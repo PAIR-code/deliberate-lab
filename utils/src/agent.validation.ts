@@ -4,24 +4,6 @@ import {Type, type Static} from '@sinclair/typebox';
 const strict = {additionalProperties: false} as const;
 
 // ****************************************************************************
-// testAgentParticipantPrompt
-// ****************************************************************************
-
-/** AgentParticipantPromptTest input validation. */
-export const AgentParticipantPromptTestData = Type.Object(
-  {
-    experimentId: Type.String({minLength: 1}),
-    participantId: Type.String({minLength: 1}),
-    stageId: Type.String({minLength: 1}),
-  },
-  strict,
-);
-
-export type AgentParticipantPromptTestData = Static<
-  typeof AgentParticipantPromptTestData
->;
-
-// ****************************************************************************
 // testAgentConfig
 // ****************************************************************************
 
@@ -53,4 +35,14 @@ export const AgentDataObjectData = Type.Object({
   persona: AgentConfigData,
   participantPromptMap: Type.Record(Type.String(), PromptConfigData),
   chatPromptMap: Type.Record(Type.String(), PromptConfigData),
+});
+
+export const AgentMediatorTemplateData = Type.Object({
+  persona: AgentConfigData,
+  promptMap: Type.Record(Type.String(), Type.Object({})),
+});
+
+export const AgentParticipantTemplateData = Type.Object({
+  persona: AgentConfigData,
+  promptMap: Type.Record(Type.String(), Type.Object({})),
 });

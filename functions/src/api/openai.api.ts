@@ -5,8 +5,10 @@ import {
   StructuredOutputDataType,
   StructuredOutputConfig,
   StructuredOutputSchema,
+  ModelResponse,
+  ModelResponseStatus,
+  addParsedModelResponse,
 } from '@deliberation-lab/utils';
-import {ModelResponse, ModelResponseStatus} from './model.response';
 
 const SUCCESS_FINISH_REASON = 'stop';
 const MAX_TOKENS_FINISH_REASON = 'length';
@@ -20,6 +22,7 @@ function makeStructuredOutputSchema(schema: StructuredOutputSchema): object {
     [StructuredOutputDataType.BOOLEAN]: 'BOOLEAN',
     [StructuredOutputDataType.ARRAY]: 'ARRAY',
     [StructuredOutputDataType.OBJECT]: 'OBJECT',
+    [StructuredOutputDataType.ENUM]: 'STRING',
   };
   const type = typeMap[schema.type];
   if (!type) {
@@ -53,6 +56,7 @@ function makeStructuredOutputSchema(schema: StructuredOutputSchema): object {
     properties: properties,
     additionalProperties: additionalProperties,
     required: orderedPropertyNames,
+    enum: schema.enumItems,
     items: itemsSchema,
   };
 }
@@ -101,6 +105,7 @@ export async function callOpenAIChatCompletion(
   } catch (error: Error) {
     return {
       status: ModelResponseStatus.INTERNAL_ERROR,
+      generationConfig,
       errorMessage: error.message,
     };
   }
@@ -150,6 +155,7 @@ export async function callOpenAIChatCompletion(
       }
       return {
         status: status,
+        generationConfig,
         errorMessage: `${error.name}: ${error.message}`,
       };
     } else {
@@ -160,7 +166,9 @@ export async function callOpenAIChatCompletion(
   if (!response || !response.choices) {
     return {
       status: ModelResponseStatus.UNKNOWN_ERROR,
-      text: `Model provider returned an unexpected response: ${response}`,
+      generationConfig,
+      rawResponse: JSON.stringify(response ?? {}),
+      errorMessage: `Model provider returned an unexpected response: ${response}`,
     };
   }
 
@@ -168,26 +176,41 @@ export async function callOpenAIChatCompletion(
   if (finishReason === MAX_TOKENS_FINISH_REASON) {
     return {
       status: ModelResponseStatus.LENGTH_ERROR,
+      generationConfig,
+      rawResponse: JSON.stringify(response),
       text: response.choices[0].message.content,
       errorMessage: `Token limit (${generationConfig.maxOutputTokens}) exceeded`,
     };
-  } else if (finishReason === REFUSAL_FINISH_REASON || response.choices[0].message.refusal) {
+  } else if (
+    finishReason === REFUSAL_FINISH_REASON ||
+    response.choices[0].message.refusal
+  ) {
     return {
       status: ModelResponseStatus.REFUSAL_ERROR,
+      generationConfig,
+      rawResponse: JSON.stringify(response),
       errorMessage: `Refusal from provider: ${response.choices[0].message.refusal}`,
     };
   } else if (finishReason !== SUCCESS_FINISH_REASON) {
     return {
       status: ModelResponseStatus.UNKNOWN_ERROR,
+      generationConfig,
+      rawResponse: JSON.stringify(response),
       text: response.choices[0].message.content,
       errorMessage: `Provider sent unrecognized finish_reason: ${finishReason}`,
-    }
+    };
   }
 
-  return {
+  const modelResponse = {
     status: ModelResponseStatus.OK,
+    generationConfig,
+    rawResponse: JSON.stringify(response),
     text: response.choices[0].message.content,
   };
+  if (structuredOutputConfig?.enabled) {
+    return addParsedModelResponse(modelResponse);
+  }
+  return modelResponse;
 }
 
 export async function getOpenAIAPIChatCompletionResponse(
@@ -231,6 +254,7 @@ export async function getOpenAIAPIChatCompletionResponse(
   } catch (error: any) {
     response = {
       status: ModelResponseStatus.UNKNOWN_ERROR,
+      generationConfig,
       errorMessage: error.message,
     };
   }

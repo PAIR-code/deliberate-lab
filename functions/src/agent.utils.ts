@@ -3,38 +3,84 @@ import {
   AgentModelSettings,
   AgentParticipantPromptConfig,
   AgentPersonaConfig,
+  APIKeyConfig,
   ApiKeyType,
-  ExperimenterData,
   ModelGenerationConfig,
+  ModelResponseStatus,
   ParticipantProfileExtended,
   ParticipantStatus,
   StageConfig,
   StageKind,
   StructuredOutputConfig,
+  UserProfile,
+  createModelLogEntry,
   makeStructuredOutputPrompt,
 } from '@deliberation-lab/utils';
 
-import {updateParticipantNextStage} from './participant.utils';
-import {initiateChatDiscussion} from './stages/chat.utils';
-import {completeProfile} from './stages/profile.utils';
-import {getAgentParticipantRankingStageResponse} from './stages/ranking.utils';
-import {getAgentParticipantSurveyStageResponse} from './stages/survey.utils';
-
-import {ModelResponseStatus} from './api/model.response';
 import {getGeminiAPIResponse} from './api/gemini.api';
 import {getOpenAIAPIChatCompletionResponse} from './api/openai.api';
 import {ollamaChat} from './api/ollama.api';
 
-import {
-  getExperimenterData,
-  getFirestoreParticipantRef,
-  getFirestoreStage,
-} from './utils/firestore';
-
 import {app} from './app';
+import {writeModelLogEntry} from './log.utils';
 
+/** Calls API and writes ModelLogEntry to experiment. */
+export async function processModelResponse(
+  experimentId: string,
+  cohortId: string,
+  participantId: string,
+  stageId: string,
+  userProfile: UserProfile,
+  publicId: string,
+  privateId: string,
+  description: string,
+  apiKeyConfig: APIKeyConfig,
+  prompt: string,
+  modelSettings: AgentModelSettings,
+  generationConfig: ModelGenerationConfig,
+  structuredOutputConfig?: StructuredOutputConfig,
+): Promise<ModelResponse> {
+  const log = createModelLogEntry({
+    experimentId,
+    cohortId,
+    participantId,
+    stageId,
+    userProfile,
+    publicId,
+    privateId,
+    description,
+    prompt,
+    createdTimestamp: Timestamp.now(),
+  });
+
+  let response = {status: ModelResponseStatus.NONE};
+  try {
+    const queryTimestamp = Timestamp.now();
+    response = (await getAgentResponse(
+      apiKeyConfig,
+      prompt,
+      modelSettings,
+      generationConfig,
+      structuredOutputConfig,
+    )) as ModelResponse;
+    const responseTimestamp = Timestamp.now();
+
+    log.response = response;
+    log.queryTimestamp = queryTimestamp;
+    log.responseTimestamp = responseTimestamp;
+  } catch (error) {
+    console.log(error);
+  }
+
+  // Write log
+  writeModelLogEntry(experimentId, log);
+
+  return response;
+}
+
+// TODO: Rename to getAPIResponse?
 export async function getAgentResponse(
-  data: ExperimenterData, // TODO: Only pass in API keys
+  apiKeyConfig: APIKeyConfig,
   prompt: string,
   modelSettings: AgentModelSettings,
   generationConfig: ModelGenerationConfig,
@@ -42,16 +88,9 @@ export async function getAgentResponse(
 ): Promise<ModelResponse> {
   let response;
 
-  const structuredOutputPrompt = structuredOutputConfig
-    ? makeStructuredOutputPrompt(structuredOutputConfig)
-    : '';
-  if (structuredOutputPrompt) {
-    prompt = `${prompt}\n${structuredOutputPrompt}`;
-  }
-
   if (modelSettings.apiType === ApiKeyType.GEMINI_API_KEY) {
     response = await getGeminiResponse(
-      data,
+      apiKeyConfig,
       modelSettings.modelName,
       prompt,
       generationConfig,
@@ -59,18 +98,23 @@ export async function getAgentResponse(
     );
   } else if (modelSettings.apiType === ApiKeyType.OPENAI_API_KEY) {
     response = await getOpenAIAPIResponse(
-      data,
+      apiKeyConfig,
       modelSettings.modelName,
       prompt,
       generationConfig,
       structuredOutputConfig,
     );
   } else if (modelSettings.apiType === ApiKeyType.OLLAMA_CUSTOM_URL) {
-    response = await getOllamaResponse(data, modelSettings.modelName, prompt);
+    response = await getOllamaResponse(
+      apiKeyConfig,
+      modelSettings.modelName,
+      prompt,
+    );
   } else {
     response = {
       status: ModelResponseStatus.CONFIG_ERROR,
-      errorMessage: `Error: invalid apiKey type: ${data.apiKeys.ollamaApiKey.apiKey}`,
+      generationConfig,
+      errorMessage: `Error: invalid apiKey type: ${apiKeyConfig.ollamaApiKey.apiKey}`,
     };
   }
 
@@ -83,18 +127,15 @@ export async function getAgentResponse(
   return response;
 }
 
-// TODO: Refactor model call functions to take in direct API configs,
-// not full ExperimenterData
-
 export async function getGeminiResponse(
-  data: ExperimenterData,
+  apiKeyConfig: APIKeyConfig,
   modelName: string,
   prompt: string,
   generationConfig: ModelGenerationConfig,
   structuredOutputConfig?: StructuredOutputConfig,
 ): Promise<ModelResponse> {
   return await getGeminiAPIResponse(
-    data.apiKeys.geminiApiKey,
+    apiKeyConfig.geminiApiKey,
     modelName,
     prompt,
     generationConfig,
@@ -103,14 +144,14 @@ export async function getGeminiResponse(
 }
 
 export async function getOpenAIAPIResponse(
-  data: ExperimenterData,
+  apiKeyConfig: APIKeyConfig,
   model: string,
   prompt: string,
   generationConfig: ModelGenerationConfig,
 ): Promise<ModelResponse> {
   return await getOpenAIAPIChatCompletionResponse(
-    data.apiKeys.openAIApiKey?.apiKey || '',
-    data.apiKeys.openAIApiKey?.baseUrl || null,
+    apiKeyConfig.openAIApiKey?.apiKey || '',
+    apiKeyConfig.openAIApiKey?.baseUrl || null,
     model,
     prompt,
     generationConfig,
@@ -118,7 +159,7 @@ export async function getOpenAIAPIResponse(
 }
 
 export async function getOllamaResponse(
-  data: ExperimenterData,
+  apiKeyConfig: APIKeyConfig,
   modelName: string,
   prompt: string,
   generationConfig: ModelGenerationConfig,
@@ -126,165 +167,7 @@ export async function getOllamaResponse(
   return await ollamaChat(
     [prompt],
     modelName,
-    data.apiKeys.ollamaApiKey,
+    apiKeyConfig.ollamaApiKey,
     generationConfig,
   );
-}
-
-/** Return all agent personas for a given experiment. */
-export async function getAgentPersonas(experimentId: string) {
-  const agentCollection = app
-    .firestore()
-    .collection('experiments')
-    .doc(experimentId)
-    .collection('agents');
-  return (await agentCollection.get()).docs.map(
-    (agent) => agent.data() as AgentPersonaConfig,
-  );
-}
-
-/** Complete agent participant's current stage. */
-export async function completeStageAsAgentParticipant(
-  experiment: Experiment,
-  participant: ParticipantProfileExtended,
-) {
-  const experimentId = experiment.id;
-  const participantDoc = getFirestoreParticipantRef(
-    experimentId,
-    participant.privateId,
-  );
-
-  // Only update if participant is active, etc.
-  const status = participant.currentStatus;
-  if (status !== ParticipantStatus.IN_PROGRESS) {
-    return;
-  }
-
-  // Ensure participants have start experiment, TOS, and current stage
-  // ready marked appropriately
-  if (!participant.timestamps.startExperiment) {
-    participant.timestamps.startExperiment = Timestamp.now();
-  }
-  if (!participant.timestamps.acceptedTOS) {
-    participant.timestamps.acceptedTOS = Timestamp.now();
-  }
-  if (!participant.timestamps.readyStages[participant.currentStageId]) {
-    participant.timestamps.readyStages[participant.currentStageId] =
-      Timestamp.now();
-  }
-
-  const completeStage = async () => {
-    await updateParticipantNextStage(
-      experimentId,
-      participant,
-      experiment.stageIds,
-    );
-  };
-
-  const stage = await getFirestoreStage(
-    experimentId,
-    participant.currentStageId,
-  );
-
-  // Fetch experiment creator's API key.
-  const creatorId = experiment.metadata.creator;
-  const experimenterData = await getExperimenterData(creatorId);
-
-  // ParticipantAnswer doc
-  const answerDoc = app
-    .firestore()
-    .collection('experiments')
-    .doc(experimentId)
-    .collection('participants')
-    .doc(participant.privateId)
-    .collection('stageData')
-    .doc(stage.id);
-
-  switch (stage.kind) {
-    case StageKind.CHAT:
-      // Do not complete stage as agent participant must chat first
-      // Instead, check if participant should initiate conversation
-      initiateChatDiscussion(
-        experimentId,
-        participant.currentCohortId,
-        stage,
-        participant.privateId,
-        participant.publicId,
-        participant, // profile
-        participant.agentConfig, // agent config
-      );
-      break;
-    case StageKind.PROFILE:
-      await completeProfile(experimentId, participant, stage);
-      await completeStage();
-      participantDoc.set(participant);
-      break;
-    case StageKind.SALESPERSON:
-      initiateChatDiscussion(
-        experimentId,
-        participant.currentCohortId,
-        stage,
-        participant.privateId,
-        participant.publicId,
-        participant, // profile
-        participant.agentConfig, // agent config
-      );
-      break;
-    case StageKind.RANKING:
-      if (!experimenterData) {
-        console.log('Could not find experimenter data and API key');
-        break;
-      }
-      const rankingAnswer = await getAgentParticipantRankingStageResponse(
-        experimentId,
-        experimenterData,
-        participant,
-        stage,
-      );
-      answerDoc.set(rankingAnswer);
-      await completeStage();
-      participantDoc.set(participant);
-      break;
-    case StageKind.SURVEY:
-      if (!experimenterData) {
-        console.log('Could not find experimenter data and API key');
-        break;
-      }
-      const surveyAnswer = await getAgentParticipantSurveyStageResponse(
-        experimentId,
-        experimenterData,
-        participant,
-        stage,
-      );
-      answerDoc.set(surveyAnswer);
-      await completeStage();
-      participantDoc.set(participant);
-      break;
-    default:
-      console.log(`Move to next stage (${participant.publicId})`);
-      await completeStage();
-      participantDoc.set(participant);
-  }
-}
-
-/** Return agent participant prompt that corresponds to agent. */
-export async function getAgentParticipantPrompt(
-  experimentId: string,
-  stageId: string,
-  agentId: string,
-): AgentParticipantPromptConfig | null {
-  const prompt = await app
-    .firestore()
-    .collection('experiments')
-    .doc(experimentId)
-    .collection('agents')
-    .doc(agentId)
-    .collection('participantPrompts')
-    .doc(stageId)
-    .get();
-
-  if (!prompt.exists) {
-    return null;
-  }
-  return prompt.data() as AgentParticipantPromptConfig;
 }

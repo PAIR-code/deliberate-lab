@@ -2,7 +2,6 @@ import {Type, type Static} from '@sinclair/typebox';
 import {UnifiedTimestampSchema} from '../shared.validation';
 import {StageKind} from './stage';
 import {
-  StageGameSchema,
   StageTextConfigSchema,
   StageProgressConfigSchema,
 } from './stage.validation';
@@ -30,7 +29,6 @@ export const ChipStageConfigData = Type.Object(
   {
     id: Type.String(),
     kind: Type.Literal(StageKind.CHIP),
-    game: StageGameSchema,
     name: Type.String(),
     descriptions: StageTextConfigSchema,
     progress: StageProgressConfigSchema,
@@ -95,3 +93,22 @@ export const SetChipTurnData = Type.Object(
 );
 
 export type SetChipTurnData = Static<typeof SetChipTurnData>;
+
+/** requestChipAssistance endpoint data validation. */
+export const RequestChipAssistanceData = Type.Object(
+  {
+    experimentId: Type.String({minLength: 1}),
+    cohortId: Type.String({minLength: 1}),
+    stageId: Type.String({minLength: 1}),
+    participantId: Type.String({minLength: 1}),
+    assistanceMode: Type.String({minLength: 1}),
+    buyMap: Type.Optional(Type.Record(Type.String(), Type.Number())),
+    sellMap: Type.Optional(Type.Record(Type.String(), Type.Number())),
+    offerResponse: Type.Optional(Type.Boolean()),
+  },
+  strict,
+);
+
+export type RequestChipAssistanceData = Static<
+  typeof RequestChipAssistanceData
+>;

@@ -7,6 +7,7 @@ import '../participant_view/participant_view';
 import './cohort_editor';
 import './cohort_settings_dialog';
 import './cohort_list';
+import './log_dashboard';
 import './participant_stats';
 
 import {MobxLitElement} from '@adobe/lit-mobx';
@@ -15,6 +16,7 @@ import {customElement, property} from 'lit/decorators.js';
 
 import {core} from '../../core/core';
 import {AnalyticsService, ButtonClick} from '../../services/analytics.service';
+import {AuthService} from '../../services/auth.service';
 import {CohortService} from '../../services/cohort.service';
 import {ExperimentManager} from '../../services/experiment.manager';
 import {ExperimentService} from '../../services/experiment.service';
@@ -35,6 +37,7 @@ export class Component extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
 
   private readonly analyticsService = core.getService(AnalyticsService);
+  private readonly authService = core.getService(AuthService);
   private readonly cohortService = core.getService(CohortService);
   private readonly experimentManager = core.getService(ExperimentManager);
   private readonly experimentService = core.getService(ExperimentService);
@@ -72,36 +75,11 @@ export class Component extends MobxLitElement {
       `;
     }
     return html`
-      ${this.renderCohortListPanel()} ${this.renderCohortEditorPanel()}
       ${this.renderParticipantStatsPanel()}
       ${this.renderParticipantPreviewPanel()}
-    `;
-  }
-
-  private renderCohortListPanel() {
-    if (!this.experimentManager.showCohortList) {
-      return nothing;
-    }
-    return html`
-      <div class="cohort-panel">
-        <cohort-list></cohort-list>
-      </div>
-    `;
-  }
-
-  private renderCohortEditorPanel() {
-    if (!this.experimentManager.showCohortEditor) {
-      return nothing;
-    }
-    return html`
-      <div class="cohort-panel">
-        <cohort-editor
-          .cohort=${this.experimentManager.getCohort(
-            this.experimentManager.currentCohortId ?? '',
-          )}
-        >
-        </cohort-editor>
-      </div>
+      ${this.experimentManager.showLogs
+        ? html`<log-dashboard></log-dashboard>`
+        : nothing}
     `;
   }
 
@@ -131,7 +109,10 @@ export class Component extends MobxLitElement {
   }
 
   private renderParticipantStatsPanel() {
-    if (!this.experimentManager.showParticipantStats) {
+    if (
+      !this.experimentManager.showParticipantStats ||
+      this.experimentManager.showLogs
+    ) {
       return nothing;
     }
 
@@ -165,7 +146,10 @@ export class Component extends MobxLitElement {
   }
 
   private renderParticipantPreviewPanel() {
-    if (!this.experimentManager.showParticipantPreview) {
+    if (
+      !this.experimentManager.showParticipantPreview ||
+      this.experimentManager.showLogs
+    ) {
       return nothing;
     }
 
@@ -191,6 +175,10 @@ export class Component extends MobxLitElement {
   }
 
   private renderParticipantHeader(isPreview = false) {
+    if (!this.experimentManager.currentParticipant) {
+      return nothing;
+    }
+
     const getProfileString = () => {
       const currentParticipant = this.experimentManager.currentParticipant;
       if (!currentParticipant) {
@@ -207,33 +195,6 @@ export class Component extends MobxLitElement {
       `;
     };
 
-    const renderAgentParticipantButton = () => {
-      const currentParticipant = this.experimentManager.currentParticipant;
-      const currentStageId = this.participantService.currentStageViewId;
-      if (!currentParticipant || !currentStageId) return nothing;
-
-      return html`
-        <pr-tooltip
-          text="Experimental feature: Test agent participant prompt"
-          position="BOTTOM_END"
-        >
-          <pr-icon-button
-            icon="robot_2"
-            size="small"
-            color="tertiary"
-            variant="default"
-            @click=${() => {
-              this.experimentManager.testAgentParticipantPrompt(
-                currentParticipant.privateId,
-                currentStageId,
-              );
-            }}
-          >
-          </pr-icon-button>
-        </pr-tooltip>
-      `;
-    };
-
     const renderStatusBanner = () => {
       if (!isPreview) return nothing;
       const text = this.getParticipantStatusText();
@@ -241,31 +202,66 @@ export class Component extends MobxLitElement {
       return html` <div class="participant-status-banner">${text}</div> `;
     };
 
+    const renderToggle = () => {
+      return html`
+        <pr-button
+          color="secondary"
+          variant="default"
+          size="small"
+          @click=${() => {
+            this.experimentManager.setShowParticipantStats(isPreview, true);
+          }}
+        >
+          Show ${isPreview ? 'stats' : 'preview'}
+        </pr-button>
+      `;
+    };
+
     return html`
       <div class="header">
         <div class="left">
-          <pr-tooltip text="Hide panel" position="RIGHT">
-            <pr-icon-button
-              icon="visibility_off"
-              size="small"
-              color="neutral"
-              variant="default"
-              @click=${() => {
-                if (isPreview) {
-                  this.experimentManager.setShowParticipantPreview(false);
-                } else {
-                  this.experimentManager.setShowParticipantStats(false);
-                }
-              }}
-            >
-            </pr-icon-button>
-          </pr-tooltip>
           ${!isPreview ? getProfileString() : ''} ${renderStatusBanner()}
+          ${renderToggle()}
         </div>
         <div class="right">
-          ${renderAgentParticipantButton()} ${this.renderTransferMenu()}
+          <pr-button
+            color="tertiary"
+            variant="default"
+            size="small"
+            @click=${() => {
+              this.experimentManager.setShowLogs(true);
+            }}
+          >
+            Open log dashboard
+          </pr-button>
+          ${this.renderDebugModeButton()} ${this.renderTransferMenu()}
         </div>
       </div>
+    `;
+  }
+
+  private renderDebugModeButton() {
+    if (!this.authService.isExperimenter) return nothing;
+
+    const debugMode = this.authService.isDebugMode;
+    const tooltipText = `
+      Turn debug mode ${debugMode ? 'off' : 'on'}.
+      (When on, experimenters can debugging statements in participant preview.
+      Note that only some stages have debugging statements.)
+    `;
+
+    return html`
+      <pr-tooltip text=${tooltipText} position="BOTTOM_END">
+        <pr-icon-button
+          icon=${debugMode ? 'code_off' : 'code'}
+          color="neutral"
+          variant="default"
+          @click=${() => {
+            this.authService.setDebugMode(!debugMode);
+          }}
+        >
+        </pr-icon-button>
+      </pr-tooltip>
     `;
   }
 

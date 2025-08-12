@@ -245,10 +245,6 @@ export class SurveyEditor extends MobxLitElement {
         </div>
         <div class="right">${this.renderQuestionNav(question, index)}</div>
       </div>
-      <div class="description">
-        <b>Optional:</b> Mark this checkbox to indicate if the question is
-        required for participants.
-      </div>
       <label class="checkbox-wrapper">
         <md-checkbox
           touch-target="wrapper"
@@ -257,7 +253,9 @@ export class SurveyEditor extends MobxLitElement {
           @click=${toggleIsRequired}
         >
         </md-checkbox>
-        <span class="checkbox-label">Required</span>
+        <span class="checkbox-label"
+          >Make this question required for participants</span
+        >
       </label>
     `;
   }
@@ -380,6 +378,43 @@ export class SurveyEditor extends MobxLitElement {
   }
 
   private renderScaleQuestion(question: ScaleSurveyQuestion, index: number) {
+    const updateLowerText = (e: InputEvent) => {
+      const lowerText = (e.target as HTMLTextAreaElement).value;
+      this.updateQuestion({...question, lowerText}, index);
+    };
+
+    const updateUpperText = (e: InputEvent) => {
+      const upperText = (e.target as HTMLTextAreaElement).value;
+      this.updateQuestion({...question, upperText}, index);
+    };
+
+    const updateMiddleText = (e: InputEvent) => {
+      const middleText = (e.target as HTMLTextAreaElement).value;
+      this.updateQuestion({...question, middleText}, index);
+    };
+
+    const updateLowerValue = (e: InputEvent) => {
+      const lowerValue =
+        parseInt((e.target as HTMLInputElement).value, 10) || 0;
+      this.updateQuestion({...question, lowerValue}, index);
+    };
+
+    const updateUpperValue = (e: InputEvent) => {
+      const upperValue =
+        parseInt((e.target as HTMLInputElement).value, 10) || 10;
+      this.updateQuestion({...question, upperValue}, index);
+    };
+
+    const updateStepSize = (e: InputEvent) => {
+      const stepSize = parseInt((e.target as HTMLInputElement).value, 10) || 1;
+      this.updateQuestion({...question, stepSize}, index);
+    };
+
+    const toggleUseSlider = () => {
+      const updatedQuestion = {...question, useSlider: !question.useSlider};
+      this.updateQuestion(updatedQuestion, index);
+    };
+
     return html`
       <div class="header">
         <div class="left">
@@ -387,6 +422,98 @@ export class SurveyEditor extends MobxLitElement {
         </div>
         ${this.renderQuestionNav(question, index)}
       </div>
+      <div class="description">
+        <b>Scale range:</b> Set the numeric range for the scale.
+      </div>
+      <div class="scale-value-editors">
+        <div class="scale-value-editor">
+          <label>Lower value</label>
+          <input
+            type="number"
+            min="0"
+            max="100"
+            step="1"
+            required
+            .value=${question.lowerValue.toString()}
+            ?disabled=${!this.experimentEditor.canEditStages}
+            @input=${updateLowerValue}
+          />
+        </div>
+        <div class="scale-value-editor">
+          <label>Upper value</label>
+          <input
+            type="number"
+            min=${(question.lowerValue + 1).toString()}
+            max="100"
+            step="1"
+            required
+            .value=${question.upperValue.toString()}
+            ?disabled=${!this.experimentEditor.canEditStages}
+            @input=${updateUpperValue}
+          />
+        </div>
+        <div class="scale-value-editor">
+          <label>Step size</label>
+          <input
+            type="number"
+            min="1"
+            max="10"
+            step="1"
+            required
+            .value=${(question.stepSize ?? 1).toString()}
+            ?disabled=${!this.experimentEditor.canEditStages}
+            @input=${updateStepSize}
+          />
+        </div>
+      </div>
+      <div class="description">
+        <b>Scale labels:</b> Add text labels for the lower and upper ends of the
+        scale.
+      </div>
+      <div class="scale-text-editors">
+        <pr-textarea
+          label="Lower text (${question.lowerValue})"
+          variant="outlined"
+          placeholder="e.g., Strongly disagree"
+          size="small"
+          .value=${question.lowerText ?? ''}
+          ?disabled=${!this.experimentEditor.canEditStages}
+          @input=${updateLowerText}
+        >
+        </pr-textarea>
+        <pr-textarea
+          label="Upper text (${question.upperValue})"
+          variant="outlined"
+          placeholder="e.g., Strongly agree"
+          size="small"
+          .value=${question.upperText ?? ''}
+          ?disabled=${!this.experimentEditor.canEditStages}
+          @input=${updateUpperText}
+        >
+        </pr-textarea>
+        <pr-textarea
+          label="Middle text (optional)"
+          variant="outlined"
+          placeholder="e.g., Neutral"
+          size="small"
+          .value=${question.middleText ?? ''}
+          ?disabled=${!this.experimentEditor.canEditStages}
+          @input=${updateMiddleText}
+        >
+        </pr-textarea>
+      </div>
+      <label class="checkbox-wrapper">
+        <md-checkbox
+          touch-target="wrapper"
+          ?checked=${question.useSlider}
+          ?disabled=${!this.experimentEditor.canEditStages}
+          @click=${toggleUseSlider}
+        >
+        </md-checkbox>
+        <span class="checkbox-label">
+          Optional: Display the scale as a slider instead of radio buttons
+        </span>
+      </label>
     `;
   }
 

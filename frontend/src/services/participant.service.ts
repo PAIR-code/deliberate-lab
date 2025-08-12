@@ -1,12 +1,15 @@
 import {
+  AssetAllocation,
   ChatMessage,
   ChatStageParticipantAnswer,
   ChipOffer,
   CreateChatMessageData,
+  FlipCardStageParticipantAnswer,
   RankingItem,
   ParticipantProfileBase,
   ParticipantProfileExtended,
   ParticipantStatus,
+  RoleStageConfig,
   StageKind,
   StageParticipantAnswer,
   SurveyAnswer,
@@ -14,6 +17,7 @@ import {
   SurveyStageParticipantAnswer,
   UnifiedTimestamp,
   UpdateChatStageParticipantAnswerData,
+  createChatMessage,
   createChatStageParticipantAnswer,
   createParticipantChatMessage,
   createSurveyPerParticipantStageParticipantAnswer,
@@ -24,7 +28,10 @@ import {
   Unsubscribe,
   collection,
   doc,
+  getDoc,
   onSnapshot,
+  orderBy,
+  query,
   setDoc,
   updateDoc,
 } from 'firebase/firestore';
@@ -40,19 +47,24 @@ import {
   acceptParticipantExperimentStartCallable,
   acceptParticipantTransferCallable,
   createChatMessageCallable,
+  requestChipAssistanceCallable,
+  selectChipAssistanceModeCallable,
   sendAlertMessageCallable,
   sendChipOfferCallable,
   sendChipResponseCallable,
   setChipTurnCallable,
+  setParticipantRolesCallable,
   setSalespersonControllerCallable,
   setSalespersonMoveCallable,
   setSalespersonResponseCallable,
+  updateAssetAllocationStageParticipantAnswerCallable,
   updateParticipantAcceptedTOSCallable,
   updateParticipantFailureCallable,
   updateParticipantProfileCallable,
   updateParticipantToNextStageCallable,
   updateParticipantWaitingCallable,
   updateChatStageParticipantAnswerCallable,
+  updateFlipCardStageParticipantAnswerCallable,
   updateSurveyPerParticipantStageParticipantAnswerCallable,
   updateSurveyStageParticipantAnswerCallable,
   updateRankingStageParticipantAnswerCallable,
@@ -89,11 +101,16 @@ export class ParticipantService extends Service {
   @observable profile: ParticipantProfileExtended | undefined = undefined;
   @observable answerMap: Record<string, StageParticipantAnswer | undefined> =
     {};
+  @observable privateChatMap: Record<string, ChatMessage[]> = {};
 
   // Loading
   @observable unsubscribe: Unsubscribe[] = [];
   @observable isProfileLoading = false;
+  @observable isPrivateChatLoading = false;
   @observable areAnswersLoading = false;
+
+  // Sidenav
+  @observable showParticipantSidenav = true;
 
   // Chat creation loading
   @observable isSendingChat = false;
@@ -104,7 +121,12 @@ export class ParticipantService extends Service {
 
   set isLoading(value: boolean) {
     this.isProfileLoading = value;
+    this.isPrivateChatLoading = value;
     this.areAnswersLoading = value;
+  }
+
+  setShowParticipantSidenav(showParticipantSidenav: boolean) {
+    this.showParticipantSidenav = showParticipantSidenav;
   }
 
   setParticipant(experimentId: string | null, participantId: string | null) {
@@ -286,6 +308,62 @@ export class ParticipantService extends Service {
         },
       ),
     );
+
+    // Subscribe to private chats
+    this.loadPrivateChatMessages();
+  }
+
+  /** Subscribe to private chat message collections for each stage ID. */
+  private async loadPrivateChatMessages() {
+    if (!this.experimentId || !this.participantId) return;
+
+    // Get stageIds from experiment doc
+    // (as they may not have loaded in experiment service yet)
+    const experimentRef = doc(
+      this.sp.firebaseService.firestore,
+      'experiments',
+      this.experimentId,
+    );
+    const experimentSnap = await getDoc(experimentRef);
+    if (!experimentSnap.exists()) return;
+    const experimentData = experimentSnap.data();
+    if (experimentData?.stageIds.length === 0) return;
+
+    this.isPrivateChatLoading = true;
+    for (const stageId of experimentData.stageIds) {
+      this.unsubscribe.push(
+        onSnapshot(
+          query(
+            collection(
+              this.sp.firebaseService.firestore,
+              'experiments',
+              this.experimentId,
+              'participants',
+              this.participantId,
+              'stageData',
+              stageId,
+              'privateChats',
+            ),
+            orderBy('timestamp', 'asc'),
+          ),
+          (snapshot) => {
+            let changedDocs = snapshot.docChanges().map((change) => change.doc);
+            if (changedDocs.length === 0) {
+              changedDocs = snapshot.docs;
+            }
+
+            changedDocs.forEach((doc) => {
+              if (!this.privateChatMap[stageId]) {
+                this.privateChatMap[stageId] = [];
+              }
+              const message = doc.data() as ChatMessage;
+              this.privateChatMap[stageId].push(message);
+            });
+            this.isPrivateChatLoading = false;
+          },
+        ),
+      );
+    }
   }
 
   unsubscribeAll() {
@@ -294,6 +372,7 @@ export class ParticipantService extends Service {
 
     this.profile = undefined;
     this.answerMap = {};
+    this.privateChatMap = {};
     this.sp.participantAnswerService.reset();
   }
 
@@ -489,6 +568,8 @@ export class ParticipantService extends Service {
   }
 
   /** Send chat message. */
+  // createChatMessageCallable will route the chat message to the correct
+  // spot based on the stage kind
   async createChatMessage(config: Partial<ChatMessage> = {}) {
     let response = {};
     this.isSendingChat = true;
@@ -510,6 +591,38 @@ export class ParticipantService extends Service {
         experimentId: this.experimentId,
         cohortId: this.profile.currentCohortId,
         stageId: this.profile.currentStageId,
+        participantId: this.profile.privateId,
+        chatMessage,
+      };
+
+      response = await createChatMessageCallable(
+        this.sp.firebaseService.functions,
+        createData,
+      );
+    }
+    this.isSendingChat = false;
+    return response;
+  }
+
+  /** Send error chat message. */
+  // createChatMessageCallable will route the chat message based on stage kind
+  async sendErrorChatMessage(config: Partial<ChatMessage> = {}) {
+    let response = {};
+    this.isSendingChat = true;
+    if (this.experimentId && this.profile) {
+      const chatMessage = createChatMessage({
+        ...config,
+        discussionId: this.sp.cohortService.getChatDiscussionId(
+          this.profile.currentStageId,
+        ),
+        isError: true,
+      });
+
+      const createData: CreateChatMessageData = {
+        experimentId: this.experimentId,
+        cohortId: this.profile.currentCohortId,
+        stageId: this.profile.currentStageId,
+        participantId: this.profile.privateId,
         chatMessage,
       };
 
@@ -580,6 +693,55 @@ export class ParticipantService extends Service {
   }
 
   /** Update participant survey answerMap. */
+  async updateFlipCardStageParticipantAnswer(
+    id: string, // flipcard stage ID
+    answer: FlipCardStageParticipantAnswer, // flipcard answer
+  ) {
+    let response = {};
+
+    // Update local answer map
+    this.answerMap[id] = answer;
+
+    if (this.experimentId && this.profile) {
+      response = await updateFlipCardStageParticipantAnswerCallable(
+        this.sp.firebaseService.functions,
+        {
+          experimentId: this.experimentId,
+          cohortId: this.profile.currentCohortId,
+          participantPrivateId: this.profile.privateId,
+          participantPublicId: this.profile.publicId,
+          flipCardStageParticipantAnswer: answer,
+        },
+      );
+    }
+
+    return response;
+  }
+
+  /** Update participant asset allocation answer. */
+  async updateAssetAllocationStageParticipantAnswer(
+    id: string, // asset allocation stage ID
+    allocation: AssetAllocation, // asset allocation
+    confirmed: boolean, // confirmation status
+  ) {
+    let response = {};
+
+    if (this.experimentId && this.profile) {
+      response = await updateAssetAllocationStageParticipantAnswerCallable(
+        this.sp.firebaseService.functions,
+        {
+          experimentId: this.experimentId,
+          participantPrivateId: this.profile.privateId,
+          stageId: id,
+          allocation,
+          confirmed,
+        },
+      );
+    }
+
+    return response;
+  }
+
   async updateSurveyStageParticipantAnswerMap(
     id: string, // survey stage ID,
     answerMap: Record<string, SurveyAnswer>, // map of question ID to answer
@@ -763,6 +925,75 @@ export class ParticipantService extends Service {
       );
     }
     return output.success;
+  }
+
+  async requestChipAssistance(
+    stageId: string,
+    assistanceMode: string, // TODO: make enum
+    buyChipType: string,
+    buyChipAmount: number,
+    sellChipType: string,
+    sellChipAmount: number,
+    offerResponse: boolean | undefined = undefined,
+  ) {
+    const buyMap: Record<string, number> = {};
+    buyMap[buyChipType] = buyChipAmount;
+
+    const sellMap: Record<string, number> = {};
+    sellMap[sellChipType] = sellChipAmount;
+
+    let output = {data: ''};
+    if (this.experimentId && this.profile) {
+      output = await requestChipAssistanceCallable(
+        this.sp.firebaseService.functions,
+        {
+          experimentId: this.experimentId,
+          cohortId: this.profile.currentCohortId,
+          stageId,
+          participantId: this.profile.privateId,
+          assistanceMode,
+          buyMap,
+          sellMap,
+          offerResponse,
+        },
+      );
+    }
+    return output;
+  }
+
+  async selectChipAssistanceMode(
+    stageId: string,
+    assistanceMode: string, // TODO: make enum
+  ) {
+    let output = {data: ''};
+    if (this.experimentId && this.profile) {
+      output = await selectChipAssistanceModeCallable(
+        this.sp.firebaseService.functions,
+        {
+          experimentId: this.experimentId,
+          cohortId: this.profile.currentCohortId,
+          stageId,
+          participantId: this.profile.privateId,
+          assistanceMode,
+        },
+      );
+    }
+    return output;
+  }
+
+  async setParticipantRoles(stageId: string) {
+    let output = {success: false};
+    if (this.experimentId && this.profile) {
+      output = await setParticipantRolesCallable(
+        this.sp.firebaseService.functions,
+        {
+          experimentId: this.experimentId,
+          cohortId: this.profile.currentCohortId,
+          stageId,
+        },
+      );
+    }
+    return output;
   }
 
   async sendAlertMessage(message: string) {

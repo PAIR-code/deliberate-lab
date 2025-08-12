@@ -42,7 +42,7 @@ export class Core {
     const serviceProvider = makeServiceProvider(this);
 
     const handler = {
-      // tslint:disable-next-line:no-any
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       get(target: any, propKey: string) {
         if (serviceProvider.hasOwnProperty(propKey)) {
           return target[propKey];

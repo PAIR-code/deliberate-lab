@@ -1,6 +1,6 @@
-@use "../../sass/common";
-@use "../../sass/colors";
-@use "../../sass/typescale";
+@use '../../sass/common';
+@use '../../sass/colors';
+@use '../../sass/typescale';
 
 :host {
   @include common.flex-column;
@@ -26,6 +26,21 @@
   justify-content: space-between;
   width: 100%;
   gap: common.$spacing-xl;
+}
+
+@include common.viewport-small {
+  .button-row {
+    flex-direction: column;
+    gap: common.$spacing-medium;
+    align-items: stretch;
+  }
+  .button-container {
+    width: 100%;
+    padding-bottom: common.$spacing-xl; // Added extra padding below buttons on mobile
+  }
+  pr-button {
+    width: 100%;
+  }
 }
 
 .button-container {

@@ -6,21 +6,26 @@ import {customElement, property, state} from 'lit/decorators.js';
 import {classMap} from 'lit/directives/class-map.js';
 
 import {core} from '../../core/core';
-import {AgentEditor} from '../../services/agent.editor';
 import {AnalyticsService, ButtonClick} from '../../services/analytics.service';
 import {ExperimentEditor} from '../../services/experiment.editor';
 
 import {
-  AgentDataObject,
+  AgentPersonaType,
+  ExperimentTemplate,
   MetadataConfig,
   StageConfig,
   StageKind,
+  createAssetAllocationStage,
   createChatStage,
   createRankingStage,
   createInfoStage,
+  createFlipCardStage,
   createPayoutStage,
+  createPrivateChatStage,
   createProfileStage,
   createRevealStage,
+  createRoleStage,
+  createStockInfoStage,
   createSurveyPerParticipantStage,
   createSurveyStage,
   createTOSStage,
@@ -31,20 +36,35 @@ import {
   ANON_LAS_METADATA,
   getLASStageConfigs,
   getAnonLASStageConfigs,
-} from '../../shared/games/lost_at_sea';
+} from '../../shared/templates/lost_at_sea';
 import {
   getChipMetadata,
   getChipNegotiationStageConfigs,
-} from '../../shared/games/chip_negotiation';
+} from '../../shared/templates/chip_negotiation';
 import {
-  RTV_AGENTS,
   RTV_METADATA,
-  getRTVStageConfigs,
-} from '../../shared/games/reality_tv_chat';
+  getRealityTVExperimentTemplate,
+} from '../../shared/templates/reality_tv_chat';
 import {
   SALESPERSON_GAME_METADATA,
   getSalespersonStageConfigs,
-} from '../../shared/games/salesperson';
+} from '../../shared/templates/salesperson';
+import {
+  FRUIT_TEST_METADATA,
+  getFruitTestExperimentTemplate,
+} from '../../shared/templates/fruit_test';
+import {
+  STOCKINFO_GAME_METADATA,
+  getStockInfoGameStageConfigs,
+} from '../../shared/templates/stockinfo_template';
+import {
+  FLIPCARD_TEMPLATE_METADATA,
+  getFlipCardExperimentTemplate,
+} from '../../shared/templates/flipcard';
+import {
+  ASSET_ALLOCATION_TEMPLATE_METADATA,
+  getAssetAllocationTemplate,
+} from '../../shared/templates/asset_allocation_template';
 
 import {styles} from './stage_builder_dialog.scss';
 
@@ -53,7 +73,6 @@ import {styles} from './stage_builder_dialog.scss';
 export class StageBuilderDialog extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
 
-  private readonly agentEditor = core.getService(AgentEditor);
   private readonly analyticsService = core.getService(AnalyticsService);
   private readonly experimentEditor = core.getService(ExperimentEditor);
 
@@ -127,19 +146,39 @@ export class StageBuilderDialog extends MobxLitElement {
       <div class="card-gallery-wrapper">
         ${this.renderLASCard()} ${this.renderLASCard(true)}
         ${this.renderRealityTVCard()} ${this.renderChipNegotiationCard()}
-        ${this.renderSalespersonGameCard()}
+        ${this.renderSalespersonGameCard()} ${this.renderFlipCardTemplateCard()}
+        ${this.renderFruitTestTemplateCard()} ${this.renderStockInfoGameCard()}
+        ${this.renderAssetAllocationTemplateCard()}
       </div>
     `;
   }
 
   private renderStageCards() {
     return html`
-      <div class="card-gallery-wrapper">
-        ${this.renderTOSCard()} ${this.renderInfoCard()}
-        ${this.renderTransferCard()} ${this.renderProfileCard()}
-        ${this.renderSurveyCard()} ${this.renderSurveyPerParticipantCard()}
-        ${this.renderChatCard()} ${this.renderRankingCard()}
-        ${this.renderRevealCard()} ${this.renderPayoutCard()}
+      <div class="gallery-section">
+        <div class="gallery-title">Basic stages</div>
+        <div class="card-gallery-wrapper">
+          ${this.renderTOSCard()} ${this.renderInfoCard()}
+          ${this.renderProfileCard()}
+        </div>
+      </div>
+
+      <div class="gallery-section">
+        <div class="gallery-title">Chat stages</div>
+        <div class="card-gallery-wrapper">
+          ${this.renderGroupChatCard()} ${this.renderPrivateChatCard()}
+        </div>
+      </div>
+
+      <div class="gallery-section">
+        <div class="gallery-title">Other stages</div>
+        <div class="card-gallery-wrapper">
+          ${this.renderTransferCard()} ${this.renderSurveyCard()}
+          ${this.renderSurveyPerParticipantCard()} ${this.renderFlipCardCard()}
+          ${this.renderRankingCard()} ${this.renderRevealCard()}
+          ${this.renderPayoutCard()} ${this.renderRoleCard()}
+          ${this.renderStockInfoCard()} ${this.renderAssetAllocationCard()}
+        </div>
       </div>
     `;
   }
@@ -151,15 +190,18 @@ export class StageBuilderDialog extends MobxLitElement {
     this.experimentEditor.jumpToLastStage();
   }
 
-  private addGame(
-    metadata: Partial<MetadataConfig>,
-    stages: StageConfig[],
-    agents: AgentDataObject[] = [],
-  ) {
-    this.analyticsService.trackButtonClick(ButtonClick.GAME_ADD);
+  private addTemplate(template: ExperimentTemplate) {
+    this.analyticsService.trackButtonClick(ButtonClick.TEMPLATE_LOAD);
+    this.experimentEditor.loadTemplate(template);
+    this.experimentEditor.toggleStageBuilderDialog();
+  }
+
+  // TODO: Remove in favor of identical addTemplate
+  // WARNING: This does NOT add agents
+  private addGame(metadata: Partial<MetadataConfig>, stages: StageConfig[]) {
+    this.analyticsService.trackButtonClick(ButtonClick.TEMPLATE_LOAD);
     this.experimentEditor.updateMetadata(metadata);
     this.experimentEditor.setStages(stages);
-    this.agentEditor.setAgentData(agents);
     this.experimentEditor.toggleStageBuilderDialog();
   }
 
@@ -183,12 +225,12 @@ export class StageBuilderDialog extends MobxLitElement {
   }
 
   private renderRealityTVCard() {
-    const addGame = () => {
-      this.addGame(RTV_METADATA, getRTVStageConfigs(), RTV_AGENTS);
+    const addTemplate = () => {
+      this.addTemplate(getRealityTVExperimentTemplate());
     };
     return html`
-      <div class="card" @click=${addGame}>
-        <div class="title">📺 ${RTV_METADATA.name}</div>
+      <div class="card" @click=${addTemplate}>
+        <div class="title">${RTV_METADATA.name}</div>
         <div>${RTV_METADATA.description}</div>
       </div>
     `;
@@ -231,6 +273,19 @@ export class StageBuilderDialog extends MobxLitElement {
     `;
   }
 
+  private renderFruitTestTemplateCard() {
+    const addTemplate = () => {
+      this.addTemplate(getFruitTestExperimentTemplate());
+    };
+
+    return html`
+      <div class="card" @click=${addTemplate}>
+        <div class="title">${FRUIT_TEST_METADATA.name}</div>
+        <div>${FRUIT_TEST_METADATA.description}</div>
+      </div>
+    `;
+  }
+
   private renderInfoCard() {
     const addStage = () => {
       this.addStage(createInfoStage());
@@ -261,15 +316,98 @@ export class StageBuilderDialog extends MobxLitElement {
     `;
   }
 
-  private renderChatCard() {
+  private renderRoleCard() {
+    const addStage = () => {
+      this.addStage(createRoleStage());
+    };
+
+    return html`
+      <div class="card" @click=${addStage}>
+        <div class="title">Role assignment</div>
+        <div>
+          Randomly assign roles to participants and show different
+          Markdown-rendered info for each role
+        </div>
+      </div>
+    `;
+  }
+
+  private renderGroupChatCard() {
     const addStage = () => {
       this.addStage(createChatStage());
     };
 
     return html`
       <div class="card" @click=${addStage}>
-        <div class="title">💬 Group chat</div>
-        <div>Host a conversation among participants and optional LLMs.</div>
+        <div class="title">Group chat</div>
+        <div>
+          Host a conversation among <i>all</i> participants in a cohort and
+          optional mediator(s).
+        </div>
+      </div>
+    `;
+  }
+
+  private renderPrivateChatCard() {
+    const addStage = () => {
+      this.addStage(createPrivateChatStage());
+    };
+
+    return html`
+      <div class="card" @click=${addStage}>
+        <div class="title">Private chat</div>
+        <div>
+          Enable each participant to privately chat <i>only</i> with added
+          mediator(s).
+        </div>
+      </div>
+    `;
+  }
+
+  private renderFlipCardCard() {
+    const addStage = () => {
+      this.addStage(createFlipCardStage());
+    };
+
+    return html`
+      <div class="card" @click=${addStage}>
+        <div class="title">🔄 FlipCard</div>
+        <div>
+          Present cards that participants can flip to reveal additional
+          information and make selections.
+        </div>
+      </div>
+    `;
+  }
+
+  private renderStockInfoCard() {
+    const addStage = () => {
+      this.addStage(createStockInfoStage());
+    };
+
+    return html`
+      <div class="card" @click=${addStage}>
+        <div class="title">📈 Stock Info</div>
+        <div>
+          Display stock information with charts, performance metrics, and
+          configurable data cards.
+        </div>
+      </div>
+    `;
+  }
+
+  private renderAssetAllocationCard() {
+    const addStage = () => {
+      this.addStage(createAssetAllocationStage());
+    };
+
+    return html`
+      <div class="card" @click=${addStage}>
+        <div class="title">💰 Asset Allocation</div>
+        <div>
+          Allow participants to allocate investment portfolios between multiple
+          stocks using interactive sliders.
+        </div>
       </div>
     `;
   }
@@ -377,6 +515,53 @@ export class StageBuilderDialog extends MobxLitElement {
         <div>
           Assign participants to different cohorts while they wait in this
           stage.
+        </div>
+      </div>
+    `;
+  }
+
+  private renderFlipCardTemplateCard() {
+    const addTemplate = () => {
+      this.addTemplate(getFlipCardExperimentTemplate());
+    };
+
+    return html`
+      <div class="card" @click=${addTemplate}>
+        <div class="title">${FLIPCARD_TEMPLATE_METADATA.name}</div>
+        <div>${FLIPCARD_TEMPLATE_METADATA.description}</div>
+      </div>
+    `;
+  }
+
+  private renderStockInfoGameCard() {
+    const addGame = () => {
+      this.addGame(STOCKINFO_GAME_METADATA, getStockInfoGameStageConfigs());
+    };
+
+    return html`
+      <div class="card" @click=${addGame}>
+        <div class="title">📈 Stock Analysis Game</div>
+        <div>
+          A demonstration of the StockInfo stage with financial data analysis.
+        </div>
+      </div>
+    `;
+  }
+
+  private renderAssetAllocationTemplateCard() {
+    const addGame = () => {
+      this.addGame(
+        ASSET_ALLOCATION_TEMPLATE_METADATA,
+        getAssetAllocationTemplate(),
+      );
+    };
+
+    return html`
+      <div class="card" @click=${addGame}>
+        <div class="title">💰 Investment Portfolio Game</div>
+        <div>
+          A complete investment study with stock analysis and portfolio
+          allocation decisions.
         </div>
       </div>
     `;

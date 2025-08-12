@@ -7,8 +7,10 @@ import {customElement, property} from 'lit/decorators.js';
 import {classMap} from 'lit/directives/class-map.js';
 
 import {
-  ALTERNATE_PROFILE_SET_ID,
+  SECONDARY_PROFILE_SET_ID,
   PROFILE_SET_ANIMALS_2_ID,
+  PROFILE_SET_NATURE_ID,
+  TERTIARY_PROFILE_SET_ID,
   ParticipantProfile,
   ParticipantProfileBase,
 } from '@deliberation-lab/utils';
@@ -21,9 +23,12 @@ enum ProfileDisplayType {
   // horizontal with small circle avatar + name (no pronouns)
   // (experimenter dashboard, header)
   DEFAULT = 'default',
-  // horizontal with small circle avatar + name + pronouns
+  // horizontal with big circle avatar + name + pronouns
   // (chat panel)
   CHAT = 'chat',
+  // horizontal with small circle avatar + name + pronouns
+  // (small chat panel)
+  CHAT_SMALL = 'chatSmall',
   // horizontal with big square avatar + name + pronouns
   // (ranking, per-participant survey stages)
   STAGE = 'stage',
@@ -74,8 +79,17 @@ export class ParticipantProfileDisplay extends MobxLitElement {
 
     // If alternate profile ID in stage ID, use anonymous profile
     let baseProfile: ParticipantProfileBase = this.profile;
-    if (this.stageId?.includes(ALTERNATE_PROFILE_SET_ID)) {
+    if (this.stageId?.includes(SECONDARY_PROFILE_SET_ID)) {
       const anon = this.profile.anonymousProfiles[PROFILE_SET_ANIMALS_2_ID];
+      if (anon) {
+        baseProfile = {
+          name: `${anon.name}`,
+          avatar: `${anon.avatar}`,
+          pronouns: null,
+        };
+      }
+    } else if (this.stageId?.includes(TERTIARY_PROFILE_SET_ID)) {
+      const anon = this.profile.anonymousProfiles[PROFILE_SET_NATURE_ID];
       if (anon) {
         baseProfile = {
           name: `${anon.name}`,
@@ -154,7 +168,7 @@ export class ProfileDisplay extends MobxLitElement {
 
     if (this.displayType === ProfileDisplayType.DEFAULT) {
       return html`
-        <div class="horizontal-profile">
+        <div class="horizontal-profile small">
           <avatar-icon
             .emoji=${this.profile.avatar}
             .isDisabled=${this.isDisabled}
@@ -169,13 +183,18 @@ export class ProfileDisplay extends MobxLitElement {
       `;
     }
 
-    if (this.displayType === ProfileDisplayType.CHAT) {
+    if (
+      this.displayType === ProfileDisplayType.CHAT ||
+      this.displayType === ProfileDisplayType.CHAT_SMALL
+    ) {
+      const isSmall = this.displayType === ProfileDisplayType.CHAT_SMALL;
       return html`
-        <div class="horizontal-profile">
+        <div class="horizontal-profile ${isSmall ? 'small' : ''}">
           <avatar-icon
             .emoji=${this.profile.avatar}
             .color=${getColor()}
             .isDisabled=${this.isDisabled}
+            .small=${isSmall}
           >
           </avatar-icon>
           <div class="display-name-wrapper">

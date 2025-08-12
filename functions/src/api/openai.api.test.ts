@@ -3,12 +3,13 @@ import nock = require('nock');
 
 import {
   ModelGenerationConfig,
+  ModelResponse,
+  ModelResponseStatus,
   StructuredOutputType,
   StructuredOutputDataType,
   createStructuredOutputConfig,
 } from '@deliberation-lab/utils';
 import {getOpenAIAPIChatCompletionResponse} from './openai.api';
-import {ModelResponse, ModelResponseStatus} from './model.response';
 
 const DEFAULT_GENERATION_CONFIG: ModelGenerationConfig = {
   maxTokens: 300,
@@ -114,6 +115,14 @@ describe('OpenAI-compatible API', () => {
                 description: 'An integer-valued property',
               },
             },
+            {
+              name: 'enumProperty',
+              schema: {
+                type: StructuredOutputDataType.ENUM,
+                description: 'An enum-valued property',
+                enumItems: ['FOO', 'BAR', 'BAZ'],
+              },
+            },
           ],
         },
       });
@@ -146,9 +155,14 @@ describe('OpenAI-compatible API', () => {
           type: 'INTEGER',
           description: 'An integer-valued property',
         },
+        enumProperty: {
+          type: 'STRING',
+          description: 'An enum-valued property',
+          enum: ['FOO', 'BAR', 'BAZ'],
+        },
       },
       additionalProperties: false,
-      required: ['stringProperty', 'integerProperty'],
+      required: ['stringProperty', 'integerProperty', 'enumProperty'],
     };
     expect(parsedResponse.response_format).toEqual({
       type: 'json_schema',

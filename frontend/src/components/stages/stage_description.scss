@@ -1,5 +1,5 @@
-@use "../../sass/common";
-@use "../../sass/typescale";
+@use '../../sass/common';
+@use '../../sass/typescale';
 
 :host {
   @include common.flex-column;
@@ -7,8 +7,15 @@
 
 .description-wrapper {
   @include common.flex-column;
-  border-bottom: 1px solid var(--md-sys-color-outline-variant);
-  padding: common.$main-content-padding;
+
+  &.border {
+    border-bottom: 1px solid var(--md-sys-color-outline-variant);
+    padding-bottom: common.$main-content-padding;
+  }
+
+  &.padding {
+    padding: common.$main-content-padding;
+  }
 }
 
 .description {

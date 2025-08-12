@@ -1,16 +1,20 @@
-@use "../../sass/colors";
-@use "../../sass/common";
-@use "../../sass/typescale";
+@use '../../sass/colors';
+@use '../../sass/common';
+@use '../../sass/typescale';
 
 :host {
   @include common.flex-column;
-  border: 2px solid var(--md-sys-color-outline);
+  border: 1px solid var(--md-sys-color-outline-variant);
   border-radius: common.$spacing-medium;
   cursor: pointer;
   gap: common.$spacing-medium;
   padding: common.$spacing-large;
   width: 300px;
   word-break: break-word;
+
+  @include common.viewport-small {
+    width: 100%;
+  }
 }
 
 .header {

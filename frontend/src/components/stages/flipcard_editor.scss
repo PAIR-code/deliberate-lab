@@ -1,0 +1,145 @@
+@use '../../sass/common';
+@use '../../sass/typescale';
+
+:host {
+  @include common.flex-column;
+  gap: common.$spacing-xl;
+  height: 100%;
+  overflow: auto;
+}
+
+.section {
+  @include common.flex-column;
+  gap: common.$spacing-large;
+  padding: common.$spacing-medium;
+}
+
+.header {
+  @include common.flex-row-align-center;
+  border-bottom: 1px solid var(--md-sys-color-outline-variant);
+  justify-content: space-between;
+  padding-bottom: common.$spacing-small;
+}
+
+.title {
+  @include typescale.title-medium;
+  color: var(--md-sys-color-on-surface);
+}
+
+.settings {
+  @include common.flex-column;
+  background: var(--md-sys-color-surface-variant);
+  border: 1px solid var(--md-sys-color-outline-variant);
+  border-radius: common.$spacing-small;
+  gap: common.$spacing-medium;
+  padding: common.$spacing-medium;
+}
+
+.setting-row {
+  @include common.flex-row-align-center;
+  gap: common.$spacing-small;
+}
+
+.checkbox-label {
+  @include common.flex-row-align-center;
+  @include typescale.body-medium;
+  color: var(--md-sys-color-on-surface);
+  cursor: pointer;
+  gap: common.$spacing-small;
+}
+
+.cards-section {
+  @include common.flex-column;
+  gap: common.$spacing-medium;
+}
+
+.cards-list {
+  @include common.flex-column;
+  gap: common.$spacing-large;
+}
+
+.card-editor {
+  @include common.flex-column;
+  background: var(--md-sys-color-surface);
+  border: 2px solid var(--md-sys-color-outline-variant);
+  border-radius: common.$spacing-medium;
+  gap: common.$spacing-medium;
+  padding: common.$spacing-medium;
+  transition: border-color 0.2s ease;
+
+  &:hover {
+    border-color: var(--md-sys-color-outline);
+  }
+}
+
+.card-header {
+  @include common.flex-row-align-center;
+  border-bottom: 1px solid var(--md-sys-color-outline-variant);
+  justify-content: space-between;
+  padding-bottom: common.$spacing-small;
+}
+
+.card-title-label {
+  @include typescale.title-small;
+  color: var(--md-sys-color-on-surface);
+}
+
+.card-fields {
+  @include common.flex-column;
+  gap: common.$spacing-medium;
+}
+
+.field {
+  @include common.flex-column;
+  gap: common.$spacing-small;
+}
+
+.field-label {
+  @include typescale.label-large;
+  color: var(--md-sys-color-on-surface);
+  font-weight: 500;
+
+  &.required::after {
+    content: ' *';
+    color: var(--md-sys-color-error);
+  }
+}
+
+// Responsive design
+@include common.viewport-small {
+  .header {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: common.$spacing-small;
+  }
+
+  .settings {
+    padding: common.$spacing-small;
+  }
+
+  .card-editor {
+    padding: common.$spacing-small;
+  }
+}
+
+// Focus styles for accessibility
+.card-editor:focus-within {
+  border-color: var(--md-sys-color-primary);
+  box-shadow: 0 0 0 2px rgba(var(--md-sys-color-primary-rgb), 0.2);
+}
+
+// Animation for adding/removing cards
+.card-editor {
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

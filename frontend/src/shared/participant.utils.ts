@@ -1,6 +1,8 @@
 import {
-  ALTERNATE_PROFILE_SET_ID,
+  SECONDARY_PROFILE_SET_ID,
+  TERTIARY_PROFILE_SET_ID,
   PROFILE_SET_ANIMALS_2_ID,
+  PROFILE_SET_NATURE_ID,
   ParticipantProfile,
   ParticipantStatus,
   ProfileType,
@@ -20,10 +22,16 @@ export function getParticipantInlineDisplay(
   stageId = '',
 ) {
   if (
-    stageId.includes(ALTERNATE_PROFILE_SET_ID) &&
+    stageId.includes(SECONDARY_PROFILE_SET_ID) &&
     participant.anonymousProfiles[PROFILE_SET_ANIMALS_2_ID]
   ) {
     const anon = participant.anonymousProfiles[PROFILE_SET_ANIMALS_2_ID];
+    return `${anon.avatar} ${anon.name}${showIsSelf ? ' (you)' : ''}`;
+  } else if (
+    stageId.includes(TERTIARY_PROFILE_SET_ID) &&
+    participant.anonymousProfiles[PROFILE_SET_NATURE_ID]
+  ) {
+    const anon = participant.anonymousProfiles[PROFILE_SET_NATURE_ID];
     return `${anon.avatar} ${anon.name}${showIsSelf ? ' (you)' : ''}`;
   }
 
@@ -68,11 +76,15 @@ export function getParticipantStatusDetailText(
 
   if (participant.currentStatus === ParticipantStatus.BOOTED_OUT) {
     return '‼️  This participant has been booted from the experiment and can no longer participate.';
-  } else if (participant.currentStatus === ParticipantStatus.ATTENTION_TIMEOUT) {
+  } else if (
+    participant.currentStatus === ParticipantStatus.ATTENTION_TIMEOUT
+  ) {
     return '‼️  This participant has failed an attention check and can no longer participate.';
-  } else if (participant.currentStatus === ParticipantStatus.TRANSFER_DECLINED) {
+  } else if (
+    participant.currentStatus === ParticipantStatus.TRANSFER_DECLINED
+  ) {
     return '🛑 This participant declined a transfer and can no longer participate.';
-  } else if(isDisconnectedUnfinishedParticipant(participant)) {
+  } else if (isDisconnectedUnfinishedParticipant(participant)) {
     return '🔌 This participant is disconnected, and cannot continue until they reconnect.';
   } else if (participant.currentStatus === ParticipantStatus.ATTENTION_CHECK) {
     return '⚠️ This participant has been sent an attention check.';
@@ -89,13 +101,9 @@ export function getParticipantStatusDetailText(
 export function isActiveParticipant(participant: ParticipantProfile) {
   return (
     participant.currentStatus === ParticipantStatus.SUCCESS ||
-    (
-      isConnected(participant) === true &&
-      (
-        participant.currentStatus === ParticipantStatus.IN_PROGRESS ||
-        participant.currentStatus === ParticipantStatus.ATTENTION_CHECK
-      )
-     )
+    (isConnected(participant) === true &&
+      (participant.currentStatus === ParticipantStatus.IN_PROGRESS ||
+        participant.currentStatus === ParticipantStatus.ATTENTION_CHECK))
   );
 }
 
@@ -113,10 +121,11 @@ export function isObsoleteParticipant(participant: ParticipantProfile) {
   );
 }
 
-export function isDisconnectedUnfinishedParticipant(participant: ParticipantProfile) {
+export function isDisconnectedUnfinishedParticipant(
+  participant: ParticipantProfile,
+) {
   return (
-    ! isConnected(participant) &&
-    ! isParticipantEndedExperiment(participant)
+    !isConnected(participant) && !isParticipantEndedExperiment(participant)
   );
 }
 
@@ -130,7 +139,10 @@ export function isSuccessParticipant(participant: ParticipantProfile) {
  * has not left yet)
  */
 export function isPendingParticipant(participant: ParticipantProfile) {
-  return isConnected(participant) === true && participant.currentStatus === ParticipantStatus.TRANSFER_PENDING;
+  return (
+    isConnected(participant) === true &&
+    participant.currentStatus === ParticipantStatus.TRANSFER_PENDING
+  );
 }
 
 /** If pending transfer to given cohort ID. */
@@ -176,8 +188,10 @@ export function isUnlockedStage(
     return true;
   }
 
-  return participant.timestamps.startExperiment &&
-    participant.timestamps.readyStages[stageId];
+  return (
+    participant.timestamps.startExperiment &&
+    participant.timestamps.readyStages[stageId]
+  );
 }
 
 /** Return number of stages that participant completed. */

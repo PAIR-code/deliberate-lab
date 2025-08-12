@@ -1,7 +1,6 @@
 import {
   AckAlertMessageData,
   AgentConfigTestData,
-  AgentParticipantPromptTestData,
   BaseParticipantData,
   CreateChatMessageData,
   CohortCreationData,
@@ -12,21 +11,26 @@ import {
   ExperimentCreationData,
   ExperimentDeletionData,
   ExperimentDownloadResponse,
+  ExperimentTemplate,
   InitiateParticipantTransferData,
   ParticipantNextStageResponse,
   ParticipantProfile,
+  RequestChipAssistanceData,
   SendAlertMessageData,
   SendChipOfferData,
   SendChipResponseData,
   SendParticipantCheckData,
   SetChipTurnData,
+  SetParticipantRolesData,
   SetSalespersonControllerData,
   SetSalespersonMoveData,
   SetSalespersonResponseData,
   SimpleResponse,
   SuccessResponse,
+  UpdateAssetAllocationStageParticipantAnswerData,
   UpdateChatStageParticipantAnswerData,
   UpdateCohortMetadataData,
+  UpdateFlipCardStageParticipantAnswerData,
   UpdateMediatorStatusData,
   UpdateParticipantAcceptedTOSData,
   UpdateParticipantFailureData,
@@ -74,6 +78,21 @@ export const deleteExperimentCallable = async (
     functions,
     'deleteExperiment',
   )(deletion);
+  return data;
+};
+
+/** Generic endpoint to get experiment template. */
+export const getExperimentTemplateCallable = async (
+  functions: Functions,
+  config: ExperimentDeletionData,
+) => {
+  const {data} = await httpsCallable<
+    ExperimentDeletionData,
+    ExperimentTemplate
+  >(
+    functions,
+    'getExperimentTemplate',
+  )(config);
   return data;
 };
 
@@ -305,6 +324,36 @@ export const updateChatStageParticipantAnswerCallable = async (
   return data;
 };
 
+/** Generic endpoint to update flipcard stage participant answers */
+export const updateFlipCardStageParticipantAnswerCallable = async (
+  functions: Functions,
+  config: UpdateFlipCardStageParticipantAnswerData,
+) => {
+  const {data} = await httpsCallable<
+    UpdateFlipCardStageParticipantAnswerData,
+    SuccessResponse
+  >(
+    functions,
+    'updateFlipCardStageParticipantAnswer',
+  )(config);
+  return data;
+};
+
+/** Generic endpoint to update asset allocation stage participant answers */
+export const updateAssetAllocationStageParticipantAnswerCallable = async (
+  functions: Functions,
+  config: UpdateAssetAllocationStageParticipantAnswerData,
+) => {
+  const {data} = await httpsCallable<
+    UpdateAssetAllocationStageParticipantAnswerData,
+    SuccessResponse
+  >(
+    functions,
+    'updateAssetAllocationStageParticipantAnswer',
+  )(config);
+  return data;
+};
+
 /** Generic endpoint to update survey stage participant answers */
 export const updateSurveyStageParticipantAnswerCallable = async (
   functions: Functions,
@@ -362,6 +411,18 @@ export const createChatMessageCallable = async (
   return data;
 };
 
+/** Generic endpoint for assigning participants to roles for role stage. */
+export const setParticipantRolesCallable = async (
+  functions: Functions,
+  config: SetParticipantRolesData,
+) => {
+  const {data} = await httpsCallable<SetParticipantRolesData, SuccessResponse>(
+    functions,
+    'setParticipantRoles',
+  )(config);
+  return data;
+};
+
 /** Generic endpoint for sending chip negotiation offer. */
 export const sendChipOfferCallable = async (
   functions: Functions,
@@ -394,6 +455,36 @@ export const setChipTurnCallable = async (
   const {data} = await httpsCallable<SetChipTurnData, SuccessResponse>(
     functions,
     'setChipTurn',
+  )(config);
+  return data;
+};
+
+/** Generic endpoint for chip assistance. */
+export const requestChipAssistanceCallable = async (
+  functions: Functions,
+  config: RequestChipAssistanceData,
+) => {
+  const {data} = await httpsCallable<
+    RequestChipAssistanceData,
+    SimpleResponse<string>
+  >(
+    functions,
+    'requestChipAssistance',
+  )(config);
+  return data;
+};
+
+/** Generic endpoint for selecting chip assistance mode. */
+export const selectChipAssistanceModeCallable = async (
+  functions: Functions,
+  config: RequestChipAssistanceData,
+) => {
+  const {data} = await httpsCallable<
+    RequestChipAssistanceData,
+    SimpleResponse<string>
+  >(
+    functions,
+    'selectChipAssistanceMode',
   )(config);
   return data;
 };
@@ -448,21 +539,6 @@ export const updateMediatorStatusCallable = async (
   const {data} = await httpsCallable<UpdateMediatorStatusData, SuccessResponse>(
     functions,
     'updateMediatorStatus',
-  )(config);
-  return data;
-};
-
-/** Generic endpoint for testing agent participant stage prompts. */
-export const testAgentParticipantPromptCallable = async (
-  functions: Functions,
-  config: AgentParticipantPromptTestData,
-) => {
-  const {data} = await httpsCallable<
-    AgentParticipantPromptTestData,
-    SimpleResponse<string>
-  >(
-    functions,
-    'testAgentParticipantPrompt',
   )(config);
   return data;
 };

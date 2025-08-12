@@ -13,11 +13,12 @@ import {
 } from 'firebase/firestore';
 import {
   AgentDataObject,
-  AgentChatPromptConfig,
-  AgentParticipantPromptConfig,
+  AgentMediatorPersonaConfig,
+  AgentMediatorTemplate,
+  AgentParticipantPersonaConfig,
+  AgentParticipantTemplate,
   AgentPersonaConfig,
   ChatMessage,
-  ChatMessageType,
   ChipItem,
   ChipStageConfig,
   ChipStagePublicData,
@@ -27,6 +28,8 @@ import {
   CohortDownload,
   Experiment,
   ExperimentDownload,
+  MediatorPromptConfig,
+  ParticipantPromptConfig,
   ParticipantDownload,
   ParticipantProfileExtended,
   PayoutItemType,
@@ -149,54 +152,72 @@ export async function getExperimentDownload(
     experimentDownload.participantMap[profile.publicId] = participantDownload;
   }
 
-  // For each agent, add AgentDataObject
-  const agentCollection = collection(
+  // For each agent mediator, add template
+  const agentMediatorCollection = collection(
     firestore,
     'experiments',
     experimentId,
-    'agents',
+    'agentMediators',
   );
-  const agents = (await getDocs(agentCollection)).docs.map(
-    (agent) => agent.data() as AgentPersonaConfig,
+  const mediatorAgents = (await getDocs(agentMediatorCollection)).docs.map(
+    (agent) => agent.data() as AgentMediatorPersonaConfig,
   );
-  for (const persona of agents) {
+  for (const persona of mediatorAgents) {
+    const mediatorPrompts = (
+      await getDocs(
+        collection(
+          firestore,
+          'experiments',
+          experimentId,
+          'agentMediators',
+          persona.id,
+          'prompts',
+        ),
+      )
+    ).docs.map((doc) => doc.data() as MediatorPromptConfig);
+    const mediatorTemplate: AgentMediatorTemplate = {
+      persona,
+      promptMap: {},
+    };
+    mediatorPrompts.forEach((prompt) => {
+      mediatorTemplate.promptMap[prompt.id] = prompt;
+    });
+    // Add to ExperimentDownload
+    experimentDownload.agentMediatorMap[persona.id] = mediatorTemplate;
+  }
+
+  // For each agent participant, add template
+  const agentParticipantCollection = collection(
+    firestore,
+    'experiments',
+    experimentId,
+    'agentParticipants',
+  );
+  const participantAgents = (
+    await getDocs(agentParticipantCollection)
+  ).docs.map((agent) => agent.data() as AgentParticipantPersonaConfig);
+  for (const persona of participantAgents) {
     const participantPrompts = (
       await getDocs(
         collection(
           firestore,
           'experiments',
           experimentId,
-          'agents',
+          'agentParticipants',
           persona.id,
-          'participantPrompts',
+          'prompts',
         ),
       )
-    ).docs.map((doc) => doc.data() as AgentParticipantPromptConfig);
-    const chatPrompts = (
-      await getDocs(
-        collection(
-          firestore,
-          'experiments',
-          experimentId,
-          'agents',
-          persona.id,
-          'chatPrompts',
-        ),
-      )
-    ).docs.map((doc) => doc.data() as AgentChatPromptConfig);
-    const agentObject: AgentDataObject = {
+    ).docs.map((doc) => doc.data() as ParticipantPromptConfig);
+    const participantTemplate: AgentParticipantTemplate = {
       persona,
-      participantPromptMap: {},
-      chatPromptMap: {},
+      promptMap: {},
     };
     participantPrompts.forEach((prompt) => {
-      agentObject.participantPromptMap[prompt.id] = prompt;
-    });
-    chatPrompts.forEach((prompt) => {
-      agentObject.chatPromptMap[prompt.id] = prompt;
+      participantTemplate.promptMap[prompt.id] = prompt;
     });
     // Add to ExperimentDownload
-    experimentDownload.agentMap[persona.id] = agentObject;
+    experimentDownload.agentParticipantMap[persona.id] = participantTemplate;
   }
 
   // For each cohort, add CohortDownload
@@ -765,15 +786,17 @@ function runChipTransaction(
   if (!currentChipMap) return {};
 
   Object.keys(currentChipMap).forEach((chipId) => {
-    newChipMap[chipId] = currentChipMap[chipId];
+    newChipMap[chipId] = Number(currentChipMap[chipId] ?? 0);
   });
 
   Object.keys(addChipMap).forEach((chipId) => {
-    newChipMap[chipId] = (currentChipMap[chipId] ?? 0) + addChipMap[chipId];
+    newChipMap[chipId] =
+      Number(currentChipMap[chipId] ?? 0) + Number(addChipMap[chipId] ?? 0);
   });
 
   Object.keys(removeChipMap).forEach((chipId) => {
-    newChipMap[chipId] = (currentChipMap[chipId] ?? 0) - removeChipMap[chipId];
+    newChipMap[chipId] =
+      Number(currentChipMap[chipId] ?? 0) - Number(removeChipMap[chipId] ?? 0);
   });
 
   return newChipMap;
@@ -784,11 +807,11 @@ function getChipPayout(
   chipValueMap: Record<string, number>,
 ): number {
   let payout = 0;
-  if (!currentChipMap) return 0;
+  if (!currentChipMap || !chipValueMap) return 0;
 
   Object.keys(currentChipMap).forEach((chipId) => {
-    const value = chipValueMap[chipId] ?? 0;
-    payout += value * currentChipMap[chipId];
+    const value = Number(chipValueMap[chipId] ?? 0);
+    payout += value * Number(currentChipMap[chipId] ?? 0);
   });
 
   return Math.ceil(payout * 100) / 100; // round final payout

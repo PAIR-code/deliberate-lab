@@ -3,29 +3,50 @@
 
 :host {
   @include common.flex-column;
+  height: calc(100vh - 96px);
+}
+
+.panel-wrapper {
+  @include common.flex-column;
+  align-items: center;
+  flex-grow: 1;
+  overflow: hidden;
+}
+
+.reveal-panel {
+  @include common.flex-column;
+  align-items: center;
+  background: var(--md-sys-color-surface-container);
+  border-bottom: 1px solid var(--md-sys-color-outline);
+  flex-shrink: 0;
+  max-height: 33%;
+  overflow: auto;
+  padding: common.$spacing-large;
+  width: 100%;
+  z-index: 1; /* show over scrolling logs in bottom panel */
+}
+
+.game-panel {
+  @include common.flex-column;
   height: 100%;
   overflow: auto;
 }
 
-.panel-wrapper {
-  @include common.flex-row;
-  flex-grow: 1;
-  overflow: auto;
+.status-panel-wrapper {
+  @include common.flex-column;
+  flex-shrink: 0;
+  height: 100%;
+  justify-content: end;
+  padding: common.$spacing-large;
 }
 
-.panel {
+.status-panel {
   @include common.flex-column;
+  border: 2px solid var(--md-sys-color-outline);
+  border-radius: common.$spacing-medium;
   flex-grow: 1;
-  gap: common.$spacing-xl;
+  gap: 0;
   overflow: auto;
-  padding: common.$main-content-padding;
-
-  &.left {
-    flex-shrink: 0;
-    gap: 0;
-    padding: 0;
-    width: 65%;
-  }
 }
 
 .subpanel {
@@ -34,7 +55,6 @@
 }
 
 .log-panel {
-  border-left: 1px solid var(--md-sys-color-outline-variant);
   display: flex;
   flex-direction: column-reverse;
   flex-grow: 1;
@@ -48,7 +68,7 @@
 
 .log-scroll-inner-wrapper {
   @include common.flex-column;
-  gap: common.$spacing-xl;
+  gap: common.$spacing-medium;
   justify-content: flex-end;
   padding: common.$main-content-padding;
 }
@@ -61,13 +81,21 @@
 
 .log-entry {
   @include common.flex-column;
-  border-left: 2px solid var(--md-sys-color-secondary);
-  padding-left: common.$spacing-large;
+  background: var(--md-sys-color-surface-variant);
+  border-radius: common.$spacing-small;
+  padding: common.$spacing-medium;
+
+  &.plain {
+    background: none;
+    color: var(--md-sys-color-secondary);
+    font-style: italic;
+    padding: 0;
+  }
 }
 
 .subtitle {
   @include typescale.label-small;
-  color: var(--md-sys-color-secondary);
+  color: var(--md-sys-color-outline);
 }
 
 .buttons {
@@ -80,9 +108,8 @@
   @include common.flex-column;
   background-color: var(--md-sys-color-surface-variant);
   border-bottom: 1px solid var(--md-sys-color-outline-variant);
-  flex-shrink: 0;
+  flex-grow: 1;
   gap: common.$spacing-medium;
-  height: 240px;
   overflow: auto;
   padding: common.$main-content-padding;
 }
@@ -118,6 +145,7 @@ select {
 }
 
 .warning {
+  @include typescale.label-small;
   background: var(--md-sys-color-secondary-container);
   border-radius: common.$spacing-medium;
   padding: common.$spacing-small;
@@ -133,6 +161,7 @@ select {
 
 .highlight {
   background-color: var(--md-sys-color-tertiary-container);
+  border-radius: common.$spacing-small;
 }
 
 .number-input {
@@ -146,6 +175,64 @@ select {
 .positive {
   color: green;
 }
+
 .negative {
   color: red;
+}
+
+.input-wrapper {
+  @include common.flex-row-align-center;
+  padding: common.$spacing-medium;
+}
+
+.input {
+  @include common.flex-row-align-center;
+  border: 1px solid var(--md-sys-color-outline);
+  border-radius: common.$spacing-medium;
+  flex-grow: 1;
+  gap: common.$spacing-medium;
+  padding: common.$spacing-medium;
+
+  pr-textarea {
+    flex-grow: 1;
+  }
+}
+
+.chat-message-wrapper {
+  @include common.flex-column;
+  gap: common.$spacing-xs;
+}
+
+pre {
+  @include common.flex-column;
+  border: 1px solid var(--md-sys-color-tertiary);
+  padding: common.$spacing-medium;
+}
+
+code {
+  @include typescale.label-small;
+  color: var(--md-sys-color-tertiary);
+  text-wrap: wrap;
+  word-break: break-all;
+}
+
+.bottom-panel-wrapper {
+  align-items: end;
+  display: grid;
+  flex-grow: 1;
+  grid-template-columns: repeat(2, 1fr);
+  max-width: common.$info-content-max-width;
+  overflow: hidden;
+  width: 100%;
+}
+
+.debug-panel {
+  @include typescale.label-small;
+  @include common.flex-column;
+  gap: common.$spacing-medium;
+  padding: common.$spacing-medium;
+}
+
+.button-wrapper {
+  width: max-content;
 }

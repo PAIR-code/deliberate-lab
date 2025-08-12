@@ -10,7 +10,7 @@ import './participant_summary';
 
 import {MobxLitElement} from '@adobe/lit-mobx';
 import {CSSResultGroup, html, nothing, TemplateResult} from 'lit';
-import {customElement, property} from 'lit/decorators.js';
+import {customElement, property, state} from 'lit/decorators.js';
 import {classMap} from 'lit/directives/class-map.js';
 
 import {core} from '../../core/core';
@@ -21,7 +21,8 @@ import {Pages, RouterService} from '../../services/router.service';
 
 import {
   CohortConfig,
-  MediatorProfile,
+  MediatorProfileExtended,
+  MediatorStatus,
   ParticipantProfile,
   ParticipantProfileExtended,
   ParticipantStatus,
@@ -44,6 +45,8 @@ export class Component extends MobxLitElement {
   @property() cohort: CohortConfig | undefined = undefined;
   @property() showAgentParticipantDialog = false;
 
+  @state() isStatusLoading = false;
+
   override render() {
     return html`
       <div class="experiment-manager">
@@ -58,42 +61,92 @@ export class Component extends MobxLitElement {
       this.experimentManager.setCurrentCohortId(id);
     };
 
+    const numCohorts = this.experimentManager.cohortList.length;
+
+    const renderSelection = () => {
+      if (numCohorts === 0) return html`Cohort editor`;
+      const getNameDisplay = (cohort: CohortConfig) => {
+        if (cohort.metadata.name) {
+          return `${cohort.metadata.name} (${cohort.id.slice(0, 8)})`;
+        }
+        return `Cohort ${cohort.id.slice(0, 8)}`;
+      };
+      return html`
+        <div>Edit cohort:</div>
+        <select .value=${this.cohort?.id} @change=${updateCohort}>
+          ${Object.values(this.experimentManager.cohortMap).map(
+            (cohort) =>
+              html`<option
+                value=${cohort.id}
+                ?selected=${cohort.id ===
+                this.experimentManager.currentCohortId}
+              >
+                ${getNameDisplay(cohort)}
+              </option>`,
+          )}
+        </select>
+      `;
+    };
+
+    const renderAdd = () => {
+      if (numCohorts === 0) return nothing;
+      return html`
+        <pr-tooltip text="Add new cohort" position="LEFT">
+          <pr-icon-button
+            color="secondary"
+            variant="tonal"
+            icon="add"
+            @click=${this.addCohort}
+          >
+          </pr-icon-button>
+        </pr-tooltip>
+      `;
+    };
+
     return html`
-      <div class="header">
-        <div class="left">
-          <pr-tooltip text="Hide panel" position="RIGHT">
-            <pr-icon-button
-              icon="visibility_off"
-              size="small"
-              color="neutral"
-              variant="default"
-              @click=${() => {
-                this.experimentManager.setShowCohortEditor(false);
-              }}
-            >
-            </pr-icon-button>
-          </pr-tooltip>
-          <div>Edit cohort:</div>
-          <select .value=${this.cohort?.id} @change=${updateCohort}>
-            <option value=${undefined}></option>
-            ${Object.values(this.experimentManager.cohortMap).map(
-              (cohort) =>
-                html`<option value=${cohort.id}>
-                  ${cohort.metadata.name} (${cohort.id})
-                </option>`,
-            )}
-          </select>
+      <div class="content-banner">
+        <div
+          class="back-button"
+          @click=${() => {
+            this.experimentManager.setShowCohortList(true, true);
+          }}
+        >
+          <pr-icon
+            icon="chevron_backward"
+            size="small"
+            variant="default"
+            color="secondary"
+          >
+          </pr-icon>
+          <div>View all cohorts</div>
         </div>
-        <div class="right"></div>
+      </div>
+      <div class="header">
+        <div class="left">${renderSelection()}</div>
+        <div class="right">${renderAdd()}</div>
       </div>
     `;
   }
 
+  private async addCohort() {
+    const cohortName = this.experimentManager.getNextCohortName();
+    const response = await this.experimentManager.createCohort({}, cohortName);
+  }
+
   private renderContent() {
+    const numCohorts = this.experimentManager.cohortList.length;
+
     if (!this.cohort) {
       return html`
         <div class="empty-message">
-          <div>Use the dropdown above to select a cohort.</div>
+          ${numCohorts > 0
+            ? html`<div>Use the dropdown above to select a cohort.</div>`
+            : html`
+                <div>To begin running your experiment, create a cohort:</div>
+                <pr-button variant="tonal" @click=${this.addCohort}>
+                  Create new cohort
+                </pr-button>
+              `}
         </div>
       `;
     }
@@ -102,7 +155,11 @@ export class Component extends MobxLitElement {
       <div class="content">
         <div class="content-header">
           <div>
-            <div>${this.cohort?.metadata.name}</div>
+            <div>
+              ${this.cohort?.metadata.name.length === 0
+                ? 'Untitled cohort'
+                : this.cohort?.metadata.name}
+            </div>
             <div class="subtitle">${this.cohort?.id}</div>
           </div>
           <div class="toolbar">
@@ -128,7 +185,10 @@ export class Component extends MobxLitElement {
     `;
   }
 
-  private renderMediatorTable(title: string, mediators: MediatorProfile[]) {
+  private renderMediatorTable(
+    title: string,
+    mediators: MediatorProfileExtended[],
+  ) {
     const renderEmptyMessage = () => {
       if (mediators.length === 0) {
         return html`<div class="table-row">No mediators yet</div>`;
@@ -136,10 +196,48 @@ export class Component extends MobxLitElement {
       return nothing;
     };
 
-    const renderMediator = (mediator: MediatorProfile) => {
+    const renderMediator = (mediator: MediatorProfileExtended) => {
+      const renderStatus = () => {
+        if (!mediator.agentConfig) {
+          return nothing;
+        }
+        return html`
+          <div class="chip secondary">🤖 ${mediator.currentStatus}</div>
+        `;
+      };
+
+      const toggleStatus = async () => {
+        this.isStatusLoading = true;
+        await this.experimentManager.updateMediatorStatus(
+          mediator.privateId,
+          mediator.currentStatus === MediatorStatus.ACTIVE
+            ? MediatorStatus.PAUSED
+            : MediatorStatus.ACTIVE,
+        );
+        this.isStatusLoading = false;
+      };
+
+      const renderPause = () => {
+        if (!mediator.agentConfig) {
+          return nothing;
+        }
+        return html`
+          <pr-icon-button
+            ?loading=${this.isStatusLoading}
+            variant="default"
+            icon=${mediator.currentStatus === MediatorStatus.PAUSED
+              ? 'play_circle'
+              : 'pause'}
+            @click=${toggleStatus}
+          >
+          </pr-icon-button>
+        `;
+      };
+
       return html`
         <div class="table-row">
           <profile-display .profile=${mediator}></profile-display>
+          ${renderStatus()} ${renderPause()}
         </div>
       `;
     };

@@ -1,0 +1,176 @@
+@use '../../sass/common';
+@use '../../sass/typescale';
+
+:host {
+  @include common.flex-column;
+  gap: common.$spacing-xl;
+  height: 100%;
+  overflow: auto;
+}
+
+.stage-container {
+  @include common.flex-column;
+  gap: common.$spacing-large;
+  padding: common.$main-content-padding;
+}
+
+.cards-grid {
+  display: grid;
+  gap: common.$spacing-large;
+  grid-template-columns: repeat(4, 1fr);
+}
+
+.card-container {
+  height: 280px;
+  perspective: 1000px;
+  position: relative;
+
+  &.disabled {
+    opacity: 0.7;
+    pointer-events: none;
+  }
+}
+
+.card-inner {
+  height: 100%;
+  position: relative;
+  text-align: center;
+  transform-style: preserve-3d;
+  transition: transform 0.6s;
+  width: 100%;
+
+  .card-container.flipped & {
+    transform: rotateY(180deg);
+  }
+}
+
+.card-front,
+.card-back {
+  @include common.flex-column;
+  backface-visibility: hidden;
+  background: var(--md-sys-color-surface);
+  border: 2px solid var(--md-sys-color-outline);
+  border-radius: common.$spacing-medium;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  gap: common.$spacing-medium;
+  height: 100%;
+  padding: common.$spacing-medium;
+  position: absolute;
+  transition: all 0.3s ease;
+  width: 100%;
+}
+
+.card-front {
+  z-index: 2;
+}
+
+.card-back {
+  transform: rotateY(180deg);
+}
+
+.card-container.selected {
+  .card-front,
+  .card-back {
+    border-color: var(--md-sys-color-primary);
+    border-width: 4px;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+  }
+}
+
+.card-title {
+  @include typescale.label-large;
+  border-bottom: 1px solid var(--md-sys-color-outline-variant);
+  color: var(--md-sys-color-on-surface);
+  margin: 0 0 common.$spacing-medium 0;
+  padding-bottom: common.$spacing-medium;
+}
+
+.card-content {
+  color: var(--md-sys-color-on-surface-variant);
+  flex: 1;
+  line-height: 1.5;
+  overflow-y: auto;
+  text-align: left;
+}
+
+.card-front .card-content {
+  text-align: center;
+}
+
+.card-buttons {
+  @include common.flex-row-align-center;
+  flex-wrap: wrap;
+  gap: common.$spacing-small;
+  justify-content: space-between;
+}
+
+.actions {
+  @include common.flex-column-align-center;
+  border-top: 1px solid var(--md-sys-color-outline-variant);
+  gap: common.$spacing-medium;
+  padding: common.$spacing-large;
+}
+
+.selection-info {
+  @include typescale.body-large;
+  background: var(--md-sys-color-surface-variant);
+  border: 1px solid var(--md-sys-color-outline-variant);
+  border-radius: common.$spacing-small;
+  color: var(--md-sys-color-on-surface);
+  padding: common.$spacing-medium;
+}
+
+.action-buttons {
+  @include common.flex-row;
+  gap: common.$spacing-medium;
+}
+
+// Responsive design for smaller screens
+@include common.viewport-small {
+  .cards-grid {
+    gap: common.$spacing-medium;
+    grid-template-columns: 1fr;
+  }
+
+  .card-buttons {
+    flex-direction: column;
+    gap: common.$spacing-small;
+  }
+}
+
+// Hover effects for non-touch devices
+@media (hover: hover) {
+  .card-container:not(.disabled):not(.flipped) .card-inner:hover {
+    transform: translateY(-4px);
+  }
+
+  .card-container.selected:not(.disabled) .card-inner:hover {
+    transform: translateY(-4px);
+  }
+
+  .card-container.flipped:not(.disabled) .card-inner:hover {
+    transform: rotateY(180deg) translateY(-4px);
+  }
+}
+
+// Animation for selection state
+.card-container.selected {
+  animation: selectPulse 0.5s ease-in-out;
+}
+
+@keyframes selectPulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+// Remove focus outline from card container when buttons are clicked
+.card-container:focus-within {
+  outline: none;
+}

@@ -2,17 +2,21 @@ import '../popup/accept_transfer_popup';
 import '../popup/attention_check_popup';
 import '../popup/booted_popup';
 import '../progress/progress_stage_waiting';
-import '../stages/chat_interface';
-import '../stages/chat_panel';
+import '../stages/group_chat_participant_view';
+import '../stages/private_chat_participant_view';
 import '../stages/chip_participant_view';
 import '../stages/comprehension_participant_view';
+import '../stages/flipcard_participant_view';
 import '../stages/ranking_participant_view';
 import '../stages/info_view';
 import '../stages/payout_participant_view';
 import '../stages/profile_participant_editor';
 import '../stages/profile_participant_view';
 import '../stages/reveal_participant_view';
+import '../stages/role_participant_view';
 import '../stages/salesperson_participant_view';
+import '../stages/asset_allocation_participant_view';
+import '../stages/stockinfo_participant_view';
 import '../stages/survey_view';
 import '../stages/survey_per_participant_view';
 import '../stages/tos_view';
@@ -77,7 +81,9 @@ export class ParticipantView extends MobxLitElement {
     };
 
     return html`
-      <participant-nav></participant-nav>
+      ${this.participantService.showParticipantSidenav
+        ? html`<participant-nav></participant-nav>`
+        : nothing}
       <div
         class="participant-previewer ${!this.authService.isExperimenter
           ? 'full-view'
@@ -216,10 +222,13 @@ export class ParticipantView extends MobxLitElement {
         `;
       case StageKind.CHAT:
         return html`
-          <div class="content chat">
-            <chat-panel .stage=${stage}></chat-panel>
-            <chat-interface .stage=${stage}></chat-interface>
-          </div>
+          <group-chat-participant-view .stage=${stage}>
+          </group-chat-particpant-view>
+        `;
+      case StageKind.PRIVATE_CHAT:
+        return html`
+          <private-chat-participant-view .stage=${stage}>
+          </private-chat-participant-view>
         `;
       case StageKind.CHIP:
         return html`
@@ -231,6 +240,10 @@ export class ParticipantView extends MobxLitElement {
           <comprehension-participant-view .stage=${stage}>
           </comprehension-participant-view>
         `;
+      case StageKind.FLIPCARD:
+        return html`<flipcard-participant-view
+          .stage=${stage}
+        ></flipcard-participant-view>`;
       case StageKind.RANKING:
         return html`
           <ranking-participant-view .stage=${stage} .answer=${answer}>
@@ -245,11 +258,23 @@ export class ParticipantView extends MobxLitElement {
         return html`
           <reveal-participant-view .stage=${stage}></reveal-participant-view>
         `;
+      case StageKind.ROLE:
+        return html`
+          <role-participant-view .stage=${stage}></role-participant-view>
+        `;
       case StageKind.SALESPERSON:
         return html`
           <salesperson-participant-view .stage=${stage}>
           </salesperson-participant-view>
         `;
+      case StageKind.STOCKINFO:
+        return html`<stockinfo-participant-view
+          .stage=${stage}
+        ></stockinfo-participant-view>`;
+      case StageKind.ASSET_ALLOCATION:
+        return html`<asset-allocation-participant-view
+          .stage=${stage}
+        ></asset-allocation-participant-view>`;
       case StageKind.SURVEY:
         return html`<survey-view .stage=${stage}></survey-view>`;
       case StageKind.SURVEY_PER_PARTICIPANT:

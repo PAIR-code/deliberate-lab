@@ -9,9 +9,14 @@ import {
   DEFAULT_AGENT_PARTICIPANT_CHAT_PROMPT,
 } from './stages/chat_stage.prompts';
 import {
+  ChatMediatorStructuredOutputConfig,
   StructuredOutputConfig,
   createStructuredOutputConfig,
 } from './structured_output';
+import {
+  MediatorPromptConfig,
+  ParticipantPromptConfig,
+} from './structured_prompt';
 
 /** Agent types and functions. */
 
@@ -24,7 +29,6 @@ export interface CustomRequestBodyField {
 }
 
 /** Specifies which API to use for model calls. */
-// TODO: Rename enum (ApiType? LLMApiType?)
 export enum ApiKeyType {
   GEMINI_API_KEY = 'GEMINI',
   OPENAI_API_KEY = 'OPENAI',
@@ -32,6 +36,7 @@ export enum ApiKeyType {
 }
 
 /** Agent config applied to ParticipantProfile or MediatorProfile. */
+// promptContext and modelSettings are copied over from persona configs
 export interface ProfileAgentConfig {
   agentId: string; // ID of agent persona used
   promptContext: string; // Additional text to concatenate to agent prompts
@@ -39,6 +44,7 @@ export interface ProfileAgentConfig {
 }
 
 /** Generation config for a specific stage's model call. */
+// TODO: Move to structured_prompt.ts
 export interface ModelGenerationConfig {
   maxTokens: number; // Max tokens per model call response
   stopSequences: string[];
@@ -48,6 +54,13 @@ export interface ModelGenerationConfig {
   presencePenalty: number;
   // TODO(mkbehr): Add response MIME type and schema
   customRequestBodyFields: CustomRequestBodyField[];
+  // TODO(mkbehr): Ad-hoc reasoning params for the chip game. Gemini-only, not
+  // tested, no UI for setting them. Correspond to thinkingBudget and
+  // includeThinking in Gemini API. Set reasoningBudget to -1 or null for
+  // model-determined reasoning limit, 0 for no reasoning, positive for that
+  // many reasoning tokens in the budget.
+  reasoningBudget?: number;
+  includeReasoning?: boolean;
 }
 
 /** Model settings for a specific agent. */
@@ -56,6 +69,7 @@ export interface AgentModelSettings {
   modelName: string;
 }
 
+// TODO: Move to structured_prompt.ts
 export interface AgentPromptSettings {
   // Number of times to retry prompt call if it fails
   numRetries: number;
@@ -65,14 +79,13 @@ export interface AgentPromptSettings {
   // Whether or not to include information (stage description/info/help)
   // shown to users
   includeStageInfo: boolean;
-  // TODO(mkbehr): Add few-shot examples
-  // (that align with generation config's response schema)
 }
 
 /** Model settings for agent in a chat discussion. */
 export interface AgentChatSettings {
   // Agent's "typing speed" during the chat conversation
-  wordsPerMinute: number;
+  // or null to automatically send
+  wordsPerMinute: number | null;
   // Number of chat messages that must exist before the agent can respond
   minMessagesBeforeResponding: number;
   // Whether the agent can respond multiple times in a row
@@ -83,19 +96,6 @@ export interface AgentChatSettings {
   maxResponses: number | null;
 }
 
-/** DEPRECATED: Settings for formatting agent response
- *  (e.g., expect JSON, use specific JSON field for response, use end token)
- *  New config is StructuredOutputConfig.
- */
-export interface AgentResponseConfig {
-  isJSON: boolean;
-  // JSON field to extract chat message from
-  messageField: string;
-  // JSON field to extract explanation from
-  explanationField: string;
-  formattingInstructions: string;
-}
-
 /** Specifies how prompt should be sent to API. */
 export interface BaseAgentPromptConfig {
   id: string; // stage ID
@@ -103,7 +103,7 @@ export interface BaseAgentPromptConfig {
   promptContext: string; // custom prompt content
   generationConfig: ModelGenerationConfig;
   promptSettings: AgentPromptSettings;
-  structuredOutputConfig: StructuredOutputConfig;
+  structuredOutputConfig: ChatMediatorStructuredOutputConfig;
 }
 
 /** Prompt config for completing stage (e.g., survey questions). */
@@ -114,8 +114,6 @@ export type AgentParticipantPromptConfig = BaseAgentPromptConfig;
  */
 export interface AgentChatPromptConfig extends BaseAgentPromptConfig {
   chatSettings: AgentChatSettings;
-  // DEPRECATED: Use structuredOutputConfig, not responseConfig
-  responseConfig?: AgentResponseConfig;
 }
 
 export enum AgentPersonaType {
@@ -124,16 +122,30 @@ export enum AgentPersonaType {
 }
 
 /** Top-level agent persona config (basically, template for agents). */
-export interface AgentPersonaConfig {
+export type AgentPersonaConfig =
+  | AgentMediatorPersonaConfig
+  | AgentParticipantPersonaConfig;
+
+export interface BaseAgentPersonaConfig {
   id: string;
   // Viewable only to experimenters
   name: string;
+  // Viewable only to experimenters
+  description: string;
   // Agent persona type
   type: AgentPersonaType;
   // If true, add to cohort on cohort creation
   isDefaultAddToCohort: boolean;
   defaultProfile: ParticipantProfileBase;
   defaultModelSettings: AgentModelSettings;
+}
+
+export interface AgentParticipantPersonaConfig extends BaseAgentPersonaConfig {
+  type: AgentPersonaType.PARTICIPANT;
+}
+
+export interface AgentMediatorPersonaConfig extends BaseAgentPersonaConfig {
+  type: AgentPersonaType.MEDIATOR;
 }
 
 /** Format used to send agent data from frontend to backend. */
@@ -145,12 +157,25 @@ export interface AgentDataObject {
   chatPromptMap: Record<string, AgentChatPromptConfig>;
 }
 
+// TODO: Refactor to support new mediator and participant prompt configs
+export interface AgentMediatorTemplate {
+  persona: AgentMediatorPersonaConfig;
+  // Maps from stage ID to prompt
+  promptMap: Record<string, MediatorPromptConfig>;
+}
+
+export interface AgentParticipantTemplate {
+  persona: AgentParticipantPersonaConfig;
+  // Maps from stage ID to prompt
+  promptMap: Record<string, ParticipantPromptConfig>;
+}
+
 // ************************************************************************* //
 // CONSTANTS                                                                 //
 // ************************************************************************* //
 export const DEFAULT_AGENT_API_TYPE = ApiKeyType.GEMINI_API_KEY;
 
-export const DEFAULT_AGENT_API_MODEL = 'gemini-1.5-pro-latest';
+export const DEFAULT_AGENT_API_MODEL = 'gemini-2.5-pro';
 
 export const DEFAULT_AGENT_MODEL_SETTINGS: AgentModelSettings = {
   apiType: DEFAULT_AGENT_API_TYPE,
@@ -183,6 +208,8 @@ export function createModelGenerationConfig(
     frequencyPenalty: config.frequencyPenalty ?? 0.0,
     presencePenalty: config.presencePenalty ?? 0.0,
     customRequestBodyFields: config.customRequestBodyFields ?? [],
+    reasoningBudget: config.reasoningBudget,
+    includeReasoning: config.includeReasoning ?? true,
   };
 }
 
@@ -190,7 +217,7 @@ export function createAgentChatSettings(
   config: Partial<AgentChatSettings> = {},
 ): AgentChatSettings {
   return {
-    wordsPerMinute: config.wordsPerMinute ?? 100,
+    wordsPerMinute: config.wordsPerMinute ?? null,
     minMessagesBeforeResponding: config.minMessagesBeforeResponding ?? 0,
     canSelfTriggerCalls: config.canSelfTriggerCalls ?? false,
     maxResponses: config.maxResponses ?? 100,
@@ -229,20 +256,21 @@ export function createAgentChatPromptConfig(
   };
 }
 
-export function createAgentPersonaConfig(
+export function createAgentMediatorPersonaConfig(
   config: Partial<AgentPersonaConfig> = {},
-): AgentPersonaConfig {
-  const type = config.type ?? AgentPersonaType.MEDIATOR;
+): AgentMediatorPersonaConfig {
+  const type = AgentPersonaType.MEDIATOR;
   return {
     id: config.id ?? generateId(),
-    name: config.name ?? '',
-    type,
+    name: config.name ?? 'Agent Mediator',
+    description: config.description ?? '',
+    type: AgentPersonaType.MEDIATOR,
     isDefaultAddToCohort: config.isDefaultAddToCohort ?? true,
     defaultProfile:
       config.defaultProfile ??
       createParticipantProfileBase({
-        name: type === AgentPersonaType.MEDIATOR ? 'Mediator' : '',
-        avatar: '🙋',
+        name: 'Mediator',
+        avatar: '🤖',
       }),
     defaultModelSettings:
       config.defaultModelSettings ?? createAgentModelSettings(),
@@ -251,17 +279,18 @@ export function createAgentPersonaConfig(
 
 export function createAgentParticipantPersonaConfig(
   config: Partial<AgentPersonaConfig> = {},
-): AgentPersonaConfig {
+): AgentParticipantPersonaConfig {
   return {
     id: config.id ?? generateId(),
     name: config.name ?? 'Agent Participant',
+    description: config.description ?? '',
     type: AgentPersonaType.PARTICIPANT,
     isDefaultAddToCohort: config.isDefaultAddToCohort ?? false,
     defaultProfile:
       config.defaultProfile ??
       createParticipantProfileBase({
-        name: '',
-        avatar: '',
+        name: 'Participant',
+        avatar: '🙋',
       }),
     defaultModelSettings:
       config.defaultModelSettings ?? createAgentModelSettings(),

@@ -7,7 +7,6 @@ import {
   Unsubscribe,
 } from 'firebase/firestore';
 import {FirebaseService} from './firebase.service';
-import {AgentEditor} from './agent.editor';
 import {Pages, RouterService} from './router.service';
 import {Service} from './service';
 
@@ -16,7 +15,6 @@ import {getPublicExperimentName} from '../shared/experiment.utils';
 
 interface ServiceProvider {
   firebaseService: FirebaseService;
-  agentEditor: AgentEditor;
   routerService: RouterService;
 }
 
@@ -107,7 +105,6 @@ export class ExperimentService extends Service {
     // Reset stage configs
     this.stageConfigMap = {};
     this.experiment = undefined;
-    this.sp.agentEditor.resetAgents();
   }
 
   reset() {

@@ -55,6 +55,10 @@ export const updateSurveyStageParticipantAnswer = onCall(async (request) => {
     .collection('publicStageData')
     .doc(data.surveyStageParticipantAnswer.id);
 
+  const participantAnswerMap = {
+    [data.participantPublicId]: data.surveyStageParticipantAnswer.answerMap,
+  };
+
   // Run document write as transaction to ensure consistency
   await app.firestore().runTransaction(async (transaction) => {
     transaction.set(document, data.surveyStageParticipantAnswer);

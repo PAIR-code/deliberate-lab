@@ -1,19 +1,22 @@
 import {
-  GoogleGenerativeAI,
+  ApiError,
+  GoogleGenAI,
   GenerationConfig,
   HarmCategory,
   HarmBlockThreshold,
-} from '@google/generative-ai';
+} from '@google/genai';
 import {
   ModelGenerationConfig,
   StructuredOutputType,
   StructuredOutputDataType,
   StructuredOutputConfig,
   StructuredOutputSchema,
+  ModelResponseStatus,
+  ModelResponse,
+  addParsedModelResponse,
 } from '@deliberation-lab/utils';
-import {ModelResponseStatus, ModelResponse} from './model.response';
 
-const GEMINI_DEFAULT_MODEL = 'gemini-1.5-pro-latest';
+const GEMINI_DEFAULT_MODEL = 'gemini-2.5-pro';
 const DEFAULT_FETCH_TIMEOUT = 300 * 1000; // This is the Chrome default
 const MAX_TOKENS_FINISH_REASON = 'MAX_TOKENS';
 const AUTHENTICATION_FAILURE_ERROR_CODE = 403;
@@ -46,6 +49,7 @@ function makeStructuredOutputSchema(schema: StructuredOutputSchema): object {
     [StructuredOutputDataType.BOOLEAN]: 'BOOLEAN',
     [StructuredOutputDataType.ARRAY]: 'ARRAY',
     [StructuredOutputDataType.OBJECT]: 'OBJECT',
+    [StructuredOutputDataType.ENUM]: 'STRING',
   };
   const type = typeMap[schema.type];
   if (!type) {
@@ -77,6 +81,7 @@ function makeStructuredOutputSchema(schema: StructuredOutputSchema): object {
     properties: properties,
     propertyOrdering: orderedPropertyNames,
     required: orderedPropertyNames,
+    enum: schema.enumItems,
     items: itemsSchema,
   };
 }
@@ -111,20 +116,26 @@ export async function callGemini(
   prompt: string,
   generationConfig: GenerationConfig,
   modelName = GEMINI_DEFAULT_MODEL,
+  parseResponse = false, // parse if structured output
 ) {
-  const genAI = new GoogleGenerativeAI(apiKey);
-  const model = genAI.getGenerativeModel({
+  const genAI = new GoogleGenAI({apiKey});
+
+  const response = await genAI.models.generateContent({
     model: modelName,
-    generationConfig,
-    safetySettings: SAFETY_SETTINGS,
+    contents: [{role: 'user', parts: [{text: prompt}]}],
+    config: {
+      ...generationConfig,
+      safetySettings: SAFETY_SETTINGS,
+    },
   });
 
-  const result = await model.generateContent(prompt);
-  const response = await result.response;
+  console.log(`DEBUG: ${JSON.stringify(response)}`);
 
   if (response.promptFeedback) {
     return {
       status: ModelResponseStatus.REFUSAL_ERROR,
+      generationConfig,
+      rawResponse: JSON.stringify(response),
       errorMessage:
         response.promptFeedback.blockReasonMessage ??
         JSON.stringify(response.promptFeedback),
@@ -134,6 +145,8 @@ export async function callGemini(
   if (!response.candidates) {
     return {
       status: ModelResponseStatus.UNKNOWN_ERROR,
+      generationConfig,
+      rawResponse: JSON.stringify(response),
       errorMessage: `Model provider returned an unexpected response (no response candidates): ${response}`,
     };
   }
@@ -142,14 +155,37 @@ export async function callGemini(
   if (finishReason === MAX_TOKENS_FINISH_REASON) {
     return {
       status: ModelResponseStatus.LENGTH_ERROR,
+      generationConfig,
+      rawResponse: JSON.stringify(response),
       errorMessage: `Error: Token limit (${generationConfig.maxOutputTokens}) exceeded`,
     };
   }
 
-  return {
+  let text = null;
+  let reasoning = null;
+
+  for (const part of response.candidates[0].content.parts) {
+    if (!part.text) {
+      continue;
+    }
+    if (part.thought) {
+      reasoning = part.text;
+    } else {
+      text = part.text;
+    }
+  }
+
+  const modelResponse = {
     status: ModelResponseStatus.OK,
-    text: response.text(),
+    text: text,
+    rawResponse: JSON.stringify(response),
+    generationConfig,
+    reasoning: reasoning,
   };
+  if (parseResponse) {
+    return addParsedModelResponse(modelResponse);
+  }
+  return modelResponse;
 }
 
 /** Constructs Gemini API query and returns response. */
@@ -177,6 +213,10 @@ export async function getGeminiAPIResponse(
       errorMessage: error.message,
     };
   }
+  const thinkingConfig = {
+    thinkingBudget: generationConfig.reasoningBudget,
+    includeThoughts: generationConfig.includeReasoning,
+  };
   const geminiConfig: GenerationConfig = {
     stopSequences: generationConfig.stopSequences,
     maxOutputTokens: generationConfig.maxTokens,
@@ -185,31 +225,39 @@ export async function getGeminiAPIResponse(
     topK: 16,
     presencePenalty: generationConfig.presencePenalty,
     frequencyPenalty: generationConfig.frequencyPenalty,
+    thinkingConfig: thinkingConfig,
     ...structuredOutputGenerationConfig,
     ...customFields,
   };
 
   try {
-    return await callGemini(apiKey, promptText, geminiConfig, modelName);
+    return await callGemini(
+      apiKey,
+      promptText,
+      geminiConfig,
+      modelName,
+      structuredOutputConfig?.enabled,
+    );
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (error: any) {
-    // The GenerativeAI client doesn't return responses in a parseable format,
-    // so try to parse the output string looking for the HTTP status code.
+    if (!(error instanceof ApiError)) {
+      return {
+        status: ModelResponseStatus.UNKNOWN_ERROR,
+        generationConfig: geminiConfig,
+        errorMessage: JSON.stringify(error),
+      };
+    }
     let returnStatus = ModelResponseStatus.UNKNOWN_ERROR;
-    // Match a status code and message between brackets, e.g. "[403 Forbidden]".
-    const statusMatch = error.message.match(/\[(\d{3})[\s\w]*\]/);
-    if (statusMatch) {
-      const statusCode = parseInt(statusMatch[1]);
-      if (statusCode == AUTHENTICATION_FAILURE_ERROR_CODE) {
-        returnStatus = ModelResponseStatus.AUTHENTICATION_ERROR;
-      } else if (statusCode == QUOTA_ERROR_CODE) {
-        returnStatus = ModelResponseStatus.QUOTA_ERROR;
-      } else if (statusCode >= 500 && statusCode < 600) {
-        returnStatus = ModelResponseStatus.PROVIDER_UNAVAILABLE_ERROR;
-      }
+    if (error.status == AUTHENTICATION_FAILURE_ERROR_CODE) {
+      returnStatus = ModelResponseStatus.AUTHENTICATION_ERROR;
+    } else if (error.status == QUOTA_ERROR_CODE) {
+      returnStatus = ModelResponseStatus.QUOTA_ERROR;
+    } else if (error.status >= 500 && error.status < 600) {
+      returnStatus = ModelResponseStatus.PROVIDER_UNAVAILABLE_ERROR;
     }
     return {
       status: returnStatus,
+      generationConfig: geminiConfig,
       errorMessage: error.message,
     };
   }

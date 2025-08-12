@@ -12,20 +12,20 @@ const TEST_MESSAGE = 'Say hello!';
 describe('OllamaChat Client', () => {
   beforeEach(() => {
     nock(LLM_SERVER_HOST)
-      .post(LLM_SERVER_PATH, body => body.model == MODEL_NAME)
+      .post(LLM_SERVER_PATH, (body) => body.model == MODEL_NAME)
       .reply(200, (uri, requestBody) => {
         return {
-          'created_at': Date.now(),
-          'model': MODEL_NAME,
-          'message': {
-            'role': 'assistant',
-            'content': `Hello! request body: ${requestBody}`,
+          created_at: Date.now(),
+          model: MODEL_NAME,
+          message: {
+            role: 'assistant',
+            content: `Hello! request body: ${requestBody}`,
           },
           done: true,
         };
       });
   });
-  
+
   afterEach(() => {
     nock.cleanAll();
   });
@@ -38,18 +38,18 @@ describe('OllamaChat Client', () => {
       presencePenalty: 0,
       customRequestBodyFields: [],
     };
-    
+
     const response = await ollamaChat(
       [TEST_MESSAGE],
       MODEL_NAME,
       {url: LLM_SERVER_ENDPOINT},
-      generationConfig
+      generationConfig,
     );
     expect(response.text.toLowerCase()).toContain('hello');
     console.log(response);
   });
 
-  it("should pass through generation config", async () => {
+  it('should pass through generation config', async () => {
     const generationConfig: AgentGenerationConfig = {
       temperature: 0.4,
       topP: 0.9,
@@ -57,12 +57,12 @@ describe('OllamaChat Client', () => {
       presencePenalty: 0,
       customRequestBodyFields: [{name: 'foo', value: 'bar'}],
     };
-    
+
     const response = await ollamaChat(
       [TEST_MESSAGE],
       MODEL_NAME,
       {url: LLM_SERVER_ENDPOINT},
-      generationConfig
+      generationConfig,
     );
     expect(response.text.toLowerCase()).toContain('hello');
     expect(response.text.toLowerCase()).toContain('"temperature":0.4');

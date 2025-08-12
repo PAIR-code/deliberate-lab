@@ -1,7 +1,9 @@
 import {ProfileAgentConfig} from './agent';
+import {MediatorProfile} from './mediator';
 import {UnifiedTimestamp, generateId} from './shared';
 import {
-  ALTERNATE_PROFILE_SET_ID,
+  SECONDARY_PROFILE_SET_ID,
+  TERTIARY_PROFILE_SET_ID,
   PROFILE_SET_ANIMALS_1,
   PROFILE_SET_ANIMALS_1_ID,
   PROFILE_SET_ANIMALS_2,
@@ -20,14 +22,30 @@ import {
 // ************************************************************************* //
 
 /** Profile data that the participant can edit. */
+// TODO: Rename?
 export interface ParticipantProfileBase {
   pronouns: string | null;
   avatar: string | null; // emoji used as avatar
   name: string | null;
 }
 
+/** Profile. */
+export type UserProfile = ParticipantProfile | MediatorProfile;
+
+export interface UserProfileBase extends ParticipantProfileBase {
+  type: UserType;
+}
+
+export enum UserType {
+  PARTICIPANT = 'participant',
+  MEDIATOR = 'mediator',
+  EXPERIMENTER = 'experimenter', // if experimenter needs to intervene
+  UNKNOWN = 'unknown',
+}
+
 /** Participant profile available in publicParticipantData collection. */
-export interface ParticipantProfile extends ParticipantProfileBase {
+export interface ParticipantProfile extends UserProfileBase {
+  type: UserType.PARTICIPANT;
   publicId: string;
   prolificId: string | null;
   currentStageId: string;
@@ -140,6 +158,7 @@ export function createParticipantProfileExtended(
   config: Partial<ParticipantProfileExtended> = {},
 ): ParticipantProfileExtended {
   return {
+    type: UserType.PARTICIPANT,
     pronouns: config.pronouns ?? null,
     name: config.name ?? null,
     avatar: config.avatar ?? null,
@@ -221,17 +240,23 @@ export function setProfile(
  */
 export function sortParticipantsByRandomProfile(
   participants: ParticipantProfile[],
-  stageId: string,
+  stageId: string = '', // empty string will default to random 1 ID
 ) {
   participants.sort((p1: ParticipantProfile, p2: ParticipantProfile) => {
     let sortKey1 = '';
     let sortKey2 = '';
-    // If alternate profile, use random 2 ID
-    if (stageId.includes(ALTERNATE_PROFILE_SET_ID)) {
+    // If secondary profile, use random 2 ID
+    if (stageId.includes(SECONDARY_PROFILE_SET_ID)) {
       sortKey1 =
         p1.anonymousProfiles[PROFILE_SET_RANDOM_2_ID]?.name ?? p1.publicId;
       sortKey2 =
         p2.anonymousProfiles[PROFILE_SET_RANDOM_2_ID]?.name ?? p2.publicId;
+    } else if (stageId.includes(TERTIARY_PROFILE_SET_ID)) {
+      // If tertiary profile, use random 3 ID
+      sortKey1 =
+        p1.anonymousProfiles[PROFILE_SET_RANDOM_3_ID]?.name ?? p1.publicId;
+      sortKey2 =
+        p2.anonymousProfiles[PROFILE_SET_RANDOM_3_ID]?.name ?? p2.publicId;
     } else {
       // Else, use random 1 ID
       sortKey1 =
@@ -242,4 +267,31 @@ export function sortParticipantsByRandomProfile(
     return sortKey1.localeCompare(sortKey2);
   });
   return participants;
+}
+
+export function getNameFromPublicId(
+  participants: ParticipantProfile[],
+  publicId: string,
+  profileSetId: string, // leave empty to use default profile
+  includeAvatar = true,
+  includePronouns = false,
+) {
+  const profile = participants.find((p) => p.publicId === publicId);
+
+  // If profile set ID specified, use the corresponding anonymous profile
+  const profileName = profileSetId
+    ? profile?.anonymousProfiles[profileSetId]?.name
+    : profile?.name;
+  const profileAvatar = profileSetId
+    ? profile?.anonymousProfiles[profileSetId]?.avatar
+    : profile?.avatar;
+  const profilePronouns = profile?.pronouns;
+
+  if (profile && profileName) {
+    const avatar = includeAvatar && profileAvatar ? `${profileAvatar} ` : '';
+    const pronouns =
+      includePronouns && profilePronouns ? ` (${profilePronouns})` : '';
+    return `${avatar}${profileName}${pronouns}`;
+  }
+  return publicId;
 }

@@ -11,7 +11,7 @@
   @include common.flex-row;
   border-left: 1px solid var(--md-sys-color-outline-variant-high);
   flex-shrink: 0;
-  height: 100%;
+  height: calc(100vh - common.$header-height);
   width: 100%;
 }
 
@@ -45,6 +45,20 @@
 .main {
   @include common.flex-column;
   flex-grow: 1;
+  overflow: auto;
+}
+
+.cohort-panel {
+  @include common.flex-column;
+  border-bottom: 1px solid var(--md-sys-color-outline-variant);
+  flex-grow: 1;
+  flex-shrink: 0;
+  max-height: calc(100vh - 2 * common.$header-height);
+  overflow: auto;
+
+  .warning {
+    padding: common.$spacing-large;
+  }
 }
 
 .header {
@@ -70,10 +84,7 @@
 .bottom {
   @include common.flex-column;
   gap: common.$spacing-large;
-  margin-bottom: 0;
-  margin-top: auto;
   padding: common.$sidenav-padding;
-  padding-bottom: calc(common.$spacing-xxl * 2);
 }
 
 pr-button pr-icon {

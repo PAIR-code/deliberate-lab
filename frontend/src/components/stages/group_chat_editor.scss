@@ -1,0 +1,130 @@
+@use '../../sass/colors';
+@use '../../sass/common';
+@use '../../sass/typescale';
+
+:host {
+  @include common.flex-column;
+  gap: common.$spacing-large;
+}
+
+.question-label {
+  @include typescale.label-small;
+}
+
+.question-wrapper {
+  @include common.flex-column;
+  gap: common.$spacing-small;
+}
+
+.question {
+  @include common.flex-column;
+  background: var(--md-sys-color-surface);
+  border-radius: common.$spacing-medium;
+  gap: common.$spacing-medium;
+  padding: common.$spacing-xl;
+}
+
+.title {
+  @include typescale.title-medium;
+  color: var(--md-sys-color-secondary);
+}
+
+.description {
+  @include typescale.label-small;
+  color: var(--md-sys-color-outline);
+  font-style: italic;
+}
+
+.card-grid {
+  @include common.flex-row;
+  flex-wrap: wrap;
+  gap: common.$spacing-large;
+}
+
+.mediator-card {
+  @include common.flex-column;
+  border: 1px solid var(--md-sys-color-outline-variant);
+  border-radius: common.$spacing-small;
+  gap: common.$spacing-medium;
+  max-width: 300px;
+  padding: common.$spacing-large;
+  width: 100%;
+}
+
+.header {
+  @include common.flex-row;
+  gap: common.$spacing-medium;
+  justify-content: space-between;
+
+  .left {
+    @include common.flex-column;
+    flex-grow: 1;
+    gap: common.$spacing-xs;
+  }
+
+  .right {
+    @include common.flex-row-align-center;
+    gap: common.$spacing-small;
+  }
+}
+
+.radio-question {
+  @include common.flex-column;
+  gap: common.$spacing-medium;
+}
+
+.radio-button {
+  @include common.flex-row-align-center;
+  gap: common.$spacing-medium;
+  min-height: calc(var(--md-sys-typescale-body-small-line-height) * 1.5);
+}
+
+.radio-wrapper {
+  @include common.flex-row;
+  flex-wrap: wrap;
+  gap: common.$spacing-xl;
+  max-width: 500px;
+}
+
+.checkbox-wrapper {
+  @include common.flex-row-align-center;
+  gap: common.$spacing-small;
+  overflow-wrap: break-word;
+
+  md-checkbox {
+    flex-shrink: 0;
+  }
+}
+
+pr-textarea {
+  flex-grow: 1;
+  width: 100%;
+}
+
+.number-input {
+  @include common.number-input;
+  width: max-content;
+}
+
+.name-value-input {
+  @include common.flex-row;
+  background: var(--md-sys-color-surface-variant);
+  border-radius: common.$spacing-small;
+  gap: common.$spacing-medium;
+  padding: common.$spacing-medium;
+  width: max-content;
+}
+
+.divider {
+  border-bottom: 1px solid var(--md-sys-color-outline-variant);
+}
+
+.tab {
+  margin-top: 0px;
+  margin-left: calc(48px + common.$spacing-medium);
+}
+
+.error-message {
+  font-style: italic;
+  color: var(--md-sys-color-error);
+}

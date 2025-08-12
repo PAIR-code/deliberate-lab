@@ -3,13 +3,14 @@ import nock = require('nock');
 
 import {
   ModelGenerationConfig,
+  ModelResponse,
+  ModelResponseStatus,
   StructuredOutputType,
   StructuredOutputDataType,
 } from '@deliberation-lab/utils';
 import {getGeminiAPIResponse} from './gemini.api';
-import {ModelResponse} from './model.response';
 
-const MODEL_NAME = 'gemini-1.5-flash';
+const MODEL_NAME = 'gemini-2.5-flash';
 
 describe('Gemini API', () => {
   let scope: nock.Scope;
@@ -98,6 +99,14 @@ describe('Gemini API', () => {
               description: 'An integer-valued property',
             },
           },
+          {
+            name: 'enumProperty',
+            schema: {
+              type: StructuredOutputDataType.ENUM,
+              description: 'An enum-valued property',
+              enumItems: ['FOO', 'BAR', 'BAZ'],
+            },
+          },
         ],
       },
     };
@@ -126,14 +135,48 @@ describe('Gemini API', () => {
               type: 'INTEGER',
               description: 'An integer-valued property',
             },
+            enumProperty: {
+              type: 'STRING',
+              description: 'An enum-valued property',
+              enum: ['FOO', 'BAR', 'BAZ'],
+            },
           },
-          propertyOrdering: ['stringProperty', 'integerProperty'],
-          required: ['stringProperty', 'integerProperty'],
+          propertyOrdering: [
+            'stringProperty',
+            'integerProperty',
+            'enumProperty',
+          ],
+          required: ['stringProperty', 'integerProperty', 'enumProperty'],
         },
       },
     };
     expect(parsedResponse).toMatchObject(expectedResponse);
   });
 
-  // TODO(mkbehr): Add tests for error responses.
+  it('handles a 503 error from the server', async () => {
+    nock.cleanAll();
+    nock('https://generativelanguage.googleapis.com')
+      .post(`/v1beta/models/${MODEL_NAME}:generateContent`)
+      .reply(503, 'Service Unavailable');
+
+    const generationConfig: ModelGenerationConfig = {
+      maxTokens: 300,
+      stopSequences: [],
+      temperature: 0.4,
+      topP: 0.9,
+      frequencyPenalty: 0,
+      presencePenalty: 0,
+      customRequestBodyFields: [{ name: 'seed', value: 123 }],
+    };
+
+    const response: ModelResponse = await getGeminiAPIResponse(
+      'testapikey',
+      MODEL_NAME,
+      'This is a test prompt.',
+      generationConfig,
+    );
+
+    expect(response.status).toBe(ModelResponseStatus.PROVIDER_UNAVAILABLE_ERROR);
+    expect(response.errorMessage).toContain('Service Unavailable');
+  });
 });

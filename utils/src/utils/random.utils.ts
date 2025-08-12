@@ -1,5 +1,20 @@
 /** Random utilities that support seeding. */
 
+/** Enum for seed strategies */
+export enum SeedStrategy {
+  EXPERIMENT = 'experiment',
+  COHORT = 'cohort',
+  PARTICIPANT = 'participant',
+  CUSTOM = 'custom',
+}
+
+/** Configuration for shuffling items with different seed strategies */
+export interface ShuffleConfig {
+  shuffle: boolean;
+  seed: SeedStrategy;
+  customSeed: string; // Always set, but only used when seed is SeedStrategy.CUSTOM
+}
+
 // ********************************************************************************************* //
 //                                             SEED                                              //
 // ********************************************************************************************* //
@@ -40,7 +55,7 @@ export const choice = <T>(array: readonly T[]): T => {
 
 /** Chooses n random distinct values from an array. The array is not modified. */
 export const choices = <T>(array: readonly T[], n: number): T[] => {
-  if (array.length <= n) {
+  if (array.length < n) {
     throw new Error(
       `Cannot choose ${n} distinct values from an array of length ${array.length}`,
     );
@@ -55,6 +70,24 @@ export const choices = <T>(array: readonly T[], n: number): T[] => {
   }
 
   return result;
+};
+
+/** Shuffles an array using a string seed for consistent results. */
+export const shuffleWithSeed = <T>(
+  array: readonly T[],
+  seedString: string = '',
+): T[] => {
+  // Convert string to numeric seed
+  let seedValue = 0;
+  for (let i = 0; i < seedString.length; i++) {
+    seedValue += seedString.charCodeAt(i);
+  }
+
+  // Set the seed
+  seed(seedValue);
+
+  // Return all items in shuffled order
+  return choices(array, array.length);
 };
 
 /** Generates a random alphanumeric string of length n. */

@@ -1,0 +1,191 @@
+@use '../../sass/colors';
+@use '../../sass/common';
+@use '../../sass/typescale';
+
+:host {
+  @include common.flex-column;
+}
+
+.prompt-wrapper {
+  @include common.flex-column;
+  border: 2px solid var(--md-sys-color-outline);
+}
+
+.header {
+  @include common.flex-row-align-center;
+  background: var(--md-sys-color-secondary-container);
+  color: var(--md-sys-color-on-secondary-container);
+  gap: common.$spacing-medium;
+  padding: common.$spacing-small common.$spacing-large;
+  justify-content: space-between;
+}
+
+.title {
+  @include typescale.title-small;
+}
+
+.prompt {
+  @include common.flex-column;
+  background: var(--md-sys-color-surface-variant);
+  gap: common.$spacing-small;
+  flex-wrap: wrap;
+}
+
+.chip {
+  @include common.chip;
+  border-radius: common.$spacing-small;
+  font-family: monospace;
+  margin-top: common.$spacing-small;
+  width: max-content;
+}
+
+.chip-collapsible {
+  @include common.flex-column;
+  color: var(--md-sys-color-outline);
+  gap: common.$spacing-medium;
+  padding: common.$spacing-medium;
+
+  &.secondary {
+    color: var(--md-sys-color-secondary);
+  }
+
+  &.group-content {
+    background: var(--md-sys-color-surface-variant);
+    color: inherit;
+  }
+}
+
+.prompt-item-wrapper {
+  @include common.flex-row;
+  align-items: start;
+  border-top: 1px solid var(--md-sys-color-outline-variant);
+  gap: common.$spacing-small;
+  justify-content: space-between;
+  padding: common.$spacing-small common.$spacing-medium;
+}
+
+.prompt-item-editor {
+  flex-grow: 1;
+}
+
+.prompt-item-actions {
+  @include common.flex-row-align-center;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+  gap: common.$spacing-small;
+}
+
+pr-textarea {
+  padding: common.$spacing-small;
+}
+
+.checkbox-wrapper {
+  @include common.flex-row-align-center;
+  gap: common.$spacing-small;
+}
+
+.menu-wrapper {
+  @include common.flex-column;
+  gap: common.$spacing-small;
+  overflow: auto;
+}
+
+.menu-item {
+  @include common.nav-item;
+  border-radius: common.$spacing-small;
+}
+
+.stage-selector {
+  @include common.flex-row-align-center;
+  gap: common.$spacing-medium;
+  padding-bottom: common.$spacing-medium;
+
+  label {
+    @include typescale.body-medium;
+    color: var(--md-sys-color-on-surface);
+  }
+
+  select {
+    flex: 1;
+    max-width: 400px;
+    padding: common.$spacing-small;
+    border: 1px solid var(--md-sys-color-outline);
+    border-radius: common.$spacing-xs;
+    background-color: var(--md-sys-color-surface);
+    color: var(--md-sys-color-on-surface);
+    font-family: inherit;
+    font-size: inherit;
+  }
+}
+
+.group-title-input {
+  background: transparent;
+  border: none;
+  color: inherit;
+  font: inherit;
+  outline: none;
+  padding: 0;
+  width: 200px;
+
+  &:focus {
+    text-decoration: underline;
+  }
+}
+
+.group-content {
+  @include common.flex-column;
+  gap: common.$spacing-medium;
+}
+
+.group-header {
+  @include common.flex-row-align-center;
+  justify-content: flex-end;
+  padding-bottom: common.$spacing-small;
+}
+
+.group-items {
+  @include common.flex-column;
+  gap: common.$spacing-small;
+  padding-left: common.$spacing-large;
+}
+
+.prompt-item-wrapper.nested {
+  margin-left: common.$spacing-large;
+}
+
+.empty-group {
+  @include typescale.body-small;
+  color: var(--md-sys-color-outline);
+  font-style: italic;
+  padding: common.$spacing-medium;
+  text-align: center;
+}
+
+.shuffle-config {
+  @include common.flex-row-align-center;
+  gap: common.$spacing-medium;
+  padding: common.$spacing-medium;
+  background: var(--md-sys-color-surface);
+  border-radius: common.$spacing-small;
+  margin-bottom: common.$spacing-medium;
+  flex-wrap: wrap;
+
+  select,
+  input[type='text'] {
+    padding: common.$spacing-small;
+    border: 1px solid var(--md-sys-color-outline);
+    border-radius: common.$spacing-xs;
+    background-color: var(--md-sys-color-surface);
+    color: var(--md-sys-color-on-surface);
+    font-family: inherit;
+    font-size: inherit;
+  }
+
+  select {
+    width: fit-content;
+  }
+
+  input[type='text'] {
+    flex: 1;
+  }
+}

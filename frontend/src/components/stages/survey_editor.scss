@@ -1,6 +1,6 @@
-@use "../../sass/colors";
-@use "../../sass/common";
-@use "../../sass/typescale";
+@use '../../sass/colors';
+@use '../../sass/common';
+@use '../../sass/typescale';
 
 :host {
   @include common.flex-column;
@@ -81,4 +81,18 @@ pr-textarea {
 
 .required {
   color: var(--md-sys-color-error);
+}
+
+.scale-value-editors,
+.scale-text-editors {
+  @include common.flex-row;
+  gap: common.$spacing-medium;
+}
+
+.scale-value-editor,
+.scale-text-editor {
+  @include common.flex-column;
+  @include common.number-input;
+  flex: 1;
+  gap: common.$spacing-small;
 }

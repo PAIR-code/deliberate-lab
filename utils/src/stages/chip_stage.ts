@@ -4,7 +4,6 @@ import {
   BaseStageConfig,
   BaseStageParticipantAnswer,
   BaseStagePublicData,
-  StageGame,
   StageKind,
   createStageTextConfig,
   createStageProgressConfig,
@@ -29,6 +28,8 @@ export interface ChipStageConfig extends BaseStageConfig {
   // has the opportunity to submit an offer that others accept/reject)
   numRounds: number;
   chips: ChipItem[];
+  // If set, use chip assistance workflow to send/respond to offers
+  assistanceConfig: ChipAssistanceConfig | null;
 }
 
 /** Chip item config. */
@@ -53,6 +54,10 @@ export interface ChipStageParticipantAnswer extends BaseStageParticipantAnswer {
   kind: StageKind.CHIP;
   chipMap: Record<string, number>; // chip ID to quantity left
   chipValueMap: Record<string, number>; // chip ID to value per chip
+  // Current assistance shown to user (or null if none)
+  currentAssistance: ChipAssistanceMove | null;
+  // Current assistance is moved to assistance history when complete
+  assistanceHistory: ChipAssistanceMove[];
 }
 
 /** Chip offer. */
@@ -95,6 +100,7 @@ export enum ChipTransactionStatus {
  * This is saved as a stage doc (with stage ID as doc ID) under
  * experiments/{experimentId}/cohorts/{cohortId}/publicStageData
  */
+// TODO: Record timestamps for when each turn begins/ends
 export interface ChipStagePublicData extends BaseStagePublicData {
   kind: StageKind.CHIP;
   // initialized false, set to true once completes number of rounds
@@ -111,6 +117,70 @@ export interface ChipStagePublicData extends BaseStagePublicData {
   // map of participant to current chip value map
   participantChipValueMap: Record<string, Record<string, number>>;
 }
+
+/** Simplified chip log. */
+export interface SimpleChipLog {
+  message: string;
+  timestamp: Timestamp | null;
+}
+
+/** Chip assistance workflow config. */
+export interface ChipAssistanceConfig {
+  // List of chip assistance modes to include in offer
+  offerModes: ChipAssistanceMode[];
+  // List of chip assistance modes to include in response
+  responseModes: ChipAssistanceMode[];
+}
+
+/** Chip assistance modes. */
+export enum ChipAssistanceMode {
+  NONE = 'none', // manually submit without assistance
+  ADVISOR = 'advisor',
+  COACH = 'coach',
+  DELEGATE = 'delegate',
+  ERROR = 'error',
+}
+
+/** Chip assistance move. */
+export type ChipAssistanceMove =
+  | ChipOfferAssistanceMove
+  | ChipResponseAssistanceMove;
+
+export interface BaseChipAssistanceMove {
+  round: number;
+  turn: string; // public ID of participant whose turn it is
+  type: ChipAssistanceType;
+  selectedMode: ChipAssistanceMode;
+  // timestamp of when mode was selected
+  selectedTime: UnifiedTimestamp;
+  // timestamp of when model call finished
+  proposedTime: UnifiedTimestamp | null;
+  // timestamp of when assistance move was completed
+  endTime: UnifiedTimestamp | null;
+  message: string | null; // explanation from model call to show to user
+  reasoning: string | null; // reasoning from model call
+  modelResponse: object; // parsed model response from call
+}
+
+export interface ChipOfferAssistanceMove extends BaseChipAssistanceMove {
+  type: ChipAssistanceType.OFFER;
+  proposedOffer: ChipOffer | null;
+  finalOffer: ChipOffer;
+}
+
+export interface ChipResponseAssistanceMove extends BaseChipAssistanceMove {
+  type: ChipAssistanceType.RESPONSE;
+  proposedResponse: boolean | null; // null if N/A (e.g., delegate/advisor mode)
+  finalResponse: boolean | null;
+}
+
+export enum ChipAssistanceType {
+  OFFER = 'offer',
+  RESPONSE = 'response',
+}
+
+// TODO: Consider removing subcollections for chip logs and transactions,
+// as they are no longer used.
 
 /** Chip log entry. */
 export type ChipLogEntry =
@@ -174,9 +244,10 @@ export interface ChipTransactionLogEntry extends BaseChipLogEntry {
   transaction: ChipTransaction;
 }
 
-// ************************************************************************* //
-// FUNCTIONS                                                                 //
-// ************************************************************************* //
+// ****************************************************************************
+// Helper functions for creating chip types.
+// For other utility functions, see chip_stage.utils.ts
+// ****************************************************************************
 
 /** Create chip stage. */
 export function createChipStage(
@@ -185,7 +256,6 @@ export function createChipStage(
   return {
     id: config.id ?? generateId(),
     kind: StageKind.CHIP,
-    game: config.game ?? StageGame.NONE,
     name: config.name ?? 'Chip negotiation',
     descriptions: config.descriptions ?? createStageTextConfig(),
     progress:
@@ -194,6 +264,7 @@ export function createChipStage(
     enableChat: config.enableChat ?? false,
     numRounds: config.numRounds ?? 3,
     chips: config.chips ?? [],
+    assistanceConfig: config.assistanceConfig ?? null,
   };
 }
 
@@ -220,6 +291,8 @@ export function createChipStageParticipantAnswer(
     kind: StageKind.CHIP,
     chipMap,
     chipValueMap,
+    currentAssistance: null,
+    assistanceHistory: [],
   };
 }
 
@@ -236,6 +309,17 @@ export function createChipStagePublicData(
     participantOfferMap: {},
     participantChipMap: {},
     participantChipValueMap: {},
+  };
+}
+
+/** Create simple chip log. */
+export function createSimpleChipLog(
+  message: string,
+  timestamp: Timestamp | null = null,
+): SimpleChipLog {
+  return {
+    message,
+    timestamp,
   };
 }
 
@@ -333,27 +417,4 @@ export function createChipTransactionLogEntry(
     transaction,
     timestamp,
   };
-}
-
-export function displayChipOfferText(
-  offerChipMap: Record<string, number>,
-  chipItems: ChipItem[],
-): string {
-  const chipDescriptions: string[] = [];
-
-  chipItems.forEach((chip) => {
-    const quantity = offerChipMap[chip.id];
-    if (quantity) {
-      chipDescriptions.push(
-        `${chip.avatar} ${quantity} ${chip.name} chip${quantity !== 1 ? 's' : ''}`,
-      );
-    }
-  });
-
-  if (chipDescriptions.length > 2) {
-    const lastDescription = chipDescriptions.pop();
-    return `${chipDescriptions.join(', ')}, and ${lastDescription}`;
-  }
-
-  return chipDescriptions.join(' and ');
 }

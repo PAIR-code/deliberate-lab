@@ -4,13 +4,12 @@ import {
   doc,
   getDocs,
   onSnapshot,
+  orderBy,
   query,
   Timestamp,
   Unsubscribe,
   where,
 } from 'firebase/firestore';
-import {AgentEditor} from './agent.editor';
-import {AgentManager} from './agent.manager';
 import {AuthService} from './auth.service';
 import {CohortService} from './cohort.service';
 import {ExperimentEditor} from './experiment.editor';
@@ -34,12 +33,15 @@ import {
   CreateChatMessageData,
   Experiment,
   ExperimentDownload,
-  MediatorProfile,
+  LogEntry,
+  MediatorProfileExtended,
+  MediatorStatus,
   MetadataConfig,
   ParticipantProfileExtended,
   ParticipantStatus,
   ProfileAgentConfig,
   StageConfig,
+  StageKind,
   createCohortConfig,
   createExperimenterChatMessage,
   generateId,
@@ -52,12 +54,13 @@ import {
   createParticipantCallable,
   deleteCohortCallable,
   deleteExperimentCallable,
+  getExperimentTemplateCallable,
   initiateParticipantTransferCallable,
   sendParticipantCheckCallable,
   setExperimentCohortLockCallable,
   testAgentConfigCallable,
-  testAgentParticipantPromptCallable,
   updateCohortMetadataCallable,
+  updateMediatorStatusCallable,
   writeExperimentCallable,
 } from '../shared/callables';
 import {
@@ -80,11 +83,10 @@ import {
 } from '../shared/participant.utils';
 
 interface ServiceProvider {
-  agentEditor: AgentEditor;
-  agentManager: AgentManager;
   authService: AuthService;
   cohortService: CohortService;
   experimentEditor: ExperimentEditor;
+  experimentManager: ExperimentManager;
   experimentService: ExperimentService;
   firebaseService: FirebaseService;
   participantService: ParticipantService;
@@ -107,8 +109,9 @@ export class ExperimentManager extends Service {
   @observable cohortMap: Record<string, CohortConfig> = {};
   @observable agentPersonaMap: Record<string, AgentPersonaConfig> = {};
   @observable participantMap: Record<string, ParticipantProfileExtended> = {};
-  @observable mediatorMap: Record<string, MediatorProfile> = {};
+  @observable mediatorMap: Record<string, MediatorProfileExtended> = {};
   @observable alertMap: Record<string, AlertMessage> = {};
+  @observable logs: LogEntry[] = [];
 
   // Loading
   @observable unsubscribe: Unsubscribe[] = [];
@@ -116,6 +119,7 @@ export class ExperimentManager extends Service {
   @observable isParticipantsLoading = false;
   @observable isMediatorsLoading = false;
   @observable isAgentsLoading = false;
+  @observable isLogsLoading = false;
 
   // Firestore loading (not included in general isLoading)
   @observable isWritingCohort = false;
@@ -129,9 +133,10 @@ export class ExperimentManager extends Service {
   @observable currentParticipantId: string | undefined = undefined;
   @observable currentCohortId: string | undefined = undefined;
   @observable showCohortEditor = true;
-  @observable showCohortList = true;
-  @observable showParticipantStats = true;
+  @observable showCohortList = false;
+  @observable showParticipantStats = false;
   @observable showParticipantPreview = true;
+  @observable showLogs = false;
   @observable hideLockedCohorts = false;
   @observable expandAllCohorts = true;
 
@@ -152,25 +157,17 @@ export class ExperimentManager extends Service {
         this.sp.experimentService.loadExperiment(this.experimentId);
       }
     } else {
-      // Load current experiment into editor
-      const experiment = this.sp.experimentService.experiment;
-      if (!experiment) return;
-
-      const stages: StageConfig[] = [];
-      experiment.stageIds.forEach((id) => {
-        const stage = this.sp.experimentService.stageConfigMap[id];
-        if (stage) stages.push(stage);
-      });
-
-      // Load agent configs from snapshot listener in agent service
       if (this.experimentId) {
-        this.sp.agentEditor.setAgentData(
-          await this.sp.agentManager.getAgentDataObjects(this.experimentId),
+        const template = await getExperimentTemplateCallable(
+          this.sp.firebaseService.functions,
+          {
+            collectionName: 'experiments',
+            experimentId: this.experimentId,
+          },
         );
+        this.sp.experimentEditor.loadTemplate(template, true);
+        this.isEditing = true;
       }
-
-      this.sp.experimentEditor.loadExperiment(experiment, stages);
-      this.isEditing = true;
     }
   }
 
@@ -227,20 +224,36 @@ export class ExperimentManager extends Service {
     this.cohortEditing = cohort;
   }
 
-  setShowCohortEditor(showCohortEditor: boolean) {
+  setShowCohortEditor(showCohortEditor: boolean, toggle: boolean) {
     this.showCohortEditor = showCohortEditor;
+    if (toggle) {
+      this.showCohortList = !showCohortEditor;
+    }
   }
 
-  setShowCohortList(showCohortList: boolean) {
+  setShowCohortList(showCohortList: boolean, toggle: boolean) {
     this.showCohortList = showCohortList;
+    if (toggle) {
+      this.showCohortEditor = !showCohortList;
+    }
   }
 
-  setShowParticipantPreview(showParticipantPreview: boolean) {
+  setShowParticipantPreview(showParticipantPreview: boolean, toggle: boolean) {
     this.showParticipantPreview = showParticipantPreview;
+    if (toggle) {
+      this.showParticipantStats = !showParticipantPreview;
+    }
   }
 
-  setShowParticipantStats(showParticipantStats: boolean) {
+  setShowParticipantStats(showParticipantStats: boolean, toggle: boolean) {
     this.showParticipantStats = showParticipantStats;
+    if (toggle) {
+      this.showParticipantPreview = !showParticipantStats;
+    }
+  }
+
+  setShowLogs(showLogs: boolean) {
+    this.showLogs = showLogs;
   }
 
   setHideLockedCohorts(hideLockedCohorts: boolean) {
@@ -333,6 +346,17 @@ export class ExperimentManager extends Service {
     return this.cohortMap[id];
   }
 
+  // Return name for next cohort based on number of cohorts
+  getNextCohortName(numCohorts = this.cohortList.length) {
+    const hasTransfer = this.sp.experimentService.stages.find(
+      (stage) => stage.kind === StageKind.TRANSFER,
+    );
+    if (numCohorts > 0 || !hasTransfer) {
+      return `Cohort ${String(numCohorts).padStart(2, '0')}`;
+    }
+    return 'Lobby';
+  }
+
   isFullCohort(cohort: CohortConfig) {
     return hasMaxParticipantsInCohort(
       cohort,
@@ -390,6 +414,7 @@ export class ExperimentManager extends Service {
     this.isParticipantsLoading = value;
     this.isMediatorsLoading = value;
     this.isAgentsLoading = value;
+    this.isLogsLoading = value;
   }
 
   updateForRoute(experimentId: string) {
@@ -448,7 +473,15 @@ export class ExperimentManager extends Service {
           changedDocs.forEach((doc) => {
             const data = doc.data() as CohortConfig;
             this.cohortMap[doc.id] = data;
+            this.currentCohortId = doc.id;
           });
+
+          // If multiple cohorts, show cohort list
+          if (changedDocs.length > 1) {
+            this.setShowCohortList(true, true);
+          } else if (changedDocs.length === 0) {
+            this.setShowCohortEditor(true, true);
+          }
 
           this.isCohortsLoading = false;
         },
@@ -508,7 +541,7 @@ export class ExperimentManager extends Service {
             const data = {
               agentConfig: null,
               ...doc.data(),
-            } as MediatorProfile;
+            } as MediatorProfileExtended;
             this.mediatorMap[doc.id] = data;
           });
 
@@ -543,6 +576,32 @@ export class ExperimentManager extends Service {
         },
       ),
     );
+
+    // Subscribe to logs
+    this.unsubscribe.push(
+      onSnapshot(
+        query(
+          collection(
+            this.sp.firebaseService.firestore,
+            'experiments',
+            id,
+            'logs',
+          ),
+          orderBy('createdTimestamp', 'desc'),
+        ),
+        (snapshot) => {
+          let changedDocs = snapshot.docChanges().map((change) => change.doc);
+          if (changedDocs.length === 0) {
+            changedDocs = snapshot.docs;
+          }
+
+          changedDocs.forEach((doc) => {
+            this.logs.push(doc.data() as LogEntry);
+          });
+          this.isLogsLoading = false;
+        },
+      ),
+    );
   }
 
   unsubscribeAll() {
@@ -555,6 +614,7 @@ export class ExperimentManager extends Service {
     this.mediatorMap = {};
     this.agentPersonaMap = {};
     this.alertMap = {};
+    this.logs = [];
   }
 
   reset() {
@@ -578,37 +638,34 @@ export class ExperimentManager extends Service {
   }
 
   /** Fork the current experiment. */
-  // TODO: Add forkExperiment cloud function on backend
-  // that takes in ID of experiment to fork (instead of experiment copy)
   async forkExperiment() {
     const experiment = this.sp.experimentService.experiment;
-    if (!experiment) return;
+    if (!experiment || !this.experimentId) return;
+
+    const experimentTemplate = await getExperimentTemplateCallable(
+      this.sp.firebaseService.functions,
+      {
+        collectionName: 'experiments',
+        experimentId: this.experimentId,
+      },
+    );
 
     // Change ID (creator will be changed by cloud functions)
-    experiment.id = generateId();
-    experiment.metadata.name = `Copy of ${experiment.metadata.name}`;
-
-    // Get ordered list of stages
-    const stages: StageConfig[] = [];
-    experiment.stageIds.forEach((id) => {
-      const stage = this.sp.experimentService.stageConfigMap[id];
-      if (stage) stages.push(stage);
-    });
+    experimentTemplate.experiment.id = generateId();
+    experimentTemplate.experiment.metadata.name = `Copy of ${experiment.metadata.name}`;
 
     let response = {};
     response = await writeExperimentCallable(
       this.sp.firebaseService.functions,
       {
         collectionName: 'experiments',
-        experimentConfig: experiment,
-        stageConfigs: stages,
-        agentConfigs: this.sp.agentEditor.getAgentData(),
+        experimentTemplate,
       },
     );
 
     // Route to new experiment and reload to update changes
     this.sp.routerService.navigate(Pages.EXPERIMENT, {
-      experiment: experiment.id,
+      experiment: experimentTemplate.experiment.id,
     });
 
     return response;
@@ -669,6 +726,8 @@ export class ExperimentManager extends Service {
         experimentId: this.experimentId,
         cohortConfig,
       });
+      // Set to current cohort
+      this.setCurrentCohortId(cohortConfig.id);
     }
     this.isWritingCohort = false;
     return response;
@@ -810,6 +869,23 @@ export class ExperimentManager extends Service {
         // Add experiment JSON to zip
         zip.file(`${experimentName}.json`, JSON.stringify(result, null, 2));
 
+        // TODO: Refactor
+        // Add logs to zip
+        const logs = (
+          await getDocs(
+            query(
+              collection(
+                this.sp.firebaseService.firestore,
+                'experiments',
+                experimentId,
+                'logs',
+              ),
+              orderBy('createdTimestamp', 'asc'),
+            ),
+          )
+        ).docs.map((doc) => doc.data() as LogEntry);
+        zip.file(`${experimentName}_Logs.json`, JSON.stringify(logs, null, 2));
+
         // Add chip negotiation data
         const chipData = getChipNegotiationData(result);
         if (chipData.length > 0) {
@@ -882,20 +958,6 @@ export class ExperimentManager extends Service {
     return data;
   }
 
-  /** TEMPORARY: Test agent participant prompt for given participant/stage. */
-  async testAgentParticipantPrompt(participantId: string, stageId: string) {
-    if (this.experimentId) {
-      await testAgentParticipantPromptCallable(
-        this.sp.firebaseService.functions,
-        {
-          experimentId: this.experimentId,
-          participantId,
-          stageId,
-        },
-      );
-    }
-  }
-
   /** Test given agent config. */
   async testAgentConfig(
     agentConfig: AgentPersonaConfig,
@@ -951,6 +1013,7 @@ export class ExperimentManager extends Service {
         experimentId,
         cohortId,
         stageId,
+        participantId: '',
         chatMessage,
       };
 
@@ -960,6 +1023,23 @@ export class ExperimentManager extends Service {
       );
     }
 
+    return response;
+  }
+
+  /** Change mediator status. */
+  async updateMediatorStatus(mediatorId: string, status: MediatorStatus) {
+    let response = {};
+    const experimentId = this.sp.experimentManager.experimentId;
+    if (experimentId) {
+      response = await updateMediatorStatusCallable(
+        this.sp.firebaseService.functions,
+        {
+          experimentId,
+          mediatorId,
+          status,
+        },
+      );
+    }
     return response;
   }
 }

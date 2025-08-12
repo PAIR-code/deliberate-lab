@@ -4,7 +4,6 @@ import {
   BaseStageConfig,
   BaseStageParticipantAnswer,
   StageConfig,
-  StageGame,
   StageKind,
   StagePublicData,
   createStageTextConfig,
@@ -27,6 +26,7 @@ export interface PayoutStageConfig extends BaseStageConfig {
   kind: StageKind.PAYOUT;
   currency: PayoutCurrency;
   payoutItems: PayoutItem[];
+  averageAllPayoutItems: boolean;
 }
 
 export enum PayoutCurrency {
@@ -94,6 +94,7 @@ export interface PayoutResultConfig {
   id: string; // stage ID of the original payout config
   currency: PayoutCurrency;
   results: PayoutItemResult[];
+  averageAllPayoutItems: boolean;
 }
 
 export type PayoutItemResult =
@@ -153,12 +154,12 @@ export function createPayoutStage(
   return {
     id: config.id ?? generateId(),
     kind: StageKind.PAYOUT,
-    game: config.game ?? StageGame.NONE,
     name: config.name ?? 'Payout',
     descriptions: config.descriptions ?? createStageTextConfig(),
     progress: config.progress ?? createStageProgressConfig(),
     currency: config.currency ?? PayoutCurrency.USD,
     payoutItems: config.payoutItems ?? [],
+    averageAllPayoutItems: config.averageAllPayoutItems ?? false,
   };
 }
 
@@ -294,6 +295,7 @@ export function calculatePayoutResult(
     id: payoutConfig.id,
     currency: payoutConfig.currency,
     results,
+    averageAllPayoutItems: payoutConfig.averageAllPayoutItems,
   };
   return resultConfig;
 }
@@ -318,6 +320,12 @@ export function calculatePayoutTotal(resultConfig: PayoutResultConfig) {
       total += Math.max(0, chipTotal - initialChipTotal);
     }
   });
+
+  // If average all items, divide total by number of results
+  if (resultConfig.averageAllPayoutItems) {
+    return Math.ceil((total / resultConfig.results.length) * 100) / 100;
+  }
+
   return Math.ceil(total * 100) / 100;
 }
 
@@ -407,10 +415,19 @@ export function calculateChipPayoutItemResult(
   if (publicChipData?.kind !== StageKind.CHIP) return null;
 
   const chipResults: ChipPayoutValueItem[] = stage.chips.map((chip) => {
-    const quantity =
-      publicChipData.participantChipMap[profile.publicId][chip.id] ?? 0;
-    const value =
-      publicChipData.participantChipValueMap[profile.publicId][chip.id] ?? 0;
+    if (!publicChipData.participantChipMap[profile.publicId]) {
+      return {
+        chip,
+        quantity: 0,
+        value: 0,
+      };
+    }
+    const quantity = Number(
+      publicChipData.participantChipMap[profile.publicId][chip.id] ?? 0,
+    );
+    const value = Number(
+      publicChipData.participantChipValueMap[profile.publicId][chip.id] ?? 0,
+    );
     return {
       chip,
       quantity,

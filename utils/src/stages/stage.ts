@@ -15,6 +15,12 @@ import {
   ComprehensionStageParticipantAnswer,
 } from './comprehension_stage';
 import {
+  FlipCardStageConfig,
+  FlipCardStageParticipantAnswer,
+  FlipCardStagePublicData,
+  createFlipCardStagePublicData,
+} from './flipcard_stage';
+import {
   RankingStageConfig,
   RankingStageParticipantAnswer,
   RankingStagePublicData,
@@ -22,13 +28,29 @@ import {
 } from './ranking_stage';
 import {InfoStageConfig} from './info_stage';
 import {PayoutStageConfig, PayoutStageParticipantAnswer} from './payout_stage';
+import {PrivateChatStageConfig} from './private_chat_stage';
 import {ProfileStageConfig} from './profile_stage';
 import {RevealStageConfig} from './reveal_stage';
+import {
+  RoleStageConfig,
+  RoleStagePublicData,
+  createRoleStagePublicData,
+} from './role_stage';
 import {
   SalespersonStageConfig,
   SalespersonStagePublicData,
   createSalespersonStagePublicData,
 } from './salesperson_stage';
+import {
+  StockInfoStageConfig,
+  StockInfoStageParticipantAnswer,
+} from './stockinfo_stage';
+import {
+  AssetAllocationStageConfig,
+  AssetAllocationStageParticipantAnswer,
+  AssetAllocationStagePublicData,
+  createAssetAllocationStagePublicData,
+} from './asset_allocation_stage';
 import {
   SurveyPerParticipantStageConfig,
   SurveyPerParticipantStageParticipantAnswer,
@@ -55,22 +77,18 @@ export enum StageKind {
   CHAT = 'chat', // group chat
   CHIP = 'chip', // "chip" negotiation
   COMPREHENSION = 'comprehension',
+  FLIPCARD = 'flipcard', // flip card selection
   RANKING = 'ranking',
   PAYOUT = 'payout',
+  PRIVATE_CHAT = 'privateChat', // participant plus any mediators
   REVEAL = 'reveal',
   SALESPERSON = 'salesperson', // co-op traveling salesperson game
+  STOCKINFO = 'stockinfo',
+  ASSET_ALLOCATION = 'assetAllocation', // asset allocation between stocks
+  ROLE = 'role', // info stage that assigns different roles to participants
   SURVEY = 'survey',
   SURVEY_PER_PARTICIPANT = 'surveyPerParticipant',
   TRANSFER = 'transfer',
-}
-
-/** Specific game associated with stage. */
-export enum StageGame {
-  NONE = 'none',
-  LAS = 'las', // Lost at Sea
-  RTV = 'rtv', // Reality TV Debate.
-  CHP = 'chp', // Chip Negotiation
-  CTS = 'cts', // Co-op Traveling Salesperson
 }
 
 /**
@@ -82,7 +100,6 @@ export enum StageGame {
 export interface BaseStageConfig {
   id: string;
   kind: StageKind;
-  game: StageGame;
   name: string;
   descriptions: StageTextConfig;
   progress: StageProgressConfig;
@@ -104,12 +121,17 @@ export type StageConfig =
   | ChatStageConfig
   | ChipStageConfig
   | ComprehensionStageConfig
+  | FlipCardStageConfig
   | RankingStageConfig
   | InfoStageConfig
   | PayoutStageConfig
+  | PrivateChatStageConfig
   | ProfileStageConfig
   | RevealStageConfig
   | SalespersonStageConfig
+  | StockInfoStageConfig
+  | AssetAllocationStageConfig
+  | RoleStageConfig
   | SurveyStageConfig
   | SurveyPerParticipantStageConfig
   | TOSStageConfig
@@ -128,11 +150,14 @@ export interface BaseStageParticipantAnswer {
 }
 
 export type StageParticipantAnswer =
+  | AssetAllocationStageParticipantAnswer
   | ChatStageParticipantAnswer
   | ChipStageParticipantAnswer
   | ComprehensionStageParticipantAnswer
+  | FlipCardStageParticipantAnswer
   | PayoutStageParticipantAnswer
   | RankingStageParticipantAnswer
+  | StockInfoStageParticipantAnswer
   | SurveyStageParticipantAnswer
   | SurveyPerParticipantStageParticipantAnswer;
 
@@ -152,8 +177,11 @@ export interface BaseStagePublicData {
 export type StagePublicData =
   | ChatStagePublicData
   | ChipStagePublicData
+  | FlipCardStagePublicData
   | RankingStagePublicData
+  | RoleStagePublicData
   | SalespersonStagePublicData
+  | AssetAllocationStagePublicData
   | SurveyStagePublicData;
 
 // ************************************************************************* //
@@ -198,8 +226,14 @@ export function createPublicDataFromStageConfigs(stages: StageConfig[]) {
       case StageKind.CHIP:
         publicData.push(createChipStagePublicData(stage.id));
         break;
+      case StageKind.FLIPCARD:
+        publicData.push(createFlipCardStagePublicData(stage.id));
+        break;
       case StageKind.RANKING:
         publicData.push(createRankingStagePublicData(stage.id));
+        break;
+      case StageKind.ROLE:
+        publicData.push(createRoleStagePublicData(stage));
         break;
       case StageKind.SALESPERSON:
         publicData.push(
@@ -208,6 +242,9 @@ export function createPublicDataFromStageConfigs(stages: StageConfig[]) {
         break;
       case StageKind.SURVEY:
         publicData.push(createSurveyStagePublicData(stage.id));
+        break;
+      case StageKind.ASSET_ALLOCATION:
+        publicData.push(createAssetAllocationStagePublicData({id: stage.id}));
         break;
       default:
         break;

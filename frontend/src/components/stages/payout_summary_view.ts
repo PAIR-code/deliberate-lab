@@ -22,7 +22,6 @@ import {
   PayoutResultConfig,
   PayoutItemResult,
   StageConfig,
-  StageGame,
   StageKind,
   SurveyPayoutItem,
   SurveyPayoutItemResult,
@@ -70,10 +69,11 @@ export class PayoutView extends MobxLitElement {
 
   private renderTotalPayout(resultConfig: PayoutResultConfig) {
     const total = calculatePayoutTotal(resultConfig);
+    const averageNote = resultConfig.averageAllPayoutItems ? ' (average)' : '';
 
     return html`
       <div class="scoring-bundle row">
-        <h2>Final payout</h2>
+        <h2>Final payout${averageNote}</h2>
         <div class="chip primary">
           ${this.renderCurrency(total, resultConfig.currency)}
         </div>

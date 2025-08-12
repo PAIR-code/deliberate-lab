@@ -4,7 +4,6 @@
 
 :host {
   @include common.flex-column;
-  gap: common.$spacing-xxl;
 }
 
 .section,
@@ -13,17 +12,36 @@
   gap: common.$spacing-large;
 }
 
-summary {
-  @include typescale.title-medium;
-  padding-bottom: common.$spacing-large;
+.tabs {
+  @include common.flex-row;
+  border-bottom: 1px solid var(--md-sys-color-outline-variant);
+  flex-wrap: wrap;
+  gap: common.$spacing-medium;
+  padding: 0 common.$spacing-large;
+  width: 100%;
 }
 
-details {
-  border-bottom: 1px solid var(--md-sys-color-outline-variant);
+.tab {
+  @include common.flex-row;
+  align-items: center;
+  border-bottom: 2px solid transparent;
+  color: var(--md-sys-color-outline);
+  height: common.$header-height;
+  padding: 0 common.$spacing-medium;
 
-  .inner-section {
-    padding-bottom: common.$spacing-large;
+  &:focus,
+  &:hover {
+    cursor: pointer;
   }
+
+  &.active {
+    border-bottom-color: var(--md-sys-color-tertiary);
+    color: var(--md-sys-color-tertiary);
+  }
+}
+
+.inner-section {
+  padding: common.$spacing-large;
 }
 
 .title {
@@ -58,9 +76,4 @@ pr-textarea {
 
 .divider {
   border-bottom: 1px solid var(--md-sys-color-outline-variant);
-}
-
-.tab {
-  margin-top: 0px;
-  margin-left: calc(48px + common.$spacing-medium);
 }

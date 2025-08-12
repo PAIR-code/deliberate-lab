@@ -1,12 +1,18 @@
 import {UnifiedTimestamp} from '../shared';
-import {AgentChatPromptConfig, ProfileAgentConfig} from '../agent';
+import {BaseAgentPromptConfig, ProfileAgentConfig} from '../agent';
 import {ParticipantProfileBase} from '../participant';
 import {getParticipantProfilePromptContext} from '../participant.prompts';
-import {makeStructuredOutputPrompt} from '../structured_output';
+import {convertUnifiedTimestampToTime} from '../shared';
+import {
+  StructuredOutputDataType,
+  createStructuredOutputConfig,
+  makeStructuredOutputPrompt,
+} from '../structured_output';
+import {ChatPromptConfig, PromptItemType} from '../structured_prompt';
+import {ChatMessage} from '../chat_message';
 import {
   ChatDiscussion,
   ChatDiscussionType,
-  ChatMessage,
   ChatStageConfig,
 } from './chat_stage';
 import {StageKind} from './stage';
@@ -15,7 +21,6 @@ import {getBaseStagePrompt} from './stage.prompts';
 // ************************************************************************* //
 // CONSTANTS                                                                 //
 // ************************************************************************* //
-export const DEFAULT_MODEL = 'gemini-1.5-pro-latest';
 export const DEFAULT_AGENT_MEDIATOR_PROMPT = `You are a agent for a chat conversation. Your task is to ensure that the conversation is polite.
 If you notice that participants are being rude, step in to make sure that everyone is respectful. 
 Otherwise, do not respond.`;
@@ -23,6 +28,31 @@ export const DEFAULT_AGENT_PARTICIPANT_CHAT_PROMPT = `You are a human participan
 Respond in a quick sentence if you would like to say something.
 Make sure your response sounds like a human with the phrasing and punctuation people use when casually chatting and no animal sounds.
 Otherwise, do not respond.`;
+
+export const DEFAULT_AGENT_PARTICIPANT_READY_TO_END_CHAT_PROMPT = `Are you ready to end the conversation and stop talking? Please consider whether you have met your goals and communicated with other participants.`;
+export const DEFAULT_AGENT_PARTICIPANT_READY_TO_END_CHAT_STRUCTURED_OUTPUT =
+  createStructuredOutputConfig({
+    schema: {
+      type: StructuredOutputDataType.OBJECT,
+      properties: [
+        {
+          name: 'explanation',
+          schema: {
+            type: StructuredOutputDataType.STRING,
+            description: 'Your concise reasoning in a few sentences',
+          },
+        },
+        {
+          name: 'response',
+          schema: {
+            type: StructuredOutputDataType.BOOLEAN,
+            description:
+              'Whether or not you are ready to end the current discussion',
+          },
+        },
+      ],
+    },
+  });
 
 // ************************************************************************* //
 // PROMPTS                                                                   //
@@ -32,9 +62,10 @@ export function getDefaultChatPrompt(
   agentConfig: ProfileAgentConfig, // TODO: Add to params
   pastStageContext: string,
   chatMessages: ChatMessage[],
-  promptConfig: AgentChatPromptConfig,
+  promptConfig: ChatPromptConfig,
   stageConfig: ChatStageConfig,
 ) {
+  // TODO: Structure based on order of PromptItems
   return [
     // TODO: Move profile context up one level
     getParticipantProfilePromptContext(
@@ -45,9 +76,11 @@ export function getDefaultChatPrompt(
     getChatStagePromptContext(
       chatMessages,
       stageConfig,
-      promptConfig.promptSettings.includeStageInfo,
+      false, // TODO: check whether to include stage info
     ),
-    promptConfig.promptContext,
+    promptConfig.prompt
+      .map((item) => (item.type === PromptItemType.TEXT ? item.text : ''))
+      .join('\n'),
     makeStructuredOutputPrompt(promptConfig.structuredOutputConfig),
   ].join('\n');
 }
@@ -67,7 +100,7 @@ export function getChatStagePromptContext(
 }
 
 /** Return prompt for processing chat history. */
-function getChatPromptMessageHistory(
+export function getChatPromptMessageHistory(
   messages: ChatMessage[],
   stage: ChatStageConfig,
 ) {
@@ -87,15 +120,7 @@ Each message is displayed in chronological order, with the most recent message a
 
 /** Convert chat message to prompt format. */
 export function convertChatMessageToPromptFormat(message: ChatMessage) {
-  // TODO: Move to shared utils functions
-  const getTime = (timestamp: UnifiedTimestamp) => {
-    const date = new Date(timestamp.seconds * 1000);
-    const hours = date.getHours().toString().padStart(2, '0');
-    const minutes = date.getMinutes().toString().padStart(2, '0');
-    return `(${hours}:${minutes})`;
-  };
-
-  return `${getTime(message.timestamp)} ${message.profile.name}: ${message.message}`;
+  return `${convertUnifiedTimestampToTime(message.timestamp)} ${message.profile.name ?? message.senderId}: ${message.message}`;
 }
 
 /** Convert chat messages into chat history string for prompt. */
