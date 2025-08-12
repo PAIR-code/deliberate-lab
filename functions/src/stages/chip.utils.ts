@@ -595,7 +595,7 @@ export async function getChipOfferAssistance(
         );
       }
       if (responseObj) {
-        console.log( responseObj);
+        console.log(responseObj);
         console.log(
           `Suggested: Give ${responseObj['suggestedSellQuantity']} ${responseObj['suggestedSellType']} to get ${responseObj['suggestedBuyQuantity']} ${responseObj['suggestedBuyType']} (${responseObj['reasoning']})`,
         );

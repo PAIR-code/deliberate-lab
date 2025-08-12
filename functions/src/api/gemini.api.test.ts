@@ -166,7 +166,7 @@ describe('Gemini API', () => {
       topP: 0.9,
       frequencyPenalty: 0,
       presencePenalty: 0,
-      customRequestBodyFields: [{ name: 'seed', value: 123 }],
+      customRequestBodyFields: [{name: 'seed', value: 123}],
     };
 
     const response: ModelResponse = await getGeminiAPIResponse(
@@ -176,7 +176,9 @@ describe('Gemini API', () => {
       generationConfig,
     );
 
-    expect(response.status).toBe(ModelResponseStatus.PROVIDER_UNAVAILABLE_ERROR);
+    expect(response.status).toBe(
+      ModelResponseStatus.PROVIDER_UNAVAILABLE_ERROR,
+    );
     expect(response.errorMessage).toContain('Service Unavailable');
   });
 });
