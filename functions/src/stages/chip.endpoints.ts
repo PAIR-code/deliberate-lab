@@ -312,7 +312,8 @@ export const requestChipAssistance = onCall(async (request) => {
     // Check if participant can accept the offer (for coach mode)
     const canAcceptOffer = () => {
       const buyChip = Object.keys(currentOffer.buy)[0];
-      const participantChipMap = publicData.participantChipMap[participant.publicId] ?? {};
+      const participantChipMap =
+        publicData.participantChipMap[participant.publicId] ?? {};
       const availableSell = participantChipMap[buyChip] ?? 0;
       return availableSell >= currentOffer.buy[buyChip];
     };
@@ -323,8 +324,9 @@ export const requestChipAssistance = onCall(async (request) => {
       response = {
         success: false,
         modelResponse: {},
-        defaultMessage: "You do not have enough chips to accept this offer. So you need to reject.",
-        defaultReasoning: "Insufficient chips to accept the offer"
+        defaultMessage:
+          'You do not have enough chips to accept this offer. So you need to reject.',
+        defaultReasoning: 'Insufficient chips to accept the offer',
       };
     } else {
       response = await getChipResponseAssistance(
@@ -537,7 +539,8 @@ export const selectChipAssistanceMode = onCall(async (request) => {
       // Check if participant can accept the offer
       const canAcceptOffer = () => {
         const buyChip = Object.keys(currentOffer.buy)[0];
-        const participantChipMap = publicData.participantChipMap[participant.publicId] ?? {};
+        const participantChipMap =
+          publicData.participantChipMap[participant.publicId] ?? {};
         const availableSell = participantChipMap[buyChip] ?? 0;
         return availableSell >= currentOffer.buy[buyChip];
       };
@@ -545,15 +548,16 @@ export const selectChipAssistanceMode = onCall(async (request) => {
       // If participant cannot accept the offer, set default response without calling LLM
       if (!canAcceptOffer()) {
         currentAssistance.proposedResponse = false; // auto-reject
-        currentAssistance.message = "You do not have enough chips to accept this offer. So you need to reject.";
-        currentAssistance.reasoning = "Insufficient chips to accept the offer";
+        currentAssistance.message =
+          'You do not have enough chips to accept this offer. So you need to reject.';
+        currentAssistance.reasoning = 'Insufficient chips to accept the offer';
         currentAssistance.proposedTime = Timestamp.now();
-        
+
         // If delegate mode, mark as completed and actually send the reject response
         if (data.assistanceMode === ChipAssistanceMode.DELEGATE) {
           currentAssistance.endTime = Timestamp.now();
           currentAssistance.finalResponse = false;
-          
+
           // Actually send the reject response to the game
           await addChipResponseToPublicData(
             data.experimentId,
@@ -569,7 +573,10 @@ export const selectChipAssistanceMode = onCall(async (request) => {
           data.experimentId,
           stage,
           publicData,
-          await getFirestoreCohortParticipants(data.experimentId, data.cohortId),
+          await getFirestoreCohortParticipants(
+            data.experimentId,
+            data.cohortId,
+          ),
           participant,
           participantAnswer,
           await getExperimenterDataFromExperiment(data.experimentId),
@@ -579,9 +586,11 @@ export const selectChipAssistanceMode = onCall(async (request) => {
         );
         // If response is valid, add to current assistance
         if (response.success) {
-          currentAssistance.proposedResponse = response.modelResponse['response'];
+          currentAssistance.proposedResponse =
+            response.modelResponse['response'];
           currentAssistance.message = response.modelResponse['feedback'] ?? '';
-          currentAssistance.reasoning = response.modelResponse['reasoning'] ?? '';
+          currentAssistance.reasoning =
+            response.modelResponse['reasoning'] ?? '';
           currentAssistance.modelResponse = response.modelResponse;
         } else {
           // Set error mode if response failed
