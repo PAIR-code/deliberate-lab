@@ -15,6 +15,7 @@ import {
   UserProfile,
   UserType,
   getChatPromptMessageHistory,
+  getNameFromPublicId,
   getStockInfoSummaryText,
   makeStructuredOutputPrompt,
   shuffleWithSeed,
@@ -24,6 +25,7 @@ import {
   getAssetAllocationSummaryText,
 } from './stages/asset_allocation.utils';
 import {
+  getFirestoreActiveParticipants,
   getFirestoreAnswersForStage,
   getFirestoreParticipant,
   getFirestoreStage,
@@ -86,8 +88,6 @@ async function processPromptItems(
         break;
       case PromptItemType.PROFILE_INFO:
         const profileInfo: string[] = [];
-        // TODO: If secondary/tertiary things in stage ID,
-        // use anonymous profiles to profile info
         const getProfileSetId = () => {
           if (stageId.includes(SECONDARY_PROFILE_SET_ID)) {
             return PROFILE_SET_ANIMALS_2_ID;
@@ -233,7 +233,29 @@ export async function getStageDisplayForPrompt(
         cohortId,
         stage.id,
       );
-      return getChatPromptMessageHistory(messages, stage);
+      // List active participants in group chat
+      const getProfileSetId = () => {
+        if (stage.id.includes(SECONDARY_PROFILE_SET_ID)) {
+          return PROFILE_SET_ANIMALS_2_ID;
+        } else if (stage.id.includes(TERTIARY_PROFILE_SET_ID)) {
+          return PROFILE_SET_NATURE_ID;
+        }
+        return '';
+      };
+      const participants = (
+        await getFirestoreActiveParticipants(experimentId, cohortId, stage.id)
+      )
+        .map((participant) =>
+          getNameFromPublicId(
+            [participant],
+            participant.publicId,
+            getProfileSetId(),
+            true,
+            true,
+          ),
+        )
+        .join(', ');
+      return `Group chat participants: ${participants}\n${getChatPromptMessageHistory(messages, stage)}`;
     case StageKind.PRIVATE_CHAT:
       // Private chat should have exactly 1 participant
       if (participantIds.length === 0) return '';

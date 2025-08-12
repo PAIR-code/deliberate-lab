@@ -32,8 +32,40 @@ export class ChatEditor extends MobxLitElement {
       <div class="title">Conversation settings</div>
       ${this.renderTimeLimit()}
       <div class="divider"></div>
-      <div class="title">Agent settings</div>
-      <div>See agent tab to configure mediator agents!</div>
+      <div class="title">Agent mediators</div>
+      <div class="description">
+        Navigate to "Agent mediators" tab to add or edit mediators
+      </div>
+      ${this.renderMediators()}
+    `;
+  }
+
+  private renderMediators() {
+    const agentMediators = this.experimentEditor.agentMediators.filter(
+      (template) => template.promptMap[this.stage?.id ?? ''],
+    );
+
+    if (agentMediators.length === 0) {
+      return html`
+        <div class="error-message">No mediators added to this stage</div>
+      `;
+    }
+
+    return html`
+      <div class="card-grid">
+        ${agentMediators.map(
+          (mediator) => html`
+            <div class="mediator-card">
+              <div class="mediator-card-title">
+                ${mediator.persona.defaultProfile.avatar}
+                ${mediator.persona.defaultProfile.name ??
+                `Agent ${mediator.persona.id}`}
+              </div>
+              <div class="description">${mediator.persona.description}</div>
+            </div>
+          `,
+        )}
+      </div>
     `;
   }
 

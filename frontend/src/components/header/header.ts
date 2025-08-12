@@ -237,10 +237,14 @@ export class Header extends MobxLitElement {
           </pr-tooltip>
         `;
       case Pages.EXPERIMENT_CREATE:
+        const errors = this.experimentEditor.getExperimentConfigErrors();
         return html`
+          ${errors.length === 0
+            ? nothing
+            : html` <div class="error">⚠️ ${errors.join(', ')}</div> `}
           <pr-button
             ?loading=${this.experimentEditor.isWritingExperiment}
-            ?disabled=${!this.experimentEditor.isValidExperimentConfig}
+            ?disabled=${errors.length > 0}
             @click=${async () => {
               this.analyticsService.trackButtonClick(
                 ButtonClick.EXPERIMENT_SAVE_NEW,
