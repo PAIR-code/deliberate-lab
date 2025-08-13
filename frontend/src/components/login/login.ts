@@ -36,10 +36,7 @@ export class Login extends MobxLitElement {
         <h1>🕊️ Welcome to ${APP_NAME}</h1>
         <div>
           ${APP_NAME} is
-          <a
-            href="https://github.com/PAIR-code/deliberate-lab/wiki"
-            target="blank"
-          >
+          <a href="https://pair-code.github.io/deliberate-lab/" target="blank">
             an open-source platform
           </a>
           for running online research experiments on human + LLM group dynamics.
