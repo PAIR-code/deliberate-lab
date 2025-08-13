@@ -28,6 +28,8 @@ export class BehaviorService extends Service {
   private flushIntervalMs = 5000;
   private intervalHandle: number | null = null;
   private listenersAttached = false;
+  private lastValueMap: WeakMap<HTMLElement, string> = new WeakMap();
+  private inputSubscriptions: Set<() => void> = new Set();
 
   start(experimentId: string, participantPrivateId: string) {
     // Ignore if already tracking same participant
@@ -76,6 +78,11 @@ export class BehaviorService extends Service {
       window.clearInterval(this.intervalHandle);
       this.intervalHandle = null;
     }
+    // Tear down any per-field input subscriptions
+    for (const unsub of this.inputSubscriptions) {
+      unsub();
+    }
+    this.inputSubscriptions.clear();
     // Do not flush after clearing identifiers
     void this.flush();
     this.experimentId = null;
@@ -133,15 +140,14 @@ export class BehaviorService extends Service {
   private onKeyDown = (e: KeyboardEvent) => {
     // Do not capture actual key values; only log whether it was backspace/delete
     const keyName = (e.key || '').toLowerCase();
-    const isBackspace = keyName === 'backspace';
-    const isDelete = keyName === 'delete' || keyName === 'del';
+    const modifiers: string[] = [];
+    if (e.ctrlKey) modifiers.push('ctrl');
+    if (e.metaKey) modifiers.push('meta');
+    if (e.altKey) modifiers.push('alt');
+    if (e.shiftKey) modifiers.push('shift');
     this.log('keydown', {
-      isBackspace,
-      isDelete,
-      ctrlKey: e.ctrlKey,
-      metaKey: e.metaKey,
-      altKey: e.altKey,
-      shiftKey: e.shiftKey,
+      keyName,
+      modifiers,
       repeat: e.repeat,
       isTrusted: e.isTrusted,
       targetTag: (e.target as HTMLElement | null)?.tagName || '',
@@ -206,6 +212,142 @@ export class BehaviorService extends Service {
       contentEditable: !!active?.isContentEditable,
     });
   };
+
+  // used for searching in shadow dom for the actual text input element
+  private isAllowedTextInput(
+    el: Element,
+  ): el is HTMLInputElement | HTMLTextAreaElement {
+    if (el.tagName === 'TEXTAREA') return true;
+    if (el.tagName === 'INPUT') {
+      const input = el as HTMLInputElement;
+      const type = (input.type || 'text').toLowerCase();
+      // Exclude password fields; allow common text types
+      return (
+        type !== 'password' &&
+        ['text', 'search', 'url', 'email', 'tel', 'number'].includes(type)
+      );
+    }
+    return false;
+  }
+
+  private getValue(el: HTMLInputElement | HTMLTextAreaElement): string {
+    return el.value ?? '';
+  }
+
+  private computeDiff(oldVal: string, newVal: string) {
+    // Simple diff: longest common prefix/suffix
+    let start = 0;
+    const oldLen = oldVal.length;
+    const newLen = newVal.length;
+    while (
+      start < oldLen &&
+      start < newLen &&
+      oldVal[start] === newVal[start]
+    ) {
+      start++;
+    }
+    let end = 0;
+    while (
+      end < oldLen - start &&
+      end < newLen - start &&
+      oldVal[oldLen - 1 - end] === newVal[newLen - 1 - end]
+    ) {
+      end++;
+    }
+    const deletedText = oldVal.slice(start, oldLen - end);
+    const addedText = newVal.slice(start, newLen - end);
+    return {addedText, deletedText, start, end};
+  }
+
+  // change events intentionally not tracked; per-input granularity only
+
+  /**
+   * Attach input tracking to a specific text field host element.
+   * Works with native inputs/textareas and custom elements like pr-textarea.
+   * Returns an unsubscribe function to remove the listener.
+   */
+  public attachTextInput(target: Element, fieldId: string): () => void {
+    const handler = (e: Event) => {
+      // Minimal resolution: prefer target itself, then its shadow root, then light DOM descendants
+      let el: HTMLInputElement | HTMLTextAreaElement | null = null;
+      if (this.isAllowedTextInput(target)) {
+        el = target as HTMLInputElement | HTMLTextAreaElement;
+      } else {
+        const sr = target.shadowRoot as ShadowRoot | undefined;
+        if (sr) {
+          const candidate = sr.querySelector('textarea, input');
+          if (candidate && this.isAllowedTextInput(candidate)) {
+            el = candidate as HTMLInputElement | HTMLTextAreaElement;
+          }
+        }
+        if (!el && (target as Element).querySelector) {
+          const candidate = (target as Element).querySelector(
+            'textarea, input',
+          );
+          if (candidate && this.isAllowedTextInput(candidate)) {
+            el = candidate as HTMLInputElement | HTMLTextAreaElement;
+          }
+        }
+      }
+      if (!el) return;
+
+      const newVal = this.getValue(el);
+      const oldVal = this.lastValueMap.get(el) ?? '';
+      const {addedText, deletedText, start} = this.computeDiff(oldVal, newVal);
+
+      if (!addedText && !deletedText) return;
+
+      const ie = e as unknown as InputEvent;
+      const inputType = ie?.inputType || 'unknown';
+      const data = ie?.data ?? null;
+      const isComposing = ie?.isComposing === true;
+
+      const selStart =
+        (el as HTMLInputElement | HTMLTextAreaElement).selectionStart ?? null;
+      const selEnd =
+        (el as HTMLInputElement | HTMLTextAreaElement).selectionEnd ?? null;
+
+      const MAX_DELTA_LEN = 10000;
+      const addedTrunc = addedText.length > MAX_DELTA_LEN;
+      const deletedTrunc = deletedText.length > MAX_DELTA_LEN;
+
+      this.log('text_change', {
+        domEvent: 'input',
+        fieldId,
+        inputType,
+        data: typeof data === 'string' ? data.slice(0, MAX_DELTA_LEN) : data,
+        isComposing,
+        addedText: addedTrunc ? addedText.slice(0, MAX_DELTA_LEN) : addedText,
+        deletedText: deletedTrunc
+          ? deletedText.slice(0, MAX_DELTA_LEN)
+          : deletedText,
+        diffStart: start,
+        oldLength: oldVal.length,
+        newLength: newVal.length,
+        selectionStart: selStart,
+        selectionEnd: selEnd,
+        isTrusted: e.isTrusted === true,
+        targetTag: el.tagName,
+        inputTypeAttr: (el as HTMLInputElement).type || 'text',
+      });
+
+      this.lastValueMap.set(el, newVal);
+    };
+
+    // Listen to both input (in case event composes) and custom change emitted by pr-textarea
+    target.addEventListener('input', handler, {capture: true});
+    target.addEventListener('change', handler, {capture: true});
+
+    const unsubscribe = () => {
+      target.removeEventListener('input', handler, true);
+      target.removeEventListener('change', handler, true);
+    };
+    this.inputSubscriptions.add(unsubscribe);
+    return () => {
+      unsubscribe();
+      this.inputSubscriptions.delete(unsubscribe);
+    };
+  }
 
   private onVisibilityChange = () => {
     if (document.visibilityState === 'hidden') {

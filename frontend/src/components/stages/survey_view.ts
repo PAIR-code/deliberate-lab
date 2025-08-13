@@ -8,6 +8,7 @@ import '@material/web/radio/radio.js';
 
 import {MobxLitElement} from '@adobe/lit-mobx';
 import {CSSResultGroup, html, nothing} from 'lit';
+import {ref} from 'lit/directives/ref.js';
 import {customElement, property} from 'lit/decorators.js';
 import {classMap} from 'lit/directives/class-map.js';
 
@@ -21,9 +22,7 @@ import {
   ScaleSurveyAnswer,
   ScaleSurveyQuestion,
   SurveyQuestionKind,
-  SurveyAnswer,
   SurveyStageConfig,
-  SurveyStageParticipantAnswer,
   TextSurveyAnswer,
   TextSurveyQuestion,
   isMultipleChoiceImageQuestion,
@@ -37,6 +36,7 @@ import {unsafeHTML} from 'lit/directives/unsafe-html.js';
 import {convertMarkdownToHTML} from '../../shared/utils';
 import {core} from '../../core/core';
 import {ParticipantService} from '../../services/participant.service';
+import {BehaviorService} from '../../services/behavior.service';
 import {ParticipantAnswerService} from '../../services/participant.answer';
 
 import {styles} from './survey_view.scss';
@@ -50,8 +50,42 @@ export class SurveyView extends MobxLitElement {
   private readonly participantAnswerService = core.getService(
     ParticipantAnswerService,
   );
+  private readonly behaviorService = core.getService(BehaviorService);
 
   @property() stage: SurveyStageConfig | undefined = undefined;
+
+  // Track per-question input subscriptions and ref handlers
+  private _inputUnsubs: Map<string, () => void> = new Map();
+  private _refHandlers: Map<string, (el: Element | undefined) => void> =
+    new Map();
+
+  private getTextareaRef(questionId: string) {
+    let handler = this._refHandlers.get(questionId);
+    if (handler) return handler;
+    handler = (el: Element | undefined) => {
+      // Detach any previous subscription for this question
+      const prev = this._inputUnsubs.get(questionId);
+      if (prev) {
+        prev();
+        this._inputUnsubs.delete(questionId);
+      }
+      if (!el) return;
+      const unsub = this.behaviorService.attachTextInput(el, questionId);
+      this._inputUnsubs.set(questionId, unsub);
+    };
+    this._refHandlers.set(questionId, handler);
+    return handler;
+  }
+
+  override disconnectedCallback(): void {
+    // Clean up all per-question input listeners
+    for (const unsub of this._inputUnsubs.values()) {
+      unsub();
+    }
+    this._inputUnsubs.clear();
+    this._refHandlers.clear();
+    super.disconnectedCallback();
+  }
 
   override render() {
     if (!this.stage) {
@@ -145,7 +179,7 @@ export class SurveyView extends MobxLitElement {
           >
           </md-checkbox>
           <div class=${titleClasses}>
-            ${unsafeHTML(convertMarkdownToHTML(question.questionTitle + "*"))}
+            ${unsafeHTML(convertMarkdownToHTML(question.questionTitle + '*'))}
           </div>
         </label>
       </div>
@@ -183,13 +217,14 @@ export class SurveyView extends MobxLitElement {
     return html`
       <div class="question">
         <div class=${titleClasses}>
-          ${unsafeHTML(convertMarkdownToHTML(question.questionTitle + "*"))}
+          ${unsafeHTML(convertMarkdownToHTML(question.questionTitle + '*'))}
         </div>
         <pr-textarea
           variant="outlined"
           placeholder="Type your response"
           .value=${textAnswer}
           ?disabled=${this.participantService.disableStage}
+          ${ref(this.getTextareaRef(question.id))}
           @change=${handleTextChange}
         >
         </pr-textarea>
@@ -239,7 +274,7 @@ export class SurveyView extends MobxLitElement {
   private renderRadioButton(choice: MultipleChoiceItem, questionId: string) {
     const id = `${questionId}-${choice.id}`;
 
-    const handleMultipleChoiceClick = (e: Event) => {
+    const handleMultipleChoiceClick = (_e: Event) => {
       const answer: MultipleChoiceSurveyAnswer = {
         id: questionId,
         kind: SurveyQuestionKind.MULTIPLE_CHOICE,
@@ -312,7 +347,7 @@ export class SurveyView extends MobxLitElement {
     return html`
       <div class="question">
         <div class=${titleClasses}>
-          ${unsafeHTML(convertMarkdownToHTML(question.questionTitle + "*"))}
+          ${unsafeHTML(convertMarkdownToHTML(question.questionTitle + '*'))}
         </div>
         <div class="scale labels">
           <div>${question.lowerText}</div>

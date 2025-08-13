@@ -9,6 +9,7 @@ import './chat_message';
 
 import {MobxLitElement} from '@adobe/lit-mobx';
 import {CSSResultGroup, html, nothing} from 'lit';
+import {ref} from 'lit/directives/ref.js';
 import {customElement, property, state} from 'lit/decorators.js';
 
 import {core} from '../../core/core';
@@ -17,6 +18,7 @@ import {CohortService} from '../../services/cohort.service';
 import {ExperimentService} from '../../services/experiment.service';
 import {ParticipantService} from '../../services/participant.service';
 import {ParticipantAnswerService} from '../../services/participant.answer';
+import {BehaviorService} from '../../services/behavior.service';
 import {RouterService} from '../../services/router.service';
 
 import {
@@ -41,6 +43,7 @@ export class ChatInterface extends MobxLitElement {
   private readonly participantAnswerService = core.getService(
     ParticipantAnswerService,
   );
+  private readonly behaviorService = core.getService(BehaviorService);
   private readonly routerService = core.getService(RouterService);
 
   @property() stage: ChatStageConfig | undefined = undefined;
@@ -48,6 +51,30 @@ export class ChatInterface extends MobxLitElement {
   @property() showInfo = false;
   @state() readyToEndDiscussionLoading = false;
   @state() isAlertLoading = false;
+
+  private _chatInputUnsub: (() => void) | null = null;
+
+  private onChatRef = (el: Element | undefined) => {
+    // Detach previous listener if any
+    if (this._chatInputUnsub) {
+      this._chatInputUnsub();
+      this._chatInputUnsub = null;
+    }
+    if (!el) return;
+    const stageId = this.stage?.id ?? 'unknown';
+    this._chatInputUnsub = this.behaviorService.attachTextInput(
+      el,
+      `chat_stage:${stageId}`,
+    );
+  };
+
+  override disconnectedCallback(): void {
+    if (this._chatInputUnsub) {
+      this._chatInputUnsub();
+      this._chatInputUnsub = null;
+    }
+    super.disconnectedCallback();
+  }
 
   private sendUserInput() {
     if (!this.stage) return;
@@ -210,6 +237,7 @@ export class ChatInterface extends MobxLitElement {
           this.isConversationOver()}
           @keyup=${handleKeyUp}
           @input=${handleInput}
+          ${ref(this.onChatRef)}
         >
         </pr-textarea>
         <pr-tooltip
