@@ -82,6 +82,7 @@ export const ExperimentCreationData = Type.Object(
         prolificConfig: ProlificConfigSchema,
         stageIds: Type.Array(Type.String()),
         cohortLockMap: Type.Record(Type.String(), Type.Boolean()),
+        collectBehaviorData: Type.Boolean(),
       },
       strict,
     ),

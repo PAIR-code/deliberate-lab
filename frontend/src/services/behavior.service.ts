@@ -1,12 +1,14 @@
 import {makeObservable} from 'mobx';
 import {FirebaseService} from './firebase.service';
 import {ParticipantService} from './participant.service';
+import {ExperimentService} from './experiment.service';
 import {addBehaviorEventsCallable} from '../shared/callables';
 import {Service} from './service';
 
 interface ServiceProvider {
   firebaseService: FirebaseService;
   participantService: ParticipantService;
+  experimentService: ExperimentService;
 }
 
 /** Collects client interaction events and sends in small batches. */
@@ -30,8 +32,13 @@ export class BehaviorService extends Service {
   private listenersAttached = false;
   private lastValueMap: WeakMap<HTMLElement, string> = new WeakMap();
   private inputSubscriptions: Set<() => void> = new Set();
+  private enabled = false;
 
   start(experimentId: string, participantPrivateId: string) {
+    const exp = this.sp.experimentService.experiment;
+    this.enabled = exp?.collectBehaviorData === true;
+    if (!this.enabled) return;
+
     // Ignore if already tracking same participant
     if (
       this.experimentId === experimentId &&
@@ -45,10 +52,12 @@ export class BehaviorService extends Service {
     this.participantPrivateId = participantPrivateId;
     this.attachListeners();
     // Periodic flush
-    this.intervalHandle = window.setInterval(
-      () => this.flush(),
-      this.flushIntervalMs,
-    );
+    if (!this.intervalHandle) {
+      this.intervalHandle = window.setInterval(
+        () => this.flush(),
+        this.flushIntervalMs,
+      );
+    }
     // Flush when page hidden/unloaded
     document.addEventListener('visibilitychange', this.onVisibilityChange, {
       capture: true,
@@ -92,6 +101,7 @@ export class BehaviorService extends Service {
 
   /** Manually log a custom behavior event. */
   log(eventType: string, metadata: Record<string, unknown> = {}) {
+    if (!this.enabled) return;
     const stageId =
       this.sp.participantService.currentStageViewId ??
       this.sp.participantService.profile?.currentStageId ??
@@ -111,6 +121,7 @@ export class BehaviorService extends Service {
   // Internal
   private attachListeners() {
     if (this.listenersAttached) return;
+    if (!this.enabled) return;
     document.addEventListener('click', this.onClick, true);
     document.addEventListener('keydown', this.onKeyDown, true);
     document.addEventListener('copy', this.onCopy, true);
@@ -268,6 +279,7 @@ export class BehaviorService extends Service {
    */
   public attachTextInput(target: Element, fieldId: string): () => void {
     const handler = (e: Event) => {
+      if (!this.enabled) return;
       // Minimal resolution: prefer target itself, then its shadow root, then light DOM descendants
       let el: HTMLInputElement | HTMLTextAreaElement | null = null;
       if (this.isAllowedTextInput(target)) {

@@ -1,17 +1,11 @@
 import {computed, makeObservable, observable} from 'mobx';
-import {
-  collection,
-  doc,
-  getDocs,
-  onSnapshot,
-  Unsubscribe,
-} from 'firebase/firestore';
+import {collection, doc, onSnapshot, Unsubscribe} from 'firebase/firestore';
 import {FirebaseService} from './firebase.service';
 import {AgentEditor} from './agent.editor';
-import {Pages, RouterService} from './router.service';
+import {RouterService} from './router.service';
 import {Service} from './service';
 
-import {Experiment, StageConfig, StageKind} from '@deliberation-lab/utils';
+import {Experiment, StageConfig} from '@deliberation-lab/utils';
 import {getPublicExperimentName} from '../shared/experiment.utils';
 
 interface ServiceProvider {
@@ -32,6 +26,8 @@ export class ExperimentService extends Service {
 
   // Experiment configs
   @observable experiment: Experiment | undefined = undefined;
+  // Temporary local flag until type updates propagate
+  @observable collectBehaviorData = false;
   @observable stageConfigMap: Record<string, StageConfig> = {};
   // TODO: Add roleConfigMap
 
@@ -69,6 +65,9 @@ export class ExperimentService extends Service {
             cohortLockMap: {}, // for experiments version <= 11
             ...doc.data(),
           } as Experiment;
+          // Keep a local mirror of the flag if present
+          this.collectBehaviorData =
+            (doc.data() as Experiment).collectBehaviorData === true;
           this.isExperimentLoading = false;
         },
       ),

@@ -1,15 +1,11 @@
 import {MobxLitElement} from '@adobe/lit-mobx';
 import {CSSResultGroup, html, nothing} from 'lit';
-import {customElement, property} from 'lit/decorators.js';
+import {customElement} from 'lit/decorators.js';
 
 import '@material/web/textfield/filled-text-field.js';
 import '@material/web/checkbox/checkbox.js';
 
 import {core} from '../../core/core';
-import {ButtonClick, AnalyticsService} from '../../services/analytics.service';
-import {AuthService} from '../../services/auth.service';
-import {HomeService} from '../../services/home.service';
-import {Pages, RouterService} from '../../services/router.service';
 import {ExperimentEditor} from '../../services/experiment.editor';
 import {ExperimentManager} from '../../services/experiment.manager';
 
@@ -22,7 +18,6 @@ import {styles} from './experiment_settings_editor.scss';
 export class ExperimentSettingsEditor extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
 
-  private readonly analyticsService = core.getService(AnalyticsService);
   private readonly experimentEditor = core.getService(ExperimentEditor);
   private readonly experimentManager = core.getService(ExperimentManager);
 
@@ -92,9 +87,16 @@ export class ExperimentSettingsEditor extends MobxLitElement {
       this.experimentEditor.updatePermissions({visibility});
     };
 
+    const isBehaviorEnabled =
+      this.experimentEditor.experiment.collectBehaviorData;
+
+    const updateBehavior = () => {
+      this.experimentEditor.updateCollectBehaviorData(!isBehaviorEnabled);
+    };
+
     return html`
       <div class="section">
-        <div class="checkbox-wrapper">
+        <div class="checkbox-wrapper" style="margin-top: 8px;">
           <md-checkbox
             touch-target="wrapper"
             ?checked=${isPublic}
@@ -105,6 +107,19 @@ export class ExperimentSettingsEditor extends MobxLitElement {
           <div>
             Make experiment public (all researchers on platform can view and
             manage the experiment dashboard if you share the link with them)
+          </div>
+        </div>
+        <div class="checkbox-wrapper">
+          <md-checkbox
+            touch-target="wrapper"
+            ?checked=${isBehaviorEnabled}
+            ?disabled=${!this.experimentEditor.isCreator}
+            @click=${updateBehavior}
+          >
+          </md-checkbox>
+          <div>
+            Collect behavior data for bot detection (may incur additional
+            database costs)
           </div>
         </div>
       </div>
