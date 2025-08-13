@@ -326,7 +326,7 @@ export class BehaviorService extends Service {
         newLength: newVal.length,
         selectionStart: selStart,
         selectionEnd: selEnd,
-        isTrusted: e.isTrusted === true,
+        isTrusted: e.isTrusted,
         targetTag: el.tagName,
         inputTypeAttr: (el as HTMLInputElement).type || 'text',
       });
