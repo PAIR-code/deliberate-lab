@@ -80,3 +80,6 @@ export * from './utils/cache.utils';
 export * from './utils/object.utils';
 export * from './utils/random.utils';
 export * from './utils/string.utils';
+
+// Behavior
+export * from './behavior';

@@ -66,12 +66,14 @@ import {
   isParticipantEndedExperiment,
 } from '../shared/participant.utils';
 import {ElectionStrategy} from '@deliberation-lab/utils';
+import {BehaviorService} from './behavior.service';
 
 interface ServiceProvider {
   cohortService: CohortService;
   experimentService: ExperimentService;
   firebaseService: FirebaseService;
   participantAnswerService: ParticipantAnswerService;
+  behaviorService: BehaviorService;
 }
 
 export class ParticipantService extends Service {
@@ -112,6 +114,12 @@ export class ParticipantService extends Service {
     this.participantId = participantId;
     this.isLoading = true;
     this.loadParticipantData();
+    // Start behavior logging when both IDs are known
+    if (experimentId && participantId) {
+      this.sp.behaviorService.start(experimentId, participantId);
+    } else {
+      this.sp.behaviorService.stop();
+    }
   }
 
   // True if currently in the experiment (not dropped out, not transfer pending)
@@ -302,6 +310,7 @@ export class ParticipantService extends Service {
     this.participantId = null;
     this.unsubscribeAll();
     this.sp.cohortService.reset();
+    this.sp.behaviorService.stop();
   }
 
   // *********************************************************************** //
@@ -331,6 +340,8 @@ export class ParticipantService extends Service {
   }
 
   async routeToEndExperiment(currentStatus: ParticipantStatus) {
+    await this.sp.behaviorService.flush();
+
     const config = this.sp.experimentService.experiment?.prolificConfig;
 
     // Redirect to Prolific if prolific integration is set up
@@ -373,6 +384,8 @@ export class ParticipantService extends Service {
     if (!this.experimentId || !this.profile) {
       return;
     }
+
+    await this.sp.behaviorService.flush();
 
     const result = await updateParticipantToNextStageCallable(
       this.sp.firebaseService.functions,
@@ -477,6 +490,8 @@ export class ParticipantService extends Service {
         participantId: this.profile.privateId,
       },
     );
+    // Ensure behavior logging is active after start
+    this.sp.behaviorService.start(this.experimentId, this.profile.privateId);
   }
 
   /** Accept attention check. */

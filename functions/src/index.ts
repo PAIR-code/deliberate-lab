@@ -22,6 +22,7 @@ export * from './agent.utils';
 export * from './log.utils';
 
 export * from './mediator.endpoints';
+export * from './behavior.endpoints';
 
 export * from './stages/chat.endpoints';
 export * from './stages/chat.triggers';

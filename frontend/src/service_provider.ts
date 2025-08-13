@@ -16,6 +16,7 @@ import {SettingsService} from './services/settings.service';
 import {ExperimentEditor} from './services/experiment.editor';
 import {ExperimentManager} from './services/experiment.manager';
 import {PresenceService} from './services/presence.service';
+import {BehaviorService} from './services/behavior.service';
 
 /**
  * Defines a map of services to their identifier
@@ -66,6 +67,9 @@ export function makeServiceProvider(self: Core) {
     },
     get presenceService() {
       return self.getService(PresenceService);
+    },
+    get behaviorService() {
+      return self.getService(BehaviorService);
     },
     // Editors
     get experimentEditor() {

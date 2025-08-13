@@ -1,5 +1,6 @@
 import {Type} from '@sinclair/typebox';
 import {Visibility} from './shared';
+import type {BehaviorEventInput} from './behavior';
 
 /** UnifiedTimestamp input validation. */
 export const UnifiedTimestampSchema = Type.Object({
@@ -26,4 +27,18 @@ export const PermissionsConfigSchema = Type.Object({
     Type.Literal(Visibility.PRIVATE),
   ]),
   readers: Type.Array(Type.String()),
+});
+
+// Behavior event validation
+export const BehaviorEventInputSchema = Type.Object({
+  eventType: Type.String({minLength: 1}),
+  relativeTimestamp: Type.Number(),
+  stageId: Type.String({minLength: 1}),
+  metadata: Type.Record(Type.String(), Type.Any()),
+});
+
+export const AddBehaviorEventsDataSchema = Type.Object({
+  experimentId: Type.String({minLength: 1}),
+  participantId: Type.String({minLength: 1}),
+  events: Type.Array(BehaviorEventInputSchema, {minItems: 1, maxItems: 200}),
 });

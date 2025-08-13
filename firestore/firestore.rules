@@ -113,7 +113,7 @@ service cloud.firestore {
       match /agents/{agentId} {
         allow get: if isExperimenter();
         allow list: if isExperimenter();
-        // Experimenters can use cloud function endpoints
+      // Experimenters can use cloud function endpoints
         allow write: if false;
 
         match /chatPrompts/{promptId} {
@@ -131,13 +131,13 @@ service cloud.firestore {
         allow get: if true; // Public read
         allow list: if canEditExperiment(experimentId);
 
-        // Experimenters can use cloud function endpoints
+      // Experimenters can use cloud function endpoints
         allow write: if false;
 
         match /publicStageData/{stageId} {
           allow read: if true;
 
-          // TODO: Triggered by cloud function triggers
+        // TODO: Triggered by cloud function triggers
           allow write: if false;
 
           match /chats/{chatId} {
@@ -169,7 +169,7 @@ service cloud.firestore {
         allow get: if true;
         allow list: if true;
 
-        // Use cloud function endpoints
+      // Use cloud function endpoints
         allow update: if false;
       }
 
@@ -180,18 +180,24 @@ service cloud.firestore {
         allow list: if true;
         allow get: if true; // Public read
 
-        // Participants can use cloud function endpoints
+      // Participants can use cloud function endpoints
         allow update: if false;
 
         match /stageData/{stageId} {
           allow read: if true;
 
-          // Participants can use cloud function endpoints
+        // Participants can use cloud function endpoints
           allow write: if false;
         }
 
         match /alerts/{alertId} {
           allow read: if true;
+          allow write: if false; // Use cloud functions
+        }
+
+        // Append-only participant behavior events
+        match /behavior/{eventId} {
+          allow read: if isExperimenter();
           allow write: if false; // Use cloud functions
         }
       }
@@ -200,7 +206,7 @@ service cloud.firestore {
         allow list: if true;
         allow get: if true;
 
-        // Triggered by cloud function triggers
+      // Triggered by cloud function triggers
         allow write: if false;
       }
     }

@@ -9,6 +9,7 @@ import {AnalyticsService, ButtonClick} from '../../services/analytics.service';
 import {ExperimentService} from '../../services/experiment.service';
 import {FirebaseService} from '../../services/firebase.service';
 import {Pages, RouterService} from '../../services/router.service';
+import {BehaviorService} from '../../services/behavior.service';
 
 import {StageKind} from '@deliberation-lab/utils';
 
@@ -26,8 +27,24 @@ export class CohortLanding extends MobxLitElement {
   private readonly experimentService = core.getService(ExperimentService);
   private readonly firebaseService = core.getService(FirebaseService);
   private readonly routerService = core.getService(RouterService);
+  private readonly behaviorService = core.getService(BehaviorService);
 
   @state() isLoading = false;
+  private hasLoggedCtaRender = false;
+
+  override updated() {
+    // Log first time the join CTA is actually available to the user
+    const params = this.routerService.activeRoute.params;
+    const exp = this.experimentService.experiment;
+    const isLocked = !!(exp && exp.cohortLockMap[params['cohort']]);
+    if (!isLocked && !this.hasLoggedCtaRender) {
+      this.behaviorService.log('cta_render', {
+        cta: 'join_experiment',
+        page: 'cohort_landing',
+      });
+      this.hasLoggedCtaRender = true;
+    }
+  }
 
   override render() {
     const isLockedCohort = () => {
@@ -67,6 +84,11 @@ export class CohortLanding extends MobxLitElement {
   }
 
   private async joinExperiment() {
+    // Log CTA click for time-to-first-interaction
+    this.behaviorService.log('cta_click', {
+      cta: 'join_experiment',
+      page: 'cohort_landing',
+    });
     this.isLoading = true;
     this.analyticsService.trackButtonClick(ButtonClick.PARTICIPANT_JOIN);
 

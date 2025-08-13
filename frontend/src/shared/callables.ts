@@ -511,3 +511,31 @@ export const ackAlertMessageCallable = async (
   )(config);
   return data;
 };
+
+/** Participant behavior logging (batched). */
+type BehaviorEventInput = {
+  eventType: string;
+  relativeTimestamp: number;
+  stageId: string;
+  metadata: Record<string, unknown>;
+};
+
+type AddBehaviorEventsData = {
+  experimentId: string;
+  participantId: string; // private id
+  events: BehaviorEventInput[];
+};
+
+export const addBehaviorEventsCallable = async (
+  functions: Functions,
+  config: AddBehaviorEventsData,
+) => {
+  const {data} = await httpsCallable<
+    AddBehaviorEventsData,
+    {success: boolean; count: number}
+  >(
+    functions,
+    'addBehaviorEvents',
+  )(config);
+  return data;
+};
