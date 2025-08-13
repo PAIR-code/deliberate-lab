@@ -11,6 +11,17 @@ export interface BehaviorEventInput {
   metadata: Record<string, unknown>;
 }
 
+// Event shape as stored/exported from Firestore
+// Note: backend writes field name `type` in documents.
+import type {UnifiedTimestamp} from './shared';
+export interface BehaviorEvent {
+  type: string;
+  relativeTimestamp: number;
+  stageId: string;
+  metadata: Record<string, unknown>;
+  timestamp: UnifiedTimestamp;
+}
+
 export interface AddBehaviorEventsData {
   experimentId: string;
   /** Participant private ID. */

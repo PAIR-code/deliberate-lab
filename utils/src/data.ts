@@ -2,6 +2,7 @@ import {AgentDataObject} from './agent';
 import {CohortConfig} from './cohort';
 import {Experiment} from './experiment';
 import {ParticipantProfileExtended} from './participant';
+import {BehaviorEvent} from './behavior';
 import {ChatMessage} from './stages/chat_stage';
 import {
   StageConfig,
@@ -33,6 +34,8 @@ export interface ParticipantDownload {
   profile: ParticipantProfileExtended;
   // Maps from stage ID to participant's stage answer
   answerMap: Record<string, StageParticipantAnswer>;
+  // Ordered list of behavior events (if any)
+  behavior: BehaviorEvent[];
 }
 
 export interface CohortDownload {
@@ -63,6 +66,7 @@ export function createParticipantDownload(
   return {
     profile,
     answerMap: {},
+    behavior: [],
   };
 }
 

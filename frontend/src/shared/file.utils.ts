@@ -44,6 +44,7 @@ import {
   SurveyQuestion,
   SurveyQuestionKind,
   UnifiedTimestamp,
+  BehaviorEvent,
   calculatePayoutResult,
   calculatePayoutTotal,
   createCohortDownload,
@@ -145,6 +146,24 @@ export async function getExperimentDownload(
     for (const stage of stageAnswers) {
       participantDownload.answerMap[stage.id] = stage;
     }
+
+    // Fetch behavior events (ordered by server timestamp)
+    const behaviorDocs = await getDocs(
+      query(
+        collection(
+          firestore,
+          'experiments',
+          experimentId,
+          'participants',
+          profile.privateId,
+          'behavior',
+        ),
+        orderBy('timestamp', 'asc'),
+      ),
+    );
+    participantDownload.behavior = behaviorDocs.docs.map(
+      (doc) => doc.data() as BehaviorEvent,
+    );
     // Add ParticipantDownload to ExperimentDownload
     experimentDownload.participantMap[profile.publicId] = participantDownload;
   }
