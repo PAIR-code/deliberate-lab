@@ -41,31 +41,6 @@ export class ExperimentBuilderNav extends MobxLitElement {
     `;
   }
 
-  private renderMetadataItem() {
-    const navItemClasses = classMap({
-      'nav-item': true,
-      selected: this.experimentEditor.currentStageId === undefined,
-    });
-
-    return html`
-      <div
-        class=${navItemClasses}
-        role="button"
-        @click=${() => {
-          this.experimentEditor.setCurrentStageId(undefined);
-        }}
-      >
-        <pr-icon icon="edit_note"></pr-icon>
-        <div class="primary">
-          ${getPrivateExperimentName(
-            this.experimentEditor.experiment,
-            'Experiment stage editor',
-          )}
-        </div>
-      </div>
-    `;
-  }
-
   private renderStageItem(stage: StageConfig, index: number) {
     const navItemClasses = classMap({
       'nav-item': true,

@@ -363,7 +363,7 @@ export class Header extends MobxLitElement {
     return html`
       <pr-tooltip text=${tooltip} position="BOTTOM_END">
         <pr-icon-button
-          icon=${this.experimentManager.isCreator ? 'edit_note' : 'overview'}
+          icon="settings"
           color="secondary"
           size="small"
           variant="default"
