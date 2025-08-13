@@ -1056,9 +1056,7 @@ export class ChipOfferForm extends MobxLitElement {
   @state() isLoading = false;
 
   // Offer interface variables
-  // eslint-disable-next-line no-unused-vars
   @property() selectedBuyChip: string = '';
-  // eslint-disable-next-line no-unused-vars
   @property() selectedSellChip: string = '';
   @property() buyChipAmount: number = 0;
   @property() sellChipAmount: number = 0;

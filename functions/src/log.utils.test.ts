@@ -34,7 +34,7 @@ allow read, write: if true;
 }
 `;
 
-var mockFirestore;
+let mockFirestore;
 
 jest.mock('./app', () => ({
   app: {
