@@ -3,33 +3,39 @@ title: Run an experiment
 layout: default
 ---
 
-<iframe class="yt-wrapper" type="text/html"
-  src="https://www.youtube.com/embed/TCGUYCLnWS0?autoplay=1&list=PLpC76pxkGLrBb5R7NViRloBzUkn8UQbr0&origin=http://pair-code.github.io/deliberatelab"
-  frameborder="0">
-</iframe>
+## Set up cohort(s)
+Navigate to the experiment and use the cohort panel's "Create new cohort"
+button to create new cohorts.
 
-## Set up cohorts
-First, navigate to the experiment.
+<img
+  src="../assets/images/deliberate-lab-experiment-dashboard-empty.png"
+  alt="Screenshot of Deliberate Lab empty experiment dashboard"
+/>
 
-<!-- TODO: Add screenshot -->
-
-Use the cohort panel's "Add cohort" button to create new cohorts.
-
-Once a cohort is created, use the toolbar buttons to:
+Once a cohort is created, use the buttons to:
 - Directly add participants (and copy/share their experiment links)
 - Copy and share the "join cohort" link (which allows participants to
 dynamically join the cohort)
 - Lock/unlock the cohort (preventing/enabling participants from joining)
 - Edit cohort settings (including giving the cohort a custom name and description in the dashboard)
 
+<img
+  src="../assets/images/deliberate-lab-cohort-panel-empty.png"
+  alt="Screenshot of Deliberate Lab cohort management panel in experiment dashboard"
+  style="max-width: 360px"
+/>
+
 To delete a cohort, use the settings icon in the cohort toolbar. Note that
 deleting a cohort also deletes all its participants.
-
-<!-- TODO: Add screenshot -->
 
 ## Manage participants
 As participants join the experiment, they'll appear in the
 experiment dashboard under the cohort list panel.
+
+<img
+  src="../assets/images/deliberate-lab-cohort-panel-human-participants.png"
+  alt="Screenshot of Deliberate Lab experiment dashboard with participants in cohort"
+/>
 
 Click on a specific participant and (in the general dashboard settings tab
 on the left) toggle participant panels to view that participant's status and/or
@@ -40,7 +46,11 @@ Use the search tab (on the left) to search for a specific participant
 by any of their ID names (and then click on the search result to select them
 in the cohort list).
 
-<!-- TODO: Add screenshot -->
+<img
+  src="../assets/images/deliberate-lab-experiment-dashboard-search.png"
+  alt="Screenshot of Deliberate Lab search tab in experiment dashboard"
+  style="max-width: 360px"
+/>
 
 ### Send attention check
 Use the "attention check" button to send a popup to a participant (asking them
@@ -67,5 +77,5 @@ in the new experiment.
 <!-- TODO: Add screenshot -->
 
 > Note: If a participant is currently in a "Transfer" experiment stage,
-a "Ready for transfer" status chip will appear in the left panel.
+a "Ready for transfer" status chip will appear in the left cohort panel.
 
