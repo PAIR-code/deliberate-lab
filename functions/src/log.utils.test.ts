@@ -1,3 +1,10 @@
+// This test assumes that a Firestore emulator is running, either at the port
+// specified by the FIRESTORE_EMULATOR_HOST environment variable, or at 8080 if
+// not specified. npm test is configured to set up a temporary emulator to run
+// the test. To do it yourself, run e.g.:
+//
+// firebase emulators:exec --only firestore "npx jest src/log.utils.test.ts"
+
 import {
   initializeTestEnvironment,
   assertSucceeds,
@@ -45,8 +52,10 @@ describe('log.utils', () => {
       projectId: 'deliberate-lab-test',
       firestore: {
         rules: RULES,
-        host: 'localhost',
-        port: 8080,
+        ...(!process.env.FIRESTORE_EMULATOR_HOST && {
+          host: 'localhost',
+          port: 8080,
+        }),
       },
     });
     mockFirestore = testEnv.unauthenticatedContext().firestore();
