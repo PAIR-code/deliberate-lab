@@ -1,4 +1,5 @@
 import {generateId} from '../shared';
+import {Condition} from '../utils/condition';
 import {
   BaseStageConfig,
   BaseStageParticipantAnswer,
@@ -43,6 +44,7 @@ export interface BaseSurveyQuestion {
   id: string;
   kind: SurveyQuestionKind;
   questionTitle: string;
+  condition?: Condition; // Optional condition for showing/hiding the question
 }
 
 export interface TextSurveyQuestion extends BaseSurveyQuestion {
@@ -191,6 +193,7 @@ export function createCheckSurveyQuestion(
     kind: SurveyQuestionKind.CHECK,
     questionTitle: config.questionTitle ?? '',
     isRequired: config.isRequired ?? false,
+    condition: config.condition,
   };
 }
 
@@ -202,6 +205,7 @@ export function createTextSurveyQuestion(
     id: config.id ?? generateId(),
     kind: SurveyQuestionKind.TEXT,
     questionTitle: config.questionTitle ?? '',
+    condition: config.condition,
   };
 }
 
@@ -215,6 +219,7 @@ export function createMultipleChoiceSurveyQuestion(
     questionTitle: config.questionTitle ?? '',
     options: config.options ?? [],
     correctAnswerId: config.correctAnswerId ?? null,
+    condition: config.condition,
   };
 }
 
@@ -244,6 +249,7 @@ export function createScaleSurveyQuestion(
     middleText: config.middleText ?? '',
     useSlider: config.useSlider ?? false,
     stepSize: config.stepSize ?? 1,
+    condition: config.condition,
   };
 }
 

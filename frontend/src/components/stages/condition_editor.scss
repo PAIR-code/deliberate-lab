@@ -1,0 +1,98 @@
+@use '../../sass/typescale';
+@use '../../sass/common';
+
+:host {
+  display: block;
+}
+
+.condition-editor {
+  padding: common.$spacing-small;
+  border: 1px solid var(--md-sys-color-outline-variant);
+  border-radius: 8px;
+  background: var(--md-sys-color-surface-container-lowest);
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: common.$spacing-medium;
+
+  .title {
+    @include typescale.title-medium;
+    color: var(--md-sys-color-on-surface);
+  }
+}
+
+.condition-group {
+  padding: common.$spacing-small;
+  border: 1px solid var(--md-sys-color-outline);
+  border-radius: 4px;
+  background: var(--md-sys-color-surface);
+
+  .group-header {
+    margin-bottom: common.$spacing-medium;
+
+    md-outlined-select {
+      width: 100%;
+      max-width: 300px;
+    }
+  }
+
+  .group-conditions {
+    display: flex;
+    flex-direction: column;
+    gap: common.$spacing-small;
+    margin-bottom: common.$spacing-small;
+  }
+
+  .condition-item {
+    display: flex;
+    align-items: center;
+    gap: common.$spacing-small;
+
+    > :first-child {
+      flex: 1;
+    }
+
+    md-icon-button {
+      flex-shrink: 0;
+    }
+  }
+
+  .group-actions {
+    display: flex;
+    gap: common.$spacing-small;
+    padding-top: common.$spacing-small;
+    border-top: 1px solid var(--md-sys-color-outline-variant);
+  }
+}
+
+.comparison-condition {
+  display: flex;
+  align-items: center;
+  gap: common.$spacing-small;
+  flex-wrap: wrap;
+
+  .target-select {
+    flex: 1;
+    min-width: 200px;
+  }
+
+  .operator-select {
+    flex: 0 0 auto;
+    min-width: 150px;
+  }
+
+  .value-select,
+  .value-input {
+    flex: 1;
+    min-width: 150px;
+  }
+}
+
+// Nested groups
+.condition-group .condition-group {
+  margin-left: common.$spacing-medium;
+  background: var(--md-sys-color-surface-container-low);
+}

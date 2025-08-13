@@ -3,12 +3,18 @@ import {CSSResultGroup, html, nothing} from 'lit';
 import {customElement, property} from 'lit/decorators.js';
 import '../stages/survey_editor_menu';
 import '@material/web/checkbox/checkbox.js';
+import './condition_editor';
+import {
+  ConditionTarget,
+  surveyQuestionsToConditionTargets,
+} from './condition_editor';
 
 import {core} from '../../core/core';
 import {ExperimentEditor} from '../../services/experiment.editor';
 
 import {
   CheckSurveyQuestion,
+  Condition,
   MultipleChoiceItem,
   MultipleChoiceSurveyQuestion,
   ScaleSurveyQuestion,
@@ -184,6 +190,67 @@ export class SurveyEditor extends MobxLitElement {
     `;
   }
 
+  private renderConditionEditor(question: SurveyQuestion, index: number) {
+    if (!this.stage) return nothing;
+
+    const onConditionChange = (condition: Condition | undefined) => {
+      this.updateQuestion(
+        {
+          ...question,
+          condition,
+        },
+        index,
+      );
+    };
+
+    // Get all questions before this one in current stage (can only reference previous questions)
+    const currentStageQuestions = this.stage.questions.slice(0, index);
+    const currentTargets = surveyQuestionsToConditionTargets(
+      currentStageQuestions,
+      this.stage.id,
+      this.stage.name,
+    );
+
+    // Get questions from all previous stages
+    const allTargets: ConditionTarget[] = [...currentTargets];
+    const currentStageIndex = this.experimentEditor.stages.findIndex(
+      (s) => s.id === this.stage?.id,
+    );
+
+    if (currentStageIndex > 0) {
+      // Add questions from previous stages
+      for (let i = 0; i < currentStageIndex; i++) {
+        const prevStage = this.experimentEditor.stages[i];
+        if (
+          prevStage.kind === StageKind.SURVEY ||
+          prevStage.kind === StageKind.SURVEY_PER_PARTICIPANT
+        ) {
+          const prevSurveyStage = prevStage as
+            | SurveyStageConfig
+            | SurveyPerParticipantStageConfig;
+          const prevTargets = surveyQuestionsToConditionTargets(
+            prevSurveyStage.questions,
+            prevStage.id,
+            prevStage.name,
+          );
+          allTargets.push(...prevTargets);
+        }
+      }
+    }
+
+    if (allTargets.length === 0) {
+      return nothing; // No questions to reference
+    }
+
+    return html`
+      <condition-editor
+        .condition=${question.condition}
+        .targets=${allTargets}
+        .onConditionChange=${onConditionChange}
+      ></condition-editor>
+    `;
+  }
+
   private renderQuestionNav(question: SurveyQuestion, index: number) {
     if (!this.stage) {
       return;
@@ -257,6 +324,7 @@ export class SurveyEditor extends MobxLitElement {
           >Make this question required for participants</span
         >
       </label>
+      ${this.renderConditionEditor(question, index)}
     `;
   }
 
@@ -333,6 +401,7 @@ export class SurveyEditor extends MobxLitElement {
       >
         Add multiple choice item
       </pr-button>
+      ${this.renderConditionEditor(question, index)}
     `;
   }
 
@@ -514,6 +583,7 @@ export class SurveyEditor extends MobxLitElement {
           Optional: Display the scale as a slider instead of radio buttons
         </span>
       </label>
+      ${this.renderConditionEditor(question, index)}
     `;
   }
 
@@ -525,6 +595,7 @@ export class SurveyEditor extends MobxLitElement {
         </div>
         ${this.renderQuestionNav(question, index)}
       </div>
+      ${this.renderConditionEditor(question, index)}
     `;
   }
 }
