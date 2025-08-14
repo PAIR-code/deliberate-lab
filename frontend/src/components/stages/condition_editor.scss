@@ -10,6 +10,11 @@
   border: 1px solid var(--md-sys-color-outline-variant);
   border-radius: 8px;
   background: var(--md-sys-color-surface-container-lowest);
+
+  &.disabled {
+    pointer-events: none;
+    opacity: 0.6;
+  }
 }
 
 .header {

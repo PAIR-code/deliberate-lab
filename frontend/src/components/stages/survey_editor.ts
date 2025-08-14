@@ -246,6 +246,7 @@ export class SurveyEditor extends MobxLitElement {
       <condition-editor
         .condition=${question.condition}
         .targets=${allTargets}
+        .disabled=${!this.experimentEditor.canEditStages}
         .onConditionChange=${onConditionChange}
       ></condition-editor>
     `;

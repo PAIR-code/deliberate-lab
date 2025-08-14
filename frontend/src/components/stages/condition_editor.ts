@@ -42,6 +42,7 @@ export class ConditionEditor extends MobxLitElement {
 
   @property({type: Object}) condition: Condition | undefined = undefined;
   @property({type: Array}) targets: ConditionTarget[] = [];
+  @property({type: Boolean}) disabled: boolean = false;
   @property() onConditionChange: (condition: Condition | undefined) => void =
     () => {};
 
@@ -49,7 +50,7 @@ export class ConditionEditor extends MobxLitElement {
     const hasCondition = this.condition !== undefined;
 
     return html`
-      <div class="condition-editor">
+      <div class="condition-editor ${this.disabled ? 'disabled' : ''}">
         <div class="header">
           <div class="title">Display Condition</div>
           ${hasCondition
