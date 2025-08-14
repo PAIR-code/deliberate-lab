@@ -169,15 +169,15 @@ export class ConditionEditor extends MobxLitElement {
     `;
   }
 
-  private renderComparisonCondition(condition: ComparisonCondition) {
-    // Build display key from structured target
-    // Using :: as separator since it's unlikely to appear in IDs
-    const conditionKey = `${condition.target.stageId}::${condition.target.questionId}`;
+  private getTargetKey(ref: ConditionTargetReference): string {
+    return `${ref.stageId}::${ref.questionId}`;
+  }
 
-    const target = this.targets.find((t) => {
-      const tKey = `${t.ref.stageId}::${t.ref.questionId}`;
-      return tKey === conditionKey;
-    });
+  private renderComparisonCondition(condition: ComparisonCondition) {
+    const conditionKey = this.getTargetKey(condition.target);
+    const target = this.targets.find(
+      (t) => this.getTargetKey(t.ref) === conditionKey,
+    );
 
     return html`
       <div class="comparison-condition">
@@ -190,16 +190,15 @@ export class ConditionEditor extends MobxLitElement {
               (e.target as HTMLSelectElement).value,
             )}
         >
-          ${this.targets.map((t) => {
-            const targetKey = `${t.ref.stageId}::${t.ref.questionId}`;
-            return html`
-              <md-select-option value=${targetKey}>
+          ${this.targets.map(
+            (t) => html`
+              <md-select-option value=${this.getTargetKey(t.ref)}>
                 <div slot="headline">
                   ${t.stageName ? `[${t.stageName}] ${t.label}` : t.label}
                 </div>
               </md-select-option>
-            `;
-          })}
+            `,
+          )}
         </md-outlined-select>
 
         <md-outlined-select
@@ -328,28 +327,38 @@ export class ConditionEditor extends MobxLitElement {
     }
   }
 
+  private getDefaultValue(target: ConditionTarget): string | number | boolean {
+    switch (target.type) {
+      case 'boolean':
+        return false;
+      case 'number':
+        return 0;
+      case 'choice':
+        return target.choices?.length ? target.choices[0].id : '';
+      case 'text':
+      default:
+        return '';
+    }
+  }
+
+  private createDefaultComparison(): ComparisonCondition | null {
+    const firstTarget = this.targets[0];
+    if (!firstTarget) return null;
+
+    return createComparisonCondition(
+      firstTarget.ref,
+      ComparisonOperator.EQUALS,
+      this.getDefaultValue(firstTarget),
+    );
+  }
+
   private addCondition() {
     // Always start with a group containing one comparison
     const group = createConditionGroup(ConditionOperator.AND);
+    const comparison = this.createDefaultComparison();
 
-    const firstTarget = this.targets[0];
-    if (firstTarget) {
-      const defaultValue =
-        firstTarget.type === 'boolean'
-          ? false
-          : firstTarget.type === 'number'
-            ? 0
-            : firstTarget.type === 'choice' && firstTarget.choices?.length
-              ? firstTarget.choices[0].id
-              : '';
-
-      group.conditions.push(
-        createComparisonCondition(
-          firstTarget.ref,
-          ComparisonOperator.EQUALS,
-          defaultValue,
-        ),
-      );
+    if (comparison) {
+      group.conditions.push(comparison);
     }
 
     this.condition = group;
@@ -370,80 +379,29 @@ export class ConditionEditor extends MobxLitElement {
   }
 
   private addComparisonToGroup(group: ConditionGroup) {
-    const firstTarget = this.targets[0];
-    if (!firstTarget) return;
+    const comparison = this.createDefaultComparison();
+    if (comparison) {
+      group.conditions.push(comparison);
+      this.onConditionChange(this.condition);
+    }
+  }
 
-    const defaultValue =
-      firstTarget.type === 'boolean'
-        ? false
-        : firstTarget.type === 'number'
-          ? 0
-          : firstTarget.type === 'choice' && firstTarget.choices?.length
-            ? firstTarget.choices[0].id
-            : '';
-
-    group.conditions.push(
-      createComparisonCondition(
-        firstTarget.ref,
-        ComparisonOperator.EQUALS,
-        defaultValue,
-      ),
-    );
-    this.onConditionChange(this.condition);
+  private createSubgroupWithComparison(): ConditionGroup {
+    const subgroup = createConditionGroup(ConditionOperator.AND);
+    const comparison = this.createDefaultComparison();
+    if (comparison) {
+      subgroup.conditions.push(comparison);
+    }
+    return subgroup;
   }
 
   private addSubgroupToGroup(group: ConditionGroup) {
-    const subgroup = createConditionGroup(ConditionOperator.AND);
-
-    const firstTarget = this.targets[0];
-    if (firstTarget) {
-      const defaultValue =
-        firstTarget.type === 'boolean'
-          ? false
-          : firstTarget.type === 'number'
-            ? 0
-            : firstTarget.type === 'choice' && firstTarget.choices?.length
-              ? firstTarget.choices[0].id
-              : '';
-
-      subgroup.conditions.push(
-        createComparisonCondition(
-          firstTarget.ref,
-          ComparisonOperator.EQUALS,
-          defaultValue,
-        ),
-      );
-    }
-
-    group.conditions.push(subgroup);
+    group.conditions.push(this.createSubgroupWithComparison());
     this.onConditionChange(this.condition);
   }
 
   private insertSubgroupAfter(group: ConditionGroup, index: number) {
-    const subgroup = createConditionGroup(ConditionOperator.AND);
-
-    const firstTarget = this.targets[0];
-    if (firstTarget) {
-      const defaultValue =
-        firstTarget.type === 'boolean'
-          ? false
-          : firstTarget.type === 'number'
-            ? 0
-            : firstTarget.type === 'choice' && firstTarget.choices?.length
-              ? firstTarget.choices[0].id
-              : '';
-
-      subgroup.conditions.push(
-        createComparisonCondition(
-          firstTarget.ref,
-          ComparisonOperator.EQUALS,
-          defaultValue,
-        ),
-      );
-    }
-
-    // Insert the subgroup after the specified index
-    group.conditions.splice(index + 1, 0, subgroup);
+    group.conditions.splice(index + 1, 0, this.createSubgroupWithComparison());
     this.onConditionChange(this.condition);
   }
 
@@ -463,30 +421,18 @@ export class ConditionEditor extends MobxLitElement {
     condition: ComparisonCondition,
     targetKey: string,
   ) {
-    // Find the target that matches this key
-    const target = this.targets.find((t) => {
-      const tKey = `${t.ref.stageId}::${t.ref.questionId}`;
-      return tKey === targetKey;
-    });
+    const target = this.targets.find(
+      (t) => this.getTargetKey(t.ref) === targetKey,
+    );
 
     if (target) {
       condition.target = target.ref;
-
-      // Reset value when target changes
-      condition.value =
-        target.type === 'boolean'
-          ? false
-          : target.type === 'number'
-            ? 0
-            : target.type === 'choice' && target.choices?.length
-              ? target.choices[0].id
-              : '';
+      condition.value = this.getDefaultValue(target);
     }
 
     this.onConditionChange(this.condition);
   }
 
-  // Helper to parse target ID strings into structured references
   private updateComparisonOperator(
     condition: ComparisonCondition,
     operator: ComparisonOperator,
