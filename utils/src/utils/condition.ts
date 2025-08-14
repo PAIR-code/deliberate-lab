@@ -44,15 +44,16 @@ export interface ComparisonCondition extends BaseCondition {
 
 export type Condition = ConditionGroup | ComparisonCondition;
 
-/** Create an empty condition group */
+/** Create a condition group with optional initial conditions */
 export function createConditionGroup(
   operator: ConditionOperator = ConditionOperator.AND,
+  conditions: Condition[] = [],
 ): ConditionGroup {
   return {
     id: generateId(),
     type: 'group',
     operator,
-    conditions: [],
+    conditions,
   };
 }
 

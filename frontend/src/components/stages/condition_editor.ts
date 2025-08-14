@@ -354,14 +354,10 @@ export class ConditionEditor extends MobxLitElement {
 
   private addCondition() {
     // Always start with a group containing one comparison
-    const group = createConditionGroup(ConditionOperator.AND);
     const comparison = this.createDefaultComparison();
+    const conditions = comparison ? [comparison] : [];
 
-    if (comparison) {
-      group.conditions.push(comparison);
-    }
-
-    this.condition = group;
+    this.condition = createConditionGroup(ConditionOperator.AND, conditions);
     this.onConditionChange(this.condition);
   }
 
@@ -387,12 +383,9 @@ export class ConditionEditor extends MobxLitElement {
   }
 
   private createSubgroupWithComparison(): ConditionGroup {
-    const subgroup = createConditionGroup(ConditionOperator.AND);
     const comparison = this.createDefaultComparison();
-    if (comparison) {
-      subgroup.conditions.push(comparison);
-    }
-    return subgroup;
+    const conditions = comparison ? [comparison] : [];
+    return createConditionGroup(ConditionOperator.AND, conditions);
   }
 
   private addSubgroupToGroup(group: ConditionGroup) {

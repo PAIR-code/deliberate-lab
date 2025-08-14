@@ -39,6 +39,54 @@ describe('condition utilities', () => {
         conditions: [],
       });
     });
+
+    test('creates condition group with initial conditions', () => {
+      const target: ConditionTargetReference = {
+        stageId: 'stage1',
+        questionId: 'q1',
+      };
+      const condition1 = createComparisonCondition(
+        target,
+        ComparisonOperator.EQUALS,
+        'value1',
+      );
+      const condition2 = createComparisonCondition(
+        target,
+        ComparisonOperator.NOT_EQUALS,
+        'value2',
+      );
+
+      const group = createConditionGroup(ConditionOperator.AND, [
+        condition1,
+        condition2,
+      ]);
+      expect(group).toEqual({
+        id: 'test-id',
+        type: 'group',
+        operator: ConditionOperator.AND,
+        conditions: [condition1, condition2],
+      });
+    });
+
+    test('creates condition group with OR operator and initial conditions', () => {
+      const target: ConditionTargetReference = {
+        stageId: 'stage1',
+        questionId: 'q1',
+      };
+      const condition = createComparisonCondition(
+        target,
+        ComparisonOperator.GREATER_THAN,
+        10,
+      );
+
+      const group = createConditionGroup(ConditionOperator.OR, [condition]);
+      expect(group).toEqual({
+        id: 'test-id',
+        type: 'group',
+        operator: ConditionOperator.OR,
+        conditions: [condition],
+      });
+    });
   });
 
   describe('createComparisonCondition', () => {
