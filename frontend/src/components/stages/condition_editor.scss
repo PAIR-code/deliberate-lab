@@ -22,6 +22,12 @@
     @include typescale.title-medium;
     color: var(--md-sys-color-on-surface);
   }
+
+  .header-actions {
+    display: flex;
+    gap: common.$spacing-small;
+    align-items: center;
+  }
 }
 
 .condition-group {
@@ -30,33 +36,117 @@
   border-radius: 4px;
   background: var(--md-sys-color-surface);
 
-  .group-header {
-    margin-bottom: common.$spacing-medium;
+  // All nested groups get darker background and indent
+  .condition-group {
+    margin-left: common.$spacing-medium;
+    background: var(--md-sys-color-surface-variant);
 
-    md-outlined-select {
-      width: 100%;
-      max-width: 300px;
+    // Double nested groups go back to light
+    .condition-group {
+      background: var(--md-sys-color-surface);
+
+      // Triple nested groups go dark again
+      .condition-group {
+        background: var(--md-sys-color-surface-variant);
+
+        // Quadruple nested groups go light
+        .condition-group {
+          background: var(--md-sys-color-surface);
+        }
+      }
     }
   }
 
   .group-conditions {
     display: flex;
     flex-direction: column;
-    gap: common.$spacing-small;
+    gap: 0;
     margin-bottom: common.$spacing-small;
+
+    .empty-conditions {
+      padding: common.$spacing-medium;
+      text-align: center;
+      color: var(--md-sys-color-on-surface-variant);
+      @include typescale.body-medium;
+      background: var(--md-sys-color-surface-container-low);
+      border-radius: 4px;
+      border: 1px dashed var(--md-sys-color-outline-variant);
+    }
+
+    .operator-connector {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: common.$spacing-xs 0;
+      position: relative;
+
+      .connector-line {
+        flex: 1;
+        height: 1px;
+        background: var(--md-sys-color-outline-variant);
+        max-width: 100px;
+      }
+
+      .operator-split-button {
+        display: flex;
+        border-radius: 16px;
+        overflow: hidden;
+        border: 1px solid var(--md-sys-color-outline);
+        margin: 0 common.$spacing-small;
+
+        .operator-option {
+          padding: 4px 12px;
+          border: none;
+          background: var(--md-sys-color-surface-container);
+          color: var(--md-sys-color-on-surface-variant);
+          font-weight: 500;
+          font-size: 12px;
+          cursor: pointer;
+          transition: all 0.2s ease;
+          min-width: 40px;
+          text-align: center;
+
+          &:first-child {
+            border-right: 1px solid var(--md-sys-color-outline-variant);
+          }
+
+          &:hover:not(.active) {
+            background: var(--md-sys-color-surface-container-high);
+          }
+
+          &.active {
+            background: var(--md-sys-color-primary);
+            color: var(--md-sys-color-on-primary);
+            font-weight: 600;
+          }
+
+          &:active {
+            transform: scale(0.95);
+          }
+        }
+      }
+    }
   }
 
   .condition-item {
     display: flex;
     align-items: center;
     gap: common.$spacing-small;
+    padding: common.$spacing-xs 0;
 
     > :first-child {
       flex: 1;
     }
 
-    md-icon-button {
+    .condition-actions {
+      display: flex;
+      align-items: center;
+      gap: common.$spacing-xs;
       flex-shrink: 0;
+
+      md-icon-button {
+        flex-shrink: 0;
+      }
     }
   }
 
@@ -89,10 +179,4 @@
     flex: 1;
     min-width: 150px;
   }
-}
-
-// Nested groups
-.condition-group .condition-group {
-  margin-left: common.$spacing-medium;
-  background: var(--md-sys-color-surface-container-low);
 }

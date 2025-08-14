@@ -56,7 +56,7 @@ export class ConditionEditor extends MobxLitElement {
             ? html`
                 <md-text-button @click=${this.removeCondition}>
                   <md-icon slot="icon">delete</md-icon>
-                  Remove condition
+                  Remove all
                 </md-text-button>
               `
             : html`
@@ -82,41 +82,83 @@ export class ConditionEditor extends MobxLitElement {
   private renderConditionGroup(group: ConditionGroup): TemplateResult {
     return html`
       <div class="condition-group">
-        <div class="group-header">
-          <md-outlined-select
-            .value=${group.operator}
-            @change=${(e: Event) =>
-              this.updateGroupOperator(
-                group,
-                (e.target as HTMLSelectElement).value as ConditionOperator,
-              )}
-          >
-            <md-select-option value=${ConditionOperator.AND}>
-              <div slot="headline">ALL conditions must be true (AND)</div>
-            </md-select-option>
-            <md-select-option value=${ConditionOperator.OR}>
-              <div slot="headline">ANY condition must be true (OR)</div>
-            </md-select-option>
-          </md-outlined-select>
-        </div>
         <div class="group-conditions">
-          ${group.conditions.map(
-            (c, index) => html`
-              <div class="condition-item">
-                ${this.renderCondition(c)}
-                <md-icon-button
-                  @click=${() => this.removeConditionFromGroup(group, index)}
-                >
-                  <md-icon>delete</md-icon>
-                </md-icon-button>
-              </div>
-            `,
-          )}
+          ${group.conditions.length === 0
+            ? html`
+                <div class="empty-conditions">
+                  No conditions added yet. Click "Add condition" below.
+                </div>
+              `
+            : group.conditions.map(
+                (c, index) => html`
+                  ${index > 0
+                    ? html`
+                        <div class="operator-connector">
+                          <div class="connector-line"></div>
+                          <div class="operator-split-button">
+                            <button
+                              class="operator-option ${group.operator ===
+                              ConditionOperator.AND
+                                ? 'active'
+                                : ''}"
+                              @click=${() =>
+                                this.updateGroupOperator(
+                                  group,
+                                  ConditionOperator.AND,
+                                )}
+                              title="All conditions must be true"
+                            >
+                              AND
+                            </button>
+                            <button
+                              class="operator-option ${group.operator ===
+                              ConditionOperator.OR
+                                ? 'active'
+                                : ''}"
+                              @click=${() =>
+                                this.updateGroupOperator(
+                                  group,
+                                  ConditionOperator.OR,
+                                )}
+                              title="Any condition must be true"
+                            >
+                              OR
+                            </button>
+                          </div>
+                          <div class="connector-line"></div>
+                        </div>
+                      `
+                    : nothing}
+                  <div class="condition-item">
+                    ${this.renderCondition(c)}
+                    <div class="condition-actions">
+                      ${c.type === 'group'
+                        ? nothing
+                        : html`
+                            <md-icon-button
+                              @click=${() =>
+                                this.insertSubgroupAfter(group, index)}
+                              title="Add subgroup after this condition"
+                            >
+                              <md-icon>add_circle</md-icon>
+                            </md-icon-button>
+                          `}
+                      <md-icon-button
+                        @click=${() =>
+                          this.removeConditionFromGroup(group, index)}
+                        title="Remove this condition"
+                      >
+                        <md-icon>delete</md-icon>
+                      </md-icon-button>
+                    </div>
+                  </div>
+                `,
+              )}
         </div>
         <div class="group-actions">
           <md-text-button @click=${() => this.addComparisonToGroup(group)}>
             <md-icon slot="icon">add</md-icon>
-            Add comparison
+            Add condition
           </md-text-button>
           <md-text-button @click=${() => this.addSubgroupToGroup(group)}>
             <md-icon slot="icon">add_circle</md-icon>
@@ -287,23 +329,30 @@ export class ConditionEditor extends MobxLitElement {
   }
 
   private addCondition() {
+    // Always start with a group containing one comparison
+    const group = createConditionGroup(ConditionOperator.AND);
+
     const firstTarget = this.targets[0];
-    if (!firstTarget) return;
+    if (firstTarget) {
+      const defaultValue =
+        firstTarget.type === 'boolean'
+          ? false
+          : firstTarget.type === 'number'
+            ? 0
+            : firstTarget.type === 'choice' && firstTarget.choices?.length
+              ? firstTarget.choices[0].id
+              : '';
 
-    const defaultValue =
-      firstTarget.type === 'boolean'
-        ? false
-        : firstTarget.type === 'number'
-          ? 0
-          : firstTarget.type === 'choice' && firstTarget.choices?.length
-            ? firstTarget.choices[0].id
-            : '';
+      group.conditions.push(
+        createComparisonCondition(
+          firstTarget.ref,
+          ComparisonOperator.EQUALS,
+          defaultValue,
+        ),
+      );
+    }
 
-    this.condition = createComparisonCondition(
-      firstTarget.ref,
-      ComparisonOperator.EQUALS,
-      defaultValue,
-    );
+    this.condition = group;
     this.onConditionChange(this.condition);
   }
 
@@ -367,6 +416,34 @@ export class ConditionEditor extends MobxLitElement {
     }
 
     group.conditions.push(subgroup);
+    this.onConditionChange(this.condition);
+  }
+
+  private insertSubgroupAfter(group: ConditionGroup, index: number) {
+    const subgroup = createConditionGroup(ConditionOperator.AND);
+
+    const firstTarget = this.targets[0];
+    if (firstTarget) {
+      const defaultValue =
+        firstTarget.type === 'boolean'
+          ? false
+          : firstTarget.type === 'number'
+            ? 0
+            : firstTarget.type === 'choice' && firstTarget.choices?.length
+              ? firstTarget.choices[0].id
+              : '';
+
+      subgroup.conditions.push(
+        createComparisonCondition(
+          firstTarget.ref,
+          ComparisonOperator.EQUALS,
+          defaultValue,
+        ),
+      );
+    }
+
+    // Insert the subgroup after the specified index
+    group.conditions.splice(index + 1, 0, subgroup);
     this.onConditionChange(this.condition);
   }
 
