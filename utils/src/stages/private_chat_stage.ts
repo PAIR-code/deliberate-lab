@@ -5,10 +5,6 @@ import {
   createStageTextConfig,
   createStageProgressConfig,
 } from './stage';
-import {
-  ParticipantProfileBase,
-  createParticipantProfileBase,
-} from '../participant';
 
 /** Private chat stage types and functions.
  *
