@@ -604,7 +604,7 @@ export class ExperimentBuilder extends MobxLitElement {
       case StageKind.PRIVATE_CHAT:
         return html`
           <base-stage-editor .stage=${stage}>
-            <div slot="title">Mediator settings</div>
+            <div slot="title">Chat settings</div>
             <private-chat-editor .stage=${stage}></private-chat-editor>
           </base-stage-editor>
         `;
