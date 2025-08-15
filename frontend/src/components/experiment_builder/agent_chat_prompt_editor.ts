@@ -180,6 +180,8 @@ export class EditorComponent extends MobxLitElement {
           ${this.renderPromptPreview(promptConfig)}
         </div>
         <div class="divider"></div>
+        ${this.renderAgentChatSettings(this.agent, promptConfig)}
+        <div class="divider"></div>
         ${this.renderAgentSamplingParameters(this.agent, promptConfig)}
         <div class="divider"></div>
         ${this.renderAgentCustomRequestBodyFields(this.agent, promptConfig)}
@@ -256,6 +258,159 @@ export class EditorComponent extends MobxLitElement {
       <div class="code-wrapper">
         <div class="field-title">Prompt preview</div>
         <pre><code>${getPromptItems()}${getStructuredOutput()}</code></pre>
+      </div>
+    `;
+  }
+
+  private renderAgentChatSettings(
+    agent: AgentPersonaConfig,
+    agentPromptConfig: ChatPromptConfig,
+  ) {
+    const chatSettings = agentPromptConfig.chatSettings;
+
+    const updateInitialMessage = (e: InputEvent) => {
+      const initialMessage = (e.target as HTMLTextAreaElement).value;
+      this.updatePrompt({
+        chatSettings: {
+          ...agentPromptConfig.chatSettings,
+          initialMessage,
+        },
+      });
+    };
+
+    const updateWordsPerMinute = (e: InputEvent) => {
+      const value = (e.target as HTMLInputElement).value;
+      const wordsPerMinute = value === '' ? null : Number(value);
+      this.updatePrompt({
+        chatSettings: {
+          ...agentPromptConfig.chatSettings,
+          wordsPerMinute,
+        },
+      });
+    };
+
+    const updateMinMessagesBeforeResponding = (e: InputEvent) => {
+      const minMessagesBeforeResponding = Number(
+        (e.target as HTMLInputElement).value,
+      );
+      if (!isNaN(minMessagesBeforeResponding)) {
+        this.updatePrompt({
+          chatSettings: {
+            ...agentPromptConfig.chatSettings,
+            minMessagesBeforeResponding,
+          },
+        });
+      }
+    };
+
+    const updateCanSelfTriggerCalls = (e: Event) => {
+      const canSelfTriggerCalls = (e.target as HTMLInputElement).checked;
+      this.updatePrompt({
+        chatSettings: {
+          ...agentPromptConfig.chatSettings,
+          canSelfTriggerCalls,
+        },
+      });
+    };
+
+    const updateMaxResponses = (e: InputEvent) => {
+      const value = (e.target as HTMLInputElement).value;
+      const maxResponses = value === '' ? null : Number(value);
+      this.updatePrompt({
+        chatSettings: {
+          ...agentPromptConfig.chatSettings,
+          maxResponses,
+        },
+      });
+    };
+
+    return html`
+      <div class="section">
+        <div class="section-header">
+          <div class="section-title">Chat settings</div>
+          <div class="description">
+            Configure how this agent participates in the chat.
+          </div>
+        </div>
+        <div class="field">
+          <label for="initialMessage">Initial message</label>
+          <div class="description">
+            Message sent automatically when the conversation begins.
+          </div>
+          <pr-textarea
+            variant="outlined"
+            placeholder="e.g., Hello! I'm here to help you with..."
+            .value=${chatSettings.initialMessage}
+            ?disabled=${!this.experimentEditor.isCreator}
+            @input=${updateInitialMessage}
+          >
+          </pr-textarea>
+        </div>
+        <div class="field">
+          <label for="wordsPerMinute">Typing speed (words per minute)</label>
+          <div class="description">
+            Agent's typing speed. Leave empty for instant messages.
+          </div>
+          <div class="number-input">
+            <input
+              .disabled=${!this.experimentEditor.isCreator}
+              type="number"
+              min="1"
+              .value=${chatSettings.wordsPerMinute ?? ''}
+              placeholder="Instant"
+              @input=${updateWordsPerMinute}
+            />
+          </div>
+        </div>
+        <div class="field">
+          <label for="minMessagesBeforeResponding"
+            >Minimum messages before responding</label
+          >
+          <div class="description">
+            Number of chat messages that must exist before the agent can
+            respond.
+          </div>
+          <div class="number-input">
+            <input
+              .disabled=${!this.experimentEditor.isCreator}
+              type="number"
+              min="0"
+              .value=${chatSettings.minMessagesBeforeResponding}
+              @input=${updateMinMessagesBeforeResponding}
+            />
+          </div>
+        </div>
+        <div class="checkbox-wrapper">
+          <md-checkbox
+            touch-target="wrapper"
+            ?checked=${chatSettings.canSelfTriggerCalls}
+            ?disabled=${!this.experimentEditor.isCreator}
+            @change=${updateCanSelfTriggerCalls}
+          >
+          </md-checkbox>
+          <div>
+            Can respond multiple times in a row
+            <span class="small">
+              (Agent's own messages can trigger new responses)
+            </span>
+          </div>
+        </div>
+        <div class="field">
+          <label for="maxResponses">Maximum responses</label>
+          <div class="description">
+            Maximum total responses during the chat. Leave empty for no limit.
+          </div>
+          <div class="number-input">
+            <input
+              .disabled=${!this.experimentEditor.isCreator}
+              type="number"
+              min="1"
+              .value=${chatSettings.maxResponses ?? ''}
+              placeholder="No limit"
+              @input=${updateMaxResponses}
+            />
+          </div>
+        </div>
       </div>
     `;
   }
