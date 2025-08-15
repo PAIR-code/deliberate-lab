@@ -192,6 +192,7 @@ export class SurveyEditor extends MobxLitElement {
 
   private renderConditionEditor(question: SurveyQuestion, index: number) {
     if (!this.stage) return nothing;
+    if (!this.experimentEditor.showAlphaFeatures) return nothing;
 
     const onConditionChange = (condition: Condition | undefined) => {
       this.updateQuestion(
