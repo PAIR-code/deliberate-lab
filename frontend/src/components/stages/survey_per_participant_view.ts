@@ -31,17 +31,15 @@ import {
   TextSurveyAnswer,
   TextSurveyQuestion,
   isMultipleChoiceImageQuestion,
+  isQuestionVisible,
+  getVisibleSurveyQuestions,
 } from '@deliberation-lab/utils';
 
 import {core} from '../../core/core';
 import {CohortService} from '../../services/cohort.service';
 import {ParticipantService} from '../../services/participant.service';
 import {ParticipantAnswerService} from '../../services/participant.answer';
-import {
-  isSurveyComplete,
-  isQuestionVisible,
-  getVisibleSurveyQuestions,
-} from '../../shared/stage.utils';
+import {isSurveyComplete} from '../../shared/stage.utils';
 
 import {styles} from './survey_view.scss';
 

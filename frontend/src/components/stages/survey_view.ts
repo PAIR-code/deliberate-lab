@@ -26,10 +26,10 @@ import {
   TextSurveyAnswer,
   TextSurveyQuestion,
   isMultipleChoiceImageQuestion,
-} from '@deliberation-lab/utils';
-import {
   getVisibleSurveyQuestions,
   isQuestionVisible,
+} from '@deliberation-lab/utils';
+import {
   isSurveyComplete,
   isSurveyAnswerComplete,
 } from '../../shared/stage.utils';
