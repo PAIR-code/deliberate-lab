@@ -105,11 +105,11 @@ export function getChatPromptMessageHistory(
   stage: ChatStageConfig,
 ) {
   if (messages.length === 0) {
-    return `No one in the group discussion has spoken yet.`;
+    return `No one in the discussion has spoken yet.`;
   }
 
   const description = `
-Below is the transcript of your group discussion.
+Below is the transcript of your discussion.
 Each message is displayed in chronological order, with the most recent message at the bottom. Each entry follows this format:
 
 (HH:MM) ParticipantName: Message content
