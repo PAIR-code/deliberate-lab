@@ -57,7 +57,11 @@ export async function createAgentChatMessageFromPrompt(
       .collection('prompts')
       .doc(stageId)
       .get()
-  ).data() as ChatPromptConfig;
+  ).data() as ChatPromptConfig | undefined;
+
+  if (!promptConfig) {
+    return false; // No prompt configured for this stage
+  }
 
   // Stage (in order to determin stage kind)
   const stage = await getFirestoreStage(experimentId, stageId);
