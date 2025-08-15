@@ -20,10 +20,13 @@ jobs:
       with:
         node-version: ${{ matrix.node-version }}
 
+    - name: Install
+      run: npm install
+
     - name: Check format
       run: |
         npx prettier --check "**/*.ts"
-        npx eslint "**/*.ts"
+        npx eslint --quiet "**/*.ts"
 
   test:
     name: Run tests

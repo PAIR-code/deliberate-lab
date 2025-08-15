@@ -20,6 +20,7 @@ export default [{
         "**/node_modules/",
         "**/webpack.config.js",
         "**/lit-css-loader.js",
+        "**/babel.config.js",
     ],
 }, ...compat.extends(
     "eslint:recommended",
