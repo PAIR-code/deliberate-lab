@@ -1,5 +1,6 @@
 import {
   ChatMessage,
+  CheckSurveyAnswer,
   SurveyAnswer,
   SurveyQuestion,
   SurveyQuestionKind,
@@ -33,46 +34,51 @@ export function isSurveyComplete(
   const required = getRequiredSurveyQuestions(questions);
   for (const question of required) {
     const answer = answerMap[question.id];
-    if (!isSurveyAnswerComplete(answer)) {
+    if (!isSurveyAnswerComplete(answer, question)) {
       return false;
     }
-    // Check text character validation separately
-    if (
-      question.kind === SurveyQuestionKind.TEXT &&
-      answer?.kind === SurveyQuestionKind.TEXT
-    ) {
-      if (!isTextAnswerValid(answer, question)) {
+  }
+
+  return true;
+}
+
+/** Checks whether given survey answer is complete.
+ * Optionally include SurveyQuestion if there are additional validation constraints.
+ */
+export function isSurveyAnswerComplete(
+  answer: SurveyAnswer | undefined,
+  question?: SurveyQuestion,
+) {
+  if (!answer) {
+    return false;
+  }
+
+  switch (answer.kind) {
+    case SurveyQuestionKind.CHECK:
+      return (answer as CheckSurveyAnswer).isChecked;
+
+    case SurveyQuestionKind.TEXT:
+      const textAnswer = answer as TextSurveyAnswer;
+      // Check if text exists
+      if (textAnswer.answer.trim() === '') {
         return false;
       }
-    }
+      // Check character count requirements if question provided
+      if (question && question.kind === SurveyQuestionKind.TEXT) {
+        const textQuestion = question as TextSurveyQuestion;
+        const length = textAnswer.answer.trim().length;
+        if (
+          textQuestion.minCharCount !== undefined &&
+          length < textQuestion.minCharCount
+        ) {
+          return false;
+        }
+      }
+      return true;
+    default:
+      // All other answer types are complete as long as they exist
+      return true;
   }
-
-  return true;
-}
-
-/** Checks whether given survey answer is complete. */
-export function isSurveyAnswerComplete(answer: SurveyAnswer | undefined) {
-  if (
-    !answer ||
-    (answer.kind === SurveyQuestionKind.CHECK && !answer.isChecked) ||
-    (answer.kind === SurveyQuestionKind.TEXT && answer.answer.trim() === '')
-  ) {
-    return false;
-  }
-  return true;
-}
-
-/** Checks whether text answer meets character count requirements. */
-export function isTextAnswerValid(
-  answer: TextSurveyAnswer,
-  question: TextSurveyQuestion,
-): boolean {
-  const length = answer.answer.trim().length;
-  // Only need to check minimum since maxlength attribute prevents exceeding max
-  if (question.minCharCount !== undefined && length < question.minCharCount) {
-    return false;
-  }
-  return true;
 }
 
 /** Returns the timestamp of the first chat message, or null if none. */

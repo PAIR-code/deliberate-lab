@@ -207,7 +207,7 @@ export class SurveyView extends MobxLitElement {
       answer && answer.kind === SurveyQuestionKind.TEXT ? answer.answer : '';
 
     const titleClasses = classMap({
-      required: !isSurveyAnswerComplete(answer),
+      required: !isSurveyAnswerComplete(answer, question),
     });
 
     // Check if current answer meets requirements for error state
