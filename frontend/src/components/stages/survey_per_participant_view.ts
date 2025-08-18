@@ -31,6 +31,8 @@ import {
   TextSurveyAnswer,
   TextSurveyQuestion,
   isMultipleChoiceImageQuestion,
+  isQuestionVisible,
+  getVisibleSurveyQuestions,
 } from '@deliberation-lab/utils';
 
 import {core} from '../../core/core';
@@ -94,6 +96,7 @@ export class SurveyView extends MobxLitElement {
     const questionsComplete = (): boolean => {
       if (!this.stage) return false;
       const participants = this.getParticipants();
+      const allStageAnswers = this.participantAnswerService.answerMap;
 
       for (const participant of participants) {
         const answerMap =
@@ -101,7 +104,17 @@ export class SurveyView extends MobxLitElement {
             this.stage.id,
             participant.publicId,
           );
-        if (!isSurveyComplete(this.stage.questions, answerMap)) {
+
+        // Get only the visible questions for this participant
+        const visibleQuestions = getVisibleSurveyQuestions(
+          this.stage.questions,
+          this.stage.id,
+          answerMap,
+          allStageAnswers,
+          participant.publicId,
+        );
+
+        if (!isSurveyComplete(visibleQuestions, answerMap)) {
           return false;
         }
       }
@@ -143,7 +156,14 @@ export class SurveyView extends MobxLitElement {
   }
 
   private renderQuestion(question: SurveyQuestion) {
-    const participants = this.getParticipants();
+    const allParticipants = this.getParticipants();
+
+    // Filter participants to only those where this question should be visible
+    const participants = allParticipants.filter((participant) =>
+      this.isQuestionVisibleForParticipant(question, participant),
+    );
+
+    // Render the appropriate question type for each visible participant
     switch (question.kind) {
       case SurveyQuestionKind.CHECK:
         return participants.map((participant) =>
@@ -164,6 +184,33 @@ export class SurveyView extends MobxLitElement {
       default:
         return nothing;
     }
+  }
+
+  private isQuestionVisibleForParticipant(
+    question: SurveyQuestion,
+    participant: ParticipantProfile,
+  ): boolean {
+    if (!this.stage || !question.condition) {
+      return true; // No condition means always show
+    }
+
+    // Get current answers for this participant
+    const currentAnswers =
+      this.participantAnswerService.getSurveyPerParticipantAnswerMap(
+        this.stage.id,
+        participant.publicId,
+      );
+
+    // Get all stage answers
+    const allStageAnswers = this.participantAnswerService.answerMap;
+
+    return isQuestionVisible(
+      question,
+      this.stage.id,
+      currentAnswers,
+      allStageAnswers,
+      participant.publicId, // Pass which participant is being evaluated
+    );
   }
 
   private renderCheckQuestion(

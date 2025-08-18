@@ -22,12 +22,12 @@ import {
   ScaleSurveyAnswer,
   ScaleSurveyQuestion,
   SurveyQuestionKind,
-  SurveyAnswer,
   SurveyStageConfig,
-  SurveyStageParticipantAnswer,
   TextSurveyAnswer,
   TextSurveyQuestion,
   isMultipleChoiceImageQuestion,
+  getVisibleSurveyQuestions,
+  isQuestionVisible,
 } from '@deliberation-lab/utils';
 import {
   isSurveyComplete,
@@ -61,10 +61,18 @@ export class SurveyView extends MobxLitElement {
 
     const questionsComplete = (): boolean => {
       if (!this.stage) return false;
-      return isSurveyComplete(
+
+      const currentSurveyAnswers =
+        this.participantAnswerService.getSurveyAnswerMap(this.stage.id);
+      const allStageAnswers = this.participantAnswerService.answerMap;
+      const visibleQuestions = getVisibleSurveyQuestions(
         this.stage.questions,
-        this.participantAnswerService.getSurveyAnswerMap(this.stage.id),
+        this.stage.id,
+        currentSurveyAnswers,
+        allStageAnswers,
       );
+
+      return isSurveyComplete(visibleQuestions, currentSurveyAnswers);
     };
 
     const saveAnswers = async () => {
@@ -78,7 +86,12 @@ export class SurveyView extends MobxLitElement {
     return html`
       <stage-description .stage=${this.stage}></stage-description>
       <div class="questions-wrapper">
-        ${this.stage.questions.map((question) => this.renderQuestion(question))}
+        ${this.stage.questions.map((question) => {
+          if (this.shouldShowQuestion(question)) {
+            return this.renderQuestion(question);
+          }
+          return nothing;
+        })}
       </div>
       <stage-footer
         .disabled=${!questionsComplete()}
@@ -89,6 +102,21 @@ export class SurveyView extends MobxLitElement {
           : nothing}
       </stage-footer>
     `;
+  }
+
+  private shouldShowQuestion(question: SurveyQuestion): boolean {
+    if (!this.stage) return true;
+
+    const currentSurveyAnswers =
+      this.participantAnswerService.getSurveyAnswerMap(this.stage.id);
+    const allStageAnswers = this.participantAnswerService.answerMap;
+
+    return isQuestionVisible(
+      question,
+      this.stage.id,
+      currentSurveyAnswers,
+      allStageAnswers,
+    );
   }
 
   private renderQuestion(question: SurveyQuestion) {

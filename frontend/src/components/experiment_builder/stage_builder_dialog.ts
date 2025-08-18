@@ -65,6 +65,10 @@ import {
   ASSET_ALLOCATION_TEMPLATE_METADATA,
   getAssetAllocationTemplate,
 } from '../../shared/templates/asset_allocation_template';
+import {
+  CONDITIONAL_SURVEY_TEMPLATE_METADATA,
+  getConditionalSurveyTemplate,
+} from '../../shared/templates/conditional_survey_template';
 
 import {styles} from './stage_builder_dialog.scss';
 
@@ -149,6 +153,7 @@ export class StageBuilderDialog extends MobxLitElement {
         ${this.renderSalespersonGameCard()} ${this.renderFlipCardTemplateCard()}
         ${this.renderFruitTestTemplateCard()} ${this.renderStockInfoGameCard()}
         ${this.renderAssetAllocationTemplateCard()}
+        ${this.renderConditionalSurveyTemplateCard()}
       </div>
     `;
   }
@@ -562,6 +567,25 @@ export class StageBuilderDialog extends MobxLitElement {
         <div>
           A complete investment study with stock analysis and portfolio
           allocation decisions.
+        </div>
+      </div>
+    `;
+  }
+
+  private renderConditionalSurveyTemplateCard() {
+    const addGame = () => {
+      this.addGame(
+        CONDITIONAL_SURVEY_TEMPLATE_METADATA,
+        getConditionalSurveyTemplate(),
+      );
+    };
+
+    return html`
+      <div class="card" @click=${addGame}>
+        <div class="title">🔀 Conditional Survey Demo</div>
+        <div>
+          Advanced survey with complex conditional logic, demonstrating AND/OR
+          operators and nested conditions.
         </div>
       </div>
     `;

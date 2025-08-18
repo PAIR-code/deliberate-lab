@@ -1,0 +1,191 @@
+@use '../../sass/typescale';
+@use '../../sass/common';
+
+:host {
+  display: block;
+}
+
+.alpha {
+  @include common.mode-tag;
+}
+
+.condition-editor {
+  padding: common.$spacing-small;
+  border: 1px solid var(--md-sys-color-outline-variant);
+  border-radius: 8px;
+  background: var(--md-sys-color-surface-container-lowest);
+
+  &.disabled {
+    pointer-events: none;
+    opacity: 0.6;
+  }
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: common.$spacing-medium;
+
+  .title {
+    @include typescale.title-medium;
+    color: var(--md-sys-color-on-surface);
+  }
+
+  .header-actions {
+    display: flex;
+    gap: common.$spacing-small;
+    align-items: center;
+  }
+}
+
+.condition-group {
+  padding: common.$spacing-small;
+  border: 1px solid var(--md-sys-color-outline);
+  border-radius: 4px;
+  background: var(--md-sys-color-surface);
+
+  // All nested groups get darker background and indent
+  .condition-group {
+    margin-left: common.$spacing-medium;
+    background: var(--md-sys-color-surface-variant);
+
+    // Double nested groups go back to light
+    .condition-group {
+      background: var(--md-sys-color-surface);
+
+      // Triple nested groups go dark again
+      .condition-group {
+        background: var(--md-sys-color-surface-variant);
+
+        // Quadruple nested groups go light
+        .condition-group {
+          background: var(--md-sys-color-surface);
+        }
+      }
+    }
+  }
+
+  .group-conditions {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    margin-bottom: common.$spacing-small;
+
+    .empty-conditions {
+      padding: common.$spacing-medium;
+      text-align: center;
+      color: var(--md-sys-color-on-surface-variant);
+      @include typescale.body-medium;
+      background: var(--md-sys-color-surface-container-low);
+      border-radius: 4px;
+      border: 1px dashed var(--md-sys-color-outline-variant);
+    }
+
+    .operator-connector {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: common.$spacing-xs 0;
+      position: relative;
+
+      .connector-line {
+        flex: 1;
+        height: 1px;
+        background: var(--md-sys-color-outline-variant);
+        max-width: 100px;
+      }
+
+      .operator-split-button {
+        display: flex;
+        border-radius: 16px;
+        overflow: hidden;
+        border: 1px solid var(--md-sys-color-outline);
+        margin: 0 common.$spacing-small;
+
+        .operator-option {
+          padding: 4px 12px;
+          border: none;
+          background: var(--md-sys-color-surface-container);
+          color: var(--md-sys-color-on-surface-variant);
+          font-weight: 500;
+          font-size: 12px;
+          cursor: pointer;
+          transition: all 0.2s ease;
+          min-width: 40px;
+          text-align: center;
+
+          &:first-child {
+            border-right: 1px solid var(--md-sys-color-outline-variant);
+          }
+
+          &:hover:not(.active) {
+            background: var(--md-sys-color-surface-container-high);
+          }
+
+          &.active {
+            background: var(--md-sys-color-primary);
+            color: var(--md-sys-color-on-primary);
+            font-weight: 600;
+          }
+
+          &:active {
+            transform: scale(0.95);
+          }
+        }
+      }
+    }
+  }
+
+  .condition-item {
+    display: flex;
+    align-items: center;
+    gap: common.$spacing-small;
+    padding: common.$spacing-xs 0;
+
+    > :first-child {
+      flex: 1;
+    }
+
+    .condition-actions {
+      display: flex;
+      align-items: center;
+      gap: common.$spacing-xs;
+      flex-shrink: 0;
+
+      md-icon-button {
+        flex-shrink: 0;
+      }
+    }
+  }
+
+  .group-actions {
+    display: flex;
+    gap: common.$spacing-small;
+    padding-top: common.$spacing-small;
+    border-top: 1px solid var(--md-sys-color-outline-variant);
+  }
+}
+
+.comparison-condition {
+  display: flex;
+  align-items: center;
+  gap: common.$spacing-small;
+  flex-wrap: wrap;
+
+  .target-select {
+    flex: 1;
+    min-width: 200px;
+  }
+
+  .operator-select {
+    flex: 0 0 auto;
+    min-width: 150px;
+  }
+
+  .value-select,
+  .value-input {
+    flex: 1;
+    min-width: 150px;
+  }
+}
