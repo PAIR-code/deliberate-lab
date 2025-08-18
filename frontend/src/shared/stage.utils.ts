@@ -3,6 +3,8 @@ import {
   SurveyAnswer,
   SurveyQuestion,
   SurveyQuestionKind,
+  TextSurveyAnswer,
+  TextSurveyQuestion,
   UnifiedTimestamp,
 } from '@deliberation-lab/utils';
 import {Timestamp} from 'firebase/firestore';
@@ -34,6 +36,15 @@ export function isSurveyComplete(
     if (!isSurveyAnswerComplete(answer)) {
       return false;
     }
+    // Check text character validation separately
+    if (
+      question.kind === SurveyQuestionKind.TEXT &&
+      answer?.kind === SurveyQuestionKind.TEXT
+    ) {
+      if (!isTextAnswerValid(answer, question)) {
+        return false;
+      }
+    }
   }
 
   return true;
@@ -46,6 +57,19 @@ export function isSurveyAnswerComplete(answer: SurveyAnswer | undefined) {
     (answer.kind === SurveyQuestionKind.CHECK && !answer.isChecked) ||
     (answer.kind === SurveyQuestionKind.TEXT && answer.answer.trim() === '')
   ) {
+    return false;
+  }
+  return true;
+}
+
+/** Checks whether text answer meets character count requirements. */
+export function isTextAnswerValid(
+  answer: TextSurveyAnswer,
+  question: TextSurveyQuestion,
+): boolean {
+  const length = answer.answer.trim().length;
+  // Only need to check minimum since maxlength attribute prevents exceeding max
+  if (question.minCharCount !== undefined && length < question.minCharCount) {
     return false;
   }
   return true;

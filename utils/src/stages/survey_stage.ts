@@ -56,6 +56,8 @@ export interface BaseSurveyQuestion {
 
 export interface TextSurveyQuestion extends BaseSurveyQuestion {
   kind: SurveyQuestionKind.TEXT;
+  minCharCount?: number; // Minimum character count for validation
+  maxCharCount?: number; // Maximum character count for validation
 }
 
 export interface CheckSurveyQuestion extends BaseSurveyQuestion {
@@ -212,6 +214,8 @@ export function createTextSurveyQuestion(
     id: config.id ?? generateId(),
     kind: SurveyQuestionKind.TEXT,
     questionTitle: config.questionTitle ?? '',
+    minCharCount: config.minCharCount,
+    maxCharCount: config.maxCharCount,
     condition: config.condition,
   };
 }

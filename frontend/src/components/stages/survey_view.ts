@@ -6,6 +6,7 @@ import './stage_footer';
 
 import '@material/web/radio/radio.js';
 import '@material/web/slider/slider.js';
+import '@material/web/textfield/outlined-text-field.js';
 
 import {MobxLitElement} from '@adobe/lit-mobx';
 import {CSSResultGroup, html, nothing} from 'lit';
@@ -209,19 +210,36 @@ export class SurveyView extends MobxLitElement {
       required: !isSurveyAnswerComplete(answer),
     });
 
+    // Check if current answer meets requirements for error state
+    const minCount = question.minCharCount ?? null;
+    const maxCount = question.maxCharCount ?? null;
+
+    const isTooShort = minCount !== null && textAnswer.length < minCount;
+
+    // Build error text (only needed for minimum since maxlength prevents exceeding max)
+    const errorText = isTooShort
+      ? `Minimum ${minCount} characters required`
+      : '';
+
     return html`
       <div class="question">
         <div class=${titleClasses}>
           ${unsafeHTML(convertMarkdownToHTML(question.questionTitle + '*'))}
         </div>
-        <pr-textarea
-          variant="outlined"
+        <md-outlined-text-field
+          type="textarea"
+          rows="4"
           placeholder="Type your response"
           .value=${textAnswer}
           ?disabled=${this.participantService.disableStage}
-          @change=${handleTextChange}
+          @input=${handleTextChange}
+          .minLength=${minCount ?? nothing}
+          .maxLength=${maxCount ?? nothing}
+          .error=${isTooShort}
+          .errorText=${errorText}
+          .counter=${maxCount !== null}
         >
-        </pr-textarea>
+        </md-outlined-text-field>
       </div>
     `;
   }
