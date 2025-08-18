@@ -8,9 +8,9 @@ import {
   Experiment,
   ParticipantProfileExtended,
   ParticipantStatus,
-  StageKind,
 } from '@deliberation-lab/utils';
 import {completeStageAsAgentParticipant} from '../agent_participant.utils';
+import {sendInitialChatMessages} from '../chat/chat.agent';
 import {updateCohortStageUnlocked} from '../participant.utils';
 import {
   getFirestoreCohort,
@@ -25,6 +25,25 @@ import {app} from '../app';
 export const updateAgentParticipant = onDocumentUpdated(
   {document: 'experiments/{experimentId}/participants/{participantId}'},
   async (event) => {
+    if (!event.data) return;
+
+    const experimentId = event.params.experimentId;
+    const participantId = event.params.participantId;
+
+    // Check if participant moved to a new stage (for initial message sending)
+    const before = event.data.before.data() as ParticipantProfileExtended;
+    const after = event.data.after.data() as ParticipantProfileExtended;
+
+    if (before.currentStageId !== after.currentStageId) {
+      // Send initial messages for chat stages
+      await sendInitialChatMessages(
+        experimentId,
+        after.currentCohortId,
+        after.currentStageId,
+        after.privateId,
+      );
+    }
+
     const experimentDoc = app
       .firestore()
       .collection('experiments')
@@ -50,9 +69,11 @@ export const updateAgentParticipant = onDocumentUpdated(
 
       // Make ONE update for the agent participant (e.g., alter status
       // OR complete a stage)
-      if (participant.status === ParticipantStatus.TRANSFER_PENDING) {
+      if (participant.currentStatus === ParticipantStatus.TRANSFER_PENDING) {
         // TODO: Resolve transfer (same logic as acceptParticipantTransfer)
-      } else if (participant.status === ParticipantStatus.ATTENTION_CHECK) {
+      } else if (
+        participant.currentStatus === ParticipantStatus.ATTENTION_CHECK
+      ) {
         // Resolve attention check
         // TODO: Move logic (copied from acceptParticipantCheck) into shared utils
         if (participant.transferCohortId) {
@@ -65,7 +86,7 @@ export const updateAgentParticipant = onDocumentUpdated(
           participant.privateId,
         );
         transaction.set(participantDoc, participant);
-      } else if (!cohort.stageUnlockMap[participant.currentStageId]) {
+      } else if (!cohort?.stageUnlockMap[participant.currentStageId]) {
         // If stage is locked, do nothing
         // TODO: Write log about stage being locked
       } else {
