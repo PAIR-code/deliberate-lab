@@ -1,55 +1,5 @@
-import {
-  ChatMessage,
-  SurveyAnswer,
-  SurveyQuestion,
-  SurveyQuestionKind,
-  UnifiedTimestamp,
-} from '@deliberation-lab/utils';
+import {ChatMessage, UnifiedTimestamp} from '@deliberation-lab/utils';
 import {Timestamp} from 'firebase/firestore';
-
-/** Returns required questions from survey stage. */
-export function getRequiredSurveyQuestions(questions: SurveyQuestion[]) {
-  return questions.filter(
-    (question) =>
-      !(question.kind === SurveyQuestionKind.CHECK && !question.isRequired),
-  );
-}
-
-/** Returns optional questions from survey stage. */
-export function getOptionalSurveyQuestions(questions: SurveyQuestion[]) {
-  return questions.filter(
-    (question) =>
-      question.kind !== SurveyQuestionKind.CHECK || !question.isRequired,
-  );
-}
-
-/** Checks whether all required questions are answered. */
-export function isSurveyComplete(
-  questions: SurveyQuestion[],
-  answerMap: Record<string, SurveyAnswer>,
-) {
-  const required = getRequiredSurveyQuestions(questions);
-  for (const question of required) {
-    const answer = answerMap[question.id];
-    if (!isSurveyAnswerComplete(answer)) {
-      return false;
-    }
-  }
-
-  return true;
-}
-
-/** Checks whether given survey answer is complete. */
-export function isSurveyAnswerComplete(answer: SurveyAnswer | undefined) {
-  if (
-    !answer ||
-    (answer.kind === SurveyQuestionKind.CHECK && !answer.isChecked) ||
-    (answer.kind === SurveyQuestionKind.TEXT && answer.answer.trim() === '')
-  ) {
-    return false;
-  }
-  return true;
-}
 
 /** Returns the timestamp of the first chat message, or null if none. */
 export function getChatStartTimestamp(

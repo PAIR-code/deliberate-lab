@@ -7,6 +7,7 @@ import './stage_footer';
 
 import '@material/web/radio/radio.js';
 import '@material/web/slider/slider.js';
+import '@material/web/textfield/outlined-text-field.js';
 
 import {MobxLitElement} from '@adobe/lit-mobx';
 import {CSSResultGroup, html, nothing} from 'lit';
@@ -33,13 +34,13 @@ import {
   isMultipleChoiceImageQuestion,
   isQuestionVisible,
   getVisibleSurveyQuestions,
+  isSurveyComplete,
 } from '@deliberation-lab/utils';
 
 import {core} from '../../core/core';
 import {CohortService} from '../../services/cohort.service';
 import {ParticipantService} from '../../services/participant.service';
 import {ParticipantAnswerService} from '../../services/participant.answer';
-import {isSurveyComplete} from '../../shared/stage.utils';
 
 import {styles} from './survey_view.scss';
 
@@ -297,18 +298,34 @@ export class SurveyView extends MobxLitElement {
     const textAnswer =
       answer && answer.kind === SurveyQuestionKind.TEXT ? answer.answer : '';
 
+    // Check if current answer meets requirements for error state
+    const minCount = question.minCharCount ?? null;
+    const maxCount = question.maxCharCount ?? null;
+
+    const isTooShort = minCount !== null && textAnswer.length < minCount;
+
+    // Build error text (only needed for minimum since maxlength prevents exceeding max)
+    const errorText = isTooShort
+      ? `Minimum ${minCount} characters required`
+      : '';
+
     return html`
       <div class="question">
         <div class="question-title">${question.questionTitle}</div>
         ${this.renderParticipant(participant)}
-        <pr-textarea
-          variant="outlined"
+        <md-outlined-text-field
+          type="textarea"
           placeholder="Type your response"
           .value=${textAnswer}
           ?disabled=${this.participantService.disableStage}
-          @change=${handleTextChange}
+          @input=${handleTextChange}
+          .minLength=${minCount ?? nothing}
+          .maxLength=${maxCount ?? nothing}
+          .error=${isTooShort}
+          .errorText=${errorText}
+          .counter=${maxCount !== null}
         >
-        </pr-textarea>
+        </md-outlined-text-field>
       </div>
     `;
   }

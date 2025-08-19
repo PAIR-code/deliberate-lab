@@ -590,12 +590,52 @@ export class SurveyEditor extends MobxLitElement {
   }
 
   private renderTextQuestion(question: TextSurveyQuestion, index: number) {
+    const updateMinCharCount = (e: InputEvent) => {
+      const value = (e.target as HTMLInputElement).value;
+      const minCharCount = value ? parseInt(value, 10) : undefined;
+      this.updateQuestion({...question, minCharCount}, index);
+    };
+
+    const updateMaxCharCount = (e: InputEvent) => {
+      const value = (e.target as HTMLInputElement).value;
+      const maxCharCount = value ? parseInt(value, 10) : undefined;
+      this.updateQuestion({...question, maxCharCount}, index);
+    };
+
     return html`
       <div class="header">
         <div class="left">
           ${this.renderQuestionTitleEditor(question, index)}
         </div>
         ${this.renderQuestionNav(question, index)}
+      </div>
+      <div class="description">
+        <b>Character limits:</b> Set minimum and maximum character counts for
+        the response.
+      </div>
+      <div class="char-count-controls">
+        <div class="char-count-editor">
+          <label>Minimum characters (optional)</label>
+          <input
+            type="number"
+            min="0"
+            placeholder="No minimum"
+            .value=${question.minCharCount?.toString() ?? ''}
+            ?disabled=${!this.experimentEditor.canEditStages}
+            @input=${updateMinCharCount}
+          />
+        </div>
+        <div class="char-count-editor">
+          <label>Maximum characters (optional)</label>
+          <input
+            type="number"
+            min="1"
+            placeholder="No maximum"
+            .value=${question.maxCharCount?.toString() ?? ''}
+            ?disabled=${!this.experimentEditor.canEditStages}
+            @input=${updateMaxCharCount}
+          />
+        </div>
       </div>
       ${this.renderConditionEditor(question, index)}
     `;
