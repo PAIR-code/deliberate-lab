@@ -2,6 +2,7 @@ import {
   AgentChatSettings,
   ChatMessage,
   ChatPromptConfig,
+  ChatStagePublicData,
   MediatorProfileExtended,
   ModelResponseStatus,
   ParticipantProfileExtended,
@@ -69,12 +70,6 @@ export async function createAgentChatMessageFromPrompt(
 
   // Check if this is an initial message request (empty triggerChatId)
   if (triggerChatId === '') {
-    // Handle initial message
-    const initialMessage = promptConfig.chatSettings?.initialMessage;
-    if (!initialMessage || initialMessage.trim() === '') {
-      return false; // No initial message configured
-    }
-
     // Check if we've already sent an initial message for this user
     const isPrivateChat = stage.kind === StageKind.PRIVATE_CHAT;
     if (!isPrivateChat) {
@@ -98,14 +93,36 @@ export async function createAgentChatMessageFromPrompt(
       await triggerLogRef.set({timestamp: Timestamp.now()});
     }
 
-    // Create the initial message
-    const chatMessage = createChatMessage({
-      message: initialMessage,
-      senderId: user.publicId,
-      type: user.type,
-      profile: createParticipantProfileBase(user),
-      timestamp: Timestamp.now(),
-    });
+    // Handle initial message
+    const initialMessage = promptConfig.chatSettings?.initialMessage;
+    let chatMessage: ChatMessage;
+
+    if (initialMessage && initialMessage.trim() !== '') {
+      // Use configured initial message
+      chatMessage = createChatMessage({
+        message: initialMessage,
+        senderId: user.publicId,
+        type: user.type,
+        profile: createParticipantProfileBase(user),
+        timestamp: Timestamp.now(),
+      });
+    } else {
+      // No initial message configured, query the API
+      const result = await getAgentChatMessage(
+        experimentId,
+        cohortId,
+        participantId,
+        stage,
+        user,
+        promptConfig,
+      );
+
+      if (!result.message) {
+        return result.success; // Return success status from API query
+      }
+
+      chatMessage = result.message;
+    }
 
     // Send the initial message
     if (isPrivateChat) {
@@ -212,6 +229,11 @@ export async function getAgentChatMessage(
     return {message: null, success: true};
   }
 
+  // Ensure user has agent config
+  if (!user.agentConfig) {
+    return {message: null, success: false};
+  }
+
   // Get prompt
   const prompt = await getStructuredPrompt(
     experimentId,
@@ -270,7 +292,11 @@ export async function getAgentChatMessage(
       cohortId,
       stageId,
     );
-    discussionId = publicData?.currentDiscussionId ?? null;
+    // Type guard to ensure we have ChatStagePublicData
+    if (publicData && 'currentDiscussionId' in publicData) {
+      discussionId =
+        (publicData as ChatStagePublicData).currentDiscussionId ?? null;
+    }
   }
 
   const chatMessage = createChatMessage({
