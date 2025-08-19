@@ -29,11 +29,9 @@ import {
   isMultipleChoiceImageQuestion,
   getVisibleSurveyQuestions,
   isQuestionVisible,
-} from '@deliberation-lab/utils';
-import {
   isSurveyComplete,
   isSurveyAnswerComplete,
-} from '../../shared/stage.utils';
+} from '@deliberation-lab/utils';
 
 import {unsafeHTML} from 'lit/directives/unsafe-html.js';
 import {convertMarkdownToHTML} from '../../shared/utils';
