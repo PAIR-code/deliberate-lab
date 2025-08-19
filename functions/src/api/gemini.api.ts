@@ -16,7 +16,7 @@ import {
   addParsedModelResponse,
 } from '@deliberation-lab/utils';
 
-const GEMINI_DEFAULT_MODEL = 'gemini-2.5-pro';
+const GEMINI_DEFAULT_MODEL = 'gemini-2.5-flash';
 const DEFAULT_FETCH_TIMEOUT = 300 * 1000; // This is the Chrome default
 const MAX_TOKENS_FINISH_REASON = 'MAX_TOKENS';
 const AUTHENTICATION_FAILURE_ERROR_CODE = 403;
