@@ -94,6 +94,8 @@ export interface AgentChatSettings {
   // Maximum total responses agent can make during the chat conversation
   // (or null if no max)
   maxResponses: number | null;
+  // Initial message to send when the conversation begins
+  initialMessage: string;
 }
 
 /** Specifies how prompt should be sent to API. */
@@ -221,6 +223,7 @@ export function createAgentChatSettings(
     minMessagesBeforeResponding: config.minMessagesBeforeResponding ?? 0,
     canSelfTriggerCalls: config.canSelfTriggerCalls ?? false,
     maxResponses: config.maxResponses ?? 100,
+    initialMessage: config.initialMessage ?? '',
   };
 }
 
