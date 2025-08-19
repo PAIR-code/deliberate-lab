@@ -12,11 +12,17 @@ import {
   StageConfig,
   StageContextPromptItem,
   StageKind,
+  SurveyStageConfig,
+  SurveyPerParticipantStageConfig,
+  SurveyStageParticipantAnswer,
+  SurveyPerParticipantStageParticipantAnswer,
   UserProfile,
   UserType,
   getChatPromptMessageHistory,
   getNameFromPublicId,
   getStockInfoSummaryText,
+  getSurveySummaryText,
+  getSurveyAnswersText,
   makeStructuredOutputPrompt,
   shuffleWithSeed,
 } from '@deliberation-lab/utils';
@@ -306,9 +312,25 @@ export async function getStageDisplayForPrompt(
           : assetAllocationDisplay;
       }
       return assetAllocationDisplay;
+    case StageKind.SURVEY:
+    case StageKind.SURVEY_PER_PARTICIPANT:
+      const surveyDisplay = getSurveySummaryText(
+        stage as SurveyStageConfig | SurveyPerParticipantStageConfig,
+      );
+      if (includeAnswers) {
+        const surveyAnswers = await getStageAnswersForPrompt(
+          experimentId,
+          cohortId,
+          participantIds,
+          stage,
+        );
+        return surveyAnswers
+          ? `${surveyDisplay}\n\n${surveyAnswers}`
+          : surveyDisplay;
+      }
+      return surveyDisplay;
     default:
       // TODO: Set up display/answers for ranking stage
-      // TODO: Set up display/answers for survey stage
       return '';
   }
 }
@@ -319,17 +341,43 @@ export async function getStageAnswersForPrompt(
   participantIds: string[], // participant private IDs
   stage: StageConfig,
 ) {
-  // TODO: Return participant answer(s)
   switch (stage.kind) {
     case StageKind.ASSET_ALLOCATION:
-      const participantAnswers =
+      const assetParticipantAnswers =
         await getFirestoreAnswersForStage<AssetAllocationStageParticipantAnswer>(
           experimentId,
           cohortId,
           stage.id,
           participantIds,
         );
-      return getAssetAllocationAnswersText(participantAnswers);
+      return getAssetAllocationAnswersText(assetParticipantAnswers);
+    case StageKind.SURVEY:
+      const surveyParticipantAnswers =
+        await getFirestoreAnswersForStage<SurveyStageParticipantAnswer>(
+          experimentId,
+          cohortId,
+          stage.id,
+          participantIds,
+        );
+      const surveyStage = stage as SurveyStageConfig;
+      return getSurveyAnswersText(
+        surveyParticipantAnswers,
+        surveyStage.questions,
+      );
+    case StageKind.SURVEY_PER_PARTICIPANT:
+      const surveyPerParticipantAnswers =
+        await getFirestoreAnswersForStage<SurveyPerParticipantStageParticipantAnswer>(
+          experimentId,
+          cohortId,
+          stage.id,
+          participantIds,
+        );
+      const surveyPerParticipantStage =
+        stage as SurveyPerParticipantStageConfig;
+      return getSurveyAnswersText(
+        surveyPerParticipantAnswers,
+        surveyPerParticipantStage.questions,
+      );
     default:
       return '';
   }
