@@ -413,7 +413,7 @@ export async function getStageAnswersForPrompt(
         );
       return getAssetAllocationAnswersText(assetParticipantAnswers, true);
     case StageKind.SURVEY:
-      const surveyAnswers =
+      const surveyParticipantAnswers =
         await getStageAnswersWithDisplayNames<SurveyStageParticipantAnswer>(
           experimentId,
           cohortId,
@@ -422,7 +422,7 @@ export async function getStageAnswersForPrompt(
         );
       const surveyStage = stage as SurveyStageConfig;
       return getSurveyAnswersText(
-        surveyAnswers,
+        surveyParticipantAnswers,
         surveyStage.questions,
         true, // Always show participant names
       );
