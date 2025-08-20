@@ -69,6 +69,10 @@ import {
   CONDITIONAL_SURVEY_TEMPLATE_METADATA,
   getConditionalSurveyTemplate,
 } from '../../shared/templates/conditional_survey_template';
+import {
+  POLICY_METADATA,
+  getPolicyExperimentTemplate,
+} from '../../shared/templates/policy';
 
 import {styles} from './stage_builder_dialog.scss';
 
@@ -154,6 +158,7 @@ export class StageBuilderDialog extends MobxLitElement {
         ${this.renderFruitTestTemplateCard()} ${this.renderStockInfoGameCard()}
         ${this.renderAssetAllocationTemplateCard()}
         ${this.renderConditionalSurveyTemplateCard()}
+        ${this.renderPolicyTemplateCard()}
       </div>
     `;
   }
@@ -587,6 +592,19 @@ export class StageBuilderDialog extends MobxLitElement {
           Advanced survey with complex conditional logic, demonstrating AND/OR
           operators and nested conditions.
         </div>
+      </div>
+    `;
+  }
+
+  private renderPolicyTemplateCard() {
+    const addTemplate = () => {
+      this.addTemplate(getPolicyExperimentTemplate());
+    };
+
+    return html`
+      <div class="card" @click=${addTemplate}>
+        <div class="title">${POLICY_METADATA.name}</div>
+        <div>${POLICY_METADATA.description}</div>
       </div>
     `;
   }
