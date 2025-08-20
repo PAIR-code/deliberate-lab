@@ -356,6 +356,7 @@ export async function sendAgentGroupChatMessage(
     chatHistory[chatHistory.length - 1].id !== triggerChatId
   ) {
     // TODO: Write chat log
+    console.log('Conversation has moved on');
     return true; // expected outcome (TODO: return status enum)
   }
 
@@ -373,6 +374,7 @@ export async function sendAgentGroupChatMessage(
     .doc(`${triggerChatId}-${chatMessage.type}`);
   const hasTriggerResponse = (await triggerResponseDoc.get()).exists;
   if (hasTriggerResponse) {
+    console.log('Someone already responded');
     return true; // expected outcome (TODO: return status enum)
   }
 
@@ -424,6 +426,7 @@ export async function sendAgentPrivateChatMessage(
     chatHistory[chatHistory.length - 1].id !== triggerChatId
   ) {
     // TODO: Write chat log
+    console.log('Conversation has moved on');
     return true; // expected outcome (TODO: return status enum)
   }
 
@@ -441,6 +444,7 @@ export async function sendAgentPrivateChatMessage(
     .doc(`${triggerChatId}-${chatMessage.type}`);
   const hasTriggerResponse = (await triggerResponseDoc.get()).exists;
   if (hasTriggerResponse) {
+    console.log('Someone already responded');
     return true; // expected outcome (TODO: return status enum)
   }
 
