@@ -878,11 +878,32 @@ export class EditorComponent extends MobxLitElement {
       const name = (e.target as HTMLTextAreaElement).value;
       const schema = agentPromptConfig.structuredOutputConfig.schema;
       if (schema && schema.properties) {
+        const oldName = schema.properties[fieldIndex].name;
         schema.properties[fieldIndex] = {
           name,
           schema: schema.properties[fieldIndex].schema,
         };
-        updateConfig({schema});
+
+        // Update field references if the renamed field was being used
+        // Only update if oldName is not empty (to avoid binding new fields to cleared references)
+        const config = agentPromptConfig.structuredOutputConfig;
+        const updates: Partial<ChatMediatorStructuredOutputConfig> = {schema};
+
+        if (oldName !== '') {
+          const fieldRefs = [
+            'shouldRespondField',
+            'messageField',
+            'explanationField',
+            'readyToEndField',
+          ] as const;
+          fieldRefs.forEach((ref) => {
+            if (config[ref] === oldName) {
+              updates[ref] = name;
+            }
+          });
+        }
+
+        updateConfig(updates);
       }
     };
 
@@ -914,11 +935,29 @@ export class EditorComponent extends MobxLitElement {
     const deleteField = () => {
       const schema = agentPromptConfig.structuredOutputConfig.schema;
       if (schema && schema.properties) {
+        const deletedFieldName = schema.properties[fieldIndex].name;
         schema.properties = [
           ...schema.properties.slice(0, fieldIndex),
           ...schema.properties.slice(fieldIndex + 1),
         ];
-        updateConfig({schema});
+
+        // Clear field references if the deleted field was being used
+        const config = agentPromptConfig.structuredOutputConfig;
+        const updates: Partial<ChatMediatorStructuredOutputConfig> = {schema};
+
+        const fieldRefs = [
+          'shouldRespondField',
+          'messageField',
+          'explanationField',
+          'readyToEndField',
+        ] as const;
+        fieldRefs.forEach((ref) => {
+          if (config[ref] === deletedFieldName) {
+            updates[ref] = '';
+          }
+        });
+
+        updateConfig(updates);
       }
     };
 
