@@ -146,6 +146,7 @@ export function getSurveyAnswersText(
       | SurveyPerParticipantStageParticipantAnswer;
   }>,
   questions: SurveyQuestion[],
+  alwaysShowParticipantNames = false,
 ): string {
   if (participantAnswers.length === 0) {
     return '';
@@ -154,9 +155,10 @@ export function getSurveyAnswersText(
   const answerSummaries: string[] = [];
 
   for (const {participantId, answer} of participantAnswers) {
-    // Only include Participant IDs if there are multiple participants.
-    const prefix =
-      participantAnswers.length > 1 ? `\nParticipant ${participantId}:` : '';
+    // Include participant names based on configuration or if multiple participants
+    const showNames =
+      alwaysShowParticipantNames || participantAnswers.length > 1;
+    const prefix = showNames ? `\nParticipant ${participantId}:` : '';
 
     if (answer.kind === StageKind.SURVEY) {
       const surveyAnswer = answer as SurveyStageParticipantAnswer;
