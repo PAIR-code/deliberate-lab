@@ -102,6 +102,9 @@ export const PROFILE_SET_ANIMALS_2: {name: string; avatar: string}[] = [
   {name: 'Horse', avatar: '🐴'},
 ];
 
+/** Anonymous participant number set. */
+export const PROFILE_SET_ANONYMOUS_PARTICIPANT_ID = 'anonymous-participant';
+
 /** Nature set with flowers, rocks, etc. */
 export const PROFILE_SET_NATURE_ID = 'nature';
 

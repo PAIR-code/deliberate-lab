@@ -15,6 +15,7 @@ import {
 export enum ProfileType {
   DEFAULT = 'DEFAULT', // Profiles are set by the participant.
   ANONYMOUS_ANIMAL = 'ANONYMOUS_ANIMAL', // Profiles are set to anonymous animals.
+  ANONYMOUS_PARTICIPANT = 'ANONYMOUS_PARTICIPANT', // Profiles are set to "Participant X" format.
 }
 
 export interface ProfileStageConfig extends BaseStageConfig {

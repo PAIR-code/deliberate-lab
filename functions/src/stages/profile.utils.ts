@@ -52,7 +52,8 @@ export async function completeProfile(
 ) {
   if (
     !participant.agentConfig ||
-    stageConfig.profileType === ProfileType.ANONYMOUS_ANIMAL
+    stageConfig.profileType === ProfileType.ANONYMOUS_ANIMAL ||
+    stageConfig.profileType === ProfileType.ANONYMOUS_PARTICIPANT
   ) {
     return;
   }

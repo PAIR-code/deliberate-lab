@@ -24,6 +24,7 @@ export const ProfileStageConfigData = Type.Object(
     profileType: Type.Union([
       Type.Literal(ProfileType.DEFAULT),
       Type.Literal(ProfileType.ANONYMOUS_ANIMAL),
+      Type.Literal(ProfileType.ANONYMOUS_PARTICIPANT),
     ]),
   },
   strict,

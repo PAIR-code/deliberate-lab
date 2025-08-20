@@ -213,7 +213,10 @@ export function requiresAnonymousProfiles(stages: StageConfig[]): boolean {
   const profileStage = stages.find((stage) => stage.kind === StageKind.PROFILE);
 
   if (!profileStage || profileStage.kind !== StageKind.PROFILE) return false;
-  return profileStage.profileType === ProfileType.ANONYMOUS_ANIMAL;
+  return (
+    profileStage.profileType === ProfileType.ANONYMOUS_ANIMAL ||
+    profileStage.profileType === ProfileType.ANONYMOUS_PARTICIPANT
+  );
 }
 
 function isConnected(participant: ParticipantProfile) {
