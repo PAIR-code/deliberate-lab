@@ -286,10 +286,22 @@ export async function getAgentChatMessage(
   }
 
   const structured = promptConfig.structuredOutputConfig;
-  const shouldRespond = response.parsedResponse[structured.shouldRespondField];
-  const message = response.parsedResponse[structured.messageField];
-  const explanation = response.parsedResponse[structured.explanationField];
-  const readyToEndChat = response.parsedResponse[structured.readyToEndField];
+  // Get shouldRespond with fail-safe: default to true if field is missing or not defined
+  const shouldRespondValue = structured.shouldRespondField
+    ? response.parsedResponse[structured.shouldRespondField]
+    : undefined;
+  // If shouldRespond field exists and is explicitly false, don't respond. Otherwise, respond.
+  const shouldRespond = shouldRespondValue === false ? false : true;
+
+  const message = structured.messageField
+    ? response.parsedResponse[structured.messageField]
+    : response.parsedResponse['response']; // fallback to default field name
+  const explanation = structured.explanationField
+    ? response.parsedResponse[structured.explanationField]
+    : response.parsedResponse['explanation']; // fallback to default field name
+  const readyToEndChat = structured.readyToEndField
+    ? response.parsedResponse[structured.readyToEndField]
+    : false; // default to not ready to end if field is missing
 
   // Only if agent participant is ready to end chat
   if (readyToEndChat && user.type === UserType.PARTICIPANT) {
