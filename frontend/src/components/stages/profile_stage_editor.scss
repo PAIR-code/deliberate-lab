@@ -1,5 +1,5 @@
-@use "../../sass/common";
-@use "../../sass/typescale";
+@use '../../sass/common';
+@use '../../sass/typescale';
 
 :host {
   @include common.flex-column;
@@ -14,4 +14,18 @@
 
 md-checkbox {
   flex-shrink: 0;
+}
+
+.profile-options {
+  @include common.flex-column;
+  gap: common.$spacing-medium;
+}
+
+.profile-option {
+  @include common.flex-row-align-center;
+  gap: common.$spacing-small;
+
+  label {
+    cursor: pointer;
+  }
 }

@@ -1,4 +1,5 @@
 import '../../pair-components/textarea';
+import '@material/web/radio/radio';
 
 import {MobxLitElement} from '@adobe/lit-mobx';
 import {CSSResultGroup, html, nothing} from 'lit';
@@ -29,34 +30,57 @@ export class ProfileStageEditorComponent extends MobxLitElement {
       return nothing;
     }
 
-    return html`${this.renderAnonymousToggle()}`;
+    return html`${this.renderProfileOptions()}`;
   }
 
-  private renderAnonymousToggle() {
+  private renderProfileOptions() {
     if (!this.stage) {
       return;
     }
-    const isAnonymous = this.stage.profileType === ProfileType.ANONYMOUS_ANIMAL;
 
-    const toggleAnonymous = () => {
+    const handleProfileTypeChange = (profileType: ProfileType) => {
       if (!this.stage) return;
-      const profileType = isAnonymous
-        ? ProfileType.DEFAULT
-        : ProfileType.ANONYMOUS_ANIMAL;
-
       this.experimentEditor.updateStage({...this.stage, profileType});
     };
 
     return html`
-      <div class="checkbox-wrapper">
-        <md-checkbox
-          touch-target="wrapper"
-          ?checked=${isAnonymous}
-          ?disabled=${!this.experimentEditor.canEditStages}
-          @click=${toggleAnonymous}
-        >
-        </md-checkbox>
-        <div>🐱 Generate anonymous (animal-themed) profiles</div>
+      <div class="profile-options">
+        <div class="profile-option">
+          <md-radio
+            name="profile-type"
+            value="default"
+            ?checked=${this.stage.profileType === ProfileType.DEFAULT}
+            ?disabled=${!this.experimentEditor.canEditStages}
+            @change=${() => handleProfileTypeChange(ProfileType.DEFAULT)}
+          ></md-radio>
+          <label>Let participants set their own profiles</label>
+        </div>
+        <div class="profile-option">
+          <md-radio
+            name="profile-type"
+            value="animal"
+            ?checked=${this.stage.profileType === ProfileType.ANONYMOUS_ANIMAL}
+            ?disabled=${!this.experimentEditor.canEditStages}
+            @change=${() =>
+              handleProfileTypeChange(ProfileType.ANONYMOUS_ANIMAL)}
+          ></md-radio>
+          <label>🐱 Generate anonymous animal-themed profiles</label>
+        </div>
+        <div class="profile-option">
+          <md-radio
+            name="profile-type"
+            value="participant"
+            ?checked=${this.stage.profileType ===
+            ProfileType.ANONYMOUS_PARTICIPANT}
+            ?disabled=${!this.experimentEditor.canEditStages}
+            @change=${() =>
+              handleProfileTypeChange(ProfileType.ANONYMOUS_PARTICIPANT)}
+          ></md-radio>
+          <label
+            >👤 Generate anonymous participant profiles (Participant 1, 2,
+            ...)</label
+          >
+        </div>
       </div>
     `;
   }

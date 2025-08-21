@@ -210,7 +210,10 @@ export class ParticipantView extends MobxLitElement {
       case StageKind.INFO:
         return html`<info-view .stage=${stage}></info-view>`;
       case StageKind.PROFILE:
-        if (stage.profileType === ProfileType.ANONYMOUS_ANIMAL) {
+        if (
+          stage.profileType === ProfileType.ANONYMOUS_ANIMAL ||
+          stage.profileType === ProfileType.ANONYMOUS_PARTICIPANT
+        ) {
           return html`
             <profile-participant-view .stage=${stage}>
             </profile-participant-view>
