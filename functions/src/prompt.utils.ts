@@ -12,6 +12,7 @@ import {
   StageConfig,
   StageContextPromptItem,
   StageKind,
+  StageParticipantAnswer,
   SurveyStageConfig,
   SurveyPerParticipantStageConfig,
   SurveyStageParticipantAnswer,
@@ -43,6 +44,66 @@ import {
 // ****************************************************************************
 // Helper functions related to assembling structured prompts.
 // ****************************************************************************
+
+/** Helper to add display names (with avatars and pronouns) to participant answers */
+async function addDisplayNamesToAnswers<T>(
+  experimentId: string,
+  participantAnswers: Array<{participantId: string; answer: T}>,
+  stageId: string,
+): Promise<Array<{participantId: string; answer: T}>> {
+  // Fetch all participant profiles
+  const participantProfiles = await Promise.all(
+    participantAnswers.map(({participantId}) =>
+      getFirestoreParticipant(experimentId, participantId),
+    ),
+  );
+
+  // Determine profile set based on stage ID
+  const profileSetId = stageId.includes(SECONDARY_PROFILE_SET_ID)
+    ? PROFILE_SET_ANIMALS_2_ID
+    : stageId.includes(TERTIARY_PROFILE_SET_ID)
+      ? PROFILE_SET_NATURE_ID
+      : '';
+
+  return participantAnswers.map(({participantId, answer}, index) => {
+    const participant = participantProfiles[index];
+    if (!participant) {
+      return {participantId, answer};
+    }
+
+    // Get display name with avatar and pronouns
+    const displayName = getNameFromPublicId(
+      [participant],
+      participant.publicId,
+      profileSetId,
+      true, // includeAvatar
+      true, // includePronouns
+    );
+
+    return {
+      participantId: displayName,
+      answer,
+    };
+  });
+}
+
+/** Convenience function to get stage answers with display names */
+async function getStageAnswersWithDisplayNames<
+  T extends StageParticipantAnswer,
+>(
+  experimentId: string,
+  cohortId: string,
+  stageId: string,
+  participantIds?: string[],
+): Promise<Array<{participantId: string; answer: T}>> {
+  const answers = await getFirestoreAnswersForStage<T>(
+    experimentId,
+    cohortId,
+    stageId,
+    participantIds,
+  );
+  return addDisplayNamesToAnswers(experimentId, answers, stageId);
+}
 
 /** Assemble prompt items into final prompt. */
 export async function getStructuredPrompt(
@@ -344,16 +405,16 @@ export async function getStageAnswersForPrompt(
   switch (stage.kind) {
     case StageKind.ASSET_ALLOCATION:
       const assetParticipantAnswers =
-        await getFirestoreAnswersForStage<AssetAllocationStageParticipantAnswer>(
+        await getStageAnswersWithDisplayNames<AssetAllocationStageParticipantAnswer>(
           experimentId,
           cohortId,
           stage.id,
           participantIds,
         );
-      return getAssetAllocationAnswersText(assetParticipantAnswers);
+      return getAssetAllocationAnswersText(assetParticipantAnswers, true);
     case StageKind.SURVEY:
       const surveyParticipantAnswers =
-        await getFirestoreAnswersForStage<SurveyStageParticipantAnswer>(
+        await getStageAnswersWithDisplayNames<SurveyStageParticipantAnswer>(
           experimentId,
           cohortId,
           stage.id,
@@ -363,10 +424,11 @@ export async function getStageAnswersForPrompt(
       return getSurveyAnswersText(
         surveyParticipantAnswers,
         surveyStage.questions,
+        true, // Always show participant names
       );
     case StageKind.SURVEY_PER_PARTICIPANT:
       const surveyPerParticipantAnswers =
-        await getFirestoreAnswersForStage<SurveyPerParticipantStageParticipantAnswer>(
+        await getStageAnswersWithDisplayNames<SurveyPerParticipantStageParticipantAnswer>(
           experimentId,
           cohortId,
           stage.id,
@@ -377,6 +439,7 @@ export async function getStageAnswersForPrompt(
       return getSurveyAnswersText(
         surveyPerParticipantAnswers,
         surveyPerParticipantStage.questions,
+        true, // Always show participant names
       );
     default:
       return '';

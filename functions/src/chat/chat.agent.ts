@@ -36,7 +36,7 @@ import {app} from '../app';
 export async function createAgentChatMessageFromPrompt(
   experimentId: string,
   cohortId: string, // cohort triggering this message (group chat)
-  participantId: string, // participant ID used for stageData
+  participantIds: string[], // participant IDs for context and stageData access
   stageId: string,
   triggerChatId: string, // ID of chat that is being responded to (empty string for initial message)
   // Profile of agent who will be sending the chat message
@@ -111,7 +111,7 @@ export async function createAgentChatMessageFromPrompt(
       const result = await getAgentChatMessage(
         experimentId,
         cohortId,
-        participantId,
+        participantIds,
         stage,
         user,
         promptConfig,
@@ -126,12 +126,20 @@ export async function createAgentChatMessageFromPrompt(
 
     // Send the initial message
     if (isPrivateChat) {
+      // For private chat, use the first participant's ID for storage location
+      const privateChatParticipantId = participantIds[0];
+      if (!privateChatParticipantId) {
+        console.error(
+          'No participant ID provided for private chat message storage',
+        );
+        return false;
+      }
       await app
         .firestore()
         .collection('experiments')
         .doc(experimentId)
         .collection('participants')
-        .doc(participantId)
+        .doc(privateChatParticipantId)
         .collection('stageData')
         .doc(stageId)
         .collection('privateChats')
@@ -158,7 +166,7 @@ export async function createAgentChatMessageFromPrompt(
   const response = await getAgentChatMessage(
     experimentId,
     cohortId,
-    participantId,
+    participantIds,
     stage,
     user,
     promptConfig,
@@ -170,9 +178,17 @@ export async function createAgentChatMessageFromPrompt(
   }
 
   if (stage.kind === StageKind.PRIVATE_CHAT) {
+    // For private chat, use the first participant's ID for storage location
+    const privateChatParticipantId = participantIds[0];
+    if (!privateChatParticipantId) {
+      console.error(
+        'No participant ID provided for private chat message storage',
+      );
+      return false;
+    }
     sendAgentPrivateChatMessage(
       experimentId,
-      participantId,
+      privateChatParticipantId,
       stageId,
       triggerChatId,
       message,
@@ -196,7 +212,7 @@ export async function createAgentChatMessageFromPrompt(
 export async function getAgentChatMessage(
   experimentId: string,
   cohortId: string,
-  participantId: string, // participant used for stageData
+  participantIds: string[], // participant IDs for context and stageData access
   stage: StageConfig,
   // Agent who will be sending the message
   user: ParticipantProfileExtended | MediatorProfileExtended,
@@ -214,7 +230,7 @@ export async function getAgentChatMessage(
     stage.kind === StageKind.PRIVATE_CHAT
       ? await getFirestorePrivateChatMessages(
           experimentId,
-          participantId,
+          participantIds[0] || '', // Use first participant ID for private chat storage
           stageId,
         )
       : await getFirestorePublicStageChatMessages(
@@ -234,11 +250,13 @@ export async function getAgentChatMessage(
     return {message: null, success: false};
   }
 
+  // Use provided participant IDs for prompt context
+
   // Get prompt
   const prompt = await getStructuredPrompt(
     experimentId,
     cohortId,
-    participantId ? [participantId] : [],
+    participantIds,
     stageId,
     user,
     user.agentConfig,
@@ -249,7 +267,7 @@ export async function getAgentChatMessage(
   const response = await processModelResponse(
     experimentId,
     cohortId,
-    participantId,
+    participantIds[0] || '', // Use first participant ID for logging/tracking
     stageId,
     user,
     user.publicId,
@@ -456,7 +474,7 @@ export async function sendInitialChatMessages(
   experimentId: string,
   cohortId: string,
   stageId: string,
-  participantId: string,
+  triggeringParticipantId: string, // The participant who triggered this by entering the stage
 ) {
   const stage = await getFirestoreStage(experimentId, stageId);
   if (!stage) return;
@@ -466,47 +484,129 @@ export async function sendInitialChatMessages(
     return;
   }
 
-  // For chat stages, trigger initial messages from all agent mediators and participants
-  // by calling createAgentChatMessageFromPrompt with empty triggerChatId
+  // Handle GROUP CHAT stages
+  if (stage.kind === StageKind.CHAT) {
+    await sendInitialGroupChatMessages(experimentId, cohortId, stageId);
+    return;
+  }
+
+  // Handle PRIVATE CHAT stages
+  if (stage.kind === StageKind.PRIVATE_CHAT) {
+    await sendInitialPrivateChatMessages(
+      experimentId,
+      cohortId,
+      stageId,
+      triggeringParticipantId,
+    );
+    return;
+  }
+}
+
+/** Send initial messages for group chat stages */
+async function sendInitialGroupChatMessages(
+  experimentId: string,
+  cohortId: string,
+  stageId: string,
+) {
+  // In group chat, participantId is not used for private data access
+  // But we still need participant IDs for including stage context (e.g., survey answers)
+
+  // Get all participants to provide context
+  const allParticipants = await getFirestoreActiveParticipants(
+    experimentId,
+    cohortId,
+    stageId,
+    false, // checkIsAgent = false to get ALL participants
+  );
+
+  const allParticipantIds = allParticipants.map((p) => p.privateId);
 
   // Send initial messages from agent mediators
-  const mediators = await getFirestoreActiveMediators(
+  const agentMediators = await getFirestoreActiveMediators(
     experimentId,
     cohortId,
     stageId,
     true, // checkIsAgent = true
   );
 
-  for (const mediator of mediators) {
+  for (const mediator of agentMediators) {
     await createAgentChatMessageFromPrompt(
       experimentId,
       cohortId,
-      participantId,
+      allParticipantIds, // Pass all participant IDs for full context
       stageId,
       '', // empty triggerChatId indicates initial message
       mediator,
     );
   }
 
-  // For group chat, also send initial messages from agent participants
-  if (stage.kind === StageKind.CHAT) {
-    const participants = await getFirestoreActiveParticipants(
+  // Send initial messages from agent participants
+  const agentParticipants = allParticipants.filter((p) => p.agentConfig);
+
+  for (const participant of agentParticipants) {
+    await createAgentChatMessageFromPrompt(
       experimentId,
       cohortId,
+      [participant.privateId], // Pass agent's own ID as array
       stageId,
-      true, // checkIsAgent = true
+      '', // empty triggerChatId indicates initial message
+      participant,
     );
+  }
+}
 
-    for (const participant of participants) {
+/** Send initial messages for private chat stages */
+async function sendInitialPrivateChatMessages(
+  experimentId: string,
+  cohortId: string,
+  stageId: string,
+  triggeringParticipantId: string, // eslint-disable-line @typescript-eslint/no-unused-vars
+) {
+  // In private chat, each participant has their own private chat data
+  // We need to send initial messages for each participant's private chat
+
+  // Get all participants in this stage
+  const allParticipants = await getFirestoreActiveParticipants(
+    experimentId,
+    cohortId,
+    stageId,
+    false, // checkIsAgent = false to get all participants
+  );
+
+  // Get agent mediators
+  const agentMediators = await getFirestoreActiveMediators(
+    experimentId,
+    cohortId,
+    stageId,
+    true, // checkIsAgent = true
+  );
+
+  // For each participant (human or agent), send initial messages from agent mediators
+  for (const participant of allParticipants) {
+    for (const mediator of agentMediators) {
       await createAgentChatMessageFromPrompt(
         experimentId,
         cohortId,
-        participant.privateId,
+        [participant.privateId], // Use each participant's ID as array for their private chat data
         stageId,
         '', // empty triggerChatId indicates initial message
-        participant,
+        mediator,
       );
     }
+  }
+
+  // Also send initial messages from agent participants if they exist
+  const agentParticipants = allParticipants.filter((p) => p.agentConfig);
+
+  for (const agentParticipant of agentParticipants) {
+    await createAgentChatMessageFromPrompt(
+      experimentId,
+      cohortId,
+      [agentParticipant.privateId], // Use agent participant's own ID as array for their private chat
+      stageId,
+      '', // empty triggerChatId indicates initial message
+      agentParticipant,
+    );
   }
 }
 
