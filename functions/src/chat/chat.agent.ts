@@ -337,6 +337,7 @@ export async function getAgentChatMessage(
     profile: createParticipantProfileBase(user),
     senderId: user.publicId,
     agentId: user.agentConfig.agentId,
+    timestamp: Timestamp.now(),
   });
   return {message: chatMessage, success: true};
 }
