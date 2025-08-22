@@ -148,6 +148,7 @@ export async function getOpenAIAPIResponse(
   model: string,
   prompt: string,
   generationConfig: ModelGenerationConfig,
+  structuredOutputConfig?: StructuredOutputConfig,
 ): Promise<ModelResponse> {
   return await getOpenAIAPIChatCompletionResponse(
     apiKeyConfig.openAIApiKey?.apiKey || '',
@@ -155,6 +156,7 @@ export async function getOpenAIAPIResponse(
     model,
     prompt,
     generationConfig,
+    structuredOutputConfig,
   );
 }
 

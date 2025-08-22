@@ -281,27 +281,48 @@ export async function getAgentChatMessage(
   );
 
   // Process response
-  if (response.status !== ModelResponseStatus.OK || !response.parsedResponse) {
+  if (response.status !== ModelResponseStatus.OK) {
     return {message: null, success: false};
   }
 
   const structured = promptConfig.structuredOutputConfig;
-  // Get shouldRespond with fail-safe: default to true if field is missing or not defined
-  const shouldRespondValue = structured.shouldRespondField
-    ? response.parsedResponse[structured.shouldRespondField]
-    : undefined;
-  // If shouldRespond field exists and is explicitly false, don't respond. Otherwise, respond.
-  const shouldRespond = shouldRespondValue === false ? false : true;
 
-  const message = structured.messageField
-    ? response.parsedResponse[structured.messageField]
-    : response.parsedResponse['response']; // fallback to default field name
-  const explanation = structured.explanationField
-    ? response.parsedResponse[structured.explanationField]
-    : response.parsedResponse['explanation']; // fallback to default field name
-  const readyToEndChat = structured.readyToEndField
-    ? response.parsedResponse[structured.readyToEndField]
-    : false; // default to not ready to end if field is missing
+  let message: string;
+  let explanation: string | undefined;
+  let shouldRespond = true;
+  let readyToEndChat = false;
+
+  // Handle non-structured output case
+  if (!structured?.enabled) {
+    // When structured output is disabled, use the text field directly
+    if (!response.text) {
+      return {message: null, success: false};
+    }
+    message = response.text;
+    explanation = response.reasoning || undefined; // Use reasoning field if available
+  } else {
+    // Handle structured output case
+    if (!response.parsedResponse) {
+      return {message: null, success: false};
+    }
+
+    // Get shouldRespond with fail-safe: default to true if field is missing or not defined
+    const shouldRespondValue = structured.shouldRespondField
+      ? response.parsedResponse[structured.shouldRespondField]
+      : undefined;
+    // If shouldRespond field exists and is explicitly false, don't respond. Otherwise, respond.
+    shouldRespond = shouldRespondValue === false ? false : true;
+
+    message = structured.messageField
+      ? response.parsedResponse[structured.messageField]
+      : response.parsedResponse['response']; // fallback to default field name
+    explanation = structured.explanationField
+      ? response.parsedResponse[structured.explanationField]
+      : response.parsedResponse['explanation']; // fallback to default field name
+    readyToEndChat = structured.readyToEndField
+      ? response.parsedResponse[structured.readyToEndField]
+      : false; // default to not ready to end if field is missing
+  }
 
   // Only if agent participant is ready to end chat
   if (readyToEndChat && user.type === UserType.PARTICIPANT) {
