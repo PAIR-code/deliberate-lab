@@ -466,6 +466,16 @@ export class EditorComponent extends MobxLitElement {
       }
     };
 
+    const updateDisableSafetyFilters = (e: Event) => {
+      const disableSafetyFilters = (e.target as HTMLInputElement).checked;
+      this.updatePrompt({
+        generationConfig: {
+          ...agentPromptConfig.generationConfig,
+          disableSafetyFilters,
+        },
+      });
+    };
+
     return html`
       <div class="section">
         <div class="section-header">
@@ -545,6 +555,22 @@ export class EditorComponent extends MobxLitElement {
               .value=${generationConfig.presencePenalty}
               @input=${updatePresencePenalty}
             />
+          </div>
+        </div>
+        <div class="checkbox-wrapper">
+          <md-checkbox
+            touch-target="wrapper"
+            ?checked=${generationConfig.disableSafetyFilters ?? false}
+            ?disabled=${!this.experimentEditor.isCreator}
+            @change=${updateDisableSafetyFilters}
+          >
+          </md-checkbox>
+          <div>
+            Disable safety filters
+            <span class="small">
+              (Only supported for Gemini. Uses BLOCK_NONE threshold instead of
+              BLOCK_ONLY_HIGH)
+            </span>
           </div>
         </div>
       </div>
