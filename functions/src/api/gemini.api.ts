@@ -5,6 +5,7 @@ import {
   GenerateContentConfig,
   HarmCategory,
   HarmBlockThreshold,
+  SafetySetting,
 } from '@google/genai';
 import {
   ModelGenerationConfig,
@@ -23,24 +24,34 @@ const MAX_TOKENS_FINISH_REASON = 'MAX_TOKENS';
 const AUTHENTICATION_FAILURE_ERROR_CODE = 403;
 const QUOTA_ERROR_CODE = 429;
 
-const SAFETY_SETTINGS = [
-  {
-    category: HarmCategory.HARM_CATEGORY_HARASSMENT,
-    threshold: HarmBlockThreshold.BLOCK_ONLY_HIGH,
-  },
-  {
-    category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT,
-    threshold: HarmBlockThreshold.BLOCK_ONLY_HIGH,
-  },
-  {
-    category: HarmCategory.HARM_CATEGORY_HATE_SPEECH,
-    threshold: HarmBlockThreshold.BLOCK_ONLY_HIGH,
-  },
-  {
-    category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT,
-    threshold: HarmBlockThreshold.BLOCK_ONLY_HIGH,
-  },
-];
+const getSafetySettings = (disableSafetyFilters = false): SafetySetting[] => {
+  const threshold = disableSafetyFilters
+    ? HarmBlockThreshold.BLOCK_NONE
+    : HarmBlockThreshold.BLOCK_ONLY_HIGH;
+
+  return [
+    {
+      category: HarmCategory.HARM_CATEGORY_CIVIC_INTEGRITY,
+      threshold: threshold,
+    },
+    {
+      category: HarmCategory.HARM_CATEGORY_HARASSMENT,
+      threshold: threshold,
+    },
+    {
+      category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT,
+      threshold: threshold,
+    },
+    {
+      category: HarmCategory.HARM_CATEGORY_HATE_SPEECH,
+      threshold: threshold,
+    },
+    {
+      category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT,
+      threshold: threshold,
+    },
+  ];
+};
 
 function makeStructuredOutputSchema(schema: StructuredOutputSchema): object {
   const typeMap: {[key in StructuredOutputDataType]?: string} = {
@@ -160,16 +171,17 @@ export async function callGemini(
   generationConfig: GenerationConfig,
   modelName = GEMINI_DEFAULT_MODEL,
   parseResponse = false, // parse if structured output
+  safetySettings?: SafetySetting[],
 ) {
   const genAI = new GoogleGenAI({apiKey});
 
   // Convert to Gemini format
   const {contents, systemInstruction} = convertToGeminiFormat(prompt);
 
-  // Build config with system instruction if provided
+  // Build config with safety settings and system instruction
   const config: GenerateContentConfig = {
     ...generationConfig,
-    safetySettings: SAFETY_SETTINGS,
+    safetySettings: safetySettings,
   };
 
   if (systemInstruction) {
@@ -212,8 +224,8 @@ export async function callGemini(
     };
   }
 
-  let text = null;
-  let reasoning = null;
+  let text: string | undefined = undefined;
+  let reasoning: string | undefined = undefined;
 
   for (const part of response.candidates[0].content.parts) {
     if (!part.text) {
@@ -247,21 +259,26 @@ export async function getGeminiAPIResponse(
   generationConfig: ModelGenerationConfig,
   structuredOutputConfig?: StructuredOutputConfig,
 ): Promise<ModelResponse> {
+  // Extract disableSafetyFilters setting from generationConfig
+  const disableSafetyFilters = generationConfig.disableSafetyFilters ?? false;
+
+  // Get custom fields for the API request
   const customFields = Object.fromEntries(
     generationConfig.customRequestBodyFields.map((field) => [
       field.name,
       field.value,
     ]),
   );
+
   let structuredOutputGenerationConfig;
   try {
     structuredOutputGenerationConfig = makeStructuredOutputGenerationConfig(
       structuredOutputConfig,
     );
-  } catch (error: Error) {
+  } catch (error: unknown) {
     return {
       status: ModelResponseStatus.INTERNAL_ERROR,
-      errorMessage: error.message,
+      errorMessage: error instanceof Error ? error.message : String(error),
     };
   }
   const thinkingConfig = {
@@ -281,6 +298,8 @@ export async function getGeminiAPIResponse(
     ...customFields,
   };
 
+  const safetySettings = getSafetySettings(disableSafetyFilters);
+
   try {
     return await callGemini(
       apiKey,
@@ -288,6 +307,7 @@ export async function getGeminiAPIResponse(
       geminiConfig,
       modelName,
       structuredOutputConfig?.enabled,
+      safetySettings,
     );
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (error: any) {
