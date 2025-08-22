@@ -16,6 +16,12 @@ import {
 import {Timestamp} from 'firebase-admin/firestore';
 import {processModelResponse} from '../agent.utils';
 import {getStructuredPrompt} from '../prompt.utils';
+import {
+  convertChatToMessages,
+  shouldUseMessageFormat,
+  ConversationMessage,
+  MessageRole,
+} from './message_converter.utils';
 import {updateParticipantReadyToEndChat} from '../stages/group_chat.utils';
 import {
   getExperimenterDataFromExperiment,
@@ -251,9 +257,8 @@ export async function getAgentChatMessage(
   }
 
   // Use provided participant IDs for prompt context
-
-  // Get prompt
-  const prompt = await getStructuredPrompt(
+  // Get structured prompt
+  const structuredPrompt = await getStructuredPrompt(
     experimentId,
     cohortId,
     participantIds,
@@ -263,7 +268,28 @@ export async function getAgentChatMessage(
     promptConfig,
   );
 
-  // Get response
+  // Check if we should use message-based format (private chat with one participant)
+  const isPrivateChat = stage.kind === StageKind.PRIVATE_CHAT;
+  const useMessageFormat = shouldUseMessageFormat(
+    isPrivateChat,
+    true, // allowMessageFormat, always true for now.
+    participantIds.length,
+  );
+
+  // Prepare prompt - either message-based or traditional string
+  let prompt: string | ConversationMessage[];
+  if (useMessageFormat && isPrivateChat) {
+    prompt = await convertToMessageFormat(
+      experimentId,
+      participantIds,
+      stageId,
+      user,
+      structuredPrompt,
+    );
+  } else {
+    prompt = structuredPrompt;
+  }
+
   const response = await processModelResponse(
     experimentId,
     cohortId,
@@ -501,6 +527,48 @@ export async function sendAgentPrivateChatMessage(
   agentDocument.set(chatMessage);
 
   return true;
+}
+
+/**
+ * Convert chat history to message-based format for private chats.
+ * Includes system prompt as the first message.
+ */
+async function convertToMessageFormat(
+  experimentId: string,
+  participantIds: string[],
+  stageId: string,
+  user: ParticipantProfileExtended | MediatorProfileExtended,
+  systemPrompt: string,
+): Promise<ConversationMessage[]> {
+  // Get chat history for private chat
+  const chatHistory = await getFirestorePrivateChatMessages(
+    experimentId,
+    participantIds[0],
+    stageId,
+  );
+
+  // Convert chat history to message format
+  const messages = convertChatToMessages(
+    chatHistory,
+    user.type,
+    user.publicId,
+    {
+      isPrivateChat: true,
+      mediatorId: user.type === UserType.MEDIATOR ? user.publicId : undefined,
+      participantId: participantIds[0],
+      includeSystemPrompt: true,
+    },
+  );
+
+  // Add system prompt as first message
+  if (systemPrompt) {
+    messages.unshift({
+      role: MessageRole.SYSTEM,
+      content: systemPrompt,
+    });
+  }
+
+  return messages;
 }
 
 /** Helper function to send initial chat messages when participants enter a chat stage */

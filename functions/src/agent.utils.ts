@@ -1,20 +1,14 @@
 import {Timestamp} from 'firebase-admin/firestore';
 import {
   AgentModelSettings,
-  AgentParticipantPromptConfig,
-  AgentPersonaConfig,
   APIKeyConfig,
   ApiKeyType,
   ModelGenerationConfig,
+  ModelResponse,
   ModelResponseStatus,
-  ParticipantProfileExtended,
-  ParticipantStatus,
-  StageConfig,
-  StageKind,
   StructuredOutputConfig,
   UserProfile,
   createModelLogEntry,
-  makeStructuredOutputPrompt,
 } from '@deliberation-lab/utils';
 
 import {getGeminiAPIResponse} from './api/gemini.api';
@@ -35,11 +29,22 @@ export async function processModelResponse(
   privateId: string,
   description: string,
   apiKeyConfig: APIKeyConfig,
-  prompt: string,
+  prompt: string | Array<{role: string; content: string; name?: string}>,
   modelSettings: AgentModelSettings,
   generationConfig: ModelGenerationConfig,
   structuredOutputConfig?: StructuredOutputConfig,
 ): Promise<ModelResponse> {
+  // Convert prompt to string for logging
+  const promptText =
+    typeof prompt === 'string'
+      ? prompt
+      : prompt
+          .map(
+            (m) =>
+              `${m.role.toUpperCase()}${m.name ? `(${m.name})` : ''}: ${m.content}`,
+          )
+          .join('\n');
+
   const log = createModelLogEntry({
     experimentId,
     cohortId,
@@ -49,7 +54,7 @@ export async function processModelResponse(
     publicId,
     privateId,
     description,
-    prompt,
+    prompt: promptText,
     createdTimestamp: Timestamp.now(),
   });
 
@@ -81,7 +86,7 @@ export async function processModelResponse(
 // TODO: Rename to getAPIResponse?
 export async function getAgentResponse(
   apiKeyConfig: APIKeyConfig,
-  prompt: string,
+  prompt: string | Array<{role: string; content: string; name?: string}>,
   modelSettings: AgentModelSettings,
   generationConfig: ModelGenerationConfig,
   structuredOutputConfig?: StructuredOutputConfig,
@@ -109,12 +114,13 @@ export async function getAgentResponse(
       apiKeyConfig,
       modelSettings.modelName,
       prompt,
+      generationConfig,
     );
   } else {
     response = {
       status: ModelResponseStatus.CONFIG_ERROR,
       generationConfig,
-      errorMessage: `Error: invalid apiKey type: ${apiKeyConfig.ollamaApiKey.apiKey}`,
+      errorMessage: `Error: invalid apiKey type`,
     };
   }
 
@@ -130,7 +136,7 @@ export async function getAgentResponse(
 export async function getGeminiResponse(
   apiKeyConfig: APIKeyConfig,
   modelName: string,
-  prompt: string,
+  prompt: string | Array<{role: string; content: string; name?: string}>,
   generationConfig: ModelGenerationConfig,
   structuredOutputConfig?: StructuredOutputConfig,
 ): Promise<ModelResponse> {
@@ -146,7 +152,7 @@ export async function getGeminiResponse(
 export async function getOpenAIAPIResponse(
   apiKeyConfig: APIKeyConfig,
   model: string,
-  prompt: string,
+  prompt: string | Array<{role: string; content: string; name?: string}>,
   generationConfig: ModelGenerationConfig,
   structuredOutputConfig?: StructuredOutputConfig,
 ): Promise<ModelResponse> {
@@ -163,11 +169,13 @@ export async function getOpenAIAPIResponse(
 export async function getOllamaResponse(
   apiKeyConfig: APIKeyConfig,
   modelName: string,
-  prompt: string,
+  prompt: string | Array<{role: string; content: string; name?: string}>,
   generationConfig: ModelGenerationConfig,
 ): Promise<ModelResponse> {
+  // Convert string to array format for ollamaChat
+  const messages = typeof prompt === 'string' ? [prompt] : prompt;
   return await ollamaChat(
-    [prompt],
+    messages,
     modelName,
     apiKeyConfig.ollamaApiKey,
     generationConfig,
