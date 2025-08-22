@@ -22,6 +22,10 @@ type OutgoingMessage = {
   model: string;
   messages: OllamaMessage[];
   stream: boolean;
+  options?: {
+    temperature?: number;
+    top_p?: number;
+  };
 };
 
 /**
@@ -33,17 +37,17 @@ type OllamaMessage = {
 };
 
 /**
- * Send a list of string-messages to the hosted LLM and receive its response.
+ * Send messages to the hosted LLM and receive its response.
  *
- * @param messages a list of string-messages to be sent as prompts to the model
+ * @param messages messages to be sent as prompts to the model (string array or role-based messages)
  * @param serverConfig the url and other necessary data of the Ollama server
  * @returns the model's response as a string, or empty string if an error occured
  */
 export async function ollamaChat(
-  messages: string[],
+  messages: string[] | Array<{role: string; content: string; name?: string}>,
   modelName: string,
   serverConfig: OllamaServerConfig,
-  generationConfig: AgentGenerationConfig,
+  generationConfig: ModelGenerationConfig,
 ): Promise<ModelResponse> {
   const messageObjects = encodeMessages(messages, modelName, generationConfig);
   const response = await fetch(serverConfig.url, {
@@ -54,7 +58,7 @@ export async function ollamaChat(
   return {
     // TODO(mkbehr): handle errors from this API
     status: ModelResponseStatus.OK,
-    rawResponse: response,
+    rawResponse: responseMessage, // Use the decoded response as rawResponse
     text: responseMessage,
   };
 }
@@ -84,21 +88,34 @@ async function decodeResponse(response: Response): Promise<string> {
 }
 
 /**
- * Transform string-messages to JSON objects appropriate for the model's API.
- * @param messages a list of string-messages to be sent to the LLM
+ * Transform messages to JSON objects appropriate for the model's API.
+ * @param messages messages to be sent to the LLM (string array or role-based messages)
  * @param modelName the type of llm running in the server (e.g. "llama3.2").
  * Keep in mind that the model must have been loaded server-side in order to be used.
  * @returns appropriate JSON objects which the model can understand
  */
 function encodeMessages(
-  messages: string[],
+  messages: string[] | Array<{role: string; content: string; name?: string}>,
   modelName: string,
   generationConfig: ModelGenerationConfig,
 ): OutgoingMessage {
-  const messageObjs: OllamaMessage[] = messages.map((message) => ({
-    role: 'user',
-    content: message,
-  }));
+  let messageObjs: OllamaMessage[];
+
+  if (typeof messages[0] === 'string') {
+    // Legacy string array format - treat all as user messages
+    messageObjs = (messages as string[]).map((message) => ({
+      role: 'user',
+      content: message,
+    }));
+  } else {
+    // Role-based message format
+    messageObjs = (messages as Array<{role: string; content: string}>).map(
+      (msg) => ({
+        role: msg.role === 'assistant' ? 'assistant' : msg.role, // Ollama uses 'assistant' not 'model'
+        content: msg.content,
+      }),
+    );
+  }
 
   const customFields = Object.fromEntries(
     generationConfig.customRequestBodyFields.map((field) => [
