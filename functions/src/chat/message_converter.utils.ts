@@ -122,10 +122,17 @@ export function shouldUseMessageFormat(
   isPrivateChat: boolean,
   allowMessageFormat: boolean = true,
   participantCount: number = 1,
+  mediatorCount: number = 1,
 ): boolean {
   // Only use message format for:
   // 1. Private chats
   // 2. When explicitly enabled
-  // 3. With a single participant (one-on-one with mediator)
-  return isPrivateChat && allowMessageFormat && participantCount === 1;
+  // 3. With exactly one participant and one mediator (true one-on-one conversation)
+  // Multiple mediators sometimes create conflicting "assistant" messages that break API flow.
+  return (
+    isPrivateChat &&
+    allowMessageFormat &&
+    participantCount === 1 &&
+    mediatorCount === 1
+  );
 }
