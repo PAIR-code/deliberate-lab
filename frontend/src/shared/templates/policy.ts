@@ -152,6 +152,9 @@ function getPolicyStageConfigs(): StageConfig[] {
   stages.push(POLICY_FINAL_SURVEY_STAGE);
   stages.push(POLICY_ADDITIONAL_SUPPORT_STAGE);
   stages.push(POLICY_DONATION_STAGE);
+  stages.push(CHATBOT_OPINION_GENERAL_SURVEY_STAGE);
+  stages.push(CHATBOT_OPINION_CONVERSATIONAL_SURVEY_STAGE);
+  stages.push(CHATBOT_OPINION_FINAL_THOUGHTS_STAGE);
   stages.push(AI_LITERACY_SUREY_STAGE);
   stages.push(ATTITUDES_SURVEY_STAGE);
   stages.push(POLICY_OUTRO_STAGE);
@@ -672,6 +675,96 @@ const POLICY_END_STAGE = createInfoStage({
   name: 'End',
   progress: DEFAULT_STAGE_PROGRESS_CONFIG,
   infoLines: [END_TEXT],
+});
+
+const opinionLikertOptions = {
+  lowerText: 'Strongly Disagree',
+  middleText: 'Neutral',
+  upperText: 'Strongly Agree',
+  lowerValue: 1,
+  upperValue: 5,
+};
+
+const CHATBOT_OPINION_GENERAL_SURVEY_STAGE = createSurveyStage({
+  id: 'chatbot_opinion_general_survey',
+  name: 'Survey: General Impressions of Chatbot',
+  progress: DEFAULT_STAGE_PROGRESS_CONFIG,
+  descriptions: createStageTextConfig({
+    primaryText: `To better understand your experience today, please answer the following questions about the conversation you just had.\n# Please rate your overall experience with the AI.`,
+  }),
+  questions: [
+    createScaleSurveyQuestion({
+      id: 'chatbot_enjoyed',
+      questionTitle: 'I enjoyed my conversation with the AI chatbot.',
+      ...opinionLikertOptions,
+    }),
+    createScaleSurveyQuestion({
+      id: 'chatbot_understand',
+      questionTitle: "The AI chatbot's responses were easy to understand.",
+      ...opinionLikertOptions,
+    }),
+    createScaleSurveyQuestion({
+      id: 'chatbot_helpful',
+      questionTitle: 'Overall, I found the AI chatbot to be helpful.',
+      ...opinionLikertOptions,
+    }),
+  ],
+});
+
+const CHATBOT_OPINION_CONVERSATIONAL_SURVEY_STAGE = createSurveyStage({
+  id: 'chatbot_opinion_conversational_survey',
+  name: "Survey: Chatbot's Conversational Approach",
+  progress: DEFAULT_STAGE_PROGRESS_CONFIG,
+  descriptions: createStageTextConfig({
+    primaryText: `To better understand your experience today, please answer the following questions about the conversation you just had.\n# Please think about the pattern of the AI's responses`,
+  }),
+  questions: [
+    createScaleSurveyQuestion({
+      id: 'chatbot_knowledgeable',
+      questionTitle:
+        'The AI chatbot seemed knowledgeable about the conversation topic.',
+      ...opinionLikertOptions,
+    }),
+    createScaleSurveyQuestion({
+      id: 'chatbot_balanced',
+      questionTitle:
+        'The AI chatbot provided me with a balanced and objective perspective.',
+      ...opinionLikertOptions,
+    }),
+    createScaleSurveyQuestion({
+      id: 'chatbot_same_arguments',
+      questionTitle:
+        'The AI chatbot seemed to bring up the same arguments or points multiple times.',
+      ...opinionLikertOptions,
+    }),
+    createScaleSurveyQuestion({
+      id: 'chatbot_engaging',
+      questionTitle: 'The AI chatbot engaged with what I was saying.',
+      ...opinionLikertOptions,
+    }),
+    createScaleSurveyQuestion({
+      id: 'chatbot_priority',
+      questionTitle:
+        "The AI chabot's main priority was helping me make the best decision for myself.",
+      ...opinionLikertOptions,
+    }),
+  ],
+});
+
+const CHATBOT_OPINION_FINAL_THOUGHTS_STAGE = createSurveyStage({
+  id: 'chatbot_opinion_final_thoughts',
+  name: 'Survey: Final Thoughts on Chatbot',
+  progress: DEFAULT_STAGE_PROGRESS_CONFIG,
+  descriptions: createStageTextConfig({
+    primaryText: `To better understand your experience today, please answer the following question about the conversation you just had.`,
+  }),
+  questions: [
+    createTextSurveyQuestion({
+      id: 'chatbot_enjoyed',
+      questionTitle:
+        "In your own words, was there anything about the AI chatbot's behaviour that you would like to note? For example, was it helpful, biased, repetitive, balanced, or something else? If there were any behaviours or patterns that stood out to you, please make sure to describe them in detail.",
+    }),
+  ],
 });
 
 const likertOptions = {
