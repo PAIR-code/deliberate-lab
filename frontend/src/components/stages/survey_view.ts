@@ -258,7 +258,9 @@ export class SurveyView extends MobxLitElement {
 
     return html`
       <div class="radio-question">
-        <div class=${titleClasses}>${question.questionTitle}*</div>
+        <div class=${titleClasses}>
+          ${unsafeHTML(convertMarkdownToHTML(question.questionTitle + '*'))}
+        </div>
         <div class=${questionWrapperClasses}>
           ${question.options.map((option) =>
             this.renderRadioButton(option, question.id),
