@@ -243,8 +243,9 @@ const POLICY_INITIAL_SURVEY_STAGE = createSurveyStage({
     primaryText: `
 # Indicate your support of the policy
 
-## You will need to indicate your support or opposition to the following policy:
-# ${EXAMPLE_POLICY.policy}
+You will need to indicate your support or opposition to the following policy:
+
+# **${EXAMPLE_POLICY.policy}**
 
 Before you learn more about the opinions about this policy, we would like to understand your current position on this issue. 
 
@@ -382,7 +383,7 @@ const POLICY_FINAL_SURVEY_STAGE = createSurveyStage({
 Now that you have learned more about the policy, please register your opposition or support for this policy.
 **As before, you can click and adjust the slider to indicate your willingness to support or oppose the policy.**
 
-# ${EXAMPLE_POLICY.policy}
+# **${EXAMPLE_POLICY.policy}**
 `,
   }),
   questions: [
@@ -475,13 +476,13 @@ const petitionOptions = [
 
 const policySignatorySupportQuestion = createMultipleChoiceSurveyQuestion({
   id: 'policy_signatory_support',
-  questionTitle: `${EXAMPLE_POLICY.petition_pro}\n${petition_text}`,
+  questionTitle: `### ${EXAMPLE_POLICY.petition_pro}\n### ${petition_text}`,
   options: petitionOptions,
   condition: finalPreferenceSupportCondition,
 });
 const policySignatoryOpposeQuestion = createMultipleChoiceSurveyQuestion({
   id: 'policy_signatory_oppose',
-  questionTitle: `${EXAMPLE_POLICY.petition_con}\n${petition_text}`,
+  questionTitle: `### ${EXAMPLE_POLICY.petition_con}\n### ${petition_text}`,
   options: petitionOptions,
   condition: finalPreferenceOpposeCondition,
 });
@@ -571,14 +572,14 @@ const donateOptions = [
 
 const policyDonateChoiceSupportQuestion = createMultipleChoiceSurveyQuestion({
   id: 'policy_donate_choice_support',
-  questionTitle: `${EXAMPLE_POLICY.nonprofit_pro}\n${donate_text}`,
+  questionTitle: `### ${EXAMPLE_POLICY.nonprofit_pro}\n### ${donate_text}`,
   options: donateOptions,
   condition: finalPreferenceSupportCondition,
 });
 
 const policyDonateChoiceOpposeQuestion = createMultipleChoiceSurveyQuestion({
   id: 'policy_donate_choice_oppose',
-  questionTitle: `${EXAMPLE_POLICY.nonprofit_con}\n${donate_text}`,
+  questionTitle: `### ${EXAMPLE_POLICY.nonprofit_con}\n### ${donate_text}`,
   options: donateOptions,
   condition: finalPreferenceOpposeCondition,
 });
@@ -635,7 +636,7 @@ const POLICY_POST_EXPERIMENT_STAGE = createSurveyStage({
     primaryText: `
 Thank you for completing the debrief.
 
-For the last time, please indicate your opposition or support for the policy: ${EXAMPLE_POLICY.policy}.
+For the last time, please indicate your opposition or support for the policy:\n # **${EXAMPLE_POLICY.policy}**
 
 As before, you can click and adjust the slider to indicate your willingness to support or oppose the policy.
 `,
