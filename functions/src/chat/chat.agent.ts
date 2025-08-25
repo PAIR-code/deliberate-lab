@@ -31,6 +31,8 @@ import {
   getFirestoreStagePublicData,
   getFirestoreActiveMediators,
   getFirestoreActiveParticipants,
+  getGroupChatTriggerLogRef,
+  getPrivateChatTriggerLogRef,
 } from '../utils/firestore';
 import {app} from '../app';
 
@@ -80,34 +82,20 @@ export async function createAgentChatMessageFromPrompt(
     const isPrivateChat = stage.kind === StageKind.PRIVATE_CHAT;
 
     // Build the appropriate trigger log reference based on chat type
-    let triggerLogRef;
-    if (isPrivateChat) {
-      // For private chat, store in the participant's private stage data
-      // Use the first participant ID as the storage location
-      const privateChatParticipantId = participantIds[0];
-      triggerLogRef = app
-        .firestore()
-        .collection('experiments')
-        .doc(experimentId)
-        .collection('participants')
-        .doc(privateChatParticipantId)
-        .collection('stageData')
-        .doc(stageId)
-        .collection('triggerLogs')
-        .doc(`initial-${user.publicId}`);
-    } else {
-      // For group chat, store in the public stage data
-      triggerLogRef = app
-        .firestore()
-        .collection('experiments')
-        .doc(experimentId)
-        .collection('cohorts')
-        .doc(cohortId)
-        .collection('publicStageData')
-        .doc(stageId)
-        .collection('triggerLogs')
-        .doc(`initial-${user.publicId}`);
-    }
+    const triggerLogId = `initial-${user.publicId}`;
+    const triggerLogRef = isPrivateChat
+      ? getPrivateChatTriggerLogRef(
+          experimentId,
+          participantIds[0], // Use the first participant ID as the storage location
+          stageId,
+          triggerLogId,
+        )
+      : getGroupChatTriggerLogRef(
+          experimentId,
+          cohortId,
+          stageId,
+          triggerLogId,
+        );
 
     const hasAlreadySent = (await triggerLogRef.get()).exists;
     if (hasAlreadySent) {
@@ -116,89 +104,40 @@ export async function createAgentChatMessageFromPrompt(
 
     // Mark that we're sending the initial message
     await triggerLogRef.set({timestamp: Timestamp.now()});
+  }
 
-    // Handle initial message
+  // Get the chat message (either initial or response)
+  let message: ChatMessage | null = null;
+
+  // For initial messages, check if there's a configured initial message
+  if (triggerChatId === '') {
     const initialMessage = promptConfig.chatSettings?.initialMessage;
-    let chatMessage: ChatMessage;
-
     if (initialMessage && initialMessage.trim() !== '') {
       // Use configured initial message
-      chatMessage = createChatMessage({
+      message = createChatMessage({
         message: initialMessage,
         senderId: user.publicId,
         type: user.type,
         profile: createParticipantProfileBase(user),
         timestamp: Timestamp.now(),
       });
-    } else {
-      // No initial message configured, query the API
-      const result = await getAgentChatMessage(
-        experimentId,
-        cohortId,
-        participantIds,
-        stage,
-        user,
-        promptConfig,
-      );
-
-      if (!result.message) {
-        return result.success; // Return success status from API query
-      }
-
-      chatMessage = result.message;
     }
-
-    // Send the initial message
-    if (isPrivateChat) {
-      // For private chat, use the first participant's ID for storage location
-      const privateChatParticipantId = participantIds[0];
-      if (!privateChatParticipantId) {
-        console.error(
-          'No participant ID provided for private chat message storage',
-        );
-        return false;
-      }
-      await app
-        .firestore()
-        .collection('experiments')
-        .doc(experimentId)
-        .collection('participants')
-        .doc(privateChatParticipantId)
-        .collection('stageData')
-        .doc(stageId)
-        .collection('privateChats')
-        .doc(chatMessage.id)
-        .set(chatMessage);
-    } else {
-      await app
-        .firestore()
-        .collection('experiments')
-        .doc(experimentId)
-        .collection('cohorts')
-        .doc(cohortId)
-        .collection('publicStageData')
-        .doc(stageId)
-        .collection('chats')
-        .doc(chatMessage.id)
-        .set(chatMessage);
-    }
-
-    return true;
   }
 
-  // Otherwise, handle regular chat response
-  const response = await getAgentChatMessage(
-    experimentId,
-    cohortId,
-    participantIds,
-    stage,
-    user,
-    promptConfig,
-  );
-
-  const message = response.message;
+  // If no configured initial message or this is a regular response, query the API
   if (!message) {
-    return response.success;
+    const response = await getAgentChatMessage(
+      experimentId,
+      cohortId,
+      participantIds,
+      stage,
+      user,
+      promptConfig,
+    );
+    message = response.message;
+    if (!message) {
+      return response.success;
+    }
   }
 
   if (stage.kind === StageKind.PRIVATE_CHAT) {
@@ -286,12 +225,26 @@ export async function getAgentChatMessage(
     promptConfig,
   );
 
-  // Check if we should use message-based format (private chat with one participant)
+  // Check if we should use message-based format
+  // Only for private chat with exactly one participant AND one mediator
   const isPrivateChat = stage.kind === StageKind.PRIVATE_CHAT;
+  // Count active mediators for this stage
+  let mediatorCount = 0;
+  if (isPrivateChat) {
+    const mediators = await getFirestoreActiveMediators(
+      experimentId,
+      cohortId,
+      stageId,
+      false, // checkIsAgent = false to get all mediators
+    );
+    mediatorCount = mediators.length;
+  }
+
   const useMessageFormat = shouldUseMessageFormat(
     isPrivateChat,
     true, // allowMessageFormat, always true for now.
     participantIds.length,
+    mediatorCount,
   );
 
   // Prepare prompt - either message-based or traditional string
@@ -424,40 +377,42 @@ export async function sendAgentGroupChatMessage(
 
   // Check if the conversation has moved on,
   // i.e., trigger chat ID is no longer that latest message
-  const chatHistory = await getFirestorePublicStageChatMessages(
-    experimentId,
-    cohortId,
-    stageId,
-  );
-  if (
-    chatHistory.length > 0 &&
-    chatHistory[chatHistory.length - 1].id !== triggerChatId
-  ) {
-    // TODO: Write chat log
-    console.log('Conversation has moved on');
-    return true; // expected outcome (TODO: return status enum)
+  // Skip this check for initial messages (empty triggerChatId)
+  if (triggerChatId !== '') {
+    const chatHistory = await getFirestorePublicStageChatMessages(
+      experimentId,
+      cohortId,
+      stageId,
+    );
+    if (
+      chatHistory.length > 0 &&
+      chatHistory[chatHistory.length - 1].id !== triggerChatId
+    ) {
+      // TODO: Write chat log
+      console.log('Conversation has moved on');
+      return true; // expected outcome (TODO: return status enum)
+    }
   }
 
   // Don't send a message if the conversation already has a response
   // to the trigger message by the same type of agent (participant, mediator)
-  const triggerResponseDoc = app
-    .firestore()
-    .collection('experiments')
-    .doc(experimentId)
-    .collection('cohorts')
-    .doc(cohortId)
-    .collection('publicStageData')
-    .doc(stageId)
-    .collection('triggerLogs')
-    .doc(`${triggerChatId}-${chatMessage.type}`);
-  const hasTriggerResponse = (await triggerResponseDoc.get()).exists;
-  if (hasTriggerResponse) {
-    console.log('Someone already responded');
-    return true; // expected outcome (TODO: return status enum)
-  }
+  // For initial messages (empty triggerChatId), skip this check as it's handled earlier
+  if (triggerChatId !== '') {
+    const triggerResponseDoc = getGroupChatTriggerLogRef(
+      experimentId,
+      cohortId,
+      stageId,
+      `${triggerChatId}-${chatMessage.type}`,
+    );
+    const hasTriggerResponse = (await triggerResponseDoc.get()).exists;
+    if (hasTriggerResponse) {
+      console.log('Someone already responded');
+      return true; // expected outcome (TODO: return status enum)
+    }
 
-  // Otherwise, log response ID as trigger message
-  triggerResponseDoc.set({});
+    // Otherwise, log response ID as trigger message
+    triggerResponseDoc.set({});
+  }
 
   // Send chat message
   const agentDocument = app
@@ -494,40 +449,42 @@ export async function sendAgentPrivateChatMessage(
 
   // Check if the conversation has moved on,
   // i.e., trigger chat ID is no longer that latest message
-  const chatHistory = await getFirestorePrivateChatMessages(
-    experimentId,
-    participantId,
-    stageId,
-  );
-  if (
-    chatHistory.length > 0 &&
-    chatHistory[chatHistory.length - 1].id !== triggerChatId
-  ) {
-    // TODO: Write chat log
-    console.log('Conversation has moved on');
-    return true; // expected outcome (TODO: return status enum)
+  // Skip this check for initial messages (empty triggerChatId)
+  if (triggerChatId !== '') {
+    const chatHistory = await getFirestorePrivateChatMessages(
+      experimentId,
+      participantId,
+      stageId,
+    );
+    if (
+      chatHistory.length > 0 &&
+      chatHistory[chatHistory.length - 1].id !== triggerChatId
+    ) {
+      // TODO: Write chat log
+      console.log('Conversation has moved on');
+      return true; // expected outcome (TODO: return status enum)
+    }
   }
 
   // Don't send a message if the conversation already has a response
   // to the trigger message by the same type of agent (participant, mediator)
-  const triggerResponseDoc = app
-    .firestore()
-    .collection('experiments')
-    .doc(experimentId)
-    .collection('participants')
-    .doc(participantId)
-    .collection('stageData')
-    .doc(stageId)
-    .collection('triggerLogs')
-    .doc(`${triggerChatId}-${chatMessage.type}`);
-  const hasTriggerResponse = (await triggerResponseDoc.get()).exists;
-  if (hasTriggerResponse) {
-    console.log('Someone already responded');
-    return true; // expected outcome (TODO: return status enum)
-  }
+  // For initial messages (empty triggerChatId), skip this check as it's handled earlier
+  if (triggerChatId !== '') {
+    const triggerResponseDoc = getPrivateChatTriggerLogRef(
+      experimentId,
+      participantId,
+      stageId,
+      `${triggerChatId}-${chatMessage.type}`,
+    );
+    const hasTriggerResponse = (await triggerResponseDoc.get()).exists;
+    if (hasTriggerResponse) {
+      console.log('Someone already responded');
+      return true; // expected outcome (TODO: return status enum)
+    }
 
-  // Otherwise, log response ID as trigger message
-  triggerResponseDoc.set({});
+    // Otherwise, log response ID as trigger message
+    triggerResponseDoc.set({});
+  }
 
   // Send chat message
   const agentDocument = app

@@ -205,7 +205,7 @@ export async function callGemini(
     };
   }
 
-  if (!response.candidates) {
+  if (!response.candidates || response.candidates.length === 0) {
     return {
       status: ModelResponseStatus.UNKNOWN_ERROR,
       generationConfig,
