@@ -78,8 +78,26 @@ export async function createAgentChatMessageFromPrompt(
   if (triggerChatId === '') {
     // Check if we've already sent an initial message for this user
     const isPrivateChat = stage.kind === StageKind.PRIVATE_CHAT;
-    if (!isPrivateChat) {
-      const triggerLogRef = app
+
+    // Build the appropriate trigger log reference based on chat type
+    let triggerLogRef;
+    if (isPrivateChat) {
+      // For private chat, store in the participant's private stage data
+      // Use the first participant ID as the storage location
+      const privateChatParticipantId = participantIds[0];
+      triggerLogRef = app
+        .firestore()
+        .collection('experiments')
+        .doc(experimentId)
+        .collection('participants')
+        .doc(privateChatParticipantId)
+        .collection('stageData')
+        .doc(stageId)
+        .collection('triggerLogs')
+        .doc(`initial-${user.publicId}`);
+    } else {
+      // For group chat, store in the public stage data
+      triggerLogRef = app
         .firestore()
         .collection('experiments')
         .doc(experimentId)
@@ -89,15 +107,15 @@ export async function createAgentChatMessageFromPrompt(
         .doc(stageId)
         .collection('triggerLogs')
         .doc(`initial-${user.publicId}`);
-
-      const hasAlreadySent = (await triggerLogRef.get()).exists;
-      if (hasAlreadySent) {
-        return false; // Already sent initial message
-      }
-
-      // Mark that we're sending the initial message
-      await triggerLogRef.set({timestamp: Timestamp.now()});
     }
+
+    const hasAlreadySent = (await triggerLogRef.get()).exists;
+    if (hasAlreadySent) {
+      return false; // Already sent initial message
+    }
+
+    // Mark that we're sending the initial message
+    await triggerLogRef.set({timestamp: Timestamp.now()});
 
     // Handle initial message
     const initialMessage = promptConfig.chatSettings?.initialMessage;
