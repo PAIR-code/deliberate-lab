@@ -2,6 +2,7 @@ import {
   ApiError,
   GoogleGenAI,
   GenerationConfig,
+  GenerateContentConfig,
   HarmCategory,
   HarmBlockThreshold,
 } from '@google/genai';
@@ -110,23 +111,75 @@ function makeStructuredOutputGenerationConfig(
   };
 }
 
+/**
+ * Convert generic message format to Gemini-specific format.
+ * Extracts system messages to use as systemInstruction.
+ * @returns Object with contents array and optional systemInstruction
+ */
+function convertToGeminiFormat(
+  prompt: string | Array<{role: string; content: string; name?: string}>,
+): {
+  contents: Array<{role: string; parts: Array<{text: string}>}>;
+  systemInstruction?: string;
+} {
+  if (typeof prompt === 'string') {
+    return {
+      contents: [{role: 'user', parts: [{text: prompt}]}],
+      systemInstruction: undefined,
+    };
+  }
+
+  // Extract system messages for systemInstruction
+  const systemMessages = prompt.filter((msg) => msg.role === 'system');
+  const conversationMessages = prompt.filter((msg) => msg.role !== 'system');
+
+  // Combine system messages into systemInstruction
+  const systemInstruction =
+    systemMessages.length > 0
+      ? systemMessages.map((msg) => msg.content).join('\n\n')
+      : undefined;
+
+  // Convert conversation messages to Gemini format
+  let contents = conversationMessages.map((msg) => ({
+    role: msg.role === 'assistant' ? 'model' : 'user',
+    parts: [{text: msg.content}],
+  }));
+
+  // If no conversation messages, add an empty user message
+  if (contents.length === 0) {
+    contents = [{role: 'user', parts: [{text: ''}]}];
+  }
+
+  return {contents, systemInstruction};
+}
+
 /** Makes Gemini API call. */
 export async function callGemini(
   apiKey: string,
-  prompt: string,
+  prompt: string | Array<{role: string; content: string; name?: string}>,
   generationConfig: GenerationConfig,
   modelName = GEMINI_DEFAULT_MODEL,
   parseResponse = false, // parse if structured output
 ) {
   const genAI = new GoogleGenAI({apiKey});
 
+  // Convert to Gemini format
+  const {contents, systemInstruction} = convertToGeminiFormat(prompt);
+
+  // Build config with system instruction if provided
+  const config: GenerateContentConfig = {
+    ...generationConfig,
+    safetySettings: SAFETY_SETTINGS,
+  };
+
+  if (systemInstruction) {
+    config.systemInstruction = systemInstruction;
+  }
+
   const response = await genAI.models.generateContent({
     model: modelName,
-    contents: [{role: 'user', parts: [{text: prompt}]}],
-    config: {
-      ...generationConfig,
-      safetySettings: SAFETY_SETTINGS,
-    },
+    contents: contents,
+    config: config,
   });
 
   if (response.promptFeedback) {
@@ -190,9 +243,9 @@ export async function callGemini(
 export async function getGeminiAPIResponse(
   apiKey: string,
   modelName: string,
-  promptText: string,
+  promptText: string | Array<{role: string; content: string; name?: string}>,
   generationConfig: ModelGenerationConfig,
-  structuredOutputConfig?: StructuredOutputConfig = null,
+  structuredOutputConfig?: StructuredOutputConfig,
 ): Promise<ModelResponse> {
   const customFields = Object.fromEntries(
     generationConfig.customRequestBodyFields.map((field) => [
