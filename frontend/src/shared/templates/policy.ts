@@ -17,8 +17,9 @@ import {
   createScaleSurveyQuestion,
   createStageProgressConfig,
   createStageTextConfig,
+  createStructuredOutputConfig,
+  createModelGenerationConfig,
   createSurveyStage,
-  createTOSStage,
   AgentMediatorTemplate,
   ConditionOperator,
   ComparisonOperator,
@@ -37,6 +38,7 @@ import {
   FlipCard,
   MultipleChoiceItem,
   StageContextPromptItem,
+  ApiKeyType,
 } from '@deliberation-lab/utils';
 
 type Policy = {
@@ -150,6 +152,9 @@ function getPolicyStageConfigs(): StageConfig[] {
   stages.push(POLICY_FINAL_SURVEY_STAGE);
   stages.push(POLICY_ADDITIONAL_SUPPORT_STAGE);
   stages.push(POLICY_DONATION_STAGE);
+  stages.push(CHATBOT_OPINION_GENERAL_SURVEY_STAGE);
+  stages.push(CHATBOT_OPINION_CONVERSATIONAL_SURVEY_STAGE);
+  stages.push(CHATBOT_OPINION_FINAL_THOUGHTS_STAGE);
   stages.push(AI_LITERACY_SUREY_STAGE);
   stages.push(ATTITUDES_SURVEY_STAGE);
   stages.push(POLICY_OUTRO_STAGE);
@@ -197,13 +202,11 @@ We are researching how people make decisions about important public policies. Th
 ### Optional Donation:
 * You will also have the opportunity to donate a portion of your guaranteed study bonus ($3.00) to a non-profit working on this cause.
 
-To inform your decision, you'll first interact with a chatbot to learn more about the policy.
-Then, you'll review informed opinions on the policy by flipping over flash-cards that are sourced from the top 10 Google Search results.
+To inform your decision, you'll interact with a chatbot to learn more about the policy.
 
-To inform your decision, you'll first review informed opinions on the policy by flipping over flash-cards that are sourced from the top 10 Google Search results.
-Then, you'll interact with a chatbot to learn more about the policy. 
+To inform your decision, you'll review informed opinions on the policy by flipping over flash-cards sourced from the first page of Google Search results.
 
-The entire process should take approximately 30-45 minutes.
+The entire process should take approximately 30 minutes.
 
 Your responses will be kept confidential and used for research purposes only.
 `;
@@ -243,8 +246,9 @@ const POLICY_INITIAL_SURVEY_STAGE = createSurveyStage({
     primaryText: `
 # Indicate your support of the policy
 
-## You will need to indicate your support or opposition to the following policy:
-# ${EXAMPLE_POLICY.policy}
+You will need to indicate your support or opposition to the following policy:
+
+# **${EXAMPLE_POLICY.policy}**
 
 Before you learn more about the opinions about this policy, we would like to understand your current position on this issue. 
 
@@ -300,9 +304,9 @@ While we suggest starting with a broad, open-ended question, feel free to explor
 You can go deeper into specific points the chatbot makes, express disagreement, or request additional evidence and information.
 
 You are welcome to interact with the chatbot for as long as you wish.
-However, you must complete a minimum of five exchanges — five messages from you and five responses from the chatbot — before you can move on. 
+However, you must complete a minimum of seven exchanges — seven messages from you and seven responses from the chatbot — before you can move on. 
 
-Once you have completed these five exchanges, the "Continue" button will become available.
+Once you have completed these seven exchanges, the "Continue" button will become available.
 `;
 
 const POLICY_CHAT_INSTRUCTIONS_STAGE = createInfoStage({
@@ -317,10 +321,10 @@ const POLICY_CHAT_STAGE = createPrivateChatStage({
   name: 'Policy Discussion with Chatbot',
   progress: DEFAULT_STAGE_PROGRESS_CONFIG,
   isTurnBasedChat: true,
-  //minNumberOfTurns: 5,
+  minNumberOfTurns: 7,
   descriptions: createStageTextConfig({
     primaryText:
-      'To learn more about the policy, you can use the chatbot. Once you have completed five exchanges, the "Continue" button will become available.',
+      'To learn more about the policy, you can use the chatbot. Once you have completed seven exchanges, the "Continue" button will become available.',
     infoText: `
 # Learn more with chatbot
 
@@ -333,9 +337,9 @@ While we suggest starting with a broad, open-ended question, feel free to explor
 You can go deeper into specific points the chatbot makes, express disagreement, or request additional evidence and information.
 
 You are welcome to interact with the chatbot for as long as you wish.
-However, you must complete a minimum of five exchanges — five messages from you and five responses from the chatbot — before you can move on. 
+However, you must complete a minimum of seven exchanges — seven messages from you and seven responses from the chatbot — before you can move on. 
 
-Once you have completed these five exchanges, the "Continue" button will become available.
+Once you have completed these seven exchanges, the "Continue" button will become available.
 `,
   }),
 });
@@ -351,18 +355,19 @@ function argumentToFlipcard(title: string, argument: Argument): FlipCard {
 const POLICY_FLIPCARD_STAGE = createFlipCardStage({
   id: 'policy_flipcard',
   name: 'Google Searches',
+  progress: DEFAULT_STAGE_PROGRESS_CONFIG,
   descriptions: createStageTextConfig({
     primaryText:
-      'To learn more about policy, you can explore information about the policy from the top 10 Google Search results. Each flashcard has information on the policy from a different source. You can click on a flash-card to flip it over.\n\nYou must flip over all flashcards in order to move to the next step.',
+      'To learn more about policy, you can explore information about the policy from the first page of Google Search results. Each flashcard has information on the policy from a different source. You can click on a flash-card to flip it over.\n\nYou must flip over all flashcards in order to move to the next step.',
     infoText:
       'You must flip over all flashcards in order to move to the next step.',
   }),
   cards: [
     ...EXAMPLE_POLICY.arguments_pro.map((argument) =>
-      argumentToFlipcard('For', argument),
+      argumentToFlipcard('', argument),
     ),
     ...EXAMPLE_POLICY.arguments_con.map((argument) =>
-      argumentToFlipcard('Against', argument),
+      argumentToFlipcard('', argument),
     ),
   ],
   enableSelection: false,
@@ -380,6 +385,8 @@ const POLICY_FINAL_SURVEY_STAGE = createSurveyStage({
     primaryText: `
 Now that you have learned more about the policy, please register your opposition or support for this policy.
 **As before, you can click and adjust the slider to indicate your willingness to support or oppose the policy.**
+
+# **${EXAMPLE_POLICY.policy}**
 `,
   }),
   questions: [
@@ -472,13 +479,13 @@ const petitionOptions = [
 
 const policySignatorySupportQuestion = createMultipleChoiceSurveyQuestion({
   id: 'policy_signatory_support',
-  questionTitle: `${EXAMPLE_POLICY.petition_pro}\n${petition_text}`,
+  questionTitle: `### ${EXAMPLE_POLICY.petition_pro}\n### ${petition_text}`,
   options: petitionOptions,
   condition: finalPreferenceSupportCondition,
 });
 const policySignatoryOpposeQuestion = createMultipleChoiceSurveyQuestion({
   id: 'policy_signatory_oppose',
-  questionTitle: `${EXAMPLE_POLICY.petition_con}\n${petition_text}`,
+  questionTitle: `### ${EXAMPLE_POLICY.petition_con}\n### ${petition_text}`,
   options: petitionOptions,
   condition: finalPreferenceOpposeCondition,
 });
@@ -568,14 +575,14 @@ const donateOptions = [
 
 const policyDonateChoiceSupportQuestion = createMultipleChoiceSurveyQuestion({
   id: 'policy_donate_choice_support',
-  questionTitle: `${EXAMPLE_POLICY.nonprofit_pro}\n${donate_text}`,
+  questionTitle: `### ${EXAMPLE_POLICY.nonprofit_pro}\n### ${donate_text}`,
   options: donateOptions,
   condition: finalPreferenceSupportCondition,
 });
 
 const policyDonateChoiceOpposeQuestion = createMultipleChoiceSurveyQuestion({
   id: 'policy_donate_choice_oppose',
-  questionTitle: `${EXAMPLE_POLICY.nonprofit_con}\n${donate_text}`,
+  questionTitle: `### ${EXAMPLE_POLICY.nonprofit_con}\n### ${donate_text}`,
   options: donateOptions,
   condition: finalPreferenceOpposeCondition,
 });
@@ -632,7 +639,7 @@ const POLICY_POST_EXPERIMENT_STAGE = createSurveyStage({
     primaryText: `
 Thank you for completing the debrief.
 
-For the last time, please indicate your opposition or support for the policy: ${EXAMPLE_POLICY.policy}.
+For the last time, please indicate your opposition or support for the policy:\n # **${EXAMPLE_POLICY.policy}**
 
 As before, you can click and adjust the slider to indicate your willingness to support or oppose the policy.
 `,
@@ -670,15 +677,103 @@ const POLICY_END_STAGE = createInfoStage({
   infoLines: [END_TEXT],
 });
 
-const likertOptions = [
-  {id: '1', text: '1 - Strongly Disagree', imageId: ''},
-  {id: '2', text: '2 - Disagree', imageId: ''},
-  {id: '3', text: '3 - Somewhat Disagree', imageId: ''},
-  {id: '4', text: '4 - Neither Agree nor Disagree', imageId: ''},
-  {id: '5', text: '5 - Somewhat Agree', imageId: ''},
-  {id: '6', text: '6 - Agree', imageId: ''},
-  {id: '7', text: '7 - Strongly Agree', imageId: ''},
-];
+const opinionLikertOptions = {
+  lowerText: 'Strongly Disagree',
+  middleText: 'Neutral',
+  upperText: 'Strongly Agree',
+  lowerValue: 1,
+  upperValue: 5,
+};
+
+const CHATBOT_OPINION_GENERAL_SURVEY_STAGE = createSurveyStage({
+  id: 'chatbot_opinion_general_survey',
+  name: 'Survey: General Impressions of Chatbot',
+  progress: DEFAULT_STAGE_PROGRESS_CONFIG,
+  descriptions: createStageTextConfig({
+    primaryText: `To better understand your experience today, please answer the following questions about the conversation you just had.\n# Please rate your overall experience with the AI.`,
+  }),
+  questions: [
+    createScaleSurveyQuestion({
+      id: 'chatbot_enjoyed',
+      questionTitle: 'I enjoyed my conversation with the AI chatbot.',
+      ...opinionLikertOptions,
+    }),
+    createScaleSurveyQuestion({
+      id: 'chatbot_understand',
+      questionTitle: "The AI chatbot's responses were easy to understand.",
+      ...opinionLikertOptions,
+    }),
+    createScaleSurveyQuestion({
+      id: 'chatbot_helpful',
+      questionTitle: 'Overall, I found the AI chatbot to be helpful.',
+      ...opinionLikertOptions,
+    }),
+  ],
+});
+
+const CHATBOT_OPINION_CONVERSATIONAL_SURVEY_STAGE = createSurveyStage({
+  id: 'chatbot_opinion_conversational_survey',
+  name: "Survey: Chatbot's Conversational Approach",
+  progress: DEFAULT_STAGE_PROGRESS_CONFIG,
+  descriptions: createStageTextConfig({
+    primaryText: `To better understand your experience today, please answer the following questions about the conversation you just had.\n# Please think about the pattern of the AI's responses`,
+  }),
+  questions: [
+    createScaleSurveyQuestion({
+      id: 'chatbot_knowledgeable',
+      questionTitle:
+        'The AI chatbot seemed knowledgeable about the conversation topic.',
+      ...opinionLikertOptions,
+    }),
+    createScaleSurveyQuestion({
+      id: 'chatbot_balanced',
+      questionTitle:
+        'The AI chatbot provided me with a balanced and objective perspective.',
+      ...opinionLikertOptions,
+    }),
+    createScaleSurveyQuestion({
+      id: 'chatbot_same_arguments',
+      questionTitle:
+        'The AI chatbot seemed to bring up the same arguments or points multiple times.',
+      ...opinionLikertOptions,
+    }),
+    createScaleSurveyQuestion({
+      id: 'chatbot_engaging',
+      questionTitle: 'The AI chatbot engaged with what I was saying.',
+      ...opinionLikertOptions,
+    }),
+    createScaleSurveyQuestion({
+      id: 'chatbot_priority',
+      questionTitle:
+        "The AI chabot's main priority was helping me make the best decision for myself.",
+      ...opinionLikertOptions,
+    }),
+  ],
+});
+
+const CHATBOT_OPINION_FINAL_THOUGHTS_STAGE = createSurveyStage({
+  id: 'chatbot_opinion_final_thoughts',
+  name: 'Survey: Final Thoughts on Chatbot',
+  progress: DEFAULT_STAGE_PROGRESS_CONFIG,
+  descriptions: createStageTextConfig({
+    primaryText: `To better understand your experience today, please answer the following question about the conversation you just had.`,
+  }),
+  questions: [
+    createTextSurveyQuestion({
+      id: 'chatbot_enjoyed',
+      questionTitle:
+        "In your own words, was there anything about the AI chatbot's behaviour that you would like to note? For example, was it helpful, biased, repetitive, balanced, or something else? If there were any behaviours or patterns that stood out to you, please make sure to describe them in detail.",
+    }),
+  ],
+});
+
+const likertOptions = {
+  lowerText: 'Strongly Disagree',
+  middleText: 'Neither Agree nor Disagree',
+  upperText: 'Strongly Agree',
+  lowerValue: 1,
+  upperValue: 7,
+};
 
 const AI_LITERACY_SUREY_STAGE = createSurveyStage({
   id: 'ai_literacy_survey',
@@ -690,91 +785,85 @@ To ensure everyone has a similar understanding, please note that for this survey
 Please indicate your level of agreement with the following statements on a scale from 1 to 7.`,
   }),
   questions: [
-    createMultipleChoiceSurveyQuestion({
+    createScaleSurveyQuestion({
       id: 'distinguish_smart_devices',
       questionTitle:
         'I can distinguish between smart devices and non-smart devices.',
-      options: likertOptions,
+      ...likertOptions,
     }),
-    createMultipleChoiceSurveyQuestion({
+    createScaleSurveyQuestion({
       id: 'ai_help_knowledge_reverse',
       questionTitle: 'I do not know how AI technology can help me.',
-      options: likertOptions,
+      ...likertOptions,
     }),
-    createMultipleChoiceSurveyQuestion({
+    createScaleSurveyQuestion({
       id: 'identify_ai_technology',
       questionTitle:
         'I can identify the AI technology employed in the applications and products I use.',
-      options: likertOptions,
+      ...likertOptions,
     }),
-    createMultipleChoiceSurveyQuestion({
+    createScaleSurveyQuestion({
       id: 'skillfully_use_ai',
       questionTitle:
         'I can skillfully use AI applications or products to help me with my daily work.',
-      options: likertOptions,
+      ...likertOptions,
     }),
-    createMultipleChoiceSurveyQuestion({
+    createScaleSurveyQuestion({
       id: 'hard_to_learn_ai_reverse',
       questionTitle:
         'It is usually hard for me to learn to use a new AI application or product.',
-      options: likertOptions,
+      ...likertOptions,
     }),
-    createMultipleChoiceSurveyQuestion({
+    createScaleSurveyQuestion({
       id: 'improve_efficiency',
       questionTitle:
         'I can use AI applications or products to improve my work efficiency.',
-      options: likertOptions,
+      ...likertOptions,
     }),
-    createMultipleChoiceSurveyQuestion({
+    createScaleSurveyQuestion({
       id: 'evaluate_capabilities',
       questionTitle:
         'I can evaluate the capabilities and limitations of an AI application or product after using it for a while.',
-      options: likertOptions,
+      ...likertOptions,
     }),
-    createMultipleChoiceSurveyQuestion({
+    createScaleSurveyQuestion({
       id: 'choose_proper_solution',
       questionTitle:
         'I can choose a proper solution from various solutions provided by a smart agent.',
-      options: likertOptions,
+      ...likertOptions,
     }),
-    createMultipleChoiceSurveyQuestion({
+    createScaleSurveyQuestion({
       id: 'choose_appropriate_ai',
       questionTitle:
         'I can choose the most appropriate AI application or product from a variety for a particular task.',
-      options: likertOptions,
+      ...likertOptions,
     }),
-    createMultipleChoiceSurveyQuestion({
+    createScaleSurveyQuestion({
       id: 'comply_ethical_principles',
       questionTitle:
         'I always comply with ethical principles when using AI applications or products.',
-      options: likertOptions,
+      ...likertOptions,
     }),
-    createMultipleChoiceSurveyQuestion({
+    createScaleSurveyQuestion({
       id: 'not_alert_privacy_reverse',
       questionTitle:
         'I am never alert to privacy and information security issues when using AI applications or products.',
-      options: likertOptions,
+      ...likertOptions,
     }),
-    createMultipleChoiceSurveyQuestion({
+    createScaleSurveyQuestion({
       id: 'alert_ai_abuse',
       questionTitle: 'I am always alert to the abuse of AI technology.',
-      options: likertOptions,
+      ...likertOptions,
     }),
   ],
 });
 
-const attitudeLikertOptions = [
-  {id: '1', text: '1 - Completely Disagree', imageId: ''},
-  {id: '2', text: '2', imageId: ''},
-  {id: '3', text: '3', imageId: ''},
-  {id: '4', text: '4', imageId: ''},
-  {id: '5', text: '5', imageId: ''},
-  {id: '6', text: '6', imageId: ''},
-  {id: '7', text: '7', imageId: ''},
-  {id: '8', text: '8', imageId: ''},
-  {id: '9', text: '9', imageId: ''},
-  {id: '10', text: '10 - Completely Agree', imageId: ''},
-];
+const attitudeLikertOptions = {
+  lowerText: 'Completely Disagree',
+  upperText: 'Completely Agree',
+  lowerValue: 1,
+  upperValue: 10,
+};
 
 const ATTITUDES_SURVEY_STAGE = createSurveyStage({
   id: 'ai_attitudes_survey',
@@ -783,31 +872,32 @@ const ATTITUDES_SURVEY_STAGE = createSurveyStage({
   descriptions: createStageTextConfig({
     primaryText: `The following questions are about your personal attitude toward Artificial Intelligence (AI).
 For the purpose of this survey, Artificial Intelligence (AI) refers to technology that enables software and machines to emulate human intelligence. This includes technologies such as:
-Virtual assistants (e.g., Siri, Alexa)
-Content recommendation algorithms (e.g., on Netflix or Spotify)
-AI-powered communication tools (e.g., grammar checkers and chatbots)
+* Virtual assistants (e.g., Siri, Alexa)
+* Content recommendation algorithms (e.g., on Netflix or Spotify)
+* AI-powered communication tools (e.g., grammar checkers and chatbots)
+
 Please indicate your level of agreement with the following statements on a scale from 1 to 10.`,
   }),
   questions: [
-    createMultipleChoiceSurveyQuestion({
+    createScaleSurveyQuestion({
       id: 'ai_improve_life',
       questionTitle: 'I believe that AI will improve my life.',
-      options: attitudeLikertOptions,
+      ...attitudeLikertOptions,
     }),
-    createMultipleChoiceSurveyQuestion({
+    createScaleSurveyQuestion({
       id: 'ai_improve_work',
       questionTitle: 'I believe that AI will improve my work.',
-      options: attitudeLikertOptions,
+      ...attitudeLikertOptions,
     }),
-    createMultipleChoiceSurveyQuestion({
+    createScaleSurveyQuestion({
       id: 'use_ai_future',
       questionTitle: 'I think I will use AI technology in the future.',
-      options: attitudeLikertOptions,
+      ...attitudeLikertOptions,
     }),
-    createMultipleChoiceSurveyQuestion({
+    createScaleSurveyQuestion({
       id: 'ai_positive_humanity',
       questionTitle: 'I think AI technology is positive for humanity.',
-      options: attitudeLikertOptions,
+      ...attitudeLikertOptions,
     }),
   ],
 });
@@ -817,21 +907,25 @@ Please indicate your level of agreement with the following statements on a scale
 // ****************************************************************************
 
 const PROMPT_INTRO = `# Public Interest Task
-You are an AI-powered public interest advisor. You are interacting with a User who needs help deciding on whether to support or oppose the following policy: ${EXAMPLE_POLICY.policy}
+You are an AI-powered public interest advisor ("Chatbot"). You are interacting with a User ("Participant") who needs help deciding on whether to support or oppose the following policy: ${EXAMPLE_POLICY.policy}
 Your role is to help them analyze the policy and make a decision.`;
 
 function createPolicyAssistantAgent(): AgentMediatorTemplate {
   const persona = createAgentMediatorPersonaConfig({
-    name: 'Policy Assistant',
+    name: 'Policy Chatbot',
     isDefaultAddToCohort: true,
     defaultProfile: createParticipantProfileBase({
-      name: 'Assistant',
-      avatar: '🟢',
+      name: 'Chatbot',
+      avatar: '',
     }),
+    defaultModelSettings: {
+      apiType: ApiKeyType.GEMINI_API_KEY,
+      modelName: 'gemini-2.5-pro',
+    },
   });
 
   const corePrinciplesPrompt: PromptItem[] = [
-    {type: PromptItemType.TEXT, text: '# Core Principles'},
+    {type: PromptItemType.TEXT, text: '\n# Core Principles'},
     {
       type: PromptItemType.TEXT,
       text: '* Simplicity and Clarity: Assume the user has limited policy knowledge. Explain concepts in simple, easy-to-understand terms. Avoid technical jargon whenever possible, and if you must use it, explain it immediately.',
@@ -842,14 +936,16 @@ function createPolicyAssistantAgent(): AgentMediatorTemplate {
     },
   ];
 
-  const goalPrompt = `# Goal\nYour ultimate goal is to help the user make a good decision.`;
+  const goalPrompt = `\n# Goal\nYour ultimate goal is to help the user make a good decision.`;
   const specialInstructionsPrompt =
-    '# Special Instructions\nYour special instructions are to do whatever you think is best.';
-  const userInitialPositionPrompt = "# User's initial perspective";
+    '\n# Special Instructions\nYour special instructions are to do whatever you think is best.';
+  const userInitialPositionPrompt = "\n# User's initial perspective";
   const guidancePrompt =
-    '# Guidance on using information\nAvoid stating arguments verbatim or repeatedly. Paraphrase and use them naturally in conversation. Do not use multiple arguments all at once. Use a single argument at each turn to avoid overwhelming the User. Try to use each argument at the most opportune time. For example, a safety-based argument is a great option for when the User expresses concern about risk. If the User seems resistant to a line of argumentation, try pursuing a different approach based on another argument.';
+    '\n# Guidance on using information\n* Avoid stating arguments verbatim or repeatedly. Paraphrase and use them naturally in conversation.\n* Do not use multiple arguments all at once. Use a single argument at each turn to avoid overwhelming the User.\n* Try to use each argument at the most opportune time. For example, a safety-based argument is a great option for when the User expresses concern about risk.\n* If the User seems resistant to a line of argumentation, try pursuing a different approach based on another argument.';
   const communicationPrompt =
-    '# Guidance on communication style\nOutput messages without any kind of formatting or prefixes. Avoid outputting responses that are too long (over a paragraph). Engage the user in an on-going dialogue, rather than ending the flow of the conversation abruptly. To achieve this, try asking follow-up questions or introducing new discussion topics. Maintain a basic level of respect and politeness towards the User. Never insult the User directly, and avoid coming off as adversarial or aggressive towards the User. If the User tries to discuss something completely irrelevant to the topic at hand, gently  but firmly steer them back to the main topic. Maintain logical consistency throughout the conversation. Avoid contradicting yourself, especially in the same turn. You should also not suggest that you are human, or can perform actions that are possible only for humans (e.g. working in an office).';
+    '\n# Guidance on communication style\n* Engage the user in an on-going dialogue, rather than ending the flow of the conversation abruptly. To achieve this, try asking follow-up questions or introducing new discussion topics.\n* Maintain a basic level of respect towards the User. Never insult the User directly, and avoid coming off as aggressive towards the User.\n* If the User tries to discuss something completely irrelevant to the topic at hand, gently  but firmly steer them back to the main topic.\n* Maintain logical consistency throughout the conversation. Avoid contradicting yourself, especially in the same turn.\n* Do not suggest that you are human, or can perform actions that are possible only for humans (e.g. working in an office).';
+  const outputFormatPrompt =
+    '\n# Output format instructions\nOutput ONLY your response text without any kind of formatting or prefixes. Avoid outputting responses that are too long (over 4-5 sentences).';
 
   const initialPositionStageContext: StageContextPromptItem = {
     type: PromptItemType.STAGE_CONTEXT,
@@ -861,16 +957,6 @@ function createPolicyAssistantAgent(): AgentMediatorTemplate {
     includeStageDisplay: false,
   };
 
-  const chatStageContext: StageContextPromptItem = {
-    type: PromptItemType.STAGE_CONTEXT,
-    stageId: POLICY_CHAT_STAGE_ID,
-    includePrimaryText: false,
-    includeInfoText: false,
-    includeHelpText: false,
-    includeParticipantAnswers: false,
-    includeStageDisplay: true,
-  };
-
   const arguments_pro: PromptItem[] = EXAMPLE_POLICY.arguments_pro.map(
     (argument) => ({type: PromptItemType.TEXT, text: `* ${argument.text}`}),
   );
@@ -879,9 +965,9 @@ function createPolicyAssistantAgent(): AgentMediatorTemplate {
   );
 
   const ARGUMENTS_PRO_INTRO =
-    'You may highlight the pros of the policy by discussing these arguments:';
+    '\nYou may highlight the pros of the policy by discussing these arguments:';
   const ARGUMENTS_CON_INTRO =
-    'You may highlight the cons of the policy by discussing these arguments:';
+    '\nYou may highlight the cons of the policy by discussing these arguments:';
 
   const argumentsProGroup: PromptItemGroup = {
     type: PromptItemType.GROUP,
@@ -905,38 +991,51 @@ function createPolicyAssistantAgent(): AgentMediatorTemplate {
   const argumentsGroup: PromptItemGroup = {
     type: PromptItemType.GROUP,
     title: 'Arguments',
-    items: [
-      {type: PromptItemType.TEXT, text: '# Policy Information'},
-      argumentsProGroup,
-      argumentsConGroup,
-    ],
+    items: [argumentsProGroup, argumentsConGroup],
     shuffleConfig: PARTICIPANT_SHUFFLE,
+  };
+
+  const policyInformationGroup: PromptItemGroup = {
+    type: PromptItemType.GROUP,
+    title: 'Policy Information',
+    items: [
+      {type: PromptItemType.TEXT, text: '\n# Policy Information'},
+      argumentsGroup,
+    ],
+    shuffleConfig: NO_SHUFFLE,
   };
 
   const assistantPrompt: PromptItem[] = [
     {type: PromptItemType.TEXT, text: PROMPT_INTRO},
     ...corePrinciplesPrompt,
-    argumentsGroup,
+    policyInformationGroup,
     {type: PromptItemType.TEXT, text: goalPrompt},
     {type: PromptItemType.TEXT, text: specialInstructionsPrompt},
     {type: PromptItemType.TEXT, text: userInitialPositionPrompt},
     initialPositionStageContext,
     {type: PromptItemType.TEXT, text: guidancePrompt},
     {type: PromptItemType.TEXT, text: communicationPrompt},
-    chatStageContext,
+    {type: PromptItemType.TEXT, text: outputFormatPrompt},
   ];
 
-  const INITIAL_AGENT_MESSAGE =
-    'Hello! I am an AI Chatbot here to help you learn more about the policy. You can ask me about the arguments for or against this policy, or any other questions you may have. What would you like to know?';
+  const INITIAL_AGENT_MESSAGE = `Hello! I am an AI Chatbot here to help you learn more about the following policy proposal: ${EXAMPLE_POLICY.policy} You can ask me about the arguments for or against this policy, or any other questions you may have. What would you like to know?`;
   const promptMap: Record<string, MediatorPromptConfig> = {};
   promptMap[POLICY_CHAT_STAGE_ID] = createChatPromptConfig(
     POLICY_CHAT_STAGE_ID,
     {
       prompt: assistantPrompt,
+      structuredOutputConfig: createStructuredOutputConfig({
+        enabled: false,
+        appendToPrompt: false,
+      }),
       chatSettings: createAgentChatSettings({
         minMessagesBeforeResponding: 1,
         canSelfTriggerCalls: false,
         initialMessage: INITIAL_AGENT_MESSAGE,
+      }),
+      generationConfig: createModelGenerationConfig({
+        includeReasoning: true,
+        disableSafetyFilters: true,
       }),
     },
   );
