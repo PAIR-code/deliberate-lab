@@ -61,6 +61,8 @@ export interface ModelGenerationConfig {
   // many reasoning tokens in the budget.
   reasoningBudget?: number;
   includeReasoning?: boolean;
+  // Gemini-only: Disable safety filters (uses BLOCK_NONE instead of BLOCK_ONLY_HIGH)
+  disableSafetyFilters?: boolean;
 }
 
 /** Model settings for a specific agent. */
@@ -212,6 +214,7 @@ export function createModelGenerationConfig(
     customRequestBodyFields: config.customRequestBodyFields ?? [],
     reasoningBudget: config.reasoningBudget,
     includeReasoning: config.includeReasoning ?? true,
+    disableSafetyFilters: config.disableSafetyFilters ?? false,
   };
 }
 

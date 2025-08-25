@@ -86,13 +86,34 @@ function makeStructuredOutputParameters(
   };
 }
 
+import {ChatCompletionMessageParam} from 'openai/resources';
+
+/**
+ * Convert generic message format to OpenAI-specific format.
+ * @returns Array of ChatCompletionMessageParam
+ */
+function convertToOpenAIFormat(
+  prompt: string | Array<{role: string; content: string; name?: string}>,
+): ChatCompletionMessageParam[] {
+  if (typeof prompt === 'string') {
+    return [{role: 'user' as const, content: prompt}];
+  }
+
+  // Convert message array to OpenAI format
+  return prompt.map((msg) => ({
+    role: msg.role as 'system' | 'user' | 'assistant',
+    content: msg.content,
+    ...(msg.name && {name: msg.name}),
+  }));
+}
+
 export async function callOpenAIChatCompletion(
   apiKey: string,
   baseUrl: string | null,
   modelName: string,
-  prompt: string,
+  prompt: string | Array<{role: string; content: string; name?: string}>,
   generationConfig: ModelGenerationConfig,
-  structuredOutputConfig?: StructuredOutputConfig = null,
+  structuredOutputConfig?: StructuredOutputConfig,
 ) {
   const client = new OpenAI({
     apiKey: apiKey,
@@ -116,11 +137,14 @@ export async function callOpenAIChatCompletion(
     ]),
   );
 
+  // Convert prompt to messages format if not already
+  const messages = convertToOpenAIFormat(prompt);
+
   let response;
   try {
     response = await client.chat.completions.create({
       model: modelName,
-      messages: [{role: 'user', content: prompt}],
+      messages: messages,
       temperature: generationConfig.temperature,
       top_p: generationConfig.topP,
       frequency_penalty: generationConfig.frequencyPenalty,
@@ -217,9 +241,9 @@ export async function getOpenAIAPIChatCompletionResponse(
   apiKey: string,
   baseUrl: string | null,
   modelName: string,
-  promptText: string,
+  promptText: string | Array<{role: string; content: string; name?: string}>,
   generationConfig: ModelGenerationConfig,
-  structuredOutputConfig?: StructuredOutputConfig = null,
+  structuredOutputConfig?: StructuredOutputConfig,
 ): Promise<ModelResponse> {
   if (!modelName) {
     console.warn('OpenAI API model name not set.');
