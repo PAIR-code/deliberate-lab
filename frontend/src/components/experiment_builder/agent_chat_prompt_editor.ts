@@ -324,6 +324,15 @@ export class EditorComponent extends MobxLitElement {
       });
     };
 
+    const updateNumRetries = (e: InputEvent) => {
+      const value = Number((e.target as HTMLInputElement).value);
+      if (!isNaN(value) && value >= 0 && value <= 5) {
+        this.updatePrompt({
+          numRetries: value,
+        });
+      }
+    };
+
     return html`
       <div class="section">
         <div class="section-header">
@@ -408,6 +417,24 @@ export class EditorComponent extends MobxLitElement {
               .value=${chatSettings.maxResponses ?? ''}
               placeholder="No limit"
               @input=${updateMaxResponses}
+            />
+          </div>
+        </div>
+        <div class="field">
+          <label for="numRetries">API retry attempts</label>
+          <div class="description">
+            Number of times to retry API calls if they fail with 500 errors.
+            Uses exponential backoff.
+          </div>
+          <div class="number-input">
+            <input
+              .disabled=${!this.experimentEditor.isCreator}
+              type="number"
+              min="0"
+              max="5"
+              .value=${agentPromptConfig.numRetries ?? 0}
+              placeholder="0"
+              @input=${updateNumRetries}
             />
           </div>
         </div>
