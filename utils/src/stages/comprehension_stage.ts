@@ -70,6 +70,18 @@ export function createComprehensionStage(
   };
 }
 
+/** Create text comprehension question. */
+export function createTextComprehensionQuestion(
+  config: Partial<TextComprehensionQuestion> = {},
+): TextComprehensionQuestion {
+  return {
+    id: config.id ?? generateId(),
+    kind: ComprehensionQuestionKind.TEXT,
+    questionTitle: config.questionTitle ?? '',
+    correctAnswer: config.correctAnswer ?? '',
+  };
+}
+
 /** Create multiple choice comprehension question. */
 export function createMultipleChoiceComprehensionQuestion(
   config: Partial<MultipleChoiceComprehensionQuestion> = {},

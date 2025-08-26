@@ -5,6 +5,7 @@ import '../../pair-components/tooltip';
 import '../experimenter/experimenter_data_editor';
 import '../stages/asset_allocation_editor';
 import '../stages/base_stage_editor';
+import '../stages/comprehension_editor';
 import '../stages/group_chat_editor';
 import '../stages/private_chat_editor';
 import '../stages/flipcard_editor';
@@ -599,6 +600,13 @@ export class ExperimentBuilder extends MobxLitElement {
           <base-stage-editor .stage=${stage}>
             <div slot="title">Chat settings</div>
             <group-chat-editor .stage=${stage}></group-chat-editor>
+          </base-stage-editor>
+        `;
+      case StageKind.COMPREHENSION:
+        return html`
+          <base-stage-editor .stage=${stage}>
+            <div slot="title">Comprehension questions</div>
+            <comprehension-editor .stage=${stage}></comprehension-editor>
           </base-stage-editor>
         `;
       case StageKind.PRIVATE_CHAT:
