@@ -170,7 +170,7 @@ export class StageBuilderDialog extends MobxLitElement {
         <div class="gallery-title">Basic stages</div>
         <div class="card-gallery-wrapper">
           ${this.renderTOSCard()} ${this.renderInfoCard()}
-          ${this.renderProfileCard()} ${this.renderComprehensionCard()}
+          ${this.renderProfileCard()}
         </div>
       </div>
 
@@ -185,7 +185,8 @@ export class StageBuilderDialog extends MobxLitElement {
         <div class="gallery-title">Other stages</div>
         <div class="card-gallery-wrapper">
           ${this.renderTransferCard()} ${this.renderSurveyCard()}
-          ${this.renderSurveyPerParticipantCard()} ${this.renderFlipCardCard()}
+          ${this.renderSurveyPerParticipantCard()}
+          ${this.renderComprehensionCard()} ${this.renderFlipCardCard()}
           ${this.renderRankingCard()} ${this.renderRevealCard()}
           ${this.renderPayoutCard()} ${this.renderRoleCard()}
           ${this.renderStockInfoCard()} ${this.renderAssetAllocationCard()}
