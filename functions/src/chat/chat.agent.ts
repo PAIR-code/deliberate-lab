@@ -275,6 +275,7 @@ export async function getAgentChatMessage(
     user.agentConfig.modelSettings,
     promptConfig.generationConfig,
     promptConfig.structuredOutputConfig,
+    promptConfig.numRetries ?? 0, // Pass numRetries from config
   );
 
   // Process response

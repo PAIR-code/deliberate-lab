@@ -33,6 +33,7 @@ export async function processModelResponse(
   modelSettings: AgentModelSettings,
   generationConfig: ModelGenerationConfig,
   structuredOutputConfig?: StructuredOutputConfig,
+  numRetries: number = 0,
 ): Promise<ModelResponse> {
   // Convert prompt to string for logging
   const promptText =
@@ -45,40 +46,79 @@ export async function processModelResponse(
           )
           .join('\n');
 
-  const log = createModelLogEntry({
-    experimentId,
-    cohortId,
-    participantId,
-    stageId,
-    userProfile,
-    publicId,
-    privateId,
-    description,
-    prompt: promptText,
-    createdTimestamp: Timestamp.now(),
-  });
-
   let response = {status: ModelResponseStatus.NONE};
-  try {
-    const queryTimestamp = Timestamp.now();
-    response = (await getAgentResponse(
-      apiKeyConfig,
-      prompt,
-      modelSettings,
-      generationConfig,
-      structuredOutputConfig,
-    )) as ModelResponse;
-    const responseTimestamp = Timestamp.now();
+  let lastError: Error | undefined;
+  const maxRetries = numRetries;
+  const initialDelay = 1000; // 1 second initial delay
 
-    log.response = response;
-    log.queryTimestamp = queryTimestamp;
-    log.responseTimestamp = responseTimestamp;
-  } catch (error) {
-    console.log(error);
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    // Create a new log entry for each attempt
+    const log = createModelLogEntry({
+      experimentId,
+      cohortId,
+      participantId,
+      stageId,
+      userProfile,
+      publicId,
+      privateId,
+      description:
+        attempt > 0 ? `${description} (retry ${attempt})` : description,
+      prompt: promptText,
+      createdTimestamp: Timestamp.now(),
+    });
+    try {
+      const queryTimestamp = Timestamp.now();
+      response = (await getAgentResponse(
+        apiKeyConfig,
+        prompt,
+        modelSettings,
+        generationConfig,
+        structuredOutputConfig,
+      )) as ModelResponse;
+      const responseTimestamp = Timestamp.now();
+
+      log.response = response;
+      log.queryTimestamp = queryTimestamp;
+      log.responseTimestamp = responseTimestamp;
+    } catch (error) {
+      lastError = error instanceof Error ? error : new Error(String(error));
+      console.log(error);
+
+      // Log the error response
+      log.response = {
+        status: ModelResponseStatus.UNKNOWN_ERROR,
+        errorMessage: lastError.message,
+      };
+      log.queryTimestamp = Timestamp.now();
+      log.responseTimestamp = Timestamp.now();
+    }
+
+    // Write log entry for every attempt
+    writeModelLogEntry(experimentId, log);
+
+    // Check if we should retry
+    const shouldRetry =
+      attempt < maxRetries &&
+      (response.status === ModelResponseStatus.PROVIDER_UNAVAILABLE_ERROR ||
+        response.status === ModelResponseStatus.INTERNAL_ERROR ||
+        response.status === ModelResponseStatus.UNKNOWN_ERROR);
+
+    if (shouldRetry) {
+      const delay = initialDelay * Math.pow(2, attempt);
+      console.log(
+        `API error (${response.status}), retrying after ${delay}ms (attempt ${attempt + 1}/${maxRetries})`,
+      );
+      await new Promise((resolve) => setTimeout(resolve, delay));
+    } else {
+      // Success or non-retryable error, exit loop
+      break;
+    }
   }
 
-  // Write log
-  writeModelLogEntry(experimentId, log);
+  // If we exhausted all retries with an error, log it
+  if (lastError && response.status === ModelResponseStatus.NONE) {
+    console.error(`Failed after ${numRetries} retries:`, lastError);
+  }
 
   return response;
 }
