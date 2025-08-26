@@ -30,6 +30,7 @@ import {
   createSurveyStage,
   createTOSStage,
   createTransferStage,
+  createComprehensionStage,
 } from '@deliberation-lab/utils';
 import {
   LAS_METADATA,
@@ -169,7 +170,7 @@ export class StageBuilderDialog extends MobxLitElement {
         <div class="gallery-title">Basic stages</div>
         <div class="card-gallery-wrapper">
           ${this.renderTOSCard()} ${this.renderInfoCard()}
-          ${this.renderProfileCard()}
+          ${this.renderProfileCard()} ${this.renderComprehensionCard()}
         </div>
       </div>
 
@@ -493,6 +494,21 @@ export class StageBuilderDialog extends MobxLitElement {
       <div class="card" @click=${addStage}>
         <div class="title">💰 Payout</div>
         <div>Display calculated experiment payouts.</div>
+      </div>
+    `;
+  }
+
+  private renderComprehensionCard() {
+    const addStage = () => {
+      this.addStage(createComprehensionStage());
+    };
+
+    return html`
+      <div class="card" @click=${addStage}>
+        <div class="title">✅ Comprehension</div>
+        <div>
+          Test participant understanding with questions and correct answers.
+        </div>
       </div>
     `;
   }

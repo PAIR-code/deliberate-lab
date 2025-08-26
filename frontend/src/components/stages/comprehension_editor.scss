@@ -1,0 +1,117 @@
+@use '../../sass/colors';
+@use '../../sass/common';
+@use '../../sass/typescale';
+
+:host {
+  @include common.flex-column;
+  gap: common.$spacing-xxl;
+}
+
+.section {
+  @include common.flex-column;
+  gap: common.$spacing-xl;
+
+  .header {
+    @include common.flex-row;
+    justify-content: space-between;
+    align-items: center;
+    gap: common.$spacing-medium;
+
+    .title {
+      @include typescale.title-small;
+    }
+  }
+}
+
+.question-wrapper {
+  @include common.flex-column;
+  background: var(--md-sys-color-surface-variant);
+  border-radius: common.$spacing-medium;
+  padding: common.$spacing-xl;
+  gap: common.$spacing-large;
+
+  .question-label {
+    @include typescale.label-small;
+    color: var(--md-sys-color-on-surface-variant);
+
+    &.required {
+      color: var(--md-sys-color-error);
+    }
+  }
+
+  .question {
+    @include typescale.body-medium;
+    background: var(--md-sys-color-surface);
+    border-radius: common.$spacing-small;
+    padding: common.$spacing-xl;
+  }
+}
+
+.header {
+  @include common.flex-row;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: common.$spacing-medium;
+
+  .left {
+    flex: 1;
+  }
+
+  .right {
+    @include common.flex-row-align-center;
+    gap: common.$spacing-small;
+  }
+}
+
+.description {
+  @include typescale.body-small;
+  color: var(--md-sys-color-on-surface-variant);
+  margin-bottom: common.$spacing-medium;
+}
+
+.checkbox-wrapper {
+  @include common.flex-row;
+  align-items: flex-start;
+  gap: common.$spacing-medium;
+  width: 100%;
+
+  .checkbox-label {
+    @include typescale.body-medium;
+  }
+
+  md-checkbox {
+    margin-top: common.$spacing-small;
+  }
+
+  .mc-item {
+    @include common.flex-row;
+    align-items: flex-start;
+    gap: common.$spacing-medium;
+    flex: 1;
+
+    pr-textarea {
+      flex: 1;
+    }
+  }
+}
+
+.menu-wrapper {
+  @include typescale.label-medium;
+  @include common.flex-column;
+  background: var(--md-sys-color-surface);
+  border-radius: common.$spacing-small;
+  padding: common.$spacing-small 0;
+}
+
+.menu-item {
+  cursor: pointer;
+  padding: common.$spacing-medium common.$spacing-xl;
+
+  &:hover {
+    background: var(--md-sys-color-surface-variant);
+  }
+}
+
+pr-button {
+  width: fit-content;
+}
