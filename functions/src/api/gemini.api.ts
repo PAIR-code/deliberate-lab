@@ -31,10 +31,6 @@ const getSafetySettings = (disableSafetyFilters = false): SafetySetting[] => {
 
   return [
     {
-      category: HarmCategory.HARM_CATEGORY_CIVIC_INTEGRITY,
-      threshold: threshold,
-    },
-    {
       category: HarmCategory.HARM_CATEGORY_HARASSMENT,
       threshold: threshold,
     },
