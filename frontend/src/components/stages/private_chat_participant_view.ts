@@ -64,7 +64,11 @@ export class PrivateChatView extends MobxLitElement {
     };
 
     // Check if minimum number of turns met for progression
-    const minTurnsMet = participantMessageCount >= this.stage.minNumberOfTurns;
+    // For turn-based chats, only count completed turns (where agent has responded)
+    const minTurnsMet = this.stage.isTurnBasedChat
+      ? participantMessageCount >= this.stage.minNumberOfTurns &&
+        !isWaitingForResponse
+      : participantMessageCount >= this.stage.minNumberOfTurns;
 
     return html`
       <chat-interface .stage=${this.stage} .disableInput=${isDisabledInput()}>
