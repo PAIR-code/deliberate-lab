@@ -97,6 +97,17 @@
   .title {
     @include typescale.title-small;
   }
+  &.large-card {
+    width: 100%;
+    pr-textarea {
+      --pr-textarea-background-color: var(--md-sys-color-surface); // A light color from your theme
+      --pr-textarea-text-color: var(--md-sys-color-on-surface); // A dark color for text
+      --pr-textarea-border-color: var(--md-sys-color-outline);
+      --pr-textarea-label-color: var(--md-sys-color-primary);
+    }
+
+  }
+
 }
 
 .gallery-section {
