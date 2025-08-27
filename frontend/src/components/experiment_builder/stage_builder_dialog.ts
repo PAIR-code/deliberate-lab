@@ -44,6 +44,12 @@ import {
   getChipNegotiationStageConfigs,
 } from '../../shared/templates/chip_negotiation';
 import {
+  getCharityDebateTemplate,
+  CharityDebateConfig,
+  CHARITIES,
+  CHARITY_DEBATE_METADATA,
+} from '../../shared/templates/charity_allocations';
+import {
   CONSENSUS_METADATA,
   getConsensusTopicTemplate,
 } from '../../shared/templates/debate_topics';
@@ -165,6 +171,7 @@ export class StageBuilderDialog extends MobxLitElement {
         ${this.renderAssetAllocationTemplateCard()}
         ${this.renderConditionalSurveyTemplateCard()}
         ${this.renderPolicyTemplateCard()}
+        ${this.renderCharityDebateTemplateCard()}
       </div>
     `;
   }
@@ -628,6 +635,88 @@ private renderConsensusDebateCard() {
       </div>
     `;
   }
+
+  private renderCharityDebateTemplateCard() {
+  const loadTemplate = () => {
+    const config: CharityDebateConfig = {
+      includeTos: (this.shadowRoot?.querySelector('#charity-cb-tos') as any)?.checked,
+      includeViewProfile: (this.shadowRoot?.querySelector('#charity-cb-profile') as any)?.checked,
+      includeMediator: (this.shadowRoot?.querySelector('#charity-cb-mediator') as any)?.checked,
+      includeInitialParticipantSurvey: (this.shadowRoot?.querySelector('#charity-cb-initial-survey') as any)?.checked,
+      includePostDiscussionSurvey: (this.shadowRoot?.querySelector('#charity-cb-post-survey') as any)?.checked,
+      includeDiscussionEvaluation: (this.shadowRoot?.querySelector('#charity-cb-discussion-eval') as any)?.checked,
+      includePeerEvaluation: (this.shadowRoot?.querySelector('#charity-cb-peer-eval') as any)?.checked,
+      includeMetaFeedback: (this.shadowRoot?.querySelector('#charity-cb-meta-eval') as any)?.checked,
+    };
+    
+    this.addTemplate(getCharityDebateTemplate(config));
+  };
+
+  return html`
+    <div class="card large-card">
+      <div class="title">${CHARITY_DEBATE_METADATA.name}</div>
+      <div>${CHARITY_DEBATE_METADATA.description}</div>
+      <div class="template-controls">
+        <div class="subtitle">Configure Experiment Stages</div>
+
+        <label class="custom-checkbox">
+          <input type="checkbox" id="charity-cb-tos" checked>
+          <span class="checkmark"></span>
+          <span class="label-text">Include Terms of Service</span>
+        </label>
+
+        <label class="custom-checkbox">
+          <input type="checkbox" id="charity-cb-profile">
+          <span class="checkmark"></span>
+          <span class="label-text">[Optional] Include View Assigned Profile Stage</span>
+        </label>
+
+        <label class="custom-checkbox">
+          <input type="checkbox" id="charity-cb-mediator" checked>
+          <span class="checkmark"></span>
+          <span class="label-text">[Conditional] Include AI Mediator & Surveys</span>
+        </label>
+        
+        <label class="custom-checkbox">
+          <input type="checkbox" id="charity-cb-initial-survey" checked>
+          <span class="checkmark"></span>
+          <span class="label-text">Include Initial Participant Survey</span>
+        </label>
+
+        <!-- The "Role/Value Assignment" checkbox has been removed. -->
+
+        <label class="custom-checkbox">
+          <input type="checkbox" id="charity-cb-post-survey" checked>
+          <span class="checkmark"></span>
+          <span class="label-text">Include Post-Discussion Survey</span>
+        </label>
+
+        <label class="custom-checkbox">
+          <input type="checkbox" id="charity-cb-discussion-eval">
+          <span class="checkmark"></span>
+          <span class="label-text">[Optional] Include Discussion Evaluation</span>
+        </label>
+
+        <label class="custom-checkbox">
+          <input type="checkbox" id="charity-cb-peer-eval" checked>
+          <span class="checkmark"></span>
+          <span class="label-text">[Optional] Include Peer Evaluation</span>
+        </label>
+
+         <label class="custom-checkbox">
+          <input type="checkbox" id="charity-cb-meta-feedback">
+          <span class="checkmark"></span>
+          <span class="label-text">[Optional] Include Meta-Feedback Survey</span>
+        </label>
+
+        <pr-button @click=${loadTemplate}>
+          Load Template
+        </pr-button>
+      </div>
+    </div>
+  `;
+}
+
 
   private renderAssetAllocationTemplateCard() {
     const addGame = () => {
