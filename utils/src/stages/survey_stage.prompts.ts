@@ -20,6 +20,19 @@ import {
 
 /** Prompt constants and utils for interacting with survey stage. */
 
+/** Helper function to format scale question text */
+function formatScaleText(scaleQuestion: ScaleSurveyQuestion): string {
+  let scaleText = `Scale: ${scaleQuestion.lowerValue} = ${scaleQuestion.lowerText}`;
+  if (scaleQuestion.middleText) {
+    const middleValue = Math.floor(
+      (scaleQuestion.lowerValue + scaleQuestion.upperValue) / 2,
+    );
+    scaleText += `, ${middleValue} = ${scaleQuestion.middleText}`;
+  }
+  scaleText += `, ${scaleQuestion.upperValue} = ${scaleQuestion.upperText}`;
+  return scaleText;
+}
+
 /** Get survey stage context (e.g., to include in prompt)
  *  for given questions and answers.
  */
@@ -128,7 +141,7 @@ export function getSurveySummaryText(
         break;
       case SurveyQuestionKind.SCALE:
         const scaleQ = question as ScaleSurveyQuestion;
-        questionText += ` (Scale ${scaleQ.lowerValue}-${scaleQ.upperValue}: ${scaleQ.lowerText} to ${scaleQ.upperText})`;
+        questionText += ` (${formatScaleText(scaleQ)})`;
         break;
     }
 
@@ -158,7 +171,7 @@ export function getSurveyAnswersText(
     // Include participant names based on configuration or if multiple participants
     const showNames =
       alwaysShowParticipantNames || participantAnswers.length > 1;
-    const prefix = showNames ? `\nParticipant ${participantId}:` : '';
+    const prefix = showNames ? `* Participant ${participantId}:` : '';
 
     if (answer.kind === StageKind.SURVEY) {
       const surveyAnswer = answer as SurveyStageParticipantAnswer;
@@ -167,7 +180,7 @@ export function getSurveyAnswersText(
         questions,
       );
       if (responses.length > 0) {
-        answerSummaries.push(`${prefix}\n${responses.join('\n')}`);
+        answerSummaries.push(`\n${prefix}\n${responses.join('\n')}`);
       }
     } else if (answer.kind === StageKind.SURVEY_PER_PARTICIPANT) {
       const perParticipantAnswer =
@@ -178,7 +191,7 @@ export function getSurveyAnswersText(
         const question = questions.find((q) => q.id === questionId);
         if (!question) continue;
 
-        responses.push(`  ${question.questionTitle}:`);
+        responses.push(`  * ${question.questionTitle}:`);
         for (const targetParticipantId in perParticipantAnswer.answerMap[
           questionId
         ]) {
@@ -186,18 +199,18 @@ export function getSurveyAnswersText(
             perParticipantAnswer.answerMap[questionId][targetParticipantId];
           const formattedAnswer = formatSingleAnswer(surveyAnswer, question);
           responses.push(
-            `    About ${targetParticipantId}: ${formattedAnswer}`,
+            `    * About ${targetParticipantId}: ${formattedAnswer}`,
           );
         }
       }
       if (responses.length > 0) {
-        answerSummaries.push(`${prefix}\n${responses.join('\n')}`);
+        answerSummaries.push(`\n${prefix}\n${responses.join('\n')}`);
       }
     }
   }
 
   return answerSummaries.length > 0
-    ? `## Survey Responses:\n${answerSummaries.join('\n')}`
+    ? `## Survey Responses: ${answerSummaries.join('\n')}`
     : '';
 }
 
@@ -212,7 +225,7 @@ function formatSurveyResponses(
     if (!answer) continue;
 
     const formattedAnswer = formatSingleAnswer(answer, question);
-    responses.push(`  ${question.questionTitle}: ${formattedAnswer}`);
+    responses.push(`  * ${question.questionTitle}: ${formattedAnswer}`);
   }
 
   return responses;
@@ -242,13 +255,7 @@ function formatSingleAnswer(
     case SurveyQuestionKind.SCALE:
       const scaleAnswer = answer as ScaleSurveyAnswer;
       const scaleQuestion = question as ScaleSurveyQuestion;
-      // Show: value (Scale: X-Y, labels with optional middle)
-      // e.g., "7 (Scale: 0-10, Strongly Disagree to Strongly Agree)"
-      // or "5 (Scale: 0-10, Strongly Disagree, Neutral, Strongly Agree)"
-      const labelText = scaleQuestion.middleText
-        ? `${scaleQuestion.lowerText}, ${scaleQuestion.middleText}, ${scaleQuestion.upperText}`
-        : `${scaleQuestion.lowerText} to ${scaleQuestion.upperText}`;
-      return `${scaleAnswer.value} (Scale: ${scaleQuestion.lowerValue}-${scaleQuestion.upperValue}, ${labelText})`;
+      return `${scaleAnswer.value} (${formatScaleText(scaleQuestion)})`;
 
     default:
       return '(unknown answer type)';
