@@ -45,10 +45,6 @@ export interface CharityDebateConfig {
   includeMetaFeedback: boolean;
 }
 
-/** Define the three mediator strategies to be used. */
-const MEDIATOR_STRATEGIES = ['Logical Fallacy', 'Habermas', 'Confidence-vs-Performance'] as const;
-type MediatorStrategy = typeof MEDIATOR_STRATEGIES[number];
-
 /** Metadata for the Charity Debate experiment. */
 export const CHARITY_DEBATE_METADATA = createMetadataConfig({
   name: 'Mediated Charity Debate (3 Rounds)',
@@ -81,6 +77,9 @@ function generateAllocationOptions(charitiesForRound: string[]): string[] {
             bundles.add(`33% ${c1} / 66% ${c2}`);
         }
     }
+    if (charitiesForRound.length === 3) {
+        bundles.add(`33% ${charitiesForRound[0]} / 33% ${charitiesForRound[1]} / 33% ${charitiesForRound[2]}`);
+    }
     return Array.from(bundles);
 }
 
@@ -102,8 +101,6 @@ export function getCharityDebateTemplate(
   stages.push(createInstructionsStage());
   if (config.includeInitialParticipantSurvey) stages.push(createInitialParticipantSurveyStage());
   if (config.includeMediator) stages.push(createInitialMediatorSurveyStage());
-  
-  // Role assignment stage has been removed.
 
   // --- Section 2: Three Core Debate Rounds with Different Mediators ---
   const shuffledCharities = [...CHARITIES].sort(() => 0.5 - Math.random());
@@ -113,18 +110,30 @@ export function getCharityDebateTemplate(
       const roundNum = index + 1;
       const setting = `donations to: ${charityGroup.join(', ')}`;
       const allocationOptions = generateAllocationOptions(charityGroup);
-      const mediatorForRound = config.includeMediator ? MEDIATOR_STRATEGIES[index] : undefined;
+      
+      // UPDATE: Mediator logic is now conditional on the round number (index).
+      // Round 1 (index 0) NEVER has a mediator.
+      // Rounds 2 & 3 (index 1 & 2) have generic mediators if enabled.
+      let mediatorForRound: string | undefined = undefined;
+      if (config.includeMediator && index > 0) {
+        mediatorForRound = `AI Mediator (Style ${index})`; // e.g., Style 1, Style 2
+      }
 
-      stages.push(createAllocationVoteStage(`initial-vote-round-${roundNum}`, `Initial Resource Allocation Vote: Round ${roundNum}`, allocationOptions));
-      stages.push(createAllocationDiscussionStage(`discussion-round-${roundNum}`, `Allocation Discussion: Round ${roundNum}`, setting, mediatorForRound));
-      stages.push(createAllocationVoteStage(`final-vote-round-${roundNum}`, `Final Resource Allocation Vote: Round ${roundNum}`, allocationOptions));
+      stages.push(createAllocationVoteStage(`initial-vote-round-${roundNum}`, `Initial Vote: Round ${roundNum}`, allocationOptions));
+      stages.push(createAllocationDiscussionStage(`discussion-round-${roundNum}`, `Discussion: Round ${roundNum}`, setting, mediatorForRound));
+      
+      if (mediatorForRound) {
+        stages.push(createPerMediatorEvaluationStage(roundNum, mediatorForRound));
+      }
+      
+      stages.push(createAllocationVoteStage(`final-vote-round-${roundNum}`, `Final Vote: Round ${roundNum}`, allocationOptions));
   });
 
   // --- Section 3: Post-Experiment Evaluations ---
   if (config.includePostDiscussionSurvey) stages.push(createPostDiscussionSurveyStage());
   if (config.includeDiscussionEvaluation) stages.push(createDiscussionEvaluationStage());
   if (config.includePeerEvaluation) stages.push(createPeerEvaluationStage());
-  if (config.includeMediator) stages.push(createMediatorEvaluationStage());
+  if (config.includeMediator) stages.push(createFinalMediatorPreferenceStage());
   if (config.includeMetaFeedback) stages.push(createMetaFeedbackStage());
   
   return createExperimentTemplate({
@@ -135,8 +144,6 @@ export function getCharityDebateTemplate(
   });
 }
 
-// ... All createStage functions remain the same as the previous response, except for the removal of createRoleAssignmentStage ...
-
 // ****************************************************************************
 // STAGE FACTORIES
 // ****************************************************************************
@@ -145,7 +152,12 @@ export function getCharityDebateTemplate(
 
 function createTermsOfServiceStage(): StageConfig {
     const tosText = `Thank you for your interest in this research. If you choose to participate, you will be asked to participate in simulated debates about resource allocation and/or potentially sensitive topics.\n\nCompensation\nYou will be paid a base amount for playing the games and completing the survey. \nAdditionally, the resources you will be allocating in this experiment are real-world charities. Your final selection for where money should be spent will translate to real allocations of a fraction of a sum ($XXXX) towards the charities you vote for.[Allocation method 1] For example, if there are 1000 participants in this experiment, and 200 of them vote for Charity X, Charity X will receive 20% of the $XXXX total sum. [Allocation method 2]  For example, if there are 1000 participants in this experiment, and 200 of them vote for Charity X, Charity X will have a 20% chance of receiving the full $XXXX. If 200 participants vote for a bundle which splits the resources into <80% Charity X, 20% Charity Y>, that bundle has a 20% chance of being selected.\n\nIRB\nThe results of this study will be used solely for research purposes. Our team will keep all your information from this study strictly confidential, as required by law. The IRB at the XXXXXX is responsible for protecting the rights and welfare of research volunteers like you.\n\nVoluntary participation\nYour participation is voluntary, which means you can choose whether or not to participate. You may choose not to participate by exiting the survey at any point. There are no known costs to you for participating in this research study except for your time.\n\nContact\nPlease feel free to contact us through Prolific or your game administrator if you have any questions, concerns, or complaints about this study.\n\nBy checking the box below and proceeding, you are acknowledging that you are over the age of 18 and that you consent to participate. Clicking the arrow will bring you to the beginning of the task.`;
-    return createSurveyStage({ id: 'terms-of-service', name: 'Terms of Service', customValidation: { type: 'min-selections', config: { limit: 1 }}, descriptions: createStageTextConfig({ primaryText: tosText }), questions: [ createMultipleChoiceSurveyQuestion({ id: 'accept-tos', questionTitle: 'Consent', options: [{ id: 'accept', text: 'I accept the Terms of Service', imageId: '' }] }) ], });
+    return createSurveyStage({ 
+        id: 'terms-of-service', name: 'Terms of Service', 
+        // UPDATE: Removed customValidation as requested
+        descriptions: createStageTextConfig({ primaryText: tosText }), 
+        questions: [ createMultipleChoiceSurveyQuestion({ id: 'accept-tos', questionTitle: 'Consent', options: [{ id: 'accept', text: 'I accept the Terms of Service', imageId: '' }] }) ], 
+    });
 }
 
 const SET_PROFILE_STAGE_EXPANDED = createProfileStage({ id: 'profile-stage', name: 'Set profile', profileType: ProfileType.ANONYMOUS_ANIMAL, descriptions: createStageTextConfig({ primaryText: 'Welcome! You will be assigned an anonymous identity for this study.' }), });
@@ -168,11 +180,10 @@ function createInstructionsStage(): StageConfig {
 function createInitialParticipantSurveyStage(): StageConfig {
     return createSurveyStage({ id: 'initial-participant-survey', name: 'Initial Participant Survey', descriptions: createStageTextConfig({ primaryText: 'Please answer the following questions about yourself.' }),
         questions: [
-            createTextSurveyQuestion({ id: 'bio-paragraph', questionTitle: 'Paragraph biography of participant (?)' }),
-            createScaleSurveyQuestion({ id: 'enjoy-controversial', questionTitle: 'I enjoy discussing controversial topics', lowerValue: 1, upperValue: 7, lowerText: 'Strongly Disagree', upperText: 'Strongly Agree' }),
-            createScaleSurveyQuestion({ id: 'comfortable-discussing', questionTitle: 'People feel comfortable discussing controversial topics with me.', lowerValue: 1, upperValue: 7, lowerText: 'Strongly Disagree', upperText: 'Strongly Agree' }),
-            createScaleSurveyQuestion({ id: 'comfortable-disagreeing-with-me', questionTitle: 'People feel comfortable disagreeing with me.', lowerValue: 1, upperValue: 7, lowerText: 'Strongly Disagree', upperText: 'Strongly Agree' }),
-            createScaleSurveyQuestion({ id: 'comfortable-disagreeing-with-others', questionTitle: 'I feel comfortable disagreeing with other people.', lowerValue: 1, upperValue: 7, lowerText: 'Strongly Disagree', upperText: 'Strongly Agree' }),
+            createScaleSurveyQuestion({ id: 'enjoy-controversial', questionTitle: 'I enjoy discussing controversial topics', lowerValue: 1, upperValue: 10 }),
+            createScaleSurveyQuestion({ id: 'comfortable-discussing', questionTitle: 'People feel comfortable discussing controversial topics with me.', lowerValue: 1, upperValue: 10 }),
+            createScaleSurveyQuestion({ id: 'comfortable-disagreeing-with-me', questionTitle: 'People feel comfortable disagreeing with me.', lowerValue: 1, upperValue: 10 }),
+            createScaleSurveyQuestion({ id: 'comfortable-disagreeing-with-others', questionTitle: 'I feel comfortable disagreeing with other people.', lowerValue: 1, upperValue: 10 }),
         ],
     });
 }
@@ -184,9 +195,8 @@ function createInitialMediatorSurveyStage(): StageConfig {
             createTextSurveyQuestion({ id: 'ai-app-usage', questionTitle: 'What kind of application do you use most of the time?' }),
             createTextSurveyQuestion({ id: 'ai-use-case', questionTitle: 'What use case would you use?' }),
             createScaleSurveyQuestion({ id: 'ai-comfort', questionTitle: 'On a scale of 1 to 10, how comfortable are you interacting with AI assistants?', lowerValue: 1, upperValue: 10 }),
-            createScaleSurveyQuestion({ id: 'ai-benefit', questionTitle: 'Conversations would benefit from the presence of an AI mediator', lowerValue: 1, upperValue: 7, lowerText: 'Strongly Disagree', upperText: 'Strongly Agree' }),
-            createScaleSurveyQuestion({ id: 'ai-obtrusive', questionTitle: 'An AI mediator could be obtrusive and annoying', lowerValue: 1, upperValue: 7, lowerText: 'Strongly Disagree', upperText: 'Strongly Agree' }),
-            createScaleSurveyQuestion({ id: 'ai-include-future', questionTitle: 'I would include the AI mediator in future discussions.', lowerValue: 1, upperValue: 7, lowerText: 'Strongly Disagree', upperText: 'Strongly Agree' }),
+            createScaleSurveyQuestion({ id: 'ai-benefit', questionTitle: 'Conversations would benefit from the presence of a neutral AI mediator.', lowerValue: 1, upperValue: 10 }),
+            createScaleSurveyQuestion({ id: 'ai-obtrusive', questionTitle: 'An AI mediator could be obtrusive and annoying', lowerValue: 1, upperValue: 10 }),
         ],
     });
 }
@@ -196,24 +206,49 @@ function createInitialMediatorSurveyStage(): StageConfig {
 function createAllocationVoteStage(stageId: string, stageName: string, allocationBundles: string[]): StageConfig {
   const options = allocationBundles.map((bundle, index) => ({ id: `${stageId}-option-${index}`, text: bundle, imageId: '' }));
   const voteText = `Please select your preferred allocation bundle for this round's charities.`;
-  return createSurveyStage({ id: stageId, name: stageName, customValidation: { type: 'max-selections', config: { limit: 1 }}, descriptions: createStageTextConfig({ primaryText: voteText }), questions: [ createMultipleChoiceSurveyQuestion({ id: `${stageId}-mcq`, questionTitle: 'Select your vote:', options, allowMultipleSelections: false }) ], });
+  return createSurveyStage({ 
+    id: stageId, name: stageName, 
+    // UPDATE: Removed customValidation as requested
+    descriptions: createStageTextConfig({ primaryText: voteText }), 
+    questions: [ createMultipleChoiceSurveyQuestion({ id: `${stageId}-mcq`, questionTitle: 'Select your vote:', options }) ], 
+  });
 }
 
-function createAllocationDiscussionStage(stageId: string, stageName: string, setting: string, mediator?: MediatorStrategy): StageConfig {
-  const mediatorText = mediator ? `\n\nAn AI Mediator (Style: ${mediator}) will be present in this discussion.` : '';
+function createAllocationDiscussionStage(stageId: string, stageName: string, setting: string, mediator?: string): StageConfig {
+  const mediatorText = mediator ? `\n\nAn ${mediator} will be present in this discussion.` : '';
   const discussionText = `You will now engage in a discussion with other participants on what the ideal resource allocation for the ${setting}. Your objective, with the other participants, is to determine the optimal resource allocation.${mediatorText}`;
   return createChatStage({ id: stageId, name: stageName, descriptions: createStageTextConfig({ primaryText: discussionText }), timeLimitInMinutes: 10 });
 }
 
 // --- Section 3 Stages: Post-Experiment Evaluations ---
 
-function createPostDiscussionSurveyStage(): StageConfig {
-    return createSurveyPerParticipantStage({ id: 'post-discussion-survey', name: 'Post-Discussion Survey', descriptions: createStageTextConfig({ primaryText: "Please evaluate your discussion interactions." }), enableSelfSurvey: true,
+function createPerMediatorEvaluationStage(roundNum: number, mediator: string): StageConfig {
+    const stageId = `mediator-eval-round-${roundNum}`;
+    return createSurveyStage({ 
+        id: stageId, 
+        name: `Mediator Evaluation: Round ${roundNum}`, 
+        descriptions: createStageTextConfig({ primaryText: `Please evaluate the AI mediator from the discussion you just completed.` }),
         questions: [
-            createScaleSurveyQuestion({ id: 'enjoyed-discussion', questionTitle: 'I enjoyed discussing controversial topics with <other participant>', lowerValue: 1, upperValue: 7, lowerText: 'Strongly Disagree', upperText: 'Strongly Agree' }),
-            createScaleSurveyQuestion({ id: 'felt-comfortable', questionTitle: 'I felt comfortable discussing controversial topics with <other participant>', lowerValue: 1, upperValue: 7, lowerText: 'Strongly Disagree', upperText: 'Strongly Agree' }),
-            createScaleSurveyQuestion({ id: 'other-comfortable-disagreeing', questionTitle: '<other participant> felt comfortable disagreeing with me.', lowerValue: 1, upperValue: 7, lowerText: 'Strongly Disagree', upperText: 'Strongly Agree' }),
-            createScaleSurveyQuestion({ id: 'felt-comfortable-disagreeing', questionTitle: 'I felt comfortable disagreeing with <other participant>.', lowerValue: 1, upperValue: 7, lowerText: 'Strongly Disagree', upperText: 'Strongly Agree' }),
+            createScaleSurveyQuestion({ id: `${stageId}-satisfied`, questionTitle: `[Performance] I was satisfied with this mediator’s performance.`, lowerValue: 1, upperValue: 10 }),
+            createScaleSurveyQuestion({ id: `${stageId}-surprised`, questionTitle: `[Performance] I was surprised by this mediator’s intent, action, or outputs.`, lowerValue: 1, upperValue: 10 }),
+            createScaleSurveyQuestion({ id: `${stageId}-helpful`, questionTitle: `[Performance] This mediator was helpful.`, lowerValue: 1, upperValue: 10 }),
+            createScaleSurveyQuestion({ id: `${stageId}-easy`, questionTitle: `[User’s experience] This mediator was easy to use.`, lowerValue: 1, upperValue: 10 }),
+            createScaleSurveyQuestion({ id: `${stageId}-fun`, questionTitle: `[User’s experience] This mediator was fun to use.`, lowerValue: 1, upperValue: 10 }),
+            createScaleSurveyQuestion({ id: `${stageId}-trust`, questionTitle: `[Trust] I can trust this mediator’s output.`, lowerValue: 1, upperValue: 10 }),
+        ]
+    });
+}
+
+function createPostDiscussionSurveyStage(): StageConfig {
+    return createSurveyPerParticipantStage({ 
+        id: 'post-discussion-survey', name: 'Post-Discussion Survey', 
+        descriptions: createStageTextConfig({ primaryText: "Please evaluate your discussion interactions with each participant." }), 
+        enableSelfSurvey: false,
+        questions: [
+            createScaleSurveyQuestion({ id: 'enjoyed-discussion', questionTitle: 'I enjoyed the discussion with this participant.', lowerValue: 1, upperValue: 10 }),
+            createScaleSurveyQuestion({ id: 'felt-comfortable', questionTitle: 'I felt comfortable discussing the topics with this participant.', lowerValue: 1, upperValue: 10 }),
+            createScaleSurveyQuestion({ id: 'other-comfortable-disagreeing', questionTitle: 'I think this participant felt comfortable disagreeing with me.', lowerValue: 1, upperValue: 10 }),
+            createScaleSurveyQuestion({ id: 'felt-comfortable-disagreeing', questionTitle: 'I felt comfortable disagreeing with this participant.', lowerValue: 1, upperValue: 10 }),
         ],
     });
 }
@@ -231,37 +266,27 @@ function createDiscussionEvaluationStage(): StageConfig {
 function createPeerEvaluationStage(): StageConfig {
   return createSurveyPerParticipantStage({ id: 'peer-evaluation', name: 'Peer Evaluation', descriptions: createStageTextConfig({ primaryText: "Please answer some questions about the other participants." }), enableSelfSurvey: false,
     questions: [
-      createMultipleChoiceSurveyQuestion({ id: 'is-human', questionTitle: '<other participant> was a human', options: [{id: 'yes', text: 'Yes', imageId: ''}, {id: 'no', text: 'No', imageId: ''}]}),
-      createMultipleChoiceSurveyQuestion({ id: 'peer-age', questionTitle: 'I think the age range of <other participant> was  <option>', options: [{id: '18-24', text: '18-24', imageId: ''}, {id: '25-34', text: '25-34', imageId: ''}, {id: '35-44', text: '35-44', imageId: ''}, {id: '45+', text: '45+', imageId: ''}]}),
-      createMultipleChoiceSurveyQuestion({ id: 'peer-education', questionTitle: 'I think the education level of <other participant> was  <option>', options: [{id: 'high-school', text: 'High School', imageId: ''}, {id: 'bachelors', text: 'Bachelors Degree', imageId: ''}, {id: 'masters', text: 'Masters Degree', imageId: ''}, {id: 'doctorate', text: 'Doctorate', imageId: ''}]}),
-      createTextSurveyQuestion({ id: 'peer-bio', questionTitle: 'Construct a small biography of the other participant, given your interpretation of them through the discussion.' }),
+      createMultipleChoiceSurveyQuestion({ id: 'is-human', questionTitle: 'Do you believe this participant was a human?', options: [{id: 'yes', text: 'Yes', imageId: ''}, {id: 'no', text: 'No, I think it was a bot', imageId: ''}]}),
+      createTextSurveyQuestion({ id: 'peer-feedback-optional', questionTitle: 'Do you have any other feedback for this participant? (Optional)' }),
     ],
   });
 }
 
-function createMediatorPerformanceQuestions(mediator: MediatorStrategy) {
-    const prefix = mediator.toLowerCase().replace(/ /g, '-');
-    return [
-        createScaleSurveyQuestion({ id: `${prefix}-satisfied`, questionTitle: `[Performance] For the ${mediator} mediator: I am satisfied with the LLM assistant’s performance.`, lowerValue: 1, upperValue: 7, lowerText: 'Strongly Disagree', upperText: 'Strongly Agree'}),
-        createScaleSurveyQuestion({ id: `${prefix}-surprised`, questionTitle: `[Performance] For the ${mediator} mediator: I am surprised by the LLM assistant’s intent, action, or outputs.`, lowerValue: 1, upperValue: 7, lowerText: 'Strongly Disagree', upperText: 'Strongly Agree'}),
-        createScaleSurveyQuestion({ id: `${prefix}-helpful`, questionTitle: `[Performance] For the ${mediator} mediator: LLM assistance is helpful.`, lowerValue: 1, upperValue: 7, lowerText: 'Strongly Disagree', upperText: 'Strongly Agree'}),
-        createScaleSurveyQuestion({ id: `${prefix}-easy`, questionTitle: `[User’s experience] For the ${mediator} mediator: LLM assistance is easy to use.`, lowerValue: 1, upperValue: 7, lowerText: 'Strongly Disagree', upperText: 'Strongly Agree'}),
-        createScaleSurveyQuestion({ id: `${prefix}-fun`, questionTitle: `[User’s experience] For the ${mediator} mediator: LLM assistance is fun to use.`, lowerValue: 1, upperValue: 7, lowerText: 'Strongly Disagree', upperText: 'Strongly Agree'}),
-        createScaleSurveyQuestion({ id: `${prefix}-trust`, questionTitle: `[Trust] For the ${mediator} mediator: I can trust the LLM assistant’s output.`, lowerValue: 1, upperValue: 7, lowerText: 'Strongly Disagree', upperText: 'Strongly Agree'}),
+function createFinalMediatorPreferenceStage(): StageConfig {
+    const preferenceOptions = [
+        { id: 'mediator-round-2', text: 'Mediator from Round 2', imageId: '' },
+        { id: 'mediator-round-3', text: 'Mediator from Round 3', imageId: '' }
     ];
-}
-
-function createMediatorEvaluationStage(): StageConfig {
-    const allMediatorQuestions = MEDIATOR_STRATEGIES.flatMap(createMediatorPerformanceQuestions);
-    const preferenceOptions = MEDIATOR_STRATEGIES.map(m => ({ id: m.toLowerCase().replace(/ /g, '-'), text: m, imageId: ''}));
     
-    return createSurveyStage({ id: 'mediator-evaluation', name: 'Mediator Evaluation', descriptions: createStageTextConfig({ primaryText: "Likert Question for Collecting Automation Desire/ Trust\nOn a level of 1 to 7:" }),
+    return createSurveyStage({ id: 'mediator-final-preference', name: 'Final Mediator Preference', descriptions: createStageTextConfig({ primaryText: "Reflecting on all the discussions you participated in, please answer the following." }),
         questions: [
-            ...allMediatorQuestions,
-            createMultipleChoiceSurveyQuestion({ id: 'mediator-preference', questionTitle: 'A posteriori choice of final modality after playing with all three\n\nIf you were to engage in another debate, which mode do you like and why?',
+            createMultipleChoiceSurveyQuestion({ 
+                id: 'mediator-preference', 
+                questionTitle: 'If you were to engage in another debate, which mediator style would you prefer?',
                 options: [ {id: 'none', text: 'None', imageId: ''}, ...preferenceOptions ],
             }),
             createTextSurveyQuestion({id: 'mediator-reason', questionTitle: 'Please explain your reason:'}),
+            createScaleSurveyQuestion({ id: 'ai-include-future-final', questionTitle: 'I would include an AI mediator in future discussions.', lowerValue: 1, upperValue: 10 }),
         ],
     });
 }
