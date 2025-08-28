@@ -24,7 +24,7 @@ import {getBaseStagePrompt} from './stage.prompts';
 export const DEFAULT_AGENT_MEDIATOR_PROMPT = `You are a agent for a chat conversation. Your task is to ensure that the conversation is polite.
 If you notice that participants are being rude, step in to make sure that everyone is respectful. 
 Otherwise, do not respond.`;
-export const DEFAULT_AGENT_PARTICIPANT_CHAT_PROMPT = `You are a human participant playing as the avatar mentioned above.
+export const DEFAULT_AGENT_PARTICIPANT_CHAT_PROMPT = `You are a human participating as the avatar mentioned above.
 Respond in a quick sentence if you would like to say something.
 Make sure your response sounds like a human with the phrasing and punctuation people use when casually chatting and no animal sounds.
 Otherwise, do not respond.`;
@@ -105,11 +105,11 @@ export function getChatPromptMessageHistory(
   stage: ChatStageConfig,
 ) {
   if (messages.length === 0) {
-    return `No one in the group discussion has spoken yet.`;
+    return `No one in the discussion has spoken yet.`;
   }
 
   const description = `
-Below is the transcript of your group discussion.
+Below is the transcript of your discussion.
 Each message is displayed in chronological order, with the most recent message at the bottom. Each entry follows this format:
 
 (HH:MM) ParticipantName: Message content

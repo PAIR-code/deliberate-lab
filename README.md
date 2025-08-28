@@ -3,6 +3,11 @@
 🕊️ **Deliberate Lab** is a platform for running online research experiments
 on human + LLM group dynamics.
 
+<img
+  src="./docs/assets/images/deliberate-lab-example-tv-debate.png"
+  alt="Screenshot of Deliberate Lab experiment dashboard"
+/>
+
 - 🔎 [Documentation for researchers + developers](https://pair-code.github.io/deliberate-lab/)
 - 👉 [Quick start for developers](https://pair-code.github.io/deliberate-lab/developers/run-locally)
 
@@ -12,7 +17,7 @@ on human + LLM group dynamics.
 
 ```
 @software{Tsai_Deliberate_Lab_Open-Source_2025,
-author = {Tsai, Vivian and Qian, Crystal and Deliberate Lab community contributors},
+author = {Tsai, Vivian and Qian, Crystal and Behr, Michael and Deliberate Lab community contributors},
 month = mar,
 title = {{Deliberate Lab: Open-Source Platform for LLM-Powered Social Science}},
 url = {https://github.com/PAIR-code/deliberate-lab},

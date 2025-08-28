@@ -3,13 +3,17 @@ title: Agent design
 layout: default
 ---
 
+<div class="banner">
+  ⚠️ Documentation may be out-of-date
+</div>
+
 ## Context
 
 Deliberate Lab supports two types of agents:
 - **Agent mediators**: Can read and write chat messages during chat stages only
-- **Agent participants**: Can progress through experiment stages and read/write chat messages for any relevant stages
+- [alpha] **Agent participants**: Can progress through experiment stages and read/write chat messages for any relevant stages
 
-## Agent participants
+## Agent participants (alpha mode)
 
 An agent participant uses the same `ParticipantProfile` config as human
 participants, except a `ProfileAgentConfig` is added to the profile to specify

@@ -24,3 +24,10 @@
   margin-bottom: common.$spacing-xl;
   padding: common.$main-content-padding;
 }
+
+.html-wrapper img {
+  height: 100%;
+  max-width: 100%;
+  display: block;
+  margin: auto;
+}

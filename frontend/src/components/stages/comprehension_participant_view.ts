@@ -6,6 +6,8 @@ import './stage_footer';
 import {MobxLitElement} from '@adobe/lit-mobx';
 import {CSSResultGroup, html, nothing} from 'lit';
 import {customElement, property} from 'lit/decorators.js';
+import '@material/web/textfield/outlined-text-field.js';
+import '@material/web/radio/radio.js';
 
 import {core} from '../../core/core';
 import {ParticipantService} from '../../services/participant.service';
@@ -16,6 +18,7 @@ import {
   ComprehensionQuestion,
   ComprehensionQuestionKind,
   MultipleChoiceComprehensionQuestion,
+  TextComprehensionQuestion,
   MultipleChoiceItem,
 } from '@deliberation-lab/utils';
 
@@ -82,6 +85,12 @@ export class ComprehensionView extends MobxLitElement {
             ${this.renderMultipleChoiceQuestion(question)} ${renderError()}
           </div>
         `;
+      case ComprehensionQuestionKind.TEXT:
+        return html`
+          <div class="question-wrapper">
+            ${this.renderTextQuestion(question)} ${renderError()}
+          </div>
+        `;
       default:
         return nothing;
     }
@@ -113,10 +122,45 @@ export class ComprehensionView extends MobxLitElement {
     return answer === choiceId;
   }
 
+  private renderTextQuestion(question: TextComprehensionQuestion) {
+    const handleTextChange = (e: InputEvent) => {
+      if (!this.stage) return;
+      const value = (e.target as HTMLTextAreaElement).value;
+      this.participantAnswerService.updateComprehensionAnswer(
+        this.stage.id,
+        question.id,
+        value,
+      );
+    };
+
+    const answer = this.stage
+      ? this.participantAnswerService.getComprehensionAnswer(
+          this.stage.id,
+          question.id,
+        )
+      : '';
+
+    return html`
+      <div class="question">
+        <div class="question-title">
+          ${unsafeHTML(convertMarkdownToHTML(question.questionTitle + '*'))}
+        </div>
+        <md-outlined-text-field
+          type="textarea"
+          placeholder="Type your answer"
+          .value=${answer || ''}
+          ?disabled=${this.participantService.disableStage}
+          @input=${handleTextChange}
+        >
+        </md-outlined-text-field>
+      </div>
+    `;
+  }
+
   private renderRadioButton(choice: MultipleChoiceItem, questionId: string) {
     const id = `${questionId}-${choice.id}`;
 
-    const handleMultipleChoiceClick = (e: Event) => {
+    const handleMultipleChoiceClick = () => {
       if (!this.stage) return;
       this.participantAnswerService.updateComprehensionAnswer(
         this.stage.id,
@@ -160,16 +204,12 @@ export class ComprehensionView extends MobxLitElement {
       question.id,
     );
 
-    if (
-      question.kind === ComprehensionQuestionKind.TEXT &&
-      answer !== question.correctAnswer
-    ) {
-      return false;
-    } else if (
-      question.kind === ComprehensionQuestionKind.MULTIPLE_CHOICE &&
-      answer !== question.correctAnswerId
-    ) {
-      return false;
+    if (question.kind === ComprehensionQuestionKind.TEXT) {
+      const textQuestion = question as TextComprehensionQuestion;
+      return answer === textQuestion.correctAnswer;
+    } else if (question.kind === ComprehensionQuestionKind.MULTIPLE_CHOICE) {
+      const mcQuestion = question as MultipleChoiceComprehensionQuestion;
+      return answer === mcQuestion.correctAnswerId;
     }
     return true;
   }

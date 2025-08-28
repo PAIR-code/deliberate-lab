@@ -2,7 +2,8 @@
 
 // Temporary hack: include this ID in stage ID in order to use
 // anonymous profile set for display
-export const ALTERNATE_PROFILE_SET_ID = 'alternate_profile';
+export const SECONDARY_PROFILE_SET_ID = 'secondary_profile';
+export const TERTIARY_PROFILE_SET_ID = 'tertiary_profile';
 
 // Set names for random hashes
 export const PROFILE_SET_RANDOM_1_ID = 'random-1';
@@ -100,6 +101,9 @@ export const PROFILE_SET_ANIMALS_2: {name: string; avatar: string}[] = [
   {name: 'Dragon', avatar: '🐉'},
   {name: 'Horse', avatar: '🐴'},
 ];
+
+/** Anonymous participant number set. */
+export const PROFILE_SET_ANONYMOUS_PARTICIPANT_ID = 'anonymous-participant';
 
 /** Nature set with flowers, rocks, etc. */
 export const PROFILE_SET_NATURE_ID = 'nature';

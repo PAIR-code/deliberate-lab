@@ -1,23 +1,39 @@
 import {
+  SECONDARY_PROFILE_SET_ID,
+  TERTIARY_PROFILE_SET_ID,
+  PROFILE_SET_ANIMALS_2_ID,
+  PROFILE_SET_NATURE_ID,
   AssetAllocationStageParticipantAnswer,
   BasePromptConfig,
   ProfileAgentConfig,
+  PromptItem,
+  PromptItemGroup,
   PromptItemType,
   StageConfig,
   StageContextPromptItem,
   StageKind,
+  StageParticipantAnswer,
+  SurveyStageConfig,
+  SurveyPerParticipantStageConfig,
+  SurveyStageParticipantAnswer,
+  SurveyPerParticipantStageParticipantAnswer,
   UserProfile,
+  UserType,
   getChatPromptMessageHistory,
+  getNameFromPublicId,
   getStockInfoSummaryText,
+  getSurveySummaryText,
+  getSurveyAnswersText,
   makeStructuredOutputPrompt,
+  shuffleWithSeed,
 } from '@deliberation-lab/utils';
 import {
   getAssetAllocationAnswersText,
   getAssetAllocationSummaryText,
 } from './stages/asset_allocation.utils';
 import {
+  getFirestoreActiveParticipants,
   getFirestoreAnswersForStage,
-  getFirestoreExperiment,
   getFirestoreParticipant,
   getFirestoreStage,
   getFirestoreStagePublicData,
@@ -28,6 +44,66 @@ import {
 // ****************************************************************************
 // Helper functions related to assembling structured prompts.
 // ****************************************************************************
+
+/** Helper to add display names (with avatars and pronouns) to participant answers */
+async function addDisplayNamesToAnswers<T>(
+  experimentId: string,
+  participantAnswers: Array<{participantId: string; answer: T}>,
+  stageId: string,
+): Promise<Array<{participantId: string; answer: T}>> {
+  // Fetch all participant profiles
+  const participantProfiles = await Promise.all(
+    participantAnswers.map(({participantId}) =>
+      getFirestoreParticipant(experimentId, participantId),
+    ),
+  );
+
+  // Determine profile set based on stage ID
+  const profileSetId = stageId.includes(SECONDARY_PROFILE_SET_ID)
+    ? PROFILE_SET_ANIMALS_2_ID
+    : stageId.includes(TERTIARY_PROFILE_SET_ID)
+      ? PROFILE_SET_NATURE_ID
+      : '';
+
+  return participantAnswers.map(({participantId, answer}, index) => {
+    const participant = participantProfiles[index];
+    if (!participant) {
+      return {participantId, answer};
+    }
+
+    // Get display name with avatar and pronouns
+    const displayName = getNameFromPublicId(
+      [participant],
+      participant.publicId,
+      profileSetId,
+      true, // includeAvatar
+      true, // includePronouns
+    );
+
+    return {
+      participantId: displayName,
+      answer,
+    };
+  });
+}
+
+/** Convenience function to get stage answers with display names */
+async function getStageAnswersWithDisplayNames<
+  T extends StageParticipantAnswer,
+>(
+  experimentId: string,
+  cohortId: string,
+  stageId: string,
+  participantIds?: string[],
+): Promise<Array<{participantId: string; answer: T}>> {
+  const answers = await getFirestoreAnswersForStage<T>(
+    experimentId,
+    cohortId,
+    stageId,
+    participantIds,
+  );
+  return addDisplayNamesToAnswers(experimentId, answers, stageId);
+}
 
 /** Assemble prompt items into final prompt. */
 export async function getStructuredPrompt(
@@ -40,8 +116,36 @@ export async function getStructuredPrompt(
   agentConfig: ProfileAgentConfig,
   promptConfig: BasePromptConfig,
 ) {
+  const promptText = await processPromptItems(
+    promptConfig.prompt,
+    experimentId,
+    cohortId,
+    participantIds,
+    stageId,
+    userProfile,
+    agentConfig,
+  );
+
+  // Add structured output if relevant
+  const structuredOutput = makeStructuredOutputPrompt(
+    promptConfig.structuredOutputConfig,
+  );
+
+  return structuredOutput ? `${promptText}\n${structuredOutput}` : promptText;
+}
+
+/** Process prompt items recursively. */
+async function processPromptItems(
+  promptItems: PromptItem[],
+  experimentId: string,
+  cohortId: string,
+  participantIds: string[],
+  stageId: string,
+  userProfile: UserProfile,
+  agentConfig: ProfileAgentConfig,
+): Promise<string> {
   const items: string[] = [];
-  for (const promptItem of promptConfig.prompt) {
+  for (const promptItem of promptItems) {
     switch (promptItem.type) {
       case PromptItemType.TEXT:
         items.push(promptItem.text);
@@ -51,16 +155,26 @@ export async function getStructuredPrompt(
         break;
       case PromptItemType.PROFILE_INFO:
         const profileInfo: string[] = [];
-        if (userProfile.avatar) {
-          profileInfo.push(userProfile.avatar);
+        const getProfileSetId = () => {
+          if (stageId.includes(SECONDARY_PROFILE_SET_ID)) {
+            return PROFILE_SET_ANIMALS_2_ID;
+          } else if (stageId.includes(TERTIARY_PROFILE_SET_ID)) {
+            return PROFILE_SET_NATURE_ID;
+          }
+          return '';
+        };
+        if (userProfile.type === UserType.PARTICIPANT) {
+          items.push(
+            getNameFromPublicId(
+              [userProfile],
+              userProfile.publicId,
+              getProfileSetId(),
+            ),
+          );
+        } else {
+          // TODO: Adjust display for mediator profiles
+          items.push(`${userProfile.avatar} ${userProfile.name}`);
         }
-        if (userProfile.name) {
-          profileInfo.push(userProfile.name);
-        }
-        if (userProfile.pronouns) {
-          profileInfo.push(`(${userProfile.pronouns})`);
-        }
-        items.push(profileInfo.join(' '));
         break;
       case PromptItemType.STAGE_CONTEXT:
         items.push(
@@ -73,14 +187,47 @@ export async function getStructuredPrompt(
           ),
         );
         break;
+      case PromptItemType.GROUP:
+        const promptGroup = promptItem as PromptItemGroup;
+        let groupItems = promptGroup.items;
+
+        // Handle shuffling if configured
+        if (promptGroup.shuffleConfig?.shuffle) {
+          // Perform shuffle based on seed
+          let seedString = '';
+          switch (promptGroup.shuffleConfig.seed) {
+            case 'experiment':
+              seedString = experimentId;
+              break;
+            case 'cohort':
+              seedString = cohortId;
+              break;
+            case 'participant':
+              // Use participant's public ID for consistent per-participant shuffling
+              seedString = userProfile.publicId;
+              break;
+            case 'custom':
+              seedString = promptGroup.shuffleConfig.customSeed;
+              break;
+          }
+          groupItems = shuffleWithSeed(groupItems, seedString);
+        }
+
+        const groupText = await processPromptItems(
+          groupItems,
+          experimentId,
+          cohortId,
+          participantIds,
+          stageId,
+          userProfile,
+          agentConfig,
+        );
+        if (groupText) items.push(groupText);
+        break;
       default:
         break;
     }
   }
-
-  // Add structured output if relevant
-  items.push(makeStructuredOutputPrompt(promptConfig.structuredOutputConfig));
-
   return items.join('\n');
 }
 
@@ -91,61 +238,47 @@ export async function getStageContextForPrompt(
   currentStageId: string,
   item: StageContextPromptItem,
 ) {
-  // Get experiment
-  const experiment = await getFirestoreExperiment(experimentId);
-  const getStageList = () => {
-    const index = experiment.stageIds.findIndex((id) => id === currentStageId);
-    return experiment.stageIds.slice(0, index + 1);
-  };
-
-  // If stage ID is null, use all stages up to current stage
-  const stageList = item.stageId ? [item.stageId] : getStageList();
-
-  // Function to get context for given stage ID
-  const getContextForStage = async (stageId) => {
-    const stage = await getFirestoreStage(experimentId, stageId);
-    const textItems: string[] = [];
-    if (item.includePrimaryText) {
-      textItems.push(`- Stage description: ${stage.descriptions.primaryText}`);
-    }
-    if (item.includeInfoText) {
-      textItems.push(`- Additional info: ${stage.descriptions.infoText}`);
-    }
-    if (item.includeHelpText) {
-      textItems.push(`- If you need help: ${stage.descriptions.helpText}`);
-    }
-
-    // Include stage display with answers embedded, or just answers
-    if (item.includeStageDisplay) {
-      textItems.push(
-        await getStageDisplayForPrompt(
-          experimentId,
-          cohortId,
-          participantIds,
-          stage,
-          item.includeParticipantAnswers,
-        ),
-      );
-    } else if (item.includeParticipantAnswers) {
-      textItems.push(
-        await getStageAnswersForPrompt(
-          experimentId,
-          cohortId,
-          participantIds,
-          stage,
-        ),
-      );
-    }
-
-    return textItems.join('\n');
-  };
-
-  // For each stage in list, add context
-  const items: string[] = [];
-  for (const id of stageList) {
-    items.push(await getContextForStage(id));
+  // Get the specific stage
+  const stage = await getFirestoreStage(experimentId, item.stageId);
+  if (!stage) {
+    return '';
   }
-  return items.join('\n');
+
+  const textItems: string[] = [];
+
+  if (item.includePrimaryText) {
+    textItems.push(`- Stage description: ${stage.descriptions.primaryText}`);
+  }
+  if (item.includeInfoText) {
+    textItems.push(`- Additional info: ${stage.descriptions.infoText}`);
+  }
+  if (item.includeHelpText) {
+    textItems.push(`- If you need help: ${stage.descriptions.helpText}`);
+  }
+
+  // Include stage display with answers embedded, or just answers
+  if (item.includeStageDisplay) {
+    textItems.push(
+      await getStageDisplayForPrompt(
+        experimentId,
+        cohortId,
+        participantIds,
+        stage,
+        item.includeParticipantAnswers,
+      ),
+    );
+  } else if (item.includeParticipantAnswers) {
+    textItems.push(
+      await getStageAnswersForPrompt(
+        experimentId,
+        cohortId,
+        participantIds,
+        stage,
+      ),
+    );
+  }
+
+  return textItems.join('\n');
 }
 
 export async function getStageDisplayForPrompt(
@@ -167,7 +300,29 @@ export async function getStageDisplayForPrompt(
         cohortId,
         stage.id,
       );
-      return getChatPromptMessageHistory(messages, stage);
+      // List active participants in group chat
+      const getProfileSetId = () => {
+        if (stage.id.includes(SECONDARY_PROFILE_SET_ID)) {
+          return PROFILE_SET_ANIMALS_2_ID;
+        } else if (stage.id.includes(TERTIARY_PROFILE_SET_ID)) {
+          return PROFILE_SET_NATURE_ID;
+        }
+        return '';
+      };
+      const participants = (
+        await getFirestoreActiveParticipants(experimentId, cohortId, stage.id)
+      )
+        .map((participant) =>
+          getNameFromPublicId(
+            [participant],
+            participant.publicId,
+            getProfileSetId(),
+            true,
+            true,
+          ),
+        )
+        .join(', ');
+      return `Group chat participants: ${participants}\n${getChatPromptMessageHistory(messages, stage)}`;
     case StageKind.PRIVATE_CHAT:
       // Private chat should have exactly 1 participant
       if (participantIds.length === 0) return '';
@@ -218,9 +373,25 @@ export async function getStageDisplayForPrompt(
           : assetAllocationDisplay;
       }
       return assetAllocationDisplay;
+    case StageKind.SURVEY:
+    case StageKind.SURVEY_PER_PARTICIPANT:
+      const surveyDisplay = getSurveySummaryText(
+        stage as SurveyStageConfig | SurveyPerParticipantStageConfig,
+      );
+      if (includeAnswers) {
+        const surveyAnswers = await getStageAnswersForPrompt(
+          experimentId,
+          cohortId,
+          participantIds,
+          stage,
+        );
+        return surveyAnswers
+          ? `${surveyDisplay}\n\n${surveyAnswers}`
+          : surveyDisplay;
+      }
+      return surveyDisplay;
     default:
       // TODO: Set up display/answers for ranking stage
-      // TODO: Set up display/answers for survey stage
       return '';
   }
 }
@@ -231,17 +402,45 @@ export async function getStageAnswersForPrompt(
   participantIds: string[], // participant private IDs
   stage: StageConfig,
 ) {
-  // TODO: Return participant answer(s)
   switch (stage.kind) {
     case StageKind.ASSET_ALLOCATION:
-      const participantAnswers =
-        await getFirestoreAnswersForStage<AssetAllocationStageParticipantAnswer>(
+      const assetParticipantAnswers =
+        await getStageAnswersWithDisplayNames<AssetAllocationStageParticipantAnswer>(
           experimentId,
           cohortId,
           stage.id,
           participantIds,
         );
-      return getAssetAllocationAnswersText(participantAnswers);
+      return getAssetAllocationAnswersText(assetParticipantAnswers, true);
+    case StageKind.SURVEY:
+      const surveyParticipantAnswers =
+        await getStageAnswersWithDisplayNames<SurveyStageParticipantAnswer>(
+          experimentId,
+          cohortId,
+          stage.id,
+          participantIds,
+        );
+      const surveyStage = stage as SurveyStageConfig;
+      return getSurveyAnswersText(
+        surveyParticipantAnswers,
+        surveyStage.questions,
+        true, // Always show participant names
+      );
+    case StageKind.SURVEY_PER_PARTICIPANT:
+      const surveyPerParticipantAnswers =
+        await getStageAnswersWithDisplayNames<SurveyPerParticipantStageParticipantAnswer>(
+          experimentId,
+          cohortId,
+          stage.id,
+          participantIds,
+        );
+      const surveyPerParticipantStage =
+        stage as SurveyPerParticipantStageConfig;
+      return getSurveyAnswersText(
+        surveyPerParticipantAnswers,
+        surveyPerParticipantStage.questions,
+        true, // Always show participant names
+      );
     default:
       return '';
   }

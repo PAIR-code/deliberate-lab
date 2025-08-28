@@ -3,15 +3,7 @@ import {
   onDocumentUpdated,
 } from 'firebase-functions/v2/firestore';
 
-import {
-  ChipItem,
-  ChipStagePublicData,
-  ParticipantProfileExtended,
-  StageConfig,
-  StageKind,
-  createChipStageParticipantAnswer,
-  createPayoutStageParticipantAnswer,
-} from '@deliberation-lab/utils';
+import {ParticipantProfileExtended} from '@deliberation-lab/utils';
 import {startAgentParticipant} from '../agent_participant.utils';
 import {
   handleAutomaticTransfer,

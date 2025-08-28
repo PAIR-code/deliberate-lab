@@ -72,6 +72,7 @@ export function getAssetAllocationAnswersText(
     participantId: string;
     answer: AssetAllocationStageParticipantAnswer;
   }>,
+  alwaysShowParticipantNames = false,
 ): string {
   if (participantAnswers.length === 0) {
     return '';
@@ -79,9 +80,10 @@ export function getAssetAllocationAnswersText(
 
   const answerSummaries = participantAnswers.map(({participantId, answer}) => {
     const allocation = answer.allocation;
-    // Only include Participant IDs if there are multiple participants.
-    const prefix =
-      participantAnswers.length > 1 ? `Participant ${participantId}:\n` : '';
+    // Include participant names based on configuration or if multiple participants
+    const showNames =
+      alwaysShowParticipantNames || participantAnswers.length > 1;
+    const prefix = showNames ? `Participant ${participantId}:\n` : '';
 
     return `${prefix}${allocation.stockA.name}: ${allocation.stockA.percentage}%, ${allocation.stockB.name}: ${allocation.stockB.percentage}%`;
   });

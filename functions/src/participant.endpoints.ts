@@ -6,6 +6,7 @@ import {
   Experiment,
   ParticipantProfileExtended,
   ParticipantStatus,
+  ProfileType,
   RoleStagePublicData,
   StageKind,
   SurveyStagePublicData,
@@ -100,7 +101,26 @@ export const createParticipant = onCall(async (request) => {
         .get()
     ).data().count;
 
-    setProfile(numParticipants, participantConfig, data.isAnonymous);
+    // Set participant profile fields
+    if (data.isAnonymous) {
+      // Find the profile stage to determine which anonymous profile type to use
+      const stages = (
+        await app
+          .firestore()
+          .collection(`experiments/${data.experimentId}/stages`)
+          .get()
+      ).docs.map((doc) => doc.data());
+
+      const profileStage = stages.find(
+        (stage) => (stage as StageConfig).kind === StageKind.PROFILE,
+      ) as StageConfig | undefined;
+      const profileType =
+        profileStage?.profileType || ProfileType.ANONYMOUS_ANIMAL;
+
+      setProfile(numParticipants, participantConfig, true, profileType);
+    } else {
+      setProfile(numParticipants, participantConfig, false);
+    }
 
     // Set current stage ID in participant config
     participantConfig.currentStageId = experiment.stageIds[0];

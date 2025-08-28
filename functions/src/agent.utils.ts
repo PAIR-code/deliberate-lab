@@ -1,20 +1,14 @@
 import {Timestamp} from 'firebase-admin/firestore';
 import {
   AgentModelSettings,
-  AgentParticipantPromptConfig,
-  AgentPersonaConfig,
   APIKeyConfig,
   ApiKeyType,
   ModelGenerationConfig,
+  ModelResponse,
   ModelResponseStatus,
-  ParticipantProfileExtended,
-  ParticipantStatus,
-  StageConfig,
-  StageKind,
   StructuredOutputConfig,
   UserProfile,
   createModelLogEntry,
-  makeStructuredOutputPrompt,
 } from '@deliberation-lab/utils';
 
 import {getGeminiAPIResponse} from './api/gemini.api';
@@ -35,45 +29,96 @@ export async function processModelResponse(
   privateId: string,
   description: string,
   apiKeyConfig: APIKeyConfig,
-  prompt: string,
+  prompt: string | Array<{role: string; content: string; name?: string}>,
   modelSettings: AgentModelSettings,
   generationConfig: ModelGenerationConfig,
   structuredOutputConfig?: StructuredOutputConfig,
+  numRetries: number = 0,
 ): Promise<ModelResponse> {
-  const log = createModelLogEntry({
-    experimentId,
-    cohortId,
-    participantId,
-    stageId,
-    userProfile,
-    publicId,
-    privateId,
-    description,
-    prompt,
-    createdTimestamp: Timestamp.now(),
-  });
+  // Convert prompt to string for logging
+  const promptText =
+    typeof prompt === 'string'
+      ? prompt
+      : prompt
+          .map(
+            (m) =>
+              `${m.role.toUpperCase()}${m.name ? `(${m.name})` : ''}: ${m.content}`,
+          )
+          .join('\n');
 
   let response = {status: ModelResponseStatus.NONE};
-  try {
-    const queryTimestamp = Timestamp.now();
-    response = (await getAgentResponse(
-      apiKeyConfig,
-      prompt,
-      modelSettings,
-      generationConfig,
-      structuredOutputConfig,
-    )) as ModelResponse;
-    const responseTimestamp = Timestamp.now();
+  let lastError: Error | undefined;
+  const maxRetries = numRetries;
+  const initialDelay = 1000; // 1 second initial delay
 
-    log.response = response;
-    log.queryTimestamp = queryTimestamp;
-    log.responseTimestamp = responseTimestamp;
-  } catch (error) {
-    console.log(error);
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    // Create a new log entry for each attempt
+    const log = createModelLogEntry({
+      experimentId,
+      cohortId,
+      participantId,
+      stageId,
+      userProfile,
+      publicId,
+      privateId,
+      description:
+        attempt > 0 ? `${description} (retry ${attempt})` : description,
+      prompt: promptText,
+      createdTimestamp: Timestamp.now(),
+    });
+    try {
+      const queryTimestamp = Timestamp.now();
+      response = (await getAgentResponse(
+        apiKeyConfig,
+        prompt,
+        modelSettings,
+        generationConfig,
+        structuredOutputConfig,
+      )) as ModelResponse;
+      const responseTimestamp = Timestamp.now();
+
+      log.response = response;
+      log.queryTimestamp = queryTimestamp;
+      log.responseTimestamp = responseTimestamp;
+    } catch (error) {
+      lastError = error instanceof Error ? error : new Error(String(error));
+      console.log(error);
+
+      // Log the error response
+      log.response = {
+        status: ModelResponseStatus.UNKNOWN_ERROR,
+        errorMessage: lastError.message,
+      };
+      log.queryTimestamp = Timestamp.now();
+      log.responseTimestamp = Timestamp.now();
+    }
+
+    // Write log entry for every attempt
+    writeModelLogEntry(experimentId, log);
+
+    // Check if we should retry
+    const shouldRetry =
+      attempt < maxRetries &&
+      (response.status === ModelResponseStatus.PROVIDER_UNAVAILABLE_ERROR ||
+        response.status === ModelResponseStatus.INTERNAL_ERROR ||
+        response.status === ModelResponseStatus.UNKNOWN_ERROR);
+
+    if (shouldRetry) {
+      const delay = initialDelay * Math.pow(2, attempt);
+      console.log(
+        `API error (${response.status}), retrying after ${delay}ms (attempt ${attempt + 1}/${maxRetries})`,
+      );
+      await new Promise((resolve) => setTimeout(resolve, delay));
+    } else {
+      // Success or non-retryable error, exit loop
+      break;
+    }
   }
 
-  // Write log
-  writeModelLogEntry(experimentId, log);
+  // If we exhausted all retries with an error, log it
+  if (lastError && response.status === ModelResponseStatus.NONE) {
+    console.error(`Failed after ${numRetries} retries:`, lastError);
+  }
 
   return response;
 }
@@ -81,7 +126,7 @@ export async function processModelResponse(
 // TODO: Rename to getAPIResponse?
 export async function getAgentResponse(
   apiKeyConfig: APIKeyConfig,
-  prompt: string,
+  prompt: string | Array<{role: string; content: string; name?: string}>,
   modelSettings: AgentModelSettings,
   generationConfig: ModelGenerationConfig,
   structuredOutputConfig?: StructuredOutputConfig,
@@ -109,12 +154,13 @@ export async function getAgentResponse(
       apiKeyConfig,
       modelSettings.modelName,
       prompt,
+      generationConfig,
     );
   } else {
     response = {
       status: ModelResponseStatus.CONFIG_ERROR,
       generationConfig,
-      errorMessage: `Error: invalid apiKey type: ${apiKeyConfig.ollamaApiKey.apiKey}`,
+      errorMessage: `Error: invalid apiKey type`,
     };
   }
 
@@ -130,7 +176,7 @@ export async function getAgentResponse(
 export async function getGeminiResponse(
   apiKeyConfig: APIKeyConfig,
   modelName: string,
-  prompt: string,
+  prompt: string | Array<{role: string; content: string; name?: string}>,
   generationConfig: ModelGenerationConfig,
   structuredOutputConfig?: StructuredOutputConfig,
 ): Promise<ModelResponse> {
@@ -146,8 +192,9 @@ export async function getGeminiResponse(
 export async function getOpenAIAPIResponse(
   apiKeyConfig: APIKeyConfig,
   model: string,
-  prompt: string,
+  prompt: string | Array<{role: string; content: string; name?: string}>,
   generationConfig: ModelGenerationConfig,
+  structuredOutputConfig?: StructuredOutputConfig,
 ): Promise<ModelResponse> {
   return await getOpenAIAPIChatCompletionResponse(
     apiKeyConfig.openAIApiKey?.apiKey || '',
@@ -155,17 +202,20 @@ export async function getOpenAIAPIResponse(
     model,
     prompt,
     generationConfig,
+    structuredOutputConfig,
   );
 }
 
 export async function getOllamaResponse(
   apiKeyConfig: APIKeyConfig,
   modelName: string,
-  prompt: string,
+  prompt: string | Array<{role: string; content: string; name?: string}>,
   generationConfig: ModelGenerationConfig,
 ): Promise<ModelResponse> {
+  // Convert string to array format for ollamaChat
+  const messages = typeof prompt === 'string' ? [prompt] : prompt;
   return await ollamaChat(
-    [prompt],
+    messages,
     modelName,
     apiKeyConfig.ollamaApiKey,
     generationConfig,

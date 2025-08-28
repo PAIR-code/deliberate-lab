@@ -61,6 +61,8 @@ export interface ModelGenerationConfig {
   // many reasoning tokens in the budget.
   reasoningBudget?: number;
   includeReasoning?: boolean;
+  // Gemini-only: Disable safety filters (uses BLOCK_NONE instead of BLOCK_ONLY_HIGH)
+  disableSafetyFilters?: boolean;
 }
 
 /** Model settings for a specific agent. */
@@ -94,6 +96,8 @@ export interface AgentChatSettings {
   // Maximum total responses agent can make during the chat conversation
   // (or null if no max)
   maxResponses: number | null;
+  // Initial message to send when the conversation begins
+  initialMessage: string;
 }
 
 /** Specifies how prompt should be sent to API. */
@@ -130,6 +134,8 @@ export interface BaseAgentPersonaConfig {
   id: string;
   // Viewable only to experimenters
   name: string;
+  // Viewable only to experimenters
+  description: string;
   // Agent persona type
   type: AgentPersonaType;
   // If true, add to cohort on cohort creation
@@ -173,7 +179,7 @@ export interface AgentParticipantTemplate {
 // ************************************************************************* //
 export const DEFAULT_AGENT_API_TYPE = ApiKeyType.GEMINI_API_KEY;
 
-export const DEFAULT_AGENT_API_MODEL = 'gemini-2.5-pro';
+export const DEFAULT_AGENT_API_MODEL = 'gemini-2.5-flash';
 
 export const DEFAULT_AGENT_MODEL_SETTINGS: AgentModelSettings = {
   apiType: DEFAULT_AGENT_API_TYPE,
@@ -208,6 +214,7 @@ export function createModelGenerationConfig(
     customRequestBodyFields: config.customRequestBodyFields ?? [],
     reasoningBudget: config.reasoningBudget,
     includeReasoning: config.includeReasoning ?? true,
+    disableSafetyFilters: config.disableSafetyFilters ?? false,
   };
 }
 
@@ -219,6 +226,7 @@ export function createAgentChatSettings(
     minMessagesBeforeResponding: config.minMessagesBeforeResponding ?? 0,
     canSelfTriggerCalls: config.canSelfTriggerCalls ?? false,
     maxResponses: config.maxResponses ?? 100,
+    initialMessage: config.initialMessage ?? '',
   };
 }
 
@@ -260,14 +268,15 @@ export function createAgentMediatorPersonaConfig(
   const type = AgentPersonaType.MEDIATOR;
   return {
     id: config.id ?? generateId(),
-    name: config.name ?? '',
+    name: config.name ?? 'Agent Mediator',
+    description: config.description ?? '',
     type: AgentPersonaType.MEDIATOR,
     isDefaultAddToCohort: config.isDefaultAddToCohort ?? true,
     defaultProfile:
       config.defaultProfile ??
       createParticipantProfileBase({
         name: 'Mediator',
-        avatar: '🙋',
+        avatar: '🤖',
       }),
     defaultModelSettings:
       config.defaultModelSettings ?? createAgentModelSettings(),
@@ -280,13 +289,14 @@ export function createAgentParticipantPersonaConfig(
   return {
     id: config.id ?? generateId(),
     name: config.name ?? 'Agent Participant',
+    description: config.description ?? '',
     type: AgentPersonaType.PARTICIPANT,
     isDefaultAddToCohort: config.isDefaultAddToCohort ?? false,
     defaultProfile:
       config.defaultProfile ??
       createParticipantProfileBase({
-        name: '',
-        avatar: '',
+        name: 'Participant',
+        avatar: '🙋',
       }),
     defaultModelSettings:
       config.defaultModelSettings ?? createAgentModelSettings(),

@@ -1,9 +1,12 @@
 import {
-  GoogleGenerativeAI,
+  ApiError,
+  GoogleGenAI,
   GenerationConfig,
+  GenerateContentConfig,
   HarmCategory,
   HarmBlockThreshold,
-} from '@google/generative-ai';
+  SafetySetting,
+} from '@google/genai';
 import {
   ModelGenerationConfig,
   StructuredOutputType,
@@ -15,30 +18,36 @@ import {
   addParsedModelResponse,
 } from '@deliberation-lab/utils';
 
-const GEMINI_DEFAULT_MODEL = 'gemini-2.5-pro';
+const GEMINI_DEFAULT_MODEL = 'gemini-2.5-flash';
 const DEFAULT_FETCH_TIMEOUT = 300 * 1000; // This is the Chrome default
 const MAX_TOKENS_FINISH_REASON = 'MAX_TOKENS';
 const AUTHENTICATION_FAILURE_ERROR_CODE = 403;
 const QUOTA_ERROR_CODE = 429;
 
-const SAFETY_SETTINGS = [
-  {
-    category: HarmCategory.HARM_CATEGORY_HARASSMENT,
-    threshold: HarmBlockThreshold.BLOCK_ONLY_HIGH,
-  },
-  {
-    category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT,
-    threshold: HarmBlockThreshold.BLOCK_ONLY_HIGH,
-  },
-  {
-    category: HarmCategory.HARM_CATEGORY_HATE_SPEECH,
-    threshold: HarmBlockThreshold.BLOCK_ONLY_HIGH,
-  },
-  {
-    category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT,
-    threshold: HarmBlockThreshold.BLOCK_ONLY_HIGH,
-  },
-];
+const getSafetySettings = (disableSafetyFilters = false): SafetySetting[] => {
+  const threshold = disableSafetyFilters
+    ? HarmBlockThreshold.BLOCK_NONE
+    : HarmBlockThreshold.BLOCK_ONLY_HIGH;
+
+  return [
+    {
+      category: HarmCategory.HARM_CATEGORY_HARASSMENT,
+      threshold: threshold,
+    },
+    {
+      category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT,
+      threshold: threshold,
+    },
+    {
+      category: HarmCategory.HARM_CATEGORY_HATE_SPEECH,
+      threshold: threshold,
+    },
+    {
+      category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT,
+      threshold: threshold,
+    },
+  ];
+};
 
 function makeStructuredOutputSchema(schema: StructuredOutputSchema): object {
   const typeMap: {[key in StructuredOutputDataType]?: string} = {
@@ -109,23 +118,77 @@ function makeStructuredOutputGenerationConfig(
   };
 }
 
+/**
+ * Convert generic message format to Gemini-specific format.
+ * Extracts system messages to use as systemInstruction.
+ * @returns Object with contents array and optional systemInstruction
+ */
+function convertToGeminiFormat(
+  prompt: string | Array<{role: string; content: string; name?: string}>,
+): {
+  contents: Array<{role: string; parts: Array<{text: string}>}>;
+  systemInstruction?: string;
+} {
+  if (typeof prompt === 'string') {
+    return {
+      contents: [{role: 'user', parts: [{text: prompt}]}],
+      systemInstruction: undefined,
+    };
+  }
+
+  // Extract system messages for systemInstruction
+  const systemMessages = prompt.filter((msg) => msg.role === 'system');
+  const conversationMessages = prompt.filter((msg) => msg.role !== 'system');
+
+  // Combine system messages into systemInstruction
+  const systemInstruction =
+    systemMessages.length > 0
+      ? systemMessages.map((msg) => msg.content).join('\n\n')
+      : undefined;
+
+  // Convert conversation messages to Gemini format
+  let contents = conversationMessages.map((msg) => ({
+    role: msg.role === 'assistant' ? 'model' : 'user',
+    parts: [{text: msg.content}],
+  }));
+
+  // If no conversation messages, add an empty user message
+  if (contents.length === 0) {
+    contents = [{role: 'user', parts: [{text: ''}]}];
+  }
+
+  return {contents, systemInstruction};
+}
+
 /** Makes Gemini API call. */
 export async function callGemini(
   apiKey: string,
-  prompt: string,
+  prompt: string | Array<{role: string; content: string; name?: string}>,
   generationConfig: GenerationConfig,
   modelName = GEMINI_DEFAULT_MODEL,
   parseResponse = false, // parse if structured output
+  safetySettings?: SafetySetting[],
 ) {
-  const genAI = new GoogleGenerativeAI(apiKey);
-  const model = genAI.getGenerativeModel({
-    model: modelName,
-    generationConfig,
-    safetySettings: SAFETY_SETTINGS,
-  });
+  const genAI = new GoogleGenAI({apiKey});
 
-  const result = await model.generateContent(prompt);
-  const response = await result.response;
+  // Convert to Gemini format
+  const {contents, systemInstruction} = convertToGeminiFormat(prompt);
+
+  // Build config with safety settings and system instruction
+  const config: GenerateContentConfig = {
+    ...generationConfig,
+    safetySettings: safetySettings,
+  };
+
+  if (systemInstruction) {
+    config.systemInstruction = systemInstruction;
+  }
+
+  const response = await genAI.models.generateContent({
+    model: modelName,
+    contents: contents,
+    config: config,
+  });
 
   if (response.promptFeedback) {
     return {
@@ -138,7 +201,7 @@ export async function callGemini(
     };
   }
 
-  if (!response.candidates) {
+  if (!response.candidates || response.candidates.length === 0) {
     return {
       status: ModelResponseStatus.UNKNOWN_ERROR,
       generationConfig,
@@ -157,8 +220,8 @@ export async function callGemini(
     };
   }
 
-  let text = null;
-  let reasoning = null;
+  let text: string | undefined = undefined;
+  let reasoning: string | undefined = undefined;
 
   for (const part of response.candidates[0].content.parts) {
     if (!part.text) {
@@ -188,25 +251,30 @@ export async function callGemini(
 export async function getGeminiAPIResponse(
   apiKey: string,
   modelName: string,
-  promptText: string,
+  promptText: string | Array<{role: string; content: string; name?: string}>,
   generationConfig: ModelGenerationConfig,
-  structuredOutputConfig?: StructuredOutputConfig = null,
+  structuredOutputConfig?: StructuredOutputConfig,
 ): Promise<ModelResponse> {
+  // Extract disableSafetyFilters setting from generationConfig
+  const disableSafetyFilters = generationConfig.disableSafetyFilters ?? false;
+
+  // Get custom fields for the API request
   const customFields = Object.fromEntries(
     generationConfig.customRequestBodyFields.map((field) => [
       field.name,
       field.value,
     ]),
   );
+
   let structuredOutputGenerationConfig;
   try {
     structuredOutputGenerationConfig = makeStructuredOutputGenerationConfig(
       structuredOutputConfig,
     );
-  } catch (error: Error) {
+  } catch (error: unknown) {
     return {
       status: ModelResponseStatus.INTERNAL_ERROR,
-      errorMessage: error.message,
+      errorMessage: error instanceof Error ? error.message : String(error),
     };
   }
   const thinkingConfig = {
@@ -226,6 +294,8 @@ export async function getGeminiAPIResponse(
     ...customFields,
   };
 
+  const safetySettings = getSafetySettings(disableSafetyFilters);
+
   try {
     return await callGemini(
       apiKey,
@@ -233,23 +303,24 @@ export async function getGeminiAPIResponse(
       geminiConfig,
       modelName,
       structuredOutputConfig?.enabled,
+      safetySettings,
     );
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (error: any) {
-    // The GenerativeAI client doesn't return responses in a parseable format,
-    // so try to parse the output string looking for the HTTP status code.
+    if (!(error instanceof ApiError)) {
+      return {
+        status: ModelResponseStatus.UNKNOWN_ERROR,
+        generationConfig: geminiConfig,
+        errorMessage: JSON.stringify(error),
+      };
+    }
     let returnStatus = ModelResponseStatus.UNKNOWN_ERROR;
-    // Match a status code and message between brackets, e.g. "[403 Forbidden]".
-    const statusMatch = error.message.match(/\[(\d{3})[\s\w]*\]/);
-    if (statusMatch) {
-      const statusCode = parseInt(statusMatch[1]);
-      if (statusCode == AUTHENTICATION_FAILURE_ERROR_CODE) {
-        returnStatus = ModelResponseStatus.AUTHENTICATION_ERROR;
-      } else if (statusCode == QUOTA_ERROR_CODE) {
-        returnStatus = ModelResponseStatus.QUOTA_ERROR;
-      } else if (statusCode >= 500 && statusCode < 600) {
-        returnStatus = ModelResponseStatus.PROVIDER_UNAVAILABLE_ERROR;
-      }
+    if (error.status == AUTHENTICATION_FAILURE_ERROR_CODE) {
+      returnStatus = ModelResponseStatus.AUTHENTICATION_ERROR;
+    } else if (error.status == QUOTA_ERROR_CODE) {
+      returnStatus = ModelResponseStatus.QUOTA_ERROR;
+    } else if (error.status >= 500 && error.status < 600) {
+      returnStatus = ModelResponseStatus.PROVIDER_UNAVAILABLE_ERROR;
     }
     return {
       status: returnStatus,

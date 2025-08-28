@@ -7,11 +7,14 @@ import {customElement} from 'lit/decorators.js';
 
 import {core} from '../../core/core';
 import {AuthService} from '../../services/auth.service';
+import {ExperimentEditor} from '../../services/experiment.editor';
 import {HomeService} from '../../services/home.service';
 import {Pages, RouterService} from '../../services/router.service';
 
 import {Experiment, Visibility} from '@deliberation-lab/utils';
 import {convertExperimentToGalleryItem} from '../../shared/experiment.utils';
+import {getQuickstartGroupChatTemplate} from '../../shared/templates/quickstart_group_chat';
+import {getQuickstartPrivateChatTemplate} from '../../shared/templates/quickstart_private_chat';
 
 import {styles} from './home_gallery.scss';
 
@@ -123,6 +126,7 @@ export class HomeGalleryTabs extends MobxLitElement {
 export class QuickStartGallery extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
 
+  private readonly experimentEditor = core.getService(ExperimentEditor);
   private readonly routerService = core.getService(RouterService);
 
   override render() {
@@ -130,13 +134,37 @@ export class QuickStartGallery extends MobxLitElement {
       <div class="quick-start-wrapper">
         <div class="gallery-wrapper">
           <div
-            class="quick-start-card"
+            class="quick-start-card blank"
             @click=${() => {
               this.routerService.navigate(Pages.EXPERIMENT_CREATE);
             }}
           >
-            <pr-icon icon="experiment" color="neutral" size="large"></pr-icon>
-            <div>Start new experiment</div>
+            <pr-icon icon="add_2" color="neutral" size="large"></pr-icon>
+            <div>Build experiment from scratch</div>
+          </div>
+          <div
+            class="quick-start-card"
+            @click=${() => {
+              this.routerService.navigate(Pages.EXPERIMENT_CREATE);
+              this.experimentEditor.loadTemplate(
+                getQuickstartGroupChatTemplate(),
+              );
+            }}
+          >
+            <pr-icon icon="groups" color="neutral" size="large"></pr-icon>
+            <div>Group chat with agent mediator</div>
+          </div>
+          <div
+            class="quick-start-card"
+            @click=${() => {
+              this.routerService.navigate(Pages.EXPERIMENT_CREATE);
+              this.experimentEditor.loadTemplate(
+                getQuickstartPrivateChatTemplate(),
+              );
+            }}
+          >
+            <pr-icon icon="3p" color="neutral" size="large"></pr-icon>
+            <div>Private chat with agent</div>
           </div>
         </div>
       </div>

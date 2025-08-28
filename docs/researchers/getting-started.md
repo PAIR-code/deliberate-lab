@@ -7,8 +7,6 @@ Welcome to Deliberate Lab! To get started, you should have a website
 link to the platform. If you're using the Google-hosted platform,
 [go here](https://deliberate-lab.appspot.com/).
 
-> 🎥 [View video tutorials for getting started](https://www.youtube.com/playlist?list=PLpC76pxkGLrBb5R7NViRloBzUkn8UQbr0)
-
 > If you're setting up your own deployment of the platform,
 see the Developers section in the sidebar.
 
@@ -17,27 +15,38 @@ see the Developers section in the sidebar.
 > A quick overview of concepts/terms referenced across the platform
 and this documentation
 
-In Deliberation Lab, `experimenters` (people who can view/edit experiments
-on the platform) can create `experiments`, which include a list of
-`experiment stages` (or `stages`). Each stage can be configured to include
-custom content and options; the experiment also has some top-level settings
-(e.g., Prolific integration).
+In Deliberation Lab, experimenters can create `experiments`, which are
+comprised of an ordered set of `stages`.
+Each stage can be configured to include custom content and options.
 
-<!-- TODO: Add screenshot -->
+<img
+  src="../assets/images/deliberate-lab-experiment-editor-stages.png"
+  alt="Screenshot of Deliberate Lab experiment editor with stages"
+/>
 
-To run an experiment, experimenters can create `cohorts`, which is a
+While setting up your experiment, you can also adjust settings for
+visibility, Prolific integration, etc.
+
+### Cohorts
+
+While running an experiment, experimenters can create `cohorts`, which is a
 bundle of participants who can interact with each other during the experiment.
 
-> Example: if running an experiment where two people play chess with each
-other, you might create 10 cohorts and have 2 participants in each cohort.
+<img
+  src="../assets/images/deliberate-lab-example-tv-debate.png"
+  alt="Screenshot of Deliberate Lab experiment editor with stages"
+/>
+
+> Example: if running an experiment where people engage in a group chat,
+you might create 10 cohorts in order to have 10 separate group chats.
 All data can be downloaded together at the experiment (top) level.
 
-Finally, participants can be manually added to cohorts (via experimenter
-dashboard), or they can dynamically join from a cohort landing page.
+Participants can be manually added to cohorts (via experimenter
+dashboard), or they can dynamically join from a cohort landing URL.
+
 Experimenters have the ability to transfer participants to different cohorts
-(within the same experimenter) or "boot" (kick out) participants from
-the cohort/experiment. (Additional participant management options
-are covered later in this tutorial.)
+(within the same experiment) or "boot" (kick out) participants from
+the cohort/experiment.
 
 ## Logging in
 

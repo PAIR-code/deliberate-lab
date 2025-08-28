@@ -5,6 +5,7 @@ import '../../pair-components/textarea';
 import '@material/web/checkbox/checkbox.js';
 
 import './structured_prompt_editor';
+import {renderShuffleIndicator} from './structured_prompt_editor';
 
 import {MobxLitElement} from '@adobe/lit-mobx';
 import {CSSResultGroup, html, nothing} from 'lit';
@@ -21,6 +22,7 @@ import {
   ChatMediatorStructuredOutputConfig,
   ChatPromptConfig,
   PromptItem,
+  PromptItemGroup,
   PromptItemType,
   StageConfig,
   StageKind,
@@ -30,6 +32,7 @@ import {
   createDefaultPromptFromText,
   makeStructuredOutputPrompt,
   structuredOutputEnabled,
+  TextPromptItem,
 } from '@deliberation-lab/utils';
 import {LLM_AGENT_AVATARS} from '../../shared/constants';
 import {getHashBasedColor} from '../../shared/utils';
@@ -63,20 +66,18 @@ export class EditorComponent extends MobxLitElement {
       stageConfig.kind !== StageKind.CHAT &&
       stageConfig.kind !== StageKind.PRIVATE_CHAT
     ) {
-      if (this.agent.type === AgentPersonaType.PARTICIPANT) {
-        return html`
-          <div class="section">
-            <div class="section-title">
-              ${this.stageNamePrefix}${stageConfig.name}
-            </div>
-            <div class="description">
-              No prompt customizations currently available for this stage.
-            </div>
+      return html`
+        <div class="section">
+          <div class="section-title">
+            ${this.stageNamePrefix}${stageConfig.name}
           </div>
-        `;
-      } else {
-        return nothing;
-      }
+          <div class="description">
+            ${this.agent.type === AgentPersonaType.PARTICIPANT
+              ? 'No prompt customizations currently available for this stage.'
+              : 'Agent mediators do not interact with this stage.'}
+          </div>
+        </div>
+      `;
     }
 
     const promptConfig = this.getPrompt();
@@ -101,7 +102,9 @@ export class EditorComponent extends MobxLitElement {
 
   private renderAddButton() {
     return html`
-      <pr-button variant="tonal" @click=${this.addPrompt}>Add prompt</pr-button>
+      <pr-button color="error" variant="tonal" @click=${this.addPrompt}>
+        Add prompt
+      </pr-button>
     `;
   }
 
@@ -177,6 +180,8 @@ export class EditorComponent extends MobxLitElement {
           ${this.renderPromptPreview(promptConfig)}
         </div>
         <div class="divider"></div>
+        ${this.renderAgentChatSettings(this.agent, promptConfig)}
+        <div class="divider"></div>
         ${this.renderAgentSamplingParameters(this.agent, promptConfig)}
         <div class="divider"></div>
         ${this.renderAgentCustomRequestBodyFields(this.agent, promptConfig)}
@@ -223,13 +228,24 @@ export class EditorComponent extends MobxLitElement {
   }
 
   private renderPromptPreview(agentPromptConfig: ChatPromptConfig) {
-    const getPromptItems = () => {
-      return agentPromptConfig.prompt.map((item) =>
-        item.type === PromptItemType.TEXT
-          ? html`<div>${item.text}</div>`
-          : html`<div class="chip tertiary">${item.type}</div>`,
-      );
+    const renderPromptItem = (item: PromptItem): unknown => {
+      switch (item.type) {
+        case PromptItemType.TEXT:
+          const textItem = item as TextPromptItem;
+          return html`<div>${textItem.text}</div>`;
+        case PromptItemType.GROUP:
+          const group = item as PromptItemGroup;
+          // prettier-ignore
+          return html`<details class="prompt-group-preview" open><summary class="chip tertiary">GROUP: ${group.title} ${renderShuffleIndicator(group.shuffleConfig)}</summary><div class="chip-collapsible">${group.items.map((subItem) => renderPromptItem(subItem))}</div></details>`;
+        default:
+          return html`<div class="chip tertiary">${item.type}</div>`;
+      }
     };
+
+    const getPromptItems = () => {
+      return agentPromptConfig.prompt.map((item) => renderPromptItem(item));
+    };
+
     const getStructuredOutput = () => {
       const config = agentPromptConfig.structuredOutputConfig;
       if (structuredOutputEnabled(config) && config.schema) {
@@ -242,6 +258,186 @@ export class EditorComponent extends MobxLitElement {
       <div class="code-wrapper">
         <div class="field-title">Prompt preview</div>
         <pre><code>${getPromptItems()}${getStructuredOutput()}</code></pre>
+      </div>
+    `;
+  }
+
+  private renderAgentChatSettings(
+    agent: AgentPersonaConfig,
+    agentPromptConfig: ChatPromptConfig,
+  ) {
+    const chatSettings = agentPromptConfig.chatSettings;
+
+    const updateInitialMessage = (e: InputEvent) => {
+      const initialMessage = (e.target as HTMLTextAreaElement).value;
+      this.updatePrompt({
+        chatSettings: {
+          ...agentPromptConfig.chatSettings,
+          initialMessage,
+        },
+      });
+    };
+
+    const updateWordsPerMinute = (e: InputEvent) => {
+      const value = (e.target as HTMLInputElement).value;
+      const wordsPerMinute = value === '' ? null : Number(value);
+      this.updatePrompt({
+        chatSettings: {
+          ...agentPromptConfig.chatSettings,
+          wordsPerMinute,
+        },
+      });
+    };
+
+    const updateMinMessagesBeforeResponding = (e: InputEvent) => {
+      const minMessagesBeforeResponding = Number(
+        (e.target as HTMLInputElement).value,
+      );
+      if (!isNaN(minMessagesBeforeResponding)) {
+        this.updatePrompt({
+          chatSettings: {
+            ...agentPromptConfig.chatSettings,
+            minMessagesBeforeResponding,
+          },
+        });
+      }
+    };
+
+    const updateCanSelfTriggerCalls = (e: Event) => {
+      const canSelfTriggerCalls = (e.target as HTMLInputElement).checked;
+      this.updatePrompt({
+        chatSettings: {
+          ...agentPromptConfig.chatSettings,
+          canSelfTriggerCalls,
+        },
+      });
+    };
+
+    const updateMaxResponses = (e: InputEvent) => {
+      const value = (e.target as HTMLInputElement).value;
+      const maxResponses = value === '' ? null : Number(value);
+      this.updatePrompt({
+        chatSettings: {
+          ...agentPromptConfig.chatSettings,
+          maxResponses,
+        },
+      });
+    };
+
+    const updateNumRetries = (e: InputEvent) => {
+      const value = Number((e.target as HTMLInputElement).value);
+      if (!isNaN(value) && value >= 0 && value <= 5) {
+        this.updatePrompt({
+          numRetries: value,
+        });
+      }
+    };
+
+    return html`
+      <div class="section">
+        <div class="section-header">
+          <div class="section-title">Chat settings</div>
+          <div class="description">
+            Configure how this agent participates in the chat.
+          </div>
+        </div>
+        <div class="field">
+          <label for="initialMessage">Initial message</label>
+          <div class="description">
+            Message sent automatically when the conversation begins.
+          </div>
+          <pr-textarea
+            variant="outlined"
+            placeholder="e.g., Hello! I'm here to help you with..."
+            .value=${chatSettings.initialMessage}
+            ?disabled=${!this.experimentEditor.isCreator}
+            @input=${updateInitialMessage}
+          >
+          </pr-textarea>
+        </div>
+        <div class="field">
+          <label for="wordsPerMinute">Typing speed (words per minute)</label>
+          <div class="description">
+            Agent's typing speed. Leave empty for instant messages.
+          </div>
+          <div class="number-input">
+            <input
+              .disabled=${!this.experimentEditor.isCreator}
+              type="number"
+              min="1"
+              .value=${chatSettings.wordsPerMinute ?? ''}
+              placeholder="Instant"
+              @input=${updateWordsPerMinute}
+            />
+          </div>
+        </div>
+        <div class="field">
+          <label for="minMessagesBeforeResponding"
+            >Minimum messages before responding</label
+          >
+          <div class="description">
+            Number of chat messages that must exist before the agent can
+            respond.
+          </div>
+          <div class="number-input">
+            <input
+              .disabled=${!this.experimentEditor.isCreator}
+              type="number"
+              min="0"
+              .value=${chatSettings.minMessagesBeforeResponding}
+              @input=${updateMinMessagesBeforeResponding}
+            />
+          </div>
+        </div>
+        <div class="checkbox-wrapper">
+          <md-checkbox
+            touch-target="wrapper"
+            ?checked=${chatSettings.canSelfTriggerCalls}
+            ?disabled=${!this.experimentEditor.isCreator}
+            @change=${updateCanSelfTriggerCalls}
+          >
+          </md-checkbox>
+          <div>
+            Can respond multiple times in a row
+            <span class="small">
+              (Agent's own messages can trigger new responses)
+            </span>
+          </div>
+        </div>
+        <div class="field">
+          <label for="maxResponses">Maximum responses</label>
+          <div class="description">
+            Maximum total responses during the chat. Leave empty for no limit.
+          </div>
+          <div class="number-input">
+            <input
+              .disabled=${!this.experimentEditor.isCreator}
+              type="number"
+              min="1"
+              .value=${chatSettings.maxResponses ?? ''}
+              placeholder="No limit"
+              @input=${updateMaxResponses}
+            />
+          </div>
+        </div>
+        <div class="field">
+          <label for="numRetries">API retry attempts</label>
+          <div class="description">
+            Number of times to retry API calls if they fail with 500 errors.
+            Uses exponential backoff.
+          </div>
+          <div class="number-input">
+            <input
+              .disabled=${!this.experimentEditor.isCreator}
+              type="number"
+              min="0"
+              max="5"
+              .value=${agentPromptConfig.numRetries ?? 0}
+              placeholder="0"
+              @input=${updateNumRetries}
+            />
+          </div>
+        </div>
       </div>
     `;
   }
@@ -295,6 +491,16 @@ export class EditorComponent extends MobxLitElement {
           },
         });
       }
+    };
+
+    const updateDisableSafetyFilters = (e: Event) => {
+      const disableSafetyFilters = (e.target as HTMLInputElement).checked;
+      this.updatePrompt({
+        generationConfig: {
+          ...agentPromptConfig.generationConfig,
+          disableSafetyFilters,
+        },
+      });
     };
 
     return html`
@@ -376,6 +582,22 @@ export class EditorComponent extends MobxLitElement {
               .value=${generationConfig.presencePenalty}
               @input=${updatePresencePenalty}
             />
+          </div>
+        </div>
+        <div class="checkbox-wrapper">
+          <md-checkbox
+            touch-target="wrapper"
+            ?checked=${generationConfig.disableSafetyFilters ?? false}
+            ?disabled=${!this.experimentEditor.isCreator}
+            @change=${updateDisableSafetyFilters}
+          >
+          </md-checkbox>
+          <div>
+            Disable safety filters
+            <span class="small">
+              (Only supported for Gemini. Uses BLOCK_NONE threshold instead of
+              BLOCK_ONLY_HIGH)
+            </span>
           </div>
         </div>
       </div>
@@ -514,7 +736,7 @@ export class EditorComponent extends MobxLitElement {
       const appendToPrompt = !config.appendToPrompt;
       updateConfig({appendToPrompt});
     };
-    const updateType = (e: InputEvent) => {
+    const updateType = (e: Event) => {
       const type = (e.target as HTMLSelectElement)
         .value as StructuredOutputType;
       updateConfig({type});
@@ -533,17 +755,25 @@ export class EditorComponent extends MobxLitElement {
           </div>
           <select
             id="structuredOutputType"
-            .selected=${config.type}
             @change=${updateType}
             ?disabled=${!this.experimentEditor.canEditStages}
           >
-            <option value="${StructuredOutputType.NONE}">
+            <option
+              value="${StructuredOutputType.NONE}"
+              ?selected=${config.type === StructuredOutputType.NONE}
+            >
               No output forcing
             </option>
-            <option value="${StructuredOutputType.JSON_FORMAT}">
+            <option
+              value="${StructuredOutputType.JSON_FORMAT}"
+              ?selected=${config.type === StructuredOutputType.JSON_FORMAT}
+            >
               Force JSON output
             </option>
-            <option value="${StructuredOutputType.JSON_SCHEMA}">
+            <option
+              value="${StructuredOutputType.JSON_SCHEMA}"
+              ?selected=${config.type === StructuredOutputType.JSON_SCHEMA}
+            >
               Force JSON output with schema
             </option>
           </select>
@@ -701,11 +931,32 @@ export class EditorComponent extends MobxLitElement {
       const name = (e.target as HTMLTextAreaElement).value;
       const schema = agentPromptConfig.structuredOutputConfig.schema;
       if (schema && schema.properties) {
+        const oldName = schema.properties[fieldIndex].name;
         schema.properties[fieldIndex] = {
           name,
           schema: schema.properties[fieldIndex].schema,
         };
-        updateConfig({schema});
+
+        // Update field references if the renamed field was being used
+        // Only update if oldName is not empty (to avoid binding new fields to cleared references)
+        const config = agentPromptConfig.structuredOutputConfig;
+        const updates: Partial<ChatMediatorStructuredOutputConfig> = {schema};
+
+        if (oldName !== '') {
+          const fieldRefs = [
+            'shouldRespondField',
+            'messageField',
+            'explanationField',
+            'readyToEndField',
+          ] as const;
+          fieldRefs.forEach((ref) => {
+            if (config[ref] === oldName) {
+              updates[ref] = name;
+            }
+          });
+        }
+
+        updateConfig(updates);
       }
     };
 
@@ -737,11 +988,29 @@ export class EditorComponent extends MobxLitElement {
     const deleteField = () => {
       const schema = agentPromptConfig.structuredOutputConfig.schema;
       if (schema && schema.properties) {
+        const deletedFieldName = schema.properties[fieldIndex].name;
         schema.properties = [
           ...schema.properties.slice(0, fieldIndex),
           ...schema.properties.slice(fieldIndex + 1),
         ];
-        updateConfig({schema});
+
+        // Clear field references if the deleted field was being used
+        const config = agentPromptConfig.structuredOutputConfig;
+        const updates: Partial<ChatMediatorStructuredOutputConfig> = {schema};
+
+        const fieldRefs = [
+          'shouldRespondField',
+          'messageField',
+          'explanationField',
+          'readyToEndField',
+        ] as const;
+        fieldRefs.forEach((ref) => {
+          if (config[ref] === deletedFieldName) {
+            updates[ref] = '';
+          }
+        });
+
+        updateConfig(updates);
       }
     };
 

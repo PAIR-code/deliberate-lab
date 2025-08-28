@@ -4,6 +4,12 @@ import {
   sortParticipantsByRandomProfile,
 } from '../participant';
 import {
+  SECONDARY_PROFILE_SET_ID,
+  TERTIARY_PROFILE_SET_ID,
+  PROFILE_SET_ANIMALS_2_ID,
+  PROFILE_SET_NATURE_ID,
+} from '../profile_sets';
+import {
   BaseStageConfig,
   BaseStageParticipantAnswer,
   BaseStagePublicData,
@@ -103,7 +109,8 @@ export function getChipLogs(
     currentTurn &&
     (!offerMap[currentRound] || !offerMap[currentRound][currentTurn])
   ) {
-    const sender = getNameFromPublicId(participants, currentTurn);
+    const profileSetId = getProfileSetId(stage.id);
+    const sender = getNameFromPublicId(participants, currentTurn, profileSetId);
     const name =
       currentParticipantPublicId === currentTurn
         ? `Your turn (${sender})`
@@ -123,10 +130,15 @@ export function getChipLogsFromTransaction(
   currentParticipantPublicId = '',
 ): SimpleChipLog[] {
   const logs: SimpleChipLog[] = [];
+  const profileSetId = getProfileSetId(stage.id);
 
   // Log participant for current turn
   const offer = transaction.offer;
-  const sender = getNameFromPublicId(participants, offer.senderId);
+  const sender = getNameFromPublicId(
+    participants,
+    offer.senderId,
+    profileSetId,
+  );
   const isSender = currentParticipantPublicId === offer.senderId;
   const name = isSender ? `Your (${sender})` : `${sender}'s`;
   // TODO: Store timestamp for when turn begins
@@ -176,7 +188,11 @@ export function getChipLogsFromTransaction(
   const recipientId = transaction.recipientId;
   const lowercaseName = name.charAt(0).toLowerCase() + name.slice(1);
   if (transaction.status === ChipTransactionStatus.ACCEPTED && recipientId) {
-    const recipient = getNameFromPublicId(participants, recipientId);
+    const recipient = getNameFromPublicId(
+      participants,
+      recipientId,
+      profileSetId,
+    );
     logs.push(
       createSimpleChipLog(
         `🤝 Deal made: ${name} offer was accepted by ${recipient}.`,
@@ -232,8 +248,8 @@ export function calculateChipOfferPayout(
   // Calculate the total payout before the offer
   const currentTotalPayout = Object.keys(chipMap)
     .map((chipId) => {
-      const quantity = chipMap[chipId] ?? 0;
-      const value = chipValueMap[chipId] ?? 0;
+      const quantity = Number(chipMap[chipId] ?? 0);
+      const value = Number(chipValueMap[chipId] ?? 0);
       return quantity * value;
     })
     .reduce((total, value) => total + value, 0);
@@ -241,13 +257,17 @@ export function calculateChipOfferPayout(
   // Calculate the changes from the offer
   const addAmount = Object.keys(addChipMap)
     .map((chipId) => {
-      return (addChipMap[chipId] ?? 0) * (chipValueMap[chipId] ?? 0);
+      return (
+        Number(addChipMap[chipId] ?? 0) * Number(chipValueMap[chipId] ?? 0)
+      );
     })
     .reduce((total, value) => total + value, 0);
 
   const removeAmount = Object.keys(removeChipMap)
     .map((chipId) => {
-      return (removeChipMap[chipId] ?? 0) * (chipValueMap[chipId] ?? 0);
+      return (
+        Number(removeChipMap[chipId] ?? 0) * Number(chipValueMap[chipId] ?? 0)
+      );
     })
     .reduce((total, value) => total + value, 0);
 
@@ -256,4 +276,53 @@ export function calculateChipOfferPayout(
     before: currentTotalPayout,
     after: currentTotalPayout + addAmount - removeAmount,
   };
+}
+
+// Used for chip log displays
+function getProfileSetId(stageId: string) {
+  if (stageId.includes(SECONDARY_PROFILE_SET_ID)) {
+    return PROFILE_SET_ANIMALS_2_ID;
+  } else if (stageId.includes(TERTIARY_PROFILE_SET_ID)) {
+    return PROFILE_SET_NATURE_ID;
+  }
+  return '';
+}
+
+/** Returns checks and list of errors for given chip offer. */
+export function getChipOfferChecks(
+  publicData: ChipStagePublicData,
+  publicId: string, // public ID of participant making the offer
+  buyType: string,
+  buyQuantity: number,
+  sellType: string,
+  sellQuantity: number,
+): {errors: string[]; isCompleteOffer: boolean; isValidOffer: boolean} {
+  // Check if offer is incomplete
+  const isCompleteOffer =
+    buyType !== '' && sellType !== '' && buyQuantity > 0 && sellQuantity > 0;
+
+  // Check if the participant has enough chips to sell
+  const canSell = () => {
+    const chipMap = publicData.participantChipMap[publicId];
+    return (chipMap[sellType] ?? 0) >= sellQuantity;
+  };
+
+  // Check if offer is valid
+  const isValidOffer = isCompleteOffer && buyType !== sellType && canSell();
+
+  const errors: string[] = [];
+  // No other players can accept the offer
+  if (!isChipOfferAcceptable(buyType, buyQuantity, publicData, publicId)) {
+    errors.push(`⚠️ No other players have enough chips to accept your offer.`);
+  }
+  // Offer is trying to give too many chips
+  if (!canSell()) {
+    errors.push(`‼️ You cannot give more chips than you have.`);
+  }
+  // Offer has same buy and sell chip type
+  if (buyType === sellType) {
+    errors.push(`‼️ You cannot offer to buy and sell the same chip type.`);
+  }
+
+  return {errors, isCompleteOffer, isValidOffer};
 }

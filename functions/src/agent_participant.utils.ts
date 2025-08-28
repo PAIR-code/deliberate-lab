@@ -13,7 +13,6 @@ import {
   updateCohortStageUnlocked,
   updateParticipantNextStage,
 } from './participant.utils';
-import {createAgentChatMessageFromPrompt} from './chat/chat.agent';
 import {completeProfile} from './stages/profile.utils';
 import {getAgentParticipantRankingStageResponse} from './stages/ranking.agent';
 import {assignRolesToParticipants} from './stages/role.utils';
@@ -85,16 +84,9 @@ export async function completeStageAsAgentParticipant(
 
   switch (stage.kind) {
     case StageKind.CHAT:
-      // Do not complete stage as agent participant must chat first
-      // Instead, check if participant should initiate conversation
-      createAgentChatMessageFromPrompt(
-        experimentId,
-        participant.currentCohortId,
-        participant.privateId,
-        stage.id,
-        '',
-        participant, // profile
-      );
+      // Do not complete stage as agent participant must chat first.
+      // Initial messages are now handled by sendInitialChatMessages in agent_participant.triggers.ts
+      // when currentStageId changes, so no action needed here.
       break;
     case StageKind.PROFILE:
       await completeProfile(experimentId, participant, stage);
@@ -111,14 +103,9 @@ export async function completeStageAsAgentParticipant(
       participantDoc.set(participant);
       break;
     case StageKind.SALESPERSON:
-      createAgentChatMessageFromPrompt(
-        experimentId,
-        participant.currentCohortId,
-        participant.privateId,
-        stage.id,
-        '',
-        participant, // profile
-      );
+      // Do not complete stage as agent participant must chat first.
+      // Initial messages are now handled by sendInitialChatMessages in agent_participant.triggers.ts
+      // when currentStageId changes, so no action needed here.
       break;
     case StageKind.RANKING:
       if (!experimenterData) {

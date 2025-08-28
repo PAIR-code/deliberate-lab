@@ -4,6 +4,7 @@ import nock = require('nock');
 import {
   ModelGenerationConfig,
   ModelResponse,
+  ModelResponseStatus,
   StructuredOutputType,
   StructuredOutputDataType,
 } from '@deliberation-lab/utils';
@@ -140,7 +141,11 @@ describe('Gemini API', () => {
               enum: ['FOO', 'BAR', 'BAZ'],
             },
           },
-          propertyOrdering: ['stringProperty', 'integerProperty', 'enumProperty'],
+          propertyOrdering: [
+            'stringProperty',
+            'integerProperty',
+            'enumProperty',
+          ],
           required: ['stringProperty', 'integerProperty', 'enumProperty'],
         },
       },
@@ -148,5 +153,32 @@ describe('Gemini API', () => {
     expect(parsedResponse).toMatchObject(expectedResponse);
   });
 
-  // TODO(mkbehr): Add tests for error responses.
+  it('handles a 503 error from the server', async () => {
+    nock.cleanAll();
+    nock('https://generativelanguage.googleapis.com')
+      .post(`/v1beta/models/${MODEL_NAME}:generateContent`)
+      .reply(503, 'Service Unavailable');
+
+    const generationConfig: ModelGenerationConfig = {
+      maxTokens: 300,
+      stopSequences: [],
+      temperature: 0.4,
+      topP: 0.9,
+      frequencyPenalty: 0,
+      presencePenalty: 0,
+      customRequestBodyFields: [{name: 'seed', value: 123}],
+    };
+
+    const response: ModelResponse = await getGeminiAPIResponse(
+      'testapikey',
+      MODEL_NAME,
+      'This is a test prompt.',
+      generationConfig,
+    );
+
+    expect(response.status).toBe(
+      ModelResponseStatus.PROVIDER_UNAVAILABLE_ERROR,
+    );
+    expect(response.errorMessage).toContain('Service Unavailable');
+  });
 });

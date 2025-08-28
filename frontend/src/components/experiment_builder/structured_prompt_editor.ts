@@ -3,24 +3,22 @@ import '../../pair-components/menu';
 import '../../pair-components/textarea';
 
 import {MobxLitElement} from '@adobe/lit-mobx';
-import {CSSResultGroup, html, nothing} from 'lit';
-import {customElement, property, state} from 'lit/decorators.js';
+import {CSSResultGroup, html, nothing, TemplateResult} from 'lit';
+import {customElement, property} from 'lit/decorators.js';
+
+import {core} from '../../core/core';
+import {ExperimentEditor} from '../../services/experiment.editor';
 
 import {
   PromptItem,
   PromptItemType,
-  StageConfig,
+  PromptItemGroup,
   StageContextPromptItem,
-  StageKind,
-  StructuredOutputConfig,
-  StructuredOutputType,
-  StructuredOutputDataType,
-  StructuredOutputSchema,
   TextPromptItem,
-  createDefaultPromptFromText,
   createDefaultStageContextPromptItem,
-  makeStructuredOutputPrompt,
-  structuredOutputEnabled,
+  createDefaultPromptItemGroup,
+  ShuffleConfig,
+  SeedStrategy,
 } from '@deliberation-lab/utils';
 
 import {styles} from './structured_prompt_editor.scss';
@@ -30,10 +28,10 @@ import {styles} from './structured_prompt_editor.scss';
 export class EditorComponent extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
 
+  private readonly experimentEditor = core.getService(ExperimentEditor);
+
   @property() prompt: PromptItem[] = [];
   @property() stageId = '';
-  @property() structuredOutputConfig: StructuredOutputConfig | undefined =
-    undefined;
   @property() onUpdate: (prompt: PromptItem[]) => void = (
     prompt: PromptItem[],
   ) => {};
@@ -42,200 +40,187 @@ export class EditorComponent extends MobxLitElement {
     return this.renderPromptPreview();
   }
 
-  private updatePromptItem(index: number, newItem: PromptItem) {
-    this.onUpdate([
-      ...this.prompt.slice(0, index),
-      newItem,
-      ...this.prompt.slice(index + 1),
-    ]);
+  private updatePromptItem = (
+    item: PromptItem,
+    updates: Partial<PromptItem>,
+  ) => {
+    Object.assign(item, updates);
+    this.onUpdate(this.prompt);
+  };
+
+  private addPromptItem(targetArray: PromptItem[], item: PromptItem) {
+    targetArray.push(item);
+    this.onUpdate(this.prompt);
   }
 
-  private addPromptItem(newItem: PromptItem) {
-    this.onUpdate([...this.prompt, newItem]);
+  private deletePromptItem(targetArray: PromptItem[], index: number) {
+    targetArray.splice(index, 1);
+    this.onUpdate(this.prompt);
   }
 
-  private deletePromptItem(index: number) {
-    this.onUpdate([
-      ...this.prompt.slice(0, index),
-      ...this.prompt.slice(index + 1),
-    ]);
-  }
-
-  private movePromptItemUp(index: number) {
-    this.onUpdate([
-      ...this.prompt.slice(0, index - 1),
-      ...this.prompt.slice(index, index + 1),
-      ...this.prompt.slice(index - 1, index),
-      ...this.prompt.slice(index + 1),
-    ]);
-  }
-
-  private movePromptItemDown(index: number) {
-    this.onUpdate([
-      ...this.prompt.slice(0, index),
-      ...this.prompt.slice(index + 1, index + 2),
-      ...this.prompt.slice(index, index + 1),
-      ...this.prompt.slice(index + 2),
-    ]);
+  private movePromptItem(
+    targetArray: PromptItem[],
+    index: number,
+    direction: number,
+  ) {
+    const newIndex = index + direction;
+    if (newIndex >= 0 && newIndex < targetArray.length) {
+      [targetArray[index], targetArray[newIndex]] = [
+        targetArray[newIndex],
+        targetArray[index],
+      ];
+      this.onUpdate(this.prompt);
+    }
   }
 
   private renderPromptPreview() {
-    const getPromptItems = () => {
-      if (this.prompt.length === 0) {
-        return html`<div class="prompt-item-wrapper">
-          ⚠️ No items added yet
-        </div>`;
-      }
-      return this.prompt.map((item, index) =>
-        this.renderPromptItem(item, index),
-      );
-    };
-    const getStructuredOutput = () => {
-      const config = this.structuredOutputConfig;
-      if (config && structuredOutputEnabled(config) && config.schema) {
-        return makeStructuredOutputPrompt(config);
-      }
-      return '';
-    };
-
-    const addText = () => {
-      this.addPromptItem({type: PromptItemType.TEXT, text: ''});
-    };
-
-    const addProfileContext = () => {
-      this.addPromptItem({type: PromptItemType.PROFILE_CONTEXT});
-    };
-
-    const addProfileInfo = () => {
-      this.addPromptItem({type: PromptItemType.PROFILE_INFO});
-    };
-
-    const addCurrentStageContext = () => {
-      this.addPromptItem(createDefaultStageContextPromptItem(this.stageId));
-    };
-
-    const addPastStageContext = () => {
-      this.addPromptItem(createDefaultStageContextPromptItem(null));
-    };
-
     return html`
       <div class="prompt-wrapper">
         <div class="header">
           <div class="title">Prompt editor</div>
-          <pr-menu
-            name="Add item to prompt"
-            icon="add_circle"
-            color="neutral"
-            variant="default"
-          >
-            <div class="menu-wrapper">
-              <div class="menu-item" role="button" @click=${addText}>
-                Freeform text
-              </div>
-              <div
-                class="menu-item"
-                role="button"
-                @click=${addCurrentStageContext}
-              >
-                Context for current stage
-              </div>
-              <div
-                class="menu-item"
-                role="button"
-                @click=${addPastStageContext}
-              >
-                Context for all stages up to current stage (inclusive)
-              </div>
-              <div class="menu-item" role="button" @click=${addProfileContext}>
-                Custom agent context
-              </div>
-              <div class="menu-item" role="button" @click=${addProfileInfo}>
-                Profile info (avatar, name, pronouns)
-              </div>
-            </div>
-          </pr-menu>
+          ${this.renderAddMenu(this.prompt, true)}
         </div>
-        <div class="prompt">${getPromptItems()}${getStructuredOutput()}</div>
+        <div class="prompt">${this.renderPromptItems(this.prompt)}</div>
       </div>
     `;
   }
 
-  private renderPromptItem(item: PromptItem, index: number) {
-    const renderItemEditor = () => {
-      switch (item.type) {
-        case PromptItemType.TEXT:
-          return this.renderTextPromptItemEditor(item, index);
-        case PromptItemType.STAGE_CONTEXT:
-          return this.renderStageContextPromptItemEditor(item, index);
-        case PromptItemType.PROFILE_INFO:
-          return html`
-            <details>
-              <summary class="chip tertiary">Profile info</summary>
-              <div class="chip-collapsible">
-                Name, avatar, pronouns (if defined)
-              </div>
-            </details>
-          `;
-        case PromptItemType.PROFILE_CONTEXT:
-          return html`
-            <details>
-              <summary class="chip tertiary">Custom agent context</summary>
-              <div class="chip-collapsible">
-                Context string provided when specific agent is created (or empty
-                string if none)
-              </div>
-            </details>
-          `;
-        default:
-          return nothing;
-      }
+  private renderAddMenu(targetArray: PromptItem[], isRoot: boolean) {
+    const addText = () => {
+      this.addPromptItem(targetArray, {type: PromptItemType.TEXT, text: ''});
+    };
+
+    const addProfileContext = () => {
+      this.addPromptItem(targetArray, {type: PromptItemType.PROFILE_CONTEXT});
+    };
+
+    const addProfileInfo = () => {
+      this.addPromptItem(targetArray, {type: PromptItemType.PROFILE_INFO});
+    };
+
+    const addStageContext = () => {
+      this.addPromptItem(
+        targetArray,
+        createDefaultStageContextPromptItem(this.stageId),
+      );
+    };
+
+    const addGroup = () => {
+      this.addPromptItem(targetArray, createDefaultPromptItemGroup());
     };
 
     return html`
-      <div class="prompt-item-wrapper">
-        <div class="prompt-item-editor">${renderItemEditor()}</div>
-        <div class="prompt-item-actions">
-          <pr-icon-button
-            icon="arrow_upward"
-            color="neutral"
-            variant="default"
-            size="small"
-            @click=${() => {
-              this.movePromptItemUp(index);
-            }}
-          >
-          </pr-icon-button>
-          <pr-icon-button
-            icon="arrow_downward"
-            color="neutral"
-            variant="default"
-            size="small"
-            @click=${() => {
-              this.movePromptItemDown(index);
-            }}
-          >
-          </pr-icon-button>
-          <pr-icon-button
-            icon="close"
-            color="neutral"
-            variant="default"
-            size="small"
-            @click=${() => {
-              this.deletePromptItem(index);
-            }}
-          >
-          </pr-icon-button>
+      <pr-menu
+        name="Add item"
+        icon="add_circle"
+        color="neutral"
+        variant="default"
+        size=${isRoot ? 'medium' : 'small'}
+      >
+        <div class="menu-wrapper">
+          <div class="menu-item" role="button" @click=${addText}>
+            Freeform text
+          </div>
+          <div class="menu-item" role="button" @click=${addStageContext}>
+            Stage context
+          </div>
+          <div class="menu-item" role="button" @click=${addProfileContext}>
+            Custom agent context
+          </div>
+          <div class="menu-item" role="button" @click=${addProfileInfo}>
+            Profile info (avatar, name, pronouns)
+          </div>
+          <div class="menu-item" role="button" @click=${addGroup}>
+            Group of items
+          </div>
         </div>
-      </div>
+      </pr-menu>
     `;
   }
 
-  private renderTextPromptItemEditor(item: TextPromptItem, index: number) {
+  private renderItemEditor(item: PromptItem): TemplateResult | typeof nothing {
+    switch (item.type) {
+      case PromptItemType.TEXT:
+        return this.renderTextPromptItemEditor(item as TextPromptItem);
+      case PromptItemType.STAGE_CONTEXT:
+        return this.renderStageContextPromptItemEditor(
+          item as StageContextPromptItem,
+        );
+      case PromptItemType.PROFILE_INFO:
+        return html`
+          <details>
+            <summary class="chip tertiary">Profile info</summary>
+            <div class="chip-collapsible">
+              Name, avatar, pronouns (if defined)
+            </div>
+          </details>
+        `;
+      case PromptItemType.PROFILE_CONTEXT:
+        return html`
+          <details>
+            <summary class="chip tertiary">Custom agent context</summary>
+            <div class="chip-collapsible">
+              Context string provided when specific agent is created (or empty
+              string if none)
+            </div>
+          </details>
+        `;
+      case PromptItemType.GROUP:
+        return this.renderPromptItemGroupEditor(item as PromptItemGroup);
+      default:
+        return nothing;
+    }
+  }
+
+  private renderPromptItems(items: PromptItem[], isNested = false) {
+    if (items.length === 0) {
+      return html`<div
+        class="${isNested ? 'empty-group' : 'prompt-item-wrapper'}"
+      >
+        ${isNested ? 'No items in group yet' : '⚠️ No items added yet'}
+      </div>`;
+    }
+
+    return items.map(
+      (item, index) => html`
+        <div class="prompt-item-wrapper ${isNested ? 'nested' : ''}">
+          <div class="prompt-item-editor">${this.renderItemEditor(item)}</div>
+          <div class="prompt-item-actions">
+            <pr-icon-button
+              icon="arrow_upward"
+              color="neutral"
+              variant="default"
+              size="small"
+              @click=${() => this.movePromptItem(items, index, -1)}
+            >
+            </pr-icon-button>
+            <pr-icon-button
+              icon="arrow_downward"
+              color="neutral"
+              variant="default"
+              size="small"
+              @click=${() => this.movePromptItem(items, index, 1)}
+            >
+            </pr-icon-button>
+            <pr-icon-button
+              icon="close"
+              color="neutral"
+              variant="default"
+              size="small"
+              @click=${() => this.deletePromptItem(items, index)}
+            >
+            </pr-icon-button>
+          </div>
+        </div>
+      `,
+    );
+  }
+
+  private renderTextPromptItemEditor(item: TextPromptItem) {
     const onInput = (e: InputEvent) => {
       const text = (e.target as HTMLTextAreaElement).value;
-      this.updatePromptItem(index, {...item, text});
+      this.updatePromptItem(item, {text: text});
     };
-
     return html`
       <pr-textarea
         placeholder="Add freeform text here"
@@ -246,64 +231,63 @@ export class EditorComponent extends MobxLitElement {
     `;
   }
 
-  private renderStageContextPromptItemEditor(
-    item: StageContextPromptItem,
-    index: number,
-  ) {
-    const updatePrimaryText = (e: InputEvent) => {
-      this.updatePromptItem(index, {
-        ...item,
-        includePrimaryText: (e.target as HTMLInputElement).checked,
-      });
-    };
+  private renderStageContextPromptItemEditor(item: StageContextPromptItem) {
+    // Get available stages up to and including current stage
+    const currentStageIndex = this.experimentEditor.stages.findIndex(
+      (stage) => stage.id === this.stageId,
+    );
+    const availableStages =
+      currentStageIndex >= 0
+        ? this.experimentEditor.stages.slice(0, currentStageIndex + 1)
+        : [];
 
-    const updateInfoText = (e: InputEvent) => {
-      this.updatePromptItem(index, {
-        ...item,
-        includeInfoText: (e.target as HTMLInputElement).checked,
-      });
-    };
-
-    const updateHelpText = (e: InputEvent) => {
-      this.updatePromptItem(index, {
-        ...item,
-        includeHelpText: (e.target as HTMLInputElement).checked,
-      });
-    };
-
-    const updateStageDisplay = (e: InputEvent) => {
-      this.updatePromptItem(index, {
-        ...item,
-        includeStageDisplay: (e.target as HTMLInputElement).checked,
-      });
-    };
-
-    const updateParticipantAnswers = (e: InputEvent) => {
-      this.updatePromptItem(index, {
-        ...item,
-        includeParticipantAnswers: (e.target as HTMLInputElement).checked,
-      });
-    };
+    // Create a map from stage ID to index for quick lookup
+    const stageIndexMap = new Map(
+      availableStages.map((stage, idx) => [stage.id, idx]),
+    );
 
     const getTitle = () => {
-      if (item.stageId === this.stageId) {
-        return 'Context for current stage';
-      } else if (!item.stageId) {
-        return 'Context for all stages up to current stage (inclusive)';
-      } else {
-        return `Context for stage "${item.stageId}"`;
+      const stageIndex = stageIndexMap.get(item.stageId);
+      if (stageIndex !== undefined) {
+        const stage = availableStages[stageIndex];
+        return `Stage context: ${stageIndex + 1}. ${stage.name}`;
       }
+      return 'Stage context';
     };
 
     return html`
       <details>
         <summary class="chip primary">${getTitle()}</summary>
         <div class="chip-collapsible secondary">
+          <div class="stage-selector">
+            <label>Select stage:</label>
+            <select
+              .value=${item.stageId}
+              @change=${(e: Event) =>
+                this.updatePromptItem(item, {
+                  stageId: (e.target as HTMLSelectElement).value,
+                })}
+            >
+              ${availableStages.map(
+                (stage, stageIndex) => html`
+                  <option
+                    value=${stage.id}
+                    ?selected=${stage.id === item.stageId}
+                  >
+                    ${stageIndex + 1}. ${stage.name}
+                  </option>
+                `,
+              )}
+            </select>
+          </div>
           <label class="checkbox-wrapper">
             <input
               type="checkbox"
               .checked=${item.includePrimaryText}
-              @input=${updatePrimaryText}
+              @change=${() =>
+                this.updatePromptItem(item, {
+                  includePrimaryText: !item.includePrimaryText,
+                })}
             />
             <div>Include stage description</div>
           </label>
@@ -311,7 +295,10 @@ export class EditorComponent extends MobxLitElement {
             <input
               type="checkbox"
               .checked=${item.includeInfoText}
-              @input=${updateInfoText}
+              @change=${() =>
+                this.updatePromptItem(item, {
+                  includeInfoText: !item.includeInfoText,
+                })}
             />
             <div>Include stage info popup</div>
           </label>
@@ -319,7 +306,10 @@ export class EditorComponent extends MobxLitElement {
             <input
               type="checkbox"
               .checked=${item.includeHelpText}
-              @input=${updateHelpText}
+              @change=${() =>
+                this.updatePromptItem(item, {
+                  includeHelpText: !item.includeHelpText,
+                })}
             />
             <div>Include stage help popup</div>
           </label>
@@ -327,7 +317,10 @@ export class EditorComponent extends MobxLitElement {
             <input
               type="checkbox"
               .checked=${item.includeStageDisplay}
-              @input=${updateStageDisplay}
+              @change=${() =>
+                this.updatePromptItem(item, {
+                  includeStageDisplay: !item.includeStageDisplay,
+                })}
             />
             <div>
               Include stage content (e.g., chat history, survey questions)
@@ -337,12 +330,128 @@ export class EditorComponent extends MobxLitElement {
             <input
               type="checkbox"
               .checked=${item.includeParticipantAnswers}
-              @input=${updateParticipantAnswers}
+              @change=${() =>
+                this.updatePromptItem(item, {
+                  includeParticipantAnswers: !item.includeParticipantAnswers,
+                })}
             />
             <div>Include participant stage answers</div>
           </label>
         </div>
       </details>
+    `;
+  }
+
+  private renderPromptItemGroupEditor(group: PromptItemGroup) {
+    return html`
+      <details open>
+        <summary class="chip secondary">
+          Group:
+          <input
+            type="text"
+            class="group-title-input"
+            .value=${group.title}
+            @input=${(e: Event) =>
+              this.updatePromptItem(group, {
+                title: (e.target as HTMLInputElement).value,
+              })}
+            @click=${(e: Event) => e.stopPropagation()}
+          />
+          ${renderShuffleIndicator(group.shuffleConfig)}
+        </summary>
+        <div class="chip-collapsible group-content">
+          ${this.renderShuffleEditor(group)}
+          <div class="group-header">
+            ${this.renderAddMenu(group.items, false)}
+          </div>
+          <div class="group-items">
+            ${this.renderPromptItems(group.items, true)}
+          </div>
+        </div>
+      </details>
+    `;
+  }
+
+  private renderShuffleEditor(group: PromptItemGroup) {
+    if (!group.shuffleConfig) return nothing;
+    const shuffleConfig = group.shuffleConfig;
+
+    return html`
+      <div class="shuffle-config">
+        <label class="checkbox-wrapper">
+          <input
+            type="checkbox"
+            .checked=${shuffleConfig.shuffle}
+            @change=${() =>
+              this.updatePromptItem(group, {
+                shuffleConfig: {
+                  ...shuffleConfig,
+                  shuffle: !shuffleConfig.shuffle,
+                },
+              })}
+          />
+          <div>Shuffle items in this group</div>
+        </label>
+
+        ${shuffleConfig.shuffle
+          ? html`
+              <label>using seed:</label>
+              <select
+                .value=${shuffleConfig.seed}
+                @change=${(e: Event) =>
+                  this.updatePromptItem(group, {
+                    shuffleConfig: {
+                      ...shuffleConfig,
+                      seed: ((e.target as HTMLSelectElement).value ||
+                        '') as SeedStrategy,
+                    },
+                  })}
+              >
+                <option
+                  value=${SeedStrategy.EXPERIMENT}
+                  ?selected=${shuffleConfig.seed === SeedStrategy.EXPERIMENT}
+                >
+                  Experiment ID
+                </option>
+                <option
+                  value=${SeedStrategy.COHORT}
+                  ?selected=${shuffleConfig.seed === SeedStrategy.COHORT}
+                >
+                  Cohort ID
+                </option>
+                <option
+                  value=${SeedStrategy.PARTICIPANT}
+                  ?selected=${shuffleConfig.seed === SeedStrategy.PARTICIPANT}
+                >
+                  Participant ID
+                </option>
+                <option
+                  value=${SeedStrategy.CUSTOM}
+                  ?selected=${shuffleConfig.seed === SeedStrategy.CUSTOM}
+                >
+                  Custom seed
+                </option>
+              </select>
+
+              ${shuffleConfig.seed === SeedStrategy.CUSTOM
+                ? html`
+                    <input
+                      type="text"
+                      placeholder="Enter custom seed"
+                      .value=${shuffleConfig.customSeed}
+                      @input=${(e: Event) =>
+                        this.updatePromptItem(group, {
+                          shuffleConfig: {
+                            ...shuffleConfig,
+                            customSeed: (e.target as HTMLInputElement).value,
+                          },
+                        })}
+                    />
+                  `
+                : ''}
+            `
+          : ''}
+      </div>
     `;
   }
 }
@@ -351,4 +460,20 @@ declare global {
   interface HTMLElementTagNameMap {
     'structured-prompt-editor': EditorComponent;
   }
+}
+
+/** Helper function to generate shuffle indicator template */
+export function renderShuffleIndicator(
+  shuffleConfig: ShuffleConfig | undefined,
+): TemplateResult | typeof nothing {
+  if (!shuffleConfig?.shuffle) return nothing;
+
+  return html`
+    <span title="Shuffle enabled">
+      🔀
+      ${shuffleConfig.seed}${shuffleConfig.seed === SeedStrategy.CUSTOM
+        ? `: ${shuffleConfig.customSeed}`
+        : ''}
+    </span>
+  `;
 }

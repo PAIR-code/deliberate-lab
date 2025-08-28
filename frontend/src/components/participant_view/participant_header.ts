@@ -59,7 +59,10 @@ export class Header extends MobxLitElement {
   private renderProfile() {
     if (!this.profile) return nothing;
     return html`
-      <pr-tooltip text="You are playing as this avatar" position="BOTTOM_END">
+      <pr-tooltip
+        text="You are participating as this avatar"
+        position="BOTTOM_END"
+      >
         <participant-profile-display
           .profile=${this.profile}
           .stageId=${this.stage?.id ?? ''}

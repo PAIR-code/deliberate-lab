@@ -1,14 +1,17 @@
 import {ProfileAgentConfig} from './agent';
 import {MediatorProfile} from './mediator';
 import {UnifiedTimestamp, generateId} from './shared';
+import {ProfileType} from './stages/profile_stage';
 import {
-  ALTERNATE_PROFILE_SET_ID,
+  SECONDARY_PROFILE_SET_ID,
+  TERTIARY_PROFILE_SET_ID,
   PROFILE_SET_ANIMALS_1,
   PROFILE_SET_ANIMALS_1_ID,
   PROFILE_SET_ANIMALS_2,
   PROFILE_SET_ANIMALS_2_ID,
   PROFILE_SET_NATURE,
   PROFILE_SET_NATURE_ID,
+  PROFILE_SET_ANONYMOUS_PARTICIPANT_ID,
   PROFILE_SET_RANDOM_1_ID,
   PROFILE_SET_RANDOM_2_ID,
   PROFILE_SET_RANDOM_3_ID,
@@ -180,6 +183,7 @@ export function setProfile(
   participantNumber: number,
   config: ParticipantProfileExtended,
   setAnonymousProfile = false,
+  profileType: ProfileType = ProfileType.ANONYMOUS_ANIMAL,
 ) {
   const generateProfileFromSet = (
     profileSet: {name: string; avatar: string}[],
@@ -201,14 +205,28 @@ export function setProfile(
     };
   };
 
+  // Generate random number for unique participant ID (used in publicID and anonymous participant profile)
+  const randomNumber = Math.floor(Math.random() * 10000);
+
+  const generateAnonymousParticipantProfile = (): AnonymousProfileMetadata => {
+    return {
+      name: `Participant ${randomNumber}`,
+      avatar: '👤',
+      repeat: 0,
+    };
+  };
+
   // Set anonymous profiles
   const profileAnimal1 = generateProfileFromSet(PROFILE_SET_ANIMALS_1);
   const profileAnimal2 = generateProfileFromSet(PROFILE_SET_ANIMALS_2);
   const profileNature = generateProfileFromSet(PROFILE_SET_NATURE);
+  const profileAnonymousParticipant = generateAnonymousParticipantProfile();
 
   config.anonymousProfiles[PROFILE_SET_ANIMALS_1_ID] = profileAnimal1;
   config.anonymousProfiles[PROFILE_SET_ANIMALS_2_ID] = profileAnimal2;
   config.anonymousProfiles[PROFILE_SET_NATURE_ID] = profileNature;
+  config.anonymousProfiles[PROFILE_SET_ANONYMOUS_PARTICIPANT_ID] =
+    profileAnonymousParticipant;
 
   // Set random hashes (can be used for random ordering, etc.)
   config.anonymousProfiles[PROFILE_SET_RANDOM_1_ID] =
@@ -221,15 +239,23 @@ export function setProfile(
   // Define public ID (using anonymous animal 1 set)
   const mainProfile = profileAnimal1;
   const color = COLORS[Math.floor(Math.random() * COLORS.length)];
-  const randomNumber = Math.floor(Math.random() * 10000);
 
   config.publicId =
     `${mainProfile.name}-${color}-${randomNumber}`.toLowerCase();
 
   if (setAnonymousProfile) {
-    // Use, e.g., "Cat 2" if second time "Cat" is being used
-    config.name = `${mainProfile.name}${mainProfile.repeat === 0 ? '' : ` ${mainProfile.repeat + 1}`}`;
-    config.avatar = mainProfile.avatar;
+    if (profileType === ProfileType.ANONYMOUS_PARTICIPANT) {
+      // Use participant number profile
+      const participantProfile =
+        config.anonymousProfiles[PROFILE_SET_ANONYMOUS_PARTICIPANT_ID];
+      config.name = participantProfile.name;
+      config.avatar = participantProfile.avatar;
+    } else if (profileType === ProfileType.ANONYMOUS_ANIMAL) {
+      // Use animal profile (default)
+      config.name = `${mainProfile.name}${mainProfile.repeat === 0 ? '' : ` ${mainProfile.repeat + 1}`}`;
+      config.avatar = mainProfile.avatar;
+    }
+    // Note: ProfileType.DEFAULT should not reach here as setAnonymousProfile would be false
     config.pronouns = '';
   }
 }
@@ -244,12 +270,18 @@ export function sortParticipantsByRandomProfile(
   participants.sort((p1: ParticipantProfile, p2: ParticipantProfile) => {
     let sortKey1 = '';
     let sortKey2 = '';
-    // If alternate profile, use random 2 ID
-    if (stageId.includes(ALTERNATE_PROFILE_SET_ID)) {
+    // If secondary profile, use random 2 ID
+    if (stageId.includes(SECONDARY_PROFILE_SET_ID)) {
       sortKey1 =
         p1.anonymousProfiles[PROFILE_SET_RANDOM_2_ID]?.name ?? p1.publicId;
       sortKey2 =
         p2.anonymousProfiles[PROFILE_SET_RANDOM_2_ID]?.name ?? p2.publicId;
+    } else if (stageId.includes(TERTIARY_PROFILE_SET_ID)) {
+      // If tertiary profile, use random 3 ID
+      sortKey1 =
+        p1.anonymousProfiles[PROFILE_SET_RANDOM_3_ID]?.name ?? p1.publicId;
+      sortKey2 =
+        p2.anonymousProfiles[PROFILE_SET_RANDOM_3_ID]?.name ?? p2.publicId;
     } else {
       // Else, use random 1 ID
       sortKey1 =
@@ -265,12 +297,26 @@ export function sortParticipantsByRandomProfile(
 export function getNameFromPublicId(
   participants: ParticipantProfile[],
   publicId: string,
+  profileSetId: string, // leave empty to use default profile
   includeAvatar = true,
+  includePronouns = false,
 ) {
   const profile = participants.find((p) => p.publicId === publicId);
-  if (profile && profile.name) {
-    const avatar = includeAvatar && profile.avatar ? `${profile.avatar} ` : '';
-    return `${avatar}${profile.name}`;
+
+  // If profile set ID specified, use the corresponding anonymous profile
+  const profileName = profileSetId
+    ? profile?.anonymousProfiles[profileSetId]?.name
+    : profile?.name;
+  const profileAvatar = profileSetId
+    ? profile?.anonymousProfiles[profileSetId]?.avatar
+    : profile?.avatar;
+  const profilePronouns = profile?.pronouns;
+
+  if (profile && profileName) {
+    const avatar = includeAvatar && profileAvatar ? `${profileAvatar} ` : '';
+    const pronouns =
+      includePronouns && profilePronouns ? ` (${profilePronouns})` : '';
+    return `${avatar}${profileName}${pronouns}`;
   }
   return publicId;
 }

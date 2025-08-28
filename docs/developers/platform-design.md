@@ -3,6 +3,10 @@ title: Platform design
 layout: default
 ---
 
+<div class="banner">
+  ⚠️ Documentation may be out-of-date
+</div>
+
 ## Overview
 
 Deliberate Lab uses Firebase's [Cloud Firestore database](https://firebase.google.com/docs/firestore/),

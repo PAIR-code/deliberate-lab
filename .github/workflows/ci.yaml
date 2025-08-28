@@ -3,8 +3,33 @@ name: Check format and run tests
 on: [push, pull_request]
 
 jobs:
-  format_and_test:
-    name: Check format and run tests
+  format:
+    name: Check format
+
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [22.x]
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Use Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ matrix.node-version }}
+
+    - name: Install
+      run: npm install
+
+    - name: Check format
+      run: |
+        npx prettier --check "**/*.ts"
+        npx eslint --quiet "**/*.ts"
+
+  test:
+    name: Run tests
 
     runs-on: ubuntu-latest
 
@@ -20,10 +45,9 @@ jobs:
       with:
         node-version: ${{ matrix.node-version }}
 
-    - name: Check format
+    - name: Install firebase
       run: |
-        npx prettier --check "**/*.ts"
-        npx eslint "**/*.ts"
+        npm install -g firebase-tools
 
     - name: Build utils
       working-directory: ./utils

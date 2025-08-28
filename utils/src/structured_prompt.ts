@@ -12,6 +12,7 @@ import {
   ChatMediatorStructuredOutputConfig,
   createStructuredOutputConfig,
 } from './structured_output';
+import {ShuffleConfig, SeedStrategy} from './utils/random.utils';
 
 // ****************************************************************************
 // TYPES
@@ -43,7 +44,8 @@ export type PromptItem =
   | TextPromptItem
   | ProfileContextPromptItem
   | ProfileInfoPromptItem
-  | StageContextPromptItem;
+  | StageContextPromptItem
+  | PromptItemGroup;
 
 export interface BasePromptItem {
   type: PromptItemType;
@@ -57,6 +59,8 @@ export enum PromptItemType {
   PROFILE_CONTEXT = 'PROFILE_CONTEXT',
   // Context from specified stage (or all stages up to present if null)
   STAGE_CONTEXT = 'STAGE_CONTEXT',
+  // Group of prompt items
+  GROUP = 'GROUP',
 }
 
 export interface TextPromptItem extends BasePromptItem {
@@ -76,8 +80,8 @@ export interface ProfileInfoPromptItem extends BasePromptItem {
 
 export interface StageContextPromptItem extends BasePromptItem {
   type: PromptItemType.STAGE_CONTEXT;
-  // ID of stage (or null if all stages up to present stage, inclusive)
-  stageId: string | null;
+  // ID of stage
+  stageId: string;
   includePrimaryText: boolean;
   includeInfoText: boolean;
   includeHelpText: boolean;
@@ -85,6 +89,14 @@ export interface StageContextPromptItem extends BasePromptItem {
   includeStageDisplay: boolean;
   // Include answers for current participant (or all participants if mediator)
   includeParticipantAnswers: boolean;
+}
+
+/** Group of prompt items. */
+export interface PromptItemGroup extends BasePromptItem {
+  type: PromptItemType.GROUP;
+  title: string;
+  items: PromptItem[];
+  shuffleConfig?: ShuffleConfig;
 }
 
 // ****************************************************************************
@@ -109,7 +121,7 @@ export function createChatPromptConfig(
 
 // Default stage context
 export function createDefaultStageContextPromptItem(
-  stageId: string | null,
+  stageId: string,
 ): StageContextPromptItem {
   return {
     type: PromptItemType.STAGE_CONTEXT,
@@ -119,6 +131,23 @@ export function createDefaultStageContextPromptItem(
     includeHelpText: false,
     includeParticipantAnswers: true,
     includeStageDisplay: true,
+  };
+}
+
+// Create prompt item group with defaults
+export function createDefaultPromptItemGroup(
+  title: string = 'New Group',
+  items: PromptItem[] = [],
+): PromptItemGroup {
+  return {
+    type: PromptItemType.GROUP,
+    title,
+    items,
+    shuffleConfig: {
+      shuffle: false,
+      seed: SeedStrategy.PARTICIPANT,
+      customSeed: '',
+    },
   };
 }
 

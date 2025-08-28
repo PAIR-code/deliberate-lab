@@ -10,14 +10,17 @@ import {
   ChipTransactionStatus,
   ExperimenterData,
   ParticipantProfile,
+  ParticipantProfileExtended,
   ParticipantStatus,
+  ModelResponse,
+  ModelResponseStatus,
+  StructuredOutputConfig,
   convertChipLogToPromptFormat,
   createChipInfoLogEntry,
   createChipOfferLogEntry,
   createChipOfferDeclinedLogEntry,
   createChipRoundLogEntry,
   createChipTransaction,
-  createChipTurn,
   createChipTurnLogEntry,
   createModelGenerationConfig,
   generateId,
@@ -29,8 +32,6 @@ import {
   getChipResponseAssistanceCoachPrompt,
   getChipResponseAssistanceDelegatePrompt,
   sortParticipantsByRandomProfile,
-  CHIP_OFFER_ASSISTANCE_COACH_PROMPT,
-  CHIP_OFFER_ASSISTANCE_DELEGATE_PROMPT,
   CHIP_OFFER_ASSISTANCE_ADVISOR_STRUCTURED_OUTPUT_CONFIG,
   CHIP_OFFER_ASSISTANCE_STRUCTURED_OUTPUT_CONFIG,
   CHIP_RESPONSE_ASSISTANCE_COACH_STRUCTURED_OUTPUT_CONFIG,
@@ -40,10 +41,7 @@ import {
 import {processModelResponse} from '../agent.utils';
 import {getFirestoreStagePublicDataRef} from '../utils/firestore';
 
-import * as admin from 'firebase-admin';
 import {Timestamp} from 'firebase-admin/firestore';
-import * as functions from 'firebase-functions';
-import {onCall} from 'firebase-functions/v2/https';
 
 import {app} from '../app';
 
@@ -163,21 +161,61 @@ export async function updateParticipantChipQuantities(
 
   // Remove map items
   Object.keys(removeMap).forEach((chipId) => {
-    const currentChips = answer.chipMap[chipId] ?? 0;
-    const removeChips = removeMap[chipId];
+    const currentChips = Number(answer.chipMap[chipId] ?? 0);
+    const removeChips = Number(removeMap[chipId]);
 
-    if (removeChips <= currentChips) {
-      answer.chipMap[chipId] -= removeChips;
-    } else {
-      // TODO: Log failure
+    if (Number.isNaN(currentChips) || Number.isNaN(removeChips)) {
+      console.error(`Invalid chip number for removal: ${chipId}`, {
+        currentChips,
+        removeChips,
+      });
       return false;
     }
+
+    if (removeChips < 0) {
+      console.error(`Negative chip removal not allowed: ${chipId}`, {
+        removeChips,
+      });
+      return false;
+    }
+
+    if (removeChips > currentChips) {
+      console.error(
+        `Attempting to remove more chips than available for ${chipId}`,
+        {
+          currentChips,
+          removeChips,
+        },
+      );
+      return false;
+    }
+
+    answer.chipMap[chipId] = currentChips - removeChips;
   });
+
   // Add map items
   Object.keys(addMap).forEach((chipId) => {
-    const currentChips = answer.chipMap[chipId] ?? 0;
-    const addChips = addMap[chipId];
-    answer.chipMap[chipId] = currentChips + addChips;
+    const currentChips = Number(answer.chipMap[chipId] ?? 0);
+    const addChips = Number(addMap[chipId]);
+    if (Number.isNaN(currentChips) || Number.isNaN(addChips)) {
+      console.error(`Invalid chip number for addition: ${chipId}`, {
+        currentChips,
+        addChips,
+      });
+      return false;
+    }
+
+    const newTotal = currentChips + addChips;
+    const maxChipLimit = 30;
+
+    if (newTotal > maxChipLimit) {
+      console.error(
+        `Chip count exceeds max limit for ${chipId}: ${newTotal} > ${maxChipLimit}`,
+      );
+      return false;
+    }
+
+    answer.chipMap[chipId] = newTotal;
   });
 
   // Update public stage data
@@ -229,6 +267,10 @@ export async function updateChipTurn(
       return false;
     }
 
+    if (!currentTurn) {
+      return false;
+    }
+
     const currentTransaction =
       publicStage.participantOfferMap[currentRound][currentTurn];
 
@@ -263,7 +305,6 @@ export async function updateChipTurn(
 
     // If all (non-offer) participants have responded to the offer,
     // execute chip transaction
-    const senderId = currentTurn;
     const recipientId =
       acceptedOffer.length > 0
         ? acceptedOffer[Math.floor(Math.random() * acceptedOffer.length)]
@@ -309,14 +350,16 @@ export async function updateChipTurn(
         );
       }
       // Write new turn entry
-      transaction.set(
-        logCollection.doc(),
-        createChipTurnLogEntry(
-          newData.currentRound,
-          newData.currentTurn,
-          timestamp,
-        ),
-      );
+      if (newData.currentTurn) {
+        transaction.set(
+          logCollection.doc(),
+          createChipTurnLogEntry(
+            newData.currentRound,
+            newData.currentTurn,
+            timestamp,
+          ),
+        );
+      }
     }
 
     // Update public stage data
@@ -518,14 +561,25 @@ export async function getChipOfferAssistance(
   const parseResponse = (response: ModelResponse, sendOffer = false) => {
     try {
       const responseObj = response.parsedResponse;
-      if (sendOffer) {
+      if (sendOffer && responseObj) {
         const buy: Record<string, number> = {};
         const sell: Record<string, number> = {};
-        buy[responseObj['suggestedBuyType']] =
-          responseObj['suggestedBuyQuantity'];
-        sell[responseObj['suggestedSellType']] =
-          responseObj['suggestedSellQuantity'];
-        console.log(buy, sell);
+        //  changing the chip IDs to lowercase, specific to the Chip Negotiation game
+        const buyType = responseObj['suggestedBuyType']?.toLowerCase();
+        const sellType = responseObj['suggestedSellType']?.toLowerCase();
+
+        if (
+          buyType &&
+          typeof responseObj['suggestedBuyQuantity'] === 'number'
+        ) {
+          buy[buyType] = responseObj['suggestedBuyQuantity'];
+        }
+        if (
+          sellType &&
+          typeof responseObj['suggestedSellQuantity'] === 'number'
+        ) {
+          sell[sellType] = responseObj['suggestedSellQuantity'];
+        }
         addChipOfferToPublicData(
           experimentId,
           participant.currentCohortId,
@@ -540,15 +594,96 @@ export async function getChipOfferAssistance(
           },
         );
       }
-      console.log(
-        `Suggested: Give ${responseObj['suggestedSellQuantity']} ${responseObj['suggestedSellType']} to get ${responseObj['suggestedBuyQuantity']} ${responseObj['suggestedBuyType']} (${responseObj['reasoning']})`,
-      );
-      return {success: true, modelResponse: responseObj};
+      if (responseObj) {
+        console.log(responseObj);
+        console.log(
+          `Suggested: Give ${responseObj['suggestedSellQuantity']} ${responseObj['suggestedSellType']} to get ${responseObj['suggestedBuyQuantity']} ${responseObj['suggestedBuyType']} (${responseObj['reasoning']})`,
+        );
+      }
+
+      // Check if responseObj is valid (not empty and has required fields)
+      if (responseObj && Object.keys(responseObj).length > 0) {
+        return {success: true, modelResponse: responseObj};
+      } else {
+        console.log('Response object is empty or invalid');
+        return {
+          success: false,
+          errorMessage: 'Empty or invalid response object',
+        };
+      }
     } catch (errorMessage) {
       // Response is already logged in console during Gemini API call
       console.log('Could not parse JSON:', errorMessage);
       return {success: false, errorMessage};
     }
+  };
+
+  // Helper function to call model with retries
+  // TODO: Consolidate with identical function in getChipResponseAssistance
+  const callModelWithRetries = async (
+    prompt: string,
+    structuredOutputConfig: StructuredOutputConfig,
+    maxRetries = 3,
+  ): Promise<ModelResponse> => {
+    let lastError: object;
+    const basePrompt = prompt; // Store original prompt
+
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        const response = await processModelResponse(
+          experimentId,
+          participant.currentCohortId,
+          participant.privateId || '',
+          stage.id,
+          participant, // NOTE: This should actually be the agent profile
+          '', // No agent private ID
+          '', // No agent public ID
+          '', // No description
+          experimenterData.apiKeys,
+          prompt,
+          modelSettings,
+          modelGenerationConfig,
+          structuredOutputConfig,
+        );
+
+        if (response.status === ModelResponseStatus.OK) {
+          return response;
+        }
+
+        lastError = response;
+        console.log(
+          `Attempt ${attempt} failed with status: ${response.status}`,
+        );
+
+        // if fail append prompt, and retry
+        if (attempt < maxRetries) {
+          const previousText = response.text ?? '[No Text Returned]';
+          const parseErrorMessage =
+            response.errorMessage ?? '[Unknown parse error]';
+
+          prompt =
+            basePrompt +
+            `\n\nYour previous response is:\n\`\`\`\n${previousText}\n\`\`\`\n\nParse error: ${parseErrorMessage}\n\nPlease try again.`;
+
+          await new Promise((resolve) => setTimeout(resolve, attempt * 1000));
+        }
+      } catch (error) {
+        lastError = error;
+        console.log(`Attempt ${attempt} threw error:`, error);
+
+        if (attempt < maxRetries) {
+          // Wait before retrying
+          await new Promise((resolve) => setTimeout(resolve, attempt * 1000));
+        }
+      }
+    }
+
+    return (
+      lastError || {
+        status: 'unknown_error',
+        errorMessage: 'All retry attempts failed',
+      }
+    );
   };
 
   // Call different LLM API prompt based on assistance mode
@@ -565,20 +700,9 @@ export async function getChipOfferAssistance(
         offerIdea,
       );
       console.log('Chip offer assistance coach prompt:', coachPrompt);
-      // Call API
-      const coachResponse = await processModelResponse(
-        experimentId,
-        participant.currentCohortId,
-        participant.privateId,
-        stage.id,
-        participant, // NOTE: This should actually be the agent profile
-        '', // No agent private ID
-        '', // No agent public ID
-        '', // No description
-        experimenterData.apiKeys,
+      // Call API with retries
+      const coachResponse = await callModelWithRetries(
         coachPrompt,
-        modelSettings,
-        modelGenerationConfig,
         CHIP_OFFER_ASSISTANCE_STRUCTURED_OUTPUT_CONFIG,
       );
       // Parse response before returning
@@ -594,20 +718,9 @@ export async function getChipOfferAssistance(
         numRoundsLeft,
       );
       console.log('Chip offer assistance advisor prompt:', advisorPrompt);
-      // Call API
-      const advisorResponse = await processModelResponse(
-        experimentId,
-        participant.currentCohortId,
-        participant.privateId,
-        stage.id,
-        participant, // NOTE: This should actually be the agent profile
-        '', // No agent private ID
-        '', // No agent public ID
-        '', // No description
-        experimenterData.apiKeys,
+      // Call API with retries
+      const advisorResponse = await callModelWithRetries(
         advisorPrompt,
-        modelSettings,
-        modelGenerationConfig,
         CHIP_OFFER_ASSISTANCE_ADVISOR_STRUCTURED_OUTPUT_CONFIG,
       );
       // Parse response before returning
@@ -623,26 +736,20 @@ export async function getChipOfferAssistance(
         numRoundsLeft,
       );
       console.log('Chip offer assistance delegate prompt:', delegatePrompt);
-      // Call API
-      const delegateResponse = await processModelResponse(
-        experimentId,
-        participant.currentCohortId,
-        participant.privateId,
-        stage.id,
-        participant, // NOTE: This should actually be the agent profile
-        '', // No agent private ID
-        '', // No agent public ID
-        '', // No description
-        experimenterData.apiKeys,
+      // Call API with retries
+      const delegateResponse = await callModelWithRetries(
         delegatePrompt,
-        modelSettings,
-        modelGenerationConfig,
         CHIP_OFFER_ASSISTANCE_ADVISOR_STRUCTURED_OUTPUT_CONFIG,
       );
       // Parse response before returning
-      return parseResponse(delegateResponse, true);
+      const parseResult = parseResponse(delegateResponse, true);
+      console.log('DELEGATE mode parse result:', parseResult);
+      if (!parseResult.success) {
+        console.log('DELEGATE mode failed - will set ERROR mode in endpoints');
+      }
+      return parseResult;
     default:
-      return '';
+      return {success: false, errorMessage: 'Invalid assistance mode'};
   }
 }
 
@@ -719,11 +826,80 @@ export async function getChipResponseAssistance(
     includeReasoning: true,
   });
 
+  // Helper function to call model with retries
+  // TODO: Consolidate with identical function in getChipOfferAssistance
+  const callModelWithRetries = async (
+    prompt: string,
+    structuredOutputConfig: StructuredOutputConfig,
+    maxRetries = 3,
+  ): Promise<ModelResponse> => {
+    let lastError: object;
+    const basePrompt = prompt; // Store original prompt
+
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        const response = await processModelResponse(
+          experimentId,
+          participant.currentCohortId,
+          participant.privateId || '',
+          stage.id,
+          participant, // NOTE: This should actually be the agent profile
+          '', // No agent private ID
+          '', // No agent public ID
+          '', // No description
+          experimenterData.apiKeys,
+          prompt,
+          modelSettings,
+          modelGenerationConfig,
+          structuredOutputConfig,
+        );
+
+        if (response.status === ModelResponseStatus.OK) {
+          return response;
+        }
+
+        lastError = response;
+        console.log(
+          `Attempt ${attempt} failed with status: ${response.status}`,
+        );
+
+        // if fail append prompt, and retry
+        if (attempt < maxRetries) {
+          const previousText = response.text ?? '[No Text Returned]';
+          const parseErrorMessage =
+            response.errorMessage ?? '[Unknown parse error]';
+
+          prompt =
+            basePrompt +
+            `\n\nYour previous response is:\n\`\`\`\n${previousText}\n\`\`\`\n\nParse error: ${parseErrorMessage}\n\nPlease try again.`;
+
+          // Wait before retrying
+          await new Promise((resolve) => setTimeout(resolve, attempt * 1000));
+        }
+      } catch (error) {
+        lastError = error;
+        console.log(`Attempt ${attempt} threw error:`, error);
+
+        if (attempt < maxRetries) {
+          // Wait before retrying
+          await new Promise((resolve) => setTimeout(resolve, attempt * 1000));
+        }
+      }
+    }
+
+    return (
+      lastError || {
+        status: 'unknown_error',
+        errorMessage: 'All retry attempts failed',
+      }
+    );
+  };
+
   // Helper function to parse structured output response
   const parseResponse = (response: ModelResponse, sendResponse = false) => {
     try {
       const responseObject = response.parsedResponse;
-      if (sendResponse) {
+      if (sendResponse && responseObject) {
         addChipResponseToPublicData(
           experimentId,
           participant.currentCohortId,
@@ -732,17 +908,29 @@ export async function getChipResponseAssistance(
           responseObject['response'],
         );
       }
-      console.log(
-        `${responseObject['response']} ${responseObject['feedback']}`,
-      );
-      return {success: true, modelResponse: responseObject};
+      if (responseObject) {
+        console.log(responseObject);
+        console.log(
+          `${responseObject['response']} ${responseObject['feedback']}`,
+        );
+      }
+
+      // Check if responseObject is valid (not empty and has required fields)
+      if (responseObject && Object.keys(responseObject).length > 0) {
+        return {success: true, modelResponse: responseObject};
+      } else {
+        console.log('Response object is empty or invalid');
+        return {
+          success: false,
+          errorMessage: 'Empty or invalid response object',
+        };
+      }
     } catch (errorMessage) {
       // Response is already logged in console during Gemini API call
       console.log('Could not parse JSON:', errorMessage);
       return {success: false, errorMessage};
     }
   };
-
   // Call different LLM API prompt based on assistance mode
   switch (assistanceMode) {
     case ChipAssistanceMode.COACH:
@@ -758,20 +946,9 @@ export async function getChipResponseAssistance(
         responseIdea,
       );
       console.log('Chip response assistance coach prompt:', coachPrompt);
-      // Call API
-      const coachResponse = await processModelResponse(
-        experimentId,
-        participant.currentCohortId,
-        participant.privateId,
-        stage.id,
-        participant, // NOTE: This should actually be the agent profile
-        '', // No agent private ID
-        '', // No agent public ID
-        '', // No description
-        experimenterData.apiKeys,
+      // Call API with retries
+      const coachResponse = await callModelWithRetries(
         coachPrompt,
-        modelSettings,
-        modelGenerationConfig,
         CHIP_RESPONSE_ASSISTANCE_COACH_STRUCTURED_OUTPUT_CONFIG,
       );
       // Parse response before returning
@@ -788,20 +965,9 @@ export async function getChipResponseAssistance(
         offer,
       );
       console.log('Chip response assistance advisor prompt:', advisorPrompt);
-      // Call API
-      const advisorResponse = await processModelResponse(
-        experimentId,
-        participant.currentCohortId,
-        participant.privateId,
-        stage.id,
-        participant, // NOTE: This should actually be the agent profile
-        '', // No agent private ID
-        '', // No agent public ID
-        '', // No description
-        experimenterData.apiKeys,
+      // Call API with retries
+      const advisorResponse = await callModelWithRetries(
         advisorPrompt,
-        modelSettings,
-        modelGenerationConfig,
         CHIP_RESPONSE_ASSISTANCE_ADVISOR_STRUCTURED_OUTPUT_CONFIG,
       );
       // Parse response before returning
@@ -818,25 +984,14 @@ export async function getChipResponseAssistance(
         offer,
       );
       console.log('Chip response assistance delegate prompt:', delegatePrompt);
-      // Call API
-      const delegateResponse = await processModelResponse(
-        experimentId,
-        participant.currentCohortId,
-        participant.privateId,
-        stage.id,
-        participant, // NOTE: This should actually be the agent profile
-        '', // No agent private ID
-        '', // No agent public ID
-        '', // No description
-        experimenterData.apiKeys,
+      // Call API with retries
+      const delegateResponse = await callModelWithRetries(
         delegatePrompt,
-        modelSettings,
-        modelGenerationConfig,
         CHIP_RESPONSE_ASSISTANCE_ADVISOR_STRUCTURED_OUTPUT_CONFIG,
       );
       // Parse response before returning
       return parseResponse(delegateResponse, true);
     default:
-      return '';
+      return {success: false, errorMessage: 'Invalid assistance mode'};
   }
 }

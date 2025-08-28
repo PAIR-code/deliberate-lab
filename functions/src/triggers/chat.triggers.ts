@@ -55,6 +55,16 @@ export const onPublicChatMessageCreated = onDocumentCreated(
         break;
     }
 
+    // Get all participants for context
+    const allParticipants = await getFirestoreActiveParticipants(
+      event.params.experimentId,
+      event.params.cohortId,
+      stage.id,
+      false, // Get all participants, not just agents
+    );
+
+    const allParticipantIds = allParticipants.map((p) => p.privateId);
+
     // Send agent mediator messages
     const mediators = await getFirestoreActiveMediators(
       event.params.experimentId,
@@ -66,7 +76,7 @@ export const onPublicChatMessageCreated = onDocumentCreated(
       createAgentChatMessageFromPrompt(
         event.params.experimentId,
         event.params.cohortId,
-        '', // no relevant participant ID
+        allParticipantIds, // Provide all participant IDs for full context
         stage.id,
         event.params.chatId,
         mediator,
@@ -74,17 +84,12 @@ export const onPublicChatMessageCreated = onDocumentCreated(
     });
 
     // Send agent participant messages
-    const participants = await getFirestoreActiveParticipants(
-      event.params.experimentId,
-      event.params.cohortId,
-      stage.id,
-      true,
-    );
-    participants.forEach((participant) => {
+    const agentParticipants = allParticipants.filter((p) => p.agentConfig);
+    agentParticipants.forEach((participant) => {
       createAgentChatMessageFromPrompt(
         event.params.experimentId,
         event.params.cohortId,
-        participant.privateId,
+        [participant.privateId], // Pass agent's own ID as array
         stage.id,
         event.params.chatId,
         participant,
@@ -137,11 +142,10 @@ export const onPrivateChatMessageCreated = onDocumentCreated(
       const result = await createAgentChatMessageFromPrompt(
         event.params.experimentId,
         participant.currentCohortId,
-        participant.privateId,
+        [participant.privateId],
         stage.id,
         event.params.chatId,
         mediator,
-        true,
       );
       if (!result) {
         sendErrorPrivateChatMessage(

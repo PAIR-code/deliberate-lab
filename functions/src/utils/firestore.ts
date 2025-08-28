@@ -281,6 +281,44 @@ export function getFirestoreStagePublicDataRef(
     .doc(stageId);
 }
 
+/** Get trigger log reference for group chat stages */
+export function getGroupChatTriggerLogRef(
+  experimentId: string,
+  cohortId: string,
+  stageId: string,
+  triggerLogId: string,
+) {
+  return app
+    .firestore()
+    .collection('experiments')
+    .doc(experimentId)
+    .collection('cohorts')
+    .doc(cohortId)
+    .collection('publicStageData')
+    .doc(stageId)
+    .collection('triggerLogs')
+    .doc(triggerLogId);
+}
+
+/** Get trigger log reference for private chat stages */
+export function getPrivateChatTriggerLogRef(
+  experimentId: string,
+  participantId: string,
+  stageId: string,
+  triggerLogId: string,
+) {
+  return app
+    .firestore()
+    .collection('experiments')
+    .doc(experimentId)
+    .collection('participants')
+    .doc(participantId)
+    .collection('stageData')
+    .doc(stageId)
+    .collection('triggerLogs')
+    .doc(triggerLogId);
+}
+
 /** Fetch stage public data from Firestore. */
 export async function getFirestoreStagePublicData(
   experimentId: string,

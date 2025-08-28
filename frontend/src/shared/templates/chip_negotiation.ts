@@ -1,5 +1,6 @@
 import {
-  ALTERNATE_PROFILE_SET_ID,
+  SECONDARY_PROFILE_SET_ID,
+  TERTIARY_PROFILE_SET_ID,
   ChipAssistanceMode,
   ChipItem,
   ProfileType,
@@ -73,58 +74,51 @@ export function getChipNegotiationStageConfigs(numChips = 3): StageConfig[] {
   // Informed consent
   stages.push(CHIP_TOS_STAGE);
 
-  // Anonymized profiles
+  // Show anonymized profile 1
   stages.push(CHIP_PROFILE_STAGE);
 
-  // Overview stages
+  // Overview stages (introduce chip game)
   stages.push(createChipInfoStage1(numChips));
   stages.push(createChipInfoStage2(numChips));
-  stages.push(CHIP_INFO_STAGE_OVERVIEW3);
 
   // Comprehension check
   stages.push(CHIP_COMPREHENSION_CHECK);
 
-  // Gameplay stages
-  stages.push(CHIP_INFO_STAGE_GAMEPLAY);
-  stages.push(CHIP_INFO_STAGE_GAMEPLAY2);
-  stages.push(CHIP_INFO_STAGE_GAMEPLAY4);
-  stages.push(CHIP_INFO_STAGE_GAMEPLAY5);
+  // Information on proposing and accepting trades
+  stages.push(CHIP_INFO_STAGE_GAMEPLAY_PROPOSING);
+  stages.push(CHIP_INFO_STAGE_GAMEPLAY_RESPONDING);
 
   // Comprehension check
   stages.push(CHIP_COMPREHENSION_CHECK2);
 
-  stages.push(CHIP_INFO_STAGE_PAYOUT);
+  // Information on AI assistance and payout
+  stages.push(CHIP_INFO_STAGE_GAMEPLAY_AI_ASSISTANCE);
   stages.push(createChipInfoPayout(numChips));
 
   // Pre-game survey stage
   stages.push(CHIP_PRE_SURVEY_STAGE1);
-  // stages.push(CHIP_PRE_SURVEY_STAGE2);
 
   // Transfer
   stages.push(TRANSFER_STAGE);
 
+  // Coach mode
   stages.push(COACH_MODE_INSTRUCTION);
   stages.push(getChipNegotiationCoach(numChips));
-  // Coach mode survey stage
   stages.push(CHIP_COACH_FEEDBACK_STAGE);
 
+  // Advisor mode
   stages.push(ADVISOR_MODE_INSTRUCTION);
+  stages.push(CHIP_SECONDARY_PROFILE_STAGE); // Show anonymized profile 2
   stages.push(getChipNegotiationAdvisor(numChips));
-  // Advisor mode survey stage
   stages.push(CHIP_ADVISOR_FEEDBACK_STAGE);
 
+  // Delegate mode
   stages.push(DELEGATE_MODE_INSTRUCTION);
+  stages.push(CHIP_TERTIARY_PROFILE_STAGE); // Show anonymized profile 3
   stages.push(getChipNegotiationDelegate(numChips));
-  // Delegate mode survey stage
   stages.push(CHIP_DELEGATE_FEEDBACK_STAGE);
 
-  // Round 1
-  // stages.push(getChipNegotiationStage1(numChips));
-
-  // Round 2
-  // stages.push(CHIP_INFO_PART2);
-  // stages.push(CHIP_ALTERNATE_PROFILE_STAGE);
-  // stages.push(getChipNegotiationStage2(numChips));
+  // Payout (averaged between three games)
   stages.push(CHIP_PAYOUT_STAGE);
 
   // Post-negotiation survey stage
@@ -140,16 +134,16 @@ const CHIP_TOS_STAGE = createTOSStage({
   id: 'tos',
   name: 'Terms of service',
   tosLines: [
-    'Thank you for your interest in this research. If you choose to participate, you will be asked to play negotiation games with other participants. In total, this will take up to 50 minutes, factoring in time you may spend waiting for others to join your live sessions.',
+    'Thank you for your interest in this research. If you choose to participate, you will be asked to play negotiation games with other participants. In total, this will take up to 60 minutes, factoring in time you may spend waiting for others to join your live sessions. If the games take longer than expected, you will be compensated fairly for your additional time.',
     '\n**Compensation**',
-    'You will be paid a base amount for playing the games and completing the survey. You may receive an additional bonus on your performance in the games.',
+    'You will be paid a base amount for playing the games and completing the survey. You may receive an additional bonus based on your performance in the games, up to $10 USD.',
     '\n**IRB**',
-    'The results of this study will be used solely for research purposes. Our team will keep all your information from this study strictly confidential, as required by law. The IRB at the Massachusetts Institute of Technology is responsible for protecting the rights and welfare of research volunteers like you.',
+    'The results of this study will be used solely for research purposes. Our team will keep all your information from this study strictly confidential, as required by law. The IRB is responsible for protecting the rights and welfare of research volunteers like you.',
     '\n**Voluntary participation**',
-    'Your participation is voluntary, which means you can choose whether or not to participate. You may choose not to participate by exiting the survey at any point. There are no known costs to you for participating in this research study except for your time.',
+    'Your participation is voluntary, which means you can choose whether or not to participate. You may choose not to participate by exiting at any point. There are no known costs to you for participating in this research study except for your time.',
     '\n**Contact**',
     'Please feel free to contact us through Prolific or your game administrator if you have any questions, concerns, or complaints about this study.',
-    '\nBy checking the box below and proceeding, you are acknowledging that you are over the age of 18 and that you consent to participate. Clicking the arrow will bring you to the beginning of the task.',
+    '\nBy checking the box below and proceeding, you are acknowledging that you are over the age of 18 and that you consent to participate. Clicking "Next Step" will bring you to the beginning of the task.',
   ],
   progress: createStageProgressConfig({
     showParticipantProgress: false,
@@ -172,12 +166,25 @@ const CHIP_PROFILE_STAGE = createProfileStage({
   }),
 });
 
-const CHIP_ALTERNATE_PROFILE_STAGE = createProfileStage({
-  id: `profile_${ALTERNATE_PROFILE_SET_ID}`,
-  name: 'View secondary randomly generated profile',
+const CHIP_SECONDARY_PROFILE_STAGE = createProfileStage({
+  id: `profile_${SECONDARY_PROFILE_SET_ID}`,
+  name: 'View randomly generated profile for second game',
   descriptions: createStageTextConfig({
     primaryText:
       'This identity is how other players will see you during the second game.',
+  }),
+  profileType: ProfileType.ANONYMOUS_ANIMAL,
+  progress: createStageProgressConfig({
+    showParticipantProgress: false,
+  }),
+});
+
+const CHIP_TERTIARY_PROFILE_STAGE = createProfileStage({
+  id: `profile_${TERTIARY_PROFILE_SET_ID}`,
+  name: 'View randomly generated profile for third game',
+  descriptions: createStageTextConfig({
+    primaryText:
+      'This identity is how other players will see you during the third game.',
   }),
   profileType: ProfileType.ANONYMOUS_ANIMAL,
   progress: createStageProgressConfig({
@@ -191,7 +198,7 @@ const CHIP_ALTERNATE_PROFILE_STAGE = createProfileStage({
 
 function createChipInfoStage1(numChips: number) {
   const infoLines = [
-    'In this experiment, you will be playing a trading game with other participants.',
+    'In this experiment, you will be playing a trading game with two other participants.',
     'All of you will be given the same initial number of',
   ];
 
@@ -210,7 +217,10 @@ function createChipInfoStage1(numChips: number) {
 
   infoLines.push(
     'By making and accepting offers, you can exchange chips with the other players to increase the total value of your chips.',
-    'You may receive a bonus payment depending on the value of your chips at the end of the game.',
+    'You may receive a bonus payment depending on the value of your chips at the end of the game.\n',
+    '\n',
+    `\n# How the game works`,
+    `The game consists of **3 rounds** of trading. During each round, each player will have a turn to propose **1 trade**. These turns are pre-determined in a random order.`,
   );
 
   return createInfoStage({
@@ -225,7 +235,7 @@ function createChipInfoStage1(numChips: number) {
 
 function createChipInfoStage2(numChips: number) {
   const infoLines = [
-    'You will play this trading game three times against three different groups of participants. In each game, you and the other participants will start with:',
+    'You will play this trading game three times. In each game, you and the other participants will start with:',
   ];
 
   // Adjust the chips included based on numChips
@@ -261,7 +271,10 @@ function createChipInfoStage2(numChips: number) {
       'Each 🟢 green chip is worth $0.50 to each participant. However, you will all have different valuations for the red, blue, and purple chips, randomly chosen between $0.10 and $1.00.',
     );
     infoLines.push(
-      'For example, Cat might value 🔴 red chips at $0.30 each, 🔵 blue chips at $0.70 each, and 🟣 purple chips at $0.50 each, while Mouse might value 🔴 red chips at $0.80 each, 🔵 blue chips at $0.30 each, and 🟣 purple chips at $0.60 each.',
+      'For example, Cat might value 🔴 red chips at $0.30 each, while Mouse might value 🔴 red chips at $0.80 each.',
+    );
+    infoLines.push(
+      "‼️ IMPORTANT: You know your own chip valuation and that everyone values � green chips at $0.50 per chip. However, you do not know the other players' valuations for the other chips, and they do not know your valuations (besides 🟢 green chips)!",
     );
   }
 
@@ -287,37 +300,19 @@ function createChipInfoStage2(numChips: number) {
   }
 
   infoLines.push(
-    "You know your own chip valuation and that everyone values 🟢 green chips the same, at $0.50 per chip. However, you do not know the other players' valuations for the other chips.",
-  );
-
-  infoLines.push("**Parcipant Knowledge of Others' Valuations:**");
-
-  infoLines.push(
-    'You know your own chip valuation and that everyone values 🟢 green chips the same, at $0.50 per chip.',
-    "However, you do not know the other players' valuations for the other chips, and they do not know your valuations (besides 🟢 green chips).",
+    'The following table is shown to you during the game. It provides the number of chips everyone has as well as a reminder of your own valuations.',
+    '![Example of a table](https://i.imgur.com/pm3FrZs.png)',
   );
 
   return createInfoStage({
     id: 'info_overview2',
-    name: 'Instructions: chip valuations 1',
+    name: 'Instructions: chip valuations',
     infoLines,
     progress: createStageProgressConfig({
       showParticipantProgress: false,
     }),
   });
 }
-
-const CHIP_INFO_STAGE_OVERVIEW3 = createInfoStage({
-  id: 'info_overview3',
-  name: 'Instructions: chip valuations 2',
-  infoLines: [
-    'The following table is shown to you during the game. It provides the number of chips everyone has as well as a reminder of your own valuations.',
-    '![Example of chip count table](https://i.imgur.com/ImUM14D.png)',
-  ],
-  progress: createStageProgressConfig({
-    showParticipantProgress: false,
-  }),
-});
 
 // ****************************************************************************
 // Comprehension checks
@@ -327,7 +322,7 @@ export const CHIP_COMPREHENSION_CHECK = createComprehensionStage({
   name: 'Comprehension check',
   descriptions: createStageTextConfig({
     primaryText:
-      'Please answer the following questions to verify your understanding of the instructions. You may proceed once you have answered the questions correctly.',
+      'Please answer the following questions to verify your understanding of the instructions. Use the navigation bar to click on previous stages to refresh your memory. You may proceed once you have answered the questions correctly.',
   }),
   progress: createStageProgressConfig({
     showParticipantProgress: false,
@@ -392,7 +387,7 @@ export const CHIP_COMPREHENSION_CHECK2 = createComprehensionStage({
   }),
   descriptions: createStageTextConfig({
     primaryText:
-      'Please answer the following questions to verify your understanding of the instructions. You may proceed once you have answered the questions correctly.',
+      'Please answer the following questions to verify your understanding of the instructions. Use the navigation bar to click on previous stages to refresh your memory. You may proceed once you have answered the questions correctly.',
   }),
 
   questions: [
@@ -485,19 +480,7 @@ export const CHIP_COMPREHENSION_CHECK2 = createComprehensionStage({
 // Gameplay instructions
 // ****************************************************************************
 
-const CHIP_INFO_STAGE_GAMEPLAY = createInfoStage({
-  id: 'info_gameplay',
-  name: 'Gameplay: rounds',
-  infoLines: [
-    `## How the game works`,
-    `The game consists of **3 rounds** of trading. During each round, each player will have a turn to propose **1 trade**. These turns are pre-determined in a random order.`,
-  ],
-  progress: createStageProgressConfig({
-    showParticipantProgress: false,
-  }),
-});
-
-const CHIP_INFO_STAGE_GAMEPLAY2 = createInfoStage({
+const CHIP_INFO_STAGE_GAMEPLAY_PROPOSING = createInfoStage({
   id: 'info_gameplay2',
   name: 'Gameplay: proposing a trade',
   infoLines: [
@@ -505,20 +488,21 @@ const CHIP_INFO_STAGE_GAMEPLAY2 = createInfoStage({
     `To propose a trade, a player must:`,
     `1. Request a certain quantity of chips of a single color from any other player to **get**.`,
     `2. Specify a certain quantity of chips of a different color to **give** in return.`,
-    `\n## 🌟 One tip`,
-    'As a reminder, you can **always** make a beneficial offer as long as you have one chip left. For example, if you have one 🔴 red chip remaining, you can offer to **give** it and get 10 🟢 green chips in return for a profit. However, it is unlikely that someone will take you up on this offer. Please consider the tradeoffs. 🙂',
-
-    `\n## Trade rules`,
+    `\n\n## Trade rules`,
     `* Players cannot offer more chips than they currently hold. For example, if you only have 5 🔴 red chips, you cannot offer 6 🔴 red chips.`,
     `* Players cannot trade chips of the same color. For example, you cannot trade 🔴 red chips for 🔴 red chips.`,
+    `\n\n## ⏰ Time limit`,
+    'Please enter your offer within 1 minute! If you do not enter your offer within 1 minute, the experimenter will send you an attention check.',
     '![Example of offering a trade](https://i.imgur.com/Jzah8Ot.png)',
+    `\n## 🌟 One tip`,
+    'As a reminder, you can **always** make a beneficial offer as long as you have one chip left. For example, if you have one 🔴 red chip remaining, you can offer to **give** it and get 10 🟢 green chips in return for a profit. However, it is unlikely that someone will take you up on this offer. Please consider the tradeoffs. 🙂',
   ],
   progress: createStageProgressConfig({
     showParticipantProgress: false,
   }),
 });
 
-const CHIP_INFO_STAGE_GAMEPLAY4 = createInfoStage({
+const CHIP_INFO_STAGE_GAMEPLAY_RESPONDING = createInfoStage({
   id: 'info_gameplay4',
   name: 'Gameplay: completing a trade',
   infoLines: [
@@ -535,15 +519,15 @@ const CHIP_INFO_STAGE_GAMEPLAY4 = createInfoStage({
   }),
 });
 
-const CHIP_INFO_STAGE_GAMEPLAY5 = createInfoStage({
+const CHIP_INFO_STAGE_GAMEPLAY_AI_ASSISTANCE = createInfoStage({
   id: 'info_gameplay5',
-  name: 'Gameplay: summary',
+  name: 'Gameplay: AI assistance',
   infoLines: [
-    `## Key points to remember`,
-    `* In each round, each player gets to propose one trade and respond to other player's trades.`,
-    `* You can only propose trades between different colored chips, and cannot offer to give a chip amount that you do not have.`,
-    `* When multiple players accept a trade, the trading partner is randomly selected.`,
-    `\nFeel free to click back to previous sections to review the instructions.`,
+    `Today, you will play three versions of the negotiation game against different players. In each game, you will have access to one of the following AI assistance modes, which will be described in further detail later:`,
+    `* **AI delegate**: In delegation mode, you can delegate your trading decisions to an AI assistant. The AI will take actions on your behalf.`,
+    `* **AI advisor**: In advisor mode, you can ask an AI assistant to give recommendations on which action to take. The AI will provide suggestions, but you must make the final decision.`,
+    `* **AI coach**: In coach mode, you can ask an AI assistant for feedback on your actions. The AI will provide coaching, but you must make the final decision.`,
+    `\nAt each turn, you will have the option of opting into AI assistance or not. You will always have the option to ignore the AI assistance and take actions yourself.`,
   ],
   progress: createStageProgressConfig({
     showParticipantProgress: false,
@@ -554,24 +538,16 @@ const CHIP_INFO_STAGE_GAMEPLAY5 = createInfoStage({
 // Payment information
 // ****************************************************************************/
 
-const CHIP_INFO_STAGE_PAYOUT = createInfoStage({
-  id: 'info_payment1',
-  name: 'Payment information',
-  infoLines: [
+function createChipInfoPayout(numChips: number) {
+  const infoLines = [
     '## Bonus payment',
-    'At the end of the study, we will *average* the final surplus from three negotiation games you played and give you a bonus payment from the average.',
+    'At the end of the study, we will *average* the money you earned across the three negotiation games, **up to $10 USD.**',
     'There are two important features to remember about the bonus:',
     '  * The bonus will be equivalent to how much money you earn through trading *beyond* what you start with.',
-    '  * If you do not complete both games, you will not receive a bonus payment.',
-    'In short, you want to make as much money as you can through trading!',
-  ],
-  progress: createStageProgressConfig({
-    showParticipantProgress: false,
-  }),
-});
+    '  * If you do not complete all games, you will not receive a bonus payment.',
+  ];
 
-function createChipInfoPayout(numChips: number) {
-  const infoLines = ['## Bonus payment example calculation'];
+  infoLines.push('## Bonus payment example calculation');
 
   let startingValue = '';
   let endingValue = '';
@@ -597,14 +573,14 @@ function createChipInfoPayout(numChips: number) {
     endingValue,
     `You would receive ${bonus} as a bonus for the first game.`,
     'If you did not increase the value of your chips, you would not receive a bonus.',
-    '\n**Your total bonus will be randomly selected from either the first or the second game.**',
+    '\n**Your total bonus will be averaged from your bonus payout across the three games.**',
     '\nThe exact values will depend on your random chip valuations and your final holdings, so your payment may differ from this example.',
     '\nThis payment is in addition to the base payment for participating.',
   );
 
   return createInfoStage({
-    id: 'info_payment2',
-    name: 'Payment information examples',
+    id: 'info_payment1',
+    name: 'Payment information ',
     infoLines,
     progress: createStageProgressConfig({
       showParticipantProgress: false,
@@ -649,7 +625,7 @@ export const TRANSFER_STAGE = createTransferStage({
 // ****************************************************************************
 function getChips(numChips: number) {
   const redChip = {
-    id: 'RED',
+    id: 'red',
     name: 'red',
     avatar: '🔴',
     canBuy: true,
@@ -660,7 +636,7 @@ function getChips(numChips: number) {
   };
 
   const blueChip = {
-    id: 'BLUE',
+    id: 'blue',
     name: 'blue',
     avatar: '🔵',
     canBuy: true,
@@ -671,7 +647,7 @@ function getChips(numChips: number) {
   };
 
   const purpleChip = {
-    id: 'PURPLE',
+    id: 'purple',
     name: 'purple',
     avatar: '🟣',
     canBuy: true,
@@ -682,7 +658,7 @@ function getChips(numChips: number) {
   };
 
   const greenChip = {
-    id: 'GREEN',
+    id: 'green',
     name: 'green',
     avatar: '🟢',
     canBuy: true,
@@ -706,14 +682,25 @@ function getChips(numChips: number) {
   return chips;
 }
 
-const CHIP_NEGOTIATION_STAGE1_ID = 'negotiation1';
-const CHIP_NEGOTIATION_STAGE2_ID = `negotiation2_${ALTERNATE_PROFILE_SET_ID}`;
+// ****************************************************************************
+// Stage IDs for chip games
+// ****************************************************************************
+const CHIP_NEGOTIATION_COACH_ID = `chip_coach`;
+const CHIP_NEGOTIATION_ADVISOR_ID = `chip_advisor_${SECONDARY_PROFILE_SET_ID}`;
+const CHIP_NEGOTIATION_DELEGATE_ID = `chip_delegate_${TERTIARY_PROFILE_SET_ID}`;
 
-// Begin temporary chip stages for testing assistance
+// ****************************************************************************
+// Chip negotiation games
+// ****************************************************************************
 function getChipNegotiationCoach(numChips: number) {
   return createChipStage({
-    id: 'chip_coach',
-    name: 'Chip negotiation with coaching option',
+    id: CHIP_NEGOTIATION_COACH_ID,
+    name: 'Game (with AI coach)',
+    progress: {
+      minParticipants: 3,
+      waitForAllParticipants: true,
+      showParticipantProgress: true,
+    },
     descriptions: createStageTextConfig({
       infoText: `As a reminder, there are three rounds in this game. You will have an opportunity to send an offer to the other participants, and response to their offers, in each round. The objective is to maximize your payout at the end of the game by trading chips to your advantage.\n\nFeel free to refer to the instructions in previous stages for more detail.`,
       helpText: `If you see the "It's your turn" panel, that means others are waiting on you to make an offer! As a reminder, you can **always** make a beneficial offer as long as you have one chip left. For example, if you have one 🔴 red chip remaining, you can offer to **give** it and get 10 🟢 green chips in return for a profit. However, it is unlikely that someone will take you up on this offer. Please consider the tradeoffs.
@@ -729,8 +716,8 @@ function getChipNegotiationCoach(numChips: number) {
 
 function getChipNegotiationAdvisor(numChips: number) {
   return createChipStage({
-    id: 'chip_advisor',
-    name: 'Chip negotiation with advisor option',
+    id: CHIP_NEGOTIATION_ADVISOR_ID,
+    name: 'Game (with AI advisor)',
     descriptions: createStageTextConfig({
       infoText: `As a reminder, there are three rounds in this game. You will have an opportunity to send an offer to the other participants, and response to their offers, in each round. The objective is to maximize your payout at the end of the game by trading chips to your advantage.\n\nFeel free to refer to the instructions in previous stages for more detail.`,
       helpText: `If you see the "It's your turn" panel, that means others are waiting on you to make an offer! As a reminder, you can **always** make a beneficial offer as long as you have one chip left. For example, if you have one 🔴 red chip remaining, you can offer to **give** it and get 10 🟢 green chips in return for a profit. However, it is unlikely that someone will take you up on this offer. Please consider the tradeoffs.
@@ -741,13 +728,20 @@ function getChipNegotiationAdvisor(numChips: number) {
       offerModes: [ChipAssistanceMode.NONE, ChipAssistanceMode.ADVISOR],
       responseModes: [ChipAssistanceMode.NONE, ChipAssistanceMode.ADVISOR],
     },
+    // WARNING: Do not use waiting/progress stages for stages with alternate
+    // profiles (as waiting/progress will show the original profiles)
+    progress: {
+      minParticipants: 0, // Do not show waiting
+      waitForAllParticipants: false, // Do not show waiting
+      showParticipantProgress: false, // Do not show progress
+    },
   });
 }
 
 function getChipNegotiationDelegate(numChips: number) {
   return createChipStage({
-    id: 'chip_delegate',
-    name: 'Chip negotiation with delegate option',
+    id: CHIP_NEGOTIATION_DELEGATE_ID,
+    name: 'Game (with AI delegate)',
     descriptions: createStageTextConfig({
       infoText: `As a reminder, there are three rounds in this game. You will have an opportunity to send an offer to the other participants, and response to their offers, in each round. The objective is to maximize your payout at the end of the game by trading chips to your advantage.\n\nFeel free to refer to the instructions in previous stages for more detail.`,
       helpText: `If you see the "It's your turn" panel, that means others are waiting on you to make an offer! As a reminder, you can **always** make a beneficial offer as long as you have one chip left. For example, if you have one 🔴 red chip remaining, you can offer to **give** it and get 10 🟢 green chips in return for a profit. However, it is unlikely that someone will take you up on this offer. Please consider the tradeoffs.
@@ -758,38 +752,13 @@ function getChipNegotiationDelegate(numChips: number) {
       offerModes: [ChipAssistanceMode.NONE, ChipAssistanceMode.DELEGATE],
       responseModes: [ChipAssistanceMode.NONE, ChipAssistanceMode.DELEGATE],
     },
-  });
-}
-// End temporary chip stages
-
-function getChipNegotiationStage1(numChips: number) {
-  return createChipStage({
-    id: CHIP_NEGOTIATION_STAGE1_ID,
-    name: 'First negotiation game',
-    descriptions: createStageTextConfig({
-      infoText: `As a reminder, there are three rounds in this game. You will have an opportunity to send an offer to the other participants, and response to their offers, in each round. The objective is to maximize your payout at the end of the game by trading chips to your advantage.\n\nFeel free to refer to the instructions in previous stages for more detail.`,
-      helpText: `If you see the "It's your turn" panel, that means others are waiting on you to make an offer! As a reminder, you can **always** make a beneficial offer as long as you have one chip left. For example, if you have one 🔴 red chip remaining, you can offer to **give** it and get 10 🟢 green chips in return for a profit. However, it is unlikely that someone will take you up on this offer. Please consider the tradeoffs.
-      `,
-    }),
-    chips: getChips(numChips),
+    // WARNING: Do not use waiting/progress stages for stages with alternate
+    // profiles (as waiting/progress will show the original profiles)
     progress: {
-      minParticipants: 3,
-      waitForAllParticipants: true,
-      showParticipantProgress: true,
+      minParticipants: 0, // Do not show waiting
+      waitForAllParticipants: false, // Do not show waiting
+      showParticipantProgress: false, // Do not show progress
     },
-  });
-}
-
-function getChipNegotiationStage2(numChips: number) {
-  return createChipStage({
-    id: CHIP_NEGOTIATION_STAGE2_ID,
-    name: 'Second negotiation game',
-    descriptions: createStageTextConfig({
-      infoText: `As a reminder, there are three rounds in this game. You will have an opportunity to send an offer to the other participants, and response to their offers, in each round. The objective is to maximize your payout at the end of the game by trading chips to your advantage.\n\nFeel free to refer to the instructions in previous stages for more detail.`,
-      helpText: `If you see the "It's your turn" panel, that means others are waiting on you to make an offer! As a reminder, you can **always** make a beneficial offer as long as you have one chip left. For example, if you have one 🔴 red chip remaining, you can offer to **give** it and get 10 🟢 green chips in return for a profit. However, it is unlikely that someone will take you up on this offer. Please consider the tradeoffs.
-      `,
-    }),
-    chips: getChips(numChips),
   });
 }
 
@@ -803,23 +772,33 @@ export function createPayoutItems() {
 
   const game1 = createChipPayoutItem({
     randomSelectionId: RANDOM_SELECTION_ID,
-    name: 'Payout from game 1 (one game was randomly selected)',
-    stageId: CHIP_NEGOTIATION_STAGE1_ID,
+    name: 'Payout from game 1',
+    stageId: CHIP_NEGOTIATION_COACH_ID,
     baseCurrencyAmount: 0,
   });
 
   const game2 = createChipPayoutItem({
     randomSelectionId: RANDOM_SELECTION_ID,
-    name: 'Payout from game 2 (one game was randomly selected)',
-    stageId: CHIP_NEGOTIATION_STAGE2_ID,
+    name: 'Payout from game 2',
+    stageId: CHIP_NEGOTIATION_ADVISOR_ID,
     baseCurrencyAmount: 0,
   });
-  return [game1, game2];
+
+  // Add the game 3
+  const game3 = createChipPayoutItem({
+    randomSelectionId: RANDOM_SELECTION_ID,
+    name: 'Payout from game 3',
+    stageId: CHIP_NEGOTIATION_DELEGATE_ID,
+    baseCurrencyAmount: 0,
+  });
+
+  return [game1, game2, game3];
 }
 
 const CHIP_PAYOUT_STAGE = createPayoutStage({
-  id: 'random_payout',
+  id: 'average_payout',
   payoutItems: createPayoutItems(),
+  averageAllPayoutItems: true,
 });
 
 // ****************************************************************************
@@ -874,46 +853,55 @@ const CHIP_SURVEY_STAGE = createSurveyStage({
 
 const COACH_MODE_INSTRUCTION = createInfoStage({
   id: 'coach_instruction',
-  name: 'Instructions: AI Assistant as a coach',
+  name: 'Game instructions: AI coach',
   infoLines: [
-    'In this game, the AI agent acts as your private coach. The Agent sees everything you see.',
+    'In this game, an AI-based agent will act as your private coach. The agent sees everything you see.',
     '',
-    '**• Your Choice:** At each turn, you input your move. You can then either submit the move directly or ask the Coach for feedback on your idea.',
-    "**• How the Coach Works:** First, input the action you plan to take, then click the “Coach” button if you'd like feedback from the AI agent. The agent will provide a one-time analysis to help you strengthen your approach.",
-    '**• Next Step:** After receiving feedback, you can revise your action before sending. You always have final control over what you send.',
+    '* **Your choice:** At each turn, you input your move. You can then either submit the move directly or ask the coach for feedback on your idea.',
+    "* **How the coach works:** First, input the action you plan to take, then click the “Coach” button if you'd like feedback from the AI agent. The agent will provide a one-time analysis to help you strengthen your approach.",
+    '* **Next step:** After receiving feedback, you can revise your action before sending.',
+    '* **‼️ Important:** You need to make the final decision by clicking the "Submit offer" button.',
     '',
-    '![Example of the AI Coach giving feedback on the proposal](https://i.imgur.com/ImUM14D.png)',
-    '![Example of the AI Coach giving feedback on responding to an offer](https://i.imgur.com/ImUM14D.png)',
+    'Here’s how the AI coach might help you with the proposal:',
+    '![Example of receiving an offer](https://i.imgur.com/YTluFKf.png)',
+    'Here’s how the AI coach might give feedback on the response:',
+    '![Example of receiving an offer](https://i.imgur.com/h6E2hco.png)',
   ],
 });
 
 const ADVISOR_MODE_INSTRUCTION = createInfoStage({
   id: 'advisor_instruction',
-  name: 'Instructions: AI Assistant as an advisor',
+  name: 'Game instructions: AI advisor',
   infoLines: [
-    'In this game, the AI agent suggests a specific move and explains its reasoning. The Agent sees everything you see.',
+    'In this game, an AI-based agent will act as your private advisor. If prompted, it will suggest a specific move for you to take and explain its reasoning. The agent sees everything you see.',
     '',
-    '**• Your Choice:** At each turn, you can either make your move directly or first ask the Advisor for a recommendation.',
-    '**• How the Advisor Works:** If you ask for advice, the Advisor will suggest a move and provide the strategic rationale behind it.',
-    "**• Next Step:** After seeing the recommendation, you can either accept the agent's move or ignore it and enter your own action.",
+    '* **Your choice:** At each turn, you can either make your move directly or first ask the advisor for a recommendation.',
+    '* **How the advisor works:** If you ask for advice, the advisor will suggest a move and provide the strategic rationale behind it.',
+    "* **Next step:** After seeing the recommendation, you can either accept the agent's move or ignore it and enter your own action.",
+    '* ** ‼️ Important:** You need to make the final decision by clicking the "Submit offer" button.',
     '',
-    '![Example of the AI Advisor giving recommendations for the proposal](https://i.imgur.com/ImUM14D.png)',
-    '![Example of the AI Coach giving recommendations for responding to an offer](https://i.imgur.com/ImUM14D.png)',
+    'Here’s how the AI advisor might give suggestions on the proposal:',
+    '![Example of receiving an offer](https://i.imgur.com/HyluDin.png)',
+    'Here’s how the AI advisor might give suggestions on the response:',
+    '![Example of receiving an offer](https://i.imgur.com/Q4tHXz2.png)',
   ],
 });
 
 const DELEGATE_MODE_INSTRUCTION = createInfoStage({
   id: 'delegate_instruction',
-  name: 'Instructions: AI Assistant as a delegate',
+  name: 'Game instructions: AI delegate',
   infoLines: [
-    'In this game, the AI agent takes full control and negotiates on your behalf for the turn. The Agent sees everything you see.',
+    'In this game, you have the option of delegating game moves to an AI-based delegate. The agent will full control and negotiate on your behalf for a given turn. The agent sees everything you see.',
     '',
-    '**• Your Choice:** At each turn, you can either make the move yourself or delegate the entire turn to the agent.',
-    '**• How the Delegate Works:** If you choose to delegate, the agent will autonomously decide and execute a move for you, and provide you with a reason.',
-    "**• Next Step:** After seeing the recommendation, you can either accept the agent's move or ignore it and enter your own action.",
-    '',
-    '![Example of the AI Delegate making an decision when proposing](https://i.imgur.com/ImUM14D.png)',
-    '![Example of the AI Delegate making an decision when responding to an offer](https://i.imgur.com/ImUM14D.png)',
+    '**• Your choice:** At each turn, you can either make the move yourself or delegate the entire turn to the agent.',
+    '**• How the delegate works:** If you choose to delegate, the agent will decide and execute a move for you, and provide you with a reason.',
+    'Remember that the delegate is built upon the same underlying AI model as the advisor and the coach, but you will only be shown its final decision and the reasoning only for the OFFER not the reject/accept decision.',
+
+    'Here’s how you can delegate the proposal to the AI:',
+    '![Example of the AI delegate making an decision when proposing](https://i.imgur.com/Qbpwm1Z.png)',
+    '![Example of the reasonings](https://i.imgur.com/rhRKCuT.png)',
+    'Here’s how you can delegate the response to the AI:',
+    '![Example of the AI delegate making an decision when responding to an offer](https://i.imgur.com/1Yev7H7.png)',
   ],
 });
 
@@ -927,7 +915,8 @@ const CHIP_PRE_SURVEY_STAGE1 = createSurveyStage({
     primaryText:
       'Before you play the bargaining games, please complete this short survey so we can better understand your background and perspectives. \
       Completion of this survey is required to receive bonus payouts. \n \
-      This section asks about your expectations about the different AI tools available to you in the game. You’ll have access to three types of AI tools (a coach, delegate, and advisor) over three games, all powered by Google Gemini 2.5 (a large language model) and built on the same underlying capabilities.\n \
+      This section asks about your expectations about the different AI tools available to you in the game.\n \
+      As a reminder, you’ll have access to three types of AI tools (a coach, delegate, and advisor) over three games, all powered by Google Gemini 2.5 (a large language model) and built on the same underlying capabilities.\n \
       Please indicate how much you agree or disagree with the following statements based on your expectations. ',
   }),
   questions: [
@@ -938,6 +927,15 @@ const CHIP_PRE_SURVEY_STAGE1 = createSurveyStage({
       lowerText: 'Not at all confident',
       lowerValue: 1,
       upperText: 'Very confident',
+      upperValue: 5,
+    }),
+    // Relevant experience section
+    createScaleSurveyQuestion({
+      questionTitle:
+        'How much prior experience do you have with games or tasks similar to this one?',
+      lowerText: 'No experience',
+      lowerValue: 1,
+      upperText: 'Extensive experience',
       upperValue: 5,
     }),
     createTextSurveyQuestion({
@@ -980,49 +978,6 @@ const CHIP_PRE_SURVEY_STAGE1 = createSurveyStage({
     }),
   ],
 });
-// const CHIP_PRE_SURVEY_STAGE2 = createSurveyStage({
-//   id: 'pre_survey_2',
-//   name: 'Pre-game survey 2',
-//   descriptions: createStageTextConfig({
-//     primaryText:
-//       'This section asks about your expectations about the different AI tools available to you in the game. As a reminder, you’ll have access to three types of AI tools (a coach, delegate, and advisor) over three games, all powered by Google Gemini 2.5 (a large language model) and built on the same underlying capabilities.\nPlease indicate how much you agree or disagree with the following statements based on your expectations.',
-//   }),
-//   questions: [
-//     // Perspectives on AI tooling
-//     createScaleSurveyQuestion({
-//       questionTitle:
-//         'I believe that having access to the AI tools will improve my performance in this game.',
-//       lowerText: 'Strongly disagree',
-//       lowerValue: 1,
-//       upperText: 'Strongly agree',
-//       upperValue: 5,
-//     }),
-//     createScaleSurveyQuestion({
-//       questionTitle:
-//         'I believe that the AI tools will provide information I can trust.',
-//       lowerText: 'Strongly disagree',
-//       lowerValue: 1,
-//       upperText: 'Strongly agree',
-//       upperValue: 5,
-//     }),
-//     createScaleSurveyQuestion({
-//       questionTitle:
-//         'I believe that the AI tools will help me see options or strategies I might otherwise miss.',
-//       lowerText: 'Strongly disagree',
-//       lowerValue: 1,
-//       upperText: 'Strongly agree',
-//       upperValue: 5,
-//     }),
-//     createScaleSurveyQuestion({
-//       questionTitle:
-//         'I believe that the AI tools will help lighten the mental workload of playing this game.',
-//       lowerText: 'Strongly disagree',
-//       lowerValue: 1,
-//       upperText: 'Strongly agree',
-//       upperValue: 5,
-//     }),
-//   ],
-// });
 
 // ****************************************************************************
 // Post-negotiation survey stage
@@ -1094,10 +1049,10 @@ const CHIP_POST_SURVEY_STAGE = createSurveyStage({
 
 const CHIP_COACH_FEEDBACK_STAGE = createSurveyStage({
   id: 'coach_feedback',
-  name: 'Coach Feedback Survey',
+  name: 'Coach feedback survey',
   descriptions: createStageTextConfig({
     primaryText:
-      'Please fill out this brief survey about the previous game, where you had access to an LLM-powered coach. Completion of this survey is required to receive bonus payouts. Indicate how much you agree or disagree with the following statements, where 1 = Strongly disagree, 2 = Disagree, 3 = Neutral, 4 = Agree, 5 = Strongly agree.',
+      'Please fill out this brief survey about the previous game, where you had access to an AI-powered coach. Completion of this survey is required to receive bonus payouts. Indicate how much you agree or disagree with the following statements, where 1 = Strongly disagree, 2 = Disagree, 3 = Neutral, 4 = Agree, 5 = Strongly agree.',
   }),
   questions: [
     createScaleSurveyQuestion({
@@ -1158,10 +1113,10 @@ const CHIP_COACH_FEEDBACK_STAGE = createSurveyStage({
 
 const CHIP_ADVISOR_FEEDBACK_STAGE = createSurveyStage({
   id: 'advisor_feedback',
-  name: 'Advisor Feedback Survey',
+  name: 'Advisor feedback survey',
   descriptions: createStageTextConfig({
     primaryText:
-      'Please fill out this brief survey about the previous game, where you had access to an LLM-powered advisor. Completion of this survey is required to receive bonus payouts. Indicate how much you agree or disagree with the following statements, where 1 = Strongly disagree, 2 = Disagree, 3 = Neutral, 4 = Agree, 5 = Strongly agree.',
+      'Please fill out this brief survey about the previous game, where you had access to an AI-powered advisor. Completion of this survey is required to receive bonus payouts. Indicate how much you agree or disagree with the following statements, where 1 = Strongly disagree, 2 = Disagree, 3 = Neutral, 4 = Agree, 5 = Strongly agree.',
   }),
   questions: [
     createScaleSurveyQuestion({
@@ -1222,10 +1177,10 @@ const CHIP_ADVISOR_FEEDBACK_STAGE = createSurveyStage({
 // ****************************************************************************
 const CHIP_DELEGATE_FEEDBACK_STAGE = createSurveyStage({
   id: 'delegate_feedback',
-  name: 'Delegation Feedback Survey',
+  name: 'Delegation feedback survey',
   descriptions: createStageTextConfig({
     primaryText:
-      'Please fill out this brief survey about the previous game, where you had access to an LLM-powered delegate. Completion of this survey is required to receive bonus payouts. Indicate how much you agree or disagree with the following statements, where 1 = Strongly disagree, 2 = Disagree, 3 = Neutral, 4 = Agree, 5 = Strongly agree.',
+      'Please fill out this brief survey about the previous game, where you had access to an AI-powered delegate. Completion of this survey is required to receive bonus payouts. Indicate how much you agree or disagree with the following statements, where 1 = Strongly disagree, 2 = Disagree, 3 = Neutral, 4 = Agree, 5 = Strongly agree.',
   }),
   questions: [
     createScaleSurveyQuestion({
@@ -1276,7 +1231,7 @@ const CHIP_DELEGATE_FEEDBACK_STAGE = createSurveyStage({
     }),
     createTextSurveyQuestion({
       questionTitle:
-        'Please share any additional context on your answers. How did you decide to use (or not use) the coach? What did you think of the quality or usefulness of its suggestions?',
+        'Please share any additional context on your answers. How did you decide to use (or not use) the DELEGATE? What did you think of the quality or usefulness of its suggestions?',
     }),
   ],
 });

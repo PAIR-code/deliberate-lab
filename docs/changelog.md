@@ -5,6 +5,11 @@ layout: default
 
 This page summarizes notable updates to the Deliberate Lab platform.
 
+## 2025-08-12: Details coming soon
+[PR #634](https://github.com/PAIR-code/deliberate-lab/pull/634)
+
+Changelog notes for Summer 2025 merge coming soon.
+
 ## 2025-06-10: Add automatic cohort transfer by survey answer
 Experiment Version: 18 / [PR #535](https://github.com/PAIR-code/deliberate-lab/pull/535)
 

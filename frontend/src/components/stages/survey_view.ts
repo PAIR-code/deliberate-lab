@@ -6,6 +6,7 @@ import './stage_footer';
 
 import '@material/web/radio/radio.js';
 import '@material/web/slider/slider.js';
+import '@material/web/textfield/outlined-text-field.js';
 
 import {MobxLitElement} from '@adobe/lit-mobx';
 import {CSSResultGroup, html, nothing} from 'lit';
@@ -22,17 +23,15 @@ import {
   ScaleSurveyAnswer,
   ScaleSurveyQuestion,
   SurveyQuestionKind,
-  SurveyAnswer,
   SurveyStageConfig,
-  SurveyStageParticipantAnswer,
   TextSurveyAnswer,
   TextSurveyQuestion,
   isMultipleChoiceImageQuestion,
-} from '@deliberation-lab/utils';
-import {
+  getVisibleSurveyQuestions,
+  isQuestionVisible,
   isSurveyComplete,
   isSurveyAnswerComplete,
-} from '../../shared/stage.utils';
+} from '@deliberation-lab/utils';
 
 import {unsafeHTML} from 'lit/directives/unsafe-html.js';
 import {convertMarkdownToHTML} from '../../shared/utils';
@@ -61,10 +60,18 @@ export class SurveyView extends MobxLitElement {
 
     const questionsComplete = (): boolean => {
       if (!this.stage) return false;
-      return isSurveyComplete(
+
+      const currentSurveyAnswers =
+        this.participantAnswerService.getSurveyAnswerMap(this.stage.id);
+      const allStageAnswers = this.participantAnswerService.answerMap;
+      const visibleQuestions = getVisibleSurveyQuestions(
         this.stage.questions,
-        this.participantAnswerService.getSurveyAnswerMap(this.stage.id),
+        this.stage.id,
+        currentSurveyAnswers,
+        allStageAnswers,
       );
+
+      return isSurveyComplete(visibleQuestions, currentSurveyAnswers);
     };
 
     const saveAnswers = async () => {
@@ -78,7 +85,12 @@ export class SurveyView extends MobxLitElement {
     return html`
       <stage-description .stage=${this.stage}></stage-description>
       <div class="questions-wrapper">
-        ${this.stage.questions.map((question) => this.renderQuestion(question))}
+        ${this.stage.questions.map((question) => {
+          if (this.shouldShowQuestion(question)) {
+            return this.renderQuestion(question);
+          }
+          return nothing;
+        })}
       </div>
       <stage-footer
         .disabled=${!questionsComplete()}
@@ -89,6 +101,21 @@ export class SurveyView extends MobxLitElement {
           : nothing}
       </stage-footer>
     `;
+  }
+
+  private shouldShowQuestion(question: SurveyQuestion): boolean {
+    if (!this.stage) return true;
+
+    const currentSurveyAnswers =
+      this.participantAnswerService.getSurveyAnswerMap(this.stage.id);
+    const allStageAnswers = this.participantAnswerService.answerMap;
+
+    return isQuestionVisible(
+      question,
+      this.stage.id,
+      currentSurveyAnswers,
+      allStageAnswers,
+    );
   }
 
   private renderQuestion(question: SurveyQuestion) {
@@ -178,22 +205,38 @@ export class SurveyView extends MobxLitElement {
       answer && answer.kind === SurveyQuestionKind.TEXT ? answer.answer : '';
 
     const titleClasses = classMap({
-      required: !isSurveyAnswerComplete(answer),
+      required: !isSurveyAnswerComplete(answer, question),
     });
+
+    // Check if current answer meets requirements for error state
+    const minCount = question.minCharCount ?? null;
+    const maxCount = question.maxCharCount ?? null;
+
+    const isTooShort = minCount !== null && textAnswer.length < minCount;
+
+    // Build error text (only needed for minimum since maxlength prevents exceeding max)
+    const errorText = isTooShort
+      ? `Minimum ${minCount} characters required`
+      : '';
 
     return html`
       <div class="question">
         <div class=${titleClasses}>
           ${unsafeHTML(convertMarkdownToHTML(question.questionTitle + '*'))}
         </div>
-        <pr-textarea
-          variant="outlined"
+        <md-outlined-text-field
+          type="textarea"
           placeholder="Type your response"
           .value=${textAnswer}
           ?disabled=${this.participantService.disableStage}
-          @change=${handleTextChange}
+          @input=${handleTextChange}
+          .minLength=${minCount ?? nothing}
+          .maxLength=${maxCount ?? nothing}
+          .error=${isTooShort}
+          .errorText=${errorText}
+          .counter=${maxCount !== null}
         >
-        </pr-textarea>
+        </md-outlined-text-field>
       </div>
     `;
   }
@@ -215,7 +258,9 @@ export class SurveyView extends MobxLitElement {
 
     return html`
       <div class="radio-question">
-        <div class=${titleClasses}>${question.questionTitle}*</div>
+        <div class=${titleClasses}>
+          ${unsafeHTML(convertMarkdownToHTML(question.questionTitle + '*'))}
+        </div>
         <div class=${questionWrapperClasses}>
           ${question.options.map((option) =>
             this.renderRadioButton(option, question.id),

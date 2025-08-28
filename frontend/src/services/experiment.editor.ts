@@ -4,6 +4,7 @@ import {
   AgentParticipantPersonaConfig,
   AgentPersonaType,
   AgentParticipantTemplate,
+  ApiKeyType,
   CohortParticipantConfig,
   Experiment,
   ExperimentTemplate,
@@ -14,6 +15,7 @@ import {
   ProlificConfig,
   StageConfig,
   StageKind,
+  checkApiKeyExists,
   createAgentMediatorPersonaConfig,
   createAgentParticipantPersonaConfig,
   createChatPromptConfig,
@@ -68,28 +70,67 @@ export class ExperimentEditor extends Service {
   @observable currentStageId: string | undefined = undefined;
   @observable showStageBuilderDialog = false;
   @observable showTemplatesTab = false;
+  @observable showAlphaFeatures = false;
 
   // **************************************************************************
   // EXPERIMENT LOADING
   // **************************************************************************
 
-  @computed get isValidExperimentConfig() {
-    // TODO: Add other validation checks here
-    if (this.experiment.metadata.name.length == 0) {
-      return false;
+  getExperimentConfigErrors() {
+    const errors: string[] = [];
+
+    if (this.experiment.metadata.name.length === 0) {
+      errors.push('Experiment does not have a name');
     }
+
+    if (this.stages.length === 0) {
+      errors.push('You must add at least one stage to your experiment');
+    }
+
+    // Check if relevant API key is set up for agents
+    const hasAgentsWithApiType = (apiType: ApiKeyType) => {
+      const agents = [...this.agentMediators, ...this.agentParticipants].filter(
+        (agent) => agent.persona.defaultModelSettings.apiType === apiType,
+      );
+      return (
+        agents.length > 0 &&
+        !checkApiKeyExists(apiType, this.sp.authService.experimenterData)
+      );
+    };
+
+    const renderApiErrorMessage = (apiType: ApiKeyType) => {
+      if (hasAgentsWithApiType(apiType)) {
+        errors.push(
+          `Your experiment includes agents that use the ${apiType} API, but you have not set your API key yet`,
+        );
+      }
+    };
+    renderApiErrorMessage(ApiKeyType.GEMINI_API_KEY);
+    renderApiErrorMessage(ApiKeyType.OPENAI_API_KEY);
+    renderApiErrorMessage(ApiKeyType.OLLAMA_CUSTOM_URL);
 
     for (const stage of this.stages) {
       switch (stage.kind) {
         case StageKind.SURVEY:
           // Ensure all questions have a non-empty title
-          if (!stage.questions.every((q) => q.questionTitle !== '')) {
-            return false;
-          }
+          stage.questions.forEach((question, index) => {
+            if (question.questionTitle === '') {
+              errors.push(
+                `${stage.name} question ${index + 1} is missing a title`,
+              );
+            }
+          });
           break;
       }
     }
-    return true;
+    return errors;
+  }
+
+  getMediatorAllowedStages() {
+    return this.stages.filter(
+      (stage) =>
+        stage.kind === StageKind.CHAT || stage.kind === StageKind.PRIVATE_CHAT,
+    );
   }
 
   @computed get canEditStages() {
@@ -137,6 +178,10 @@ export class ExperimentEditor extends Service {
 
   isInitializedExperiment() {
     return this.experiment.id.length > 0;
+  }
+
+  setShowAlphaFeatures(show: boolean) {
+    this.showAlphaFeatures = show;
   }
 
   updateMetadata(metadata: Partial<MetadataConfig>) {
@@ -258,6 +303,15 @@ export class ExperimentEditor extends Service {
 
   setCurrentAgentId(id: string) {
     this.currentAgentId = id;
+  }
+
+  setAgentIdToLatest(isMediator: boolean = true) {
+    const agents = isMediator ? this.agentMediators : this.agentParticipants;
+    if (agents.length === 0) {
+      this.setCurrentAgentId('');
+    } else {
+      this.setCurrentAgentId(agents[agents.length - 1].persona.id);
+    }
   }
 
   setAgentMediators(templates: AgentMediatorTemplate[]) {

@@ -30,6 +30,7 @@ import {
   createSurveyStage,
   createTOSStage,
   createTransferStage,
+  createComprehensionStage,
 } from '@deliberation-lab/utils';
 import {
   LAS_METADATA,
@@ -75,6 +76,14 @@ import {
   ASSET_ALLOCATION_TEMPLATE_METADATA,
   getAssetAllocationTemplate,
 } from '../../shared/templates/asset_allocation_template';
+import {
+  CONDITIONAL_SURVEY_TEMPLATE_METADATA,
+  getConditionalSurveyTemplate,
+} from '../../shared/templates/conditional_survey_template';
+import {
+  POLICY_METADATA,
+  getPolicyExperimentTemplate,
+} from '../../shared/templates/policy';
 
 import {styles} from './stage_builder_dialog.scss';
 
@@ -159,6 +168,8 @@ export class StageBuilderDialog extends MobxLitElement {
         ${this.renderSalespersonGameCard()} ${this.renderFlipCardTemplateCard()}
         ${this.renderFruitTestTemplateCard()} ${this.renderStockInfoGameCard()}
         ${this.renderAssetAllocationTemplateCard()}
+        ${this.renderConditionalSurveyTemplateCard()}
+        ${this.renderPolicyTemplateCard()}
         ${this.renderCharityDebateTemplateCard()}
       </div>
     `;
@@ -185,7 +196,8 @@ export class StageBuilderDialog extends MobxLitElement {
         <div class="gallery-title">Other stages</div>
         <div class="card-gallery-wrapper">
           ${this.renderTransferCard()} ${this.renderSurveyCard()}
-          ${this.renderSurveyPerParticipantCard()} ${this.renderFlipCardCard()}
+          ${this.renderSurveyPerParticipantCard()}
+          ${this.renderComprehensionCard()} ${this.renderFlipCardCard()}
           ${this.renderRankingCard()} ${this.renderRevealCard()}
           ${this.renderPayoutCard()} ${this.renderRoleCard()}
           ${this.renderStockInfoCard()} ${this.renderAssetAllocationCard()}
@@ -498,6 +510,21 @@ export class StageBuilderDialog extends MobxLitElement {
     `;
   }
 
+  private renderComprehensionCard() {
+    const addStage = () => {
+      this.addStage(createComprehensionStage());
+    };
+
+    return html`
+      <div class="card" @click=${addStage}>
+        <div class="title">✅ Comprehension</div>
+        <div>
+          Test participant understanding with questions and correct answers.
+        </div>
+      </div>
+    `;
+  }
+
   private renderProfileCard() {
     const isDisabled = this.experimentEditor.hasStageKind(StageKind.PROFILE);
 
@@ -688,6 +715,38 @@ private renderConsensusDebateCard() {
           A complete investment study with stock analysis and portfolio
           allocation decisions.
         </div>
+      </div>
+    `;
+  }
+
+  private renderConditionalSurveyTemplateCard() {
+    const addGame = () => {
+      this.addGame(
+        CONDITIONAL_SURVEY_TEMPLATE_METADATA,
+        getConditionalSurveyTemplate(),
+      );
+    };
+
+    return html`
+      <div class="card" @click=${addGame}>
+        <div class="title">🔀 Conditional Survey Demo</div>
+        <div>
+          Advanced survey with complex conditional logic, demonstrating AND/OR
+          operators and nested conditions.
+        </div>
+      </div>
+    `;
+  }
+
+  private renderPolicyTemplateCard() {
+    const addTemplate = () => {
+      this.addTemplate(getPolicyExperimentTemplate());
+    };
+
+    return html`
+      <div class="card" @click=${addTemplate}>
+        <div class="title">${POLICY_METADATA.name}</div>
+        <div>${POLICY_METADATA.description}</div>
       </div>
     `;
   }

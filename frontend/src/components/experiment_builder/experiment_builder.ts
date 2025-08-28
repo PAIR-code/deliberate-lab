@@ -5,7 +5,9 @@ import '../../pair-components/tooltip';
 import '../experimenter/experimenter_data_editor';
 import '../stages/asset_allocation_editor';
 import '../stages/base_stage_editor';
+import '../stages/comprehension_editor';
 import '../stages/group_chat_editor';
+import '../stages/private_chat_editor';
 import '../stages/flipcard_editor';
 import '../stages/ranking_editor';
 import '../stages/info_editor';
@@ -28,6 +30,8 @@ import {MobxLitElement} from '@adobe/lit-mobx';
 import {CSSResultGroup, html, nothing} from 'lit';
 import {customElement, property, state} from 'lit/decorators.js';
 
+import '@material/web/checkbox/checkbox.js';
+
 import {core} from '../../core/core';
 import {AnalyticsService, ButtonClick} from '../../services/analytics.service';
 import {ExperimentEditor} from '../../services/experiment.editor';
@@ -39,9 +43,14 @@ import {StageConfig, StageKind, generateId} from '@deliberation-lab/utils';
 import {styles} from './experiment_builder.scss';
 
 enum PanelView {
-  AGENTS = 'agents',
+  AGENT_MEDIATORS = 'agent_mediators',
+  AGENT_PARTICIPANTS = 'agent_participants',
+  ALPHA = 'alpha',
   API_KEY = 'api_key',
-  DEFAULT = 'default',
+  COHORT = 'cohort',
+  METADATA = 'metadata',
+  PERMISSIONS = 'permissions',
+  PROLIFIC = 'prolific',
   STAGES = 'stages',
 }
 
@@ -55,11 +64,11 @@ export class ExperimentBuilder extends MobxLitElement {
   private readonly experimentManager = core.getService(ExperimentManager);
   private readonly routerService = core.getService(RouterService);
 
-  @state() panelView: PanelView = PanelView.DEFAULT;
+  @state() panelView: PanelView = PanelView.STAGES;
 
   override render() {
     return html`
-      ${this.renderNavPanel()} ${this.renderExperimentConfigBuilder()}
+      ${this.renderPanelView()} ${this.renderExperimentConfigBuilder()}
       ${this.renderExperimenterSettings()} ${this.renderStageBuilderDialog()}
     `;
   }
@@ -73,183 +82,177 @@ export class ExperimentBuilder extends MobxLitElement {
     return nothing;
   }
 
-  private renderNavPanel() {
-    const isSelected = (panelView: PanelView) => {
-      return this.panelView === panelView;
-    };
-
+  private renderPanelView() {
     return html`
       <div class="panel-wrapper">
-        <div class="sidebar">
-          <pr-tooltip text="Experiment settings" position="RIGHT_END">
-            <pr-icon-button
-              color="secondary"
-              icon="folder_managed"
-              size="medium"
-              variant=${!isSelected(PanelView.API_KEY) ? 'tonal' : 'default'}
+        <div class="panel-view">
+          <div class="top">
+            <div class="panel-view-header">
+              <div class="header-title">General settings</div>
+            </div>
+            <div
+              class="general-item ${this.panelView === PanelView.METADATA
+                ? 'current'
+                : ''}"
               @click=${() => {
-                this.panelView = PanelView.DEFAULT;
+                this.panelView = PanelView.METADATA;
               }}
             >
-            </pr-icon-button>
-          </pr-tooltip>
-          <pr-tooltip text="API key settings" position="RIGHT_END">
-            <pr-icon-button
-              color="secondary"
-              icon="key"
-              size="medium"
-              variant=${isSelected(PanelView.API_KEY) ? 'tonal' : 'default'}
+              <div>Metadata</div>
+              <div class="subtitle">Experiment name and description</div>
+            </div>
+            <div
+              class="general-item ${this.panelView === PanelView.PERMISSIONS
+                ? 'current'
+                : ''}"
+              @click=${() => {
+                this.panelView = PanelView.PERMISSIONS;
+              }}
+            >
+              <div>Permissions</div>
+              <div class="subtitle">Set visibility of experiment dashboard</div>
+            </div>
+            <div
+              class="general-item ${this.panelView === PanelView.STAGES
+                ? 'current'
+                : ''}"
+              @click=${() => {
+                this.panelView = PanelView.STAGES;
+              }}
+            >
+              <div>Experiment stages</div>
+              <div class="subtitle">Add and configure experiment stages</div>
+            </div>
+            <div
+              class="general-item ${this.panelView === PanelView.PROLIFIC
+                ? 'current'
+                : ''}"
+              @click=${() => {
+                this.panelView = PanelView.PROLIFIC;
+              }}
+            >
+              <div>Prolific integration</div>
+              <div class="subtitle">Set up Prolific codes</div>
+            </div>
+            <div
+              class="general-item ${this.panelView === PanelView.COHORT
+                ? 'current'
+                : ''}"
+              @click=${() => {
+                this.panelView = PanelView.COHORT;
+              }}
+            >
+              <div>Cohort setup</div>
+              <div class="subtitle">Specify default cohort settings</div>
+            </div>
+            <div class="panel-view-header">
+              <div class="header-title">LLM settings</div>
+            </div>
+            <div
+              class="general-item ${this.panelView === PanelView.API_KEY
+                ? 'current'
+                : ''}"
               @click=${() => {
                 this.panelView = PanelView.API_KEY;
               }}
             >
-            </pr-icon-button>
-          </pr-tooltip>
-        </div>
-        ${this.renderPanelView()}
-      </div>
-    `;
-  }
-
-  private renderPanelView() {
-    if (this.panelView === PanelView.API_KEY) {
-      return html`
-        <div class="panel-view">
-          <div class="top">
-            <div class="panel-view-header">Experimenter settings</div>
-            <div>
-              ⚠️ Note that experimenter API settings are shared across all
-              experiments!
+              <div>API key</div>
+              <div class="subtitle">Configure API key used for agent calls</div>
             </div>
-          </div>
-        </div>
-      `;
-    }
-
-    return html`
-      <div class="panel-view">
-        <div class="top">
-          <div class="panel-view-header">
-            <div class="header-title">General settings</div>
-            ${this.renderAddStageButton()}
-          </div>
-          <div
-            class="general-item ${this.panelView === PanelView.DEFAULT
-              ? 'current'
-              : ''}"
-            @click=${() => {
-              this.panelView = PanelView.DEFAULT;
-            }}
-          >
-            <div>Metadata</div>
-            <div class="subtitle">
-              Experiment name, visibility, Prolific integration
+            <div
+              class="general-item ${this.panelView === PanelView.AGENT_MEDIATORS
+                ? 'current'
+                : ''}"
+              @click=${() => {
+                this.panelView = PanelView.AGENT_MEDIATORS;
+                this.experimentEditor.setAgentIdToLatest(true);
+              }}
+            >
+              <div>Agent mediators</div>
+              <div class="subtitle">Add and configure agent mediators</div>
             </div>
-          </div>
-          <div
-            class="general-item ${this.panelView === PanelView.STAGES
-              ? 'current'
-              : ''}"
-            @click=${() => {
-              this.panelView = PanelView.STAGES;
-            }}
-          >
-            <div>Stages</div>
-            <div class="subtitle">Add and configure experiment stages</div>
-          </div>
-          <div class="panel-view-header">
-            <div class="header-title">Agent Mediators</div>
-            ${this.renderAddMediatorButton()}
-          </div>
-          ${this.experimentEditor.agentMediators.map(
-            (mediator) => html`
-              <div
-                class="agent-item ${this.experimentEditor.currentAgentId ===
-                  mediator.persona.id && this.panelView === PanelView.AGENTS
-                  ? 'current'
-                  : ''}"
-                @click=${() => {
-                  this.panelView = PanelView.AGENTS;
-                  this.experimentEditor.setCurrentAgentId(mediator.persona.id);
-                }}
-              >
-                <div>
-                  ${mediator.persona.name.length > 0
-                    ? mediator.persona.name
-                    : mediator.persona.defaultProfile.name}
-                </div>
-                <div class="subtitle">
-                  ${mediator.persona.defaultModelSettings.modelName}
-                </div>
-                <div class="subtitle">${mediator.persona.id}</div>
+            ${this.experimentEditor.showAlphaFeatures
+              ? html`
+                  <div
+                    class="general-item ${this.panelView ===
+                    PanelView.AGENT_PARTICIPANTS
+                      ? 'current'
+                      : ''}"
+                    @click=${() => {
+                      this.panelView = PanelView.AGENT_PARTICIPANTS;
+                      this.experimentEditor.setAgentIdToLatest(false);
+                    }}
+                  >
+                    <div>
+                      Agent participants<span class="alpha">alpha</span>
+                    </div>
+                    <div class="subtitle">
+                      Add and configure agent participants
+                    </div>
+                  </div>
+                `
+              : nothing}
+            <div class="panel-view-header">
+              <div class="header-title">Additional settings</div>
+            </div>
+            <div
+              class="general-item ${this.panelView === PanelView.ALPHA
+                ? 'current'
+                : ''}"
+              @click=${() => {
+                this.panelView = PanelView.ALPHA;
+              }}
+            >
+              <div>
+                Alpha features
+                <div class="subtitle">Toggle alpha features in editor</div>
               </div>
-            `,
-          )}
-          <div class="panel-view-header">
-            <div class="header-title">Agent Participants</div>
-            ${this.renderAddParticipantButton()}
+            </div>
+            <div class="bottom">${this.renderDeleteButton()}</div>
           </div>
-          ${this.experimentEditor.agentParticipants.map(
-            (agent) => html`
-              <div
-                class="agent-item ${this.experimentEditor.currentAgentId ===
-                  agent.persona.id && this.panelView === PanelView.AGENTS
-                  ? 'current'
-                  : ''}"
-                @click=${() => {
-                  this.panelView = PanelView.AGENTS;
-                  this.experimentEditor.setCurrentAgentId(agent.persona.id);
-                }}
-              >
-                <div>
-                  ${agent.persona.name.length > 0
-                    ? agent.persona.name
-                    : agent.persona.defaultProfile.name}
-                </div>
-                <div class="subtitle">
-                  ${agent.persona.defaultModelSettings.modelName}
-                </div>
-                <div class="subtitle">${agent.persona.id}</div>
-              </div>
-            `,
-          )}
         </div>
-        <div class="bottom">${this.renderDeleteButton()}</div>
       </div>
     `;
   }
 
   private renderAddMediatorButton() {
+    const disabled =
+      this.experimentEditor.getMediatorAllowedStages().length === 0;
+    const tooltipText = disabled
+      ? 'No mediator-compatible stages have been added to this experiment. Add a mediator-compatible stage (e.g., chat) to enable this.'
+      : '';
+
     return html`
-      <pr-tooltip text="Add agent mediator persona" position="BOTTOM_END">
-        <pr-icon-button
+      <pr-tooltip text=${tooltipText} position="BOTTOM_END">
+        <pr-button
           icon="person_add"
-          color="neutral"
-          variant="default"
+          color="tertiary"
+          variant="tonal"
+          ?disabled=${disabled}
+          aria-disabled=${disabled ? 'true' : 'false'}
           @click=${() => {
-            this.panelView = PanelView.AGENTS;
+            if (disabled) return;
             this.experimentEditor.addAgentMediator();
           }}
         >
-        </pr-icon-button>
-      </pr-tootipt>
+          + Add agent mediator persona
+        </pr-button>
+      </pr-tooltip>
     `;
   }
 
   private renderAddParticipantButton() {
     return html`
-      <pr-tooltip text="Add agent participant persona" position="BOTTOM_END">
-        <pr-icon-button
-          icon="person_add"
-          color="neutral"
-          variant="default"
-          @click=${() => {
-            this.panelView = PanelView.AGENTS;
-            this.experimentEditor.addAgentParticipant();
-          }}
-        >
-        </pr-icon-button>
-      </pr-tootipt>
+      <pr-button
+        icon="person_add"
+        color="tertiary"
+        variant="tonal"
+        @click=${() => {
+          this.experimentEditor.addAgentParticipant();
+        }}
+      >
+        + Add agent participant persona
+      </pr-button>
     `;
   }
 
@@ -302,7 +305,7 @@ export class ExperimentBuilder extends MobxLitElement {
     }
     return html`
       <div class="experiment-builder">
-        <div class="content">
+        <div class="content padding">
           <experimenter-data-editor></experimenter-data-editor>
         </div>
       </div>
@@ -310,17 +313,108 @@ export class ExperimentBuilder extends MobxLitElement {
   }
 
   private renderExperimentConfigBuilder() {
-    if (this.panelView === PanelView.DEFAULT) {
+    if (this.panelView === PanelView.METADATA) {
       return html`
         <div class="experiment-builder">
-          <experiment-settings-editor></experiment-settings-editor>
+          <experiment-metadata-editor></experiment-metadata-editor>
         </div>
       `;
-    } else if (this.panelView === PanelView.AGENTS) {
-      const agent = this.experimentEditor.currentAgent;
+    } else if (this.panelView === PanelView.PERMISSIONS) {
       return html`
         <div class="experiment-builder">
+          <experiment-permissions-editor></experiment-permissions-editor>
+        </div>
+      `;
+    } else if (this.panelView === PanelView.PROLIFIC) {
+      return html`
+        <div class="experiment-builder">
+          <experiment-prolific-editor></experiment-prolific-editor>
+        </div>
+      `;
+    } else if (this.panelView === PanelView.COHORT) {
+      return html`
+        <div class="experiment-builder">
+          <experiment-cohort-editor></experiment-cohort-editor>
+        </div>
+      `;
+    } else if (this.panelView === PanelView.AGENT_MEDIATORS) {
+      return this.renderAgentMediatorsBuilder();
+    } else if (this.panelView === PanelView.AGENT_PARTICIPANTS) {
+      return this.renderAgentParticipantsBuilder();
+    } else if (this.panelView === PanelView.STAGES) {
+      return this.renderStageBuilder();
+    } else if (this.panelView === PanelView.ALPHA) {
+      return html`
+        <div class="inner-wrapper">
+          <div class="title">Alpha mode</div>
+          <div class="checkbox-wrapper">
+            <md-checkbox
+              touch-target="wrapper"
+              ?checked=${this.experimentEditor.showAlphaFeatures}
+              @click=${() => {
+                this.experimentEditor.setShowAlphaFeatures(
+                  !this.experimentEditor.showAlphaFeatures,
+                );
+              }}
+            >
+            </md-checkbox>
+            <div>
+              Show "alpha mode" options when building experiment. Note that
+              alpha features are still in progress and may not work as intended.
+            </div>
+          </div>
+        </div>
+      `;
+    }
+    return nothing;
+  }
+
+  private renderAgentParticipantsBuilder() {
+    const agent = this.experimentEditor.currentAgent;
+    const name = agent?.persona.name;
+    return html`
+      <div class="sidenav">
+        <div class="sidenav-header">${this.renderAddParticipantButton()}</div>
+        <div class="sidenav-items">
+          <div class="subtitle warning">
+            ⚠️ Agent participant are in alpha mode and may not work as expected.
+          </div>
+          ${this.experimentEditor.agentParticipants.map(
+            (agent) => html`
+              <div
+                class="agent-item ${this.experimentEditor.currentAgentId ===
+                agent.persona.id
+                  ? 'current'
+                  : ''}"
+                @click=${() => {
+                  this.experimentEditor.setCurrentAgentId(agent.persona.id);
+                }}
+              >
+                <div>
+                  ${agent.persona.name.length > 0
+                    ? agent.persona.name
+                    : agent.persona.defaultProfile.name}
+                </div>
+                <div class="subtitle">
+                  ${agent.persona.defaultModelSettings.modelName}
+                </div>
+                <div class="subtitle">${agent.persona.id}</div>
+              </div>
+            `,
+          )}
+        </div>
+      </div>
+      <div class="experiment-builder">
+        <div class="header">
+          ${name !== '' ? name : `Agent ${agent?.persona.id}`}
+        </div>
+        <div class="content">
           <agent-persona-editor .agent=${agent?.persona}>
+          <br/>
+          <div class="divider main">
+          
+          ${this.experimentEditor.stages.length === 0 ? '' : html`<div class="header">Stage-specific prompts</div>`}
+
             ${this.experimentEditor.stages.map(
               (stage, index) => html`
                 <agent-chat-prompt-editor
@@ -333,11 +427,65 @@ export class ExperimentBuilder extends MobxLitElement {
             )}
           </agent-persona-editor>
         </div>
-      `;
-    } else if (this.panelView === PanelView.STAGES) {
-      return this.renderStageBuilder();
-    }
-    return nothing;
+      </div>
+    `;
+  }
+
+  private renderAgentMediatorsBuilder() {
+    const agent = this.experimentEditor.currentAgent;
+    const name = agent?.persona.name;
+    return html`
+      <div class="sidenav">
+        <div class="sidenav-header">${this.renderAddMediatorButton()}</div>
+        <div class="sidenav-items">
+          ${this.experimentEditor.agentMediators.map(
+            (mediator) => html`
+              <div
+                class="agent-item ${this.experimentEditor.currentAgentId ===
+                mediator.persona.id
+                  ? 'current'
+                  : ''}"
+                @click=${() => {
+                  this.experimentEditor.setCurrentAgentId(mediator.persona.id);
+                }}
+              >
+                <div>
+                  ${mediator.persona.name.length > 0
+                    ? mediator.persona.name
+                    : mediator.persona.defaultProfile.name}
+                </div>
+                <div class="subtitle">
+                  ${mediator.persona.defaultModelSettings.modelName}
+                </div>
+                <div class="subtitle">${mediator.persona.id}</div>
+              </div>
+            `,
+          )}
+        </div>
+      </div>
+      <div class="experiment-builder">
+        <div class="header">
+          ${name !== '' ? name : `Agent ${agent?.persona.id}`}
+        </div>
+        <div class="content">
+          <agent-persona-editor .agent=${agent?.persona}>
+            ${this.experimentEditor.stages.length === 0
+              ? ''
+              : html`<div class="header">Stage-specific prompts</div>`}
+            ${this.experimentEditor.stages.map(
+              (stage, index) => html`
+                <agent-chat-prompt-editor
+                  .agent=${agent?.persona}
+                  .stageId=${stage.id}
+                  .stageNamePrefix=${`${index + 1}. `}
+                >
+                </agent-chat-prompt-editor>
+              `,
+            )}
+          </agent-persona-editor>
+        </div>
+      </div>
+    `;
   }
 
   private renderStageBuilder() {
@@ -422,82 +570,122 @@ export class ExperimentBuilder extends MobxLitElement {
     const stage = this.experimentEditor.currentStage;
 
     if (stage === undefined) {
-      return html` Select a stage to edit. `;
+      return html`<div class="content padding">Select a stage to edit.</div>`;
     }
 
     switch (stage.kind) {
       case StageKind.INFO:
         return html`
-          <base-stage-editor .stage=${stage}></base-stage-editor>
-          <info-editor .stage=${stage}></info-editor>
+          <base-stage-editor .stage=${stage}>
+            <div slot="title">Info settings</div>
+            <info-editor .stage=${stage}></info-editor>
+          </base-stage-editor>
         `;
       case StageKind.PAYOUT:
         return html`
-          <base-stage-editor .stage=${stage}></base-stage-editor>
-          <payout-editor .stage=${stage}></payout-editor>
+          <base-stage-editor .stage=${stage}>
+            <div slot="title">Payout settings</div>
+            <payout-editor .stage=${stage}></payout-editor>
+          </base-stage-editor>
         `;
       case StageKind.PROFILE:
         return html`
-          <base-stage-editor .stage=${stage}></base-stage-editor>
-          <profile-stage-editor .stage=${stage}></profile-stage-editor>
+          <base-stage-editor .stage=${stage}>
+            <div slot="title">Profile settings</div>
+            <profile-stage-editor .stage=${stage}></profile-stage-editor>
+          </base-stage-editor>
         `;
       case StageKind.CHAT:
         return html`
-          <base-stage-editor .stage=${stage}></base-stage-editor>
-          <group-chat-editor .stage=${stage}></group-chat-editor>
+          <base-stage-editor .stage=${stage}>
+            <div slot="title">Chat settings</div>
+            <group-chat-editor .stage=${stage}></group-chat-editor>
+          </base-stage-editor>
+        `;
+      case StageKind.COMPREHENSION:
+        return html`
+          <base-stage-editor .stage=${stage}>
+            <div slot="title">Comprehension questions</div>
+            <comprehension-editor .stage=${stage}></comprehension-editor>
+          </base-stage-editor>
         `;
       case StageKind.PRIVATE_CHAT:
-        return html` <base-stage-editor .stage=${stage}></base-stage-editor> `;
+        return html`
+          <base-stage-editor .stage=${stage}>
+            <div slot="title">Chat settings</div>
+            <private-chat-editor .stage=${stage}></private-chat-editor>
+          </base-stage-editor>
+        `;
       case StageKind.FLIPCARD:
         return html`
-          <base-stage-editor .stage=${stage}></base-stage-editor>
-          <flipcard-editor .stage=${stage}></flipcard-editor>
+          <base-stage-editor .stage=${stage}>
+            <div slot="title">Flipcard settings</div>
+            <flipcard-editor .stage=${stage}></flipcard-editor>
+          </base-stage-editor>
         `;
       case StageKind.RANKING:
         return html`
-          <base-stage-editor .stage=${stage}></base-stage-editor>
-          <ranking-editor .stage=${stage}></ranking-editor>
+          <base-stage-editor .stage=${stage}>
+            <div slot="title">Ranking settings</div>
+            <ranking-editor .stage=${stage}></ranking-editor>
+          </base-stage-editor>
         `;
       case StageKind.REVEAL:
         return html`
-          <base-stage-editor .stage=${stage}></base-stage-editor>
-          <reveal-editor .stage=${stage}></reveal-editor>
+          <base-stage-editor .stage=${stage}>
+            <div slot="title">Reveal stages</div>
+            <reveal-editor .stage=${stage}></reveal-editor>
+          </base-stage-editor>
         `;
       case StageKind.ROLE:
         return html`
-          <base-stage-editor .stage=${stage}></base-stage-editor>
-          <role-editor .stage=${stage}></role-editor>
+          <base-stage-editor .stage=${stage}>
+            <div slot="title">Roles</div>
+            <role-editor .stage=${stage}></role-editor>
+          </base-stage-editor>
         `;
       case StageKind.STOCKINFO:
         return html`
-          <base-stage-editor .stage=${stage}></base-stage-editor>
-          <stockinfo-editor .stage=${stage}></stockinfo-editor>
+          <base-stage-editor .stage=${stage}>
+            <div slot="title">Stock settings</div>
+            <stockinfo-editor .stage=${stage}></stockinfo-editor>
+          </base-stage-editor>
         `;
       case StageKind.ASSET_ALLOCATION:
         return html`
-          <base-stage-editor .stage=${stage}></base-stage-editor>
-          <asset-allocation-editor .stage=${stage}></asset-allocation-editor>
+          <base-stage-editor .stage=${stage}>
+            <div slot="title">Asset allocation configuration</div>
+            <asset-allocation-editor .stage=${stage}></asset-allocation-editor>
+          </base-stage-editor>
         `;
       case StageKind.SURVEY:
         return html`
-          <base-stage-editor .stage=${stage}></base-stage-editor>
-          <survey-editor .stage=${stage}></survey-editor>
+          <base-stage-editor .stage=${stage}>
+            <div slot="title">Survey questions</div>
+            <survey-editor .stage=${stage}></survey-editor>
+          </base-stage-editor>
         `;
       case StageKind.SURVEY_PER_PARTICIPANT:
         return html`
-          <base-stage-editor .stage=${stage}></base-stage-editor>
-          <survey-per-participant-editor .stage=${stage}>
-          </survey-per-participant-editor>
+          <base-stage-editor .stage=${stage}>
+            <div slot="title">Survey questions</div>
+            <survey-per-participant-editor .stage=${stage}>
+            </survey-per-participant-editor>
+          </base-stage-editor>
         `;
       case StageKind.TOS:
         return html`
-          <base-stage-editor .stage=${stage}></base-stage-editor>
-          <tos-editor .stage=${stage}></tos-editor>
+          <base-stage-editor .stage=${stage}>
+            <div slot="title">Terms of service</div>
+            <tos-editor .stage=${stage}></tos-editor>
+          </base-stage-editor>
         `;
       case StageKind.TRANSFER:
         return html`
-          <base-stage-editor .stage=${stage}></base-stage-editor>
-          <transfer-editor .stage=${stage}></transfer-editor>
+          <base-stage-editor .stage=${stage}>
+            <div slot="title">Transfer settings</div>
+            <transfer-editor .stage=${stage}></transfer-editor>
+          </base-stage-editor>
         `;
       default:
         return html` Stage editor not found. `;

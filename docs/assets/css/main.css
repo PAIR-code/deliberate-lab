@@ -10,7 +10,7 @@ body {
   --md-sys-color-on-surface: var(--md-ref-palette-gray5);
   --md-sys-color-gray: var(--md-ref-palette-gray40);
   --md-sys-color-blue: var(--md-ref-palette-blue40);
-  --md-sys-color-blue-light: var(--md-ref-palette-blue50);
+  --md-sys-color-blue-light: var(--md-ref-palette-blue60);
 
   background: #fefefe;
   font-family: 'Roboto', Helvetica, sans-serif;
@@ -94,9 +94,7 @@ article {
   align-items: center;
   display: flex;
   flex-shrink: 0;
-  font-family: 'Roboto Mono';
   font-size: 0.9em;
-  font-weight: 500;
   height: 40px;
   border-bottom: 1px solid var(--md-sys-color-outline);
   padding: 0 1em;
@@ -112,7 +110,6 @@ article {
 
 .nav-section-title {
   color: var(--md-sys-color-outline);
-  font-family: 'Roboto Mono';
   font-size: 0.7em;
   font-weight: 400;
   text-transform: uppercase;
@@ -134,26 +131,34 @@ a.nav-link:hover {
 }
 
 header {
+  align-items: center;
+  display: flex;
+  flex-direction: column;
   padding: 0.75em;
 }
 
-h1 {
-  font-family: 'Roboto Mono';
+.subtitle {
   font-size: 1.2em;
+  line-height: 1.3em;
+  text-align: center;
+}
+
+h1 {
+  font-size: 2em;
   font-weight: 500;
+  line-height: 1.5em;
+  text-align: center;
 }
 
 h2 {
   color: var(--md-sys-color-blue);
   border-bottom: 2px solid var(--md-sys-color-blue-light);
-  margin-top: 2em;
+  margin-top: 1em;
   padding-bottom: 4px;
-  font-family: 'Roboto Mono';
 }
 
 h3 {
   color: var(--md-sys-color-outline);
-  font-family: 'Roboto Mono';
   font-size: 0.9em;
   font-weight: 500;
 }
