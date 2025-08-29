@@ -32,6 +32,21 @@ export class InfoView extends MobxLitElement {
         <div class="info-block">
           ${unsafeHTML(convertMarkdownToHTML(infoLinesJoined))}
         </div>
+        ${this.stage.youtubeVideoId
+          ? html`
+              <iframe
+                width="560"
+                height="315"
+                src="https://www.youtube.com/embed/${this.stage.youtubeVideoId}"
+                title="YouTube video player"
+                frameborder="0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                referrerpolicy="strict-origin-when-cross-origin"
+                allowfullscreen
+              >
+              </iframe>
+            `
+          : nothing}
       </div>
       <stage-footer>
         ${this.stage.progress.showParticipantProgress

@@ -15,6 +15,7 @@ import {
 export interface InfoStageConfig extends BaseStageConfig {
   kind: StageKind.INFO;
   infoLines: string[];
+  youtubeVideoId?: string;
 }
 
 // ************************************************************************* //
@@ -32,5 +33,6 @@ export function createInfoStage(
     descriptions: config.descriptions ?? createStageTextConfig(),
     progress: config.progress ?? createStageProgressConfig(),
     infoLines: config.infoLines ?? [],
+    youtubeVideoId: config.youtubeVideoId,
   };
 }
