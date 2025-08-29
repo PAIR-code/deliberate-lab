@@ -255,6 +255,10 @@ export class GroupChatView extends MobxLitElement {
     }
 
     const renderProgress = () => {
+      if (!this.stage?.progress.showParticipantProgress) {
+        return nothing;
+      }
+
       if (currentDiscussionId) {
         return html`
           <progress-chat-discussion-completed
