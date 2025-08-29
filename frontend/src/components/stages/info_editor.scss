@@ -1,6 +1,6 @@
-@use "../../sass/colors";
-@use "../../sass/common";
-@use "../../sass/typescale";
+@use '../../sass/colors';
+@use '../../sass/common';
+@use '../../sass/typescale';
 
 :host {
   @include common.flex-column;
@@ -8,5 +8,9 @@
 }
 
 pr-textarea {
+  width: 100%;
+}
+
+md-outlined-text-field {
   width: 100%;
 }
