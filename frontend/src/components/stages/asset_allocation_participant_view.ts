@@ -114,7 +114,7 @@ export class AssetAllocationParticipantView extends MobxLitElement {
         </div>
 
         <stage-footer .stage=${this.stage} .disabled=${!answer.confirmed}>
-          ${answer.confirmed
+          ${answer.confirmed && this.stage.progress.showParticipantProgress
             ? html`<progress-stage-completed></progress-stage-completed>`
             : nothing}
         </stage-footer>

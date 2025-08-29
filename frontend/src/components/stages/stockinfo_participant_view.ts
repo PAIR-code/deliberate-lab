@@ -62,7 +62,9 @@ export class StockInfoParticipantView extends MobxLitElement {
         ${this.renderStockNavigation()}
 
         <stage-footer .stage=${this.stage} .disabled=${!isComplete}>
-          <progress-stage-completed></progress-stage-completed>
+          ${this.stage.progress.showParticipantProgress
+            ? html`<progress-stage-completed></progress-stage-completed>`
+            : nothing}
         </stage-footer>
       </div>
     `;
