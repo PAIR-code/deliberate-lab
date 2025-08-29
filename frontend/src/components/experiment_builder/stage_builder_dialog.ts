@@ -1,4 +1,5 @@
 import '../../pair-components/icon_button';
+import '../../pair-components/textarea';
 
 import {MobxLitElement} from '@adobe/lit-mobx';
 import {CSSResultGroup, html, nothing} from 'lit';
@@ -575,15 +576,16 @@ private renderConsensusDebateCard() {
       <div class="title">${CONSENSUS_METADATA.name}</div>
       <div>${CONSENSUS_METADATA.description}</div>
       <div class="template-controls">
-        <pr-text-input
+        <pr-textarea
           id="consensus-topics-input"
-          label="Topics (comma-separated)"
+          variant="outlined"
+          placeholder="Debate topic"
           value="Climate Change"
-        ></pr-text-input>
-        <pr-button @click=${loadTemplate}>
-          Load Template
-        </pr-button>
+        ></pr-textarea>
       </div>
+      <pr-button @click=${loadTemplate}>
+        Load Template
+      </pr-button>
     </div>
   `;
 }
@@ -690,11 +692,10 @@ private renderConsensusDebateCard() {
           <span class="checkmark"></span>
           <span class="label-text">[Optional] Include Meta-Feedback Survey</span>
         </label>
-
-        <pr-button @click=${loadTemplate}>
-          Load Template
-        </pr-button>
       </div>
+      <pr-button @click=${loadTemplate}>
+        Load Template
+      </pr-button>
     </div>
   `;
 }
