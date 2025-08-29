@@ -72,29 +72,33 @@ export const onPublicChatMessageCreated = onDocumentCreated(
       stage.id,
       true,
     );
-    mediators.forEach((mediator) => {
-      createAgentChatMessageFromPrompt(
-        event.params.experimentId,
-        event.params.cohortId,
-        allParticipantIds, // Provide all participant IDs for full context
-        stage.id,
-        event.params.chatId,
-        mediator,
-      );
-    });
+    await Promise.all(
+      mediators.map((mediator) =>
+        createAgentChatMessageFromPrompt(
+          event.params.experimentId,
+          event.params.cohortId,
+          allParticipantIds, // Provide all participant IDs for full context
+          stage.id,
+          event.params.chatId,
+          mediator,
+        ),
+      ),
+    );
 
     // Send agent participant messages
     const agentParticipants = allParticipants.filter((p) => p.agentConfig);
-    agentParticipants.forEach((participant) => {
-      createAgentChatMessageFromPrompt(
-        event.params.experimentId,
-        event.params.cohortId,
-        [participant.privateId], // Pass agent's own ID as array
-        stage.id,
-        event.params.chatId,
-        participant,
-      );
-    });
+    await Promise.all(
+      agentParticipants.map((participant) =>
+        createAgentChatMessageFromPrompt(
+          event.params.experimentId,
+          event.params.cohortId,
+          [participant.privateId], // Pass agent's own ID as array
+          stage.id,
+          event.params.chatId,
+          participant,
+        ),
+      ),
+    );
   },
 );
 
@@ -138,35 +142,40 @@ export const onPrivateChatMessageCreated = onDocumentCreated(
       stage.id,
       true,
     );
-    mediators.forEach(async (mediator) => {
-      const result = await createAgentChatMessageFromPrompt(
-        event.params.experimentId,
-        participant.currentCohortId,
-        [participant.privateId],
-        stage.id,
-        event.params.chatId,
-        mediator,
-      );
-      if (!result) {
-        sendErrorPrivateChatMessage(
+
+    await Promise.all(
+      mediators.map(async (mediator) => {
+        const result = await createAgentChatMessageFromPrompt(
           event.params.experimentId,
-          participant.privateId,
+          participant.currentCohortId,
+          [participant.privateId],
           stage.id,
-          {
-            discussionId: message.discussionId,
-            message: 'Error fetching response',
-            type: mediator.type,
-            profile: createParticipantProfileBase(mediator),
-            senderId: mediator.publicId,
-            agentId: mediator.agentConfig?.agentId ?? '',
-          },
+          event.params.chatId,
+          mediator,
         );
-      }
-    });
+
+        if (!result) {
+          await sendErrorPrivateChatMessage(
+            event.params.experimentId,
+            participant.privateId,
+            stage.id,
+            {
+              discussionId: message.discussionId,
+              message: 'Error fetching response',
+              type: mediator.type,
+              profile: createParticipantProfileBase(mediator),
+              senderId: mediator.publicId,
+              agentId: mediator.agentConfig?.agentId ?? '',
+            },
+          );
+        }
+      }),
+    );
+
     // If no mediator, return error (otherwise participant may wait
     // indefinitely for a response).
     if (mediators.length === 0) {
-      sendErrorPrivateChatMessage(
+      await sendErrorPrivateChatMessage(
         event.params.experimentId,
         participant.privateId,
         stage.id,
