@@ -1,4 +1,5 @@
 import '../../pair-components/icon_button';
+import '../../pair-components/textarea';
 
 import {MobxLitElement} from '@adobe/lit-mobx';
 import {CSSResultGroup, html} from 'lit';
@@ -42,6 +43,10 @@ import {
   getChipNegotiationStageConfigs,
 } from '../../shared/templates/chip_negotiation';
 import {
+  CONSENSUS_METADATA,
+  getConsensusTopicTemplate,
+} from '../../shared/templates/debate_topics';
+import {
   RTV_METADATA,
   getRealityTVExperimentTemplate,
 } from '../../shared/templates/reality_tv_chat';
@@ -69,7 +74,7 @@ import {
   CHARITY_DEBATE_METADATA,
   CharityDebateConfig,
   getCharityDebateTemplate,
-} from '../../shared/templates/charity_allocation';
+} from '../../shared/templates/charity_allocations';
 import {
   CONDITIONAL_SURVEY_TEMPLATE_METADATA,
   getConditionalSurveyTemplate,
@@ -548,6 +553,35 @@ export class StageBuilderDialog extends MobxLitElement {
           Assign participants to different cohorts while they wait in this
           stage.
         </div>
+      </div>
+    `;
+  }
+
+  private renderConsensusDebateCard() {
+    const loadTemplate = () => {
+      // Find the input element within the component's shadow DOM using its ID.
+      const inputElement = this.shadowRoot?.querySelector(
+        '#consensus-topics-input',
+      ) as HTMLInputElement;
+      const topicsCsv = inputElement?.value || 'Climate Change';
+
+      // Pass the retrieved value to the existing template function.
+      this.addTemplate(getConsensusTopicTemplate(topicsCsv));
+    };
+
+    return html`
+      <div class="card">
+        <div class="title">${CONSENSUS_METADATA.name}</div>
+        <div>${CONSENSUS_METADATA.description}</div>
+        <div class="template-controls">
+          <pr-textarea
+            id="consensus-topics-input"
+            variant="outlined"
+            placeholder="Debate topic"
+            value="Climate Change"
+          ></pr-textarea>
+        </div>
+        <pr-button @click=${loadTemplate}> Load Template </pr-button>
       </div>
     `;
   }

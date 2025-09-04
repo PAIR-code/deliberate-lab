@@ -11,9 +11,7 @@ import {
   createTextSurveyQuestion,
   createScaleSurveyQuestion,
   createStageTextConfig,
-  AgentMediatorTemplate,
   ExperimentTemplate,
-  MediatorPromptConfig,
   ProfileType,
   StageConfig,
   ScaleSurveyQuestion,
@@ -385,7 +383,7 @@ function createAllocationDiscussionStage(
 
 function createPerMediatorEvaluationStage(
   roundNum: number,
-  mediator: string,
+  _mediator: string,
 ): StageConfig {
   const stageId = `mediator-eval-round-${roundNum}`;
   const scaleProps = {
