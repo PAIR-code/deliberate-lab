@@ -25,6 +25,7 @@ export interface StockAllocation {
 export interface AssetAllocation {
   stockA: StockAllocation;
   stockB: StockAllocation;
+  additionalAllocations?: StockAllocation[];
 }
 
 /** Stock configuration for asset allocation. */
@@ -32,6 +33,7 @@ export interface AssetAllocationStockInfoConfig {
   stockInfoStageId?: string; // Optional reference to StockInfo stage
   stockA: Stock;
   stockB: Stock;
+  additionalStocks?: Stock[];
 }
 
 /** AssetAllocation stage config. */
@@ -67,44 +69,47 @@ export function createAssetAllocationStockInfoConfig(
     stockInfoStageId: config.stockInfoStageId,
     stockA: config.stockA ?? createStock({name: 'Stock A'}),
     stockB: config.stockB ?? createStock({name: 'Stock B'}),
+    additionalStocks: config.additionalStocks,
   };
 }
 
-/** Create asset allocation. */
+/** Create asset allocation from a list of stocks and percentages. */
 export function createAssetAllocation(
-  stockA: Stock,
-  stockB: Stock,
-  stockAPercentage: number = 50,
-  stockBPercentage: number = 50,
+  stocks: Stock[],
+  percentages: number[],
 ): AssetAllocation {
-  // Ensure percentages add up to 100
-  const total = stockAPercentage + stockBPercentage;
-  if (total !== 100) {
+  // Ensure we have at least 2 stocks
+  if (stocks.length < 2) {
+    throw new Error('Asset allocation requires at least two stocks.');
+  }
+
+  const allAllocations = stocks.map((stock, index) => ({
+    id: stock.id,
+    name: stock.name,
+    percentage: percentages[index] ?? 0,
+  }));
+
+  const total = allAllocations.reduce((sum, p) => sum + p.percentage, 0);
+
+  // If percentages don't sum to 100, create an equal distribution as a fallback
+  if (total !== 100 || stocks.length !== percentages.length) {
+    const equalPercentage = 100 / stocks.length;
+    const equalAllocations = stocks.map((stock) => ({
+      id: stock.id,
+      name: stock.name,
+      percentage: equalPercentage,
+    }));
     return {
-      stockA: {
-        id: stockA.id,
-        name: stockA.name,
-        percentage: 50,
-      },
-      stockB: {
-        id: stockB.id,
-        name: stockB.name,
-        percentage: 50,
-      },
+      stockA: equalAllocations[0],
+      stockB: equalAllocations[1],
+      additionalAllocations: equalAllocations.slice(2),
     };
   }
 
   return {
-    stockA: {
-      id: stockA.id,
-      name: stockA.name,
-      percentage: stockAPercentage,
-    },
-    stockB: {
-      id: stockB.id,
-      name: stockB.name,
-      percentage: stockBPercentage,
-    },
+    stockA: allAllocations[0],
+    stockB: allAllocations[1],
+    additionalAllocations: allAllocations.slice(2),
   };
 }
 
@@ -120,9 +125,9 @@ export function createAssetAllocationStage(
       config.descriptions ??
       createStageTextConfig({
         infoText:
-          'Allocate your investment between two stocks using the sliders.',
+          'Allocate your investment between the options using the sliders.',
         helpText:
-          'Adjust the sliders to set your desired allocation. The percentages must add up to 100%. Review the stock information on the right before confirming your allocation.',
+          'Adjust the sliders to set your desired allocation. The percentages must add up to 100%. Review the information on the right before confirming your allocation.',
       }),
     progress:
       config.progress ??

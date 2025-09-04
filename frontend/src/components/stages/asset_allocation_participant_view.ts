@@ -27,6 +27,7 @@ import {
   getStockTicker,
   createAssetAllocation,
   createAssetAllocationStageParticipantAnswer,
+  Stock,
 } from '@deliberation-lab/utils';
 
 import {core} from '../../core/core';
@@ -51,51 +52,87 @@ export class AssetAllocationParticipantView extends MobxLitElement {
   @property({type: Object}) stage: AssetAllocationStageConfig | undefined =
     undefined;
 
-  @state() private selectedStockIndex = 0; // 0 for Stock A, 1 for Stock B
-  @state() private allocation = {stockAPercentage: 50, stockBPercentage: 50};
+  @state() private selectedStockIndex = 0;
 
-  private get stocks() {
-    if (!this.stage) {
-      return {stockA: null, stockB: null};
-    }
-    return {
-      stockA: this.stage.stockConfig.stockA,
-      stockB: this.stage.stockConfig.stockB,
-    };
+  @state() private allStocks: Stock[] = [];
+
+  override connectedCallback() {
+    super.connectedCallback();
+    this.initializeStocks();
   }
 
-  override render() {
-    if (!this.stage || !this.participantService.profile) {
-      return nothing;
+  override updated(changedProperties: Map<string, unknown>) {
+    if (changedProperties.has('stage')) {
+      this.initializeStocks();
     }
+  }
 
-    let answer =
+  private initializeStocks() {
+    if (!this.stage) {
+      this.allStocks = [];
+      return;
+    }
+    this.allStocks = [
+      this.stage.stockConfig.stockA,
+      this.stage.stockConfig.stockB,
+      ...(this.stage.stockConfig.additionalStocks || []),
+    ];
+  }
+
+  private getAnswer(): AssetAllocationStageParticipantAnswer | undefined {
+    if (!this.stage) return undefined;
+    const answer =
       this.participantAnswerService.getAssetAllocationParticipantAnswer(
         this.stage.id,
       );
+    return answer ?? undefined;
+  }
 
-    // Initialize answer if it doesn't exist
+  override render() {
+    if (
+      !this.stage ||
+      !this.participantService.profile ||
+      !this.allStocks.length
+    ) {
+      return nothing;
+    }
+
+    let answer = this.getAnswer();
+
     if (!answer) {
       answer = this.createInitialAnswer();
       this.participantAnswerService.addAnswer(this.stage.id, answer);
     }
 
-    // Sync state with answer allocation percentages
-    this.allocation.stockAPercentage = answer.allocation.stockA.percentage;
-    this.allocation.stockBPercentage = answer.allocation.stockB.percentage;
+    const allAllocations = [
+      answer.allocation.stockA,
+      answer.allocation.stockB,
+      ...(answer.allocation.additionalAllocations || []),
+    ];
+    const totalPercentage = Math.round(
+      allAllocations.reduce((sum, alloc) => sum + alloc.percentage, 0),
+    );
 
     return html`
       <div class="stage-container">
         <stage-description .stage=${this.stage}></stage-description>
 
         <div class="allocation-content">
-          <!-- Left: Donut Chart and Sliders Combined -->
           <div class="allocation-section">
             <div class="allocation-header">
-              <h3>Asset Allocation</h3>
+              <h3>
+                Asset Allocation
+                <span
+                  class="total-percentage ${totalPercentage !== 100
+                    ? 'invalid'
+                    : ''}"
+                >
+                  (Total: ${totalPercentage}%)
+                </span>
+              </h3>
               <md-filled-button
                 @click=${() => this.confirmAllocation()}
-                ?disabled=${answer.confirmed}
+                ?disabled=${answer.confirmed || totalPercentage !== 100}
               >
                 Confirm Allocation
               </md-filled-button>
@@ -106,7 +143,6 @@ export class AssetAllocationParticipantView extends MobxLitElement {
             <div class="sliders-section">${this.renderSliders(answer)}</div>
           </div>
 
-          <!-- Right: Stock Info -->
           <div class="info-section">
             <h3>Stock Information</h3>
             ${this.renderStockInfo()}
@@ -120,78 +156,58 @@ export class AssetAllocationParticipantView extends MobxLitElement {
         </stage-footer>
       </div>
 
-      ${this.renderConfirmationDialog()}
+      ${this.renderConfirmationDialog(answer.allocation)}
     `;
   }
 
   private renderDonutChart(allocation: AssetAllocation) {
-    if (!this.stocks.stockA || !this.stocks.stockB) return nothing;
-
-    const stockTickers = {
-      stockA: getStockTicker(this.stocks.stockA.name),
-      stockB: getStockTicker(this.stocks.stockB.name),
-    };
-    const svgContent = generateDonutChartSVG(allocation, stockTickers);
+    const svgContent = generateDonutChartSVG(allocation);
     return unsafeHTML(svgContent);
   }
 
   private renderSliders(answer: AssetAllocationStageParticipantAnswer) {
     const isConfirmed = answer.confirmed;
+    const allAllocations = [
+      answer.allocation.stockA,
+      answer.allocation.stockB,
+      ...(answer.allocation.additionalAllocations || []),
+    ];
 
     return html`
       <div class="slider-container">
-        <div class="slider-group">
-          <label for="stock-a-slider">
-            <span class="legend-color stock-a"></span>
-            <span class="stock-name">${this.stocks.stockA?.name}</span>
-            <span class="percentage-display"
-              >${this.allocation.stockAPercentage}%</span
-            >
-          </label>
-          <md-slider
-            id="stock-a-slider"
-            min="0"
-            max="100"
-            step="5"
-            value="${this.allocation.stockAPercentage}"
-            labeled
-            ticks
-            ?disabled=${isConfirmed}
-            @input=${(e: Event) => this.handleSliderChange(e, 'A')}
-          ></md-slider>
-        </div>
-
-        <div class="slider-group">
-          <label for="stock-b-slider">
-            <span class="legend-color stock-b"></span>
-            <span class="stock-name">${this.stocks.stockB?.name}</span>
-            <span class="percentage-display"
-              >${this.allocation.stockBPercentage}%</span
-            >
-          </label>
-          <md-slider
-            id="stock-b-slider"
-            min="0"
-            max="100"
-            step="5"
-            value="${this.allocation.stockBPercentage}"
-            labeled
-            ticks
-            ?disabled=${isConfirmed}
-            @input=${(e: Event) => this.handleSliderChange(e, 'B')}
-          ></md-slider>
-        </div>
+        ${allAllocations.map(
+          (alloc, index) => html`
+            <div class="slider-group">
+              <label for="stock-${index}-slider">
+                <span class="legend-color stock-${index % 10}"></span>
+                <span class="stock-name">${this.allStocks[index].name}</span>
+                <span class="percentage-display"
+                  >${Math.round(alloc.percentage)}%</span
+                >
+              </label>
+              <md-slider
+                id="stock-${index}-slider"
+                min="0"
+                max="100"
+                step="1"
+                .value=${alloc.percentage}
+                labeled
+                ?disabled=${isConfirmed}
+                @input=${(e: Event) => this.handleSliderChange(e, index)}
+              ></md-slider>
+            </div>
+          `,
+        )}
       </div>
     `;
   }
 
   private renderStockInfo() {
-    if (!this.stocks.stockA || !this.stocks.stockB) return nothing;
+    if (!this.allStocks.length) return nothing;
 
-    const selectedStock =
-      this.selectedStockIndex === 0 ? this.stocks.stockA : this.stocks.stockB;
+    const selectedStock = this.allStocks[this.selectedStockIndex];
+    if (!selectedStock) return nothing;
 
-    // Get the stockInfoStage only if referenced
     const stockInfoStage = this.stage?.stockConfig.stockInfoStageId
       ? this.getStockInfoStage()
       : null;
@@ -205,28 +221,19 @@ export class AssetAllocationParticipantView extends MobxLitElement {
     return html`
       <div class="stock-info-container">
         <div class="stock-toggle">
-          ${this.selectedStockIndex === 0
-            ? html`<md-filled-tonal-button
-                @click=${() => (this.selectedStockIndex = 0)}
-              >
-                ${this.stocks.stockA.name}
-              </md-filled-tonal-button>`
-            : html`<md-outlined-button
-                @click=${() => (this.selectedStockIndex = 0)}
-              >
-                ${this.stocks.stockA.name}
-              </md-outlined-button>`}
-          ${this.selectedStockIndex === 1
-            ? html`<md-filled-tonal-button
-                @click=${() => (this.selectedStockIndex = 1)}
-              >
-                ${this.stocks.stockB.name}
-              </md-filled-tonal-button>`
-            : html`<md-outlined-button
-                @click=${() => (this.selectedStockIndex = 1)}
-              >
-                ${this.stocks.stockB.name}
-              </md-outlined-button>`}
+          ${this.allStocks.map(
+            (stock, index) => html`
+              ${this.selectedStockIndex === index
+                ? html`<md-filled-tonal-button
+                    >${stock.name}</md-filled-tonal-button
+                  >`
+                : html`<md-outlined-button
+                    @click=${() => (this.selectedStockIndex = index)}
+                  >
+                    ${stock.name}
+                  </md-outlined-button>`}
+            `,
+          )}
         </div>
 
         <div class="stock-content">
@@ -235,7 +242,6 @@ export class AssetAllocationParticipantView extends MobxLitElement {
                 <div class="chart-wrapper">${unsafeHTML(chartSvg)}</div>
               </div>`
             : nothing}
-
           <div class="stock-description ${chartSvg ? '' : 'simple'}">
             <h4>${selectedStock.name}</h4>
             <div>
@@ -247,75 +253,93 @@ export class AssetAllocationParticipantView extends MobxLitElement {
     `;
   }
 
-  private renderConfirmationDialog() {
+  private renderConfirmationDialog(allocation: AssetAllocation) {
+    const allAllocations = [
+      allocation.stockA,
+      allocation.stockB,
+      ...(allocation.additionalAllocations || []),
+    ];
+
     return html`
       <md-dialog id="confirmation-dialog">
         <div slot="headline">Confirm Your Allocation</div>
         <div slot="content">
           <p>You have allocated:</p>
           <ul>
-            <li>
-              ${this.stocks.stockA?.name}: ${this.allocation.stockAPercentage}%
-            </li>
-            <li>
-              ${this.stocks.stockB?.name}: ${this.allocation.stockBPercentage}%
-            </li>
+            ${allAllocations.map(
+              (alloc) => html`
+                <li>${alloc.name}: ${Math.round(alloc.percentage)}%</li>
+              `,
+            )}
           </ul>
           <p>Are you sure you want to confirm this allocation?</p>
         </div>
         <div slot="actions">
-          <md-text-button @click=${() => this.closeDialog()}>
-            Go Back
-          </md-text-button>
-          <md-filled-button @click=${() => this.saveAllocation()}>
-            Confirm
-          </md-filled-button>
+          <md-text-button @click=${() => this.closeDialog()}
+            >Go Back</md-text-button
+          >
+          <md-filled-button @click=${() => this.saveAllocation()}
+            >Confirm</md-filled-button
+          >
         </div>
       </md-dialog>
     `;
   }
 
-  private handleSliderChange(event: Event, stock: 'A' | 'B') {
+  /**
+   * ✨ CORRECTED AND RESTORED
+   * This function now correctly updates the central MobX state and contains
+   * the interactive logic to adjust other sliders to maintain a 100% sum.
+   */
+  private handleSliderChange(event: Event, changedIndex: number) {
+    if (!this.stage) return;
+    const answer = this.getAnswer();
+    if (!answer) return;
+
     const slider = event.target as MdSlider;
-    const value = slider.value ?? 50;
+    const newValue = slider.value ?? 0;
 
-    if (stock === 'A') {
-      this.allocation = {
-        stockAPercentage: value,
-        stockBPercentage: 100 - value,
-      };
-    } else {
-      this.allocation = {
-        stockAPercentage: 100 - value,
-        stockBPercentage: value,
-      };
+    const allCurrentAllocations = [
+      answer.allocation.stockA,
+      answer.allocation.stockB,
+      ...(answer.allocation.additionalAllocations || []),
+    ];
+    const percentages = allCurrentAllocations.map((a) => a.percentage);
+
+    const oldValue = percentages[changedIndex];
+    const diff = newValue - oldValue;
+    if (Math.abs(diff) < 0.01) return; // Ignore tiny floating point changes
+
+    percentages[changedIndex] = newValue;
+
+    // Distribute the difference among all other sliders proportionally
+    const totalOfOthers = 100 - oldValue;
+    if (totalOfOthers > 0) {
+      for (let i = 0; i < percentages.length; i++) {
+        if (i !== changedIndex) {
+          const proportion = percentages[i] / totalOfOthers;
+          percentages[i] -= diff * proportion;
+        }
+      }
     }
 
-    // Update both sliders to reflect the change
-    const stockASlider = this.shadowRoot?.getElementById(
-      'stock-a-slider',
-    ) as MdSlider;
-    const stockBSlider = this.shadowRoot?.getElementById(
-      'stock-b-slider',
-    ) as MdSlider;
+    // Clamp and re-normalize to fix any floating point inaccuracies and ensure the sum is exactly 100
+    const clamped = percentages.map((p) => Math.max(0, Math.min(100, p)));
+    const total = clamped.reduce((sum, p) => sum + p, 0);
+    const normalizedPercentages = clamped.map((p) => (p / total) * 100);
 
-    if (stockASlider) stockASlider.value = this.allocation.stockAPercentage;
-    if (stockBSlider) stockBSlider.value = this.allocation.stockBPercentage;
+    const finalAllocation = createAssetAllocation(
+      this.allStocks,
+      normalizedPercentages,
+    );
 
-    // Update the answer but don't save to Firebase yet
-    if (this.stage) {
-      const answer =
-        this.participantAnswerService.getAssetAllocationParticipantAnswer(
-          this.stage.id,
-        );
-      answer!.allocation = createAssetAllocation(
-        this.stocks.stockA!,
-        this.stocks.stockB!,
-        this.allocation.stockAPercentage,
-        this.allocation.stockBPercentage,
-      );
-    }
-    this.requestUpdate();
+    // This is the crucial step: update the answer in the MobX service.
+    // The component will automatically re-render with the new data.
+    this.participantAnswerService.updateAssetAllocation(
+      this.stage.id,
+      finalAllocation,
+      false, // not confirmed yet
+    );
   }
 
   private confirmAllocation() {
@@ -333,32 +357,21 @@ export class AssetAllocationParticipantView extends MobxLitElement {
   }
 
   private async saveAllocation() {
-    if (!this.stage || !this.stocks.stockA || !this.stocks.stockB) return;
+    if (!this.stage) return;
+    const answer = this.getAnswer();
+    if (!answer) return;
 
-    // Close dialog immediately
     this.closeDialog();
 
-    // Create allocation with the new structure
-    const allocation = createAssetAllocation(
-      this.stocks.stockA,
-      this.stocks.stockB,
-      this.allocation.stockAPercentage,
-      this.allocation.stockBPercentage,
-    );
-
-    // Update local answer
     this.participantAnswerService.updateAssetAllocation(
       this.stage.id,
-      allocation,
-      true,
+      answer.allocation,
+      true, // confirmed
     );
 
-    // Save to Firebase
     await this.participantAnswerService.saveAssetAllocationAnswer(
       this.stage.id,
     );
-
-    this.requestUpdate();
   }
 
   private getStockInfoStage(): StockInfoStageConfig | null {
@@ -370,10 +383,7 @@ export class AssetAllocationParticipantView extends MobxLitElement {
   }
 
   private createInitialAnswer(): AssetAllocationStageParticipantAnswer {
-    const allocation = createAssetAllocation(
-      this.stocks.stockA!,
-      this.stocks.stockB!,
-    );
+    const allocation = createAssetAllocation(this.allStocks, []);
     return createAssetAllocationStageParticipantAnswer({
       id: this.stage!.id,
       allocation,

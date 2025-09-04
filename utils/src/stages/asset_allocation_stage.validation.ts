@@ -29,6 +29,7 @@ export const AssetAllocationData = Type.Object(
   {
     stockA: StockAllocationData,
     stockB: StockAllocationData,
+    additionalAllocations: Type.Optional(Type.Array(StockAllocationData)),
   },
   strict,
 );
@@ -39,6 +40,7 @@ export const AssetAllocationStockInfoConfigData = Type.Object(
     stockInfoStageId: Type.Optional(Type.String({minLength: 1})),
     stockA: StockData,
     stockB: StockData,
+    additionalStocks: Type.Optional(Type.Array(StockData)),
   },
   strict,
 );

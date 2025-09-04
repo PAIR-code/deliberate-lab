@@ -45,33 +45,74 @@ export function calculateDonutChartConfig(): DonutChartConfig {
   };
 }
 
-export function generateDonutChartSVG(
-  allocation: AssetAllocation,
-  stockTickers: {stockA: string; stockB: string},
-): string {
+export function generateDonutChartSVG(allocation: AssetAllocation): string {
   const config = calculateDonutChartConfig();
   const circumference = 2 * Math.PI * config.radius;
+  const allAllocations = [
+    allocation.stockA,
+    allocation.stockB,
+    ...(allocation.additionalAllocations || []),
+  ];
+  const colors = [
+    '#2196F3',
+    '#FF9800',
+    '#4CAF50',
+    '#F44336',
+    '#9C27B0',
+    '#FFC107',
+    '#00BCD4',
+    '#8BC34A',
+    '#E91E63',
+    '#673AB7',
+  ];
 
-  // Calculate segment lengths
-  const stockALength = (allocation.stockA.percentage / 100) * circumference;
-  const stockBLength = (allocation.stockB.percentage / 100) * circumference;
+  let segments = '';
+  let labels = '';
+  let accumulatedPercentage = 0;
 
-  // Calculate label positions (adjusted for 90 degree rotation)
-  const stockAAngleRadians =
-    Math.PI / 2 + (allocation.stockA.percentage / 200) * 2 * Math.PI;
-  const stockAEndAngle =
-    Math.PI / 2 + (allocation.stockA.percentage / 100) * 2 * Math.PI;
-  const stockBAngleRadians =
-    stockAEndAngle + (allocation.stockB.percentage / 200) * 2 * Math.PI;
+  allAllocations.forEach((stockAllocation, index) => {
+    if (stockAllocation.percentage <= 0) return;
 
-  const stockAX =
-    config.centerX + config.labelRadius * Math.cos(stockAAngleRadians);
-  const stockAY =
-    config.centerY + config.labelRadius * Math.sin(stockAAngleRadians);
-  const stockBX =
-    config.centerX + config.labelRadius * Math.cos(stockBAngleRadians);
-  const stockBY =
-    config.centerY + config.labelRadius * Math.sin(stockBAngleRadians);
+    const stockLength = (stockAllocation.percentage / 100) * circumference;
+    const color = colors[index % colors.length];
+
+    // Segment
+    segments += `
+      <circle
+        cx="${config.centerX}"
+        cy="${config.centerY}"
+        r="${config.radius}"
+        fill="none"
+        stroke="${color}"
+        stroke-width="${config.strokeWidth}"
+        stroke-dasharray="${stockLength} ${circumference}"
+        stroke-dashoffset="${(-accumulatedPercentage / 100) * circumference}"
+        transform="rotate(90 ${config.centerX} ${config.centerY})"
+      />`;
+
+    // Label
+    const midAngle =
+      (accumulatedPercentage + stockAllocation.percentage / 2) / 100;
+    const angleRadians = Math.PI / 2 + midAngle * 2 * Math.PI;
+    const labelX = config.centerX + config.labelRadius * Math.cos(angleRadians);
+    const labelY = config.centerY + config.labelRadius * Math.sin(angleRadians);
+    const ticker = getStockTicker(stockAllocation.name);
+
+    labels += `
+      <text 
+        x="${labelX}" 
+        y="${labelY}" 
+        text-anchor="middle" 
+        dominant-baseline="middle" 
+        fill="var(--md-sys-color-on-surface)"
+        font-size="${config.fontSize}"
+        font-weight="600"
+      >
+        ${ticker}: ${stockAllocation.percentage.toFixed(0)}%
+      </text>`;
+
+    accumulatedPercentage += stockAllocation.percentage;
+  });
 
   return `
     <svg viewBox="0 0 ${config.viewBoxWidth} ${config.viewBoxHeight}" class="donut-chart">
@@ -84,58 +125,8 @@ export function generateDonutChartSVG(
         stroke="var(--md-sys-color-surface-variant)"
         stroke-width="${config.strokeWidth}"
       />
-      
-      <!-- Stock A segment -->
-      <circle
-        cx="${config.centerX}"
-        cy="${config.centerY}"
-        r="${config.radius}"
-        fill="none"
-        stroke="#2196F3"
-        stroke-width="${config.strokeWidth}"
-        stroke-dasharray="${stockALength} ${circumference}"
-        stroke-dashoffset="0"
-        transform="rotate(90 ${config.centerX} ${config.centerY})"
-      />
-      
-      <!-- Stock B segment -->
-      <circle
-        cx="${config.centerX}"
-        cy="${config.centerY}"
-        r="${config.radius}"
-        fill="none"
-        stroke="#FF9800"
-        stroke-width="${config.strokeWidth}"
-        stroke-dasharray="${stockBLength} ${circumference}"
-        stroke-dashoffset="${-stockALength}"
-        transform="rotate(90 ${config.centerX} ${config.centerY})"
-      />
-      
-      <!-- Stock A label -->
-      <text 
-        x="${stockAX}" 
-        y="${stockAY}" 
-        text-anchor="middle" 
-        dominant-baseline="middle" 
-        fill="var(--md-sys-color-on-surface)"
-        font-size="${config.fontSize}"
-        font-weight="600"
-      >
-        ${stockTickers.stockA}: ${allocation.stockA.percentage}%
-      </text>
-      
-      <!-- Stock B label -->
-      <text 
-        x="${stockBX}" 
-        y="${stockBY}" 
-        text-anchor="middle" 
-        dominant-baseline="middle" 
-        fill="var(--md-sys-color-on-surface)"
-        font-size="${config.fontSize}"
-        font-weight="600"
-      >
-        ${stockTickers.stockB}: ${allocation.stockB.percentage}%
-      </text>
+      ${segments}
+      ${labels}
     </svg>
   `;
 }

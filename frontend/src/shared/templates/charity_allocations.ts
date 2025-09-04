@@ -14,6 +14,9 @@ import {
   ProfileType,
   StageConfig,
   ScaleSurveyQuestion,
+  createAssetAllocationStage,
+  createAssetAllocationStockInfoConfig,
+  createStock,
 } from '@deliberation-lab/utils';
 
 export interface CharityDebateConfig {
@@ -47,7 +50,6 @@ export const CHARITIES = [
   'Global Fund for Women',
 ];
 
-// ✨ ADDED: Standardized 1-7 scale properties for consistency
 const LIKERT_SCALE_PROPS = {
   lowerValue: 1,
   upperValue: 7,
@@ -86,7 +88,6 @@ export function getCharityDebateTemplate(
       mediatorForRound = `AI Mediator (Style ${index})`;
     }
 
-    // 1. Pre-discussion allocation vote
     stages.push(
       createAllocationSurveyStage(
         `vote-round-${roundNum}-pre`,
@@ -95,7 +96,6 @@ export function getCharityDebateTemplate(
       ),
     );
 
-    // 2. Discussion stage
     stages.push(
       createAllocationDiscussionStage(
         `discussion-round-${roundNum}`,
@@ -105,7 +105,6 @@ export function getCharityDebateTemplate(
       ),
     );
 
-    // 4. Post-discussion allocation vote
     stages.push(
       createAllocationSurveyStage(
         `vote-round-${roundNum}-post`,
@@ -114,12 +113,10 @@ export function getCharityDebateTemplate(
       ),
     );
 
-    // 3. Mediator evaluation (if applicable)
     if (mediatorForRound) {
       stages.push(createPerMediatorEvaluationStage(roundNum));
     }
 
-    // 5. End of round marker
     stages.push(
       createSurveyStage({
         id: `end-round-${roundNum}`,
@@ -154,36 +151,33 @@ export function getCharityDebateTemplate(
 // STAGE FACTORIES
 // ****************************************************************************
 
-/**
- * Creates a survey stage with sliders for allocating funds to a group of charities.
- *  untouched per request
- */
 function createAllocationSurveyStage(
   id: string,
   name: string,
   charityGroup: string[],
 ): StageConfig {
-  const allocationQuestions: ScaleSurveyQuestion[] = charityGroup.map(
-    (charityName) =>
-      createScaleSurveyQuestion({
-        id: `${id}-${charityName.replace(/[^a-zA-Z0-9]/g, '-')}`,
-        questionTitle: `Allocation for: ${charityName}`,
-        useSlider: true,
-        lowerValue: 0,
-        upperValue: 100,
-        lowerText: '0%',
-        upperText: '100%',
-      }),
+  const charityStocks = charityGroup.map((charityName) =>
+    createStock({name: charityName}),
   );
 
-  return createSurveyStage({
-    id: id,
-    name: name,
+  const stockA = charityStocks[0];
+  const stockB = charityStocks[1];
+  const additionalStocks = charityStocks.slice(2);
+
+  return createAssetAllocationStage({
+    id,
+    name,
     descriptions: createStageTextConfig({
       primaryText: `Please use the sliders below to indicate how you would allocate 100% of the funds among this round's charities.`,
-      infoText: `Please ensure your chosen percentages for **${charityGroup.join(', ')}** add up to 100%. **Note: The system will not automatically enforce this sum.**`,
+      infoText: `Please ensure your chosen percentages for **${charityGroup.join(
+        ', ',
+      )}** add up to 100%.`,
     }),
-    questions: allocationQuestions,
+    stockConfig: createAssetAllocationStockInfoConfig({
+      stockA,
+      stockB,
+      additionalStocks,
+    }),
   });
 }
 
