@@ -21,3 +21,4 @@ Caddyfile
 *index.html
 *firebase_config.ts
 *config.ts
+!webpack.config.ts
