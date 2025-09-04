@@ -1,8 +1,8 @@
 import '../../pair-components/icon_button';
 
 import {MobxLitElement} from '@adobe/lit-mobx';
-import {CSSResultGroup, html, nothing} from 'lit';
-import {customElement, property, state} from 'lit/decorators.js';
+import {CSSResultGroup, html} from 'lit';
+import {customElement, property} from 'lit/decorators.js';
 import {classMap} from 'lit/directives/class-map.js';
 
 import {core} from '../../core/core';
@@ -10,7 +10,6 @@ import {AnalyticsService, ButtonClick} from '../../services/analytics.service';
 import {ExperimentEditor} from '../../services/experiment.editor';
 
 import {
-  AgentPersonaType,
   ExperimentTemplate,
   MetadataConfig,
   StageConfig,
@@ -66,6 +65,11 @@ import {
   ASSET_ALLOCATION_TEMPLATE_METADATA,
   getAssetAllocationTemplate,
 } from '../../shared/templates/asset_allocation_template';
+import {
+  CHARITY_DEBATE_METADATA,
+  CharityDebateConfig,
+  getCharityDebateTemplate,
+} from '../../shared/templates/charity_allocation';
 import {
   CONDITIONAL_SURVEY_TEMPLATE_METADATA,
   getConditionalSurveyTemplate,
@@ -160,6 +164,7 @@ export class StageBuilderDialog extends MobxLitElement {
         ${this.renderAssetAllocationTemplateCard()}
         ${this.renderConditionalSurveyTemplateCard()}
         ${this.renderPolicyTemplateCard()}
+        ${this.renderCharityDebateTemplateCard()}
       </div>
     `;
   }
@@ -571,6 +576,122 @@ export class StageBuilderDialog extends MobxLitElement {
         <div>
           A demonstration of the StockInfo stage with financial data analysis.
         </div>
+      </div>
+    `;
+  }
+
+  private renderCharityDebateTemplateCard() {
+    const loadTemplate = () => {
+      const config: CharityDebateConfig = {
+        includeTos: (
+          this.shadowRoot?.querySelector('#charity-cb-tos') as HTMLInputElement
+        )?.checked,
+        includeViewProfile: (
+          this.shadowRoot?.querySelector(
+            '#charity-cb-profile',
+          ) as HTMLInputElement
+        )?.checked,
+        includeMediator: (
+          this.shadowRoot?.querySelector(
+            '#charity-cb-mediator',
+          ) as HTMLInputElement
+        )?.checked,
+        includeInitialParticipantSurvey: (
+          this.shadowRoot?.querySelector(
+            '#charity-cb-initial-survey',
+          ) as HTMLInputElement
+        )?.checked,
+        includePostDiscussionSurvey: (
+          this.shadowRoot?.querySelector(
+            '#charity-cb-post-survey',
+          ) as HTMLInputElement
+        )?.checked,
+        includeDiscussionEvaluation: (
+          this.shadowRoot?.querySelector(
+            '#charity-cb-discussion-eval',
+          ) as HTMLInputElement
+        )?.checked,
+        includePeerEvaluation: (
+          this.shadowRoot?.querySelector(
+            '#charity-cb-peer-eval',
+          ) as HTMLInputElement
+        )?.checked,
+        includeMetaFeedback: (
+          this.shadowRoot?.querySelector(
+            '#charity-cb-meta-feedback',
+          ) as HTMLInputElement
+        )?.checked,
+      };
+
+      this.addTemplate(getCharityDebateTemplate(config));
+    };
+
+    return html`
+      <div class="card">
+        <div class="title">${CHARITY_DEBATE_METADATA.name}</div>
+        <div>${CHARITY_DEBATE_METADATA.description}</div>
+        <div class="template-controls">
+          <div class="subtitle">Configure Experiment Stages</div>
+
+          <label class="custom-checkbox">
+            <input type="checkbox" id="charity-cb-tos" checked />
+            <span class="checkmark"></span>
+            <span class="label-text">Include Terms of Service</span>
+          </label>
+
+          <label class="custom-checkbox">
+            <input type="checkbox" id="charity-cb-profile" />
+            <span class="checkmark"></span>
+            <span class="label-text"
+              >[Optional] Include View Assigned Profile Stage</span
+            >
+          </label>
+
+          <label class="custom-checkbox">
+            <input type="checkbox" id="charity-cb-mediator" checked />
+            <span class="checkmark"></span>
+            <span class="label-text"
+              >[Conditional] Include AI Mediator & Surveys</span
+            >
+          </label>
+
+          <label class="custom-checkbox">
+            <input type="checkbox" id="charity-cb-initial-survey" checked />
+            <span class="checkmark"></span>
+            <span class="label-text">Include Initial Participant Survey</span>
+          </label>
+
+          <!-- The "Role/Value Assignment" checkbox has been removed. -->
+
+          <label class="custom-checkbox">
+            <input type="checkbox" id="charity-cb-post-survey" checked />
+            <span class="checkmark"></span>
+            <span class="label-text">Include Post-Discussion Survey</span>
+          </label>
+
+          <label class="custom-checkbox">
+            <input type="checkbox" id="charity-cb-discussion-eval" />
+            <span class="checkmark"></span>
+            <span class="label-text"
+              >[Optional] Include Discussion Evaluation</span
+            >
+          </label>
+
+          <label class="custom-checkbox">
+            <input type="checkbox" id="charity-cb-peer-eval" checked />
+            <span class="checkmark"></span>
+            <span class="label-text">[Optional] Include Peer Evaluation</span>
+          </label>
+
+          <label class="custom-checkbox">
+            <input type="checkbox" id="charity-cb-meta-feedback" />
+            <span class="checkmark"></span>
+            <span class="label-text"
+              >[Optional] Include Meta-Feedback Survey</span
+            >
+          </label>
+        </div>
+        <pr-button @click=${loadTemplate}> Load Template </pr-button>
       </div>
     `;
   }
