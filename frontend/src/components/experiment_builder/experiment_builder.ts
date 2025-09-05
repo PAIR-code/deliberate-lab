@@ -658,6 +658,14 @@ export class ExperimentBuilder extends MobxLitElement {
             <asset-allocation-editor .stage=${stage}></asset-allocation-editor>
           </base-stage-editor>
         `;
+      case StageKind.MULTI_ASSET_ALLOCATION:
+        return html`
+          <base-stage-editor .stage=${stage}>
+            <div slot="title">Asset allocation configuration</div>
+            <multi-asset-allocation-editor .stage=${stage}>
+            </multi-asset-allocation-editor>
+          </base-stage-editor>
+        `;
       case StageKind.SURVEY:
         return html`
           <base-stage-editor .stage=${stage}>

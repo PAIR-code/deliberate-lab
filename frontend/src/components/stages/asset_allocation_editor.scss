@@ -21,6 +21,14 @@
   }
 }
 
+p {
+  margin: 0;
+}
+
+.title {
+  @include typescale.title-medium;
+}
+
 .section {
   @include common.flex-column;
   gap: common.$spacing-medium;
@@ -44,10 +52,8 @@
 }
 
 .info-text {
-  margin: 0;
-  font-size: 0.875rem;
-  line-height: 1.5;
-  color: var(--md-sys-color-on-surface-variant);
+  @include typescale.label-small;
+  color: var(--md-sys-color-outline);
 }
 
 // Stock Info Stage Selector
@@ -80,13 +86,9 @@
 }
 
 .no-stages {
-  padding: common.$spacing-medium;
-  text-align: center;
-  color: var(--md-sys-color-on-surface-variant);
   font-style: italic;
-  background-color: var(--md-sys-color-surface-container);
-  border-radius: common.$spacing-medium;
   margin: 0;
+  padding: common.$spacing-medium;
 }
 
 .stage-list {
@@ -193,16 +195,22 @@
   }
 }
 
-.stock-config {
+.stock-list {
   @include common.flex-column;
-  gap: common.$spacing-large;
-  padding: common.$spacing-medium;
-  background-color: var(--md-sys-color-surface-container);
+  gap: common.$spacing-xl;
+}
+
+.stock-config {
+  @include common.flex-row;
+  gap: common.$spacing-medium;
+  padding: common.$spacing-large;
+  background-color: var(--md-sys-color-surface-variant);
   border-radius: common.$spacing-medium;
 }
 
 .simple-stock-editor {
   @include common.flex-column;
+  flex-grow: 1;
   gap: common.$spacing-large;
 
   md-outlined-text-field {
