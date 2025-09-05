@@ -6,6 +6,7 @@ import {
   CreateChatMessageData,
   FlipCardStageParticipantAnswer,
   RankingItem,
+  MultiAssetAllocationStageParticipantAnswer,
   ParticipantProfileBase,
   ParticipantProfileExtended,
   ParticipantStatus,
@@ -58,6 +59,7 @@ import {
   setSalespersonMoveCallable,
   setSalespersonResponseCallable,
   updateAssetAllocationStageParticipantAnswerCallable,
+  updateMultiAssetAllocationStageParticipantAnswerCallable,
   updateParticipantAcceptedTOSCallable,
   updateParticipantFailureCallable,
   updateParticipantProfileCallable,
@@ -735,6 +737,28 @@ export class ParticipantService extends Service {
           stageId: id,
           allocation,
           confirmed,
+        },
+      );
+    }
+
+    return response;
+  }
+
+  /** Update participant multi asset allocation answer. */
+  async updateMultiAssetAllocationStageParticipantAnswer(
+    stageId: string, // asset allocation stage ID
+    answer: MultiAssetAllocationStageParticipantAnswer,
+  ) {
+    let response = {};
+
+    if (this.experimentId && this.profile) {
+      response = await updateMultiAssetAllocationStageParticipantAnswerCallable(
+        this.sp.firebaseService.functions,
+        {
+          experimentId: this.experimentId,
+          participantPrivateId: this.profile.privateId,
+          stageId,
+          answer,
         },
       );
     }

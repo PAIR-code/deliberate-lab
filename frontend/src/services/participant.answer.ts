@@ -323,7 +323,7 @@ export class ParticipantAnswerService extends Service {
         kind: StageKind.MULTI_ASSET_ALLOCATION,
         allocationMap: {},
         isConfirmed: false,
-        confirmationTimestamp: null,
+        confirmedTimestamp: null,
       };
     }
     answer.allocationMap[allocation.id] = allocation;
@@ -368,6 +368,15 @@ export class ParticipantAnswerService extends Service {
       stageId,
       answer.allocation,
       answer.confirmed,
+    );
+  }
+
+  async saveMultiAssetAllocationAnswer(stageId: string) {
+    const answer = this.answerMap[stageId];
+    if (!answer || answer.kind !== StageKind.MULTI_ASSET_ALLOCATION) return;
+    await this.sp.participantService.updateMultiAssetAllocationStageParticipantAnswer(
+      stageId,
+      answer,
     );
   }
 

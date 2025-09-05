@@ -15,16 +15,17 @@ import {
   prettyPrintError,
   prettyPrintErrors,
 } from '../utils/validation';
+import {getFirestoreParticipantAnswerRef} from '../utils/firestore';
 
 /** Endpoints for AssetAllocation stage operations. */
 
 // ************************************************************************* //
 // updateAssetAllocationStageParticipantAnswer endpoint                      //
 //                                                                           //
-// Updates participant's AssetAllocation answer (public data updated by     //
+// Updates participant's AssetAllocation answer (public data updated by      //
 // trigger)                                                                  //
 // Input structure: { experimentId, cohortId, participantPrivateId,          //
-//                    participantPublicId, stageId, allocation, confirmed }  //
+//                    stageId, allocation, confirmed }                       //
 // Validation: utils/src/stages/asset_allocation_stage.validation.ts         //
 // ************************************************************************* //
 
@@ -87,3 +88,32 @@ function handleUpdateAssetAllocationStageParticipantAnswerValidationErrors(
   throw new functions.https.HttpsError('invalid-argument', 'Invalid data');
 }
 /* eslint-enable @typescript-eslint/no-explicit-any */
+
+// ************************************************************************* //
+// updateMultiAssetAllocationStageParticipantAnswer endpoint                 //
+//                                                                           //
+// Updates participant's MultiAssetAllocation answer (public data updated by //
+// trigger)                                                                  //
+// Input structure: { experimentId, cohortId, participantPrivateId, answer } //
+// Validation: utils/src/stages/asset_allocation_stage.validation.ts         //
+// ************************************************************************* //
+
+export const updateMultiAssetAllocationStageParticipantAnswer = onCall(
+  async (request) => {
+    const {data} = request;
+
+    // Define participant answer document reference
+    const participantDocument = getFirestoreParticipantAnswerRef(
+      data.experimentId,
+      data.participantPrivateId,
+      data.stageId,
+    );
+
+    // Update participant answer only (public data will be updated by trigger)
+    await app.firestore().runTransaction(async (transaction) => {
+      transaction.set(participantDocument, data.answer);
+    });
+
+    return {success: true, id: data.stageId};
+  },
+);

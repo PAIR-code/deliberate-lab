@@ -419,6 +419,16 @@ export class MultiAssetAllocationParticipantView extends MobxLitElement {
       `;
     };
 
+    const saveAnswers = async () => {
+      if (!this.stage) return;
+
+      // Save all answers for this stage
+      await this.participantAnswerService.saveMultiAssetAllocationAnswer(
+        this.stage.id,
+      );
+      await this.participantService.progressToNextStage();
+    };
+
     return html`
       <div class="stage-container">
         <stage-description .stage=${this.stage}></stage-description>
@@ -441,7 +451,11 @@ export class MultiAssetAllocationParticipantView extends MobxLitElement {
           </div>
         </div>
 
-        <stage-footer .stage=${this.stage} .disabled=${!isValidAnswer}>
+        <stage-footer
+          .stage=${this.stage}
+          .disabled=${!isValidAnswer}
+          .onNextClick=${saveAnswers}
+        >
           ${this.stage?.progress.showParticipantProgress
             ? html`<progress-stage-completed></progress-stage-completed>`
             : nothing}
