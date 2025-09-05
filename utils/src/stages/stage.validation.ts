@@ -1,5 +1,8 @@
 import {Type} from '@sinclair/typebox';
-import {AssetAllocationStageConfigData} from './asset_allocation_stage.validation';
+import {
+  AssetAllocationStageConfigData,
+  MultiAssetAllocationStageConfigData,
+} from './asset_allocation_stage.validation';
 import {ChatStageConfigData} from './chat_stage.validation';
 import {ChipStageConfigData} from './chip_stage.validation';
 import {ComprehensionStageConfigData} from './comprehension_stage.validation';
@@ -27,6 +30,7 @@ import {TOSStageConfigData} from './tos_stage.validation';
 /** StageConfig input validation. */
 export const StageConfigData = Type.Union([
   AssetAllocationStageConfigData,
+  MultiAssetAllocationStageConfigData,
   ChatStageConfigData,
   ChipStageConfigData,
   ComprehensionStageConfigData,

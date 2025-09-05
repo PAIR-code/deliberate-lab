@@ -78,6 +78,20 @@ export const AssetAllocationStagePublicDataData = Type.Object(
   strict,
 );
 
+/** MultiAssetAllocation validation. */
+export const MultiAssetAllocationStageConfigData = Type.Object(
+  {
+    id: Type.String({minLength: 1}),
+    kind: Type.Literal(StageKind.MULTI_ASSET_ALLOCATION),
+    name: Type.String({minLength: 1}),
+    descriptions: StageTextConfigSchema,
+    progress: StageProgressConfigSchema,
+    stockOptions: Type.Array(StockData),
+    stockInfoStageId: Type.String(),
+  },
+  strict,
+);
+
 // ************************************************************************* //
 // API endpoint validation                                                   //
 // ************************************************************************* //

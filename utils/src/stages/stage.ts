@@ -49,6 +49,8 @@ import {
   AssetAllocationStageConfig,
   AssetAllocationStageParticipantAnswer,
   AssetAllocationStagePublicData,
+  MultiAssetAllocationStageConfig,
+  MultiAssetAllocationStageParticipantAnswer,
   createAssetAllocationStagePublicData,
 } from './asset_allocation_stage';
 import {
@@ -84,7 +86,8 @@ export enum StageKind {
   REVEAL = 'reveal',
   SALESPERSON = 'salesperson', // co-op traveling salesperson game
   STOCKINFO = 'stockinfo',
-  ASSET_ALLOCATION = 'assetAllocation', // asset allocation between stocks
+  ASSET_ALLOCATION = 'assetAllocation', // asset allocation between 2 stocks
+  MULTI_ASSET_ALLOCATION = 'multiAssetAllocation', // allocation of 2+ stocks
   ROLE = 'role', // info stage that assigns different roles to participants
   SURVEY = 'survey',
   SURVEY_PER_PARTICIPANT = 'surveyPerParticipant',
@@ -131,6 +134,7 @@ export type StageConfig =
   | SalespersonStageConfig
   | StockInfoStageConfig
   | AssetAllocationStageConfig
+  | MultiAssetAllocationStageConfig
   | RoleStageConfig
   | SurveyStageConfig
   | SurveyPerParticipantStageConfig
@@ -151,6 +155,7 @@ export interface BaseStageParticipantAnswer {
 
 export type StageParticipantAnswer =
   | AssetAllocationStageParticipantAnswer
+  | MultiAssetAllocationStageParticipantAnswer
   | ChatStageParticipantAnswer
   | ChipStageParticipantAnswer
   | ComprehensionStageParticipantAnswer
