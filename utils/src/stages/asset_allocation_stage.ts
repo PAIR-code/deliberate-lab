@@ -75,7 +75,7 @@ export interface MultiAssetAllocationStageParticipantAnswer
   allocationMap: Record<string, StockAllocation>;
   // Whether or not participant has locked in the allocation
   isConfirmed: boolean;
-  confirmationTimestamp: UnifiedTimestamp;
+  confirmationTimestamp: UnifiedTimestamp | null;
 }
 
 // ************************************************************************* //
