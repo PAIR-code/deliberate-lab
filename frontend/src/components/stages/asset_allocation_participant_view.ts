@@ -403,7 +403,6 @@ export class MultiAssetAllocationParticipantView extends MobxLitElement {
     if (!this.stage) return nothing;
 
     // Check if allocations sum to 100 percent
-    // TODO: Update to also check if answer is confirmed
     const isValidAnswer =
       this.stage.stockOptions
         .map(
@@ -489,7 +488,7 @@ export class MultiAssetAllocationParticipantView extends MobxLitElement {
     };
 
     const id = `${stock.id}-slider`;
-    const isDisabled = false; // TODO: update
+    const isDisabled = this.participantService.disableStage;
 
     return html`
       <div class="slider-group">
