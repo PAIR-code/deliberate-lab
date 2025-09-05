@@ -78,6 +78,32 @@ export const AssetAllocationStagePublicDataData = Type.Object(
   strict,
 );
 
+/** MultiAssetAllocation validation. */
+export const MultiAssetAllocationStageConfigData = Type.Object(
+  {
+    id: Type.String({minLength: 1}),
+    kind: Type.Literal(StageKind.MULTI_ASSET_ALLOCATION),
+    name: Type.String({minLength: 1}),
+    descriptions: StageTextConfigSchema,
+    progress: StageProgressConfigSchema,
+    stockOptions: Type.Array(StockData),
+    stockInfoStageId: Type.String(),
+  },
+  strict,
+);
+
+/** MultiAssetAllocation stage participant answer validation. */
+export const MultiAssetAllocationStageParticipantAnswerData = Type.Object(
+  {
+    id: Type.String({minLength: 1}),
+    kind: Type.Literal(StageKind.MULTI_ASSET_ALLOCATION),
+    allocationMap: Type.Record(Type.String(), StockAllocationData),
+    isConfirmed: Type.Boolean(),
+    confirmedTimestamp: Type.Union([UnifiedTimestampSchema, Type.Null()]),
+  },
+  strict,
+);
+
 // ************************************************************************* //
 // API endpoint validation                                                   //
 // ************************************************************************* //
@@ -95,4 +121,18 @@ export const UpdateAssetAllocationStageParticipantAnswerData = Type.Object(
 
 export type UpdateAssetAllocationStageParticipantAnswerData = Static<
   typeof UpdateAssetAllocationStageParticipantAnswerData
+>;
+
+export const UpdateMultiAssetAllocationStageParticipantAnswerData = Type.Object(
+  {
+    experimentId: Type.String({minLength: 1}),
+    participantPrivateId: Type.String({minLength: 1}),
+    stageId: Type.String({minLength: 1}),
+    answer: MultiAssetAllocationStageParticipantAnswerData,
+  },
+  strict,
+);
+
+export type UpdateMultiAssetAllocationStageParticipantAnswerData = Static<
+  typeof UpdateMultiAssetAllocationStageParticipantAnswerData
 >;

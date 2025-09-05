@@ -10,9 +10,11 @@ import '@material/web/textfield/outlined-text-field.js';
 import {MobxLitElement} from '@adobe/lit-mobx';
 import {CSSResultGroup, html, nothing} from 'lit';
 import {customElement, property} from 'lit/decorators.js';
+import {classMap} from 'lit/directives/class-map.js';
 
 import {
   AssetAllocationStageConfig,
+  MultiAssetAllocationStageConfig,
   Stock,
   StageKind,
   StockInfoStageConfig,
@@ -69,8 +71,8 @@ export class AssetAllocationEditor extends MobxLitElement {
         <div class="info-text">
           <p>
             You can either reference an existing StockInfo stage with exactly 2
-            stocks for detailed stock data and charts, or configure simple stock
-            names and descriptions manually.
+            stocks for detailed stock data and charts, or configure stock names
+            and descriptions manually (see "Simple stocks" option below).
           </p>
         </div>
 
@@ -255,5 +257,236 @@ export class AssetAllocationEditor extends MobxLitElement {
       ...this.stage,
       stockConfig: createAssetAllocationStockInfoConfig(),
     });
+  }
+}
+
+@customElement('multi-asset-allocation-editor')
+export class MultiAssetAllocationEditor extends MobxLitElement {
+  static override styles: CSSResultGroup = [styles];
+
+  private readonly experimentEditor = core.getService(ExperimentEditor);
+
+  @property() stage: MultiAssetAllocationStageConfig | undefined = undefined;
+
+  override render() {
+    if (!this.stage) return nothing;
+
+    return html`
+      <div class="section">
+        <div class="title">Stock Options</div>
+        ${this.renderStockInfoStageSelector()}
+      </div>
+      ${!this.stage.stockInfoStageId
+        ? this.renderSimpleStockConfiguration()
+        : nothing}
+    `;
+  }
+
+  private renderStockInfoStageOption(stockInfoStage: StockInfoStageConfig) {
+    const isSelected = this.stage?.stockInfoStageId === stockInfoStage.id;
+    const stageIndex = this.experimentEditor.stages.findIndex(
+      (s) => s.id === stockInfoStage.id,
+    );
+    const isDisabled = !this.experimentEditor.canEditStages;
+
+    const onSelect = () => {
+      if (!this.stage || isDisabled) return;
+
+      this.experimentEditor.updateStage({
+        ...this.stage,
+        stockInfoStageId: stockInfoStage.id,
+        stockOptions: stockInfoStage.stocks,
+      });
+    };
+
+    const classes = classMap({
+      'stage-option': true,
+      selected: isSelected,
+      disabled: isDisabled,
+    });
+
+    return html`
+      <div class=${classes} @click=${onSelect}>
+        <div class="stage-header">
+          <span class="stage-number">${stageIndex + 1}.</span>
+          <span class="stage-name">${stockInfoStage.name}</span>
+          ${isSelected
+            ? html`<span class="selected-indicator">✓</span>`
+            : nothing}
+        </div>
+        <div class="stage-details">
+          <span class="stock-count">
+            ${stockInfoStage.stocks?.length || 0} stocks
+          </span>
+        </div>
+      </div>
+    `;
+  }
+
+  private renderStockInfoStageSelector() {
+    if (!this.stage) return nothing;
+
+    const stockInfoStages = this.getAvailableStockInfoStages();
+    const selectedStage =
+      stockInfoStages.find((s) => s.id === this.stage!.stockInfoStageId) ??
+      null;
+
+    return html`
+      <div class="stock-info-selector">
+        <p class="info-text">
+          Reference an existing StockInfo stage for detailed stock data and
+          charts, or configure "simple stock" names and descriptions manually:
+        </p>
+
+        <div class="stage-options">
+          ${stockInfoStages.length === 0
+            ? html`<p class="no-stages">No StockInfo stages found.</p>`
+            : html`
+                <div class="stage-list">
+                  ${stockInfoStages.map((stage) =>
+                    this.renderStockInfoStageOption(stage),
+                  )}
+                </div>
+              `}
+          <div
+            class="stage-option ${!selectedStage ? 'selected' : ''}"
+            @click=${this.clearStockInfoStage}
+          >
+            Use simple stocks (configured below)
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  private renderSimpleStockConfiguration() {
+    if (!this.stage) return nothing;
+
+    const addStock = () => {
+      if (!this.stage) return;
+
+      this.experimentEditor.updateStage({
+        ...this.stage,
+        stockOptions: [
+          ...this.stage.stockOptions,
+          createStock({name: 'Untitled stock'}),
+        ],
+      });
+    };
+
+    return html`
+      <div class="section">
+        <div class="title">Simple Stock Configuration</div>
+        <p class="info-text">
+          Configure basic information for stocks. To display charts, create a
+          StockInfo stage preceding this stage and select it above.
+        </p>
+
+        <div class="stock-list">
+          ${this.stage.stockOptions.map((stock, index) =>
+            this.renderSimpleStockEditor(stock, index),
+          )}
+          <pr-button @click=${addStock}> Add new stock </pr-button>
+        </div>
+      </div>
+    `;
+  }
+
+  private renderSimpleStockEditor(stock: Stock, index: number) {
+    if (!this.stage) return;
+
+    const updateStock = (updates: Partial<Stock>) => {
+      if (!this.stage || !this.experimentEditor.canEditStages) return;
+
+      const updatedStock = {...stock, ...updates};
+
+      const stockOptions = [
+        ...this.stage.stockOptions.slice(0, index),
+        updatedStock,
+        ...this.stage.stockOptions.slice(index + 1),
+      ];
+      this.experimentEditor.updateStage({
+        ...this.stage,
+        stockOptions,
+      });
+    };
+
+    const removeStock = () => {
+      if (!this.stage) return;
+
+      this.experimentEditor.updateStage({
+        ...this.stage,
+        stockOptions: [
+          ...this.stage.stockOptions.slice(0, index),
+          ...this.stage.stockOptions.slice(index + 1),
+        ],
+      });
+    };
+
+    return html`
+      <div class="stock-config">
+        <div class="simple-stock-editor">
+          <md-outlined-text-field
+            label="Stock Name"
+            value=${stock.name}
+            ?disabled=${!this.experimentEditor.canEditStages}
+            @input=${(e: Event) => {
+              const name = (e.target as HTMLInputElement).value;
+              updateStock({name});
+            }}
+          ></md-outlined-text-field>
+
+          <md-outlined-text-field
+            label="Description (optional)"
+            value=${stock.description}
+            type="textarea"
+            rows="3"
+            ?disabled=${!this.experimentEditor.canEditStages}
+            @input=${(e: Event) => {
+              const description = (e.target as HTMLInputElement).value;
+              updateStock({description});
+            }}
+          ></md-outlined-text-field>
+        </div>
+        <pr-icon-button
+          icon="close"
+          color="neutral"
+          variant="default"
+          @click=${removeStock}
+        >
+        </pr-icon-button>
+      </div>
+    `;
+  }
+
+  private getAvailableStockInfoStages(): StockInfoStageConfig[] {
+    // Get all StockInfo stages that precede this stage
+    const currentStageIndex = this.experimentEditor.stages.findIndex(
+      (stage) => stage.id === this.stage?.id,
+    );
+
+    return this.experimentEditor.stages
+      .slice(0, currentStageIndex)
+      .filter(
+        (stage): stage is StockInfoStageConfig =>
+          stage.kind === StageKind.STOCKINFO,
+      );
+  }
+
+  private clearStockInfoStage() {
+    if (!this.stage || !this.experimentEditor.canEditStages) return;
+
+    this.experimentEditor.updateStage({
+      ...this.stage,
+      stockInfoStageId: '',
+      stockOptions: [],
+    });
+  }
+}
+
+declare global {
+  interface HTMLElementTagNameMap {
+    'asset-allocation-editor': AssetAllocationEditor;
+    'multi-asset-allocation-editor': MultiAssetAllocationEditor;
   }
 }

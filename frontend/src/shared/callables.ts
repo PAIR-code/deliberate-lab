@@ -28,6 +28,7 @@ import {
   SimpleResponse,
   SuccessResponse,
   UpdateAssetAllocationStageParticipantAnswerData,
+  UpdateMultiAssetAllocationStageParticipantAnswerData,
   UpdateChatStageParticipantAnswerData,
   UpdateCohortMetadataData,
   UpdateFlipCardStageParticipantAnswerData,
@@ -350,6 +351,21 @@ export const updateAssetAllocationStageParticipantAnswerCallable = async (
   >(
     functions,
     'updateAssetAllocationStageParticipantAnswer',
+  )(config);
+  return data;
+};
+
+/** Generic endpoint to update multi asset allocation stage participant answers */
+export const updateMultiAssetAllocationStageParticipantAnswerCallable = async (
+  functions: Functions,
+  config: UpdateMultiAssetAllocationStageParticipantAnswerData,
+) => {
+  const {data} = await httpsCallable<
+    UpdateMultiAssetAllocationStageParticipantAnswerData,
+    SuccessResponse
+  >(
+    functions,
+    'updateMultiAssetAllocationStageParticipantAnswer',
   )(config);
   return data;
 };

@@ -18,6 +18,7 @@ import {
   RankingStageParticipantAnswer,
   StageKind,
   StageParticipantAnswer,
+  StockAllocation,
   StockInfoStageParticipantAnswer,
   SurveyAnswer,
   createAssetAllocationStageParticipantAnswer,
@@ -313,6 +314,22 @@ export class ParticipantAnswerService extends Service {
     this.answerMap[stageId] = answer;
   }
 
+  /** Used in MultiAssetAllocation stage. */
+  updateStockAllocation(stageId: string, allocation: StockAllocation) {
+    let answer = this.answerMap[stageId];
+    if (!answer || answer.kind !== StageKind.MULTI_ASSET_ALLOCATION) {
+      answer = {
+        id: stageId,
+        kind: StageKind.MULTI_ASSET_ALLOCATION,
+        allocationMap: {},
+        isConfirmed: false,
+        confirmedTimestamp: null,
+      };
+    }
+    answer.allocationMap[allocation.id] = allocation;
+    this.answerMap[stageId] = answer;
+  }
+
   async setChipTurn(stageId: string) {
     await this.sp.participantService.setChipTurn(stageId);
   }
@@ -351,6 +368,15 @@ export class ParticipantAnswerService extends Service {
       stageId,
       answer.allocation,
       answer.confirmed,
+    );
+  }
+
+  async saveMultiAssetAllocationAnswer(stageId: string) {
+    const answer = this.answerMap[stageId];
+    if (!answer || answer.kind !== StageKind.MULTI_ASSET_ALLOCATION) return;
+    await this.sp.participantService.updateMultiAssetAllocationStageParticipantAnswer(
+      stageId,
+      answer,
     );
   }
 

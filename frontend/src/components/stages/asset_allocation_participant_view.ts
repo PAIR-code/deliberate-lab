@@ -20,7 +20,11 @@ import {
   AssetAllocationStageConfig,
   AssetAllocationStageParticipantAnswer,
   AssetAllocation,
+  MultiAssetAllocationStageConfig,
+  MultiAssetAllocationStageParticipantAnswer,
   StageKind,
+  Stock,
+  StockAllocation,
   StockInfoStageConfig,
   generateSVGChart,
   generateDonutChartSVG,
@@ -378,5 +382,142 @@ export class AssetAllocationParticipantView extends MobxLitElement {
       id: this.stage!.id,
       allocation,
     });
+  }
+}
+
+/** MultiAssetAllocation stage participant view */
+@customElement('multi-asset-allocation-participant-view')
+export class MultiAssetAllocationParticipantView extends MobxLitElement {
+  static override styles: CSSResultGroup = [styles];
+
+  private readonly participantService = core.getService(ParticipantService);
+  private readonly participantAnswerService = core.getService(
+    ParticipantAnswerService,
+  );
+  private readonly experimentService = core.getService(ExperimentService);
+
+  @property({type: Object}) stage: MultiAssetAllocationStageConfig | undefined =
+    undefined;
+
+  override render() {
+    if (!this.stage) return nothing;
+
+    // Check if allocations sum to 100 percent
+    const isValidAnswer =
+      this.stage.stockOptions
+        .map(
+          (stock, index) => this.getStockAllocation(stock.id)?.percentage ?? 0,
+        )
+        .reduce((acc, percentage) => acc + percentage, 0) === 100;
+
+    const renderError = () => {
+      return html`
+        <div class="error-message">
+          Your allocations must add up to exactly 100% before you can move on.
+        </div>
+      `;
+    };
+
+    const saveAnswers = async () => {
+      if (!this.stage) return;
+
+      // Save all answers for this stage
+      await this.participantAnswerService.saveMultiAssetAllocationAnswer(
+        this.stage.id,
+      );
+      await this.participantService.progressToNextStage();
+    };
+
+    return html`
+      <div class="stage-container">
+        <stage-description .stage=${this.stage}></stage-description>
+
+        <div class="allocation-content">
+          <div class="allocation-section">
+            <div class="allocation-header">
+              <h3>Asset Allocation</h3>
+            </div>
+            <div class="sliders-section">
+              ${this.stage.stockOptions.map((stock, index) =>
+                this.renderSlider(
+                  stock,
+                  this.getStockAllocation(stock.id),
+                  index,
+                ),
+              )}
+              ${!isValidAnswer ? renderError() : nothing}
+            </div>
+          </div>
+        </div>
+
+        <stage-footer
+          .stage=${this.stage}
+          .disabled=${!isValidAnswer}
+          .onNextClick=${saveAnswers}
+        >
+          ${this.stage?.progress.showParticipantProgress
+            ? html`<progress-stage-completed></progress-stage-completed>`
+            : nothing}
+        </stage-footer>
+      </div>
+    `;
+  }
+
+  private getStockAllocation(stockId: string) {
+    const answer =
+      this.participantAnswerService.answerMap[this.stage?.id ?? ''];
+    if (answer?.kind !== StageKind.MULTI_ASSET_ALLOCATION) {
+      return undefined;
+    }
+    return answer.allocationMap[stockId];
+  }
+
+  private renderSlider(
+    stock: Stock,
+    allocation: StockAllocation | undefined,
+    index: number,
+  ) {
+    const updateAllocation = (e: Event) => {
+      if (!this.stage) return;
+
+      const percentage = Number((e.target as HTMLInputElement).value);
+      this.participantAnswerService.updateStockAllocation(this.stage.id, {
+        ...stock,
+        percentage,
+      });
+    };
+
+    const id = `${stock.id}-slider`;
+    const isDisabled = this.participantService.disableStage;
+
+    return html`
+      <div class="slider-group">
+        <label for=${id}>
+          <span class="legend-color stock-${index % 9}"></span>
+          <span class="stock-name">${stock.name}</span>
+          <span class="percentage-display"
+            >${allocation?.percentage ?? 0}%</span
+          >
+        </label>
+        <md-slider
+          id=${id}
+          min="0"
+          max="100"
+          step="5"
+          value="${allocation?.percentage ?? 0}"
+          labeled
+          ticks
+          ?disabled=${isDisabled}
+          @input=${updateAllocation}
+        ></md-slider>
+      </div>
+    `;
+  }
+}
+
+declare global {
+  interface HTMLElementTagNameMap {
+    'asset-allocation-participant-view': AssetAllocationParticipantView;
+    'multi-asset-allocation-participant-view': MultiAssetAllocationParticipantView;
   }
 }

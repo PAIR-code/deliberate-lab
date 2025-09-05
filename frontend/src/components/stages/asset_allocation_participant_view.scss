@@ -57,6 +57,10 @@
   }
 }
 
+.error-message {
+  color: var(--md-sys-color-error);
+}
+
 // Donut Chart Section
 .chart-section {
   @include common.flex-column;
@@ -85,12 +89,42 @@
   border-radius: common.$spacing-small;
   flex-shrink: 0; // Prevent shrinking in flex containers
 
-  &.stock-a {
+  &.stock-a,
+  &.stock-0 {
     background-color: #2196f3; /* Blue */
   }
 
-  &.stock-b {
+  &.stock-b,
+  &.stock-1 {
     background-color: #ff9800; /* Orange */
+  }
+
+  &.stock-2 {
+    background-color: #4caf50; /* Green */
+  }
+
+  &.stock-3 {
+    background-color: #f44336; /* Red */
+  }
+
+  &.stock-4 {
+    background-color: #ffc107; /* Yellow */
+  }
+
+  &.stock-5 {
+    background-color: #9c27b0; /* Purple */
+  }
+
+  &.stock-6 {
+    background-color: #00bcd4; /* Aqua */
+  }
+
+  &.stock-7 {
+    background-color: #8bc34a; /* Light green */
+  }
+
+  &.stock-8 {
+    background-color: #e91e63; /* Pink */
   }
 }
 

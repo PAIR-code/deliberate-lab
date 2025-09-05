@@ -20,6 +20,7 @@ import {
   createRankingStage,
   createInfoStage,
   createFlipCardStage,
+  createMultiAssetAllocationStage,
   createPayoutStage,
   createPrivateChatStage,
   createProfileStage,
@@ -190,6 +191,7 @@ export class StageBuilderDialog extends MobxLitElement {
           ${this.renderRankingCard()} ${this.renderRevealCard()}
           ${this.renderPayoutCard()} ${this.renderRoleCard()}
           ${this.renderStockInfoCard()} ${this.renderAssetAllocationCard()}
+          ${this.renderMultiAssetAllocationCard()}
         </div>
       </div>
     `;
@@ -415,7 +417,23 @@ export class StageBuilderDialog extends MobxLitElement {
 
     return html`
       <div class="card" @click=${addStage}>
-        <div class="title">💰 Asset Allocation</div>
+        <div class="title">2-Stock Asset Allocation</div>
+        <div>
+          Allow participants to allocate investment portfolios between two
+          stocks using interactive sliders.
+        </div>
+      </div>
+    `;
+  }
+
+  private renderMultiAssetAllocationCard() {
+    const addStage = () => {
+      this.addStage(createMultiAssetAllocationStage());
+    };
+
+    return html`
+      <div class="card" @click=${addStage}>
+        <div class="title">💰 Multi-Asset Allocation</div>
         <div>
           Allow participants to allocate investment portfolios between multiple
           stocks using interactive sliders.

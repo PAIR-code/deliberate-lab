@@ -278,6 +278,11 @@ export class ParticipantView extends MobxLitElement {
         return html`<asset-allocation-participant-view
           .stage=${stage}
         ></asset-allocation-participant-view>`;
+      case StageKind.MULTI_ASSET_ALLOCATION:
+        return html`
+          <multi-asset-allocation-participant-view .stage=${stage}>
+          </multi-asset-allocation-participant-view>
+        `;
       case StageKind.SURVEY:
         return html`<survey-view .stage=${stage}></survey-view>`;
       case StageKind.SURVEY_PER_PARTICIPANT:

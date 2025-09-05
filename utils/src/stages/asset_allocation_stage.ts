@@ -21,13 +21,13 @@ export interface StockAllocation {
   percentage: number; // 0-100
 }
 
-/** Asset allocation configuration. */
+/** Asset allocation configuration (two stocks). */
 export interface AssetAllocation {
   stockA: StockAllocation;
   stockB: StockAllocation;
 }
 
-/** Stock configuration for asset allocation. */
+/** Stock configuration for asset allocation (two stocks). */
 export interface AssetAllocationStockInfoConfig {
   stockInfoStageId?: string; // Optional reference to StockInfo stage
   stockA: Stock;
@@ -53,6 +53,29 @@ export interface AssetAllocationStageParticipantAnswer
 export interface AssetAllocationStagePublicData extends BaseStagePublicData {
   kind: StageKind.ASSET_ALLOCATION;
   participantAllocations: Record<string, AssetAllocation>; // participantId -> allocation
+}
+
+/** 2+ asset allocation stage config. */
+export interface MultiAssetAllocationStageConfig extends BaseStageConfig {
+  kind: StageKind.MULTI_ASSET_ALLOCATION;
+  // Ordered list of allocation options (used if stockInfoStageId is empty)
+  stockOptions: Stock[];
+  // If non-empty, the specified stock info stage will be used
+  // to populate stock options (instead of the stockOptions field)
+  stockInfoStageId: string;
+  // TODO: Add additional options here, e.g., whether or not
+  // sliders should automatically scale
+}
+
+/** 2+ asset allocation stage participant answer. */
+export interface MultiAssetAllocationStageParticipantAnswer
+  extends BaseStageParticipantAnswer {
+  kind: StageKind.MULTI_ASSET_ALLOCATION;
+  // Maps from stock ID to stock allocation
+  allocationMap: Record<string, StockAllocation>;
+  // Whether or not participant has locked in the allocation
+  isConfirmed: boolean;
+  confirmedTimestamp: UnifiedTimestamp | null;
 }
 
 // ************************************************************************* //
@@ -158,5 +181,29 @@ export function createAssetAllocationStagePublicData(
     id: config.id ?? generateId(),
     kind: StageKind.ASSET_ALLOCATION,
     participantAllocations: config.participantAllocations ?? {},
+  };
+}
+
+/** Create MultiAssetAllocation stage. */
+export function createMultiAssetAllocationStage(
+  config: Partial<MultiAssetAllocationStageConfig> = {},
+): MultiAssetAllocationStageConfig {
+  return {
+    id: config.id ?? generateId(),
+    kind: StageKind.MULTI_ASSET_ALLOCATION,
+    name: config.name ?? 'Multi-Asset Allocation',
+    descriptions:
+      config.descriptions ??
+      createStageTextConfig({
+        infoText: 'Allocate your investment using the sliders.',
+        helpText:
+          'Adjust the sliders to set your desired allocation. The percentages must add up to 100%. Review the stock information on the right before confirming your allocation.',
+      }),
+    progress: config.progress ?? createStageProgressConfig(),
+    stockInfoStageId: config.stockInfoStageId ?? '',
+    stockOptions: config.stockOptions ?? [
+      createStock({name: 'Stock A'}),
+      createStock({name: 'Stock B'}),
+    ],
   };
 }
