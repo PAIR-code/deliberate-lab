@@ -71,8 +71,8 @@ export class AssetAllocationEditor extends MobxLitElement {
         <div class="info-text">
           <p>
             You can either reference an existing StockInfo stage with exactly 2
-            stocks for detailed stock data and charts, or configure simple stock
-            names and descriptions manually.
+            stocks for detailed stock data and charts, or configure stock names
+            and descriptions manually (see "Simple stocks" option below).
           </p>
         </div>
 
