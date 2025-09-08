@@ -66,6 +66,7 @@ export function getCharityDebateTemplate(
   if (config.includeViewProfile) stages.push(createViewProfileStage());
   if (config.includeMediator) stages.push(createMediatedDiscussionInfoStage());
   stages.push(createInstructionsStage());
+
   if (config.includeInitialParticipantSurvey)
     stages.push(createInitialParticipantSurveyStage());
   if (config.includeMediator) stages.push(createInitialMediatorSurveyStage());
