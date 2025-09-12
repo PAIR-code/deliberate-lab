@@ -1,48 +1,50 @@
 import {
+  BasePromptConfig,
   ModelResponseStatus,
   ParticipantProfileExtended,
   ProfileType,
   ProfileStageConfig,
   StructuredOutputDataType,
+  createDefaultPromptFromText,
   createModelGenerationConfig,
   createStructuredOutputConfig,
 } from '@deliberation-lab/utils';
 
-import * as admin from 'firebase-admin';
-import * as functions from 'firebase-functions';
-import {Timestamp} from 'firebase-admin/firestore';
-import {onCall} from 'firebase-functions/v2/https';
-
-import {app} from '../app';
-import {getAgentResponse} from '../agent.utils';
+import {processModelResponse} from '../agent.utils';
 import {getExperimenterDataFromExperiment} from '../utils/firestore';
-import {getPastStagesPromptContext} from './stage.utils';
+import {getStructuredPrompt} from '../prompt.utils';
+
+const PROFILE_DEFAULT_PROMPT =
+  'Please fill out your profile name, emoji, and pronouns.';
 
 const PROFILE_STRUCTURED_OUTPUT_CONFIG = createStructuredOutputConfig({
-  properties: [
-    {
-      name: 'name',
-      schema: {
-        type: StructuredOutputDataType.STRING,
-        description: 'Your name',
+  schema: {
+    type: StructuredOutputDataType.OBJECT,
+    properties: [
+      {
+        name: 'name',
+        schema: {
+          type: StructuredOutputDataType.STRING,
+          description: 'Your name',
+        },
       },
-    },
-    {
-      name: 'emoji',
-      schema: {
-        type: StructuredOutputDataType.STRING,
-        description: 'A single emoji to be used as your avatar',
+      {
+        name: 'emoji',
+        schema: {
+          type: StructuredOutputDataType.STRING,
+          description: 'A single emoji to be used as your avatar',
+        },
       },
-    },
-    {
-      name: 'pronouns',
-      schema: {
-        type: StructuredOutputDataType.STRING,
-        description:
-          'Your pronouns (either she/her, he/him, they/them, or something else similar)',
+      {
+        name: 'pronouns',
+        schema: {
+          type: StructuredOutputDataType.STRING,
+          description:
+            'Your pronouns (either she/her, he/him, they/them, or something else similar)',
+        },
       },
-    },
-  ],
+    ],
+  },
 });
 
 export async function completeProfile(
@@ -57,18 +59,46 @@ export async function completeProfile(
   ) {
     return;
   }
+  const agentConfig = participant.agentConfig;
 
   // Fetch experiment creator's API key.
   const experimenterData =
     await getExperimenterDataFromExperiment(experimentId);
   if (!experimenterData) return null;
 
-  const response = await getAgentResponse(
+  const promptConfig: BasePromptConfig = {
+    id: stageConfig.id,
+    type: stageConfig.kind,
+    prompt: createDefaultPromptFromText(PROFILE_DEFAULT_PROMPT, stageConfig.id),
+    generationConfig: createModelGenerationConfig(),
+    structuredOutputConfig: PROFILE_STRUCTURED_OUTPUT_CONFIG,
+    numRetries: 0,
+  };
+  const structuredPrompt = await getStructuredPrompt(
+    experimentId,
+    participant.currentCohortId,
+    /*participantIds=*/ [participant.privateId],
+    stageConfig.id,
+    participant,
+    agentConfig,
+    promptConfig,
+  );
+
+  const response = await processModelResponse(
+    experimentId,
+    participant.currentCohortId,
+    /*participantId=*/ participant.privateId,
+    stageConfig.id,
+    participant,
+    participant.publicId,
+    participant.privateId,
+    /*description=*/ '',
     experimenterData.apiKeys,
-    `${participant.agentConfig.promptContext}\n\nPlease fill out your profile name, emoji, and pronouns.`,
-    participant.agentConfig.modelSettings,
-    createModelGenerationConfig(),
-    PROFILE_STRUCTURED_OUTPUT_CONFIG,
+    structuredPrompt,
+    agentConfig.modelSettings,
+    promptConfig.generationConfig,
+    promptConfig.structuredOutputConfig,
+    promptConfig.numRetries ?? 0,
   );
 
   if (response.status !== ModelResponseStatus.OK) {
@@ -76,16 +106,13 @@ export async function completeProfile(
     return;
   }
 
-  let parsed = '';
-  try {
-    const cleanedText = response.text!.replace(/```json\s*|\s*```/g, '').trim();
-    parsed = JSON.parse(JSON.parse(cleanedText).response);
-  } catch {
+  if (!response.parsedResponse) {
     // Response is already logged in console during Gemini API call
     console.log('Could not parse JSON!');
     return null;
   }
 
+  const parsed = response.parsedResponse;
   if (parsed['name']) {
     participant.name = parsed['name'].trim();
   }
