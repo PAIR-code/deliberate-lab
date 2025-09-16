@@ -8,6 +8,7 @@ import {classMap} from 'lit/directives/class-map.js';
 import {core} from '../../core/core';
 import {ParticipantAnswerService} from '../../services/participant.answer';
 import {ParticipantService} from '../../services/participant.service';
+import {ExperimentService} from '../../services/experiment.service';
 
 import {styles} from './chat_input.scss';
 
@@ -20,6 +21,7 @@ export class ChatInputComponent extends MobxLitElement {
   private readonly participantAnswerService = core.getService(
     ParticipantAnswerService,
   );
+  private readonly experimentService = core.getService(ExperimentService);
 
   @property() stageId = '';
   @property() sendUserInput: (input: string) => void = async (
@@ -60,6 +62,17 @@ export class ChatInputComponent extends MobxLitElement {
       this.storeUserInput(value);
     };
 
+    const handlePaste = (e: ClipboardEvent) => {
+      // Check if bot protection is enabled
+      const botProtection =
+        this.experimentService.experiment?.defaultCohortConfig?.botProtection ??
+        false;
+      if (botProtection) {
+        e.preventDefault();
+        return false;
+      }
+    };
+
     const autoFocus = () => {
       // Only auto-focus chat input if on desktop
       return navigator.maxTouchPoints === 0;
@@ -75,6 +88,7 @@ export class ChatInputComponent extends MobxLitElement {
           ?disabled=${this.isDisabled}
           @keyup=${handleKeyUp}
           @input=${handleInput}
+          @paste=${handlePaste}
         >
         </pr-textarea>
         <pr-tooltip

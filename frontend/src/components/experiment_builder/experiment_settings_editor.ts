@@ -132,7 +132,7 @@ export class ExperimentCohortEditor extends MobxLitElement {
           with these settings. You can update each individual cohort's settings
           later.
         </div>
-        ${this.renderMaxParticipantConfig()}
+        ${this.renderMaxParticipantConfig()} ${this.renderBotProtectionConfig()}
       </div>
     `;
   }
@@ -231,6 +231,36 @@ export class ExperimentCohortEditor extends MobxLitElement {
           @input=${updateNum}
         >
         </md-filled-text-field>
+      </div>
+    `;
+  }
+
+  private renderBotProtectionConfig() {
+    const botProtection =
+      this.experimentEditor.experiment.defaultCohortConfig.botProtection ??
+      false;
+
+    const updateBotProtection = () => {
+      this.experimentEditor.updateCohortConfig({
+        botProtection: !botProtection,
+      });
+    };
+
+    return html`
+      <div class="config-item">
+        <div class="checkbox-wrapper">
+          <md-checkbox
+            touch-target="wrapper"
+            ?checked=${botProtection}
+            ?disabled=${!this.experimentManager.isCreator}
+            @click=${updateBotProtection}
+          >
+          </md-checkbox>
+          <div>
+            Enable bot protection (disables pasting in chat input to prevent
+            automated responses)
+          </div>
+        </div>
       </div>
     `;
   }
