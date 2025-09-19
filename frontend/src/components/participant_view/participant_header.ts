@@ -32,10 +32,10 @@ export class Header extends MobxLitElement {
 
     return html`
       <div class="header">
-        <div class="left">${this.renderMenu()} ${this.stage.name}</div>
-        <div class="right">
-          ${this.renderInfo()} ${this.renderHelp()} ${this.renderProfile()}
+        <div class="left">
+          ${this.renderMenu()} ${this.stage.name}${this.renderInfo()}
         </div>
+        <div class="right">${this.renderHelp()} ${this.renderProfile()}</div>
       </div>
     `;
   }
