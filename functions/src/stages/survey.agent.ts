@@ -4,15 +4,102 @@ import {
   ParticipantProfileExtended,
   SurveyStageConfig,
   SurveyQuestionKind,
-  createAgentParticipantSurveyQuestionPrompt,
   createSurveyStageParticipantAnswer,
-  getSurveyStagePromptContext,
   SurveyQuestion,
   SurveyAnswer,
+  StructuredOutputConfig,
+  StructuredOutputSchema,
+  StructuredOutputType,
+  StructuredOutputDataType,
+  MultipleChoiceSurveyQuestion,
+  ScaleSurveyQuestion,
 } from '@deliberation-lab/utils';
 import {processModelResponse} from '../agent.utils';
 import {getStructuredPrompt} from '../prompt.utils';
 import {app} from '../app';
+
+/** Create a structured output config tailored for the survey question type. */
+function createStructuredOutputConfigForSurvey(
+  question: SurveyQuestion,
+): StructuredOutputConfig {
+  const responseField = 'response';
+  let schema: StructuredOutputSchema;
+
+  switch (question.kind) {
+    case SurveyQuestionKind.TEXT:
+      schema = {
+        type: StructuredOutputDataType.OBJECT,
+        properties: [
+          {
+            name: responseField,
+            schema: {
+              type: StructuredOutputDataType.STRING,
+              description: "The user's freeform text answer.",
+            },
+          },
+        ],
+      };
+      break;
+    case SurveyQuestionKind.CHECK:
+      schema = {
+        type: StructuredOutputDataType.OBJECT,
+        properties: [
+          {
+            name: responseField,
+            schema: {
+              type: StructuredOutputDataType.BOOLEAN,
+              description: 'True if the checkbox is checked, false otherwise.',
+            },
+          },
+        ],
+      };
+      break;
+    case SurveyQuestionKind.MULTIPLE_CHOICE:
+      const mcQuestion = question as MultipleChoiceSurveyQuestion;
+      schema = {
+        type: StructuredOutputDataType.OBJECT,
+        properties: [
+          {
+            name: responseField,
+            schema: {
+              type: StructuredOutputDataType.ENUM,
+              description: 'The ID of the selected choice.',
+              enumItems: mcQuestion.options.map((o) => o.id),
+            },
+          },
+        ],
+      };
+      break;
+    case SurveyQuestionKind.SCALE:
+      const scaleQuestion = question as ScaleSurveyQuestion;
+      const isInteger =
+        Number.isInteger(scaleQuestion.lowerValue) &&
+        Number.isInteger(scaleQuestion.upperValue) &&
+        Number.isInteger(scaleQuestion.stepSize ?? 1);
+      schema = {
+        type: StructuredOutputDataType.OBJECT,
+        properties: [
+          {
+            name: responseField,
+            schema: {
+              type: isInteger
+                ? StructuredOutputDataType.INTEGER
+                : StructuredOutputDataType.NUMBER,
+              description: `The selected value on the scale from ${scaleQuestion.lowerValue} to ${scaleQuestion.upperValue}.`,
+            },
+          },
+        ],
+      };
+      break;
+  }
+
+  return {
+    enabled: true,
+    appendToPrompt: true,
+    type: StructuredOutputType.JSON_SCHEMA,
+    schema: schema,
+  };
+}
 
 /** Use LLM call to generation agent participant response to survey stage. */
 export async function getAgentParticipantSurveyStageResponse(
@@ -88,6 +175,8 @@ async function getAgentParticipantSurveyQuestionResponse(
     return;
   }
 
+  const structuredOutputConfig = createStructuredOutputConfigForSurvey(question);
+
   const prompt = await getStructuredPrompt(
     experimentId,
     participant.currentCohortId,
@@ -95,7 +184,7 @@ async function getAgentParticipantSurveyQuestionResponse(
     stage.id,
     participant,
     participant.agentConfig,
-    promptConfig,
+    {...promptConfig, structuredOutputConfig}, // Override with dynamic config
     {question, answerMap},
   );
 
@@ -112,39 +201,42 @@ async function getAgentParticipantSurveyQuestionResponse(
     prompt,
     participant.agentConfig.modelSettings,
     promptConfig.generationConfig,
-    promptConfig.structuredOutputConfig,
+    structuredOutputConfig, // Use the dynamic config here too
     promptConfig.numRetries,
   );
 
-  const response = rawResponse.text ?? '';
+  if (!rawResponse.parsedResponse) {
+    console.error('Failed to get parsed response from model for survey question.');
+    return undefined;
+  }
 
-  // Parse response according to question kind. Then, return survey answer.
-  // TODO: Use structured output
+  const responseValue = rawResponse.parsedResponse.response;
+
   try {
     switch (question.kind) {
       case SurveyQuestionKind.TEXT:
         return {
           id: question.id,
           kind: SurveyQuestionKind.TEXT,
-          answer: response.trim(),
+          answer: responseValue as string,
         };
       case SurveyQuestionKind.CHECK:
         return {
           id: question.id,
           kind: SurveyQuestionKind.CHECK,
-          isChecked: response.trim().toLowerCase() === 'true',
+          isChecked: responseValue as boolean,
         };
       case SurveyQuestionKind.MULTIPLE_CHOICE:
         return {
           id: question.id,
           kind: SurveyQuestionKind.MULTIPLE_CHOICE,
-          choiceId: response.trim(),
+          choiceId: responseValue as string,
         };
       case SurveyQuestionKind.SCALE:
         return {
           id: question.id,
           kind: SurveyQuestionKind.SCALE,
-          value: Number(response.trim()),
+          value: responseValue as number,
         };
       default:
         return undefined;
