@@ -30,7 +30,7 @@ export interface BasePromptConfig {
 
 export type MediatorPromptConfig = ChatPromptConfig;
 
-export type ParticipantPromptConfig = ChatPromptConfig;
+export type ParticipantPromptConfig = BasePromptConfig;
 
 // Currently used for both mediator and participant chat prompts
 export interface ChatPromptConfig extends BasePromptConfig {
@@ -116,6 +116,22 @@ export function createChatPromptConfig(
     structuredOutputConfig:
       config.structuredOutputConfig ?? createStructuredOutputConfig(),
     chatSettings: config.chatSettings ?? createAgentChatSettings(),
+  };
+}
+
+export function createBasePromptConfig(
+  id: string, // stage ID
+  type: StageKind,
+  config: Partial<BasePromptConfig> = {},
+): BasePromptConfig {
+  return {
+    id,
+    type,
+    prompt: config.prompt ?? createDefaultPromptFromText('', id),
+    numRetries: config.numRetries ?? 0,
+    generationConfig: config.generationConfig ?? createModelGenerationConfig(),
+    structuredOutputConfig:
+      config.structuredOutputConfig ?? createStructuredOutputConfig(),
   };
 }
 

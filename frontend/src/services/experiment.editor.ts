@@ -18,6 +18,7 @@ import {
   checkApiKeyExists,
   createAgentMediatorPersonaConfig,
   createAgentParticipantPersonaConfig,
+  createBasePromptConfig,
   createChatPromptConfig,
   createExperimentConfig,
   createMetadataConfig,
@@ -388,7 +389,18 @@ export class ExperimentEditor extends Service {
   addAgentParticipantPrompt(agentId: string, stageId: string) {
     const agent = this.getAgentParticipant(agentId);
     if (!agent) return;
-    agent.promptMap[stageId] = createChatPromptConfig(stageId);
+
+    const stage = this.getStage(stageId);
+    if (!stage) return;
+
+    if (
+      stage.kind === StageKind.SURVEY ||
+      stage.kind === StageKind.SURVEY_PER_PARTICIPANT
+    ) {
+      agent.promptMap[stageId] = createBasePromptConfig(stageId, stage.kind);
+    } else {
+      agent.promptMap[stageId] = createChatPromptConfig(stageId);
+    }
   }
 
   updateAgentMediatorPersona(

@@ -26,6 +26,10 @@ import {
   getSurveyAnswersText,
   makeStructuredOutputPrompt,
   shuffleWithSeed,
+  SurveyQuestion,
+  createAgentParticipantSurveyQuestionPrompt,
+  getSurveyStagePromptContext,
+  SurveyAnswer,
 } from '@deliberation-lab/utils';
 import {
   getAssetAllocationAnswersText,
@@ -115,6 +119,7 @@ export async function getStructuredPrompt(
   userProfile: UserProfile,
   agentConfig: ProfileAgentConfig,
   promptConfig: BasePromptConfig,
+  promptParameters?: Record<string, any>,
 ) {
   const promptText = await processPromptItems(
     promptConfig.prompt,
@@ -124,6 +129,7 @@ export async function getStructuredPrompt(
     stageId,
     userProfile,
     agentConfig,
+    promptParameters,
   );
 
   // Add structured output if relevant
@@ -143,6 +149,7 @@ async function processPromptItems(
   stageId: string,
   userProfile: UserProfile,
   agentConfig: ProfileAgentConfig,
+  promptParameters?: Record<string, any>,
 ): Promise<string> {
   const items: string[] = [];
   for (const promptItem of promptItems) {
@@ -184,6 +191,7 @@ async function processPromptItems(
             participantIds,
             stageId,
             promptItem,
+            promptParameters,
           ),
         );
         break;
@@ -221,6 +229,7 @@ async function processPromptItems(
           stageId,
           userProfile,
           agentConfig,
+          promptParameters,
         );
         if (groupText) items.push(groupText);
         break;
@@ -237,6 +246,7 @@ export async function getStageContextForPrompt(
   participantIds: string[],
   currentStageId: string,
   item: StageContextPromptItem,
+  promptParameters?: Record<string, any>,
 ) {
   // Get the specific stage
   const stage = await getFirestoreStage(experimentId, item.stageId);
@@ -278,7 +288,31 @@ export async function getStageContextForPrompt(
     );
   }
 
-  return textItems.join('\n');
+  let context = textItems.join('\n');
+
+  // If survey stage, add current question context
+  if (
+    stage.kind === StageKind.SURVEY &&
+    promptParameters?.question &&
+    promptParameters?.answerMap
+  ) {
+    const question = promptParameters.question as SurveyQuestion;
+    const answerMap = promptParameters.answerMap as Record<string, SurveyAnswer>;
+    const currentQuestionIndex = stage.questions.findIndex(
+      (q: SurveyQuestion) => q.id === question.id,
+    );
+    const pastQuestions = stage.questions.slice(0, currentQuestionIndex);
+    const pastQuestionsPrompt = getSurveyStagePromptContext(
+      stage as SurveyStageConfig,
+      true, // TODO: Use prompt settings for includeStageInfo
+      pastQuestions,
+      answerMap,
+    );
+    const questionPrompt = createAgentParticipantSurveyQuestionPrompt(question);
+    context += `\n${pastQuestionsPrompt}\n${questionPrompt}`;
+  }
+
+  return context;
 }
 
 export async function getStageDisplayForPrompt(
@@ -287,6 +321,7 @@ export async function getStageDisplayForPrompt(
   participantIds: string[], // participant private IDs for answer inclusion
   stage: StageConfig,
   includeAnswers: boolean,
+  promptParameters?: Record<string, any>,
 ) {
   switch (stage.kind) {
     case StageKind.TOS:
@@ -375,21 +410,52 @@ export async function getStageDisplayForPrompt(
       return assetAllocationDisplay;
     case StageKind.SURVEY:
     case StageKind.SURVEY_PER_PARTICIPANT:
-      const surveyDisplay = getSurveySummaryText(
-        stage as SurveyStageConfig | SurveyPerParticipantStageConfig,
-      );
-      if (includeAnswers) {
-        const surveyAnswers = await getStageAnswersForPrompt(
-          experimentId,
-          cohortId,
-          participantIds,
-          stage,
+      const surveyStage =
+        stage as SurveyStageConfig | SurveyPerParticipantStageConfig;
+      const question = promptParameters?.question as SurveyQuestion | undefined;
+      const answerMap =
+        promptParameters?.answerMap as Record<string, SurveyAnswer> | undefined;
+
+      if (includeAnswers && question && answerMap) {
+        const currentQuestionIndex = surveyStage.questions.findIndex(
+          (q) => q.id === question.id,
         );
-        return surveyAnswers
-          ? `${surveyDisplay}\n\n${surveyAnswers}`
-          : surveyDisplay;
+        const pastQuestions = surveyStage.questions.slice(
+          0,
+          currentQuestionIndex,
+        );
+
+        const participantAnswer: SurveyStageParticipantAnswer = {
+          id: stage.id,
+          kind: stage.kind as StageKind.SURVEY, // a bit of a lie for SURVEY_PER_PARTICIPANT but structure is same for this purpose
+          answerMap: answerMap,
+        };
+
+        const pastAnswersText = getSurveyAnswersText(
+          [{participantId: 'You', answer: participantAnswer}],
+          pastQuestions,
+          false, // showParticipantName
+        );
+
+        const currentQuestionPrompt =
+          createAgentParticipantSurveyQuestionPrompt(question);
+
+        return `${pastAnswersText}\n${currentQuestionPrompt}`;
+      } else {
+        const surveyDisplay = getSurveySummaryText(surveyStage);
+        if (includeAnswers) {
+          const surveyAnswers = await getStageAnswersForPrompt(
+            experimentId,
+            cohortId,
+            participantIds,
+            stage,
+          );
+          return surveyAnswers
+            ? `${surveyDisplay}\n\n${surveyAnswers}`
+            : surveyDisplay;
+        }
+        return surveyDisplay;
       }
-      return surveyDisplay;
     default:
       // TODO: Set up display/answers for ranking stage
       return '';

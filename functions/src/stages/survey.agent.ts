@@ -1,16 +1,18 @@
 import {
   APIKeyConfig,
+  BasePromptConfig,
   ParticipantProfileExtended,
   SurveyStageConfig,
   SurveyQuestionKind,
   createAgentParticipantSurveyQuestionPrompt,
-  createModelGenerationConfig,
   createSurveyStageParticipantAnswer,
   getSurveyStagePromptContext,
-  getSurveyStageQuestion,
+  SurveyQuestion,
+  SurveyAnswer,
 } from '@deliberation-lab/utils';
-import {getAgentResponse} from '../agent.utils';
-import {getPastStagesPromptContext} from './stage.utils';
+import {processModelResponse} from '../agent.utils';
+import {getStructuredPrompt} from '../prompt.utils';
+import {app} from '../app';
 
 /** Use LLM call to generation agent participant response to survey stage. */
 export async function getAgentParticipantSurveyStageResponse(
@@ -21,6 +23,25 @@ export async function getAgentParticipantSurveyStageResponse(
 ) {
   // If participant is not an agent, return
   if (!participant.agentConfig) {
+    return;
+  }
+
+  const promptConfig = (
+    await app
+      .firestore()
+      .collection('experiments')
+      .doc(experimentId)
+      .collection('agentParticipants')
+      .doc(participant.agentConfig.agentId)
+      .collection('prompts')
+      .doc(stage.id)
+      .get()
+  ).data() as BasePromptConfig | undefined;
+
+  if (!promptConfig) {
+    console.log(
+      `No prompt config found for agent ${participant.agentConfig.agentId} in stage ${stage.id}`,
+    );
     return;
   }
 
@@ -35,6 +56,7 @@ export async function getAgentParticipantSurveyStageResponse(
       participant,
       question,
       answerMap,
+      promptConfig,
     );
     if (answer) {
       answerMap[question.id] = answer;
@@ -56,46 +78,44 @@ export async function getAgentParticipantSurveyStageResponse(
 async function getAgentParticipantSurveyQuestionResponse(
   experimentId: string,
   apiKeyConfig: APIKeyConfig, // for making LLM call
-  stage: StageConfig,
+  stage: SurveyStageConfig,
   participant: ParticipantProfileExtended,
   question: SurveyQuestion, // current question
   answerMap: Record<string, SurveyAnswer>, // answers collected so far
-): SurveyAnswer {
-  const pastStagesPrompt = await getPastStagesPromptContext(
+  promptConfig: BasePromptConfig,
+): Promise<SurveyAnswer | undefined> {
+  if (!participant.agentConfig) {
+    return;
+  }
+
+  const prompt = await getStructuredPrompt(
     experimentId,
+    participant.currentCohortId,
+    [participant.privateId],
     stage.id,
+    participant,
+    participant.agentConfig,
+    promptConfig,
+    {question, answerMap},
+  );
+
+  const rawResponse = await processModelResponse(
+    experimentId,
+    participant.currentCohortId,
     participant.privateId,
-    true, // TODO: Use prompt settings for includeStageInfo
-  );
-
-  // Get context for answered questions in current stage
-  // Iterate through stage questions an add context for ones with
-  // answers
-  const currentQuestionIndex = stage.questions.findIndex(
-    (q) => q.id === question.id,
-  );
-  const pastQuestions = stage.questions.slice(0, currentQuestionIndex);
-  const pastQuestionsPrompt = getSurveyStagePromptContext(
-    stage,
-    true, // TODO: Use prompt settings for includeStageInfo
-    pastQuestions,
-    answerMap,
-  );
-
-  const questionPrompt = createAgentParticipantSurveyQuestionPrompt(question);
-  const prompt = `${pastStagesPrompt}\n${pastQuestionsPrompt}\n${questionPrompt}`;
-
-  // Build generation config
-  // TODO: Use generation config from agent persona prompt
-  const generationConfig = createModelGenerationConfig();
-
-  // TODO: Use structured output
-  const rawResponse = await getAgentResponse(
+    stage.id,
+    participant,
+    participant.publicId,
+    participant.privateId,
+    `Survey question: ${question.id}`, // description
     apiKeyConfig,
     prompt,
     participant.agentConfig.modelSettings,
-    generationConfig,
+    promptConfig.generationConfig,
+    promptConfig.structuredOutputConfig,
+    promptConfig.numRetries,
   );
+
   const response = rawResponse.text ?? '';
 
   // Parse response according to question kind. Then, return survey answer.
@@ -112,7 +132,7 @@ async function getAgentParticipantSurveyQuestionResponse(
         return {
           id: question.id,
           kind: SurveyQuestionKind.CHECK,
-          isChecked: response.trim().lower() === 'true',
+          isChecked: response.trim().toLowerCase() === 'true',
         };
       case SurveyQuestionKind.MULTIPLE_CHOICE:
         return {

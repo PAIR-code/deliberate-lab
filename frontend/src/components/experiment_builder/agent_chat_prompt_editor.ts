@@ -18,7 +18,7 @@ import {
   AgentPersonaConfig,
   AgentPersonaType,
   ApiKeyType,
-  BaseAgentPromptConfig,
+  BasePromptConfig,
   ChatMediatorStructuredOutputConfig,
   ChatPromptConfig,
   PromptItem,
@@ -62,20 +62,35 @@ export class EditorComponent extends MobxLitElement {
     const stageConfig = this.experimentEditor.getStage(this.stageId);
     if (!stageConfig) {
       return nothing;
-    } else if (
+    }
+
+    const supportedStageKinds = [
+      StageKind.CHAT,
+      StageKind.PRIVATE_CHAT,
+      StageKind.SURVEY,
+      StageKind.SURVEY_PER_PARTICIPANT,
+    ];
+
+    const isMediatorIncompatible =
+      this.agent?.type === AgentPersonaType.MEDIATOR &&
       stageConfig.kind !== StageKind.CHAT &&
-      stageConfig.kind !== StageKind.PRIVATE_CHAT
+      stageConfig.kind !== StageKind.PRIVATE_CHAT;
+
+    if (
+      !supportedStageKinds.includes(stageConfig.kind) ||
+      isMediatorIncompatible
     ) {
+      const message =
+        this.agent?.type === AgentPersonaType.PARTICIPANT
+          ? 'No prompt customizations currently available for this stage.'
+          : 'Agent mediators do not interact with this stage.';
+
       return html`
         <div class="section">
           <div class="section-title">
             ${this.stageNamePrefix}${stageConfig.name}
           </div>
-          <div class="description">
-            ${this.agent.type === AgentPersonaType.PARTICIPANT
-              ? 'No prompt customizations currently available for this stage.'
-              : 'Agent mediators do not interact with this stage.'}
-          </div>
+          <div class="description">${message}</div>
         </div>
       `;
     }
@@ -143,7 +158,7 @@ export class EditorComponent extends MobxLitElement {
     }
   }
 
-  private updatePrompt(updatedPrompt: Partial<ChatPromptConfig>) {
+  private updatePrompt(updatedPrompt: Partial<BasePromptConfig>) {
     const oldPrompt = this.getPrompt();
     if (!this.agent || !oldPrompt) {
       return;
@@ -151,7 +166,10 @@ export class EditorComponent extends MobxLitElement {
 
     const newPrompt = {...oldPrompt, ...updatedPrompt};
     if (this.agent.type === AgentPersonaType.MEDIATOR) {
-      this.experimentEditor.updateAgentMediatorPrompt(this.agent.id, newPrompt);
+      this.experimentEditor.updateAgentMediatorPrompt(
+        this.agent.id,
+        newPrompt as ChatPromptConfig,
+      );
     } else if (this.agent.type === AgentPersonaType.PARTICIPANT) {
       this.experimentEditor.updateAgentParticipantPrompt(
         this.agent.id,
@@ -160,11 +178,12 @@ export class EditorComponent extends MobxLitElement {
     }
   }
 
-  private renderDialog(
-    stageConfig: StageConfig,
-    promptConfig: ChatPromptConfig,
-  ) {
+  private renderDialog(stageConfig: StageConfig, promptConfig: BasePromptConfig) {
     if (!this.agent || !this.showDialog) return nothing;
+
+    const isChatStage =
+      stageConfig.kind === StageKind.CHAT ||
+      stageConfig.kind === StageKind.PRIVATE_CHAT;
 
     return html`
       <agent-chat-prompt-dialog
@@ -176,12 +195,21 @@ export class EditorComponent extends MobxLitElement {
         <div class="section">
           ${this.renderAgentPrompt(this.agent, promptConfig)}
           <div class="section-title">Prompt settings</div>
-          ${this.renderAgentStructuredOutputConfig(this.agent, promptConfig)}
+          ${isChatStage
+            ? this.renderAgentStructuredOutputConfig(
+                this.agent,
+                promptConfig as ChatPromptConfig,
+              )
+            : nothing}
           ${this.renderPromptPreview(promptConfig)}
         </div>
         <div class="divider"></div>
-        ${this.renderAgentChatSettings(this.agent, promptConfig)}
-        <div class="divider"></div>
+        ${isChatStage
+          ? html`${this.renderAgentChatSettings(
+              this.agent,
+              promptConfig as ChatPromptConfig,
+            )}<div class="divider"></div>`
+          : nothing}
         ${this.renderAgentSamplingParameters(this.agent, promptConfig)}
         <div class="divider"></div>
         ${this.renderAgentCustomRequestBodyFields(this.agent, promptConfig)}
@@ -212,7 +240,7 @@ export class EditorComponent extends MobxLitElement {
 
   private renderAgentPrompt(
     agent: AgentPersonaConfig,
-    agentPromptConfig: ChatPromptConfig,
+    agentPromptConfig: BasePromptConfig,
   ) {
     const updatePrompt = (prompt: PromptItem[]) => {
       this.updatePrompt({prompt});
@@ -227,7 +255,7 @@ export class EditorComponent extends MobxLitElement {
     `;
   }
 
-  private renderPromptPreview(agentPromptConfig: ChatPromptConfig) {
+  private renderPromptPreview(agentPromptConfig: BasePromptConfig) {
     const renderPromptItem = (item: PromptItem): unknown => {
       switch (item.type) {
         case PromptItemType.TEXT:
@@ -247,7 +275,14 @@ export class EditorComponent extends MobxLitElement {
     };
 
     const getStructuredOutput = () => {
-      const config = agentPromptConfig.structuredOutputConfig;
+      if (
+        agentPromptConfig.type !== StageKind.CHAT &&
+        agentPromptConfig.type !== StageKind.PRIVATE_CHAT
+      ) {
+        return '';
+      }
+      const config = (agentPromptConfig as ChatPromptConfig)
+        .structuredOutputConfig;
       if (structuredOutputEnabled(config) && config.schema) {
         return makeStructuredOutputPrompt(config);
       }
@@ -272,10 +307,10 @@ export class EditorComponent extends MobxLitElement {
       const initialMessage = (e.target as HTMLTextAreaElement).value;
       this.updatePrompt({
         chatSettings: {
-          ...agentPromptConfig.chatSettings,
+          ...(agentPromptConfig as ChatPromptConfig).chatSettings,
           initialMessage,
         },
-      });
+      } as Partial<ChatPromptConfig>);
     };
 
     const updateWordsPerMinute = (e: InputEvent) => {
@@ -283,10 +318,10 @@ export class EditorComponent extends MobxLitElement {
       const wordsPerMinute = value === '' ? null : Number(value);
       this.updatePrompt({
         chatSettings: {
-          ...agentPromptConfig.chatSettings,
+          ...(agentPromptConfig as ChatPromptConfig).chatSettings,
           wordsPerMinute,
         },
-      });
+      } as Partial<ChatPromptConfig>);
     };
 
     const updateMinMessagesBeforeResponding = (e: InputEvent) => {
@@ -296,10 +331,10 @@ export class EditorComponent extends MobxLitElement {
       if (!isNaN(minMessagesBeforeResponding)) {
         this.updatePrompt({
           chatSettings: {
-            ...agentPromptConfig.chatSettings,
+            ...(agentPromptConfig as ChatPromptConfig).chatSettings,
             minMessagesBeforeResponding,
           },
-        });
+        } as Partial<ChatPromptConfig>);
       }
     };
 
@@ -307,10 +342,10 @@ export class EditorComponent extends MobxLitElement {
       const canSelfTriggerCalls = (e.target as HTMLInputElement).checked;
       this.updatePrompt({
         chatSettings: {
-          ...agentPromptConfig.chatSettings,
+          ...(agentPromptConfig as ChatPromptConfig).chatSettings,
           canSelfTriggerCalls,
         },
-      });
+      } as Partial<ChatPromptConfig>);
     };
 
     const updateMaxResponses = (e: InputEvent) => {
@@ -318,10 +353,10 @@ export class EditorComponent extends MobxLitElement {
       const maxResponses = value === '' ? null : Number(value);
       this.updatePrompt({
         chatSettings: {
-          ...agentPromptConfig.chatSettings,
+          ...(agentPromptConfig as ChatPromptConfig).chatSettings,
           maxResponses,
         },
-      });
+      } as Partial<ChatPromptConfig>);
     };
 
     const updateNumRetries = (e: InputEvent) => {
@@ -444,7 +479,7 @@ export class EditorComponent extends MobxLitElement {
 
   private renderAgentSamplingParameters(
     agent: AgentPersonaConfig,
-    agentPromptConfig: ChatPromptConfig,
+    agentPromptConfig: BasePromptConfig,
   ) {
     const generationConfig = agentPromptConfig.generationConfig;
 
@@ -606,7 +641,7 @@ export class EditorComponent extends MobxLitElement {
 
   private renderAgentCustomRequestBodyFields(
     agent: AgentPersonaConfig,
-    agentPromptConfig: ChatPromptConfig,
+    agentPromptConfig: BasePromptConfig,
   ) {
     const addField = () => {
       const customRequestBodyFields = [
@@ -644,7 +679,7 @@ export class EditorComponent extends MobxLitElement {
 
   private renderAgentCustomRequestBodyField(
     agent: AgentPersonaConfig,
-    agentPromptConfig: ChatPromptConfig,
+    agentPromptConfig: BasePromptConfig,
     field: {name: string; value: string},
     fieldIndex: number,
   ) {
