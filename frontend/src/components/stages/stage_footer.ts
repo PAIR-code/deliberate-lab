@@ -57,6 +57,7 @@ export class Footer extends MobxLitElement {
     return html`
       <pr-button
         variant=${this.disabled ? 'default' : 'tonal'}
+        size="medium"
         ?disabled=${preventNextClick}
         ?loading=${this.isLoadingNext}
         @click=${handleNext}
