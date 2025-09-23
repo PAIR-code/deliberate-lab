@@ -70,6 +70,8 @@ export interface CohortParticipantConfig {
   maxParticipantsPerCohort: number | null;
   // If false, exclude booted participant from min/max participant counts
   includeAllParticipantsInCohortCount: boolean;
+  // If true, disable pasting in chat input to prevent bot-like behavior
+  botProtection: boolean;
 }
 
 /** Prolific integration config. */
@@ -124,6 +126,7 @@ export function createCohortParticipantConfig(
     maxParticipantsPerCohort: config.maxParticipantsPerCohort ?? null,
     includeAllParticipantsInCohortCount:
       config.includeAllParticipantsInCohortCount ?? false,
+    botProtection: config.botProtection ?? false,
   };
 }
 
