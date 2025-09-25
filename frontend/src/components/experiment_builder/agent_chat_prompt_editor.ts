@@ -68,13 +68,15 @@ export class EditorComponent extends MobxLitElement {
     ) {
       return html`
         <div class="section">
-          <div class="section-title">
-            ${this.stageNamePrefix}${stageConfig.name}
-          </div>
-          <div class="description">
-            ${this.agent.type === AgentPersonaType.PARTICIPANT
-              ? 'No prompt customizations currently available for this stage.'
-              : 'Agent mediators do not interact with this stage.'}
+          <div class="inactive-stage">
+            <div class="section-title inactive">
+              ${this.stageNamePrefix}${stageConfig.name}
+            </div>
+            <div class="description">
+              ${this.agent.type === AgentPersonaType.PARTICIPANT
+                ? 'No prompt customizations currently available for this stage.'
+                : 'Agent mediators do not interact with this stage.'}
+            </div>
           </div>
         </div>
       `;
