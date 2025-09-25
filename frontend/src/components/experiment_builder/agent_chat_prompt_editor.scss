@@ -12,6 +12,16 @@
   padding: common.$main-content-padding;
 }
 
+.inactive-stage {
+  @include common.flex-row;
+  gap: 8px;
+  align-items: baseline;
+}
+
+.inactive {
+  color: var(--md-sys-color-outline);
+}
+
 .section-header {
   @include common.flex-row-align-center;
   flex-wrap: wrap;
@@ -119,7 +129,7 @@ code {
 .section,
 .subsection {
   @include common.flex-column;
-  gap: common.$spacing-large;
+  gap: common.$spacing-medium;
 }
 
 .chip {
