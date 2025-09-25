@@ -14,7 +14,7 @@
 
 .inactive-stage {
   @include common.flex-row;
-  gap: 8px;
+  gap: common.$spacing-medium;
   align-items: baseline;
 }
 
