@@ -1,6 +1,5 @@
 /** Structured prompt types, constants, and functions. */
 import {
-  AgentChatPromptConfig,
   AgentChatSettings,
   ModelGenerationConfig,
   createAgentChatSettings,

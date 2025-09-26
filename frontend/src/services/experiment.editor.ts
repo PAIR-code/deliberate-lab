@@ -2,7 +2,6 @@ import {
   AgentMediatorTemplate,
   AgentMediatorPersonaConfig,
   AgentParticipantPersonaConfig,
-  AgentPersonaType,
   AgentParticipantTemplate,
   ApiKeyType,
   CohortParticipantConfig,
@@ -21,9 +20,6 @@ import {
   createBasePromptConfig,
   createChatPromptConfig,
   createExperimentConfig,
-  createMetadataConfig,
-  createPermissionsConfig,
-  createProlificConfig,
   generateId,
 } from '@deliberation-lab/utils';
 import {Timestamp} from 'firebase/firestore';

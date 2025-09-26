@@ -119,7 +119,7 @@ export async function getStructuredPrompt(
   userProfile: UserProfile,
   agentConfig: ProfileAgentConfig,
   promptConfig: BasePromptConfig,
-  promptParameters?: Record<string, any>,
+  promptParameters?: Record<string, unknown>,
 ) {
   const promptText = await processPromptItems(
     promptConfig.prompt,
@@ -149,7 +149,7 @@ async function processPromptItems(
   stageId: string,
   userProfile: UserProfile,
   agentConfig: ProfileAgentConfig,
-  promptParameters?: Record<string, any>,
+  promptParameters?: Record<string, unknown>,
 ): Promise<string> {
   const items: string[] = [];
   for (const promptItem of promptItems) {
@@ -161,7 +161,6 @@ async function processPromptItems(
         items.push(agentConfig.promptContext);
         break;
       case PromptItemType.PROFILE_INFO:
-        const profileInfo: string[] = [];
         const getProfileSetId = () => {
           if (stageId.includes(SECONDARY_PROFILE_SET_ID)) {
             return PROFILE_SET_ANIMALS_2_ID;
@@ -246,7 +245,7 @@ export async function getStageContextForPrompt(
   participantIds: string[],
   currentStageId: string,
   item: StageContextPromptItem,
-  promptParameters?: Record<string, any>,
+  promptParameters?: Record<string, unknown>,
 ) {
   // Get the specific stage
   const stage = await getFirestoreStage(experimentId, item.stageId);
@@ -297,7 +296,10 @@ export async function getStageContextForPrompt(
     promptParameters?.answerMap
   ) {
     const question = promptParameters.question as SurveyQuestion;
-    const answerMap = promptParameters.answerMap as Record<string, SurveyAnswer>;
+    const answerMap = promptParameters.answerMap as Record<
+      string,
+      SurveyAnswer
+    >;
     const currentQuestionIndex = stage.questions.findIndex(
       (q: SurveyQuestion) => q.id === question.id,
     );
@@ -321,7 +323,7 @@ export async function getStageDisplayForPrompt(
   participantIds: string[], // participant private IDs for answer inclusion
   stage: StageConfig,
   includeAnswers: boolean,
-  promptParameters?: Record<string, any>,
+  promptParameters?: Record<string, unknown>,
 ) {
   switch (stage.kind) {
     case StageKind.TOS:
@@ -410,11 +412,13 @@ export async function getStageDisplayForPrompt(
       return assetAllocationDisplay;
     case StageKind.SURVEY:
     case StageKind.SURVEY_PER_PARTICIPANT:
-      const surveyStage =
-        stage as SurveyStageConfig | SurveyPerParticipantStageConfig;
+      const surveyStage = stage as
+        | SurveyStageConfig
+        | SurveyPerParticipantStageConfig;
       const question = promptParameters?.question as SurveyQuestion | undefined;
-      const answerMap =
-        promptParameters?.answerMap as Record<string, SurveyAnswer> | undefined;
+      const answerMap = promptParameters?.answerMap as
+        | Record<string, SurveyAnswer>
+        | undefined;
 
       if (includeAnswers && question && answerMap) {
         const currentQuestionIndex = surveyStage.questions.findIndex(

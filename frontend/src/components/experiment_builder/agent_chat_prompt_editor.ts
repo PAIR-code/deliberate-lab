@@ -17,7 +17,6 @@ import {ExperimentEditor} from '../../services/experiment.editor';
 import {
   AgentPersonaConfig,
   AgentPersonaType,
-  ApiKeyType,
   BasePromptConfig,
   ChatMediatorStructuredOutputConfig,
   ChatPromptConfig,
@@ -29,13 +28,10 @@ import {
   StructuredOutputType,
   StructuredOutputDataType,
   StructuredOutputSchema,
-  createDefaultPromptFromText,
   makeStructuredOutputPrompt,
   structuredOutputEnabled,
   TextPromptItem,
 } from '@deliberation-lab/utils';
-import {LLM_AGENT_AVATARS} from '../../shared/constants';
-import {getHashBasedColor} from '../../shared/utils';
 
 import {styles} from './agent_chat_prompt_editor.scss';
 import {styles as dialogStyles} from './stage_builder_dialog.scss';
@@ -178,7 +174,10 @@ export class EditorComponent extends MobxLitElement {
     }
   }
 
-  private renderDialog(stageConfig: StageConfig, promptConfig: BasePromptConfig) {
+  private renderDialog(
+    stageConfig: StageConfig,
+    promptConfig: BasePromptConfig,
+  ) {
     if (!this.agent || !this.showDialog) return nothing;
 
     const isChatStage =
@@ -206,9 +205,10 @@ export class EditorComponent extends MobxLitElement {
         <div class="divider"></div>
         ${isChatStage
           ? html`${this.renderAgentChatSettings(
-              this.agent,
-              promptConfig as ChatPromptConfig,
-            )}<div class="divider"></div>`
+                this.agent,
+                promptConfig as ChatPromptConfig,
+              )}
+              <div class="divider"></div>`
           : nothing}
         ${this.renderAgentSamplingParameters(this.agent, promptConfig)}
         <div class="divider"></div>

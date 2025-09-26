@@ -162,7 +162,8 @@ async function getAgentParticipantSurveyQuestionResponse(
     return;
   }
 
-  const structuredOutputConfig = createStructuredOutputConfigForSurvey(question);
+  const structuredOutputConfig =
+    createStructuredOutputConfigForSurvey(question);
 
   const prompt = await getStructuredPrompt(
     experimentId,
@@ -200,29 +201,29 @@ async function getAgentParticipantSurveyQuestionResponse(
   const responseValue = rawResponse.parsedResponse.response;
 
   switch (question.kind) {
-  case SurveyQuestionKind.TEXT:
-    return {
-      id: question.id,
-      kind: SurveyQuestionKind.TEXT,
-      answer: responseValue as string,
-    };
-  case SurveyQuestionKind.CHECK:
-    return {
-      id: question.id,
-      kind: SurveyQuestionKind.CHECK,
-      isChecked: responseValue as boolean,
-    };
-  case SurveyQuestionKind.MULTIPLE_CHOICE:
-    return {
-      id: question.id,
-      kind: SurveyQuestionKind.MULTIPLE_CHOICE,
-      choiceId: responseValue as string,
-    };
-  case SurveyQuestionKind.SCALE:
-    return {
-      id: question.id,
-      kind: SurveyQuestionKind.SCALE,
-      value: responseValue as number,
-    };
+    case SurveyQuestionKind.TEXT:
+      return {
+        id: question.id,
+        kind: SurveyQuestionKind.TEXT,
+        answer: responseValue as string,
+      };
+    case SurveyQuestionKind.CHECK:
+      return {
+        id: question.id,
+        kind: SurveyQuestionKind.CHECK,
+        isChecked: responseValue as boolean,
+      };
+    case SurveyQuestionKind.MULTIPLE_CHOICE:
+      return {
+        id: question.id,
+        kind: SurveyQuestionKind.MULTIPLE_CHOICE,
+        choiceId: responseValue as string,
+      };
+    case SurveyQuestionKind.SCALE:
+      return {
+        id: question.id,
+        kind: SurveyQuestionKind.SCALE,
+        value: responseValue as number,
+      };
   }
 }

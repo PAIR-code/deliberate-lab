@@ -9,7 +9,6 @@ jest.mock('../app', () => ({
   },
 }));
 
-import { app } from '../app';
 import * as agentUtils from '../agent.utils';
 import * as firestoreUtils from '../utils/firestore';
 import {
@@ -27,8 +26,7 @@ import {
   StageKind,
   createBasePromptConfig,
 } from '@deliberation-lab/utils';
-import * as admin from 'firebase-admin';
-import { getAgentParticipantSurveyStageResponse } from './survey.agent';
+import {getAgentParticipantSurveyStageResponse} from './survey.agent';
 
 describe('survey.agent', () => {
   let processModelResponseSpy: jest.SpyInstance;
@@ -45,7 +43,7 @@ describe('survey.agent', () => {
     agentConfig: {
       agentId: 'agent1',
       promptContext: '',
-      modelSettings: { apiType: 'GEMINI', modelName: 'gemini-pro' },
+      modelSettings: {apiType: 'GEMINI', modelName: 'gemini-pro'},
     },
   } as ParticipantProfileExtended;
 
@@ -56,8 +54,8 @@ describe('survey.agent', () => {
   });
 
   it('should return undefined if participant is not an agent', async () => {
-    const participant = { ...mockParticipant, agentConfig: undefined };
-    const stage = { questions: [] } as SurveyStageConfig;
+    const participant = {...mockParticipant, agentConfig: undefined};
+    const stage = {questions: []} as SurveyStageConfig;
 
     const response = await getAgentParticipantSurveyStageResponse(
       mockExperimentId,
@@ -70,8 +68,8 @@ describe('survey.agent', () => {
   });
 
   it('should return undefined if no prompt config is found', async () => {
-    const stage = { questions: [] } as SurveyStageConfig;
-    mockDocGet.mockResolvedValue({ exists: false, data: () => undefined });
+    const stage = {questions: []} as SurveyStageConfig;
+    mockDocGet.mockResolvedValue({exists: false, data: () => undefined});
 
     const response = await getAgentParticipantSurveyStageResponse(
       mockExperimentId,
@@ -111,7 +109,7 @@ describe('survey.agent', () => {
       getFirestoreStageSpy.mockResolvedValue(stage);
       processModelResponseSpy.mockResolvedValue({
         status: ModelResponseStatus.OK,
-        parsedResponse: { response: 'My name is Agent' },
+        parsedResponse: {response: 'My name is Agent'},
       });
 
       const response = await getAgentParticipantSurveyStageResponse(
@@ -145,7 +143,7 @@ describe('survey.agent', () => {
       getFirestoreStageSpy.mockResolvedValue(stage);
       processModelResponseSpy.mockResolvedValue({
         status: ModelResponseStatus.OK,
-        parsedResponse: { response: true },
+        parsedResponse: {response: true},
       });
 
       const response = await getAgentParticipantSurveyStageResponse(
@@ -166,7 +164,7 @@ describe('survey.agent', () => {
       const question = createMultipleChoiceSurveyQuestion({
         id: 'q3',
         questionTitle: 'Favorite color?',
-        options: [createMultipleChoiceItem({ id: 'red', text: 'Red' })],
+        options: [createMultipleChoiceItem({id: 'red', text: 'Red'})],
       });
       const stage = {
         id: 'stage1',
@@ -180,7 +178,7 @@ describe('survey.agent', () => {
       getFirestoreStageSpy.mockResolvedValue(stage);
       processModelResponseSpy.mockResolvedValue({
         status: ModelResponseStatus.OK,
-        parsedResponse: { response: 'red' },
+        parsedResponse: {response: 'red'},
       });
 
       const response = await getAgentParticipantSurveyStageResponse(
@@ -217,7 +215,7 @@ describe('survey.agent', () => {
       getFirestoreStageSpy.mockResolvedValue(stage);
       processModelResponseSpy.mockResolvedValue({
         status: ModelResponseStatus.OK,
-        parsedResponse: { response: 4 },
+        parsedResponse: {response: 4},
       });
 
       const response = await getAgentParticipantSurveyStageResponse(
@@ -254,7 +252,7 @@ describe('survey.agent', () => {
       getFirestoreStageSpy.mockResolvedValue(stage);
       processModelResponseSpy.mockResolvedValue({
         status: ModelResponseStatus.OK,
-        parsedResponse: { response: 0.7 },
+        parsedResponse: {response: 0.7},
       });
 
       const response = await getAgentParticipantSurveyStageResponse(
