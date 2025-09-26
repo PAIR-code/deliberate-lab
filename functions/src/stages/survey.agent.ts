@@ -18,7 +18,6 @@ import {processModelResponse} from '../agent.utils';
 import {getStructuredPrompt} from '../prompt.utils';
 import {app} from '../app';
 
-/** Create a structured output config tailored for the survey question type. */
 function createStructuredOutputConfigForSurvey(
   question: SurveyQuestion,
 ): StructuredOutputConfig {
@@ -101,16 +100,14 @@ function createStructuredOutputConfigForSurvey(
   };
 }
 
-/** Use LLM call to generation agent participant response to survey stage. */
 export async function getAgentParticipantSurveyStageResponse(
   experimentId: string,
-  apiKeyConfig: APIKeyConfig, // for making LLM call
+  apiKeyConfig: APIKeyConfig,
   participant: ParticipantProfileExtended,
   stage: SurveyStageConfig,
 ) {
-  // If participant is not an agent, return
   if (!participant.agentConfig) {
-    return;
+    return undefined;
   }
 
   const promptConfig = (
@@ -126,15 +123,10 @@ export async function getAgentParticipantSurveyStageResponse(
   ).data() as BasePromptConfig | undefined;
 
   if (!promptConfig) {
-    console.log(
-      `No prompt config found for agent ${participant.agentConfig.agentId} in stage ${stage.id}`,
-    );
-    return;
+    return undefined;
   }
 
   const answerMap: Record<string, SurveyAnswer> = {};
-  // For each question, call getAgentParticipantSurveyQuestionResponse
-  // and add to answer map
   for (const question of stage.questions) {
     const answer = await getAgentParticipantSurveyQuestionResponse(
       experimentId,
@@ -150,24 +142,19 @@ export async function getAgentParticipantSurveyStageResponse(
     }
   }
 
-  // Use answer map to assemble final stage answer
   const participantAnswer = createSurveyStageParticipantAnswer({
     id: stage.id,
     answerMap,
   });
-  console.log(
-    '✅ SurveyStageParticipantAnswer\n',
-    JSON.stringify(participantAnswer),
-  );
   return participantAnswer;
 }
 
 async function getAgentParticipantSurveyQuestionResponse(
   experimentId: string,
-  apiKeyConfig: APIKeyConfig, // for making LLM call
+  apiKeyConfig: APIKeyConfig,
   stage: SurveyStageConfig,
   participant: ParticipantProfileExtended,
-  question: SurveyQuestion, // current question
+  question: SurveyQuestion,
   answerMap: Record<string, SurveyAnswer>, // answers collected so far
   promptConfig: BasePromptConfig,
 ): Promise<SurveyAnswer | undefined> {
@@ -184,65 +171,58 @@ async function getAgentParticipantSurveyQuestionResponse(
     stage.id,
     participant,
     participant.agentConfig,
-    {...promptConfig, structuredOutputConfig}, // Override with dynamic config
+    {...promptConfig, structuredOutputConfig},
     {question, answerMap},
   );
 
   const rawResponse = await processModelResponse(
     experimentId,
     participant.currentCohortId,
-    participant.privateId,
+    /*participantId=*/ participant.privateId,
     stage.id,
     participant,
     participant.publicId,
     participant.privateId,
-    `Survey question: ${question.id}`, // description
+    /*description=*/ `Survey question: ${question.id}`,
     apiKeyConfig,
     prompt,
     participant.agentConfig.modelSettings,
     promptConfig.generationConfig,
-    structuredOutputConfig, // Use the dynamic config here too
+    structuredOutputConfig,
     promptConfig.numRetries,
   );
 
   if (!rawResponse.parsedResponse) {
-    console.error('Failed to get parsed response from model for survey question.');
+    // TODO: Surface the error to the experimenter.
     return undefined;
   }
 
   const responseValue = rawResponse.parsedResponse.response;
 
-  try {
-    switch (question.kind) {
-      case SurveyQuestionKind.TEXT:
-        return {
-          id: question.id,
-          kind: SurveyQuestionKind.TEXT,
-          answer: responseValue as string,
-        };
-      case SurveyQuestionKind.CHECK:
-        return {
-          id: question.id,
-          kind: SurveyQuestionKind.CHECK,
-          isChecked: responseValue as boolean,
-        };
-      case SurveyQuestionKind.MULTIPLE_CHOICE:
-        return {
-          id: question.id,
-          kind: SurveyQuestionKind.MULTIPLE_CHOICE,
-          choiceId: responseValue as string,
-        };
-      case SurveyQuestionKind.SCALE:
-        return {
-          id: question.id,
-          kind: SurveyQuestionKind.SCALE,
-          value: responseValue as number,
-        };
-      default:
-        return undefined;
-    }
-  } catch (error) {
-    console.log(error);
-    return undefined;
+  switch (question.kind) {
+  case SurveyQuestionKind.TEXT:
+    return {
+      id: question.id,
+      kind: SurveyQuestionKind.TEXT,
+      answer: responseValue as string,
+    };
+  case SurveyQuestionKind.CHECK:
+    return {
+      id: question.id,
+      kind: SurveyQuestionKind.CHECK,
+      isChecked: responseValue as boolean,
+    };
+  case SurveyQuestionKind.MULTIPLE_CHOICE:
+    return {
+      id: question.id,
+      kind: SurveyQuestionKind.MULTIPLE_CHOICE,
+      choiceId: responseValue as string,
+    };
+  case SurveyQuestionKind.SCALE:
+    return {
+      id: question.id,
+      kind: SurveyQuestionKind.SCALE,
+      value: responseValue as number,
+    };
   }
 }
