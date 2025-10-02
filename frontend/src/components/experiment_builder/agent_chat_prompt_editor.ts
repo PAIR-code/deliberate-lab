@@ -184,6 +184,8 @@ export class EditorComponent extends MobxLitElement {
         <div class="divider"></div>
         ${this.renderAgentChatSettings(this.agent, promptConfig)}
         <div class="divider"></div>
+        ${this.renderModelReasoningParameters(this.agent, promptConfig)}
+        <div class="divider"></div>
         ${this.renderAgentSamplingParameters(this.agent, promptConfig)}
         <div class="divider"></div>
         ${this.renderAgentCustomRequestBodyFields(this.agent, promptConfig)}
@@ -437,6 +439,69 @@ export class EditorComponent extends MobxLitElement {
               .value=${agentPromptConfig.numRetries ?? 0}
               placeholder="0"
               @input=${updateNumRetries}
+            />
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  private renderModelReasoningParameters(
+    agent: AgentPersonaConfig,
+    agentPromptConfig: ChatPromptConfig,
+  ) {
+    const modelGenerationConfig = agentPromptConfig.generationConfig;
+
+    const updateReasoningBudget = (e: InputEvent) => {
+      const reasoningBudget = Number((e.target as HTMLInputElement).value);
+      if (!isNaN(reasoningBudget)) {
+        this.updatePrompt({
+          generationConfig: {
+            ...agentPromptConfig.generationConfig,
+            reasoningBudget,
+          },
+        });
+      }
+    };
+
+    const updateIncludeReasoning = (e: InputEvent) => {
+      const includeReasoning = (e.target as HTMLInputElement).checked;
+      this.updatePrompt({
+        generationConfig: {
+          ...agentPromptConfig.generationConfig,
+          includeReasoning,
+        },
+      });
+    };
+
+    return html`
+      <div class="section">
+        <div class="section-header">
+          <div class="section-title">Model Reasoning Parameters</div>
+          <div class="description">
+            Currently only used for Gemini 2.5 APIs.
+          </div>
+        </div>
+        <div class="checkbox-wrapper">
+          <md-checkbox
+            touch-target="wrapper"
+            ?checked=${modelGenerationConfig.includeReasoning}
+            ?disabled=${!this.experimentEditor.isCreator}
+            @click=${updateIncludeReasoning}
+          >
+          </md-checkbox>
+          <div>Include model reasoning</div>
+        </div>
+
+        <div class="field">
+          <label for="reasoning-budget">Reasoning Budget</label>
+          <div class="description">Reasoning budget for Gemini 2.5</div>
+          <div class="number-input">
+            <input
+              .disabled=${!this.experimentEditor.isCreator}
+              type="number"
+              .value=${modelGenerationConfig.reasoningBudget}
+              @input=${updateReasoningBudget}
             />
           </div>
         </div>
