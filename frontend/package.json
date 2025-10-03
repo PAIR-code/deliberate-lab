@@ -16,7 +16,8 @@
     "serve:prod": "webpack serve --mode production",
     "start": "npm run build && npm run serve",
     "start:prod": "npm run build:prod && npm run serve:prod",
-    "lint": "eslint src"
+    "lint": "eslint src",
+    "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
     "@swc/register": "^0.1.10",

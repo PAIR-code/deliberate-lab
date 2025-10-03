@@ -9,7 +9,8 @@
     "declarations": "tsc --declaration --emitDeclarationOnly",
     "build": "tsup --onSuccess \"npm run declarations\"",
     "build:watch": "tsup --watch --onSuccess \"npm run declarations\"",
-    "test": "jest"
+    "test": "jest",
+    "typecheck": "tsc --noEmit"
   },
   "files": [
     "dist/**/*"
