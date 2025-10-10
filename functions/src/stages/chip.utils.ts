@@ -41,8 +41,6 @@ import {
 import {processModelResponse} from '../agent.utils';
 import {getFirestoreStagePublicDataRef} from '../utils/firestore';
 
-import {Timestamp} from 'firebase-admin/firestore';
-
 import {app} from '../app';
 
 /**
