@@ -13,12 +13,10 @@ import {getGeminiAPIResponse} from './gemini.api';
 const MODEL_NAME = 'gemini-2.5-flash';
 
 describe('Gemini API', () => {
-  let scope: nock.Scope;
-
   beforeEach(() => {
-    scope = nock('https://generativelanguage.googleapis.com')
+    nock('https://generativelanguage.googleapis.com')
       .post(`/v1beta/models/${MODEL_NAME}:generateContent`)
-      .reply(200, (uri, requestBody) => {
+      .reply(200, (uri, requestBody: any) => {
         return {
           candidates: [
             {
@@ -54,7 +52,7 @@ describe('Gemini API', () => {
       topP: 0.9,
       frequencyPenalty: 0,
       presencePenalty: 0,
-      customRequestBodyFields: [{name: 'seed', value: 123}],
+      customRequestBodyFields: [{name: 'seed', value: '123'}],
     };
 
     const response: ModelResponse = await getGeminiAPIResponse(
@@ -64,6 +62,7 @@ describe('Gemini API', () => {
       generationConfig,
     );
 
+    expect(response.text).toBeDefined();
     expect(response.text).toContain('test output');
     expect(response.text).toContain('"temperature":0.4');
     expect(response.text).toContain('"topP":0.9');
@@ -77,10 +76,13 @@ describe('Gemini API', () => {
       topP: 0.9,
       frequencyPenalty: 0,
       presencePenalty: 0,
-      customRequestBodyFields: [{name: 'seed', value: 123}],
+      customRequestBodyFields: [{name: 'seed', value: '123'}],
     };
 
     const structuredOutputConfig = {
+      enabled: true,
+      appendToPrompt: true,
+      explanationField: 'explanation',
       type: StructuredOutputType.JSON_SCHEMA,
       schema: {
         type: StructuredOutputDataType.OBJECT,
@@ -119,7 +121,8 @@ describe('Gemini API', () => {
       structuredOutputConfig,
     );
 
-    const parsedResponse = JSON.parse(response.text);
+    expect(response.text).toBeDefined();
+    const parsedResponse = JSON.parse(response.text!);
     const expectedResponse = {
       output: 'test output',
       generationConfig: {
@@ -166,7 +169,7 @@ describe('Gemini API', () => {
       topP: 0.9,
       frequencyPenalty: 0,
       presencePenalty: 0,
-      customRequestBodyFields: [{name: 'seed', value: 123}],
+      customRequestBodyFields: [{name: 'seed', value: '123'}],
     };
 
     const response: ModelResponse = await getGeminiAPIResponse(

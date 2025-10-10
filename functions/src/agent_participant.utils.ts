@@ -1,13 +1,11 @@
 import {Timestamp} from 'firebase-admin/firestore';
 import {
-  AgentModelSettings,
-  AgentParticipantPromptConfig,
-  AgentPersonaConfig,
-  ModelGenerationConfig,
+  Experiment,
   ParticipantProfileExtended,
   ParticipantStatus,
-  StageConfig,
+  RankingStageConfig,
   StageKind,
+  SurveyStageConfig,
 } from '@deliberation-lab/utils';
 import {
   updateCohortStageUnlocked,
@@ -21,9 +19,10 @@ import {
   getExperimenterData,
   getFirestoreParticipantRef,
   getFirestoreStage,
+  getFirestore,
 } from './utils/firestore';
 
-import {app} from './app';
+import {Transaction} from 'firebase-admin/firestore';
 
 /** Complete agent participant's current stage. */
 export async function completeStageAsAgentParticipant(
@@ -73,8 +72,7 @@ export async function completeStageAsAgentParticipant(
   const experimenterData = await getExperimenterData(creatorId);
 
   // ParticipantAnswer doc
-  const answerDoc = app
-    .firestore()
+  const answerDoc = getFirestore()
     .collection('experiments')
     .doc(experimentId)
     .collection('participants')
@@ -149,7 +147,7 @@ export async function startAgentParticipant(
   experimentId: string,
   participant: ParticipantProfileExtended,
 ) {
-  await app.firestore().runTransaction(async (transaction) => {
+  await getFirestore().runTransaction(async (transaction: Transaction) => {
     // If participant is NOT agent, do nothing
     if (!participant?.agentConfig) {
       return;

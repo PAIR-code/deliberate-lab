@@ -5,6 +5,7 @@ import {
   ModelGenerationConfig,
   ModelResponse,
   ModelResponseStatus,
+  StructuredOutputConfig,
   StructuredOutputType,
   StructuredOutputDataType,
   createStructuredOutputConfig,
@@ -25,7 +26,7 @@ describe('OpenAI-compatible API', () => {
   beforeEach(() => {
     nock('https://test.uri')
       .post('/v1/chat/completions')
-      .reply(200, (uri, requestBody) => {
+      .reply(200, (uri, requestBody: any) => {
         return {
           id: 'test-id',
           object: 'text_completion',
@@ -61,7 +62,8 @@ describe('OpenAI-compatible API', () => {
       DEFAULT_GENERATION_CONFIG,
     );
     expect(response.status).toEqual(ModelResponseStatus.OK);
-    const parsedResponse = JSON.parse(response.text);
+    expect(response.text).toBeDefined();
+    const parsedResponse = JSON.parse(response.text!);
 
     expect(parsedResponse.model).toEqual('test-model');
     expect(parsedResponse.response_format).toEqual({type: 'text'});
@@ -85,7 +87,8 @@ describe('OpenAI-compatible API', () => {
       structuredOutputConfig,
     );
     expect(response.status).toEqual(ModelResponseStatus.OK);
-    const parsedResponse = JSON.parse(response.text);
+    expect(response.text).toBeDefined();
+    const parsedResponse = JSON.parse(response.text!);
 
     expect(parsedResponse.model).toEqual('test-model');
     expect(parsedResponse.response_format).toEqual({type: 'json_object'});
@@ -137,7 +140,8 @@ describe('OpenAI-compatible API', () => {
     );
     // Mock request still just returns the response body, not actually the
     // specified schema.
-    const parsedResponse = JSON.parse(response.text);
+    expect(response.text).toBeDefined();
+    const parsedResponse = JSON.parse(response.text!);
 
     expect(parsedResponse.model).toEqual('test-model');
     expect(parsedResponse.messages).toEqual([

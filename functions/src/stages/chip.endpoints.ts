@@ -3,12 +3,16 @@ import {
   ChipAssistanceMode,
   ChipAssistanceMove,
   ChipAssistanceType,
+  ChipOffer,
   ChipStageConfig,
+  ChipStageParticipantAnswer,
   ChipStagePublicData,
+  ParticipantProfile,
   SendChipOfferData,
   SendChipResponseData,
   SetChipTurnData,
   StageKind,
+  StageParticipantAnswer,
   createChipOffer,
   createChipRoundLogEntry,
   createChipTurnLogEntry,
@@ -220,7 +224,7 @@ export const sendChipResponse = onCall(async (request) => {
     handleSendChipResponseValidationErrors(data);
   }
 
-  const success = addChipResponseToPublicData(
+  const success = await addChipResponseToPublicData(
     data.experimentId,
     data.cohortId,
     data.stageId,
@@ -414,7 +418,7 @@ export const requestChipAssistance = onCall(async (request) => {
       data.experimentId,
       data.participantId,
       data.stageId,
-    );
+    ) as ChipStageParticipantAnswer;
     if (participantAnswer?.currentAssistance) {
       const currentAssistance = participantAnswer.currentAssistance;
       currentAssistance.proposedOffer = createChipOffer({
@@ -517,6 +521,10 @@ export const selectChipAssistanceMode = onCall(async (request) => {
     message: null,
     reasoning: null,
     modelResponse: {},
+    proposedOffer: {} as ChipOffer,
+    finalOffer: {} as ChipOffer,
+    proposedResponse: false,
+    finalResponse: false,
   };
 
   // If advisor or delegate, immediately call model

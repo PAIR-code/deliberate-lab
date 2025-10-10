@@ -8,15 +8,16 @@
 import {
   initializeTestEnvironment,
   assertSucceeds,
-  RulesTestEnvironment,
 } from '@firebase/rules-unit-testing';
 import nock from 'nock';
 import {
   ModelGenerationConfig,
   ModelLogEntry,
   StructuredOutputDataType,
+  StructuredOutputConfig,
   StructuredOutputType,
   createModelLogEntry,
+  UnifiedTimestamp,
 } from '@deliberation-lab/utils';
 import {writeModelLogEntry} from './log.utils';
 import {getGeminiAPIResponse} from './api/gemini.api';
@@ -100,10 +101,15 @@ describe('log.utils', () => {
       stopSequences: [],
       temperature: 0.4,
       topP: 0.9,
+      frequencyPenalty: 0,
+      presencePenalty: 0,
       customRequestBodyFields: [],
     };
 
-    const structuredOutputConfig = {
+    const structuredOutputConfig: StructuredOutputConfig = {
+      enabled: true,
+      appendToPrompt: true,
+      explanationField: 'explanation',
       type: StructuredOutputType.JSON_SCHEMA,
       schema: {
         type: StructuredOutputDataType.OBJECT,
@@ -139,7 +145,7 @@ describe('log.utils', () => {
 
     await writeModelLogEntry(experimentId, logEntry);
 
-    const logDocRef = await mockFirestore
+    const logDocRef = mockFirestore
       .collection('experiments')
       .doc(experimentId)
       .collection('logs')

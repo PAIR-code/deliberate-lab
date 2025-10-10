@@ -18,6 +18,11 @@ import {app} from '../app';
 
 /** Utils functions for handling Firestore docs. */
 
+/** Get the firestore instance. */
+export function getFirestore() {
+  return app.firestore();
+}
+
 /** Get experimenter data. */
 export async function getExperimenterData(creatorId: string) {
   const creatorDoc = await app
