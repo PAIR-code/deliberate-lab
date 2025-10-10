@@ -1,30 +1,13 @@
 import {Timestamp} from 'firebase-admin/firestore';
+import {onDocumentCreated} from 'firebase-functions/v2/firestore';
 import {
-  onDocumentCreated,
-  onDocumentUpdated,
-} from 'firebase-functions/v2/firestore';
-import {
-  ChipStageParticipantAnswer,
   ChipStagePublicData,
   ChipTransaction,
-  ChipTransactionStatus,
-  ParticipantProfileExtended,
-  StageConfig,
-  StageKind,
-  StagePublicData,
-  createChipInfoLogEntry,
-  createChipOfferDeclinedLogEntry,
-  createChipRoundLogEntry,
   createChipTransactionLogEntry,
-  createChipTurnLogEntry,
 } from '@deliberation-lab/utils';
 
 import {app} from '../app';
-import {
-  getChipParticipants,
-  updateChipCurrentTurn,
-  updateParticipantChipQuantities,
-} from '../stages/chip.utils';
+import {updateParticipantChipQuantities} from '../stages/chip.utils';
 
 /**
  * When chip transaction doc is written,

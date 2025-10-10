@@ -1,6 +1,4 @@
 import {
-  RoleItem,
-  RoleStageConfig,
   RoleStagePublicData,
   StageKind,
 } from '@deliberation-lab/utils';
@@ -10,9 +8,6 @@ import {
   getFirestoreStage,
   getFirestoreStagePublicDataRef,
 } from '../utils/firestore';
-
-import * as admin from 'firebase-admin';
-import * as functions from 'firebase-functions';
 
 import {app} from '../app';
 /** Assign roles to participants for given stage. */

@@ -1,38 +1,21 @@
 import {
-  AgentChatResponse,
-  AgentChatSettings,
   ChatMessage,
-  ChatPromptConfig,
   ChatStageConfig,
   ChatStageParticipantAnswer,
   ChatStagePublicData,
-  ExperimenterData,
-  MediatorStatus,
-  ModelResponseStatus,
-  ParticipantProfile,
   ParticipantProfileExtended,
-  ParticipantStatus,
   StageKind,
-  awaitTypingDelay,
   createChatPromptConfig,
   createChatStageParticipantAnswer,
   createParticipantChatMessage,
   createDefaultPromptFromText,
-  getDefaultChatPrompt,
-  getTimeElapsed,
-  structuredOutputEnabled,
 } from '@deliberation-lab/utils';
 
-import * as admin from 'firebase-admin';
-import * as functions from 'firebase-functions';
 import {Timestamp} from 'firebase-admin/firestore';
-import {onCall} from 'firebase-functions/v2/https';
 
 import {app} from '../app';
-import {getAgentResponse} from '../agent.utils';
 import {updateParticipantNextStage} from '../participant.utils';
 import {
-  getExperimenterDataFromExperiment,
   getFirestoreActiveParticipants,
   getFirestoreExperiment,
   getFirestoreParticipant,
@@ -42,7 +25,6 @@ import {
   getFirestoreStage,
   getFirestoreStagePublicData,
 } from '../utils/firestore';
-import {getPastStagesPromptContext} from './stage.utils';
 
 /** Get number of chat messages for given cohort and stage ID. */
 export async function getChatMessageCount(

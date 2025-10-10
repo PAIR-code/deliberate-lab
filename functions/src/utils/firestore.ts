@@ -355,7 +355,7 @@ export async function getAgentParticipantPrompt(
   experimentId: string,
   stageId: string,
   agentId: string,
-): AgentParticipantPromptConfig | null {
+): Promise<AgentParticipantPromptConfig | null> {
   const prompt = await app
     .firestore()
     .collection('experiments')

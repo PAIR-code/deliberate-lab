@@ -12,7 +12,6 @@ import {
   SendChipResponseData,
   SetChipTurnData,
   StageKind,
-  StageParticipantAnswer,
   createChipOffer,
   createChipRoundLogEntry,
   createChipTurnLogEntry,

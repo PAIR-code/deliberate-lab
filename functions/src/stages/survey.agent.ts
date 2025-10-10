@@ -7,7 +7,6 @@ import {
   createModelGenerationConfig,
   createSurveyStageParticipantAnswer,
   getSurveyStagePromptContext,
-  getSurveyStageQuestion,
 } from '@deliberation-lab/utils';
 import {getAgentResponse} from '../agent.utils';
 import {getPastStagesPromptContext} from './stage.utils';
