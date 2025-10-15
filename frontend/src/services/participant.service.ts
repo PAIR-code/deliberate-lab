@@ -1061,7 +1061,7 @@ export class ParticipantService extends Service {
 
   async sendAlertMessage(message: string) {
     let response = {};
-    if (this.experimentId && this.profile) {
+    if (this.experimentId && this.profile && message.trim().length > 0) {
       response = await sendAlertMessageCallable(
         this.sp.firebaseService.functions,
         {
