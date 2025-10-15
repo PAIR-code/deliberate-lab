@@ -37,3 +37,19 @@
   gap: common.$spacing-medium;
   padding: 0 common.$sidenav-padding;
 }
+
+.alert-history {
+  display: flex;
+  flex-direction: column-reverse;
+  gap: common.$spacing-medium;
+}
+
+.alert {
+  border-top: 1px solid var(--md-sys-color-outline-variant);
+  padding: common.$spacing-medium;
+}
+
+.timestamp {
+  @include typescale.label-small;
+  color: var(--md-sys-color-outline);
+}

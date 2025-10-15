@@ -3,6 +3,7 @@ import '../../pair-components/icon';
 import '../../pair-components/icon_button';
 
 import '@material/web/textfield/outlined-text-field.js';
+import {AlertMessage} from '@deliberation-lab/utils';
 
 import {MobxLitElement} from '@adobe/lit-mobx';
 import {CSSResultGroup, html, nothing} from 'lit';
@@ -13,6 +14,8 @@ import {core} from '../../core/core';
 import {AuthService} from '../../services/auth.service';
 import {HomeService} from '../../services/home.service';
 import {ParticipantService} from '../../services/participant.service';
+
+import {convertUnifiedTimestampToDate} from '../../shared/utils';
 
 import {styles} from './participant_help_panel.scss';
 
@@ -72,7 +75,29 @@ export class HelpPanel extends MobxLitElement {
           >
             Send message
           </pr-button>
+          ${this.renderAlertHistory()}
         </div>
+      </div>
+    `;
+  }
+
+  renderAlertHistory() {
+    return html`
+      <div class="alert-history">
+        ${this.participantService.alerts.map((alert) =>
+          this.renderAlert(alert),
+        )}
+      </div>
+    `;
+  }
+
+  renderAlert(alert: AlertMessage) {
+    return html`
+      <div class="alert">
+        <div class="timestamp">
+          ${convertUnifiedTimestampToDate(alert.timestamp)}
+        </div>
+        <div>${alert.message}</div>
       </div>
     `;
   }

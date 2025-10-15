@@ -1,4 +1,5 @@
 import {
+  AlertMessage,
   AssetAllocation,
   ChatMessage,
   ChatStageParticipantAnswer,
@@ -104,6 +105,7 @@ export class ParticipantService extends Service {
   @observable answerMap: Record<string, StageParticipantAnswer | undefined> =
     {};
   @observable privateChatMap: Record<string, ChatMessage[]> = {};
+  @observable alerts: AlertMessage[] = [];
 
   // Loading
   @observable unsubscribe: Unsubscribe[] = [];
@@ -316,8 +318,9 @@ export class ParticipantService extends Service {
       ),
     );
 
-    // Subscribe to private chats
+    // Subscribe to additional documents
     this.loadPrivateChatMessages();
+    this.loadAlertMessages();
   }
 
   /** Subscribe to private chat message collections for each stage ID. */
@@ -373,6 +376,36 @@ export class ParticipantService extends Service {
     }
   }
 
+  /** Subscribe to participant's private alerts. */
+  async loadAlertMessages() {
+    if (!this.experimentId || !this.participantId) return;
+    this.unsubscribe.push(
+      onSnapshot(
+        query(
+          collection(
+            this.sp.firebaseService.firestore,
+            'experiments',
+            this.experimentId,
+            'participants',
+            this.participantId,
+            'alerts',
+          ),
+          orderBy('timestamp', 'asc'),
+        ),
+        (snapshot) => {
+          let changedDocs = snapshot.docChanges().map((change) => change.doc);
+          if (changedDocs.length === 0) {
+            changedDocs = snapshot.docs;
+          }
+
+          changedDocs.forEach((doc) => {
+            this.alerts.push(doc.data() as AlertMessage);
+          });
+        },
+      ),
+    );
+  }
+
   unsubscribeAll() {
     this.unsubscribe.forEach((unsubscribe) => unsubscribe());
     this.unsubscribe = [];
@@ -380,6 +413,7 @@ export class ParticipantService extends Service {
     this.profile = undefined;
     this.answerMap = {};
     this.privateChatMap = {};
+    this.alerts = [];
     this.sp.participantAnswerService.reset();
   }
 
