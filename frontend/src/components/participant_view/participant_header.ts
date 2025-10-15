@@ -35,7 +35,9 @@ export class Header extends MobxLitElement {
         <div class="left">
           ${this.renderMenu()} ${this.stage.name}${this.renderInfo()}
         </div>
-        <div class="right">${this.renderHelp()} ${this.renderProfile()}</div>
+        <div class="right">
+          ${this.renderHelpPanelToggle()} ${this.renderProfile()}
+        </div>
       </div>
     `;
   }
@@ -90,6 +92,26 @@ export class Header extends MobxLitElement {
         .showHelpIcon=${true}
         .popupText=${this.stage.descriptions.helpText}
       ></info-popup>
+    `;
+  }
+
+  private renderHelpPanelToggle() {
+    return html`
+      <pr-tooltip
+        text="Click to open help chat with the experimenter"
+        position="BOTTOM_END"
+      >
+        <pr-icon-button
+          icon="contact_support"
+          color="error"
+          size="large"
+          variant="default"
+          @click=${() => {
+            this.participantService.setShowHelpPanel(true);
+          }}
+        >
+        </pr-icon-button>
+      </pr-tooltip>
     `;
   }
 }

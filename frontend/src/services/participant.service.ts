@@ -113,6 +113,7 @@ export class ParticipantService extends Service {
 
   // Sidenav
   @observable showParticipantSidenav = true;
+  @observable showHelpPanel = false;
 
   // Chat creation loading
   @observable isSendingChat = false;
@@ -125,6 +126,10 @@ export class ParticipantService extends Service {
     this.isProfileLoading = value;
     this.isPrivateChatLoading = value;
     this.areAnswersLoading = value;
+  }
+
+  setShowHelpPanel(showHelpPanel: boolean) {
+    this.showHelpPanel = showHelpPanel;
   }
 
   setShowParticipantSidenav(showParticipantSidenav: boolean) {
