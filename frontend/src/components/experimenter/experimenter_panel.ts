@@ -341,7 +341,7 @@ export class Panel extends MobxLitElement {
                 ${convertUnifiedTimestampToDate(alert.timestamp)}
               </div>
             </div>
-            <div>${alert.message}</div>
+            <div class="alert-content">${alert.message}</div>
           </div>
           <div class="alert-bottom">
             <div class="subtitle">Responses</div>

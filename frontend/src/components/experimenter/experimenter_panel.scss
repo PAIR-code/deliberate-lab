@@ -235,3 +235,7 @@ pr-button pr-icon {
     flex-grow: 1;
   }
 }
+
+.alert-content {
+  @include typescale.body-medium;
+}
