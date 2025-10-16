@@ -39,17 +39,26 @@
 }
 
 .alert-history {
-  display: flex;
-  flex-direction: column-reverse;
-  gap: common.$spacing-medium;
+  @include common.flex-column;
+  gap: common.$spacing-large;
 }
 
 .alert {
-  border-top: 1px solid var(--md-sys-color-outline-variant);
+  border: 2px solid var(--md-sys-color-outline-variant);
+  border-radius: common.$spacing-small;
   padding: common.$spacing-medium;
 }
 
-.timestamp {
+.subtitle {
   @include typescale.label-small;
   color: var(--md-sys-color-outline);
+}
+
+.message {
+  @include typescale.body-medium;
+  margin-bottom: common.$spacing-medium;
+}
+
+.error {
+  color: var(--md-sys-color-error);
 }

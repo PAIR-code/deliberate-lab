@@ -105,7 +105,7 @@ export class ParticipantService extends Service {
   @observable answerMap: Record<string, StageParticipantAnswer | undefined> =
     {};
   @observable privateChatMap: Record<string, ChatMessage[]> = {};
-  @observable alerts: AlertMessage[] = [];
+  @observable alertMap: Record<string, AlertMessage> = {};
 
   // Loading
   @observable unsubscribe: Unsubscribe[] = [];
@@ -128,6 +128,12 @@ export class ParticipantService extends Service {
     this.isProfileLoading = value;
     this.isPrivateChatLoading = value;
     this.areAnswersLoading = value;
+  }
+
+  @computed get alerts() {
+    return Object.values(this.alertMap).sort(
+      (a, b) => b.timestamp.seconds - a.timestamp.seconds,
+    );
   }
 
   setShowHelpPanel(showHelpPanel: boolean) {
@@ -399,7 +405,8 @@ export class ParticipantService extends Service {
           }
 
           changedDocs.forEach((doc) => {
-            this.alerts.push(doc.data() as AlertMessage);
+            const alert = doc.data() as AlertMessage;
+            this.alertMap[alert.id] = alert;
           });
         },
       ),
@@ -413,7 +420,7 @@ export class ParticipantService extends Service {
     this.profile = undefined;
     this.answerMap = {};
     this.privateChatMap = {};
-    this.alerts = [];
+    this.alertMap = {};
     this.sp.participantAnswerService.reset();
   }
 

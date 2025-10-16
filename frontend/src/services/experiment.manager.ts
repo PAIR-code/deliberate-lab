@@ -979,13 +979,14 @@ export class ExperimentManager extends Service {
   }
 
   /** Acknowledge alert message. */
-  async ackAlertMessage(alertId: string, response = '') {
+  async ackAlertMessage(alertId: string, participantId: string, response = '') {
     let output = {};
     if (this.experimentId) {
       output = await ackAlertMessageCallable(
         this.sp.firebaseService.functions,
         {
           experimentId: this.experimentId,
+          participantId,
           alertId,
           response,
         },

@@ -317,7 +317,11 @@ export class Panel extends MobxLitElement {
 
       const onAck = (response: string) => {
         this.isAckAlertLoading = true;
-        this.experimentManager.ackAlertMessage(alert.id, response);
+        this.experimentManager.ackAlertMessage(
+          alert.id,
+          alert.participantId,
+          response,
+        );
         this.isAckAlertLoading = false;
       };
 
@@ -355,8 +359,6 @@ export class Panel extends MobxLitElement {
                   variant="default"
                   @click=${async () => {
                     onAck(alertResponse);
-                    alertResponse = '';
-                    console.log(alertResponse);
                   }}
                 >
                 </pr-icon-button>

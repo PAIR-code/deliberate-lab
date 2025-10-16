@@ -94,10 +94,15 @@ export class HelpPanel extends MobxLitElement {
   renderAlert(alert: AlertMessage) {
     return html`
       <div class="alert">
-        <div class="timestamp">
+        <div class="subtitle">
           ${convertUnifiedTimestampToDate(alert.timestamp)}
         </div>
-        <div>${alert.message}</div>
+        <div class="message">${alert.message}</div>
+        <div class="subtitle">Experimenter response</div>
+        ${alert.responses.map((response) => html`<div>${response}</div>`)}
+        ${alert.responses.length === 0
+          ? html`<div class="error">Waiting for a response...</div>`
+          : nothing}
       </div>
     `;
   }
