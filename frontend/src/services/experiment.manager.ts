@@ -389,15 +389,15 @@ export class ExperimentManager extends Service {
   }
 
   @computed get newAlerts() {
-    return Object.values(this.alertMap).filter(
-      (alert) => alert.status === AlertStatus.NEW,
-    );
+    return Object.values(this.alertMap)
+      .filter((alert) => alert.status === AlertStatus.NEW)
+      .sort((a, b) => b.timestamp.seconds - a.timestamp.seconds);
   }
 
   @computed get oldAlerts() {
-    return Object.values(this.alertMap).filter(
-      (alert) => alert.status !== AlertStatus.NEW,
-    );
+    return Object.values(this.alertMap)
+      .filter((alert) => alert.status !== AlertStatus.NEW)
+      .sort((a, b) => b.timestamp.seconds - a.timestamp.seconds);
   }
 
   @computed get isLoading() {
