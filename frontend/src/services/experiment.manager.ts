@@ -70,6 +70,7 @@ import {
 import {
   downloadCSV,
   downloadJSON,
+  getAlertData,
   getChatHistoryData,
   getChipNegotiationCSV,
   getChipNegotiationData,
@@ -936,6 +937,19 @@ export class ExperimentManager extends Service {
           new Blob(
             [
               getParticipantData(result)
+                .map((row) => row.join(','))
+                .join('\n'),
+            ],
+            {type: 'text/csv'},
+          ),
+        );
+
+        // Add alert data to zip
+        zip.file(
+          `${experimentName}_Alerts.csv`,
+          new Blob(
+            [
+              getAlertData(result)
                 .map((row) => row.join(','))
                 .join('\n'),
             ],

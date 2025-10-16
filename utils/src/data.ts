@@ -1,4 +1,5 @@
 import {AgentMediatorTemplate, AgentParticipantTemplate} from './agent';
+import {AlertMessage} from './alert';
 import {CohortConfig} from './cohort';
 import {Experiment} from './experiment';
 import {ParticipantProfileExtended} from './participant';
@@ -29,6 +30,8 @@ export interface ExperimentDownload {
   agentMediatorMap: Record<string, AgentMediatorTemplate>;
   // Maps from agent participant ID to agent template
   agentParticipantMap: Record<string, AgentParticipantTemplate>;
+  // List of alerts sent during this experiment
+  alerts: AlertMessage[];
 }
 
 export interface ParticipantDownload {
@@ -56,6 +59,7 @@ export function createExperimentDownload(
     cohortMap: {},
     agentMediatorMap: {},
     agentParticipantMap: {},
+    alerts: [],
   };
 }
 
