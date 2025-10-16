@@ -83,18 +83,6 @@ export class Header extends MobxLitElement {
     `;
   }
 
-  private renderHelp() {
-    if (!this.stage || this.stage.descriptions.helpText.length === 0) {
-      return nothing;
-    }
-    return html`
-      <info-popup
-        .showHelpIcon=${true}
-        .popupText=${this.stage.descriptions.helpText}
-      ></info-popup>
-    `;
-  }
-
   private renderHelpPanelToggle() {
     return html`
       <pr-tooltip
