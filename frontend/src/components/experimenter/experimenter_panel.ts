@@ -3,6 +3,7 @@ import '../../pair-components/icon';
 import '../../pair-components/icon_button';
 import '../../pair-components/tooltip';
 
+import '../participant_profile/profile_display';
 import './experimenter_data_editor';
 import './experimenter_manual_chat';
 
@@ -329,9 +330,12 @@ export class Panel extends MobxLitElement {
         <div class="alert ${alert.status === AlertStatus.NEW ? 'new' : ''}">
           <div class="alert-top">
             <div class="alert-header">
-              <div class="subtitle">
-                ${cohort?.metadata.name ?? 'Unknown cohort'}
-                (${participant?.name ?? 'Unknown participant'})
+              <div class="left">
+                <participant-profile-display .profile=${participant}>
+                </participant-profile-display>
+                <div class="subtitle">
+                  (${cohort?.metadata.name ?? 'Unknown cohort'})
+                </div>
               </div>
               <div class="subtitle">
                 ${convertUnifiedTimestampToDate(alert.timestamp)}

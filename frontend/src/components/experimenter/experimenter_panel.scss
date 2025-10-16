@@ -212,6 +212,11 @@ pr-button pr-icon {
   @include common.flex-row-align-center;
   gap: common.$spacing-small;
   justify-content: space-between;
+
+  .left {
+    @include common.flex-row-align-center;
+    gap: common.$spacing-small;
+  }
 }
 
 .alert-response-options {
