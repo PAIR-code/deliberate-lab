@@ -59,6 +59,11 @@
   margin-bottom: common.$spacing-medium;
 }
 
+.status {
+  color: var(--md-sys-color-primary);
+  font-style: italic;
+}
+
 .error {
   color: var(--md-sys-color-error);
 }

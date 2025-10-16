@@ -3,7 +3,7 @@ import '../../pair-components/icon';
 import '../../pair-components/icon_button';
 
 import '@material/web/textfield/outlined-text-field.js';
-import {AlertMessage} from '@deliberation-lab/utils';
+import {AlertMessage, AlertStatus} from '@deliberation-lab/utils';
 
 import {MobxLitElement} from '@adobe/lit-mobx';
 import {CSSResultGroup, html, nothing} from 'lit';
@@ -100,11 +100,25 @@ export class HelpPanel extends MobxLitElement {
         <div class="message">${alert.message}</div>
         <div class="subtitle">Experimenter response</div>
         ${alert.responses.map((response) => html`<div>${response}</div>`)}
-        ${alert.responses.length === 0
-          ? html`<div class="error">Waiting for a response...</div>`
-          : nothing}
+        ${this.renderAlertStatus(alert)}
       </div>
     `;
+  }
+
+  renderAlertStatus(alert: AlertMessage) {
+    if (alert.status === AlertStatus.RESOLVED) {
+      return html`<div class="status">
+        Experimenter has resolved this message
+      </div>`;
+    } else if (alert.responses.length > 0) {
+      return nothing;
+    } else if (alert.status === AlertStatus.READ) {
+      return html`<div class="status">
+        Experimenter has read your message (no response yet)
+      </div>`;
+    } else {
+      return html`<div class="error">Waiting for a response...</div>`;
+    }
   }
 }
 
