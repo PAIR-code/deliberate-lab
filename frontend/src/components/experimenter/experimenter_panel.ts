@@ -369,7 +369,7 @@ export class Panel extends MobxLitElement {
               </div>
               ${alert.status === AlertStatus.NEW
                 ? html`
-                    <pr-tooltip text="Mark as read">
+                    <pr-tooltip text="Mark as read" position="TOP_END">
                       <pr-icon-button
                         icon="check_circle"
                         variant="default"
