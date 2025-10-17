@@ -579,9 +579,9 @@ export class StageBuilderDialog extends MobxLitElement {
 
   private renderConsensusDebateCard() {
     const loadTemplate = () => {
-      const inputElement = this.shadowRoot?.querySelector(
+      const inputElement = this.shadowRoot?.querySelector<HTMLInputElement>(
         '#consensus-topics-input',
-      ) as any;
+      );
       const topicsCsv = inputElement?.value || 'Climate Change';
 
       this.addTemplate(getConsensusTopicTemplate(topicsCsv));
@@ -633,7 +633,8 @@ export class StageBuilderDialog extends MobxLitElement {
   }
 
   @state()
-  private charityDebateConfig: CharityDebateConfig = createCharityDebateConfig();
+  private charityDebateConfig: CharityDebateConfig =
+    createCharityDebateConfig();
 
   private renderCharityDebateTemplateCard() {
     const loadTemplate = () => {
@@ -699,11 +700,14 @@ export class StageBuilderDialog extends MobxLitElement {
           <label class="custom-checkbox">
             <input
               type="checkbox"
-              .checked=${this.charityDebateConfig.includeInitialParticipantSurvey}
+              .checked=${this.charityDebateConfig
+                .includeInitialParticipantSurvey}
               @change=${(e: Event) => {
                 this.charityDebateConfig = {
                   ...this.charityDebateConfig,
-                  includeInitialParticipantSurvey: (e.target as HTMLInputElement).checked,
+                  includeInitialParticipantSurvey: (
+                    e.target as HTMLInputElement
+                  ).checked,
                 };
               }}
             />
@@ -718,7 +722,8 @@ export class StageBuilderDialog extends MobxLitElement {
               @change=${(e: Event) => {
                 this.charityDebateConfig = {
                   ...this.charityDebateConfig,
-                  includeDiscussionEvaluation: (e.target as HTMLInputElement).checked,
+                  includeDiscussionEvaluation: (e.target as HTMLInputElement)
+                    .checked,
                 };
               }}
             />
@@ -735,7 +740,8 @@ export class StageBuilderDialog extends MobxLitElement {
               @change=${(e: Event) => {
                 this.charityDebateConfig = {
                   ...this.charityDebateConfig,
-                  includeDebriefingAndFeedback: (e.target as HTMLInputElement).checked,
+                  includeDebriefingAndFeedback: (e.target as HTMLInputElement)
+                    .checked,
                 };
               }}
             />
@@ -757,7 +763,9 @@ export class StageBuilderDialog extends MobxLitElement {
               }}
             />
             <span class="checkmark"></span>
-            <span class="label-text">[Optional] Include Meta-Feedback Survey</span>
+            <span class="label-text"
+              >[Optional] Include Meta-Feedback Survey</span
+            >
           </label>
         </div>
 
@@ -765,7 +773,6 @@ export class StageBuilderDialog extends MobxLitElement {
       </div>
     `;
   }
-
 
   private renderAssetAllocationTemplateCard() {
     const addGame = () => {

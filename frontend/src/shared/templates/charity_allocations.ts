@@ -55,14 +55,11 @@ export const CHARITY_DEBATE_METADATA = createMetadataConfig({
 
 const CHARITY_BUNDLES = [
   [
-    'IFAW (Animal Welfare)', 
-    'Wildaid (Animal Welfare)', 
-    'Clean Oceans'
+    'IFAW (Animal Welfare)',
+    'Sudan Humanitarian Aid',
+    'Clean Oceans Initiative',
   ],
-  [
-    'Sudan Aid', 
-    'Eye Care in India', 
-    'Wheelchairs for Children'],
+  ['Wildaid (Animal Welfare)', 'Eye Care in India', 'Wheelchairs for Children'],
   [
     'Rainforest Action',
     'Aid for Children in remote villages',
@@ -78,10 +75,10 @@ const LIKERT_SCALE_PROPS = {
 };
 
 const TEXT_TOS = [
-  'Thank you for your interest in this research. If you choose to participate, you will be asked to participate in debates about resource allocation and/or potentially sensitive topics.',
+  'Thank you for your interest in this research. If you choose to participate, you will be asked to participate in debates about resource allocation, which have real-world consequences in the form of disbursing real funds to real charities, based on your / your teams actions.',
   '',
   '**Compensation & Impact**',
-  'You will be paid a base amount for completing the survey. This base payment is guaranteed and is independent of your decisions regarding the charity allocations. The resources you are allocating are for real-world charities. At the end of the entire study, the total donation sum ($XXXX) will be divided among all of the participating groups. The size of the donation budget your group gets to allocate is determined by your group\'s ability to find common ground.',
+  "You will be paid a base amount for completing the survey. This base payment is guaranteed and is independent of your decisions regarding the charity allocations. The resources you are allocating are for real-world charities. At the end of the entire study, the total donation sum (at least $2000 USD) will be divided among all of the participating groups. The size of the donation budget your group gets to allocate is determined by your group's ability to find common ground.",
   '',
   "**The more consensus your group reaches across all rounds, the more 'spending power' it will have over the final, real donation pool.** For example, a group that consistently reaches high agreement will be responsible for allocating a larger portion of the total money than a group that consistently disagrees. Your primary goal is to work together to maximize your group's impact.",
   '',
@@ -102,7 +99,7 @@ const TEXT_VIEW_PROFILE = [
 ].join('\n');
 
 const TEXT_MEDIATED_INFO = [
-  'In some rounds, your discussion may be joined by an AI Mediator. The style of the AI mediator may be different in each round.',
+  'In the last two rounds, your discussion will be joined by an AI Mediator. The style of the AI mediator will be different in each round.',
 ].join('\n');
 
 const TEXT_INSTRUCTIONS = [
@@ -119,13 +116,13 @@ const TEXT_DEBRIEFING = [
   'Thank you for your participation in this study. This marks the end of the experiment.',
   '',
   '**Purpose of the Research**',
-  'The goal of this research is to understand how different communication environments affect group decision-making and consensus-building. We are particularly interested in how the presence of an AI mediator can influence discussion dynamics and outcomes.',
+  'The goal of this research is to understand how different mediation strategies affect group decision-making and consensus-building. The results / research may be included in research papers.',
   '',
   '**Use of Your Allocations**',
-  "As stated in the initial terms of service, your decisions have real-world consequences. The actions you take and the outcomes your group reaches will have a tangible impact on donations to the charities named within the study.",
+  'As stated in the initial terms of service, your decisions have real-world consequences. The actions you take and the outcomes your group reaches will have a tangible impact on donations to the charities named within the study.',
   "The consensus scores your group achieved across the three rounds will be used to determine your group's share of a total donation pool, which will be distributed to the named charities according to your group's final allocations. Your thoughtful participation has contributed directly to these charitable causes.",
   '',
-  '**Compensation Reminder:** Your base participation payment is guaranteed and is separate from any donation outcomes.',
+  '**Compensation Reminder:** Your base pay rate is guaranteed and is separate from any donation outcomes.',
   'If you have any questions, please do not hesitate to contact the research team.',
 ].join('\n');
 
@@ -235,10 +232,26 @@ function createComprehensionStageNew(): StageConfig {
           questionTitle:
             'Based on the instructions, how does a group make the biggest impact with its donations?',
           options: [
-            { id: 'a', text: "By making sure every member's vote is unique and different.", imageId: '', },
-            { id: 'b', text: 'By having the AI Mediator make the final decision.', imageId: '', },
-            { id: 'c', text: 'By reaching high agreement (consensus) on how the funds should be allocated.', imageId: '', },
-            { id: 'd', text: 'By voting as quickly as possible, regardless of what others do.', imageId: '', },
+            {
+              id: 'a',
+              text: "By making sure every member's vote is unique and different.",
+              imageId: '',
+            },
+            {
+              id: 'b',
+              text: 'By having the AI Mediator make the final decision.',
+              imageId: '',
+            },
+            {
+              id: 'c',
+              text: 'By reaching high agreement (consensus) on how the funds should be allocated.',
+              imageId: '',
+            },
+            {
+              id: 'd',
+              text: 'By voting as quickly as possible, regardless of what others do.',
+              imageId: '',
+            },
           ],
         },
         'c',
@@ -248,10 +261,26 @@ function createComprehensionStageNew(): StageConfig {
           questionTitle:
             "Consider two groups. In **Group A**, members' votes are very close to each other. In **Group B**, members' votes are very far apart. Which group earns more 'spending power'?",
           options: [
-            { id: 'a', text: 'Group B, because their votes are stronger and more decisive.', imageId: '', },
-            { id: 'b', text: 'Group A, because its members reached a closer agreement.', imageId: '', },
-            { id: 'c', text: 'Both groups have the same spending power.', imageId: '', },
-            { id: 'd', text: "It's impossible to know without seeing the charities.", imageId: '', },
+            {
+              id: 'a',
+              text: 'Group B, because their votes are stronger and more decisive.',
+              imageId: '',
+            },
+            {
+              id: 'b',
+              text: 'Group A, because its members reached a closer agreement.',
+              imageId: '',
+            },
+            {
+              id: 'c',
+              text: 'Both groups have the same spending power.',
+              imageId: '',
+            },
+            {
+              id: 'd',
+              text: "It's impossible to know without seeing the charities.",
+              imageId: '',
+            },
           ],
         },
         'b',
@@ -261,10 +290,26 @@ function createComprehensionStageNew(): StageConfig {
           questionTitle:
             'Imagine the total donation pool is split between two groups. Group A achieves a 95% consensus score, while Group B only achieves a 10% score. Which is a likely outcome?',
           options: [
-            { id: 'a', text: 'Both groups get to allocate the same amount of money.', imageId: '', },
-            { id: 'b', text: 'The money is split proportionally, so Group A gets a much larger donation budget (e.g., $15) and Group B gets a much smaller one (e.g., $5).', imageId: '', },
-            { id: 'c', text: 'Group B gets more money because their discussion was more diverse.', imageId: '', },
-            { id: 'd', text: 'Only Group A gets to allocate money.', imageId: '', },
+            {
+              id: 'a',
+              text: 'Both groups get to allocate the same amount of money.',
+              imageId: '',
+            },
+            {
+              id: 'b',
+              text: 'The money is split proportionally, so Group A gets a much larger donation budget (e.g., $15) and Group B gets a much smaller one (e.g., $5).',
+              imageId: '',
+            },
+            {
+              id: 'c',
+              text: 'Group B gets more money because their discussion was more diverse.',
+              imageId: '',
+            },
+            {
+              id: 'd',
+              text: 'Only Group A gets to allocate money.',
+              imageId: '',
+            },
           ],
         },
         'b',
@@ -274,10 +319,10 @@ function createComprehensionStageNew(): StageConfig {
           questionTitle:
             'Consider three groups: **Group X** (votes are 90/10/0, 85/15/0, 95/5/0), **Group Y** (votes are 50/50/0, 60/40/0, 40/60/0), and **Group Z** (votes are 100/0/0, 0/100/0, 0/0/100). Please rank them from MOST spending power to LEAST.',
           options: [
-            { id: 'a', text: 'X, then Y, then Z', imageId: '', },
-            { id: 'b', text: 'Z, then Y, then X', imageId: '', },
-            { id: 'c', text: 'Y, then X, then Z', imageId: '', },
-            { id: 'd', text: 'They all get the same amount', imageId: '', },
+            {id: 'a', text: 'X, then Y, then Z', imageId: ''},
+            {id: 'b', text: 'Z, then Y, then X', imageId: ''},
+            {id: 'c', text: 'Y, then X, then Z', imageId: ''},
+            {id: 'd', text: 'They all get the same amount', imageId: ''},
           ],
         },
         'a',
@@ -322,8 +367,8 @@ function createRoundOutcomeSurveyStage(
       questionTitle:
         "Did you have any significant disagreements with other participants during this round's discussion?",
       options: [
-        { id: 'yes', text: 'Yes', imageId: '', },
-        { id: 'no', text: 'No', imageId: '', },
+        {id: 'yes', text: 'Yes', imageId: ''},
+        {id: 'no', text: 'No', imageId: ''},
       ],
     }),
     createScaleSurveyQuestion({
@@ -333,7 +378,7 @@ function createRoundOutcomeSurveyStage(
       lowerText: 'Mild',
       upperText: 'Intense',
       condition: createComparisonCondition(
-        { stageId, questionId: disagreementQuestionId },
+        {stageId, questionId: disagreementQuestionId},
         ComparisonOperator.EQUALS,
         'yes',
       ),
@@ -347,7 +392,7 @@ function createRoundOutcomeSurveyStage(
           'The AI mediator was helpful in resolving these disagreements.',
         ...LIKERT_SCALE_PROPS,
         condition: createComparisonCondition(
-          { stageId, questionId: disagreementQuestionId },
+          {stageId, questionId: disagreementQuestionId},
           ComparisonOperator.EQUALS,
           'yes',
         ),
@@ -391,11 +436,13 @@ function createAllocationStage(
 function createTermsOfServiceStage(): StageConfig {
   return createSurveyStage({
     name: 'Terms of Service',
-    descriptions: createStageTextConfig({ primaryText: TEXT_TOS }),
+    descriptions: createStageTextConfig({primaryText: TEXT_TOS}),
     questions: [
       createMultipleChoiceSurveyQuestion({
         questionTitle: 'Consent',
-        options: [{ id: 'accept', text: 'I accept the Terms of Service', imageId: '', }],
+        options: [
+          {id: 'accept', text: 'I accept the Terms of Service', imageId: ''},
+        ],
       }),
     ],
   });
@@ -489,7 +536,8 @@ function createInitialMediatorSurveyStage(): StageConfig {
         ...LIKERT_SCALE_PROPS,
       }),
       createScaleSurveyQuestion({
-        questionTitle: 'A neutral AI mediator could make discussions more fair.',
+        questionTitle:
+          'A neutral AI mediator could make discussions more fair.',
         ...LIKERT_SCALE_PROPS,
       }),
       createScaleSurveyQuestion({
@@ -524,7 +572,7 @@ function createAllocationDiscussionStage(
   return createChatStage({
     id: stageId,
     name: stageName,
-    descriptions: createStageTextConfig({ primaryText: discussionText }),
+    descriptions: createStageTextConfig({primaryText: discussionText}),
   });
 }
 
@@ -592,8 +640,8 @@ function createDiscussionEvaluationStage(): StageConfig {
 
 function createFinalMediatorPreferenceStage(): StageConfig {
   const preferenceOptions = [
-    { id: 'mediator-round-2', text: 'Mediator from Round 2', imageId: '', },
-    { id: 'mediator-round-3', text: 'Mediator from Round 3', imageId: '', },
+    {id: 'mediator-round-2', text: 'Mediator from Round 2', imageId: ''},
+    {id: 'mediator-round-3', text: 'Mediator from Round 3', imageId: ''},
   ];
 
   return createSurveyStage({
@@ -606,7 +654,10 @@ function createFinalMediatorPreferenceStage(): StageConfig {
       createMultipleChoiceSurveyQuestion({
         questionTitle:
           'If you were to engage in another debate, which mediator style would you prefer?',
-        options: [{ id: 'none', text: 'None', imageId: '', }, ...preferenceOptions],
+        options: [
+          {id: 'none', text: 'None', imageId: ''},
+          ...preferenceOptions,
+        ],
       }),
       createTextSurveyQuestion({
         questionTitle:
@@ -662,6 +713,10 @@ function createExperimentFeedbackStage(): StageConfig {
       createTextSurveyQuestion({
         questionTitle:
           'Do you have any other feedback or concerns about your experience in this study? (If not applicable, please write NA)',
+      }),
+      createTextSurveyQuestion({
+        questionTitle:
+          'Did you experience any harmful / offensive behavior, from participants or the mediator? (If not applicable, please write NA). \nYou may also reach out directly to the proctors, (aarontp@google.com) / (cjqian@google.com)',
       }),
     ],
   });
