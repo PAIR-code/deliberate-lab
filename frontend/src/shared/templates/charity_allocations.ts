@@ -93,13 +93,13 @@ const CONSENSUS_TOS_STAGE = createTOSStage({
 
 const TEXT_MEDIATED_INFO = [
   'In the last two rounds, your discussion will be joined by an AI Mediator. The style of the AI mediator will be different in each round.',
-]
+];
 
 const TEXT_INSTRUCTIONS = [
   'Welcome! In this experiment, you will participate in three rounds of discussion and resource allocation for real-world charities. Your goal is to work with others to find the best allocation.',
   "**Your group's impact is tied to consensus.** At the end of the entire study, the total donation sum will be divided among all participating groups. The more consensus your group reaches, the more 'spending power' you will have. For example, a group that consistently reaches high agreement will allocate a much larger portion of the final donation pool than a group that consistently disagrees. Your main objective is to find common ground with your fellow participants to maximize your group's impact.",
   '**Compensation Reminder:** Your base participation payment is guaranteed and is separate from any donation outcomes.',
-]
+];
 
 const TEXT_ALLOCATION_INFO_HINT = `Ensure your chosen percentages add up to 100%. (Hint: We recommend getting the percentages close and then adjusting one slider to make the total exactly 100%).`;
 
@@ -326,14 +326,14 @@ function createRoundOutcomeSurveyStage(
   const disagreementQuestionId = `had-disagreements-${roundNum}`;
 
   const questions = [
-      createScaleSurveyQuestion({
-        questionTitle: 'I felt strongly about my initial allocation.',
-        ...LIKERT_SCALE_PROPS,
-      }),
-      createScaleSurveyQuestion({
-        questionTitle: 'I feel strongly about my final allocation.',
-        ...LIKERT_SCALE_PROPS,
-      }),
+    createScaleSurveyQuestion({
+      questionTitle: 'I felt strongly about my initial allocation.',
+      ...LIKERT_SCALE_PROPS,
+    }),
+    createScaleSurveyQuestion({
+      questionTitle: 'I feel strongly about my final allocation.',
+      ...LIKERT_SCALE_PROPS,
+    }),
     createTextSurveyQuestion({
       questionTitle:
         'Did you change your allocation after the discussion? If so, what was the most important factor that influenced your decision? (If not, please write NA)',
