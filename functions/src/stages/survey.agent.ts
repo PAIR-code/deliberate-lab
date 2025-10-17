@@ -92,7 +92,7 @@ async function getAgentParticipantSurveyQuestionResponse(
   const rawResponse = await getAgentResponse(
     apiKeyConfig,
     prompt,
-    participant.agentConfig.modelSettings,
+    participant.agentConfig?.modelSettings,
     generationConfig,
   );
   const response = rawResponse.text ?? '';

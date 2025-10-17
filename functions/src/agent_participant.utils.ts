@@ -67,6 +67,13 @@ export async function completeStageAsAgentParticipant(
     participant.currentStageId,
   );
 
+  if (!stage) {
+    console.error(
+      `Could not find stage ${participant.currentStageId} for experiment ${experimentId}`,
+    );
+    return;
+  }
+
   // Fetch experiment creator's API key.
   const creatorId = experiment.metadata.creator;
   const experimenterData = await getExperimenterData(creatorId);

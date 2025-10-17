@@ -72,8 +72,8 @@ function makeStructuredOutputSchema(schema: StructuredOutputSchema): object {
     properties = {};
     orderedPropertyNames = [];
     schema.properties.forEach((property) => {
-      properties[property.name] = makeStructuredOutputSchema(property.schema);
-      orderedPropertyNames.push(property.name);
+      properties![property.name] = makeStructuredOutputSchema(property.schema);
+      orderedPropertyNames!.push(property.name);
     });
   }
 

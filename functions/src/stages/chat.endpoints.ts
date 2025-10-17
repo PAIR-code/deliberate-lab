@@ -56,6 +56,13 @@ export const createChatMessage = onCall(async (request) => {
 
   const stage = await getFirestoreStage(data.experimentId, data.stageId);
 
+  if (!stage) {
+    throw new HttpsError(
+      'not-found',
+      `Stage ${data.stageId} not found in experiment ${data.experimentId}`,
+    );
+  }
+
   // Run document write as transaction to ensure consistency
   await app.firestore().runTransaction(async (transaction) => {
     // Add chat message
@@ -128,5 +135,5 @@ function handleUpdateChatStageParticipantAnswerValidationErrors(data: any) {
     }
   }
 
-  throw new functions.https.HttpsError('invalid-argument', 'Invalid data');
+  throw new HttpsError('invalid-argument', 'Invalid data');
 }

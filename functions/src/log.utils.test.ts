@@ -8,6 +8,7 @@
 import {
   initializeTestEnvironment,
   assertSucceeds,
+  RulesTestEnvironment,
 } from '@firebase/rules-unit-testing';
 import nock from 'nock';
 import {
@@ -17,7 +18,6 @@ import {
   StructuredOutputConfig,
   StructuredOutputType,
   createModelLogEntry,
-  UnifiedTimestamp,
 } from '@deliberation-lab/utils';
 import {writeModelLogEntry} from './log.utils';
 import {getGeminiAPIResponse} from './api/gemini.api';
@@ -46,7 +46,7 @@ jest.mock('./app', () => ({
 }));
 
 describe('log.utils', () => {
-  let testEnv: rulesTestEnvironment;
+  let testEnv: RulesTestEnvironment;
 
   beforeAll(async () => {
     testEnv = await initializeTestEnvironment({

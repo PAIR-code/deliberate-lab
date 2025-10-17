@@ -204,6 +204,12 @@ export const deleteExperiment = onCall(async (request) => {
       .doc(data.experimentId)
       .get()
   ).data();
+  if (!experiment) {
+    throw new functions.https.HttpsError(
+      'not-found',
+      `Experiment ${data.experimentId} not found in collection ${data.collectionName}`,
+    );
+  }
   if (request.auth?.token.email !== experiment.metadata.creator)
     return {success: false};
 
@@ -232,6 +238,13 @@ export const getExperimentTemplate = onCall(async (request) => {
       .doc(data.experimentId)
       .get()
   ).data();
+
+  if (!experiment) {
+    throw new functions.https.HttpsError(
+      'not-found',
+      `Experiment ${data.experimentId} not found in collection ${data.collectionName}`,
+    );
+  }
 
   const template = createExperimentTemplate({
     id: '',

@@ -353,9 +353,22 @@ export async function getStageDisplayForPrompt(
           experimentId,
           participantId,
         );
-        roleInfo.push(
-          `${participant.publicId}: ${getRoleDisplay(rolePublicData.participantMap[participant.publicId] ?? '').join('\n\n')}`,
-        );
+        if (participant && rolePublicData) {
+          roleInfo.push(
+            `${participant.publicId}: ${getRoleDisplay(rolePublicData.participantMap[participant.publicId] ?? '').join('\n\n')}`,
+          );
+        } else {
+          if (!participant) {
+            console.error(
+              `Could not create roleInfo for participant ${participantId} in stage ${stage.id}: Participant not found.`,
+            );
+          }
+          if (!rolePublicData) {
+            console.error(
+              `Could not create roleInfo for participant ${participantId} in stage ${stage.id}: rolePublicData is missing.`,
+            );
+          }
+        }
       }
       return roleInfo.join('\n');
     case StageKind.STOCKINFO:
