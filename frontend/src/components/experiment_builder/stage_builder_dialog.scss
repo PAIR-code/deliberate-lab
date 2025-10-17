@@ -99,6 +99,11 @@
   }
 }
 
+.template-controls {
+  @include common.flex-column;
+  gap: common.$spacing-small;
+}
+
 .gallery-section {
   @include common.flex-column;
   gap: common.$spacing-medium;
