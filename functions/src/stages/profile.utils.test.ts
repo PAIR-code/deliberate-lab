@@ -20,37 +20,40 @@ describe('stages/profile.utils', () => {
   describe('completeProfile', () => {
     const experimentId = 'test-experiment';
 
-    const defaultParticipant: ParticipantProfileExtended = createParticipantProfileExtended({
-      publicId: 'participant-1',
-      privateId: 'private-1',
-      currentStageId: 'profile-stage',
-      currentCohortId: 'cohort-1',
-      agentConfig: {
-        agentId: 'agent-1',
-        name: 'Test Agent',
-        promptContext: 'You are a helpful assistant.',
-        modelSettings: {
-          apiType: ApiKeyType.GEMINI_API_KEY,
-          modelName: 'gemini-pro',
-        } as AgentModelSettings,
-      } as ProfileAgentConfig,
-      name: 'Initial Name',
-      avatar: '🤔',
-      pronouns: 'she/her',
-    });
+    const defaultParticipant: ParticipantProfileExtended =
+      createParticipantProfileExtended({
+        publicId: 'participant-1',
+        privateId: 'private-1',
+        currentStageId: 'profile-stage',
+        currentCohortId: 'cohort-1',
+        agentConfig: {
+          agentId: 'agent-1',
+          name: 'Test Agent',
+          promptContext: 'You are a helpful assistant.',
+          modelSettings: {
+            apiType: ApiKeyType.GEMINI_API_KEY,
+            modelName: 'gemini-pro',
+          } as AgentModelSettings,
+        } as ProfileAgentConfig,
+        name: 'Initial Name',
+        avatar: '🤔',
+        pronouns: 'she/her',
+      });
 
     const defaultStageConfig: ProfileStageConfig = createProfileStage();
 
-    
     const defaultExperimenterData = (() => {
-      const experimenterData = createExperimenterData('experimenter-id', 'experimenter@example.com');
+      const experimenterData = createExperimenterData(
+        'experimenter-id',
+        'experimenter@example.com',
+      );
       return {
-            ...experimenterData,
-          apiKeys: {
-              ...experimenterData.apiKeys,
-            geminiApiKey: 'test-api-key',
-          },
-      }
+        ...experimenterData,
+        apiKeys: {
+          ...experimenterData.apiKeys,
+          geminiApiKey: 'test-api-key',
+        },
+      };
     })();
 
     afterEach(() => {

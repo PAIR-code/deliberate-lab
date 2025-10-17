@@ -1,7 +1,4 @@
-import {
-  RoleStagePublicData,
-  StageKind,
-} from '@deliberation-lab/utils';
+import {RoleStagePublicData, StageKind} from '@deliberation-lab/utils';
 
 import {
   getFirestoreActiveParticipants,

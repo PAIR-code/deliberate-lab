@@ -62,7 +62,7 @@ export async function createCohortInternal(
   transaction.set(document, cohortConfig);
 
   // Add relevant mediators to cohort
-  const mediators : MediatorProfileExtended[] = await createMediatorsForCohort(
+  const mediators: MediatorProfileExtended[] = await createMediatorsForCohort(
     experimentId,
     cohortConfig.id,
   );

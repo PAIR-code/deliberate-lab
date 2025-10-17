@@ -26,7 +26,7 @@ describe('OpenAI-compatible API', () => {
   beforeEach(() => {
     nock('https://test.uri')
       .post('/v1/chat/completions')
-      .reply(200, (uri, requestBody: any) => {
+      .reply(200, (uri, requestBody) => {
         return {
           id: 'test-id',
           object: 'text_completion',

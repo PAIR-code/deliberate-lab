@@ -413,11 +413,11 @@ export const requestChipAssistance = onCall(async (request) => {
 
   // If in coach assistance mode, record the proposed offer and model feedback
   if (data.assistanceMode === ChipAssistanceMode.COACH) {
-    const participantAnswer = await getFirestoreParticipantAnswer(
+    const participantAnswer = (await getFirestoreParticipantAnswer(
       data.experimentId,
       data.participantId,
       data.stageId,
-    ) as ChipStageParticipantAnswer;
+    )) as ChipStageParticipantAnswer;
     if (participantAnswer?.currentAssistance) {
       const currentAssistance = participantAnswer.currentAssistance;
       currentAssistance.proposedOffer = createChipOffer({

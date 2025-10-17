@@ -125,6 +125,7 @@ export async function callOpenAIChatCompletion(
   let responseFormat;
   try {
     responseFormat = makeStructuredOutputParameters(structuredOutputConfig);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (error: any) {
     return {
       status: ModelResponseStatus.INTERNAL_ERROR,

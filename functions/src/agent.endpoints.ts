@@ -2,12 +2,8 @@ import {
   ModelResponseStatus,
   createModelGenerationConfig,
 } from '@deliberation-lab/utils';
-import {
-  getAgentResponse,
-} from './agent.utils';
-import {
-  getExperimenterData,
-} from './utils/firestore';
+import {getAgentResponse} from './agent.utils';
+import {getExperimenterData} from './utils/firestore';
 
 import {onCall} from 'firebase-functions/v2/https';
 

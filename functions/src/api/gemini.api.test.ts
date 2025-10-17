@@ -16,7 +16,7 @@ describe('Gemini API', () => {
   beforeEach(() => {
     nock('https://generativelanguage.googleapis.com')
       .post(`/v1beta/models/${MODEL_NAME}:generateContent`)
-      .reply(200, (uri, requestBody: any) => {
+      .reply(200, (uri, requestBody) => {
         return {
           candidates: [
             {
