@@ -3,10 +3,9 @@ import {
   Experiment,
   ParticipantProfileExtended,
   ParticipantStatus,
-  RankingStageConfig,
   StageKind,
-  SurveyStageConfig,
 } from '@deliberation-lab/utils';
+import {app} from './app';
 import {
   updateCohortStageUnlocked,
   updateParticipantNextStage,
@@ -19,7 +18,6 @@ import {
   getExperimenterData,
   getFirestoreParticipantRef,
   getFirestoreStage,
-  getFirestore,
 } from './utils/firestore';
 
 import {Transaction} from 'firebase-admin/firestore';
@@ -79,7 +77,8 @@ export async function completeStageAsAgentParticipant(
   const experimenterData = await getExperimenterData(creatorId);
 
   // ParticipantAnswer doc
-  const answerDoc = getFirestore()
+  const answerDoc = app
+    .firestore()
     .collection('experiments')
     .doc(experimentId)
     .collection('participants')
@@ -154,7 +153,7 @@ export async function startAgentParticipant(
   experimentId: string,
   participant: ParticipantProfileExtended,
 ) {
-  await getFirestore().runTransaction(async (transaction: Transaction) => {
+  await app.firestore().runTransaction(async (transaction: Transaction) => {
     // If participant is NOT agent, do nothing
     if (!participant?.agentConfig) {
       return;
