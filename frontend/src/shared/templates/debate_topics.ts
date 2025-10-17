@@ -61,14 +61,12 @@ const PRE_DISCUSSION_PERSONAL_SURVEY = createSurveyStage({
   progress: createStageProgressConfig({showParticipantProgress: true}),
   questions: [
     createScaleSurveyQuestion({
-      id: '86f79ae3-d65a-4d07-8460-8ace37df2176',
       questionTitle: 'I enjoy discussing controversial topics',
       lowerValue: 0,
       upperValue: 10,
       stepSize: 1,
     }),
     createScaleSurveyQuestion({
-      id: '78658ccf-6415-4a49-9d36-25ddd555ec19',
       questionTitle:
         'People feel comfortable having hard conversations with me',
       lowerValue: 0,
@@ -76,40 +74,39 @@ const PRE_DISCUSSION_PERSONAL_SURVEY = createSurveyStage({
       stepSize: 1,
     }),
     createScaleSurveyQuestion({
-      id: 'a3f43de6-6a63-4d51-956b-dfbcbd44cc3a',
       questionTitle: 'People feel comfortable disagreeing with me',
       lowerValue: 0,
       upperValue: 10,
       stepSize: 1,
     }),
     createScaleSurveyQuestion({
-      id: '7b8653d4-a6d9-4f33-85c7-f7ed1211ef2d',
+      id: 'comfort-disagreeing',
       questionTitle: 'I feel comfortable disagreeing with other people',
       lowerValue: 0,
       upperValue: 10,
       stepSize: 1,
     }),
     createMultipleChoiceSurveyQuestion({
-      id: '13c696f1-7334-43b9-aabc-8d0f760aa938',
+      id: 'debate-style',
       questionTitle: 'My debate style is [TODO: tie to some existing taxonomy]',
       options: [
         {
-          id: '79ad69d7-f877-4123-a689-a2118078b0c6',
+          id: 'socratic',
           text: 'Socratic',
           imageId: '',
         },
         {
-          id: '6e344f69-c935-445a-993b-1bb212d7d406',
+          id: 'argumentative',
           text: 'Argumentative',
           imageId: '',
         },
         {
-          id: 'c780a539-878a-4459-a52e-3272da98e565',
+          id: 'passive',
           text: 'Listening [passive]',
           imageId: '',
         },
         {
-          id: '2a7a9e81-18e5-4c26-92ea-5de02e812543',
+          id: 'other',
           text: 'Other',
           imageId: '',
         },
