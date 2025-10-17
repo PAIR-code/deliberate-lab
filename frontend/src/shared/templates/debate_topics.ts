@@ -61,14 +61,12 @@ const PRE_DISCUSSION_PERSONAL_SURVEY = createSurveyStage({
   progress: createStageProgressConfig({showParticipantProgress: true}),
   questions: [
     createScaleSurveyQuestion({
-      id: '86f79ae3-d65a-4d07-8460-8ace37df2176',
       questionTitle: 'I enjoy discussing controversial topics',
       lowerValue: 0,
       upperValue: 10,
       stepSize: 1,
     }),
     createScaleSurveyQuestion({
-      id: '78658ccf-6415-4a49-9d36-25ddd555ec19',
       questionTitle:
         'People feel comfortable having hard conversations with me',
       lowerValue: 0,
@@ -76,14 +74,12 @@ const PRE_DISCUSSION_PERSONAL_SURVEY = createSurveyStage({
       stepSize: 1,
     }),
     createScaleSurveyQuestion({
-      id: 'a3f43de6-6a63-4d51-956b-dfbcbd44cc3a',
       questionTitle: 'People feel comfortable disagreeing with me',
       lowerValue: 0,
       upperValue: 10,
       stepSize: 1,
     }),
     createScaleSurveyQuestion({
-      id: '7b8653d4-a6d9-4f33-85c7-f7ed1211ef2d',
       questionTitle: 'I feel comfortable disagreeing with other people',
       lowerValue: 0,
       upperValue: 10,
