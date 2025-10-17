@@ -128,13 +128,3 @@ Then, view the app at http://localhost:4201.
 * If you don't, you can [register one here](https://analytics.google.com/analytics/web/#/a334209184p464501091/admin/account/create?utm_source=gahc&utm_medium=dlinks) ([see instructions](https://support.google.com/analytics/answer/9304153#stream)). At the end of the registration process ("Data Collection"), you will be asked to specify a platform. Select "Web" and (since this is a local project) input **localhost.local** as the URL.
 
 * After obtaining the Analytics ID (the ID starting with "*G-*") follow the instructions above. Keep in mind that when including it in JavaScript code, it needs to be a string (e.g. `gtag('config', 'G-xxxxx')`), while in URLs it must remain without quotes (e.g. `gaScript.src=https://www.googletagmanager.com/gtag/js?id=G-xxxxxxxx`)
-
-## Formatting
-We now have a pre-commit hook that automatically runs Prettier (see configuration at `./.prettierrc.json`) and ESLint (see configuration at `./eslint.config.mjs`). This is set up with `lint-staged` under the root directory's `./package.json`.
-
-You can also run Prettier and/or ESLint from the command line, e.g.:
-
-```bash
-npx prettier --write --list-different "**/*.ts" # runs on all TypeScript files
-npx eslint "**/*.ts" # runs on all TypeScript files
-```
