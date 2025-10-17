@@ -1,5 +1,6 @@
 import {
   APIKeyConfig,
+  ParticipantProfile,
   ParticipantProfileExtended,
   ParticipantStatus,
   RankingStageConfig,

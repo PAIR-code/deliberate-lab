@@ -12,7 +12,7 @@ import {app} from './app';
 export async function createMediatorsForCohort(
   experimentId: string,
   cohortId: string,
-): Promise<MediatorProfile[]> {
+): Promise<MediatorProfileExtended[]> {
   const personas = await getAgentMediatorPersonas(experimentId);
   const mediators: MediatorProfile[] = [];
   for (const persona of personas) {

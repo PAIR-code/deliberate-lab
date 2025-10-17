@@ -1,8 +1,10 @@
 import {
   ParticipantProfileExtended,
+  RankingStageConfig,
   RankingStageParticipantAnswer,
   RankingStagePublicData,
   StageKind,
+  SurveyStagePublicData,
   filterRankingsByCandidates,
   getCondorcetElectionWinner,
   getRankingCandidatesFromWTL,

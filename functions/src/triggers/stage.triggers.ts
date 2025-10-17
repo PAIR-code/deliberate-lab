@@ -2,7 +2,10 @@ import {
   onDocumentUpdated,
   onDocumentWritten,
 } from 'firebase-functions/v2/firestore';
-import {StageKind} from '@deliberation-lab/utils';
+import {
+  StageKind,
+  StageParticipantAnswer,
+} from '@deliberation-lab/utils';
 import {
   getFirestoreParticipant,
   getFirestoreStage,
