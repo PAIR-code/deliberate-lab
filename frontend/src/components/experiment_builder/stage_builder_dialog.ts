@@ -579,9 +579,9 @@ export class StageBuilderDialog extends MobxLitElement {
 
   private renderConsensusDebateCard() {
     const loadTemplate = () => {
-      const inputElement = this.shadowRoot?.querySelector<HTMLInputElement>(
-        '#consensus-topics-input',
-      );
+      const inputElement = this.shadowRoot?.getElementById(
+        'consensus-topics-input',
+      ) as HTMLInputElement;
       const topicsCsv = inputElement?.value || 'Climate Change';
 
       this.addTemplate(getConsensusTopicTemplate(topicsCsv));
@@ -661,23 +661,6 @@ export class StageBuilderDialog extends MobxLitElement {
             />
             <span class="checkmark"></span>
             <span class="label-text">Include Terms of Service</span>
-          </label>
-
-          <label class="custom-checkbox">
-            <input
-              type="checkbox"
-              .checked=${this.charityDebateConfig.includeViewProfile}
-              @change=${(e: Event) => {
-                this.charityDebateConfig = {
-                  ...this.charityDebateConfig,
-                  includeViewProfile: (e.target as HTMLInputElement).checked,
-                };
-              }}
-            />
-            <span class="checkmark"></span>
-            <span class="label-text"
-              >[Optional] Include View Assigned Profile Stage</span
-            >
           </label>
 
           <label class="custom-checkbox">

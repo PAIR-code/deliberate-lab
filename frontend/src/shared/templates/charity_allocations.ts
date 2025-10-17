@@ -1,5 +1,6 @@
 import {
   createChatStage,
+  createTOSStage,
   createExperimentConfig,
   createExperimentTemplate,
   createMetadataConfig,
@@ -23,7 +24,6 @@ import {
 
 export interface CharityDebateConfig {
   includeTos: boolean;
-  includeViewProfile: boolean;
   includeMediator: boolean;
   includeInitialParticipantSurvey: boolean;
   includeDiscussionEvaluation: boolean;
@@ -36,7 +36,6 @@ export function createCharityDebateConfig(
 ): CharityDebateConfig {
   return {
     includeTos: true,
-    includeViewProfile: false,
     includeMediator: true,
     includeInitialParticipantSurvey: true,
     includeDiscussionEvaluation: false,
@@ -74,66 +73,54 @@ const LIKERT_SCALE_PROPS = {
   upperText: 'Strongly Agree',
 };
 
-const TEXT_TOS = [
-  'Thank you for your interest in this research. If you choose to participate, you will be asked to participate in debates about resource allocation, which have real-world consequences in the form of disbursing real funds to real charities, based on your / your teams actions.',
-  '',
-  '**Compensation & Impact**',
-  "You will be paid a base amount for completing the survey. This base payment is guaranteed and is independent of your decisions regarding the charity allocations. The resources you are allocating are for real-world charities. At the end of the entire study, the total donation sum (at least $2000 USD) will be divided among all of the participating groups. The size of the donation budget your group gets to allocate is determined by your group's ability to find common ground.",
-  '',
-  "**The more consensus your group reaches across all rounds, the more 'spending power' it will have over the final, real donation pool.** For example, a group that consistently reaches high agreement will be responsible for allocating a larger portion of the total money than a group that consistently disagrees. Your primary goal is to work together to maximize your group's impact.",
-  '',
-  '**IRB & Confidentiality**',
-  'The results of this study will be used solely for research purposes. Our team will keep all your information from this study strictly confidential, as required by law. The IRB at XXXXXX is responsible for protecting the rights and welfare of research volunteers like you.',
-  '**Voluntary Participation**',
-  'Your participation is voluntary, which means you can choose whether or not to participate. You may choose not to participate by exiting the survey at any point. There are no known costs to you for participating in this research study except for your time.',
-  '',
-  '**Contact**',
-  'Please feel free to contact us through Prolific or your game administrator if you have any questions, concerns, or complaints about this study.',
-  'By checking the box below and proceeding, you are acknowledging that you are over the age of 18 and that you consent to participate.',
-].join('\n');
-
-const TEXT_VIEW_PROFILE = [
-  "This identity is how other players will see you during today's experiment.",
-  'You will be playing as this randomly generated identity: [avatar and identity name]',
-  'Please avoid referring to yourself with identifiers outside of this assigned identity.',
-].join('\n');
+const CONSENSUS_TOS_STAGE = createTOSStage({
+  id: 'tos',
+  name: 'Terms of service',
+  tosLines: [
+    'Thank you for your interest in this research. If you choose to participate, you will be asked to participate in debates about resource allocation, which have real-world consequences in the form of disbursing real funds to real charities, based on your / your teams actions.',
+    '**Compensation & Impact**',
+    "You will be paid a base amount for completing the survey. This base payment is guaranteed and is independent of your decisions regarding the charity allocations. The resources you are allocating are for real-world charities. At the end of the entire study, the total donation sum (at least $2000 USD) will be distributed to the named charities according to the votes / consensus of all participant groups. The size of the donation budget your group gets to allocate is determined by your group's ability to find common ground.",
+    "**The more consensus your group reaches across all rounds, the more 'spending power' it will have over the final, real donation pool.** For example, a group that consistently reaches high agreement will be responsible for allocating a larger portion of the total money than a group that consistently disagrees. Your primary goal is to work together to maximize your group's impact.",
+    '**IRB & Confidentiality**',
+    'The results of this study will be used solely for research purposes. Our team will keep all your information from this study strictly confidential, as required by law. The IRB at XXXXXX is responsible for protecting the rights and welfare of research volunteers like you.',
+    '**Voluntary Participation**',
+    'Your participation is voluntary, which means you can choose whether or not to participate. You may choose not to participate by exiting the survey at any point. There are no known costs to you for participating in this research study except for your time.',
+    '**Contact**',
+    'Please feel free to contact us through Prolific or your game administrator if you have any questions, concerns, or complaints about this study.',
+    'By checking the box below and proceeding, you are acknowledging that you are over the age of 18 and that you consent to participate.',
+  ],
+});
 
 const TEXT_MEDIATED_INFO = [
   'In the last two rounds, your discussion will be joined by an AI Mediator. The style of the AI mediator will be different in each round.',
-].join('\n');
+]
 
 const TEXT_INSTRUCTIONS = [
   'Welcome! In this experiment, you will participate in three rounds of discussion and resource allocation for real-world charities. Your goal is to work with others to find the best allocation.',
-  '',
   "**Your group's impact is tied to consensus.** At the end of the entire study, the total donation sum will be divided among all participating groups. The more consensus your group reaches, the more 'spending power' you will have. For example, a group that consistently reaches high agreement will allocate a much larger portion of the final donation pool than a group that consistently disagrees. Your main objective is to find common ground with your fellow participants to maximize your group's impact.",
-  '',
   '**Compensation Reminder:** Your base participation payment is guaranteed and is separate from any donation outcomes.',
-].join('\n');
+]
 
 const TEXT_ALLOCATION_INFO_HINT = `Ensure your chosen percentages add up to 100%. (Hint: We recommend getting the percentages close and then adjusting one slider to make the total exactly 100%).`;
 
 const TEXT_DEBRIEFING = [
   'Thank you for your participation in this study. This marks the end of the experiment.',
-  '',
   '**Purpose of the Research**',
-  'The goal of this research is to understand how different mediation strategies affect group decision-making and consensus-building. The results / research may be included in research papers.',
-  '',
+  'The goal of this research is to understand how different mediation strategies affect group decision-making and consensus-building.',
   '**Use of Your Allocations**',
   'As stated in the initial terms of service, your decisions have real-world consequences. The actions you take and the outcomes your group reaches will have a tangible impact on donations to the charities named within the study.',
   "The consensus scores your group achieved across the three rounds will be used to determine your group's share of a total donation pool, which will be distributed to the named charities according to your group's final allocations. Your thoughtful participation has contributed directly to these charitable causes.",
-  '',
   '**Compensation Reminder:** Your base pay rate is guaranteed and is separate from any donation outcomes.',
   'If you have any questions, please do not hesitate to contact the research team.',
-].join('\n');
+];
 
 export function getCharityDebateTemplate(
   config: CharityDebateConfig,
 ): ExperimentTemplate {
   const stages: StageConfig[] = [];
 
-  if (config.includeTos) stages.push(createTermsOfServiceStage());
+  if (config.includeTos) stages.push(CONSENSUS_TOS_STAGE);
   stages.push(SET_PROFILE_STAGE_EXPANDED);
-  if (config.includeViewProfile) stages.push(createViewProfileStage());
   if (config.includeMediator) stages.push(createMediatedDiscussionInfoStage());
   stages.push(createInstructionsStage());
   stages.push(createComprehensionStageNew());
@@ -339,6 +326,14 @@ function createRoundOutcomeSurveyStage(
   const disagreementQuestionId = `had-disagreements-${roundNum}`;
 
   const questions = [
+      createScaleSurveyQuestion({
+        questionTitle: 'I felt strongly about my initial allocation.',
+        ...LIKERT_SCALE_PROPS,
+      }),
+      createScaleSurveyQuestion({
+        questionTitle: 'I feel strongly about my final allocation.',
+        ...LIKERT_SCALE_PROPS,
+      }),
     createTextSurveyQuestion({
       questionTitle:
         'Did you change your allocation after the discussion? If so, what was the most important factor that influenced your decision? (If not, please write NA)',
@@ -433,21 +428,6 @@ function createAllocationStage(
   });
 }
 
-function createTermsOfServiceStage(): StageConfig {
-  return createSurveyStage({
-    name: 'Terms of Service',
-    descriptions: createStageTextConfig({primaryText: TEXT_TOS}),
-    questions: [
-      createMultipleChoiceSurveyQuestion({
-        questionTitle: 'Consent',
-        options: [
-          {id: 'accept', text: 'I accept the Terms of Service', imageId: ''},
-        ],
-      }),
-    ],
-  });
-}
-
 const SET_PROFILE_STAGE_EXPANDED = createProfileStage({
   name: 'Set profile',
   profileType: ProfileType.ANONYMOUS_ANIMAL,
@@ -457,24 +437,17 @@ const SET_PROFILE_STAGE_EXPANDED = createProfileStage({
   }),
 });
 
-function createViewProfileStage(): StageConfig {
-  return createInfoStage({
-    name: 'View Randomly Assigned Profile',
-    infoLines: TEXT_VIEW_PROFILE.split('\n'),
-  });
-}
-
 function createMediatedDiscussionInfoStage(): StageConfig {
   return createInfoStage({
     name: 'Mediated-Discussion',
-    infoLines: TEXT_MEDIATED_INFO.split('\n'),
+    infoLines: TEXT_MEDIATED_INFO,
   });
 }
 
 function createInstructionsStage(): StageConfig {
   return createInfoStage({
     name: 'Instructions: Overview',
-    infoLines: TEXT_INSTRUCTIONS.split('\n'),
+    infoLines: TEXT_INSTRUCTIONS,
   });
 }
 
@@ -674,7 +647,7 @@ function createFinalMediatorPreferenceStage(): StageConfig {
 function createDebriefingStage(): StageConfig {
   return createInfoStage({
     name: 'Debriefing',
-    infoLines: TEXT_DEBRIEFING.split('\n'),
+    infoLines: TEXT_DEBRIEFING,
   });
 }
 
