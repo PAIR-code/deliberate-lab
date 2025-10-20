@@ -171,7 +171,7 @@ export class StageBuilderDialog extends MobxLitElement {
         ${this.renderFruitTestTemplateCard()} ${this.renderStockInfoGameCard()}
         ${this.renderAssetAllocationTemplateCard()}
         ${this.renderConditionalSurveyTemplateCard()}
-        ${this.renderPolicyTemplateCard()}
+        ${this.renderPolicyTemplateCard()} ${this.renderConsensusDebateCard()}
         ${this.renderCharityDebateTemplateCard()}
       </div>
     `;
@@ -579,12 +579,11 @@ export class StageBuilderDialog extends MobxLitElement {
 
   private renderConsensusDebateCard() {
     const loadTemplate = () => {
-      const inputElement = this.shadowRoot?.getElementById(
-        'consensus-topics-input',
-      ) as HTMLInputElement;
-      const topicsCsv = inputElement?.value || 'Climate Change';
+      this.addTemplate(getConsensusTopicTemplate(this.consensusTopics));
+    };
 
-      this.addTemplate(getConsensusTopicTemplate(topicsCsv));
+    const onTopicsInput = (e: Event) => {
+      this.consensusTopics = (e.target as HTMLInputElement).value;
     };
 
     return html`
@@ -593,10 +592,10 @@ export class StageBuilderDialog extends MobxLitElement {
         <div>${CONSENSUS_METADATA.description}</div>
         <div class="template-controls">
           <pr-textarea
-            id="consensus-topics-input"
             variant="outlined"
-            placeholder="Debate topic"
-            value="Climate Change"
+            placeholder="Debate topic (e.g., 'Climate Change,Vaccinations,AI Ethics')"
+            .value=${this.consensusTopics}
+            @input=${onTopicsInput}
           ></pr-textarea>
         </div>
         <pr-button @click=${loadTemplate}> Load Template </pr-button>
@@ -636,6 +635,32 @@ export class StageBuilderDialog extends MobxLitElement {
   private charityDebateConfig: CharityDebateConfig =
     createCharityDebateConfig();
 
+  @state()
+  private consensusTopics: string = 'Climate Change';
+
+  private renderCharityCheckbox(
+    field: keyof CharityDebateConfig,
+    labelText: string,
+  ) {
+    return html`
+      <label class="custom-checkbox">
+        <input
+          type="checkbox"
+          .checked=${this.charityDebateConfig[field]}
+          @change=${(e: Event) => {
+            // Use a new object to trigger a Lit update
+            this.charityDebateConfig = {
+              ...this.charityDebateConfig,
+              [field]: (e.target as HTMLInputElement).checked,
+            };
+          }}
+        />
+        <span class="checkmark"></span>
+        <span class="label-text">${labelText}</span>
+      </label>
+    `;
+  }
+
   private renderCharityDebateTemplateCard() {
     const loadTemplate = () => {
       this.addTemplate(getCharityDebateTemplate(this.charityDebateConfig));
@@ -648,108 +673,30 @@ export class StageBuilderDialog extends MobxLitElement {
         <div class="template-controls">
           <div class="subtitle">Configure Experiment Stages</div>
 
-          <label class="custom-checkbox">
-            <input
-              type="checkbox"
-              .checked=${this.charityDebateConfig.includeTos}
-              @change=${(e: Event) => {
-                this.charityDebateConfig = {
-                  ...this.charityDebateConfig,
-                  includeTos: (e.target as HTMLInputElement).checked,
-                };
-              }}
-            />
-            <span class="checkmark"></span>
-            <span class="label-text">Include Terms of Service</span>
-          </label>
-
-          <label class="custom-checkbox">
-            <input
-              type="checkbox"
-              .checked=${this.charityDebateConfig.includeMediator}
-              @change=${(e: Event) => {
-                this.charityDebateConfig = {
-                  ...this.charityDebateConfig,
-                  includeMediator: (e.target as HTMLInputElement).checked,
-                };
-              }}
-            />
-            <span class="checkmark"></span>
-            <span class="label-text"
-              >[Conditional] Include AI Mediator & Surveys</span
-            >
-          </label>
-
-          <label class="custom-checkbox">
-            <input
-              type="checkbox"
-              .checked=${this.charityDebateConfig
-                .includeInitialParticipantSurvey}
-              @change=${(e: Event) => {
-                this.charityDebateConfig = {
-                  ...this.charityDebateConfig,
-                  includeInitialParticipantSurvey: (
-                    e.target as HTMLInputElement
-                  ).checked,
-                };
-              }}
-            />
-            <span class="checkmark"></span>
-            <span class="label-text">Include Initial Participant Survey</span>
-          </label>
-
-          <label class="custom-checkbox">
-            <input
-              type="checkbox"
-              .checked=${this.charityDebateConfig.includeDiscussionEvaluation}
-              @change=${(e: Event) => {
-                this.charityDebateConfig = {
-                  ...this.charityDebateConfig,
-                  includeDiscussionEvaluation: (e.target as HTMLInputElement)
-                    .checked,
-                };
-              }}
-            />
-            <span class="checkmark"></span>
-            <span class="label-text"
-              >[Optional] Include Discussion Evaluation</span
-            >
-          </label>
-
-          <label class="custom-checkbox">
-            <input
-              type="checkbox"
-              .checked=${this.charityDebateConfig.includeDebriefingAndFeedback}
-              @change=${(e: Event) => {
-                this.charityDebateConfig = {
-                  ...this.charityDebateConfig,
-                  includeDebriefingAndFeedback: (e.target as HTMLInputElement)
-                    .checked,
-                };
-              }}
-            />
-            <span class="checkmark"></span>
-            <span class="label-text"
-              >[Optional] Include Debriefing & Experiment Feedback</span
-            >
-          </label>
-
-          <label class="custom-checkbox">
-            <input
-              type="checkbox"
-              .checked=${this.charityDebateConfig.includeMetaFeedback}
-              @change=${(e: Event) => {
-                this.charityDebateConfig = {
-                  ...this.charityDebateConfig,
-                  includeMetaFeedback: (e.target as HTMLInputElement).checked,
-                };
-              }}
-            />
-            <span class="checkmark"></span>
-            <span class="label-text"
-              >[Optional] Include Meta-Feedback Survey</span
-            >
-          </label>
+          ${this.renderCharityCheckbox(
+            'includeTos',
+            'Include Terms of Service',
+          )}
+          ${this.renderCharityCheckbox(
+            'includeMediator',
+            '[Conditional] Include AI Mediator & Surveys',
+          )}
+          ${this.renderCharityCheckbox(
+            'includeInitialParticipantSurvey',
+            'Include Initial Participant Survey',
+          )}
+          ${this.renderCharityCheckbox(
+            'includeDiscussionEvaluation',
+            '[Optional] Include Discussion Evaluation',
+          )}
+          ${this.renderCharityCheckbox(
+            'includeDebriefingAndFeedback',
+            '[Optional] Include Debriefing & Experiment Feedback',
+          )}
+          ${this.renderCharityCheckbox(
+            'includeMetaFeedback',
+            '[Optional] Include Meta-Feedback Survey',
+          )}
         </div>
 
         <pr-button @click=${loadTemplate}> Load Template </pr-button>

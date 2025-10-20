@@ -42,22 +42,14 @@ const SET_PROFILE_STAGE = createProfileStage({
   id: 'profile-stage',
   name: 'Set profile',
   profileType: ProfileType.ANONYMOUS_ANIMAL,
-  descriptions: createStageTextConfig({
-    primaryText: '',
-    infoText: '',
-    helpText: '',
-  }),
+  descriptions: createStageTextConfig({}),
   progress: createStageProgressConfig({showParticipantProgress: true}),
 });
 
 const PRE_DISCUSSION_PERSONAL_SURVEY = createSurveyStage({
   id: 'pre-discussion-survey',
   name: 'Pre-Discussion Personal Survey',
-  descriptions: createStageTextConfig({
-    primaryText: '',
-    infoText: '',
-    helpText: '',
-  }),
+  descriptions: createStageTextConfig({}),
   progress: createStageProgressConfig({showParticipantProgress: true}),
   questions: [
     createScaleSurveyQuestion({
@@ -120,11 +112,7 @@ function createTopicSurveyStage(topic: string, index: number): StageConfig {
   return createSurveyStage({
     id: `topic-survey-${index}`,
     name: `Topic Survey - ${topic}`,
-    descriptions: createStageTextConfig({
-      primaryText: '',
-      infoText: '',
-      helpText: '',
-    }),
+    descriptions: createStageTextConfig({}),
     progress: createStageProgressConfig({showParticipantProgress: true}),
     questions: [
       createScaleSurveyQuestion({
@@ -164,8 +152,6 @@ function createGroupChatStage(topic: string, index: number): StageConfig {
     name: `Group chat - ${topic}`,
     descriptions: createStageTextConfig({
       primaryText: `You will now be entered into a chat to discuss your views on ${topic}.`,
-      infoText: '',
-      helpText: '',
     }),
     timeLimitInMinutes: 5,
     progress: createStageProgressConfig({
@@ -186,11 +172,7 @@ function createPostDiscussionSurveyStage(
   return createSurveyPerParticipantStage({
     id: `post-discussion-survey-${index}`,
     name: `Post-Discussion Survey - ${topic}`,
-    descriptions: createStageTextConfig({
-      primaryText: '',
-      infoText: '',
-      helpText: '',
-    }),
+    descriptions: createStageTextConfig({}),
     progress: createStageProgressConfig({showParticipantProgress: true}),
     enableSelfSurvey: false,
     questions: [
@@ -294,11 +276,7 @@ function createSalientPointsStage(topic: string, index: number): StageConfig {
   return createSurveyPerParticipantStage({
     id: `salient-points-${index}`,
     name: `Salient points, discussing ${topic}`,
-    descriptions: createStageTextConfig({
-      primaryText: '',
-      infoText: '',
-      helpText: '',
-    }),
+    descriptions: createStageTextConfig({}),
     progress: createStageProgressConfig({showParticipantProgress: true}),
     enableSelfSurvey: true,
     questions: [
