@@ -19,6 +19,23 @@ import {styles} from './cohort_settings_dialog.scss';
 export class AgentParticipantDialog extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
 
+  static renderDialog(
+    showDialog: boolean,
+    cohort: CohortConfig | undefined,
+    onDialogClose: () => void,
+  ) {
+    if (!showDialog || !cohort) {
+      return nothing;
+    }
+    return html`
+      <agent-participant-configuration-dialog
+        .cohort=${cohort}
+        .onDialogClose=${onDialogClose}
+      >
+      </agent-participant-configuration-dialog>
+    `;
+  }
+
   private readonly analyticsService = core.getService(AnalyticsService);
   private readonly experimentManager = core.getService(ExperimentManager);
 

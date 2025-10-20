@@ -4,9 +4,9 @@ import '../../pair-components/icon_button';
 import '../../pair-components/tooltip';
 
 import '../participant_profile/profile_display';
-import './agent_participant_configuration_dialog';
 import './cohort_summary';
 import './participant_summary';
+import {AgentParticipantDialog} from './agent_participant_configuration_dialog';
 
 import {MobxLitElement} from '@adobe/lit-mobx';
 import {CSSResultGroup, html, nothing, TemplateResult} from 'lit';
@@ -354,23 +354,7 @@ export class Component extends MobxLitElement {
     `;
   }
 
-  // TODO: Access this from cohort_summary
   private renderAddAgentParticipant() {
-    const renderDialog = () => {
-      if (!this.showAgentParticipantDialog) {
-        return nothing;
-      }
-      return html`
-        <agent-participant-configuration-dialog
-          .cohort=${this.cohort}
-          .onDialogClose=${() => {
-            this.showAgentParticipantDialog = false;
-          }}
-        >
-        </agent-participant-configuration-dialog>
-      `;
-    };
-
     return html`
       <pr-tooltip text="Add agent participant" position="BOTTOM_END">
         <pr-icon-button
@@ -386,7 +370,13 @@ export class Component extends MobxLitElement {
         >
         </pr-icon-button>
       </pr-tooltip>
-      ${renderDialog()}
+      ${AgentParticipantDialog.renderDialog(
+        this.showAgentParticipantDialog,
+        this.cohort,
+        () => {
+          this.showAgentParticipantDialog = false;
+        },
+      )}
     `;
   }
 

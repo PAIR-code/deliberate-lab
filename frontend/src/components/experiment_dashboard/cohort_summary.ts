@@ -6,10 +6,11 @@ import '../../pair-components/tooltip';
 
 import '../progress/cohort_progress_bar';
 import './participant_summary';
+import {AgentParticipantDialog} from './agent_participant_configuration_dialog';
 
 import {MobxLitElement} from '@adobe/lit-mobx';
 import {CSSResultGroup, html, nothing} from 'lit';
-import {customElement, property} from 'lit/decorators.js';
+import {customElement, property, state} from 'lit/decorators.js';
 import {classMap} from 'lit/directives/class-map.js';
 
 import {core} from '../../core/core';
@@ -41,6 +42,7 @@ export class CohortSummary extends MobxLitElement {
 
   @property() cohort: CohortConfig | undefined = undefined;
   @property() isExpanded = true;
+  @state() showAgentParticipantDialog = false;
 
   override render() {
     if (this.cohort === undefined) {
@@ -51,6 +53,13 @@ export class CohortSummary extends MobxLitElement {
       <div class="cohort-summary">
         ${this.renderHeader()} ${this.renderBody()}
       </div>
+      ${AgentParticipantDialog.renderDialog(
+        this.showAgentParticipantDialog,
+        this.cohort,
+        () => {
+          this.showAgentParticipantDialog = false;
+        },
+      )}
     `;
   }
 
@@ -144,11 +153,8 @@ export class CohortSummary extends MobxLitElement {
           <div
             class="menu-item"
             @click=${() => {
-              // TODO: Make this createParticipant.
-              this.experimentManager.setCurrentCohortId(
-                this.cohort?.id ?? undefined,
-              );
-              this.experimentManager.setShowCohortEditor(true, true);
+              if (!this.cohort) return;
+              this.showAgentParticipantDialog = true;
             }}
           >
             Add agent participant
