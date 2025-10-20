@@ -2,7 +2,6 @@
 <!-- Briefly describe the changes introduced by this PR. -->
 
 - [ ] [Documentation](https://pair-code.github.io/deliberate-lab/) updated as needed
-- [ ] Code follows project conventions
 
 ---
 
