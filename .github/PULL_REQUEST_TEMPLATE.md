@@ -14,9 +14,7 @@
 ---
 
 ## Related issues
-
 This PR fixes: #<issue_number>
-
 > It’s recommended to [open an issue](https://github.com/orgs/PAIR-code/projects) for discussion before submitting a PR.
 
 ---
