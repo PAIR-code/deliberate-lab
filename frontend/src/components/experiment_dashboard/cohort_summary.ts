@@ -6,7 +6,7 @@ import '../../pair-components/tooltip';
 
 import '../progress/cohort_progress_bar';
 import './participant_summary';
-import {AgentParticipantDialog} from './agent_participant_configuration_dialog';
+import './agent_participant_configuration_dialog';
 
 import {MobxLitElement} from '@adobe/lit-mobx';
 import {CSSResultGroup, html, nothing} from 'lit';
@@ -53,13 +53,14 @@ export class CohortSummary extends MobxLitElement {
       <div class="cohort-summary">
         ${this.renderHeader()} ${this.renderBody()}
       </div>
-      ${AgentParticipantDialog.renderDialog(
-        this.showAgentParticipantDialog,
-        this.cohort,
-        () => {
-          this.showAgentParticipantDialog = false;
-        },
-      )}
+      ${this.showAgentParticipantDialog
+        ? html`<agent-participant-configuration-dialog
+            .cohort=${this.cohort}
+            @close=${() => {
+              this.showAgentParticipantDialog = false;
+            }}
+          ></agent-participant-configuration-dialog>`
+        : nothing}
     `;
   }
 

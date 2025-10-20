@@ -6,7 +6,7 @@ import '../../pair-components/tooltip';
 import '../participant_profile/profile_display';
 import './cohort_summary';
 import './participant_summary';
-import {AgentParticipantDialog} from './agent_participant_configuration_dialog';
+import './agent_participant_configuration_dialog';
 
 import {MobxLitElement} from '@adobe/lit-mobx';
 import {CSSResultGroup, html, nothing, TemplateResult} from 'lit';
@@ -370,13 +370,14 @@ export class Component extends MobxLitElement {
         >
         </pr-icon-button>
       </pr-tooltip>
-      ${AgentParticipantDialog.renderDialog(
-        this.showAgentParticipantDialog,
-        this.cohort,
-        () => {
-          this.showAgentParticipantDialog = false;
-        },
-      )}
+      ${this.showAgentParticipantDialog
+        ? html`<agent-participant-configuration-dialog
+            .cohort=${this.cohort}
+            @close=${() => {
+              this.showAgentParticipantDialog = false;
+            }}
+          ></agent-participant-configuration-dialog>`
+        : nothing}
     `;
   }
 

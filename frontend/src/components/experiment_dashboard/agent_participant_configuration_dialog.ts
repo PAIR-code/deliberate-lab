@@ -19,23 +19,6 @@ import {styles} from './cohort_settings_dialog.scss';
 export class AgentParticipantDialog extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
 
-  static renderDialog(
-    showDialog: boolean,
-    cohort: CohortConfig | undefined,
-    onDialogClose: () => void,
-  ) {
-    if (!showDialog || !cohort) {
-      return nothing;
-    }
-    return html`
-      <agent-participant-configuration-dialog
-        .cohort=${cohort}
-        .onDialogClose=${onDialogClose}
-      >
-      </agent-participant-configuration-dialog>
-    `;
-  }
-
   private readonly analyticsService = core.getService(AnalyticsService);
   private readonly experimentManager = core.getService(ExperimentManager);
 
@@ -43,9 +26,12 @@ export class AgentParticipantDialog extends MobxLitElement {
   @property() isSuccess = false;
 
   @property() cohort: CohortConfig | undefined = undefined;
-  @property() onDialogClose = () => {};
   @property() agentId = '';
   @property() promptContext = '';
+
+  private close() {
+    this.dispatchEvent(new CustomEvent('close'));
+  }
 
   override render() {
     if (!this.cohort) {
@@ -60,7 +46,7 @@ export class AgentParticipantDialog extends MobxLitElement {
             color="neutral"
             icon="close"
             variant="default"
-            @click=${this.onDialogClose}
+            @click=${this.close}
           >
           </pr-icon-button>
         </div>
