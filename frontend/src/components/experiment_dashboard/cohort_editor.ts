@@ -354,6 +354,7 @@ export class Component extends MobxLitElement {
     `;
   }
 
+  // TODO: Access this from cohort_summary
   private renderAddAgentParticipant() {
     const renderDialog = () => {
       if (!this.showAgentParticipantDialog) {

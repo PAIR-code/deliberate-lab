@@ -144,13 +144,14 @@ export class CohortSummary extends MobxLitElement {
           <div
             class="menu-item"
             @click=${() => {
+              // TODO: Make this createParticipant.
               this.experimentManager.setCurrentCohortId(
                 this.cohort?.id ?? undefined,
               );
               this.experimentManager.setShowCohortEditor(true, true);
             }}
           >
-            Add agent
+            Add agent participant
           </div>
         </div>
       </pr-menu>
