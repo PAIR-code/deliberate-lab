@@ -344,7 +344,7 @@ export class Panel extends MobxLitElement {
             <div class="alert-content">${alert.message}</div>
           </div>
           <div class="alert-bottom">
-            <div class="subtitle">Responses</div>
+            <div class="subtitle">Your responses</div>
             ${alert.responses.map(
               (response) => html` <div class="response">${response}</div> `,
             )}

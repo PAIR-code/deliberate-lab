@@ -136,6 +136,10 @@ export class ParticipantService extends Service {
     );
   }
 
+  getShowHelpPanel() {
+    return this.showHelpPanel;
+  }
+  
   setShowHelpPanel(showHelpPanel: boolean) {
     this.showHelpPanel = showHelpPanel;
   }

@@ -86,16 +86,17 @@ export class Header extends MobxLitElement {
   private renderHelpPanelToggle() {
     return html`
       <pr-tooltip
-        text="Click to open help chat with the experimenter"
+        text=" Click to message the administrator"
         position="BOTTOM_END"
       >
         <pr-icon-button
-          icon="contact_support"
+          icon="live_help"
           color="error"
           size="large"
           variant="default"
           @click=${() => {
-            this.participantService.setShowHelpPanel(true);
+            const current = this.participantService.getShowHelpPanel();
+            this.participantService.setShowHelpPanel(!current);
           }}
         >
         </pr-icon-button>
