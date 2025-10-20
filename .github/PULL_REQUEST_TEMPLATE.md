@@ -1,6 +1,22 @@
-Fixes #<issue_number_goes_here>
+## Description
+<!-- Briefly describe the changes introduced by this PR. -->
 
-> It's a good idea to open an issue first for discussion.
+- [ ] [Documentation](https://pair-code.github.io/deliberate-lab/) updated as needed
+- [ ] Code follows project conventions
 
-- [ ] Tests pass
-- [ ] Appropriate changes to documentation are included in the PR
+---
+
+## Verification
+- [ ] *Screenshots or videos* included (if applicable)
+- [ ] Clear reproduction steps provided to invoke the feature (if applicable)
+- [ ] All tests pass (if applicable)
+
+---
+
+## Related issues
+
+This PR fixes: #<issue_number>
+
+> It’s recommended to [open an issue](https://github.com/orgs/PAIR-code/projects) for discussion before submitting a PR.
+
+---
