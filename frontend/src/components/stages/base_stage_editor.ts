@@ -83,7 +83,7 @@ export class BaseStageEditorComponent extends MobxLitElement {
         return html`
           <div class="inner-section">
             ${this.renderName()} ${this.renderPrimaryText()}
-            ${this.renderInfoText()} ${this.renderHelpText()}
+            ${this.renderInfoText()}
           </div>
         `;
       case BaseStageTab.PROGRESS:
@@ -155,27 +155,6 @@ export class BaseStageEditorComponent extends MobxLitElement {
       <md-filled-text-field
         label="Info popup text (optional)"
         .value=${this.stage?.descriptions.infoText ?? ''}
-        ?disabled=${!this.experimentEditor.canEditStages}
-        type="textarea"
-        @input=${update}
-      >
-      </md-filled-text-field>
-    `;
-  }
-
-  private renderHelpText() {
-    const update = (e: InputEvent) => {
-      const helpText = (e.target as HTMLTextAreaElement).value;
-      if (this.stage) {
-        const descriptions = {...this.stage.descriptions, helpText};
-        this.experimentEditor.updateStage({...this.stage, descriptions});
-      }
-    };
-
-    return html`
-      <md-filled-text-field
-        label="Help popup text (optional)"
-        .value=${this.stage?.descriptions.helpText ?? ''}
         ?disabled=${!this.experimentEditor.canEditStages}
         type="textarea"
         @input=${update}

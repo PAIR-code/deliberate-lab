@@ -41,6 +41,7 @@ export const sendAlertMessage = onCall(async (request) => {
     .doc(alert.id);
 
   // Also store alert message under experiment's alerts collection
+  // TODO: Use trigger function
   const experimenterAlertDoc = await app
     .firestore()
     .collection('experiments')
@@ -62,12 +63,24 @@ export const ackAlertMessage = onCall(async (request) => {
   const {data} = request;
   const experimentId = data.experimentId;
   const alertId = data.alertId;
+  const participantId = data.participantId;
   const response = data.response;
 
   // Only allow experimenters to ack alerts
   await AuthGuard.isExperimenter(request);
 
   const doc = await app
+    .firestore()
+    .collection('experiments')
+    .doc(experimentId)
+    .collection('participants')
+    .doc(participantId)
+    .collection('alerts')
+    .doc(alertId);
+
+  // Also store alert message under experiment's alerts collection
+  // TODO: Use trigger function
+  const experimenterAlertDoc = await app
     .firestore()
     .collection('experiments')
     .doc(experimentId)
@@ -82,6 +95,7 @@ export const ackAlertMessage = onCall(async (request) => {
       alert.responses.push(response);
     }
     transaction.set(doc, alert);
+    transaction.set(experimenterAlertDoc, alert);
   });
 
   return {success: true};

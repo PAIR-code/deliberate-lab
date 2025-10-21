@@ -43,7 +43,6 @@ export class GroupChatView extends MobxLitElement {
   @property() disableInput = false;
   @property() showInfo = false;
   @state() readyToEndDiscussionLoading = false;
-  @state() isAlertLoading = false;
 
   private renderChatMessage(chatMessage: ChatMessage) {
     return html` <chat-message .chat=${chatMessage}></chat-message> `;
@@ -185,12 +184,6 @@ export class GroupChatView extends MobxLitElement {
         currentDiscussionId,
       );
 
-    const sendAlert = async () => {
-      this.isAlertLoading = true;
-      await this.participantService.sendAlertMessage('Stuck in chat stage!');
-      this.isAlertLoading = false;
-    };
-
     return html`
       <pr-tooltip
         text=${isDisabled
@@ -207,19 +200,6 @@ export class GroupChatView extends MobxLitElement {
         >
           Ready to end discussion
         </pr-button>
-      </pr-tooltip>
-      <pr-tooltip
-        position="TOP_END"
-        text="Click this to alert the experimenter if you have trouble ending discussion"
-      >
-        <pr-icon-button
-          icon="contact_support"
-          variant="default"
-          color="error"
-          ?loading=${this.isAlertLoading}
-          @click=${sendAlert}
-        >
-        </pr-icon-button>
       </pr-tooltip>
     `;
   }

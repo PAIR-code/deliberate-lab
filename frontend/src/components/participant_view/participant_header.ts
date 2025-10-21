@@ -35,7 +35,9 @@ export class Header extends MobxLitElement {
         <div class="left">
           ${this.renderMenu()} ${this.stage.name}${this.renderInfo()}
         </div>
-        <div class="right">${this.renderHelp()} ${this.renderProfile()}</div>
+        <div class="right">
+          ${this.renderHelpPanelToggle()} ${this.renderProfile()}
+        </div>
       </div>
     `;
   }
@@ -81,15 +83,24 @@ export class Header extends MobxLitElement {
     `;
   }
 
-  private renderHelp() {
-    if (!this.stage || this.stage.descriptions.helpText.length === 0) {
-      return nothing;
-    }
+  private renderHelpPanelToggle() {
     return html`
-      <info-popup
-        .showHelpIcon=${true}
-        .popupText=${this.stage.descriptions.helpText}
-      ></info-popup>
+      <pr-tooltip
+        text=" Click to message the administrator"
+        position="BOTTOM_END"
+      >
+        <pr-icon-button
+          icon="live_help"
+          color="error"
+          size="large"
+          variant="default"
+          @click=${() => {
+            const current = this.participantService.getShowHelpPanel();
+            this.participantService.setShowHelpPanel(!current);
+          }}
+        >
+        </pr-icon-button>
+      </pr-tooltip>
     `;
   }
 }

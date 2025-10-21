@@ -18,6 +18,7 @@ import {
   AgentParticipantPersonaConfig,
   AgentParticipantTemplate,
   AgentPersonaConfig,
+  AlertMessage,
   ChatMessage,
   ChipItem,
   ChipStageConfig,
@@ -268,6 +269,17 @@ export async function getExperimentDownload(
 
     // Add CohortDownload to ExperimentDownload
     experimentDownload.cohortMap[cohort.id] = cohortDownload;
+
+    // Add alerts to ExperimentDownload
+    const alertList = (
+      await getDocs(
+        query(
+          collection(firestore, 'experiments', experimentId, 'alerts'),
+          orderBy('timestamp', 'asc'),
+        ),
+      )
+    ).docs.map((doc) => doc.data() as AlertMessage);
+    experimentDownload.alerts = alertList;
   }
 
   return experimentDownload;
@@ -924,6 +936,20 @@ export function getParticipantData(data: ExperimentDownload) {
   return participantData;
 }
 
+/** Returns CSV data for all alerts in experiment download. */
+export function getAlertData(data: ExperimentDownload) {
+  const alertData: string[][] = [];
+
+  // Add headings
+  alertData.push(getAllAlertCSVColumns(null));
+  // Add alerts
+  for (const alert of data.alerts) {
+    alertData.push(getAllAlertCSVColumns(alert));
+  }
+
+  return alertData;
+}
+
 /** Returns CSV data for all chat histories in experiment download. */
 export function getChatHistoryData(
   data: ExperimentDownload,
@@ -949,6 +975,31 @@ export function getChatHistoryData(
     }
   }
   return chatData;
+}
+
+/** Returns all CSV columns for given alert message (or headings if null). */
+export function getAllAlertCSVColumns(alert: AlertMessage | null) {
+  const columns: string[] = [];
+  // Add timestamp
+  columns.push(
+    alert ? convertUnifiedTimestampToISO(alert.timestamp) : 'Timestamp',
+  );
+  // Add experiment ID
+  columns.push(alert ? alert.experimentId : 'Experiment ID');
+  // Add cohort ID
+  columns.push(alert ? alert.cohortId : 'Cohort ID');
+  // Add participant ID
+  columns.push(alert ? alert.participantId : 'Participant ID');
+  // Add alert ID
+  columns.push(alert ? alert.id : 'Alert ID');
+  // Add status
+  columns.push(alert ? alert.status : 'Alert Status');
+  // Add message
+  columns.push(alert ? alert.message : 'Participant Message');
+  // Add response
+  columns.push(alert ? alert.responses.join('\n') : 'Experimenter Responses');
+
+  return columns;
 }
 
 /** Returns all CSV columns for given participant (or headings if null). */

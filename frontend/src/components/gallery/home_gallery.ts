@@ -13,7 +13,7 @@ import {Pages, RouterService} from '../../services/router.service';
 
 import {Experiment, Visibility} from '@deliberation-lab/utils';
 import {convertExperimentToGalleryItem} from '../../shared/experiment.utils';
-import {getQuickstartGroupChatTemplate} from '../../shared/templates/quickstart_group_chat';
+import {getQuickstartAgentGroupChatTemplate, getQuickstartGroupChatTemplate} from '../../shared/templates/quickstart_group_chat';
 import {getQuickstartPrivateChatTemplate} from '../../shared/templates/quickstart_private_chat';
 
 import {styles} from './home_gallery.scss';
@@ -147,11 +147,11 @@ export class QuickStartGallery extends MobxLitElement {
             @click=${() => {
               this.routerService.navigate(Pages.EXPERIMENT_CREATE);
               this.experimentEditor.loadTemplate(
-                getQuickstartGroupChatTemplate(),
+                getQuickstartAgentGroupChatTemplate(),
               );
             }}
           >
-            <pr-icon icon="groups" color="neutral" size="large"></pr-icon>
+            <pr-icon icon="groups_3" color="neutral" size="large"></pr-icon>
             <div>Group chat with agent mediator</div>
           </div>
           <div
@@ -165,6 +165,18 @@ export class QuickStartGallery extends MobxLitElement {
           >
             <pr-icon icon="3p" color="neutral" size="large"></pr-icon>
             <div>Private chat with agent</div>
+          </div>
+          <div
+            class="quick-start-card"
+            @click=${() => {
+              this.routerService.navigate(Pages.EXPERIMENT_CREATE);
+              this.experimentEditor.loadTemplate(
+                getQuickstartGroupChatTemplate(),
+              );
+            }}
+          >
+            <pr-icon icon="groups" color="neutral" size="large"></pr-icon>
+            <div>Group chat with<br/>no agents</div>
           </div>
         </div>
       </div>

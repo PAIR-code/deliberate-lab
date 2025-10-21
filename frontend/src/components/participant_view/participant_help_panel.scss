@@ -1,0 +1,68 @@
+@use '../../sass/colors';
+@use '../../sass/common';
+@use '../../sass/typescale';
+
+:host {
+  @include common.flex-column;
+  flex-shrink: 0;
+}
+
+.nav {
+  @include common.flex-column;
+  border-left: 1px solid var(--md-sys-color-outline-variant);
+  flex-grow: 1;
+  max-height: calc(100vh - common.$header-height);
+  overflow: auto;
+  width: common.$sidenav-width;
+
+  &.full-view {
+    max-height: 100vh;
+  }
+}
+
+.header {
+  @include common.flex-row-align-center;
+  @include typescale.label-large;
+  box-sizing: border-box;
+  cursor: pointer;
+  gap: common.$spacing-medium;
+  justify-content: space-between;
+  flex-shrink: 0;
+  height: common.$header-height;
+  padding: 0 common.$sidenav-padding;
+}
+
+.body {
+  @include common.flex-column;
+  gap: common.$spacing-medium;
+  padding: 0 common.$sidenav-padding;
+}
+
+.alert-history {
+  @include common.flex-column;
+  gap: common.$spacing-large;
+}
+
+.alert {
+  border: 2px solid var(--md-sys-color-outline-variant);
+  border-radius: common.$spacing-small;
+  padding: common.$spacing-medium;
+}
+
+.subtitle {
+  @include typescale.label-small;
+  color: var(--md-sys-color-outline);
+}
+
+.message {
+  margin-bottom: common.$spacing-medium;
+}
+
+.status {
+  color: var(--md-sys-color-primary);
+  font-style: italic;
+}
+
+.error {
+  color: var(--md-sys-color-error);
+}

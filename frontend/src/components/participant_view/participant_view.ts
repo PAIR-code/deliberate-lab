@@ -22,6 +22,7 @@ import '../stages/survey_per_participant_view';
 import '../stages/tos_view';
 import '../stages/transfer_view';
 import './participant_header';
+import './participant_help_panel';
 import './participant_nav';
 
 import {MobxLitElement} from '@adobe/lit-mobx';
@@ -91,6 +92,9 @@ export class ParticipantView extends MobxLitElement {
       >
         ${renderContent()}
       </div>
+      ${this.participantService.showHelpPanel
+        ? html`<help-panel></help-panel>`
+        : nothing}
       ${this.renderPopups()}
     `;
   }
