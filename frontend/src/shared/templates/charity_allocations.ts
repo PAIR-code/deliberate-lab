@@ -1,5 +1,30 @@
 import {
   createChatStage,
+  AgentMediatorTemplate,
+  MediatorPromptConfig,
+  AgentPersonaType,
+  createAgentMediatorPersonaConfig,
+  ChatPromptConfig,
+  ChatMediatorStructuredOutputConfig,
+  StructuredOutputDataType,
+  StructuredOutputType,
+  StructuredOutputSchema,
+  createStructuredOutputConfig,
+  createAgentChatPromptConfig,
+  createAgentChatSettings,
+  PromptItemType,
+  ProfileInfoPromptItem,
+  ProfileContextPromptItem,
+  StageContextPromptItem,
+  TextPromptItem,
+  AgentChatSettings,
+  DEFAULT_AGENT_MODEL_SETTINGS,
+  DEFAULT_EXPLANATION_FIELD,
+  DEFAULT_READY_TO_END_FIELD,
+  DEFAULT_RESPONSE_FIELD,
+  DEFAULT_SHOULD_RESPOND_FIELD,
+  createModelGenerationConfig,
+  createChatPromptConfig,
   createTOSStage,
   createExperimentConfig,
   createExperimentTemplate,
@@ -21,6 +46,35 @@ import {
   ComparisonOperator,
   createInfoStage,
 } from '@deliberation-lab/utils';
+
+// Agent configuration for the template.
+const HABERMAS_MEDIATOR_ID = 'habermas-mediator-agent';
+const DYNAMIC_MEDIATOR_ID = 'dynamic-mediator-agent';
+
+const HABERMAS_STAGE_ID = 'discussion-round-2';
+const DYNAMIC_STAGE_ID = 'discussion-round-3';
+
+const FAILURE_MODE_ENUMS = [
+  'NoFailureModeDetected',
+  'Reaching Rapid, Uncritical Consensus (Groupthink)',
+  'Failure to Provide Justification or Reasoning',
+  'Absence of Deliberation or Discussion of Pros/Cons',
+  'Ignoring or Dismissing Dissenting Opinions',
+  'Demonstrating Low Engagement or Apathy',
+  'Using Abnormal Communication (e.g., Repetitive loops)',
+  'Failing to Explore Diverse Viewpoints',
+];
+
+const SOLUTION_STRATEGY_ENUMS = [
+  'NoSolutionNeeded',
+  'Promote Deeper Reflection or Consideration of Alternatives',
+  'Prompt for Justification or Reasoning',
+  'Encourage Deliberation of Pros and Cons',
+  'Amplify Minority Viewpoints or Acknowledge Uncertainty',
+  'Re-engage Low-Participation Members or Re-center on Goal',
+  'Summarize to Break a Loop or Gently Re-focus Conversation',
+  'Prompt for Brainstorming of New Ideas or Alternatives',
+];
 
 export interface CharityDebateConfig {
   includeTos: boolean;
@@ -194,7 +248,7 @@ export function getCharityDebateTemplate(
       metadata: CHARITY_DEBATE_METADATA,
     }),
     stageConfigs: stages,
-    agentMediators: [],
+    agentMediators: [HABERMAS_MEDIATOR_TEMPLATE, DYNAMIC_MEDIATOR_TEMPLATE],
     agentParticipants: [],
   });
 }
@@ -738,3 +792,197 @@ function createMetaFeedbackStage(): StageConfig {
     ],
   });
 }
+
+function createTextPromptItem(text: string): TextPromptItem {
+  return {
+    type: PromptItemType.TEXT,
+    text: text,
+  } as TextPromptItem;
+}
+
+function createStandardMediatorSchema(): StructuredOutputSchema {
+  return {
+    type: StructuredOutputDataType.OBJECT,
+    properties: [
+      {
+        name: DEFAULT_EXPLANATION_FIELD, // 'explanation'
+        schema: {
+          type: StructuredOutputDataType.STRING,
+          description:
+            'Your reasoning for your response and other field values.',
+        },
+      },
+      {
+        name: DEFAULT_SHOULD_RESPOND_FIELD, // 'shouldRespond'
+        schema: {
+          type: StructuredOutputDataType.BOOLEAN,
+          description: `Whether or not to respond. Should NOT be True if nothing has been said by participants. If consensusLevel is not high and >2 messages have passed, consider responding. If a failure mode is detected, this should be True.`,
+        },
+      },
+      {
+        name: DEFAULT_RESPONSE_FIELD, // 'response'
+        schema: {
+          type: StructuredOutputDataType.STRING,
+          description: 'Your response message to the group.',
+        },
+      },
+      {
+        name: DEFAULT_READY_TO_END_FIELD, // 'readyToEndChat'
+        schema: {
+          type: StructuredOutputDataType.BOOLEAN,
+          description:
+            'Whether or not you have completed your goals and are ready to end the conversation.',
+        },
+      },
+      {
+        name: 'consensusLevel', // Custom field
+        schema: {
+          type: StructuredOutputDataType.STRING,
+          description:
+            'Should be low, medium, or high, depending on how much agreement there is between participants.',
+        },
+      },
+    ],
+  };
+}
+
+function createDynamicMediatorSchema(): StructuredOutputSchema {
+  const standardSchema = createStandardMediatorSchema();
+
+  // 1. Add the Failure Mode Diagnosis Field
+  const failureModeField = {
+    name: 'observedFailureMode',
+    schema: {
+      type: StructuredOutputDataType.ENUM,
+      description:
+        'Analyze the conversation and select the single most prominent failure mode. If none are present, you MUST choose "NoFailureModeDetected".',
+      enumItems: FAILURE_MODE_ENUMS,
+    },
+  };
+
+  // 2. Add the Solution Strategy Selection Field
+  const solutionStrategyField = {
+    name: 'proposedSolution',
+    schema: {
+      type: StructuredOutputDataType.ENUM,
+      description: `Based on your 'observedFailureMode' diagnosis, select the most appropriate solution strategy. If you detected no failure mode, you MUST choose "NoSolutionNeeded".`,
+      enumItems: SOLUTION_STRATEGY_ENUMS,
+    },
+  };
+
+  standardSchema.properties!.push(failureModeField, solutionStrategyField);
+  return standardSchema;
+}
+
+function createHabermasMediatorPromptConfig(): MediatorPromptConfig {
+  const structuredOutputConfig = createStructuredOutputConfig({
+    enabled: true,
+    schema: createStandardMediatorSchema() as any,
+    appendToPrompt: true,
+  });
+
+  const chatSettings = createAgentChatSettings({
+    initialMessage: '',
+    minMessagesBeforeResponding: 0,
+    maxResponses: 100,
+  });
+
+  const generationConfig = createModelGenerationConfig();
+
+  const habermasInstruction = `Summarize the conversation periodically to help participants track the state of the conversation and come to a consensus`;
+
+  return createChatPromptConfig(HABERMAS_STAGE_ID, {
+    prompt: [
+      createTextPromptItem(
+        'You are participating in an experiment with the following online profile:',
+      ),
+      {type: PromptItemType.PROFILE_INFO} as ProfileInfoPromptItem,
+      {type: PromptItemType.PROFILE_CONTEXT} as ProfileContextPromptItem,
+      {
+        type: PromptItemType.STAGE_CONTEXT,
+        stageId: HABERMAS_STAGE_ID,
+      } as StageContextPromptItem,
+      createTextPromptItem(habermasInstruction),
+    ],
+    structuredOutputConfig,
+    chatSettings,
+    generationConfig,
+  });
+}
+
+function createDynamicMediatorPromptConfig(): MediatorPromptConfig {
+  const structuredOutputConfig = createStructuredOutputConfig({
+    enabled: true,
+    schema: createDynamicMediatorSchema() as any,
+    appendToPrompt: true,
+  });
+
+  const chatSettings = createAgentChatSettings({
+    initialMessage: '',
+    minMessagesBeforeResponding: 0,
+    maxResponses: 100,
+  });
+
+  const generationConfig = createModelGenerationConfig();
+
+  const dynamicInstruction = `Your goal is to improve deliberation quality. First, analyze the conversation to diagnose a specific failure mode by setting the 'observedFailureMode' field.
+
+Next, you MUST use the following Lookup Table to select the correct 'proposedSolution' that maps to your diagnosis.
+
+--- STRATEGY LOOKUP TABLE ---
+- IF 'observedFailureMode' is 'NoFailureModeDetected', THEN 'proposedSolution' MUST BE 'NoSolutionNeeded'.
+- IF 'observedFailureMode' is 'Reaching Rapid, Uncritical Consensus (Groupthink)', THEN 'proposedSolution' MUST BE 'Promote Deeper Reflection or Consideration of Alternatives'.
+- IF 'observedFailureMode' is 'Failure to Provide Justification or Reasoning', THEN 'proposedSolution' MUST BE 'Prompt for Justification or Reasoning'.
+- IF 'observedFailureMode' is 'Absence of Deliberation or Discussion of Pros/Cons', THEN 'proposedSolution' MUST BE 'Encourage Deliberation of Pros and Cons'.
+- IF 'observedFailureMode' is 'Ignoring or Dismissing Dissenting Opinions', THEN 'proposedSolution' MUST BE 'Amplify Minority Viewpoints or Acknowledge Uncertainty'.
+- IF 'observedFailureMode' is 'Demonstrating Low Engagement or Apathy', THEN 'proposedSolution' MUST BE 'Re-engage Low-Participation Members or Re-center on Goal'.
+- IF 'observedFailureMode' is 'Using Abnormal Communication (e.g., Repetitive loops)', THEN 'proposedSolution' MUST BE 'Summarize to Break a Loop or Gently Re-focus Conversation'.
+- IF 'observedFailureMode' is 'Failing to Explore Diverse Viewpoints', THEN 'proposedSolution' MUST BE 'Prompt for Brainstorming of New Ideas or Alternatives'.
+---
+
+Finally, craft a 'response' message that implements your chosen solution. If the solution is 'NoSolutionNeeded', your 'response' must be an empty string and 'shouldRespond' must be false.`;
+
+  return createChatPromptConfig(DYNAMIC_STAGE_ID, {
+    prompt: [
+      createTextPromptItem(
+        'You are participating in an experiment with the following online profile:',
+      ),
+      {type: PromptItemType.PROFILE_INFO} as ProfileInfoPromptItem,
+      {type: PromptItemType.PROFILE_CONTEXT} as ProfileContextPromptItem,
+      {
+        type: PromptItemType.STAGE_CONTEXT,
+        stageId: DYNAMIC_STAGE_ID,
+      } as StageContextPromptItem,
+      createTextPromptItem(dynamicInstruction),
+    ],
+    structuredOutputConfig,
+    chatSettings,
+    generationConfig,
+  });
+}
+
+const HABERMAS_MEDIATOR_TEMPLATE: AgentMediatorTemplate = {
+  persona: createAgentMediatorPersonaConfig({
+    id: HABERMAS_MEDIATOR_ID,
+    name: 'Habermas Mediator',
+    description:
+      'An AI mediator focused on promoting consensus and summarization.',
+    defaultModelSettings: DEFAULT_AGENT_MODEL_SETTINGS,
+  }),
+  promptMap: {
+    [HABERMAS_STAGE_ID]: createHabermasMediatorPromptConfig(),
+  },
+};
+
+const DYNAMIC_MEDIATOR_TEMPLATE: AgentMediatorTemplate = {
+  persona: createAgentMediatorPersonaConfig({
+    id: DYNAMIC_MEDIATOR_ID,
+    name: 'Dynamic Mediator (LAS-Informed)',
+    description:
+      'An AI mediator focused on counteracting specific negative group dynamics.',
+    defaultModelSettings: DEFAULT_AGENT_MODEL_SETTINGS,
+  }),
+  promptMap: {
+    [DYNAMIC_STAGE_ID]: createDynamicMediatorPromptConfig(),
+  },
+};
