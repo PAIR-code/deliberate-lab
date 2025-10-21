@@ -153,17 +153,19 @@ export class CohortSummary extends MobxLitElement {
           >
             Add human participant
           </div>
-          ${this.experimentEditor.showAlphaFeatures ? html`
-            <div
-              class="menu-item"
-              @click=${() => {
-                if (!this.cohort) return;
-                this.showAgentParticipantDialog = true;
-              }}
-            >
-              Add agent participant
-            </div>
-          ` : nothing}
+          ${this.experimentEditor.showAlphaFeatures
+            ? html`
+                <div
+                  class="menu-item"
+                  @click=${() => {
+                    if (!this.cohort) return;
+                    this.showAgentParticipantDialog = true;
+                  }}
+                >
+                  Add agent participant
+                </div>
+              `
+            : nothing}
         </div>
       </pr-menu>
     `;
