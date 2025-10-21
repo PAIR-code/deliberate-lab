@@ -15,6 +15,7 @@ import {classMap} from 'lit/directives/class-map.js';
 
 import {core} from '../../core/core';
 import {AnalyticsService, ButtonClick} from '../../services/analytics.service';
+import {ExperimentEditor} from '../../services/experiment.editor';
 import {ExperimentManager} from '../../services/experiment.manager';
 import {ExperimentService} from '../../services/experiment.service';
 import {Pages, RouterService} from '../../services/router.service';
@@ -36,6 +37,7 @@ export class CohortSummary extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
 
   private readonly analyticsService = core.getService(AnalyticsService);
+  private readonly experimentEditor = core.getService(ExperimentEditor);
   private readonly experimentManager = core.getService(ExperimentManager);
   private readonly experimentService = core.getService(ExperimentService);
   private readonly routerService = core.getService(RouterService);
@@ -151,15 +153,17 @@ export class CohortSummary extends MobxLitElement {
           >
             Add human participant
           </div>
-          <div
-            class="menu-item"
-            @click=${() => {
-              if (!this.cohort) return;
-              this.showAgentParticipantDialog = true;
-            }}
-          >
-            Add agent participant
-          </div>
+          ${this.experimentEditor.showAlphaFeatures ? html`
+            <div
+              class="menu-item"
+              @click=${() => {
+                if (!this.cohort) return;
+                this.showAgentParticipantDialog = true;
+              }}
+            >
+              Add agent participant
+            </div>
+          ` : nothing}
         </div>
       </pr-menu>
     `;
