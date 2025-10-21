@@ -1,4 +1,5 @@
 import '../../pair-components/icon_button';
+import '../../pair-components/textarea';
 
 import {MobxLitElement} from '@adobe/lit-mobx';
 import {CSSResultGroup, html, nothing} from 'lit';
@@ -44,6 +45,16 @@ import {
   getChipNegotiationStageConfigs,
 } from '../../shared/templates/chip_negotiation';
 import {
+  getCharityDebateTemplate,
+  CharityDebateConfig,
+  createCharityDebateConfig,
+  CHARITY_DEBATE_METADATA,
+} from '../../shared/templates/charity_allocations';
+import {
+  CONSENSUS_METADATA,
+  getConsensusTopicTemplate,
+} from '../../shared/templates/debate_topics';
+import {
   RTV_METADATA,
   getRealityTVExperimentTemplate,
 } from '../../shared/templates/reality_tv_chat';
@@ -88,6 +99,12 @@ export class StageBuilderDialog extends MobxLitElement {
 
   @property({type: Boolean})
   showTemplates: boolean = false;
+
+  // Used to populate charity allocation template
+  @state() private charityDebateConfig: CharityDebateConfig =
+    createCharityDebateConfig();
+  // Used to populate resource allocation template
+  @state() private consensusTopics: string = 'Climate Change';
 
   override render() {
     return html`
@@ -160,7 +177,8 @@ export class StageBuilderDialog extends MobxLitElement {
         ${this.renderFruitTestTemplateCard()} ${this.renderStockInfoGameCard()}
         ${this.renderAssetAllocationTemplateCard()}
         ${this.renderConditionalSurveyTemplateCard()}
-        ${this.renderPolicyTemplateCard()}
+        ${this.renderPolicyTemplateCard()} ${this.renderConsensusDebateCard()}
+        ${this.renderCharityDebateTemplateCard()}
       </div>
     `;
   }
@@ -565,6 +583,32 @@ export class StageBuilderDialog extends MobxLitElement {
     `;
   }
 
+  private renderConsensusDebateCard() {
+    const loadTemplate = () => {
+      this.addTemplate(getConsensusTopicTemplate(this.consensusTopics));
+    };
+
+    const onTopicsInput = (e: Event) => {
+      this.consensusTopics = (e.target as HTMLInputElement).value;
+    };
+
+    return html`
+      <div class="card">
+        <div class="title">${CONSENSUS_METADATA.name}</div>
+        <div>${CONSENSUS_METADATA.description}</div>
+        <div class="template-controls">
+          <pr-textarea
+            variant="outlined"
+            placeholder="Debate topic (e.g., 'Climate Change,Vaccinations,AI Ethics')"
+            .value=${this.consensusTopics}
+            @input=${onTopicsInput}
+          ></pr-textarea>
+        </div>
+        <pr-button @click=${loadTemplate}> Load Template </pr-button>
+      </div>
+    `;
+  }
+
   private renderFlipCardTemplateCard() {
     const addTemplate = () => {
       this.addTemplate(getFlipCardExperimentTemplate());
@@ -589,6 +633,72 @@ export class StageBuilderDialog extends MobxLitElement {
         <div>
           A demonstration of the StockInfo stage with financial data analysis.
         </div>
+      </div>
+    `;
+  }
+
+  private renderCharityCheckbox(
+    field: keyof CharityDebateConfig,
+    labelText: string,
+  ) {
+    return html`
+      <label class="custom-checkbox">
+        <input
+          type="checkbox"
+          .checked=${this.charityDebateConfig[field]}
+          @change=${(e: Event) => {
+            // Use a new object to trigger a Lit update
+            this.charityDebateConfig = {
+              ...this.charityDebateConfig,
+              [field]: (e.target as HTMLInputElement).checked,
+            };
+          }}
+        />
+        <span class="checkmark"></span>
+        <span class="label-text">${labelText}</span>
+      </label>
+    `;
+  }
+
+  private renderCharityDebateTemplateCard() {
+    const loadTemplate = () => {
+      this.addTemplate(getCharityDebateTemplate(this.charityDebateConfig));
+    };
+
+    return html`
+      <div class="card large-card">
+        <div class="title">${CHARITY_DEBATE_METADATA.name}</div>
+        <div>${CHARITY_DEBATE_METADATA.description}</div>
+        <div class="template-controls">
+          <div class="subtitle">Configure Experiment Stages</div>
+
+          ${this.renderCharityCheckbox(
+            'includeTos',
+            'Include Terms of Service',
+          )}
+          ${this.renderCharityCheckbox(
+            'includeMediator',
+            '[Conditional] Include AI Mediator & Surveys',
+          )}
+          ${this.renderCharityCheckbox(
+            'includeInitialParticipantSurvey',
+            'Include Initial Participant Survey',
+          )}
+          ${this.renderCharityCheckbox(
+            'includeDiscussionEvaluation',
+            '[Optional] Include Discussion Evaluation',
+          )}
+          ${this.renderCharityCheckbox(
+            'includeDebriefingAndFeedback',
+            '[Optional] Include Debriefing & Experiment Feedback',
+          )}
+          ${this.renderCharityCheckbox(
+            'includeMetaFeedback',
+            '[Optional] Include Meta-Feedback Survey',
+          )}
+        </div>
+
+        <pr-button @click=${loadTemplate}> Load Template </pr-button>
       </div>
     `;
   }
