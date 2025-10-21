@@ -100,6 +100,12 @@ export class StageBuilderDialog extends MobxLitElement {
   @property({type: Boolean})
   showTemplates: boolean = false;
 
+  // Used to populate charity allocation template
+  @state() private charityDebateConfig: CharityDebateConfig =
+    createCharityDebateConfig();
+  // Used to populate resource allocation template
+  @state() private consensusTopics: string = 'Climate Change';
+
   override render() {
     return html`
       <div class="dialog">
@@ -630,13 +636,6 @@ export class StageBuilderDialog extends MobxLitElement {
       </div>
     `;
   }
-
-  @state()
-  private charityDebateConfig: CharityDebateConfig =
-    createCharityDebateConfig();
-
-  @state()
-  private consensusTopics: string = 'Climate Change';
 
   private renderCharityCheckbox(
     field: keyof CharityDebateConfig,
