@@ -3,12 +3,12 @@ service cloud.firestore {
   match /databases/{database}/documents {
     // Function: check if admin
     function isAdmin() {
-      return get(/databases/$(database)/documents/allowlist/$(request.auth.token.email)).data.get("isAdmin", null) != null;
+      return get(/databases/$(database)/documents/allowlist/$(request.auth.token.email.lower())).data.get("isAdmin", null) != null;
     }
 
     // Function: checks if experimenter
     function isExperimenter() {
-      return request.auth.uid != null && exists(/databases/$(database)/documents/allowlist/$(request.auth.token.email));
+      return request.auth.uid != null && exists(/databases/$(database)/documents/allowlist/$(request.auth.token.email.lower()));
     }
 
     // Function: checks if public
@@ -18,12 +18,12 @@ service cloud.firestore {
 
     // Function: checks if creator of resource
     function isCreator() {
-      return request.auth.token.email == resource.data.permissions.reader || request.auth.uid == resource.data.metadata.creator;
+      return request.auth.token.email.lower() == resource.data.permissions.reader || request.auth.uid == resource.data.metadata.creator;
     }
 
     // Function: checks if read access (email listed in readers list)
     function isReader() {
-      return request.auth.token.email in resource.data.permissions.readers;
+      return request.auth.token.email.lower() in resource.data.permissions.readers;
     }
 
     // Function: checks if can edit experiment
@@ -33,7 +33,7 @@ service cloud.firestore {
 
     // Function: checks if creator of experiment
     function isExperimentCreator(experimentId) {
-      return get(/databases/$(database)/documents/experiments/$(experimentId)).data.metadata.creator == request.auth.token.email || get(/databases/$(database)/documents/experiments/$(experimentId)).data.metadata.creator == request.auth.uid;
+      return get(/databases/$(database)/documents/experiments/$(experimentId)).data.metadata.creator == request.auth.token.email.lower() || get(/databases/$(database)/documents/experiments/$(experimentId)).data.metadata.creator == request.auth.uid;
     }
 
     // Function: checks if experiment is public
@@ -43,12 +43,12 @@ service cloud.firestore {
 
     // Function: checks if reader of experiment
     function isExperimentReader(experimentId) {
-      return request.auth.token.email in get(/databases/$(database)/documents/experiments/$(experimentId)).data.permissions.readers;
+      return request.auth.token.email.lower() in get(/databases/$(database)/documents/experiments/$(experimentId)).data.permissions.readers;
     }
 
     // Experimenter allowlist
     match /allowlist/{experimenterId} {
-      allow read: if isAdmin() || request.auth.token.email == experimenterId;
+      allow read: if isAdmin() || request.auth.token.email.lower() == experimenterId;
       allow update: if isAdmin();
     }
 
@@ -71,14 +71,14 @@ service cloud.firestore {
     // Experimenter data (experimenter with matching ID only)
     match /experimenterData/{experimenterId} {
       allow list: if false;
-      allow get: if experimenterId == request.auth.token.email || experimenterId == request.auth.uid;
-      allow write: if experimenterId == request.auth.token.email || experimenterId == request.auth.uid;
+      allow get: if experimenterId == request.auth.token.email.lower() || experimenterId == request.auth.uid;
+      allow write: if experimenterId == request.auth.token.email.lower() || experimenterId == request.auth.uid;
     }
 
     // Experimenter profiles (experimenter only)
     match /experimenters/{experimenterId} {
       allow read: if true;
-      allow write: if experimenterId == request.auth.token.email || experimenterId == request.auth.uid;
+      allow write: if experimenterId == request.auth.token.email.lower() || experimenterId == request.auth.uid;
     }
 
     // Experiments

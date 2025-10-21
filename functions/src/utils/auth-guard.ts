@@ -15,7 +15,7 @@ const getClaims = async (request: CallableRequest) => {
   const allowlistDoc = await app
     .firestore()
     .collection('allowlist')
-    .doc(request.auth.token.email)
+    .doc(request.auth.token.email.toLowerCase())
     .get();
 
   return allowlistDoc.exists;
