@@ -681,3 +681,36 @@ export const initiateParticipantTransfer = onCall(async (request) => {
 
   return {success: true};
 });
+
+// ************************************************************************* //
+// updateParticipantStatus endpoint for experimenters                        //
+//                                                                           //
+// Input structure: { experimentId, participantId, status }                  //
+// Validation: utils/src/participant.validation.ts                           //
+// ************************************************************************* //
+export const updateParticipantStatus = onCall(async (request) => {
+  // TODO: Only allow creator, admins, and readers to manage transfers
+  await AuthGuard.isExperimenter(request);
+
+  const {data} = request;
+
+  // Define document reference
+  const document = app
+    .firestore()
+    .collection('experiments')
+    .doc(data.experimentId)
+    .collection('participants')
+    .doc(data.participantId);
+
+  // Run document write as transaction to ensure consistency
+  await app.firestore().runTransaction(async (transaction) => {
+    const participant = (
+      await document.get()
+    ).data() as ParticipantProfileExtended;
+
+    participant.currentStatus = data.status;
+    transaction.set(document, participant);
+  });
+
+  return {success: true};
+});

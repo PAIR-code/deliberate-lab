@@ -36,6 +36,7 @@ import {
   UpdateParticipantAcceptedTOSData,
   UpdateParticipantFailureData,
   UpdateParticipantProfileData,
+  UpdateParticipantStatusData,
   UpdateParticipantWaitingData,
   UpdateRankingStageParticipantAnswerData,
   UpdateSurveyPerParticipantStageParticipantAnswerData,
@@ -555,6 +556,18 @@ export const updateMediatorStatusCallable = async (
   const {data} = await httpsCallable<UpdateMediatorStatusData, SuccessResponse>(
     functions,
     'updateMediatorStatus',
+  )(config);
+  return data;
+};
+
+/** Generic endpoint for updating Participant status. */
+export const updateParticipantStatusCallable = async (
+  functions: Functions,
+  config: UpdateParticipantStatusData,
+) => {
+  const {data} = await httpsCallable<UpdateParticipantStatusData, SuccessResponse>(
+    functions,
+    'updateParticipantStatus',
   )(config);
   return data;
 };

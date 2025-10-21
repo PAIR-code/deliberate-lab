@@ -7,7 +7,7 @@ import '../progress/participant_progress_bar';
 
 import {MobxLitElement} from '@adobe/lit-mobx';
 import {CSSResultGroup, html, nothing} from 'lit';
-import {customElement, property} from 'lit/decorators.js';
+import {customElement, property, state} from 'lit/decorators.js';
 import {classMap} from 'lit/directives/class-map.js';
 
 import {core} from '../../core/core';
@@ -44,6 +44,7 @@ export class ParticipantSummary extends MobxLitElement {
   private readonly routerService = core.getService(RouterService);
 
   @property() participant: ParticipantProfileExtended | undefined = undefined;
+  @state() isStatusLoading = false;
 
   override render() {
     if (this.participant === undefined) {
@@ -69,7 +70,8 @@ export class ParticipantSummary extends MobxLitElement {
         <div class="left">
           <participant-profile-display .profile=${this.participant}>
           </participant-profile-display>
-          ${this.renderStatus()} ${this.renderAttentionStatus()}
+          ${this.renderStatus()} ${this.renderPauseButton()}
+          ${this.renderAttentionStatus()}
           ${this.renderTimeElapsed()} ${this.renderIsAgent()}
         </div>
         <div class="buttons">
@@ -78,8 +80,8 @@ export class ParticipantSummary extends MobxLitElement {
             .stageIds=${this.experimentService.experiment?.stageIds ?? []}
           >
           </participant-progress-bar>
-          ${this.renderCopyButton()} ${this.renderAttentionButton()}
-          ${this.renderBootButton()}
+          ${this.renderCopyButton()}
+          ${this.renderAttentionButton()} ${this.renderBootButton()}
         </div>
       </div>
     `;
@@ -186,6 +188,38 @@ export class ParticipantSummary extends MobxLitElement {
 
     await navigator.clipboard.writeText(link);
     alert('Link copied to clipboard!');
+  }
+
+  private renderPauseButton() {
+    if (!this.participant || !this.participant.agentConfig) {
+      return nothing;
+    }
+
+    const toggleStatus = async (event: Event) => {
+      event.stopPropagation();
+      if (!this.participant) return;
+      const {privateId, currentStatus} = this.participant;
+      this.isStatusLoading = true;
+      await this.experimentManager.updateParticipantStatus(
+        privateId,
+        currentStatus === ParticipantStatus.PAUSED
+          ? ParticipantStatus.IN_PROGRESS
+          : ParticipantStatus.PAUSED,
+      );
+      this.isStatusLoading = false;
+    };
+
+    return html`
+      <pr-icon-button
+        ?loading=${this.isStatusLoading}
+        variant="default"
+        icon=${this.participant.currentStatus === ParticipantStatus.PAUSED
+          ? 'play_circle'
+          : 'pause'}
+        @click=${toggleStatus}
+      >
+      </pr-icon-button>
+    `;
   }
 
   private renderAttentionButton() {

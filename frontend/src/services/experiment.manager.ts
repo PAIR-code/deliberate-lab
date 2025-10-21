@@ -61,6 +61,7 @@ import {
   testAgentConfigCallable,
   updateCohortMetadataCallable,
   updateMediatorStatusCallable,
+  updateParticipantStatusCallable,
   writeExperimentCallable,
 } from '../shared/callables';
 import {
@@ -1051,6 +1052,23 @@ export class ExperimentManager extends Service {
         {
           experimentId,
           mediatorId,
+          status,
+        },
+      );
+    }
+    return response;
+  }
+
+  /** Change participant status. */
+  async updateParticipantStatus(participantId: string, status: ParticipantStatus.IN_PROGRESS | ParticipantStatus.PAUSED) {
+    let response = {};
+    const experimentId = this.sp.experimentManager.experimentId;
+    if (experimentId) {
+      response = await updateParticipantStatusCallable(
+        this.sp.firebaseService.functions,
+        {
+          experimentId,
+          participantId,
           status,
         },
       );
