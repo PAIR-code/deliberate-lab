@@ -5,10 +5,13 @@ import {
   PROFILE_SET_NATURE_ID,
   AssetAllocationStageParticipantAnswer,
   BasePromptConfig,
+  ChatStageConfig,
+  PrivateChatStageConfig,
   ProfileAgentConfig,
   PromptItem,
   PromptItemGroup,
   PromptItemType,
+  RoleStagePublicData,
   StageConfig,
   StageContextPromptItem,
   StageKind,
@@ -154,7 +157,6 @@ async function processPromptItems(
         items.push(agentConfig.promptContext);
         break;
       case PromptItemType.PROFILE_INFO:
-        const profileInfo: string[] = [];
         const getProfileSetId = () => {
           if (stageId.includes(SECONDARY_PROFILE_SET_ID)) {
             return PROFILE_SET_ANIMALS_2_ID;
@@ -351,9 +353,22 @@ export async function getStageDisplayForPrompt(
           experimentId,
           participantId,
         );
-        roleInfo.push(
-          `${participant.publicId}: ${getRoleDisplay(rolePublicData.participantMap[participant.publicId] ?? '').join('\n\n')}`,
-        );
+        if (participant && rolePublicData) {
+          roleInfo.push(
+            `${participant.publicId}: ${getRoleDisplay(rolePublicData.participantMap[participant.publicId] ?? '').join('\n\n')}`,
+          );
+        } else {
+          if (!participant) {
+            console.error(
+              `Could not create roleInfo for participant ${participantId} in stage ${stage.id}: Participant not found.`,
+            );
+          }
+          if (!rolePublicData) {
+            console.error(
+              `Could not create roleInfo for participant ${participantId} in stage ${stage.id}: rolePublicData is missing.`,
+            );
+          }
+        }
       }
       return roleInfo.join('\n');
     case StageKind.STOCKINFO:

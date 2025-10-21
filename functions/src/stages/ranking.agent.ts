@@ -1,22 +1,15 @@
 import {
-  AgentModelSettings,
   APIKeyConfig,
-  ModelGenerationConfig,
+  ParticipantProfile,
   ParticipantProfileExtended,
   ParticipantStatus,
   RankingStageConfig,
-  RankingStageParticipantAnswer,
-  createAgentConfig,
   createAgentParticipantRankingStagePrompt,
   createModelGenerationConfig,
   createRankingStageParticipantAnswer,
 } from '@deliberation-lab/utils';
 import {getAgentResponse} from '../agent.utils';
 import {getPastStagesPromptContext} from './stage.utils';
-
-import * as admin from 'firebase-admin';
-import * as functions from 'firebase-functions';
-import {onCall} from 'firebase-functions/v2/https';
 
 import {app} from '../app';
 

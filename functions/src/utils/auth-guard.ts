@@ -6,7 +6,7 @@ import * as functions from 'firebase-functions';
 /** Extract claims for the user who made the request. */
 const getClaims = async (request: CallableRequest) => {
   const uid = request.auth?.uid;
-  if (!uid)
+  if (!uid || !request.auth?.token.email)
     throw new functions.https.HttpsError(
       'unauthenticated',
       'User is not authenticated',

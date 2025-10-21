@@ -4,12 +4,9 @@ import {
   SalespersonMoveStatus,
   SalespersonStageConfig,
   SalespersonStagePublicData,
-  generateId,
 } from '@deliberation-lab/utils';
 
-import * as admin from 'firebase-admin';
 import {Timestamp} from 'firebase-admin/firestore';
-import * as functions from 'firebase-functions';
 import {onCall} from 'firebase-functions/v2/https';
 
 import {app} from '../app';

@@ -1,33 +1,12 @@
-import {Value} from '@sinclair/typebox/value';
 import {
-  AgentGenerationConfig,
-  ApiKeyType,
-  ExperimenterData,
-  StageConfig,
-  StageKind,
-  ModelResponse,
   ModelResponseStatus,
-  ParticipantProfileExtended,
-  createAgentModelSettings,
   createModelGenerationConfig,
 } from '@deliberation-lab/utils';
-import {
-  getAgentResponse,
-  getGeminiResponse,
-  getOpenAIAPIResponse,
-  getOllamaResponse,
-} from './agent.utils';
-import {getAgentParticipantRankingStageResponse} from './stages/ranking.agent';
-import {
-  getExperimenterData,
-  getExperimenterDataFromExperiment,
-} from './utils/firestore';
+import {getAgentResponse} from './agent.utils';
+import {getExperimenterData} from './utils/firestore';
 
-import * as admin from 'firebase-admin';
-import * as functions from 'firebase-functions';
 import {onCall} from 'firebase-functions/v2/https';
 
-import {app} from './app';
 import {AuthGuard} from './utils/auth-guard';
 
 // ****************************************************************************

@@ -4,6 +4,7 @@ import {
   RankingStageParticipantAnswer,
   StageConfig,
   StageKind,
+  SurveyStageParticipantAnswer,
   getChatStagePromptContext,
   getInfoStagePromptContext,
   getRankingStagePromptContext,

@@ -1,16 +1,10 @@
 import {
   AgentChatPromptConfig,
-  AgentPersonaConfig,
   AgentPersonaType,
   MediatorProfile,
-  ProfileAgentConfig,
   createMediatorProfileFromAgentPersona,
 } from '@deliberation-lab/utils';
 import {getAgentMediatorPersonas} from './utils/firestore';
-
-import * as admin from 'firebase-admin';
-import * as functions from 'firebase-functions';
-import {onCall} from 'firebase-functions/v2/https';
 
 import {app} from './app';
 
@@ -18,7 +12,7 @@ import {app} from './app';
 export async function createMediatorsForCohort(
   experimentId: string,
   cohortId: string,
-): MediatorProfile[] {
+): Promise<MediatorProfileExtended[]> {
   const personas = await getAgentMediatorPersonas(experimentId);
   const mediators: MediatorProfile[] = [];
   for (const persona of personas) {
@@ -35,7 +29,7 @@ export async function createMediatorsForCohort(
           .doc(persona.id)
           .collection('prompts')
           .get()
-      ).docs.map((doc) => doc.data() as ChatPromptConfig);
+      ).docs.map((doc) => doc.data() as AgentChatPromptConfig);
       const mediator = createMediatorProfileFromAgentPersona(
         cohortId,
         persona,
@@ -52,7 +46,7 @@ export async function getMediatorsInCohortStage(
   experimentId: string,
   cohortId: string,
   stageId: string,
-): MediatorProfile[] {
+): Promise<MediatorProfile[]> {
   return (
     await app
       .firestore()

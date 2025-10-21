@@ -1,8 +1,4 @@
-import {ModelLogEntry, createModelLogEntry} from '@deliberation-lab/utils';
-
-import * as admin from 'firebase-admin';
-import * as functions from 'firebase-functions';
-import {Timestamp} from 'firebase-admin/firestore';
+import {ModelLogEntry} from '@deliberation-lab/utils';
 
 import {app} from './app';
 

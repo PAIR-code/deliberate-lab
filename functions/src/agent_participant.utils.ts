@@ -1,14 +1,11 @@
 import {Timestamp} from 'firebase-admin/firestore';
 import {
-  AgentModelSettings,
-  AgentParticipantPromptConfig,
-  AgentPersonaConfig,
-  ModelGenerationConfig,
+  Experiment,
   ParticipantProfileExtended,
   ParticipantStatus,
-  StageConfig,
   StageKind,
 } from '@deliberation-lab/utils';
+import {app} from './app';
 import {
   updateCohortStageUnlocked,
   updateParticipantNextStage,
@@ -23,7 +20,7 @@ import {
   getFirestoreStage,
 } from './utils/firestore';
 
-import {app} from './app';
+import {Transaction} from 'firebase-admin/firestore';
 
 /** Complete agent participant's current stage. */
 export async function completeStageAsAgentParticipant(
@@ -67,6 +64,13 @@ export async function completeStageAsAgentParticipant(
     experimentId,
     participant.currentStageId,
   );
+
+  if (!stage) {
+    console.error(
+      `Could not find stage ${participant.currentStageId} for experiment ${experimentId}`,
+    );
+    return;
+  }
 
   // Fetch experiment creator's API key.
   const creatorId = experiment.metadata.creator;
@@ -149,7 +153,7 @@ export async function startAgentParticipant(
   experimentId: string,
   participant: ParticipantProfileExtended,
 ) {
-  await app.firestore().runTransaction(async (transaction) => {
+  await app.firestore().runTransaction(async (transaction: Transaction) => {
     // If participant is NOT agent, do nothing
     if (!participant?.agentConfig) {
       return;

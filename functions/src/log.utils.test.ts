@@ -15,6 +15,7 @@ import {
   ModelGenerationConfig,
   ModelLogEntry,
   StructuredOutputDataType,
+  StructuredOutputConfig,
   StructuredOutputType,
   createModelLogEntry,
 } from '@deliberation-lab/utils';
@@ -45,7 +46,7 @@ jest.mock('./app', () => ({
 }));
 
 describe('log.utils', () => {
-  let testEnv: rulesTestEnvironment;
+  let testEnv: RulesTestEnvironment;
 
   beforeAll(async () => {
     testEnv = await initializeTestEnvironment({
@@ -100,10 +101,15 @@ describe('log.utils', () => {
       stopSequences: [],
       temperature: 0.4,
       topP: 0.9,
+      frequencyPenalty: 0,
+      presencePenalty: 0,
       customRequestBodyFields: [],
     };
 
-    const structuredOutputConfig = {
+    const structuredOutputConfig: StructuredOutputConfig = {
+      enabled: true,
+      appendToPrompt: true,
+      explanationField: 'explanation',
       type: StructuredOutputType.JSON_SCHEMA,
       schema: {
         type: StructuredOutputDataType.OBJECT,
@@ -139,7 +145,7 @@ describe('log.utils', () => {
 
     await writeModelLogEntry(experimentId, logEntry);
 
-    const logDocRef = await mockFirestore
+    const logDocRef = mockFirestore
       .collection('experiments')
       .doc(experimentId)
       .collection('logs')

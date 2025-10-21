@@ -1,13 +1,14 @@
 import {
-  AgentConfig,
+  AgentModelSettings,
+  ApiKeyType,
   ModelResponseStatus,
-  ModelSettings,
   ParticipantProfileExtended,
-  ParticipantTimeouts,
+  ProfileAgentConfig,
   ProfileStageConfig,
   ProfileType,
-  StageKind,
-  UnifiedTimestamp,
+  createExperimenterData,
+  createParticipantProfileExtended,
+  createProfileStage,
 } from '@deliberation-lab/utils';
 
 import * as firestoreUtils from '../utils/firestore';
@@ -19,34 +20,41 @@ describe('stages/profile.utils', () => {
   describe('completeProfile', () => {
     const experimentId = 'test-experiment';
 
-    const defaultParticipant: ParticipantProfileExtended = {
-      publicId: 'participant-1',
-      privateId: 'private-1',
-      currentStageId: 'profile-stage',
-      currentCohortId: 'cohort-1',
-      agentConfig: {
-        id: 'agent-1',
-        name: 'Test Agent',
-        promptContext: 'You are a helpful assistant.',
-        modelSettings: {
-          model: 'gemini-pro',
-        } as ModelSettings,
-      } as AgentConfig,
-      name: 'Initial Name',
-      avatar: '🤔',
-      pronouns: 'she/her',
-      isTyping: false,
-      lastActive: {seconds: 0, nanoseconds: 0} as UnifiedTimestamp,
-      timeouts: {} as ParticipantTimeouts,
-      readyToEnd: false,
-    };
+    const defaultParticipant: ParticipantProfileExtended =
+      createParticipantProfileExtended({
+        publicId: 'participant-1',
+        privateId: 'private-1',
+        currentStageId: 'profile-stage',
+        currentCohortId: 'cohort-1',
+        agentConfig: {
+          agentId: 'agent-1',
+          name: 'Test Agent',
+          promptContext: 'You are a helpful assistant.',
+          modelSettings: {
+            apiType: ApiKeyType.GEMINI_API_KEY,
+            modelName: 'gemini-pro',
+          } as AgentModelSettings,
+        } as ProfileAgentConfig,
+        name: 'Initial Name',
+        avatar: '🤔',
+        pronouns: 'she/her',
+      });
 
-    const defaultStageConfig: ProfileStageConfig = {
-      id: 'profile-stage',
-      kind: StageKind.PROFILE,
-      name: 'Profile Stage',
-      profileType: ProfileType.DEFAULT,
-    };
+    const defaultStageConfig: ProfileStageConfig = createProfileStage();
+
+    const defaultExperimenterData = (() => {
+      const experimenterData = createExperimenterData(
+        'experimenter-id',
+        'experimenter@example.com',
+      );
+      return {
+        ...experimenterData,
+        apiKeys: {
+          ...experimenterData.apiKeys,
+          geminiApiKey: 'test-api-key',
+        },
+      };
+    })();
 
     afterEach(() => {
       jest.restoreAllMocks();
@@ -63,9 +71,7 @@ describe('stages/profile.utils', () => {
 
       jest
         .spyOn(firestoreUtils, 'getExperimenterDataFromExperiment')
-        .mockResolvedValue({
-          apiKeys: {gemini: 'test-api-key'},
-        });
+        .mockResolvedValue(defaultExperimenterData);
 
       jest
         .spyOn(promptUtils, 'getStructuredPrompt')
@@ -100,7 +106,7 @@ describe('stages/profile.utils', () => {
         'processModelResponse',
       );
 
-      const participant = {...defaultParticipant, agentConfig: undefined};
+      const participant = {...defaultParticipant, agentConfig: null};
       const stageConfig = {...defaultStageConfig};
 
       await completeProfile(experimentId, participant, stageConfig);
@@ -143,16 +149,14 @@ describe('stages/profile.utils', () => {
 
       jest
         .spyOn(firestoreUtils, 'getExperimenterDataFromExperiment')
-        .mockResolvedValue({
-          apiKeys: {gemini: 'test-api-key'},
-        });
+        .mockResolvedValue(defaultExperimenterData);
 
       jest
         .spyOn(promptUtils, 'getStructuredPrompt')
         .mockResolvedValue('test-prompt');
 
       const mockResponse = {
-        status: ModelResponseStatus.ERROR,
+        status: ModelResponseStatus.PROVIDER_UNAVAILABLE_ERROR,
       };
       jest
         .spyOn(agentUtils, 'processModelResponse')

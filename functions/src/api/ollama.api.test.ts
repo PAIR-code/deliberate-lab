@@ -1,6 +1,7 @@
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 import nock = require('nock');
 
+import {ModelGenerationConfig} from '@deliberation-lab/utils';
 import {ollamaChat} from './ollama.api';
 
 const MODEL_NAME = 'llama3.2';
@@ -31,7 +32,9 @@ describe('OllamaChat Client', () => {
   });
 
   it("should return a response containing 'hello' (case insensitive)", async () => {
-    const generationConfig: AgentGenerationConfig = {
+    const generationConfig: ModelGenerationConfig = {
+      maxTokens: 300,
+      stopSequences: [],
       temperature: 0.7,
       topP: 1,
       frequencyPenalty: 0,
@@ -45,12 +48,15 @@ describe('OllamaChat Client', () => {
       {url: LLM_SERVER_ENDPOINT},
       generationConfig,
     );
-    expect(response.text.toLowerCase()).toContain('hello');
+    expect(response.text).toBeDefined();
+    expect(response.text!.toLowerCase()).toContain('hello');
     console.log(response);
   });
 
   it('should pass through generation config', async () => {
-    const generationConfig: AgentGenerationConfig = {
+    const generationConfig: ModelGenerationConfig = {
+      maxTokens: 300,
+      stopSequences: [],
       temperature: 0.4,
       topP: 0.9,
       frequencyPenalty: 0,
@@ -64,9 +70,10 @@ describe('OllamaChat Client', () => {
       {url: LLM_SERVER_ENDPOINT},
       generationConfig,
     );
-    expect(response.text.toLowerCase()).toContain('hello');
-    expect(response.text.toLowerCase()).toContain('"temperature":0.4');
-    expect(response.text.toLowerCase()).toContain('"top_p":0.9');
-    expect(response.text.toLowerCase()).toContain('"foo":"bar"');
+    expect(response.text).toBeDefined();
+    expect(response.text!.toLowerCase()).toContain('hello');
+    expect(response.text!.toLowerCase()).toContain('"temperature":0.4');
+    expect(response.text!.toLowerCase()).toContain('"top_p":0.9');
+    expect(response.text!.toLowerCase()).toContain('"foo":"bar"');
   });
 });

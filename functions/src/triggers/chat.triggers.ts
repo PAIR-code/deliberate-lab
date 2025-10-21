@@ -14,7 +14,6 @@ import {
 import {createAgentChatMessageFromPrompt} from '../chat/chat.agent';
 import {sendErrorPrivateChatMessage} from '../chat/chat.utils';
 import {startTimeElapsed} from '../stages/chat.time';
-import {sendAgentParticipantSalespersonMessage} from '../stages/salesperson.agent';
 import {app} from '../app';
 
 // ************************************************************************* //

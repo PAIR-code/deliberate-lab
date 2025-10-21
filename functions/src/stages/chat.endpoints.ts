@@ -1,16 +1,10 @@
 import {Value} from '@sinclair/typebox/value';
 import {
-  ChatStageConfig,
-  ChatStageParticipantAnswer,
-  CreateChatMessageData,
-  StageConfig,
   StageKind,
   UpdateChatStageParticipantAnswerData,
 } from '@deliberation-lab/utils';
-import * as admin from 'firebase-admin';
 import {Timestamp} from 'firebase-admin/firestore';
-import * as functions from 'firebase-functions';
-import {onCall} from 'firebase-functions/v2/https';
+import {onCall, HttpsError} from 'firebase-functions/v2/https';
 
 import {app} from '../app';
 import {getFirestoreStage} from '../utils/firestore';
@@ -61,6 +55,13 @@ export const createChatMessage = onCall(async (request) => {
   const chatMessage = {...data.chatMessage, timestamp: Timestamp.now()};
 
   const stage = await getFirestoreStage(data.experimentId, data.stageId);
+
+  if (!stage) {
+    throw new HttpsError(
+      'not-found',
+      `Stage ${data.stageId} not found in experiment ${data.experimentId}`,
+    );
+  }
 
   // Run document write as transaction to ensure consistency
   await app.firestore().runTransaction(async (transaction) => {
@@ -134,5 +135,5 @@ function handleUpdateChatStageParticipantAnswerValidationErrors(data: any) {
     }
   }
 
-  throw new functions.https.HttpsError('invalid-argument', 'Invalid data');
+  throw new HttpsError('invalid-argument', 'Invalid data');
 }

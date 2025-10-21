@@ -27,19 +27,21 @@ function makeStructuredOutputSchema(schema: StructuredOutputSchema): object {
   const type = typeMap[schema.type];
   if (!type) {
     throw new Error(
-      `Error parsing structured output config: unrecognized data type ${dataType}`,
+      `Error parsing structured output config: unrecognized data type ${schema.type}`,
     );
   }
 
-  let properties = undefined;
-  let orderedPropertyNames = undefined;
+  let properties: {[key: string]: object} | undefined = undefined;
+  let orderedPropertyNames: string[] | undefined = undefined;
 
-  if (schema.properties?.length > 0) {
+  if (schema.properties && schema.properties.length > 0) {
     properties = {};
     orderedPropertyNames = [];
     schema.properties.forEach((property) => {
-      properties[property.name] = makeStructuredOutputSchema(property.schema);
-      orderedPropertyNames.push(property.name);
+      if (properties && orderedPropertyNames) {
+        properties[property.name] = makeStructuredOutputSchema(property.schema);
+        orderedPropertyNames.push(property.name);
+      }
     });
   }
 
@@ -114,7 +116,7 @@ export async function callOpenAIChatCompletion(
   prompt: string | Array<{role: string; content: string; name?: string}>,
   generationConfig: ModelGenerationConfig,
   structuredOutputConfig?: StructuredOutputConfig,
-) {
+): Promise<ModelResponse> {
   const client = new OpenAI({
     apiKey: apiKey,
     baseURL: baseUrl,
@@ -123,7 +125,8 @@ export async function callOpenAIChatCompletion(
   let responseFormat;
   try {
     responseFormat = makeStructuredOutputParameters(structuredOutputConfig);
-  } catch (error: Error) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  } catch (error: any) {
     return {
       status: ModelResponseStatus.INTERNAL_ERROR,
       generationConfig,
@@ -131,7 +134,7 @@ export async function callOpenAIChatCompletion(
     };
   }
   const customFields = Object.fromEntries(
-    generationConfig.customRequestBodyFields.map((field) => [
+    (generationConfig.customRequestBodyFields || []).map((field) => [
       field.name,
       field.value,
     ]),
@@ -171,7 +174,7 @@ export async function callOpenAIChatCompletion(
           status = ModelResponseStatus.QUOTA_ERROR;
           break;
         default:
-          if (status >= 500) {
+          if (error.status && error.status >= 500) {
             status = ModelResponseStatus.PROVIDER_UNAVAILABLE_ERROR;
           } else {
             status = ModelResponseStatus.UNKNOWN_ERROR;
@@ -202,8 +205,8 @@ export async function callOpenAIChatCompletion(
       status: ModelResponseStatus.LENGTH_ERROR,
       generationConfig,
       rawResponse: JSON.stringify(response),
-      text: response.choices[0].message.content,
-      errorMessage: `Token limit (${generationConfig.maxOutputTokens}) exceeded`,
+      text: response.choices[0].message.content || undefined,
+      errorMessage: `Token limit (${generationConfig.maxTokens}) exceeded`,
     };
   } else if (
     finishReason === REFUSAL_FINISH_REASON ||
@@ -220,16 +223,16 @@ export async function callOpenAIChatCompletion(
       status: ModelResponseStatus.UNKNOWN_ERROR,
       generationConfig,
       rawResponse: JSON.stringify(response),
-      text: response.choices[0].message.content,
+      text: response.choices[0].message.content || undefined,
       errorMessage: `Provider sent unrecognized finish_reason: ${finishReason}`,
     };
   }
 
-  const modelResponse = {
+  const modelResponse: ModelResponse = {
     status: ModelResponseStatus.OK,
     generationConfig,
     rawResponse: JSON.stringify(response),
-    text: response.choices[0].message.content,
+    text: response.choices[0].message.content || undefined,
   };
   if (structuredOutputConfig?.enabled) {
     return addParsedModelResponse(modelResponse);
@@ -264,9 +267,8 @@ export async function getOpenAIAPIChatCompletionResponse(
     structuredOutputConfig,
   );
 
-  let response;
   try {
-    response = await callOpenAIChatCompletion(
+    const response = await callOpenAIChatCompletion(
       apiKey,
       baseUrl,
       modelName,
@@ -274,14 +276,20 @@ export async function getOpenAIAPIChatCompletionResponse(
       generationConfig,
       structuredOutputConfig,
     );
+    if (!response) {
+      return {
+        status: ModelResponseStatus.UNKNOWN_ERROR,
+        generationConfig,
+        errorMessage: 'No response from OpenAI API',
+      };
+    }
+    return response;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (error: any) {
-    response = {
+    return {
       status: ModelResponseStatus.UNKNOWN_ERROR,
       generationConfig,
       errorMessage: error.message,
     };
   }
-
-  return response;
 }

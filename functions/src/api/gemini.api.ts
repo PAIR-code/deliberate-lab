@@ -19,7 +19,6 @@ import {
 } from '@deliberation-lab/utils';
 
 const GEMINI_DEFAULT_MODEL = 'gemini-2.5-flash';
-const DEFAULT_FETCH_TIMEOUT = 300 * 1000; // This is the Chrome default
 const MAX_TOKENS_FINISH_REASON = 'MAX_TOKENS';
 const AUTHENTICATION_FAILURE_ERROR_CODE = 403;
 const QUOTA_ERROR_CODE = 429;
@@ -62,19 +61,19 @@ function makeStructuredOutputSchema(schema: StructuredOutputSchema): object {
   const type = typeMap[schema.type];
   if (!type) {
     throw new Error(
-      `Error parsing structured output config: unrecognized data type ${dataType}`,
+      `Error parsing structured output config: unrecognized data type ${schema.type}`,
     );
   }
 
-  let properties = null;
-  let orderedPropertyNames = null;
+  let properties: {[key: string]: object} | null = null;
+  let orderedPropertyNames: string[] | null = null;
 
-  if (schema.properties?.length > 0) {
+  if (schema.properties && schema.properties.length > 0) {
     properties = {};
     orderedPropertyNames = [];
     schema.properties.forEach((property) => {
-      properties[property.name] = makeStructuredOutputSchema(property.schema);
-      orderedPropertyNames.push(property.name);
+      properties![property.name] = makeStructuredOutputSchema(property.schema);
+      orderedPropertyNames!.push(property.name);
     });
   }
 
@@ -168,7 +167,7 @@ export async function callGemini(
   modelName = GEMINI_DEFAULT_MODEL,
   parseResponse = false, // parse if structured output
   safetySettings?: SafetySetting[],
-) {
+): Promise<ModelResponse> {
   const genAI = new GoogleGenAI({apiKey});
 
   // Convert to Gemini format

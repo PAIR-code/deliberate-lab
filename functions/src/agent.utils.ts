@@ -15,7 +15,6 @@ import {getGeminiAPIResponse} from './api/gemini.api';
 import {getOpenAIAPIChatCompletionResponse} from './api/openai.api';
 import {ollamaChat} from './api/ollama.api';
 
-import {app} from './app';
 import {writeModelLogEntry} from './log.utils';
 
 /** Calls API and writes ModelLogEntry to experiment. */

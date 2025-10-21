@@ -3,7 +3,11 @@ import {
   onDocumentUpdated,
 } from 'firebase-functions/v2/firestore';
 
-import {ParticipantProfileExtended} from '@deliberation-lab/utils';
+import {
+  ParticipantProfileExtended,
+  StageConfig,
+  StageKind,
+} from '@deliberation-lab/utils';
 import {startAgentParticipant} from '../agent_participant.utils';
 import {
   handleAutomaticTransfer,
