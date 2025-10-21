@@ -47,7 +47,7 @@ import {
 import {
   getCharityDebateTemplate,
   CharityDebateConfig,
-  CHARITIES,
+  createCharityDebateConfig,
   CHARITY_DEBATE_METADATA,
 } from '../../shared/templates/charity_allocations';
 import {
@@ -171,7 +171,7 @@ export class StageBuilderDialog extends MobxLitElement {
         ${this.renderFruitTestTemplateCard()} ${this.renderStockInfoGameCard()}
         ${this.renderAssetAllocationTemplateCard()}
         ${this.renderConditionalSurveyTemplateCard()}
-        ${this.renderPolicyTemplateCard()}
+        ${this.renderPolicyTemplateCard()} ${this.renderConsensusDebateCard()}
         ${this.renderCharityDebateTemplateCard()}
       </div>
     `;
@@ -577,38 +577,31 @@ export class StageBuilderDialog extends MobxLitElement {
     `;
   }
 
-private renderConsensusDebateCard() {
-  const loadTemplate = () => {
-    // Find the input element within the component's shadow DOM using its ID.
-    const inputElement = this.shadowRoot?.querySelector('#consensus-topics-input') as any;
+  private renderConsensusDebateCard() {
+    const loadTemplate = () => {
+      this.addTemplate(getConsensusTopicTemplate(this.consensusTopics));
+    };
 
-    // Get the value, using the default if the input is not found or is empty.
-    const topicsCsv = inputElement?.value || 'Climate Change';
+    const onTopicsInput = (e: Event) => {
+      this.consensusTopics = (e.target as HTMLInputElement).value;
+    };
 
-    // Pass the retrieved value to the existing template function.
-    this.addTemplate(getConsensusTopicTemplate(topicsCsv));
-  };
-
-  return html`
-    <div class="card">
-      <div class="title">${CONSENSUS_METADATA.name}</div>
-      <div>${CONSENSUS_METADATA.description}</div>
-      <div class="template-controls">
-        <pr-textarea
-          id="consensus-topics-input"
-          variant="outlined"
-          placeholder="Debate topic"
-          value="Climate Change"
-        ></pr-textarea>
+    return html`
+      <div class="card">
+        <div class="title">${CONSENSUS_METADATA.name}</div>
+        <div>${CONSENSUS_METADATA.description}</div>
+        <div class="template-controls">
+          <pr-textarea
+            variant="outlined"
+            placeholder="Debate topic (e.g., 'Climate Change,Vaccinations,AI Ethics')"
+            .value=${this.consensusTopics}
+            @input=${onTopicsInput}
+          ></pr-textarea>
+        </div>
+        <pr-button @click=${loadTemplate}> Load Template </pr-button>
       </div>
-      <pr-button @click=${loadTemplate}>
-        Load Template
-      </pr-button>
-    </div>
-  `;
-}
-
-
+    `;
+  }
 
   private renderFlipCardTemplateCard() {
     const addTemplate = () => {
@@ -638,86 +631,78 @@ private renderConsensusDebateCard() {
     `;
   }
 
+  @state()
+  private charityDebateConfig: CharityDebateConfig =
+    createCharityDebateConfig();
+
+  @state()
+  private consensusTopics: string = 'Climate Change';
+
+  private renderCharityCheckbox(
+    field: keyof CharityDebateConfig,
+    labelText: string,
+  ) {
+    return html`
+      <label class="custom-checkbox">
+        <input
+          type="checkbox"
+          .checked=${this.charityDebateConfig[field]}
+          @change=${(e: Event) => {
+            // Use a new object to trigger a Lit update
+            this.charityDebateConfig = {
+              ...this.charityDebateConfig,
+              [field]: (e.target as HTMLInputElement).checked,
+            };
+          }}
+        />
+        <span class="checkmark"></span>
+        <span class="label-text">${labelText}</span>
+      </label>
+    `;
+  }
+
   private renderCharityDebateTemplateCard() {
-  const loadTemplate = () => {
-    const config: CharityDebateConfig = {
-      includeTos: (this.shadowRoot?.querySelector('#charity-cb-tos') as any)?.checked,
-      includeViewProfile: (this.shadowRoot?.querySelector('#charity-cb-profile') as any)?.checked,
-      includeMediator: (this.shadowRoot?.querySelector('#charity-cb-mediator') as any)?.checked,
-      includeInitialParticipantSurvey: (this.shadowRoot?.querySelector('#charity-cb-initial-survey') as any)?.checked,
-      includePostDiscussionSurvey: (this.shadowRoot?.querySelector('#charity-cb-post-survey') as any)?.checked,
-      includeDiscussionEvaluation: (this.shadowRoot?.querySelector('#charity-cb-discussion-eval') as any)?.checked,
-      includePeerEvaluation: (this.shadowRoot?.querySelector('#charity-cb-peer-eval') as any)?.checked,
-      includeMetaFeedback: (this.shadowRoot?.querySelector('#charity-cb-meta-eval') as any)?.checked,
+    const loadTemplate = () => {
+      this.addTemplate(getCharityDebateTemplate(this.charityDebateConfig));
     };
-    
-    this.addTemplate(getCharityDebateTemplate(config));
-  };
 
-  return html`
-    <div class="card large-card">
-      <div class="title">${CHARITY_DEBATE_METADATA.name}</div>
-      <div>${CHARITY_DEBATE_METADATA.description}</div>
-      <div class="template-controls">
-        <div class="subtitle">Configure Experiment Stages</div>
+    return html`
+      <div class="card large-card">
+        <div class="title">${CHARITY_DEBATE_METADATA.name}</div>
+        <div>${CHARITY_DEBATE_METADATA.description}</div>
+        <div class="template-controls">
+          <div class="subtitle">Configure Experiment Stages</div>
 
-        <label class="custom-checkbox">
-          <input type="checkbox" id="charity-cb-tos" checked>
-          <span class="checkmark"></span>
-          <span class="label-text">Include Terms of Service</span>
-        </label>
+          ${this.renderCharityCheckbox(
+            'includeTos',
+            'Include Terms of Service',
+          )}
+          ${this.renderCharityCheckbox(
+            'includeMediator',
+            '[Conditional] Include AI Mediator & Surveys',
+          )}
+          ${this.renderCharityCheckbox(
+            'includeInitialParticipantSurvey',
+            'Include Initial Participant Survey',
+          )}
+          ${this.renderCharityCheckbox(
+            'includeDiscussionEvaluation',
+            '[Optional] Include Discussion Evaluation',
+          )}
+          ${this.renderCharityCheckbox(
+            'includeDebriefingAndFeedback',
+            '[Optional] Include Debriefing & Experiment Feedback',
+          )}
+          ${this.renderCharityCheckbox(
+            'includeMetaFeedback',
+            '[Optional] Include Meta-Feedback Survey',
+          )}
+        </div>
 
-        <label class="custom-checkbox">
-          <input type="checkbox" id="charity-cb-profile">
-          <span class="checkmark"></span>
-          <span class="label-text">[Optional] Include View Assigned Profile Stage</span>
-        </label>
-
-        <label class="custom-checkbox">
-          <input type="checkbox" id="charity-cb-mediator" checked>
-          <span class="checkmark"></span>
-          <span class="label-text">[Conditional] Include AI Mediator & Surveys</span>
-        </label>
-        
-        <label class="custom-checkbox">
-          <input type="checkbox" id="charity-cb-initial-survey" checked>
-          <span class="checkmark"></span>
-          <span class="label-text">Include Initial Participant Survey</span>
-        </label>
-
-        <!-- The "Role/Value Assignment" checkbox has been removed. -->
-
-        <label class="custom-checkbox">
-          <input type="checkbox" id="charity-cb-post-survey" checked>
-          <span class="checkmark"></span>
-          <span class="label-text">Include Post-Discussion Survey</span>
-        </label>
-
-        <label class="custom-checkbox">
-          <input type="checkbox" id="charity-cb-discussion-eval">
-          <span class="checkmark"></span>
-          <span class="label-text">[Optional] Include Discussion Evaluation</span>
-        </label>
-
-        <label class="custom-checkbox">
-          <input type="checkbox" id="charity-cb-peer-eval" checked>
-          <span class="checkmark"></span>
-          <span class="label-text">[Optional] Include Peer Evaluation</span>
-        </label>
-
-         <label class="custom-checkbox">
-          <input type="checkbox" id="charity-cb-meta-feedback">
-          <span class="checkmark"></span>
-          <span class="label-text">[Optional] Include Meta-Feedback Survey</span>
-        </label>
+        <pr-button @click=${loadTemplate}> Load Template </pr-button>
       </div>
-      <pr-button @click=${loadTemplate}>
-        Load Template
-      </pr-button>
-    </div>
-  `;
-}
-
+    `;
+  }
 
   private renderAssetAllocationTemplateCard() {
     const addGame = () => {
