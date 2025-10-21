@@ -53,7 +53,8 @@ export const writeExperiment = onCall(async (request) => {
   // Use current experimenter as creator
   if (request.auth) {
     experimentConfig.metadata.creator = request.auth.token.email || '';
-    experimentConfig.metadata.creator = experimentConfig.metadata.creator.toLowerCase();
+    experimentConfig.metadata.creator =
+      experimentConfig.metadata.creator.toLowerCase();
   }
 
   // Run document write as transaction to ensure consistency
@@ -136,7 +137,10 @@ export const updateExperiment = onCall(async (request) => {
   }
   // Verify that the experimenter is the creator
   // TODO: Enable admins to update experiment?
-  if (request.auth?.token.email?.toLowerCase() !== oldExperiment.data()?.metadata.creator) {
+  if (
+    request.auth?.token.email?.toLowerCase() !==
+    oldExperiment.data()?.metadata.creator
+  ) {
     return {success: false};
   }
 
