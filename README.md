@@ -10,20 +10,20 @@ on human + LLM group dynamics.
 
 - 🔎 [Documentation for researchers + developers](https://pair-code.github.io/deliberate-lab/)
 - 👉 [Quick start for developers](https://pair-code.github.io/deliberate-lab/developers/run-locally)
+- :📃 [Technical paper](https://arxiv.org/abs/2510.13011)
 
 ## Citation
 
-📝 If you use Deliberate Lab in your work, please include the following software citation:
+📝 If you use Deliberate Lab in your work, please include the following citation:
 
 ```
-@software{Tsai_Deliberate_Lab_Open-Source_2025,
-author = {Tsai, Vivian and Qian, Crystal and Behr, Michael and Deliberate Lab community contributors},
-month = mar,
-title = {{Deliberate Lab: Open-Source Platform for LLM-Powered Social Science}},
-url = {https://github.com/PAIR-code/deliberate-lab},
-version = {2025-03-24},
-year = {2025}
+@misc{qian2025deliberatelab,
+  author={Crystal Qian and Vivian Tsai and Michael Behr and Nada Hussein and Léo Laugier and Nithum Thain and Lucas Dixon},
+  title={Deliberate Lab: A Platform for Real-Time Human-AI Social Experiments}, 
+  url={https://arxiv.org/abs/2510.13011}, 
+  year={2025},
 }
+
 ```
 
 See also `CITATION.cff` for citation file or "Cite this repository" in the GitHub sidebar for APA format.

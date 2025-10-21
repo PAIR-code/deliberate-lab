@@ -5,10 +5,31 @@ authors:
   given-names: "Vivian"
 - family-names: "Qian"
   given-names: "Crystal"
-- family-names: "Behr"
-  given-names: "Michael"
 - family-names: "Deliberate Lab community contributors"
 title: "Deliberate Lab: Open-Source Platform for LLM-Powered Social Science"
 version: 2025-03-24
 date-released: 2025-03-24
 url: "https://github.com/PAIR-code/deliberate-lab"
+
+preferred-citation:
+  type: article
+  title: "Deliberate Lab: A Platform for Real-Time Human-AI Social Experiments"
+  authors:
+    - family-names: "Qian"
+      given-names: "Crystal"
+    - family-names: "Tsai"
+      given-names: "Vivian"
+    - family-names: "Behr"
+      given-names: "Michael"
+    - family-names: "Hussein"
+      given-names: "Nada"
+    - family-names: "Laugier"
+      given-names: "Léo"
+    - family-names: "Thain"
+      given-names: "Nithum"
+    - family-names: "Dixon"
+      given-names: "Lucas"
+  journal: "arXiv"
+  year: 2025
+  doi: "10.48550/arXiv.2510.13011"
+  url: "https://arxiv.org/abs/2510.13011"
