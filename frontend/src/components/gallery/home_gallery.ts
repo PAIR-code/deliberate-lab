@@ -13,7 +13,10 @@ import {Pages, RouterService} from '../../services/router.service';
 
 import {Experiment, Visibility} from '@deliberation-lab/utils';
 import {convertExperimentToGalleryItem} from '../../shared/experiment.utils';
-import {getQuickstartAgentGroupChatTemplate, getQuickstartGroupChatTemplate} from '../../shared/templates/quickstart_group_chat';
+import {
+  getQuickstartAgentGroupChatTemplate,
+  getQuickstartGroupChatTemplate,
+} from '../../shared/templates/quickstart_group_chat';
 import {getQuickstartPrivateChatTemplate} from '../../shared/templates/quickstart_private_chat';
 
 import {styles} from './home_gallery.scss';
@@ -176,7 +179,7 @@ export class QuickStartGallery extends MobxLitElement {
             }}
           >
             <pr-icon icon="groups" color="neutral" size="large"></pr-icon>
-            <div>Group chat with<br/>no agents</div>
+            <div>Group chat with<br />no agents</div>
           </div>
         </div>
       </div>

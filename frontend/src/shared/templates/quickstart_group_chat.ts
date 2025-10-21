@@ -58,7 +58,7 @@ export function getQuickstartAgentGroupChatTemplate(): ExperimentTemplate {
 
 const CHAT_STAGE_ID = 'chat';
 
-function getStageConfigs(anonymous: boolean =true): StageConfig[] {
+function getStageConfigs(anonymous: boolean = true): StageConfig[] {
   const stages: StageConfig[] = [];
   let profileStage;
   if (anonymous === true) {
@@ -68,8 +68,8 @@ function getStageConfigs(anonymous: boolean =true): StageConfig[] {
     };
   } else {
     profileStage = {
-        name: 'Set your profile',
-        profileType: ProfileType.DEFAULT,
+      name: 'Set your profile',
+      profileType: ProfileType.DEFAULT,
     };
   }
 
