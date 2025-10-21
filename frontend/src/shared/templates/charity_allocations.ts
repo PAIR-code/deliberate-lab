@@ -79,7 +79,7 @@ const CONSENSUS_TOS_STAGE = createTOSStage({
   tosLines: [
     'Thank you for your interest in this research. If you choose to participate, you will be asked to participate in debates about resource allocation, which have real-world consequences in the form of disbursing real funds to real charities, based on your / your teams actions.',
     '**Compensation & Impact**',
-    "You will be paid a base amount for completing the survey. This base payment is guaranteed and is independent of your decisions regarding the charity allocations.",
+    'You will be paid a base amount for completing the survey. This base payment is guaranteed and is independent of your decisions regarding the charity allocations.',
     '**IRB & Confidentiality**',
     'The results of this study will be used solely for research purposes. Our team will keep all your information from this study strictly confidential, as required by law. The IRB at XXXXXX is responsible for protecting the rights and welfare of research volunteers like you.',
     '**Voluntary Participation**',
@@ -96,7 +96,7 @@ const TEXT_MEDIATED_INFO = [
 
 const TEXT_INSTRUCTIONS = [
   'Welcome! In this experiment, you will participate in three rounds of discussion and resource allocation for real-world charities. Your goal is to work with others to find the best allocation.',
-  "**How consensus is determined.** After each discussion, you will be asked how to distribute resources among the three charities presented. Your allocation will be compared with that of your group members to determine how much consensus your group achieved. The closer your allocations are to each other, the higher your consensus score will be.",
+  '**How consensus is determined.** After each discussion, you will be asked how to distribute resources among the three charities presented. Your allocation will be compared with that of your group members to determine how much consensus your group achieved. The closer your allocations are to each other, the higher your consensus score will be.',
   "**Your group's impact is tied to consensus.** At the end of the entire study, the total donation sum will be divided among all participating groups. The more consensus your group reaches, the more 'spending power' you will have. For example, a group that consistently reaches high agreement will allocate a much larger portion of the final donation pool than a group that consistently disagrees. Your main objective is to find common ground with your fellow participants to maximize your group's impact.",
   '**Compensation Reminder:** Your base participation payment is guaranteed and is separate from any donation outcomes.',
 ];
@@ -455,7 +455,8 @@ function createInitialParticipantSurveyStage(): StageConfig {
   return createSurveyStage({
     name: 'Initial Participant Survey',
     descriptions: createStageTextConfig({
-        primaryText: 'Please indicate how much you agree or disagree with the following statements.',
+      primaryText:
+        'Please indicate how much you agree or disagree with the following statements.',
     }),
     questions: [
       createScaleSurveyQuestion({
@@ -476,7 +477,8 @@ function createInitialParticipantSurveyStage(): StageConfig {
         ...LIKERT_SCALE_PROPS,
       }),
       createScaleSurveyQuestion({
-        questionTitle: 'I try to make sure everyone agrees before making a decision.',
+        questionTitle:
+          'I try to make sure everyone agrees before making a decision.',
         ...LIKERT_SCALE_PROPS,
       }),
       createScaleSurveyQuestion({
@@ -484,7 +486,8 @@ function createInitialParticipantSurveyStage(): StageConfig {
         ...LIKERT_SCALE_PROPS,
       }),
       createScaleSurveyQuestion({
-        questionTitle: 'It is important to me how the charity allocations today are decided.',
+        questionTitle:
+          'It is important to me how the charity allocations today are decided.',
         ...LIKERT_SCALE_PROPS,
       }),
     ],
@@ -495,7 +498,8 @@ function createInitialMediatorSurveyStage(): StageConfig {
   return createSurveyStage({
     name: 'Initial Mediator Survey',
     descriptions: createStageTextConfig({
-      primaryText: 'During your conversations today, you may receive facilitation assistance from an AI. Please answer the following questions about your experience with AI assistants.',
+      primaryText:
+        'During your conversations today, you may receive facilitation assistance from an AI. Please answer the following questions about your experience with AI assistants.',
     }),
     questions: [
       createScaleSurveyQuestion({
