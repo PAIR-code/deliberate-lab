@@ -78,6 +78,22 @@ export interface MultiAssetAllocationStageParticipantAnswer
   confirmedTimestamp: UnifiedTimestamp | null;
 }
 
+export interface MultiAssetAllocationStagePublicData extends BaseStagePublicData {
+  kind: StageKind.MULTI_ASSET_ALLOCATION;
+  participantAnswerMap: Record<string, MultiAssetAllocationStageParticipantAnswer>;
+}
+
+export function createMultiAssetAllocationStagePublicData(
+  config: Partial<MultiAssetAllocationStagePublicData> = {},
+): MultiAssetAllocationStagePublicData {
+  return {
+    id: config.id ?? '',
+    kind: StageKind.MULTI_ASSET_ALLOCATION,
+    participantAnswerMap: config.participantAnswerMap ?? {},
+  };
+}
+
+
 // ************************************************************************* //
 // FUNCTIONS                                                                 //
 // ************************************************************************* //

@@ -1,0 +1,120 @@
+import '../participant_profile/profile_display';
+
+import { MobxLitElement } from '@adobe/lit-mobx';
+import { CSSResultGroup, html, nothing } from 'lit';
+import { customElement, property } from 'lit/decorators.js';
+
+import {
+  MultiAssetAllocationStagePublicData,
+  MultiAssetAllocationStageConfig, // We'll need this for the stage name
+} from '@deliberation-lab/utils';
+import { getParticipantInlineDisplay } from '../../shared/participant.utils';
+
+import { core } from '../../core/core';
+import { CohortService } from '../../services/cohort.service';
+import { ExperimentService } from '../../services/experiment.service';
+
+import { styles } from './ranking_reveal_view.scss'; // Re-use existing styles
+
+/** Renders the results of a single MultiAssetAllocation stage. */
+@customElement('allocation-reveal-view')
+export class AllocationReveal extends MobxLitElement {
+  static override styles: CSSResultGroup = [styles];
+
+  private readonly cohortService = core.getService(CohortService);
+  private readonly experimentService = core.getService(ExperimentService);
+
+  // --- Properties passed in by the parent reveal-summary-view ---
+  @property() stage: MultiAssetAllocationStageConfig | undefined = undefined;
+  @property() publicData: MultiAssetAllocationStagePublicData | undefined = undefined;
+
+  private computeConsensusScore(): number {
+    if (!this.publicData || !this.publicData.participantAnswerMap) return 0;
+
+    // Add the type annotation here.  This is the key to telling TypeScript
+    // what the type of this variable is.
+    const participantAnswers = Object.values(this.publicData.participantAnswerMap) as any[];
+    if (participantAnswers.length === 0) return 0;
+    
+    const firstAllocationMap = participantAnswers[0].allocationMap;
+    const assetIds = Object.keys(firstAllocationMap);
+    if (assetIds.length === 0) return 0;
+    
+    const perAssetAverages: number[] = [];
+
+    for (const assetId of assetIds) {
+      const sumForAsset = participantAnswers.reduce((sum, currentAnswer) => {
+        return sum + (currentAnswer.allocationMap[assetId]?.percentage || 0);
+      }, 0);
+      perAssetAverages.push(sumForAsset / participantAnswers.length);
+    }
+
+    const totalAverage = perAssetAverages.reduce((sum, avg) => sum + avg, 0);
+    return totalAverage / perAssetAverages.length;
+  }
+
+  private renderAllocationTable() {
+    if (!this.publicData || !this.stage) return nothing;
+
+    const participantAnswerMap = this.publicData.participantAnswerMap;
+    const participantIds = Object.keys(participantAnswerMap);
+    if (participantIds.length === 0) return nothing;
+    
+    // Use the stage's stockOptions to get asset names, which is more robust.
+    const assets = this.stage.stockOptions;
+
+    return html`
+      <div class="participant-votes-table">
+        <div class="table-head">
+          <div class="table-row">
+            <div class="table-cell rank-row">Participant</div>
+            ${assets.map(asset => html`<div class="table-cell">${asset.name}</div>`)}
+          </div>
+        </div>
+        <div class="table-body">
+          ${participantIds.map(participantId => {
+            const profile = this.cohortService.participantMap[participantId];
+            const participantAnswer = participantAnswerMap[participantId];
+            return html`
+              <div class="table-row">
+                <div class="table-cell rank-row">
+                  ${profile ? getParticipantInlineDisplay(profile) : participantId}
+                </div>
+                ${assets.map(asset => {
+                    const percentage = participantAnswer.allocationMap[asset.id]?.percentage;
+                    return html`<div class="table-cell">${percentage?.toFixed(1) ?? 'N/A'}%</div>`;
+                })}
+              </div>
+            `;
+          })}
+        </div>
+      </div>
+    `;
+  }
+
+  override render() {
+    if (!this.publicData || !this.stage) {
+      return html`<p><em>Waiting for allocation data...</em></p>`;
+    }
+
+    const consensusScore = this.computeConsensusScore();
+    const stageName = this.experimentService.getStageName(this.stage.id);
+
+    return html`
+      <div class.round-results-wrapper>
+        <h3>Results for <i>${stageName}</i></h3>
+        ${this.renderAllocationTable()}
+        <div class="consensus-score">
+          <strong>Consensus Score: ${consensusScore.toFixed(1)}%</strong>
+        </div>
+        <div class="divider"></div>
+      </div>
+    `;
+  }
+}
+
+declare global {
+  interface HTMLElementTagNameMap {
+    'allocation-reveal-view': AllocationReveal;
+  }
+}

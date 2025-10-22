@@ -1,5 +1,7 @@
 import './ranking_reveal_view';
 import './survey_reveal_view';
+import './allocation_reveal_view';
+
 
 import {MobxLitElement} from '@adobe/lit-mobx';
 import {CSSResultGroup, html, nothing} from 'lit';
@@ -46,6 +48,7 @@ export class RevealView extends MobxLitElement {
     const stage = this.experimentService.getStage(item.id);
     const answer = this.participantService.answerMap[item.id];
     const publicData = this.cohortService.stagePublicDataMap[item.id];
+    console.log(`[Reveal Debug] Data for stage ID '${item.id}':`, publicData);
     if (!stage) return nothing;
 
     switch (item.kind) {
@@ -68,6 +71,13 @@ export class RevealView extends MobxLitElement {
           <survey-reveal-view .item=${item} .stage=${stage} .answer=${answer}>
           </survey-reveal-view>
         `;
+      case StageKind.MULTI_ASSET_ALLOCATION:
+        return html`
+          <allocation-reveal-view .stage=${stage} .publicData=${publicData}>
+          </allocation-reveal-view>
+        `;
+
+
       default:
         return nothing;
     }

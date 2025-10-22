@@ -23,6 +23,7 @@ import {
   DEFAULT_READY_TO_END_FIELD,
   DEFAULT_RESPONSE_FIELD,
   DEFAULT_SHOULD_RESPOND_FIELD,
+  RevealAudience,
   createModelGenerationConfig,
   createChatPromptConfig,
   createTOSStage,
@@ -45,6 +46,9 @@ import {
   createComparisonCondition,
   ComparisonOperator,
   createInfoStage,
+  StageKind,
+  createRevealStage,
+
 } from '@deliberation-lab/utils';
 
 // Agent configuration for the template.
@@ -174,15 +178,15 @@ export function getCharityDebateTemplate(
 ): ExperimentTemplate {
   const stages: StageConfig[] = [];
 
-  if (config.includeTos) stages.push(CONSENSUS_TOS_STAGE);
-  stages.push(SET_PROFILE_STAGE_EXPANDED);
-  if (config.includeMediator) stages.push(createMediatedDiscussionInfoStage());
-  stages.push(createInstructionsStage());
-  stages.push(createComprehensionStageNew());
-
-  if (config.includeInitialParticipantSurvey)
-    stages.push(createInitialParticipantSurveyStage());
-  if (config.includeMediator) stages.push(createInitialMediatorSurveyStage());
+//  if (config.includeTos) stages.push(CONSENSUS_TOS_STAGE);
+//  stages.push(SET_PROFILE_STAGE_EXPANDED);
+//  if (config.includeMediator) stages.push(createMediatedDiscussionInfoStage());
+//  stages.push(createInstructionsStage());
+//  stages.push(createComprehensionStageNew());
+//
+//  if (config.includeInitialParticipantSurvey)
+//    stages.push(createInitialParticipantSurveyStage());
+//  if (config.includeMediator) stages.push(createInitialMediatorSurveyStage());
 
   const debateRoundsCharities = [...CHARITY_BUNDLES].sort(
     () => 0.5 - Math.random(),
@@ -199,22 +203,22 @@ export function getCharityDebateTemplate(
 
     stages.push(createRoundStartStage(roundNum));
 
-    stages.push(
-      createAllocationStage(
-        `vote-round-${roundNum}-pre`,
-        `Allocation (Pre-Discussion): Round ${roundNum}`,
-        charityGroup,
-      ),
-    );
-
-    stages.push(
-      createAllocationDiscussionStage(
-        `discussion-round-${roundNum}`,
-        `Discussion: Round ${roundNum}`,
-        setting,
-        mediatorForRound,
-      ),
-    );
+//    stages.push(
+//      createAllocationStage(
+//        `vote-round-${roundNum}-pre`,
+//        `Allocation (Pre-Discussion): Round ${roundNum}`,
+//        charityGroup,
+//      ),
+//    );
+//
+//    stages.push(
+//      createAllocationDiscussionStage(
+//        `discussion-round-${roundNum}`,
+//        `Discussion: Round ${roundNum}`,
+//        setting,
+//        mediatorForRound,
+//      ),
+//    );
 
     stages.push(
       createAllocationStage(
@@ -224,14 +228,16 @@ export function getCharityDebateTemplate(
       ),
     );
 
-    const isMediatedRound = mediatorForRound !== undefined;
-
-    if (isMediatedRound) {
-      stages.push(createPerMediatorEvaluationStage(roundNum));
-    }
-
-    stages.push(createRoundOutcomeSurveyStage(roundNum, isMediatedRound));
+//    const isMediatedRound = mediatorForRound !== undefined;
+//
+//    if (isMediatedRound) {
+//      stages.push(createPerMediatorEvaluationStage(roundNum));
+//    }
+//
+//    stages.push(createRoundOutcomeSurveyStage(roundNum, isMediatedRound));
   });
+
+  stages.push(createAllocationRevealStage());
 
   if (config.includeDiscussionEvaluation)
     stages.push(createDiscussionEvaluationStage());
@@ -249,10 +255,39 @@ export function getCharityDebateTemplate(
       metadata: CHARITY_DEBATE_METADATA,
     }),
     stageConfigs: stages,
-    agentMediators: [HABERMAS_MEDIATOR_TEMPLATE, DYNAMIC_MEDIATOR_TEMPLATE],
+    //agentMediators: [HABERMAS_MEDIATOR_TEMPLATE, DYNAMIC_MEDIATOR_TEMPLATE],
+    agentMediators: [],
     agentParticipants: [],
   });
 }
+
+export function createAllocationRevealStage(): StageConfig {
+  return createRevealStage({
+    id: 'final-results-summary',
+    name: 'Final Allocation Results',
+    
+    // This is the crucial part. We are listing the stages whose
+    // results we want this stage to "reveal".
+    items: [
+      {
+        id: 'vote-round-1-post',
+        kind: StageKind.MULTI_ASSET_ALLOCATION,
+        revealAudience: RevealAudience.ALL_PARTICIPANTS, // <-- ADD THIS LINE
+      },
+      {
+        id: 'vote-round-2-post',
+        kind: StageKind.MULTI_ASSET_ALLOCATION,
+        revealAudience: RevealAudience.ALL_PARTICIPANTS, // <-- ADD THIS LINE
+      },
+      {
+        id: 'vote-round-3-post',
+        kind: StageKind.MULTI_ASSET_ALLOCATION,
+        revealAudience: RevealAudience.ALL_PARTICIPANTS, // <-- ADD THIS LINE
+      },
+    ],
+  });
+}
+
 
 function createRoundStartStage(roundNum: number): StageConfig {
   return createInfoStage({
