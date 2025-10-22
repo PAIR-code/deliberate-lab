@@ -48,7 +48,7 @@ import {
   createInfoStage,
   StageKind,
   createRevealStage,
-
+  createMultiAssetAllocationRevealItem
 } from '@deliberation-lab/utils';
 
 // Agent configuration for the template.
@@ -269,21 +269,18 @@ export function createAllocationRevealStage(): StageConfig {
     // This is the crucial part. We are listing the stages whose
     // results we want this stage to "reveal".
     items: [
-      {
+      createMultiAssetAllocationRevealItem({
         id: 'vote-round-1-post',
-        kind: StageKind.MULTI_ASSET_ALLOCATION,
-        revealAudience: RevealAudience.ALL_PARTICIPANTS, // <-- ADD THIS LINE
-      },
-      {
+        revealAudience: RevealAudience.ALL_PARTICIPANTS,
+      }),
+      createMultiAssetAllocationRevealItem({
         id: 'vote-round-2-post',
-        kind: StageKind.MULTI_ASSET_ALLOCATION,
-        revealAudience: RevealAudience.ALL_PARTICIPANTS, // <-- ADD THIS LINE
-      },
-      {
+        revealAudience: RevealAudience.ALL_PARTICIPANTS,
+      }),
+      createMultiAssetAllocationRevealItem({
         id: 'vote-round-3-post',
-        kind: StageKind.MULTI_ASSET_ALLOCATION,
-        revealAudience: RevealAudience.ALL_PARTICIPANTS, // <-- ADD THIS LINE
-      },
+        revealAudience: RevealAudience.ALL_PARTICIPANTS,
+      }),
     ],
   });
 }
