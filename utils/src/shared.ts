@@ -1,6 +1,8 @@
 import {Timestamp} from 'firebase/firestore';
 import {ExperimentDownload} from './data';
 import {v4 as uuidv4} from 'uuid';
+import {MediatorStatus} from './mediator';
+import {ParticipantStatus} from './participant';
 
 /** Shared types and functions. */
 
@@ -166,4 +168,28 @@ export function createPermissionsConfig(
     visibility: config.visibility ?? Visibility.PRIVATE,
     readers: config.readers ?? [],
   };
+}
+
+/**
+ * Get display text for agent status (mediator or participant).
+ * Converts internal status values to user-friendly display text.
+ */
+export function getAgentStatusDisplayText(
+  status: MediatorStatus | ParticipantStatus,
+): string {
+  // Mediator statuses are already in display format
+  if (status === MediatorStatus.ACTIVE || status === MediatorStatus.PAUSED) {
+    return status;
+  }
+  
+  // Convert participant statuses to display format
+  if (status === ParticipantStatus.IN_PROGRESS) {
+    return 'active';
+  }
+  if (status === ParticipantStatus.PAUSED) {
+    return 'paused';
+  }
+  
+  // For other statuses, return as-is
+  return status;
 }

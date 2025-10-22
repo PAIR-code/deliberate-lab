@@ -22,6 +22,7 @@ import {
   StageKind,
   getTimeElapsed,
   getRgbColorInterpolation,
+  getAgentStatusDisplayText,
 } from '@deliberation-lab/utils';
 
 import {
@@ -70,9 +71,11 @@ export class ParticipantSummary extends MobxLitElement {
         <div class="left">
           <participant-profile-display .profile=${this.participant}>
           </participant-profile-display>
-          ${this.renderStatus()} ${this.renderPauseButton()}
-          ${this.renderAttentionStatus()} ${this.renderTimeElapsed()}
+          ${this.renderStatus()}
+          ${this.renderAttentionStatus()}
+          ${this.renderTimeElapsed()}
           ${this.renderIsAgent()}
+          ${this.renderPauseButton()}
         </div>
         <div class="buttons">
           <participant-progress-bar
@@ -88,10 +91,11 @@ export class ParticipantSummary extends MobxLitElement {
   }
 
   private renderIsAgent() {
-    if (this.participant && !this.participant.agentConfig) {
+    if (!this.participant || !this.participant.agentConfig) {
       return nothing;
     }
-    return html`<div class="chip">🤖</div>`;
+    const statusText = getAgentStatusDisplayText(this.participant.currentStatus);
+    return html`<div class="chip secondary">🤖 ${statusText}</div>`;
   }
 
   private renderTimeElapsed() {
