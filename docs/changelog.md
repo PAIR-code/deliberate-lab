@@ -5,10 +5,29 @@ layout: default
 
 This page summarizes notable updates to the Deliberate Lab platform.
 
-## 2025-08-12: Details coming soon
+## 2025-10-21: Miscellaneous improvements for agent chat and experiment workflow
+[PR #717](https://github.com/PAIR-code/deliberate-lab/pull/717)
+
+Agent changes:
+- (patch) Fix issue with chat message triggers
+- (patch) Fix agent min/max number of turns chat setting
+- (feature) Enable agents to send initial hardcoded chat messages
+- (feature) Add retry loop for API calls
+- (feature) Add group prompt items to structured prompts
+
+Other changes:
+- (feature) Add support for YouTube iframes in info stage
+- (feature) Add bot protection setting that disables pasting in chat
+- (feature) Add help/alert panel for experimenters and participants to communicate
+- (feature) Add MultiAssetAllocation stage
+- (feature) Add new consensus templates
+- (feature) Add quickstart gallery cards to home page
+- (feature) Add API key warnings to experiment editor
+
+## 2025-08-12: Summer 2025 feature updates and bug fixes
 [PR #634](https://github.com/PAIR-code/deliberate-lab/pull/634)
 
-Changelog notes for Summer 2025 merge coming soon.
+Changelog notes for Summer 2025 merge to be added.
 
 ## 2025-06-10: Add automatic cohort transfer by survey answer
 Experiment Version: 18 / [PR #535](https://github.com/PAIR-code/deliberate-lab/pull/535)

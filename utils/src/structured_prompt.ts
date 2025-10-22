@@ -32,7 +32,7 @@ export type MediatorPromptConfig = ChatPromptConfig;
 
 export type ParticipantPromptConfig = ChatPromptConfig;
 
-// Currently used for both mediator and participant chat prompts
+/** Currently used for both mediator and participant chat prompts. */
 export interface ChatPromptConfig extends BasePromptConfig {
   type: StageKind.CHAT;
   structuredOutputConfig: ChatMediatorStructuredOutputConfig;
@@ -58,6 +58,8 @@ export enum PromptItemType {
   // Context specified in the agent config
   PROFILE_CONTEXT = 'PROFILE_CONTEXT',
   // Context from specified stage (or all stages up to present if null)
+  // NOTE: This is content that a human participant can see, e.g.,
+  // half-answered survey while in the UI for the given stage
   STAGE_CONTEXT = 'STAGE_CONTEXT',
   // Group of prompt items
   GROUP = 'GROUP',
@@ -78,6 +80,12 @@ export interface ProfileInfoPromptItem extends BasePromptItem {
   type: PromptItemType.PROFILE_INFO;
 }
 
+/**
+ * StageContextPromptItem.
+ *
+ * NOTE: This is content that a human participant can see, e.g.,
+ * half-answered survey while in the UI for the given stage.
+ */
 export interface StageContextPromptItem extends BasePromptItem {
   type: PromptItemType.STAGE_CONTEXT;
   // ID of stage
