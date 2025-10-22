@@ -26,9 +26,12 @@ export class AgentParticipantDialog extends MobxLitElement {
   @property() isSuccess = false;
 
   @property() cohort: CohortConfig | undefined = undefined;
-  @property() onDialogClose = () => {};
   @property() agentId = '';
   @property() promptContext = '';
+
+  private close() {
+    this.dispatchEvent(new CustomEvent('close'));
+  }
 
   override render() {
     if (!this.cohort) {
@@ -43,7 +46,7 @@ export class AgentParticipantDialog extends MobxLitElement {
             color="neutral"
             icon="close"
             variant="default"
-            @click=${this.onDialogClose}
+            @click=${this.close}
           >
           </pr-icon-button>
         </div>
