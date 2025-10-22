@@ -108,7 +108,10 @@ async function getStageAnswersWithDisplayNames<
   return addDisplayNamesToAnswers(experimentId, answers, stageId);
 }
 
-/** Assemble prompt items into final prompt. */
+/** Assemble prompt items into final prompt.
+ * This is the main function called to get a final prompt string that
+ * can be sent to an LLM API without any further edits.
+ */
 export async function getStructuredPrompt(
   experimentId: string,
   cohortId: string,
@@ -118,7 +121,7 @@ export async function getStructuredPrompt(
   userProfile: UserProfile,
   agentConfig: ProfileAgentConfig,
   promptConfig: BasePromptConfig,
-) {
+): string {
   const promptText = await processPromptItems(
     promptConfig.prompt,
     experimentId,
@@ -233,6 +236,12 @@ async function processPromptItems(
   return items.join('\n');
 }
 
+/**
+ * Assembles content from the given stage (e.g., information provided to
+ * human participants for the stage) based on the prompt item settings of
+ * what to include (e.g., stage description, participant's answers for the
+ * stage) and formatted specifically for inserting into an LLM prompt.
+ */
 export async function getStageContextForPrompt(
   experimentId: string,
   cohortId: string,
@@ -283,6 +292,14 @@ export async function getStageContextForPrompt(
   return textItems.join('\n');
 }
 
+/** Formats the body content for the given stage, e.g., the terms of service
+ * in a TOS stage or all the survey questions in a survey stage.
+ *
+ * NOTE: This shows all content visible to the participant, so a survey
+ * stage will produce a complete list of all the survey questions
+ * even if not all of them have been answered (just as a human participant
+ * would see all the survey questions in the stage UI).
+ */
 export async function getStageDisplayForPrompt(
   experimentId: string,
   cohortId: string,
@@ -388,7 +405,7 @@ export async function getStageDisplayForPrompt(
           : assetAllocationDisplay;
       }
       return assetAllocationDisplay;
-    case StageKind.SURVEY:
+    case StageKind.SURVEY: // Same logic as survey per participant below
     case StageKind.SURVEY_PER_PARTICIPANT:
       const surveyDisplay = getSurveySummaryText(
         stage as SurveyStageConfig | SurveyPerParticipantStageConfig,
