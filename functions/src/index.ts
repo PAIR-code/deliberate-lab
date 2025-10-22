@@ -4,6 +4,7 @@
  */
 
 // Endpoints called from frontend
+export * from './admin.endpoints';
 export * from './alert.endpoints';
 export * from './agent.endpoints';
 export * from './cohort.endpoints';

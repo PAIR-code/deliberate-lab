@@ -36,4 +36,24 @@ export class AuthGuard {
 
     throwUnauthIfNot(claims);
   }
+
+  public static async isAdmin(request: CallableRequest) {
+    const uid = request.auth?.uid;
+    if (!uid || !request.auth?.token.email)
+      throw new functions.https.HttpsError(
+        'unauthenticated',
+        'User is not authenticated',
+      );
+
+    const allowlistDoc = await app
+      .firestore()
+      .collection('allowlist')
+      .doc(request.auth.token.email.toLowerCase())
+      .get();
+
+    const isAdmin =
+      allowlistDoc.exists && allowlistDoc.data()?.isAdmin === true;
+
+    throwUnauthIfNot(isAdmin);
+  }
 }

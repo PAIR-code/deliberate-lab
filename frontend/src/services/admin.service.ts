@@ -18,6 +18,7 @@ import {
   where,
 } from 'firebase/firestore';
 import {computed, makeObservable, observable} from 'mobx';
+import {httpsCallable} from 'firebase/functions';
 
 import {AuthService} from './auth.service';
 import {FirebaseService} from './firebase.service';
@@ -100,5 +101,27 @@ export class AdminService extends Service {
 
   getExperiment(experimentId: string) {
     return this.experiments.find((exp) => exp.id === experimentId);
+  }
+
+  async normalizeAllowlistEmails() {
+    const normalizeFunction = httpsCallable(
+      this.sp.firebaseService.functions,
+      'normalizeAllowlistEmails',
+    );
+
+    try {
+      const result = await normalizeFunction({});
+      return result.data as {
+        success: boolean;
+        normalizedCount: number;
+        alreadyLowercaseCount: number;
+        conflictCount: number;
+        totalProcessed: number;
+        details: string[];
+      };
+    } catch (error) {
+      console.error('Error normalizing allowlist emails:', error);
+      throw error;
+    }
   }
 }
