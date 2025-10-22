@@ -207,7 +207,9 @@ export class Component extends MobxLitElement {
           return nothing;
         }
         return html`
-          <div class="chip secondary">🤖 ${getAgentStatusDisplayText(mediator.currentStatus)}</div>
+          <div class="chip secondary">
+            🤖 ${getAgentStatusDisplayText(mediator.currentStatus)}
+          </div>
         `;
       };
 

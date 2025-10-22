@@ -181,7 +181,7 @@ export function getAgentStatusDisplayText(
   if (status === MediatorStatus.ACTIVE || status === MediatorStatus.PAUSED) {
     return status;
   }
-  
+
   // Convert participant statuses to display format
   if (status === ParticipantStatus.IN_PROGRESS) {
     return 'active';
@@ -189,7 +189,7 @@ export function getAgentStatusDisplayText(
   if (status === ParticipantStatus.PAUSED) {
     return 'paused';
   }
-  
+
   // For other statuses, return as-is
   return status;
 }

@@ -71,10 +71,8 @@ export class ParticipantSummary extends MobxLitElement {
         <div class="left">
           <participant-profile-display .profile=${this.participant}>
           </participant-profile-display>
-          ${this.renderStatus()}
-          ${this.renderAttentionStatus()}
-          ${this.renderTimeElapsed()}
-          ${this.renderIsAgent()}
+          ${this.renderStatus()} ${this.renderAttentionStatus()}
+          ${this.renderTimeElapsed()} ${this.renderIsAgent()}
           ${this.renderPauseButton()}
         </div>
         <div class="buttons">
@@ -94,7 +92,9 @@ export class ParticipantSummary extends MobxLitElement {
     if (!this.participant || !this.participant.agentConfig) {
       return nothing;
     }
-    const statusText = getAgentStatusDisplayText(this.participant.currentStatus);
+    const statusText = getAgentStatusDisplayText(
+      this.participant.currentStatus,
+    );
     return html`<div class="chip secondary">🤖 ${statusText}</div>`;
   }
 
