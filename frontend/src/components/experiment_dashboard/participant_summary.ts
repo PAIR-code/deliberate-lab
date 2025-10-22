@@ -71,8 +71,8 @@ export class ParticipantSummary extends MobxLitElement {
           <participant-profile-display .profile=${this.participant}>
           </participant-profile-display>
           ${this.renderStatus()} ${this.renderPauseButton()}
-          ${this.renderAttentionStatus()}
-          ${this.renderTimeElapsed()} ${this.renderIsAgent()}
+          ${this.renderAttentionStatus()} ${this.renderTimeElapsed()}
+          ${this.renderIsAgent()}
         </div>
         <div class="buttons">
           <participant-progress-bar
@@ -80,8 +80,8 @@ export class ParticipantSummary extends MobxLitElement {
             .stageIds=${this.experimentService.experiment?.stageIds ?? []}
           >
           </participant-progress-bar>
-          ${this.renderCopyButton()}
-          ${this.renderAttentionButton()} ${this.renderBootButton()}
+          ${this.renderCopyButton()} ${this.renderAttentionButton()}
+          ${this.renderBootButton()}
         </div>
       </div>
     `;

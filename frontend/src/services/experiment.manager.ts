@@ -1060,7 +1060,10 @@ export class ExperimentManager extends Service {
   }
 
   /** Change participant status. */
-  async updateParticipantStatus(participantId: string, status: ParticipantStatus.IN_PROGRESS | ParticipantStatus.PAUSED) {
+  async updateParticipantStatus(
+    participantId: string,
+    status: ParticipantStatus.IN_PROGRESS | ParticipantStatus.PAUSED,
+  ) {
     let response = {};
     const experimentId = this.sp.experimentManager.experimentId;
     if (experimentId) {

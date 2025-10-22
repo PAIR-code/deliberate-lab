@@ -565,7 +565,10 @@ export const updateParticipantStatusCallable = async (
   functions: Functions,
   config: UpdateParticipantStatusData,
 ) => {
-  const {data} = await httpsCallable<UpdateParticipantStatusData, SuccessResponse>(
+  const {data} = await httpsCallable<
+    UpdateParticipantStatusData,
+    SuccessResponse
+  >(
     functions,
     'updateParticipantStatus',
   )(config);
