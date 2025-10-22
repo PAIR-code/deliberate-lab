@@ -1,4 +1,5 @@
 import {
+  AlertMessage,
   AssetAllocation,
   ChatMessage,
   ChatStageParticipantAnswer,
@@ -104,6 +105,7 @@ export class ParticipantService extends Service {
   @observable answerMap: Record<string, StageParticipantAnswer | undefined> =
     {};
   @observable privateChatMap: Record<string, ChatMessage[]> = {};
+  @observable alertMap: Record<string, AlertMessage> = {};
 
   // Loading
   @observable unsubscribe: Unsubscribe[] = [];
@@ -113,6 +115,7 @@ export class ParticipantService extends Service {
 
   // Sidenav
   @observable showParticipantSidenav = true;
+  @observable showHelpPanel = false;
 
   // Chat creation loading
   @observable isSendingChat = false;
@@ -125,6 +128,20 @@ export class ParticipantService extends Service {
     this.isProfileLoading = value;
     this.isPrivateChatLoading = value;
     this.areAnswersLoading = value;
+  }
+
+  @computed get alerts() {
+    return Object.values(this.alertMap).sort(
+      (a, b) => b.timestamp.seconds - a.timestamp.seconds,
+    );
+  }
+
+  getShowHelpPanel() {
+    return this.showHelpPanel;
+  }
+
+  setShowHelpPanel(showHelpPanel: boolean) {
+    this.showHelpPanel = showHelpPanel;
   }
 
   setShowParticipantSidenav(showParticipantSidenav: boolean) {
@@ -311,8 +328,9 @@ export class ParticipantService extends Service {
       ),
     );
 
-    // Subscribe to private chats
+    // Subscribe to additional documents
     this.loadPrivateChatMessages();
+    this.loadAlertMessages();
   }
 
   /** Subscribe to private chat message collections for each stage ID. */
@@ -368,6 +386,37 @@ export class ParticipantService extends Service {
     }
   }
 
+  /** Subscribe to participant's private alerts. */
+  async loadAlertMessages() {
+    if (!this.experimentId || !this.participantId) return;
+    this.unsubscribe.push(
+      onSnapshot(
+        query(
+          collection(
+            this.sp.firebaseService.firestore,
+            'experiments',
+            this.experimentId,
+            'participants',
+            this.participantId,
+            'alerts',
+          ),
+          orderBy('timestamp', 'asc'),
+        ),
+        (snapshot) => {
+          let changedDocs = snapshot.docChanges().map((change) => change.doc);
+          if (changedDocs.length === 0) {
+            changedDocs = snapshot.docs;
+          }
+
+          changedDocs.forEach((doc) => {
+            const alert = doc.data() as AlertMessage;
+            this.alertMap[alert.id] = alert;
+          });
+        },
+      ),
+    );
+  }
+
   unsubscribeAll() {
     this.unsubscribe.forEach((unsubscribe) => unsubscribe());
     this.unsubscribe = [];
@@ -375,6 +424,7 @@ export class ParticipantService extends Service {
     this.profile = undefined;
     this.answerMap = {};
     this.privateChatMap = {};
+    this.alertMap = {};
     this.sp.participantAnswerService.reset();
   }
 
@@ -1022,7 +1072,7 @@ export class ParticipantService extends Service {
 
   async sendAlertMessage(message: string) {
     let response = {};
-    if (this.experimentId && this.profile) {
+    if (this.experimentId && this.profile && message.trim().length > 0) {
       response = await sendAlertMessageCallable(
         this.sp.firebaseService.functions,
         {

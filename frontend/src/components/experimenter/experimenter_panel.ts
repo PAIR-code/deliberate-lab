@@ -3,6 +3,7 @@ import '../../pair-components/icon';
 import '../../pair-components/icon_button';
 import '../../pair-components/tooltip';
 
+import '../participant_profile/profile_display';
 import './experimenter_data_editor';
 import './experimenter_manual_chat';
 
@@ -308,42 +309,81 @@ export class Panel extends MobxLitElement {
   private renderAlertPanel() {
     const newAlerts = this.experimentManager.newAlerts;
     const oldAlerts = this.experimentManager.oldAlerts;
+    let alertResponse = '';
 
     const renderAlert = (alert: AlertMessage) => {
       const cohort = this.experimentManager.getCohort(alert.cohortId);
       const participant =
         this.experimentManager.participantMap[alert.participantId];
 
-      const onAck = () => {
-        // TODO: Add UI so the experimenter can send a custom response
-        // (and add UI for the participant to view alert status/response)
+      const onAck = (response: string) => {
         this.isAckAlertLoading = true;
-        const response = 'Acknowledged';
-        this.experimentManager.ackAlertMessage(alert.id, response);
+        this.experimentManager.ackAlertMessage(
+          alert.id,
+          alert.participantId,
+          response,
+        );
         this.isAckAlertLoading = false;
       };
 
       return html`
         <div class="alert ${alert.status === AlertStatus.NEW ? 'new' : ''}">
-          <div class="subtitle">
-            ${convertUnifiedTimestampToDate(alert.timestamp)}
+          <div class="alert-top">
+            <div class="alert-header">
+              <div class="left">
+                <participant-profile-display .profile=${participant}>
+                </participant-profile-display>
+                <div class="subtitle">
+                  (${cohort?.metadata.name ?? 'Unknown cohort'})
+                </div>
+              </div>
+              <div class="subtitle">
+                ${convertUnifiedTimestampToDate(alert.timestamp)}
+              </div>
+            </div>
+            <div class="alert-content">${alert.message}</div>
           </div>
-          <div>
-            ${cohort?.metadata.name ?? 'Unknown cohort'}
-            (${participant?.name ?? 'Unknown participant'})
-          </div>
-          <div>${alert.message}</div>
-          ${alert.status === AlertStatus.NEW
-            ? html`
+          <div class="alert-bottom">
+            <div class="subtitle">Your responses</div>
+            ${alert.responses.map(
+              (response) => html` <div class="response">${response}</div> `,
+            )}
+            <div class="alert-response-options">
+              <div class="alert-response-input">
+                <pr-textarea
+                  .value=${alertResponse}
+                  placeholder="Send a response"
+                  @input=${(e: Event) => {
+                    alertResponse = (e.target as HTMLTextAreaElement).value;
+                  }}
+                >
+                </pr-textarea>
                 <pr-icon-button
-                  icon="check_circle"
+                  icon="send"
                   variant="default"
-                  ?loading=${this.isAckAlertLoading}
-                  @click=${onAck}
+                  @click=${async () => {
+                    onAck(alertResponse);
+                  }}
                 >
                 </pr-icon-button>
-              `
-            : nothing}
+              </div>
+              ${alert.status === AlertStatus.NEW
+                ? html`
+                    <pr-tooltip text="Mark as read" position="TOP_END">
+                      <pr-icon-button
+                        icon="check_circle"
+                        variant="default"
+                        ?loading=${this.isAckAlertLoading}
+                        @click=${() => {
+                          onAck('');
+                        }}
+                      >
+                      </pr-icon-button>
+                    </pr-tooltip>
+                  `
+                : nothing}
+            </div>
+          </div>
         </div>
       `;
     };

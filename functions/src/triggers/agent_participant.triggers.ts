@@ -1,17 +1,11 @@
+import {onDocumentUpdated} from 'firebase-functions/v2/firestore';
 import {
-  onDocumentCreated,
-  onDocumentUpdated,
-} from 'firebase-functions/v2/firestore';
-import {Timestamp} from 'firebase-admin/firestore';
-import {
-  CohortConfig,
   Experiment,
   ParticipantProfileExtended,
   ParticipantStatus,
 } from '@deliberation-lab/utils';
 import {completeStageAsAgentParticipant} from '../agent_participant.utils';
 import {sendInitialChatMessages} from '../chat/chat.agent';
-import {updateCohortStageUnlocked} from '../participant.utils';
 import {
   getFirestoreCohort,
   getFirestoreParticipant,
@@ -28,7 +22,6 @@ export const updateAgentParticipant = onDocumentUpdated(
     if (!event.data) return;
 
     const experimentId = event.params.experimentId;
-    const participantId = event.params.participantId;
 
     // Check if participant moved to a new stage (for initial message sending)
     const before = event.data.before.data() as ParticipantProfileExtended;

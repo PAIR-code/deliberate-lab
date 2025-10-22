@@ -6,6 +6,7 @@ import {
   Experiment,
   ParticipantProfileExtended,
   ParticipantStatus,
+  ProfileStageConfig,
   ProfileType,
   RoleStagePublicData,
   StageKind,
@@ -113,7 +114,7 @@ export const createParticipant = onCall(async (request) => {
 
       const profileStage = stages.find(
         (stage) => (stage as StageConfig).kind === StageKind.PROFILE,
-      ) as StageConfig | undefined;
+      ) as ProfileStageConfig | undefined;
       const profileType =
         profileStage?.profileType || ProfileType.ANONYMOUS_ANIMAL;
 

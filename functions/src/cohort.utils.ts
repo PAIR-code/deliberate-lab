@@ -1,6 +1,7 @@
 import {
   CohortConfig,
   StageConfig,
+  MediatorProfileExtended,
   createPublicDataFromStageConfigs,
 } from '@deliberation-lab/utils';
 import {createMediatorsForCohort} from './mediator.utils';
@@ -61,7 +62,7 @@ export async function createCohortInternal(
   transaction.set(document, cohortConfig);
 
   // Add relevant mediators to cohort
-  const mediators = await createMediatorsForCohort(
+  const mediators: MediatorProfileExtended[] = await createMediatorsForCohort(
     experimentId,
     cohortConfig.id,
   );

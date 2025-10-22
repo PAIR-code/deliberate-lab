@@ -29,6 +29,7 @@ export type SendAlertMessageData = Static<typeof SendAlertMessageData>;
 export const AckAlertMessageData = Type.Object(
   {
     experimentId: Type.String({minLength: 1}),
+    participantId: Type.String({minLength: 1}),
     alertId: Type.String({minLength: 1}),
     response: Type.String(),
   },

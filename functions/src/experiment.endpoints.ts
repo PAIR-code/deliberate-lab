@@ -1,24 +1,23 @@
 import {Value} from '@sinclair/typebox/value';
 import {
+  AgentMediatorPersonaConfig,
+  AgentMediatorTemplate,
+  AgentParticipantPersonaConfig,
+  AgentParticipantTemplate,
   Experiment,
-  ExperimentCreationData,
   ExperimentDeletionData,
+  MediatorPromptConfig,
+  ParticipantPromptConfig,
+  StageConfig,
   createExperimentConfig,
   createExperimentTemplate,
 } from '@deliberation-lab/utils';
 
-import * as admin from 'firebase-admin';
 import * as functions from 'firebase-functions';
 import {onCall} from 'firebase-functions/v2/https';
 
 import {app} from './app';
 import {AuthGuard} from './utils/auth-guard';
-import {
-  checkConfigDataUnionOnPath,
-  isUnionError,
-  prettyPrintError,
-  prettyPrintErrors,
-} from './utils/validation';
 
 /** Create, update, and delete experiments and experiment templates. */
 
@@ -52,7 +51,9 @@ export const writeExperiment = onCall(async (request) => {
   }
 
   // Use current experimenter as creator
-  experimentConfig.metadata.creator = request.auth.token.email;
+  if (request.auth) {
+    experimentConfig.metadata.creator = request.auth.token.email || '';
+  }
 
   // Run document write as transaction to ensure consistency
   await app.firestore().runTransaction(async (transaction) => {
@@ -192,7 +193,6 @@ export const deleteExperiment = onCall(async (request) => {
   const validInput = Value.Check(ExperimentDeletionData, data);
   if (!validInput) {
     throw new functions.https.HttpsError('invalid-argument', 'Invalid data');
-    return {success: false};
   }
 
   // Verify that experimenter is the creator before enabling delete
@@ -204,6 +204,12 @@ export const deleteExperiment = onCall(async (request) => {
       .doc(data.experimentId)
       .get()
   ).data();
+  if (!experiment) {
+    throw new functions.https.HttpsError(
+      'not-found',
+      `Experiment ${data.experimentId} not found in collection ${data.collectionName}`,
+    );
+  }
   if (request.auth?.token.email !== experiment.metadata.creator)
     return {success: false};
 
@@ -232,6 +238,13 @@ export const getExperimentTemplate = onCall(async (request) => {
       .doc(data.experimentId)
       .get()
   ).data();
+
+  if (!experiment) {
+    throw new functions.https.HttpsError(
+      'not-found',
+      `Experiment ${data.experimentId} not found in collection ${data.collectionName}`,
+    );
+  }
 
   const template = createExperimentTemplate({
     id: '',

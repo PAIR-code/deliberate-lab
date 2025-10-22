@@ -6,8 +6,6 @@ import {
 } from '@deliberation-lab/utils';
 import {getFirestoreStagePublicDataRef} from '../utils/firestore';
 
-import {app} from '../app';
-
 /** Start tracking elapsed time. */
 export async function startTimeElapsed(
   experimentId: string,
@@ -38,13 +36,17 @@ export async function updateTimeElapsed(
   experimentId: string,
   cohortId: string,
   stage: ChatStageConfig,
-  publicStageData: ChatPublicStageData,
+  publicStageData: ChatStagePublicData,
 ) {
   if (!stage.timeLimitInMinutes) return;
   const stageId = stage.id;
 
   // If discussion has ended, don't continue
   if (publicStageData.discussionEndTimestamp) {
+    return;
+  }
+
+  if (!publicStageData.discussionStartTimestamp) {
     return;
   }
 

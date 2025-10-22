@@ -70,6 +70,7 @@ import {
 import {
   downloadCSV,
   downloadJSON,
+  getAlertData,
   getChatHistoryData,
   getChipNegotiationCSV,
   getChipNegotiationData,
@@ -389,15 +390,15 @@ export class ExperimentManager extends Service {
   }
 
   @computed get newAlerts() {
-    return Object.values(this.alertMap).filter(
-      (alert) => alert.status === AlertStatus.NEW,
-    );
+    return Object.values(this.alertMap)
+      .filter((alert) => alert.status === AlertStatus.NEW)
+      .sort((a, b) => b.timestamp.seconds - a.timestamp.seconds);
   }
 
   @computed get oldAlerts() {
-    return Object.values(this.alertMap).filter(
-      (alert) => alert.status !== AlertStatus.NEW,
-    );
+    return Object.values(this.alertMap)
+      .filter((alert) => alert.status !== AlertStatus.NEW)
+      .sort((a, b) => b.timestamp.seconds - a.timestamp.seconds);
   }
 
   @computed get isLoading() {
@@ -943,6 +944,19 @@ export class ExperimentManager extends Service {
           ),
         );
 
+        // Add alert data to zip
+        zip.file(
+          `${experimentName}_Alerts.csv`,
+          new Blob(
+            [
+              getAlertData(result)
+                .map((row) => row.join(','))
+                .join('\n'),
+            ],
+            {type: 'text/csv'},
+          ),
+        );
+
         // Generate zip and trigger download
         zip.generateAsync({type: 'blob'}).then((blob) => {
           const link = document.createElement('a');
@@ -979,13 +993,14 @@ export class ExperimentManager extends Service {
   }
 
   /** Acknowledge alert message. */
-  async ackAlertMessage(alertId: string, response = '') {
+  async ackAlertMessage(alertId: string, participantId: string, response = '') {
     let output = {};
     if (this.experimentId) {
       output = await ackAlertMessageCallable(
         this.sp.firebaseService.functions,
         {
           experimentId: this.experimentId,
+          participantId,
           alertId,
           response,
         },

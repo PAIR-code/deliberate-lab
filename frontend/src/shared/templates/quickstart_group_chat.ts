@@ -25,7 +25,23 @@ import {
 // Experiment config
 // ****************************************************************************
 export function getQuickstartGroupChatTemplate(): ExperimentTemplate {
-  const stageConfigs = getStageConfigs();
+  const stageConfigs = getStageConfigs(false);
+  const metadata = createMetadataConfig({
+    name: 'Group Chat Experiment',
+    publicName: 'Group Chat',
+    description: 'Template experiment: group chat, no agents.',
+  });
+
+  return createExperimentTemplate({
+    experiment: createExperimentConfig(stageConfigs, {metadata}),
+    stageConfigs,
+    agentMediators: [],
+    agentParticipants: [],
+  });
+}
+
+export function getQuickstartAgentGroupChatTemplate(): ExperimentTemplate {
+  const stageConfigs = getStageConfigs(true);
   const metadata = createMetadataConfig({
     name: 'Mediated Group Chat Experiment',
     publicName: 'Group Chat',
@@ -42,13 +58,23 @@ export function getQuickstartGroupChatTemplate(): ExperimentTemplate {
 
 const CHAT_STAGE_ID = 'chat';
 
-function getStageConfigs(): StageConfig[] {
+function getStageConfigs(anonymous: boolean = true): StageConfig[] {
   const stages: StageConfig[] = [];
-  stages.push(
-    createProfileStage({
+  let profileStage;
+  if (anonymous === true) {
+    profileStage = {
       name: 'View your randomly assigned profile',
       profileType: ProfileType.ANONYMOUS_ANIMAL,
-    }),
+    };
+  } else {
+    profileStage = {
+      name: 'Set your profile',
+      profileType: ProfileType.DEFAULT,
+    };
+  }
+
+  stages.push(
+    createProfileStage(profileStage),
     createChatStage({
       id: CHAT_STAGE_ID,
       name: 'Group chat',

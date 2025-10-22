@@ -1,6 +1,7 @@
 import {Timestamp} from 'firebase-admin/firestore';
 import {
   AutoTransferType,
+  ChipItem,
   Experiment,
   ParticipantProfileExtended,
   ParticipantStatus,
@@ -12,15 +13,12 @@ import {
   createMetadataConfig,
   SurveyStagePublicData,
   SurveyQuestionKind,
-  MultipleChoiceSurveyAnswer,
   createChipStageParticipantAnswer,
   createPayoutStageParticipantAnswer,
+  ChipStagePublicData,
 } from '@deliberation-lab/utils';
 import {completeStageAsAgentParticipant} from './agent_participant.utils';
-import {
-  getFirestoreActiveParticipants,
-  getFirestoreParticipant,
-} from './utils/firestore';
+import {getFirestoreActiveParticipants} from './utils/firestore';
 import {generateId} from '@deliberation-lab/utils';
 import {createCohortInternal} from './cohort.utils';
 
@@ -279,10 +277,10 @@ export async function handleAutomaticTransfer(
       continue;
     }
 
-    const surveyAnswer = surveyAnswers[autoTransferConfig.surveyQuestionId!];
+    const surveyAnswer = surveyAnswers[autoTransferConfig.surveyQuestionId];
     if (!surveyAnswer) {
       console.log(
-        `Participant ${connectedParticipant.publicId} has no survey answer matching ${stageConfig.surveyQuestionId}`,
+        `Participant ${connectedParticipant.publicId} has no survey answer matching ${autoTransferConfig.surveyQuestionId}`,
       );
       continue;
     }
@@ -349,7 +347,7 @@ export async function handleAutomaticTransfer(
       dateCreated: Timestamp.now(),
       dateModified: Timestamp.now(),
     }),
-    participantConfig: autoTransferConfig.newCohortParticipantConfig,
+    participantConfig: autoTransferConfig.autoCohortParticipantConfig,
   });
 
   console.log(

@@ -20,6 +20,10 @@
     url: /developers/agent-design
   - title: Deploying
     url: /developers/deploy
+- title: Feature Docs
+  pages:
+  - title: Help/alert panel
+    url: /features/help
 - title: Other
   pages:
     - title: Changelog

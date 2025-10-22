@@ -1,22 +1,5 @@
-import {
-  RoleItem,
-  RoleStageConfig,
-  RoleStagePublicData,
-  StageKind,
-} from '@deliberation-lab/utils';
-
-import {
-  getFirestoreActiveParticipants,
-  getFirestoreStage,
-  getFirestoreStagePublicDataRef,
-} from '../utils/firestore';
-import {assignRolesToParticipants} from './role.utils';
-
-import * as admin from 'firebase-admin';
-import * as functions from 'firebase-functions';
 import {onCall} from 'firebase-functions/v2/https';
-
-import {app} from '../app';
+import {assignRolesToParticipants} from './role.utils';
 
 // ************************************************************************* //
 // setParticipantRoles endpoint                                              //

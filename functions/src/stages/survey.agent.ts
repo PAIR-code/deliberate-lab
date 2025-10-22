@@ -1,13 +1,15 @@
 import {
   APIKeyConfig,
   ParticipantProfileExtended,
+  StageConfig,
+  SurveyAnswer,
   SurveyStageConfig,
+  SurveyQuestion,
   SurveyQuestionKind,
   createAgentParticipantSurveyQuestionPrompt,
   createModelGenerationConfig,
   createSurveyStageParticipantAnswer,
   getSurveyStagePromptContext,
-  getSurveyStageQuestion,
 } from '@deliberation-lab/utils';
 import {getAgentResponse} from '../agent.utils';
 import {getPastStagesPromptContext} from './stage.utils';
@@ -60,7 +62,7 @@ async function getAgentParticipantSurveyQuestionResponse(
   participant: ParticipantProfileExtended,
   question: SurveyQuestion, // current question
   answerMap: Record<string, SurveyAnswer>, // answers collected so far
-): SurveyAnswer {
+): Promise<SurveyAnswer> {
   const pastStagesPrompt = await getPastStagesPromptContext(
     experimentId,
     stage.id,
@@ -93,7 +95,7 @@ async function getAgentParticipantSurveyQuestionResponse(
   const rawResponse = await getAgentResponse(
     apiKeyConfig,
     prompt,
-    participant.agentConfig.modelSettings,
+    participant.agentConfig?.modelSettings,
     generationConfig,
   );
   const response = rawResponse.text ?? '';
@@ -112,7 +114,7 @@ async function getAgentParticipantSurveyQuestionResponse(
         return {
           id: question.id,
           kind: SurveyQuestionKind.CHECK,
-          isChecked: response.trim().lower() === 'true',
+          isChecked: response.trim().toLowerCase() === 'true',
         };
       case SurveyQuestionKind.MULTIPLE_CHOICE:
         return {

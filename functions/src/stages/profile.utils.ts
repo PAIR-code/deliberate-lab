@@ -64,7 +64,7 @@ export async function completeProfile(
   // Fetch experiment creator's API key.
   const experimenterData =
     await getExperimenterDataFromExperiment(experimentId);
-  if (!experimenterData) return null;
+  if (!experimenterData) return;
 
   const promptConfig: BasePromptConfig = {
     id: stageConfig.id,
@@ -109,7 +109,7 @@ export async function completeProfile(
   if (!response.parsedResponse) {
     // Response is already logged in console during Gemini API call
     console.log('Could not parse JSON!');
-    return null;
+    return;
   }
 
   const parsed = response.parsedResponse;
