@@ -32,7 +32,11 @@ export interface BaseRevealItem {
 }
 
 /** Reveal item. */
-export type RevealItem = ChipRevealItem | RankingRevealItem | SurveyRevealItem | MultiAssetAllocationRevealItem;
+export type RevealItem =
+  | ChipRevealItem
+  | RankingRevealItem
+  | SurveyRevealItem
+  | MultiAssetAllocationRevealItem;
 
 /** Reveal settings for chip stage. */
 export interface ChipRevealItem extends BaseRevealItem {
@@ -52,8 +56,8 @@ export interface SurveyRevealItem extends BaseRevealItem {
 
 export interface MultiAssetAllocationRevealItem extends BaseRevealItem {
   kind: StageKind.MULTI_ASSET_ALLOCATION;
+  displayMode?: 'full' | 'scoreOnly';
 }
-
 
 /** Specifies which answers to reveal. */
 export enum RevealAudience {
@@ -139,5 +143,6 @@ export function createMultiAssetAllocationRevealItem(
     id: config.id ?? generateId(),
     kind: StageKind.MULTI_ASSET_ALLOCATION,
     revealAudience: config.revealAudience ?? RevealAudience.ALL_PARTICIPANTS,
+    displayMode: config.displayMode ?? 'full', // Add this line, defaulting to 'full'
   };
 }

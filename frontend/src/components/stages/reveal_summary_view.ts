@@ -2,7 +2,6 @@ import './ranking_reveal_view';
 import './survey_reveal_view';
 import './allocation_reveal_view';
 
-
 import {MobxLitElement} from '@adobe/lit-mobx';
 import {CSSResultGroup, html, nothing} from 'lit';
 import {customElement, property, state} from 'lit/decorators.js';
@@ -14,6 +13,7 @@ import {ParticipantService} from '../../services/participant.service';
 
 import {
   RevealItem,
+  MultiAssetAllocationRevealItem,
   RevealStageConfig,
   StageConfig,
   StageKind,
@@ -72,11 +72,16 @@ export class RevealView extends MobxLitElement {
           </survey-reveal-view>
         `;
       case StageKind.MULTI_ASSET_ALLOCATION:
+        // Cast the generic item to our specific type to access the new property
+        const allocationItem = item as MultiAssetAllocationRevealItem;
         return html`
-          <allocation-reveal-view .stage=${stage} .publicData=${publicData}>
+          <allocation-reveal-view
+            .stage=${stage}
+            .publicData=${publicData}
+            .displayMode=${allocationItem.displayMode}
+          >
           </allocation-reveal-view>
         `;
-
 
       default:
         return nothing;

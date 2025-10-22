@@ -48,7 +48,7 @@ import {
   createInfoStage,
   StageKind,
   createRevealStage,
-  createMultiAssetAllocationRevealItem
+  createMultiAssetAllocationRevealItem,
 } from '@deliberation-lab/utils';
 
 // Agent configuration for the template.
@@ -79,7 +79,6 @@ const SOLUTION_STRATEGY_ENUMS = [
   'Summarize to Break a Loop or Gently Re-focus Conversation',
   'Prompt for Brainstorming of New Ideas or Alternatives',
 ];
-
 
 export interface CharityDebateConfig {
   includeTos: boolean;
@@ -178,15 +177,15 @@ export function getCharityDebateTemplate(
 ): ExperimentTemplate {
   const stages: StageConfig[] = [];
 
-//  if (config.includeTos) stages.push(CONSENSUS_TOS_STAGE);
-//  stages.push(SET_PROFILE_STAGE_EXPANDED);
-//  if (config.includeMediator) stages.push(createMediatedDiscussionInfoStage());
-//  stages.push(createInstructionsStage());
-//  stages.push(createComprehensionStageNew());
-//
-//  if (config.includeInitialParticipantSurvey)
-//    stages.push(createInitialParticipantSurveyStage());
-//  if (config.includeMediator) stages.push(createInitialMediatorSurveyStage());
+  if (config.includeTos) stages.push(CONSENSUS_TOS_STAGE);
+  stages.push(SET_PROFILE_STAGE_EXPANDED);
+  if (config.includeMediator) stages.push(createMediatedDiscussionInfoStage());
+  stages.push(createInstructionsStage());
+  stages.push(createComprehensionStageNew());
+
+  if (config.includeInitialParticipantSurvey)
+    stages.push(createInitialParticipantSurveyStage());
+  if (config.includeMediator) stages.push(createInitialMediatorSurveyStage());
 
   const debateRoundsCharities = [...CHARITY_BUNDLES].sort(
     () => 0.5 - Math.random(),
@@ -203,22 +202,22 @@ export function getCharityDebateTemplate(
 
     stages.push(createRoundStartStage(roundNum));
 
-//    stages.push(
-//      createAllocationStage(
-//        `vote-round-${roundNum}-pre`,
-//        `Allocation (Pre-Discussion): Round ${roundNum}`,
-//        charityGroup,
-//      ),
-//    );
-//
-//    stages.push(
-//      createAllocationDiscussionStage(
-//        `discussion-round-${roundNum}`,
-//        `Discussion: Round ${roundNum}`,
-//        setting,
-//        mediatorForRound,
-//      ),
-//    );
+    stages.push(
+      createAllocationStage(
+        `vote-round-${roundNum}-pre`,
+        `Allocation (Pre-Discussion): Round ${roundNum}`,
+        charityGroup,
+      ),
+    );
+
+    stages.push(
+      createAllocationDiscussionStage(
+        `discussion-round-${roundNum}`,
+        `Discussion: Round ${roundNum}`,
+        setting,
+        mediatorForRound,
+      ),
+    );
 
     stages.push(
       createAllocationStage(
@@ -228,13 +227,14 @@ export function getCharityDebateTemplate(
       ),
     );
 
-//    const isMediatedRound = mediatorForRound !== undefined;
-//
-//    if (isMediatedRound) {
-//      stages.push(createPerMediatorEvaluationStage(roundNum));
-//    }
-//
-//    stages.push(createRoundOutcomeSurveyStage(roundNum, isMediatedRound));
+    const isMediatedRound = mediatorForRound !== undefined;
+
+    if (isMediatedRound) {
+      stages.push(createPerMediatorEvaluationStage(roundNum));
+    }
+
+    stages.push(createRoundOutcomeSurveyStage(roundNum, isMediatedRound));
+    stages.push(createConsensusScoreRevealStage(roundNum));
   });
 
   stages.push(createAllocationRevealStage());
@@ -261,11 +261,31 @@ export function getCharityDebateTemplate(
   });
 }
 
+function createConsensusScoreRevealStage(roundNum: number): StageConfig {
+  const sourceStageId = `vote-round-${roundNum}-post`;
+
+  return createRevealStage({
+    id: `consensus-reveal-round-${roundNum}`,
+    name: `Round ${roundNum} Consensus Score`,
+    descriptions: createStageTextConfig({
+      primaryText: `Based on how close your votes were, your group achieved the following score for this round. This contributes to your group's final spending power.`,
+    }),
+    items: [
+      createMultiAssetAllocationRevealItem({
+        id: sourceStageId,
+        revealAudience: RevealAudience.ALL_PARTICIPANTS,
+        // This is the key that tells the component to only show the score.
+        displayMode: 'scoreOnly',
+      }),
+    ],
+  });
+}
+
 export function createAllocationRevealStage(): StageConfig {
   return createRevealStage({
     id: 'final-results-summary',
     name: 'Final Allocation Results',
-    
+
     // This is the crucial part. We are listing the stages whose
     // results we want this stage to "reveal".
     items: [
@@ -284,7 +304,6 @@ export function createAllocationRevealStage(): StageConfig {
     ],
   });
 }
-
 
 function createRoundStartStage(roundNum: number): StageConfig {
   return createInfoStage({
@@ -826,7 +845,6 @@ function createMetaFeedbackStage(): StageConfig {
   });
 }
 
-
 function createTextPromptItem(text: string): TextPromptItem {
   return {
     type: PromptItemType.TEXT,
@@ -850,7 +868,7 @@ function createStandardMediatorSchema(): StructuredOutputSchema {
         name: DEFAULT_SHOULD_RESPOND_FIELD, // 'shouldRespond'
         schema: {
           type: StructuredOutputDataType.BOOLEAN,
-          description: `Whether or not to respond. Should be FALSE if nothing has been said by participants, or if consensusLevel is HIGH, or if we have responded within the last 2 messages. If consensusLevel is not HIGH and >2 messages have passed, consider responding.`
+          description: `Whether or not to respond. Should be FALSE if nothing has been said by participants, or if consensusLevel is HIGH, or if we have responded within the last 2 messages. If consensusLevel is not HIGH and >2 messages have passed, consider responding.`,
         },
       },
       {
