@@ -15,6 +15,8 @@ import {addParticipantAnswerToRankingStagePublicData} from '../stages/ranking.ut
 import {addParticipantAnswerToSurveyStagePublicData} from '../stages/survey.utils';
 import {addParticipantAnswerToFlipCardStagePublicData} from '../stages/flipcard.utils';
 import {addParticipantAnswerToAssetAllocationStagePublicData} from '../stages/asset_allocation.utils';
+import { addParticipantAnswerToMultiAssetAllocationStagePublicData } from '../stages/multi_asset_allocation.utils';
+
 
 /** When participant (private) stage data is updated. */
 export const onParticipantStageDataUpdated = onDocumentWritten(
@@ -70,6 +72,14 @@ export const onParticipantStageDataUpdated = onDocumentWritten(
         break;
       case StageKind.SURVEY:
         addParticipantAnswerToSurveyStagePublicData(
+          event.params.experimentId,
+          stage,
+          participant,
+          data,
+        );
+        break;
+      case StageKind.MULTI_ASSET_ALLOCATION:
+        addParticipantAnswerToMultiAssetAllocationStagePublicData(
           event.params.experimentId,
           stage,
           participant,
