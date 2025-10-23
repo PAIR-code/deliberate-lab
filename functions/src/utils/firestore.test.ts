@@ -111,13 +111,15 @@ const stageRecord: StageConfig = createChatStage({
   name: 'Brainstorm shared transit ideas',
   descriptions: {
     primaryText: 'Propose ways Berlin could make nighttime travel safer.',
-    infoText: 'Share concrete pilots the city could launch within three months.',
+    infoText:
+      'Share concrete pilots the city could launch within three months.',
     helpText: 'Offer one idea at a time so other participants can iterate.',
   },
   discussions: [
     createDefaultChatDiscussion({
       id: discussionId,
-      description: 'Collect actionable experiments to improve late-night transit.',
+      description:
+        'Collect actionable experiments to improve late-night transit.',
     }),
   ],
   timeLimitInMinutes: 20,
@@ -166,48 +168,51 @@ const stageAnswer2: StageParticipantAnswer = createChatStageParticipantAnswer({
   },
 });
 
-const participantAgent: ParticipantProfileExtended = createParticipantProfileExtended({
-  privateId: participantPrivateId,
-  publicId: 'alex-companion',
-  name: 'Alex (AI Companion)',
-  avatar: '🤖',
-  pronouns: 'they/them',
-  currentCohortId: cohortId,
-  currentStageId: stageId,
-  currentStatus: ParticipantStatus.IN_PROGRESS,
-  timestamps: createProgressTimestamps({
-    readyStages: {[stageId]: ClientTimestamp.fromMillis(0)},
-  }),
-  agentConfig: {
-    agentId: 'mediator-aurora',
-    promptContext: '',
-    modelSettings: createAgentModelSettings({modelName: 'gemini-2.5-flash'}),
-  },
-});
+const participantAgent: ParticipantProfileExtended =
+  createParticipantProfileExtended({
+    privateId: participantPrivateId,
+    publicId: 'alex-companion',
+    name: 'Alex (AI Companion)',
+    avatar: '🤖',
+    pronouns: 'they/them',
+    currentCohortId: cohortId,
+    currentStageId: stageId,
+    currentStatus: ParticipantStatus.IN_PROGRESS,
+    timestamps: createProgressTimestamps({
+      readyStages: {[stageId]: ClientTimestamp.fromMillis(0)},
+    }),
+    agentConfig: {
+      agentId: 'mediator-aurora',
+      promptContext: '',
+      modelSettings: createAgentModelSettings({modelName: 'gemini-2.5-flash'}),
+    },
+  });
 
-const participantHuman: ParticipantProfileExtended = createParticipantProfileExtended({
-  privateId: participantPrivateId2,
-  publicId: 'taylor-johnson',
-  name: 'Taylor Johnson',
-  avatar: '🚲',
-  pronouns: 'she/her',
-  currentCohortId: cohortId,
-  currentStageId: 'reflection-session',
-  currentStatus: ParticipantStatus.SUCCESS,
-  agentConfig: null,
-});
+const participantHuman: ParticipantProfileExtended =
+  createParticipantProfileExtended({
+    privateId: participantPrivateId2,
+    publicId: 'taylor-johnson',
+    name: 'Taylor Johnson',
+    avatar: '🚲',
+    pronouns: 'she/her',
+    currentCohortId: cohortId,
+    currentStageId: 'reflection-session',
+    currentStatus: ParticipantStatus.SUCCESS,
+    agentConfig: null,
+  });
 
-const participantInactive: ParticipantProfileExtended = createParticipantProfileExtended({
-  privateId: 'participant-zoe-private',
-  publicId: 'zoe-schmidt',
-  name: 'Zoe Schmidt',
-  avatar: '🛹',
-  pronouns: 'she/her',
-  currentCohortId: 'munich-cohort',
-  currentStageId: stageId,
-  currentStatus: ParticipantStatus.PAUSED,
-  agentConfig: null,
-});
+const participantInactive: ParticipantProfileExtended =
+  createParticipantProfileExtended({
+    privateId: 'participant-zoe-private',
+    publicId: 'zoe-schmidt',
+    name: 'Zoe Schmidt',
+    avatar: '🛹',
+    pronouns: 'she/her',
+    currentCohortId: 'munich-cohort',
+    currentStageId: stageId,
+    currentStatus: ParticipantStatus.PAUSED,
+    agentConfig: null,
+  });
 
 const mediatorAgent: MediatorProfileExtended = {
   type: UserType.MEDIATOR,
@@ -252,23 +257,26 @@ const mediatorPaused: MediatorProfileExtended = {
   agentConfig: null,
 };
 
-const agentPersonaRecord: AgentPersonaConfig = createAgentMediatorPersonaConfig({
-  id: 'mediator-aurora',
-  name: 'Aurora (AI Mediator)',
-  description: 'AI mediator trained to encourage inclusive brainstorming.',
-  defaultProfile: createParticipantProfileBase({
+const agentPersonaRecord: AgentPersonaConfig = createAgentMediatorPersonaConfig(
+  {
+    id: 'mediator-aurora',
     name: 'Aurora (AI Mediator)',
-    avatar: '🤖',
-    pronouns: 'she/her',
-  }),
-  defaultModelSettings: createAgentModelSettings({modelName: 'gemini-2.5-flash'}),
-});
+    description: 'AI mediator trained to encourage inclusive brainstorming.',
+    defaultProfile: createParticipantProfileBase({
+      name: 'Aurora (AI Mediator)',
+      avatar: '🤖',
+      pronouns: 'she/her',
+    }),
+    defaultModelSettings: createAgentModelSettings({
+      modelName: 'gemini-2.5-flash',
+    }),
+  },
+);
 
 const agentPromptRecord: AgentParticipantPromptConfig = {
   id: stageId,
   type: StageKind.CHAT,
-  promptContext:
-    'Invite participants to build on the strongest transit ideas.',
+  promptContext: 'Invite participants to build on the strongest transit ideas.',
   generationConfig: createModelGenerationConfig({
     maxTokens: 350,
     temperature: 0.7,
