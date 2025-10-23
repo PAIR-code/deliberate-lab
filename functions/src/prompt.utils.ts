@@ -37,6 +37,7 @@ import {
 import {
   getFirestoreActiveParticipants,
   getFirestoreAnswersForStage,
+  getFirestoreExperiment,
   getFirestoreParticipant,
   getFirestoreStage,
   getFirestoreStagePublicData,
@@ -108,9 +109,23 @@ async function getStageAnswersWithDisplayNames<
   return addDisplayNamesToAnswers(experimentId, answers, stageId);
 }
 
+/** Return list of stage IDs preceding *and including* given stage ID. */
+async function getAllPrecedingStageIds(experimentId: string, stageId: string) {
+  const experiment = await getFirestoreExperiment(experimentId);
+  return experiment.stageIds.slice(0, experiment.stageIds.indexOf(stageId) + 1);
+}
+
 /** Assemble prompt items into final prompt.
  * This is the main function called to get a final prompt string that
  * can be sent to an LLM API without any further edits.
+ *
+ * TODO: Instead of having the functions under this fetch documents
+ * from Firestore, pass in a data structure containing all the database docs
+ * needed (e.g., stage configs, cohort participants, private/public answers).
+ *
+ * This could save duplicate fetching and will also enable us to easily build
+ * structured prompts with fake data (e.g., to preview prompts in experiment
+ * builder).
  */
 export async function getStructuredPrompt(
   experimentId: string,
@@ -182,15 +197,21 @@ async function processPromptItems(
         }
         break;
       case PromptItemType.STAGE_CONTEXT:
-        items.push(
-          await getStageContextForPrompt(
-            experimentId,
-            cohortId,
-            participantIds,
-            stageId,
-            promptItem,
-          ),
-        );
+        const stageContextIds = promptItem.stageId
+          ? [stageId]
+          : await getAllPrecedingStageIds(experimentId, stageId);
+        for (const id of stageContextIds) {
+          items.push(
+            await getStageContextForPrompt(
+              experimentId,
+              cohortId,
+              participantIds,
+              stageId,
+              id,
+              promptItem,
+            ),
+          );
+        }
         break;
       case PromptItemType.GROUP:
         const promptGroup = promptItem as PromptItemGroup;
@@ -247,25 +268,27 @@ export async function getStageContextForPrompt(
   cohortId: string,
   participantIds: string[],
   currentStageId: string,
+  contextStageId: string, // use this and not item.stageId, which could be ''
   item: StageContextPromptItem,
 ) {
   // Get the specific stage
-  const stage = await getFirestoreStage(experimentId, item.stageId);
+  const stage = await getFirestoreStage(experimentId, contextStageId);
   if (!stage) {
     return '';
   }
 
   const textItems: string[] = [];
 
-  if (item.includePrimaryText) {
+  // Include name of stage
+  textItems.push(`----- STAGE: ${stage.name ?? stage.id} -----`);
+
+  if (item.includePrimaryText && stage.descriptions.primaryText.trim() !== '') {
     textItems.push(`- Stage description: ${stage.descriptions.primaryText}`);
   }
   if (item.includeInfoText) {
     textItems.push(`- Additional info: ${stage.descriptions.infoText}`);
   }
-  if (item.includeHelpText) {
-    textItems.push(`- If you need help: ${stage.descriptions.helpText}`);
-  }
+  // Note: Help text not included since the field has been deprecated
 
   // Include stage display with answers embedded, or just answers
   if (item.includeStageDisplay) {

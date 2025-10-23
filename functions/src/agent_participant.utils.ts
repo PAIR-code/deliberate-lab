@@ -116,13 +116,7 @@ export async function completeStageAsAgentParticipant(
         console.log('Could not find experimenter data and API key');
         break;
       }
-      const rankingAnswer = await getAgentParticipantRankingStageResponse(
-        experimentId,
-        experimenterData.apiKeys,
-        participant,
-        stage,
-      );
-      answerDoc.set(rankingAnswer);
+      // TODO: Add logic to complete ranking stage
       await completeStage();
       participantDoc.set(participant);
       break;
@@ -131,15 +125,13 @@ export async function completeStageAsAgentParticipant(
         console.log('Could not find experimenter data and API key');
         break;
       }
-      const surveyAnswer = await getAgentParticipantSurveyStageResponse(
-        experimentId,
-        experimenterData.apiKeys,
-        participant,
-        stage,
-      );
+      // TODO: Add logic to complete survey stage
       answerDoc.set(surveyAnswer);
       await completeStage();
       participantDoc.set(participant);
+      break;
+    case StageKind.TRANSFER:
+      // Do not proceed to next stage. Instead, wait for proposed transfer
       break;
     default:
       console.log(`Move to next stage (${participant.publicId})`);

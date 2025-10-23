@@ -105,6 +105,10 @@ export class EditorComponent extends MobxLitElement {
       );
     };
 
+    const addAllStageContext = () => {
+      this.addPromptItem(targetArray, createDefaultStageContextPromptItem(''));
+    };
+
     const addGroup = () => {
       this.addPromptItem(targetArray, createDefaultPromptItemGroup());
     };
@@ -122,7 +126,10 @@ export class EditorComponent extends MobxLitElement {
             Freeform text
           </div>
           <div class="menu-item" role="button" @click=${addStageContext}>
-            Stage context
+            Context from single stage
+          </div>
+          <div class="menu-item" role="button" @click=${addAllStageContext}>
+            Context from all stages before this stage
           </div>
           <div class="menu-item" role="button" @click=${addProfileContext}>
             Custom agent context
@@ -246,7 +253,13 @@ export class EditorComponent extends MobxLitElement {
       availableStages.map((stage, idx) => [stage.id, idx]),
     );
 
+    const allStagesText =
+      'Context for all stages before and including this stage';
+
     const getTitle = () => {
+      if (!item.stageId) {
+        return allStagesText;
+      }
       const stageIndex = stageIndexMap.get(item.stageId);
       if (stageIndex !== undefined) {
         const stage = availableStages[stageIndex];
@@ -278,6 +291,9 @@ export class EditorComponent extends MobxLitElement {
                   </option>
                 `,
               )}
+              <option value=${''} ?selected=${!item.stageId}>
+                ${allStagesText}
+              </option>
             </select>
           </div>
           <label class="checkbox-wrapper">
@@ -301,17 +317,6 @@ export class EditorComponent extends MobxLitElement {
                 })}
             />
             <div>Include stage info popup</div>
-          </label>
-          <label class="checkbox-wrapper">
-            <input
-              type="checkbox"
-              .checked=${item.includeHelpText}
-              @change=${() =>
-                this.updatePromptItem(item, {
-                  includeHelpText: !item.includeHelpText,
-                })}
-            />
-            <div>Include stage help popup</div>
           </label>
           <label class="checkbox-wrapper">
             <input
