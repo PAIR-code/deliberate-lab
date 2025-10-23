@@ -140,7 +140,8 @@ export const deleteCohort = onCall(async (request) => {
     );
   }
 
-  if (request.auth?.token.email !== experiment.metadata.creator) return;
+  if (request.auth?.token.email?.toLowerCase() !== experiment.metadata.creator)
+    return;
 
   // Delete document
   const doc = app

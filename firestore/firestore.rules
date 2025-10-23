@@ -3,12 +3,12 @@ service cloud.firestore {
   match /databases/{database}/documents {
     // Function: check if admin
     function isAdmin() {
-      return get(/databases/$(database)/documents/allowlist/$(request.auth.token.email)).data.get("isAdmin", null) != null;
+      return get(/databases/$(database)/documents/allowlist/$(request.auth.token.email.lower())).data.get("isAdmin", null) != null;
     }
 
     // Function: checks if experimenter
     function isExperimenter() {
-      return request.auth.uid != null && exists(/databases/$(database)/documents/allowlist/$(request.auth.token.email));
+      return request.auth.uid != null && exists(/databases/$(database)/documents/allowlist/$(request.auth.token.email.lower()));
     }
 
     // Function: checks if public
@@ -18,12 +18,27 @@ service cloud.firestore {
 
     // Function: checks if creator of resource
     function isCreator() {
-      return request.auth.token.email == resource.data.permissions.reader || request.auth.uid == resource.data.metadata.creator;
+      return lowerEquals(request.auth.token.email, resource.data.permissions.reader) || lowerEquals(request.auth.uid, resource.data.metadata.creator);
     }
 
     // Function: checks if read access (email listed in readers list)
     function isReader() {
-      return request.auth.token.email in resource.data.permissions.readers;
+      return includesReader(resource.data.permissions.readers, request.auth.token.email);
+    }
+
+    function lowerString(value) {
+      return value is string ? value.lower() : null;
+    }
+
+    function lowerEquals(a, b) {
+      let lowerA = lowerString(a);
+      let lowerB = lowerString(b);
+      return lowerA != null && lowerB != null && lowerA == lowerB;
+    }
+
+    function includesReader(readers, email) {
+      let emailLower = lowerString(email);
+      return readers != null && emailLower != null && readers.any(reader, reader is string && reader.lower() == emailLower);
     }
 
     // Function: checks if can edit experiment
@@ -33,7 +48,9 @@ service cloud.firestore {
 
     // Function: checks if creator of experiment
     function isExperimentCreator(experimentId) {
-      return get(/databases/$(database)/documents/experiments/$(experimentId)).data.metadata.creator == request.auth.token.email || get(/databases/$(database)/documents/experiments/$(experimentId)).data.metadata.creator == request.auth.uid;
+      let experiment = get(/databases/$(database)/documents/experiments/$(experimentId)).data;
+      let creator = lowerString(experiment.metadata.creator);
+      return creator != null && (creator == lowerString(request.auth.token.email) || creator == lowerString(request.auth.uid));
     }
 
     // Function: checks if experiment is public
@@ -43,12 +60,15 @@ service cloud.firestore {
 
     // Function: checks if reader of experiment
     function isExperimentReader(experimentId) {
-      return request.auth.token.email in get(/databases/$(database)/documents/experiments/$(experimentId)).data.permissions.readers;
+      return includesReader(
+        get(/databases/$(database)/documents/experiments/$(experimentId)).data.permissions.readers,
+        request.auth.token.email
+      );
     }
 
     // Experimenter allowlist
     match /allowlist/{experimenterId} {
-      allow read: if isAdmin() || request.auth.token.email == experimenterId;
+      allow read: if isAdmin() || lowerEquals(request.auth.token.email, experimenterId);
       allow update: if isAdmin();
     }
 
@@ -71,14 +91,14 @@ service cloud.firestore {
     // Experimenter data (experimenter with matching ID only)
     match /experimenterData/{experimenterId} {
       allow list: if false;
-      allow get: if experimenterId == request.auth.token.email || experimenterId == request.auth.uid;
-      allow write: if experimenterId == request.auth.token.email || experimenterId == request.auth.uid;
+      allow get: if lowerEquals(experimenterId, request.auth.token.email) || lowerEquals(experimenterId, request.auth.uid);
+      allow write: if lowerEquals(experimenterId, request.auth.token.email) || lowerEquals(experimenterId, request.auth.uid);
     }
 
     // Experimenter profiles (experimenter only)
     match /experimenters/{experimenterId} {
       allow read: if true;
-      allow write: if experimenterId == request.auth.token.email || experimenterId == request.auth.uid;
+      allow write: if lowerEquals(experimenterId, request.auth.token.email) || lowerEquals(experimenterId, request.auth.uid);
     }
 
     // Experiments
