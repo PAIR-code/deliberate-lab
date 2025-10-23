@@ -162,6 +162,27 @@ export const CreateParticipantData = Type.Object(
 export type CreateParticipantData = Static<typeof CreateParticipantData>;
 
 // ************************************************************************* //
+// updateParticipantStatus endpoint for experimenters                        //
+// ************************************************************************* //
+
+/** updateParticipantStatus input validation. */
+export const UpdateParticipantStatusData = Type.Object(
+  {
+    experimentId: Type.String({minLength: 1}),
+    participantId: Type.String({minLength: 1}),
+    status: Type.Union([
+      Type.Literal(ParticipantStatus.IN_PROGRESS),
+      Type.Literal(ParticipantStatus.PAUSED),
+    ]),
+  },
+  strict,
+);
+
+export type UpdateParticipantStatusData = Static<
+  typeof UpdateParticipantStatusData
+>;
+
+// ************************************************************************* //
 // updateParticipant endpoint for experimenters                               //
 // ************************************************************************* //
 

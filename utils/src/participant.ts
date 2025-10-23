@@ -90,6 +90,8 @@ export interface ProgressTimestamps {
 }
 
 export enum ParticipantStatus {
+  // Paused by experimenter
+  PAUSED = 'PAUSED',
   // Attention check needs to be acknowledged
   ATTENTION_CHECK = 'ATTENTION_CHECK',
   // Actively participating in experiment
