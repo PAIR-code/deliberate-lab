@@ -110,19 +110,97 @@ export const CHARITY_DEBATE_METADATA = createMetadataConfig({
     'A multi-round debate where participants discuss and vote on how to allocate a budget among several real-world charities, with different AI mediators in each round.',
 });
 
-const CHARITY_BUNDLES = [
-  [
-    'IFAW (Animal Welfare)',
-    'Sudan Humanitarian Aid',
-    'Clean Oceans Initiative',
-  ],
-  ['Wildaid (Animal Welfare)', 'Eye Care in India', 'Wheelchairs for Children'],
-  [
-    'Rainforest Action',
-    'Aid for Children in remote villages',
-    'Global Housing for Orphans',
-  ],
+interface CharityInfo {
+  key: string;
+  name: string;
+  link: string;
+  score: string;
+  mission: string;
+}
+
+const CHARITY_DATA: CharityInfo[] = [
+  {
+    key: 'ifaw',
+    name: 'IFAW (animal welfare)',
+    link: 'https://www.charitynavigator.org/ein/542044674',
+    score: '98%',
+    mission:
+      'Fresh thinking and bold action for animals, people, and the place we call home.',
+  },
+  {
+    key: 'wildaid',
+    name: 'Wildaid (animal welfare)',
+    link: 'https://www.charitynavigator.org/ein/203644441',
+    score: '97%',
+    mission:
+      "WildAid's mission is to end the illegal wildlife trade in our lifetimes by reducing demand through public awareness campaigns and providing comprehensive marine protection.",
+  },
+  {
+    key: 'clean_ocean',
+    name: 'Clean Ocean Action',
+    link: 'https://www.charitynavigator.org/ein/222897204',
+    score: 'Not Rated', // Score not present in link text
+    mission:
+      "Clean Oceans International is dedicated to reducing plastic pollution in the world's ocean through Research, Innovation, and Direct Action.",
+  },
+  {
+    key: 'sudan_aid',
+    name: 'Sudan Humanitarian Aid',
+    link: 'https://www.charitynavigator.org/ein/472864379',
+    score: '92%',
+    mission:
+      'To provide life-saving aid to the affected population, Sadagaat-USA is collaborating with other US-based organizations and local initiatives in Sudan to offer food, medication, medical supplies, and water through its emergency response program.',
+  },
+  {
+    key: 'eyecare_india',
+    name: 'Eyecare in India',
+    link: 'https://www.charitynavigator.org/ein/776141976',
+    score: '100%',
+    mission:
+      'Our mission is to reach out to the rural poor and provide quality eye care free of cost to the needy by building operationally self-sufficient super specialty eye care hospitals across India and perform free eye surgeries.',
+  },
+  {
+    key: 'global_housing',
+    name: 'Global housing for orphans',
+    link: 'https://www.charitynavigator.org/ein/562500794',
+    score: '91%',
+    mission:
+      'Givelight builds nurturing homes and provides high quality education for orphans globally.',
+  },
+  {
+    key: 'rainforest_action',
+    name: 'Rainforest Action',
+    link: 'https://www.charitynavigator.org/ein/943045180',
+    score: '100%',
+    mission:
+      'Rainforest Action Network campaigns for the forests, their inhabitants and the natural systems that sustain life by transforming the global marketplace through education, grassroots organizing and non-violent direct action.',
+  },
+  {
+    key: 'aid_for_children',
+    name: 'Aid for children in remote villages',
+    link: 'https://www.charitynavigator.org/ein/300108263',
+    score: '100%',
+    mission:
+      '[Facilitated via GlobalGiving] The Eden Social Welfare Foundation has cared for underprivileged children since 2006, with the hope that they can enjoy the right to a fair education, better after-school care, and a healthy and nutritious breakfast.',
+  },
+  {
+    key: 'global_fund_women',
+    name: 'Global Fund for Women',
+    link: 'https://www.charitynavigator.org/ein/770155782',
+    score: '100%',
+    mission:
+      "Global Fund for Women advances women’s human rights by investing in women-led organizations worldwide. Our international network of supporters mobilizes financial and other resources to support women’s actions for social justice, equality and peace.",
+  },
 ];
+
+const CHARITY_DATA_MAP = new Map(CHARITY_DATA.map((info) => [info.key, info]));
+
+const CHARITY_BUNDLES: string[][] = [
+  ['ifaw', 'sudan_aid', 'clean_ocean'],
+  ['wildaid', 'eyecare_india', 'global_housing'],
+  ['rainforest_action', 'aid_for_children', 'global_fund_women'],
+];
+
 
 const LIKERT_SCALE_PROPS = {
   lowerValue: 1,
@@ -511,23 +589,37 @@ function createRoundOutcomeSurveyStage(
   });
 }
 
+
 function createAllocationStage(
   id: string,
   name: string,
   charityGroup: string[],
 ): StageConfig {
-  const charityStocks = charityGroup.map((charityName) =>
-    createStock({
-      name: charityName,
-      description: `Details about **${charityName}** will be shown here.`,
-    }),
-  );
+  let primaryText = `Please use the sliders below to allocate 100% of the funds among this round's charities.`;
+
+  charityGroup.forEach((charityKey, index) => {
+    const info = CHARITY_DATA_MAP.get(charityKey);
+    if (info) {
+      primaryText += `\n
+[${info.name}](${info.link}) (Charity Navigator score: ${info.score})
+*${info.mission}*\n`;
+    }
+  });
+
+  const charityStocks = charityGroup.map((charityKey) => {
+    const info = CHARITY_DATA_MAP.get(charityKey);
+
+    return createStock({
+      name: info ? info.name : charityKey,
+      description: `Details for ${info ? info.name : charityKey}.`,
+    });
+  });
 
   return createMultiAssetAllocationStage({
     id,
     name,
     descriptions: createStageTextConfig({
-      primaryText: `Please use the sliders below to allocate 100% of the funds among this round's charities.`,
+      primaryText: primaryText,
       infoText: TEXT_ALLOCATION_INFO_HINT,
     }),
     stockOptions: charityStocks,
