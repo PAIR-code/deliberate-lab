@@ -57,7 +57,8 @@ export enum PromptItemType {
   PROFILE_INFO = 'PROFILE_INFO',
   // Context specified in the agent config
   PROFILE_CONTEXT = 'PROFILE_CONTEXT',
-  // Context from specified stage (or all stages up to present if null)
+  // Context from specified stage (or all preceding stages AND current stage
+  // if stageId is empty)
   // NOTE: This is content that a human participant can see, e.g.,
   // half-answered survey while in the UI for the given stage
   STAGE_CONTEXT = 'STAGE_CONTEXT',
@@ -88,7 +89,8 @@ export interface ProfileInfoPromptItem extends BasePromptItem {
  */
 export interface StageContextPromptItem extends BasePromptItem {
   type: PromptItemType.STAGE_CONTEXT;
-  // ID of stage
+  // ID of stage (or empty if context should include all preceding stages
+  // plus current stage)
   stageId: string;
   includePrimaryText: boolean;
   includeInfoText: boolean;
@@ -129,6 +131,7 @@ export function createChatPromptConfig(
 
 // Default stage context
 export function createDefaultStageContextPromptItem(
+  // If empty string, all preceding stages + current stage to be concatenated
   stageId: string,
 ): StageContextPromptItem {
   return {

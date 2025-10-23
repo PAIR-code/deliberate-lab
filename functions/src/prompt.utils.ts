@@ -37,6 +37,7 @@ import {
 import {
   getFirestoreActiveParticipants,
   getFirestoreAnswersForStage,
+  getFirestoreExperiment,
   getFirestoreParticipant,
   getFirestoreStage,
   getFirestoreStagePublicData,
@@ -106,6 +107,12 @@ async function getStageAnswersWithDisplayNames<
     participantIds,
   );
   return addDisplayNamesToAnswers(experimentId, answers, stageId);
+}
+
+/** Return list of stage IDs preceding *and including* given stage ID. */
+async function getAllPrecedingStageIds(experimentId: string, stageId: string) {
+  const experiment = await getFirestoreExperiment(experimentId);
+  return experiment.stageIds.slice(0, experiment.stageIds.indexOf(stageId) + 1);
 }
 
 /** Assemble prompt items into final prompt.
@@ -182,15 +189,21 @@ async function processPromptItems(
         }
         break;
       case PromptItemType.STAGE_CONTEXT:
-        items.push(
-          await getStageContextForPrompt(
-            experimentId,
-            cohortId,
-            participantIds,
-            stageId,
-            promptItem,
-          ),
-        );
+        const stageContextIds = promptItem.stageId
+          ? [stageId]
+          : await getAllPrecedingStageIds(experimentId, stageId);
+        for (const id of stageContextIds) {
+          items.push(
+            await getStageContextForPrompt(
+              experimentId,
+              cohortId,
+              participantIds,
+              stageId,
+              id,
+              promptItem,
+            ),
+          );
+        }
         break;
       case PromptItemType.GROUP:
         const promptGroup = promptItem as PromptItemGroup;
@@ -247,10 +260,11 @@ export async function getStageContextForPrompt(
   cohortId: string,
   participantIds: string[],
   currentStageId: string,
+  contextStageId: string, // use this and not item.stageId, which could be ''
   item: StageContextPromptItem,
 ) {
   // Get the specific stage
-  const stage = await getFirestoreStage(experimentId, item.stageId);
+  const stage = await getFirestoreStage(experimentId, contextStageId);
   if (!stage) {
     return '';
   }

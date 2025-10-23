@@ -232,6 +232,8 @@ export class EditorComponent extends MobxLitElement {
   }
 
   private renderPromptPreview(agentPromptConfig: ChatPromptConfig) {
+    // TODO: Render prompt preview with fake data populating prompt item
+    // variables
     const renderPromptItem = (item: PromptItem): unknown => {
       switch (item.type) {
         case PromptItemType.TEXT:
