@@ -118,6 +118,14 @@ async function getAllPrecedingStageIds(experimentId: string, stageId: string) {
 /** Assemble prompt items into final prompt.
  * This is the main function called to get a final prompt string that
  * can be sent to an LLM API without any further edits.
+ *
+ * TODO: Instead of having the functions under this fetch documents
+ * from Firestore, pass in a data structure containing all the database docs
+ * needed (e.g., stage configs, cohort participants, private/public answers).
+ *
+ * This could save duplicate fetching and will also enable us to easily build
+ * structured prompts with fake data (e.g., to preview prompts in experiment
+ * builder).
  */
 export async function getStructuredPrompt(
   experimentId: string,
