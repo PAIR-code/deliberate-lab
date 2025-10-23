@@ -97,3 +97,49 @@ Stock Info | Shows stock info stage information
 Asset Allocation | Shows asset allocation information
 Survey | Shows survey information (and answers if specified in settings)
 Survey Per Participant | Shows survey per participant information (and answers if specified in settings)
+
+## [Developer workflow] Adding agent participant support for a stage
+
+> NOTE: This documentation, along with additional content, will eventually
+be moved into a guide for adding a new stage to Deliberate Lab
+
+### Enable stage context in structured prompts
+First, make sure structured prompts are able to support your stage type.
+
+See `getStageDisplayForPrompt` in `functions/src/prompt.utils.ts` for a switch
+statement with all supported stages.
+
+If your stage is not supported, add a helper function to fetch relevant data
+(doing it in the helper function is fine for now; we may eventually fetch all
+data up front) and build the stage display.
+
+<small>Note: "stage display" is just the main UI
+content of the stage; other parts like "stage description" and "stage progress"
+are already built via other logic for "stage context" prompt items.</small>
+
+<small>Note: Make sure you have an option
+to include participant answers in the display (this would just be the
+current participant's answers for an agent participants, but could include
+all cohort participants' answers for a mediator)
+</small>
+
+**Testing:** The fastest way to test this is to set up an agent mediator OR
+participant (since both use structured prompts) for a chat stage, add
+your stage immediately before, and make sure the agent's chat prompt includes
+all stages before it as context. Then, send a chat message, wait for an
+agent response, and check the agent logging dashboard to verify that API
+queries contain your stage display in the prompt.
+
+### Add logic to completeStageAsAgentParticipant
+Make sure the `completeStageAsAgentParticipant`
+(in `functions/src/agent_participant.utils.ts`) includes your stage type.
+
+If relevant, add a helper function to make an API query, update participant
+profile status, call `completeStage` (to progress participant to next
+stage in experiment config), etc.
+
+If an API query is needed, define a default structured prompt (to be used
+if no custom prompt is saved in the experiment builder). If the stage requires
+additional settings (e.g., for survey stage, an option to complete all
+questions via one API call vs. complete one question per call), create a new
+prompt config extending `BasePromptConfig` in `utils/src/structured_prompt.ts`.
