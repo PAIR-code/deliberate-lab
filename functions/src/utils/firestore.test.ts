@@ -69,9 +69,7 @@ import {
   getGroupChatTriggerLogRef,
   getPrivateChatTriggerLogRef,
 } from './firestore';
-
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const {Timestamp: ClientTimestamp} = require('firebase/firestore');
+import {Timestamp as ClientTimestamp} from 'firebase-admin/firestore';
 
 type TestFirestore = ReturnType<
   ReturnType<RulesTestEnvironment['authenticatedContext']>['firestore']
