@@ -166,7 +166,7 @@ export function createDefaultPromptItemGroup(
 // Default prompt includes current stage context
 export function createDefaultPromptFromText(
   text: string,
-  stageId: string,
+  stageId: string = '', // defaults to context from past + current stages
 ): PromptItem[] {
   return [
     {
