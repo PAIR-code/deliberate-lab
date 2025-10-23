@@ -282,7 +282,7 @@ export async function getStageContextForPrompt(
   // Include name of stage
   textItems.push(`----- STAGE: ${stage.name ?? stage.id} -----`);
 
-  if (item.includePrimaryText) {
+  if (item.includePrimaryText && stage.descriptions.primaryText.trim() !== '') {
     textItems.push(`- Stage description: ${stage.descriptions.primaryText}`);
   }
   if (item.includeInfoText) {
