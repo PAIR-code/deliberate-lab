@@ -216,8 +216,8 @@ const CONSENSUS_TOS_STAGE = createTOSStage({
     'Thank you for your interest in this research. If you choose to participate, you will be asked to participate in debates about resource allocation, which have real-world consequences in the form of disbursing real funds to real charities, based on your / your teams actions.',
     '**Compensation & Impact**',
     'You will be paid a base amount for completing the survey. This base payment is guaranteed and is independent of your decisions regarding the charity allocations.',
-    '**IRB & Confidentiality**',
-    'The results of this study will be used solely for research purposes. Our team will keep all your information from this study strictly confidential, as required by law. The IRB at XXXXXX is responsible for protecting the rights and welfare of research volunteers like you.',
+    '**Confidentiality**',
+    'The results of this study will be used solely for research purposes. Our team will keep all your information from this study strictly confidential, as required by law.',
     '**Voluntary Participation**',
     'Your participation is voluntary, which means you can choose whether or not to participate. You may choose not to participate by exiting the survey at any point. There are no known costs to you for participating in this research study except for your time.',
     '**Contact**',
@@ -259,7 +259,7 @@ export function getCharityDebateTemplate(
   stages.push(SET_PROFILE_STAGE_EXPANDED);
   if (config.includeMediator) stages.push(createMediatedDiscussionInfoStage());
   stages.push(createInstructionsStage());
-  stages.push(createComprehensionStageNew());
+  stages.push(createCharityComprehensionStage());
 
   if (config.includeInitialParticipantSurvey)
     stages.push(createInitialParticipantSurveyStage());
@@ -271,7 +271,7 @@ export function getCharityDebateTemplate(
 
   debateRoundsCharities.forEach((charityGroup, index) => {
     const roundNum = index + 1;
-    const setting = `donations to: ${charityGroup.join(', ')}`;
+    const setting = `donations to: *${charityGroup.join(', ')}*`;
     let mediatorForRound: string | undefined = undefined;
 
     if (config.includeMediator && index > 0) {
@@ -327,6 +327,7 @@ export function getCharityDebateTemplate(
   }
 
   if (config.includeMetaFeedback) stages.push(createMetaFeedbackStage());
+  stages.push(createExperimentEndInfoStage());
 
   return createExperimentTemplate({
     experiment: createExperimentConfig(stages, {
@@ -383,14 +384,22 @@ export function createAllocationRevealStage(): StageConfig {
   });
 }
 
+
 function createRoundStartStage(roundNum: number): StageConfig {
+  // Start with the base message for all rounds.
+  const infoLines = [`You are now beginning Round ${roundNum}.`];
+  if (roundNum > 1) {
+    infoLines.push('The discussion in this round will be joined by an AI Mediator.');
+  }
+
   return createInfoStage({
     name: `Beginning of Round ${roundNum}`,
-    infoLines: [`You are now beginning Round ${roundNum}.`],
+    infoLines: infoLines,
   });
 }
 
-function createComprehensionStageNew(): StageConfig {
+
+function createCharityComprehensionStage(): StageConfig {
   return createComprehensionStage({
     name: 'Comprehension Check',
     descriptions: createStageTextConfig({
@@ -484,19 +493,6 @@ function createComprehensionStageNew(): StageConfig {
           ],
         },
         'b',
-      ),
-      createMultipleChoiceComprehensionQuestion(
-        {
-          questionTitle:
-            'Consider three groups: **Group X** (votes are 90/10/0, 85/15/0, 95/5/0), **Group Y** (votes are 50/50/0, 60/40/0, 40/60/0), and **Group Z** (votes are 100/0/0, 0/100/0, 0/0/100). Please rank them from MOST spending power to LEAST.',
-          options: [
-            {id: 'a', text: 'X, then Y, then Z', imageId: ''},
-            {id: 'b', text: 'Z, then Y, then X', imageId: ''},
-            {id: 'c', text: 'Y, then X, then Z', imageId: ''},
-            {id: 'd', text: 'They all get the same amount', imageId: ''},
-          ],
-        },
-        'a',
       ),
     ],
   });
@@ -642,6 +638,12 @@ function createMediatedDiscussionInfoStage(): StageConfig {
   });
 }
 
+function createExperimentEndInfoStage(): StageConfig {
+  return createInfoStage({
+    name: 'Experiment-End',
+    infoLines: ["This marks the end of the experiment. Thank you for participating!",],
+  });
+}
 function createInstructionsStage(): StageConfig {
   return createInfoStage({
     name: 'Instructions: Overview',
@@ -798,6 +800,10 @@ function createPerMediatorEvaluationStage(roundNum: number): StageConfig {
         questionTitle: `[Fairness] The mediator seemed to favor one participant or viewpoint over others.`,
         ...LIKERT_SCALE_PROPS,
       }),
+      createTextSurveyQuestion({
+        questionTitle:
+          `Do you have any additional feedback on this mediator's performance in the discussion? (If none, please write NA)`,
+      }),
     ],
   });
 }
@@ -903,7 +909,7 @@ function createExperimentFeedbackStage(): StageConfig {
       }),
       createTextSurveyQuestion({
         questionTitle:
-          'Did you experience any harmful / offensive behavior, from participants or the mediator? (If not applicable, please write NA). \nYou may also reach out directly to the proctors, (aarontp@google.com) / (cjqian@google.com)',
+          'Did you experience any harmful / offensive behavior, from participants or the mediator? (If not applicable, please write NA). \nYou may also reach out directly to the proctors',
       }),
     ],
   });
