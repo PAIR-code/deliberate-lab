@@ -11,9 +11,8 @@ import {
   updateParticipantNextStage,
 } from './participant.utils';
 import {completeProfile} from './stages/profile.utils';
-import {getAgentParticipantRankingStageResponse} from './stages/ranking.agent';
+import {completeRankingStageAsAgentParticipant} from './stages/ranking.agent';
 import {assignRolesToParticipants} from './stages/role.utils';
-import {getAgentParticipantSurveyStageResponse} from './stages/survey.agent';
 import {
   getExperimenterData,
   getFirestoreParticipantRef,
@@ -112,11 +111,12 @@ export async function completeStageAsAgentParticipant(
       // when currentStageId changes, so no action needed here.
       break;
     case StageKind.RANKING:
-      if (!experimenterData) {
-        console.log('Could not find experimenter data and API key');
-        break;
-      }
-      // TODO: Add logic to complete ranking stage
+      await completeRankingStageAsAgentParticipant(
+        experimentId,
+        participant,
+        stage,
+        experimenterData,
+      );
       await completeStage();
       participantDoc.set(participant);
       break;
