@@ -120,6 +120,15 @@ npm run start
 
 Then, view the app at http://localhost:4201.
 
+## Run backend tests
+
+Most backend test coverage lives in the `functions` workspace. After running `npm install` in `functions/`, you can choose between two scripts:
+
+- `npm run test:unit` executes fast unit suites that stub Firestore access and do not require emulators.
+- `npm run test:firestore` launches the Firestore emulator on-demand (via `firebase emulators:exec`) and runs suites that interact with seeded test data, such as `utils/firestore.test.ts`.
+
+Both commands assume the shared `@deliberation-lab/utils` package has been built (`npm run build` inside `utils/`).
+
 ## Troubleshooting tips
 
 ### Getting and using your Google Analytics ID

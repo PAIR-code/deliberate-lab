@@ -8,22 +8,39 @@ import {
   AgentParticipantPromptConfig,
   AgentPersonaConfig,
   ChatMessage,
-  CohortConfig,
-  Experiment,
+  ChatStagePublicData,
   ExperimenterData,
   MediatorProfileExtended,
   MediatorStatus,
   ParticipantProfileExtended,
   ParticipantStatus,
   StageConfig,
+  StageKind,
   StageParticipantAnswer,
-  StagePublicData,
+  UserType,
+  createCohortConfig,
+  createAgentMediatorPersonaConfig,
+  createAgentModelSettings,
+  createAgentPromptSettings,
+  createChatStage,
+  createChatStageParticipantAnswer,
+  createChatStagePublicData,
+  createDefaultChatDiscussion,
+  createMediatorChatMessage,
+  createModelGenerationConfig,
+  createParticipantChatMessage,
+  createParticipantProfileBase,
+  createParticipantProfileExtended,
+  createProgressTimestamps,
+  createStructuredOutputConfig,
+  createExperimentConfig,
+  createExperimenterData,
+  createMetadataConfig,
 } from '@deliberation-lab/utils';
 import {
   initializeTestEnvironment,
   RulesTestEnvironment,
 } from '@firebase/rules-unit-testing';
-import type {Firestore} from 'firebase-admin/firestore';
 
 import {app} from '../app';
 import {
@@ -53,8 +70,16 @@ import {
   getPrivateChatTriggerLogRef,
 } from './firestore';
 
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const {Timestamp: ClientTimestamp} = require('firebase/firestore');
+
+type TestFirestore = ReturnType<
+  ReturnType<RulesTestEnvironment['authenticatedContext']>['firestore']
+>;
+
 const firestoreMock = app.firestore as jest.Mock;
 
+// Rules are ignored in the admin SDK, but required to initialize the test environment.
 const RULES = [
   "rules_version = '2';",
   'service cloud.firestore {',
@@ -66,125 +91,268 @@ const RULES = [
   '}',
 ].join('\n');
 
-const experimenterId = 'creator-1';
-const experimentId = 'experiment-1';
-const cohortId = 'cohort-1';
-const stageId = 'stage-1';
-const participantPrivateId = 'participant-private-1';
-const participantPrivateId2 = 'participant-private-2';
-const triggerLogId = 'trigger-log-1';
-const agentId = 'agent-1';
+const experimenterId = 'julia-researcher';
+const experimentId = 'civic-forum-2025';
+const cohortId = 'berlin-cohort';
+const stageId = 'brainstorm-session';
+const discussionId = 'discussion-night-transit';
+const participantPrivateId = 'participant-alex-private';
+const participantPrivateId2 = 'participant-taylor-private';
+const triggerLogId = 'trigger-001';
+const agentId = 'companion-agent-1';
 
-const experimenterRecord = {
-  id: experimenterId,
-} as unknown as ExperimenterData;
+const experimenterRecord: ExperimenterData = {
+  ...createExperimenterData(experimenterId, 'julia.researcher@example.com'),
+  viewedExperiments: [experimentId],
+};
 
-const experimentRecord = {
-  metadata: {
-    creator: experimenterId,
-  },
-} as unknown as Experiment;
-
-const cohortRecord = {
-  id: cohortId,
-} as unknown as CohortConfig;
-
-const stageRecord = {
+const stageRecord: StageConfig = createChatStage({
   id: stageId,
-} as unknown as StageConfig;
+  name: 'Brainstorm shared transit ideas',
+  descriptions: {
+    primaryText: 'Propose ways Berlin could make nighttime travel safer.',
+    infoText: 'Share concrete pilots the city could launch within three months.',
+    helpText: 'Offer one idea at a time so other participants can iterate.',
+  },
+  discussions: [
+    createDefaultChatDiscussion({
+      id: discussionId,
+      description: 'Collect actionable experiments to improve late-night transit.',
+    }),
+  ],
+  timeLimitInMinutes: 20,
+  requireFullTime: true,
+});
 
-const stagePublicRecord = {
-  stageId,
-} as unknown as StagePublicData;
+const stagePublicRecord: ChatStagePublicData = {
+  ...createChatStagePublicData(stageRecord),
+  discussionTimestampMap: {[discussionId]: {}},
+};
 
-const stageAnswer1 = {
-  answer: 'value-1',
-} as unknown as StageParticipantAnswer;
+const experimentRecord = createExperimentConfig([stageRecord], {
+  id: experimentId,
+  metadata: createMetadataConfig({
+    name: 'Berlin Civic Transit Forum',
+    publicName: 'Berlin Civic Transit Forum',
+    description:
+      'Community forum exploring how Berlin might improve nighttime transit access.',
+    creator: experimenterId,
+    dateCreated: ClientTimestamp.fromMillis(0),
+    dateModified: ClientTimestamp.fromMillis(0),
+  }),
+});
 
-const stageAnswer2 = {
-  answer: 'value-2',
-} as unknown as StageParticipantAnswer;
+const cohortRecord = createCohortConfig({
+  id: cohortId,
+  metadata: createMetadataConfig({
+    name: 'Berlin Pilot Cohort',
+    description: 'First cohort piloting the civic transit forum.',
+    creator: experimenterId,
+    dateCreated: ClientTimestamp.fromMillis(0),
+    dateModified: ClientTimestamp.fromMillis(0),
+  }),
+  stageUnlockMap: {[stageId]: true},
+});
 
-const participantAgent = {
+const stageAnswer1: StageParticipantAnswer = createChatStageParticipantAnswer({
+  id: stageId,
+  discussionTimestampMap: {[discussionId]: null},
+});
+
+const stageAnswer2: StageParticipantAnswer = createChatStageParticipantAnswer({
+  id: stageId,
+  discussionTimestampMap: {
+    [discussionId]: ClientTimestamp.fromMillis(1),
+  },
+});
+
+const participantAgent: ParticipantProfileExtended = createParticipantProfileExtended({
   privateId: participantPrivateId,
+  publicId: 'alex-companion',
+  name: 'Alex (AI Companion)',
+  avatar: '🤖',
+  pronouns: 'they/them',
   currentCohortId: cohortId,
   currentStageId: stageId,
   currentStatus: ParticipantStatus.IN_PROGRESS,
-  agentConfig: {personaId: 'agent-persona-1'},
-} as unknown as ParticipantProfileExtended;
+  timestamps: createProgressTimestamps({
+    readyStages: {[stageId]: ClientTimestamp.fromMillis(0)},
+  }),
+  agentConfig: {
+    agentId: 'mediator-aurora',
+    promptContext: '',
+    modelSettings: createAgentModelSettings({modelName: 'gemini-2.5-flash'}),
+  },
+});
 
-const participantHuman = {
+const participantHuman: ParticipantProfileExtended = createParticipantProfileExtended({
   privateId: participantPrivateId2,
+  publicId: 'taylor-johnson',
+  name: 'Taylor Johnson',
+  avatar: '🚲',
+  pronouns: 'she/her',
   currentCohortId: cohortId,
-  currentStageId: 'stage-2',
+  currentStageId: 'reflection-session',
   currentStatus: ParticipantStatus.SUCCESS,
   agentConfig: null,
-} as unknown as ParticipantProfileExtended;
+});
 
-const participantInactive = {
-  privateId: 'participant-inactive',
-  currentCohortId: 'cohort-2',
+const participantInactive: ParticipantProfileExtended = createParticipantProfileExtended({
+  privateId: 'participant-zoe-private',
+  publicId: 'zoe-schmidt',
+  name: 'Zoe Schmidt',
+  avatar: '🛹',
+  pronouns: 'she/her',
+  currentCohortId: 'munich-cohort',
   currentStageId: stageId,
   currentStatus: ParticipantStatus.PAUSED,
   agentConfig: null,
-} as unknown as ParticipantProfileExtended;
+});
 
-const mediatorAgent = {
-  currentCohortId: cohortId,
+const mediatorAgent: MediatorProfileExtended = {
+  type: UserType.MEDIATOR,
+  publicId: 'aurora-mediator',
+  privateId: 'mediator-aurora-private',
+  name: 'Aurora (AI Mediator)',
+  avatar: '🤖',
+  pronouns: 'she/her',
   currentStatus: MediatorStatus.ACTIVE,
-  agentConfig: {personaId: 'mediator-agent'},
-} as unknown as MediatorProfileExtended;
+  currentCohortId: cohortId,
+  activeStageMap: {[stageId]: true},
+  agentConfig: {
+    agentId: 'mediator-aurora',
+    promptContext: '',
+    modelSettings: createAgentModelSettings({modelName: 'gemini-2.5-flash'}),
+  },
+};
 
-const mediatorHuman = {
-  currentCohortId: cohortId,
+const mediatorHuman: MediatorProfileExtended = {
+  type: UserType.MEDIATOR,
+  publicId: 'samira-lee',
+  privateId: 'mediator-samira-private',
+  name: 'Samira Lee',
+  avatar: '🧭',
+  pronouns: 'she/her',
   currentStatus: MediatorStatus.ACTIVE,
+  currentCohortId: cohortId,
+  activeStageMap: {[stageId]: true},
   agentConfig: null,
-} as unknown as MediatorProfileExtended;
+};
 
-const mediatorPaused = {
-  currentCohortId: cohortId,
+const mediatorPaused: MediatorProfileExtended = {
+  type: UserType.MEDIATOR,
+  publicId: 'miguel-arroyo',
+  privateId: 'mediator-miguel-private',
+  name: 'Miguel Arroyo',
+  avatar: '🎧',
+  pronouns: 'he/him',
   currentStatus: MediatorStatus.PAUSED,
+  currentCohortId: cohortId,
+  activeStageMap: {[stageId]: true},
   agentConfig: null,
-} as unknown as MediatorProfileExtended;
+};
 
-const agentPersonaRecord = {
-  personaId: 'mediator-agent',
-} as unknown as AgentPersonaConfig;
+const agentPersonaRecord: AgentPersonaConfig = createAgentMediatorPersonaConfig({
+  id: 'mediator-aurora',
+  name: 'Aurora (AI Mediator)',
+  description: 'AI mediator trained to encourage inclusive brainstorming.',
+  defaultProfile: createParticipantProfileBase({
+    name: 'Aurora (AI Mediator)',
+    avatar: '🤖',
+    pronouns: 'she/her',
+  }),
+  defaultModelSettings: createAgentModelSettings({modelName: 'gemini-2.5-flash'}),
+});
 
-const agentPromptRecord = {
-  prompt: 'call to action',
-} as unknown as AgentParticipantPromptConfig;
+const agentPromptRecord: AgentParticipantPromptConfig = {
+  id: stageId,
+  type: StageKind.CHAT,
+  promptContext:
+    'Invite participants to build on the strongest transit ideas.',
+  generationConfig: createModelGenerationConfig({
+    maxTokens: 350,
+    temperature: 0.7,
+  }),
+  promptSettings: createAgentPromptSettings({
+    includeStageHistory: true,
+    includeStageInfo: true,
+  }),
+  structuredOutputConfig: createStructuredOutputConfig(),
+};
 
-const publicChatEarly = {
-  id: 'chat-early',
-  timestamp: 1,
-} as unknown as ChatMessage;
+const publicChatEarly: ChatMessage = createParticipantChatMessage({
+  id: 'chat-001',
+  discussionId,
+  message: 'Let’s list current pain points with the U-Bahn.',
+  senderId: 'taylor-johnson',
+  profile: createParticipantProfileBase({
+    name: 'Taylor Johnson',
+    avatar: '🚲',
+    pronouns: 'she/her',
+  }),
+  timestamp: ClientTimestamp.fromMillis(1),
+});
 
-const publicChatLate = {
-  id: 'chat-late',
-  timestamp: 3,
-} as unknown as ChatMessage;
+const publicChatLate: ChatMessage = createMediatorChatMessage({
+  id: 'chat-002',
+  discussionId,
+  message: 'We could pilot night trams on weekends first.',
+  senderId: 'aurora-mediator',
+  agentId: 'mediator-aurora',
+  profile: createParticipantProfileBase({
+    name: 'Aurora (AI Mediator)',
+    avatar: '🤖',
+    pronouns: 'she/her',
+  }),
+  timestamp: ClientTimestamp.fromMillis(3),
+});
 
-const privateChatEarly = {
-  id: 'private-early',
-  timestamp: 2,
-} as unknown as ChatMessage;
+const privateChatEarly: ChatMessage = createMediatorChatMessage({
+  id: 'private-001',
+  message: 'Remember to reference existing rider surveys.',
+  senderId: 'companion-agent-1',
+  agentId: 'mediator-aurora',
+  profile: createParticipantProfileBase({
+    name: 'Aurora (AI Mediator)',
+    avatar: '🤖',
+    pronouns: 'she/her',
+  }),
+  timestamp: ClientTimestamp.fromMillis(2),
+});
 
-const privateChatLate = {
-  id: 'private-late',
-  timestamp: 4,
-} as unknown as ChatMessage;
+const privateChatLate: ChatMessage = createMediatorChatMessage({
+  id: 'private-002',
+  message: 'Summarize consensus before the stage ends.',
+  senderId: 'companion-agent-1',
+  agentId: 'mediator-aurora',
+  profile: createParticipantProfileBase({
+    name: 'Aurora (AI Mediator)',
+    avatar: '🤖',
+    pronouns: 'she/her',
+  }),
+  timestamp: ClientTimestamp.fromMillis(4),
+});
 
-const publicTriggerLogRecord = {message: 'public trigger'};
-const privateTriggerLogRecord = {message: 'private trigger'};
+const publicTriggerLogRecord = {
+  message: 'Posted recap to group channel',
+  createdAt: ClientTimestamp.fromMillis(5),
+};
+
+const privateTriggerLogRecord = {
+  message: 'Sent private reminder to Alex',
+  createdAt: ClientTimestamp.fromMillis(5),
+};
 
 let testEnv: RulesTestEnvironment;
-let mockFirestore: Firestore;
+let mockFirestore: TestFirestore;
 
-async function seedBaseData(firestore: Firestore) {
+async function seedBaseData(firestore: TestFirestore) {
   const experimentRef = firestore.collection('experiments').doc(experimentId);
 
-  await firestore.collection('experimenterData').doc(experimenterId).set(experimenterRecord);
+  await firestore
+    .collection('experimenterData')
+    .doc(experimenterId)
+    .set(experimenterRecord);
   await experimentRef.set(experimentRecord);
 
   const participantsRef = experimentRef.collection('participants');
@@ -232,7 +400,10 @@ async function seedBaseData(firestore: Firestore) {
 
   const cohortRef = experimentRef.collection('cohorts').doc(cohortId);
   await cohortRef.set(cohortRecord);
-  await cohortRef.collection('publicStageData').doc(stageId).set(stagePublicRecord);
+  await cohortRef
+    .collection('publicStageData')
+    .doc(stageId)
+    .set(stagePublicRecord);
   await cohortRef
     .collection('publicStageData')
     .doc(stageId)
@@ -253,7 +424,10 @@ async function seedBaseData(firestore: Firestore) {
     .set(publicChatLate);
 
   await experimentRef.collection('stages').doc(stageId).set(stageRecord);
-  await experimentRef.collection('agentMediators').doc('personaAgent').set(agentPersonaRecord);
+  await experimentRef
+    .collection('agentMediators')
+    .doc('personaAgent')
+    .set(agentPersonaRecord);
   await experimentRef.collection('agents').doc(agentId).set({});
   await experimentRef
     .collection('agents')
@@ -296,7 +470,10 @@ describe('firestore utils', () => {
   });
 
   it('returns undefined when experimenter data is missing', async () => {
-    await mockFirestore.collection('experimenterData').doc(experimenterId).delete();
+    await mockFirestore
+      .collection('experimenterData')
+      .doc(experimenterId)
+      .delete();
     const result = await getExperimenterData(experimenterId);
     expect(result).toBeUndefined();
   });
@@ -380,10 +557,7 @@ describe('firestore utils', () => {
   });
 
   it('fetches active participants in cohort', async () => {
-    const result = await getFirestoreActiveParticipants(
-      experimentId,
-      cohortId,
-    );
+    const result = await getFirestoreActiveParticipants(experimentId, cohortId);
     expect(result).toHaveLength(2);
     expect(result).toEqual(
       expect.arrayContaining([participantAgent, participantHuman]),
@@ -498,11 +672,7 @@ describe('firestore utils', () => {
   });
 
   it('returns stage public data doc reference', async () => {
-    const ref = getFirestoreStagePublicDataRef(
-      experimentId,
-      cohortId,
-      stageId,
-    );
+    const ref = getFirestoreStagePublicDataRef(experimentId, cohortId, stageId);
     const doc = await ref.get();
     expect(doc.exists).toBe(true);
     expect(doc.data()).toEqual(stagePublicRecord);

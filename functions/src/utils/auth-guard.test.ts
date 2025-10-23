@@ -60,10 +60,12 @@ describe('AuthGuard', () => {
             },
           }
         : undefined,
-    } as unknown as CallableRequest);
+    }) as unknown as CallableRequest;
 
   it('allows experimenter emails present in allowlist', async () => {
-    await expect(AuthGuard.isExperimenter(makeRequest(experimenterEmail))).resolves.toBeUndefined();
+    await expect(
+      AuthGuard.isExperimenter(makeRequest(experimenterEmail)),
+    ).resolves.toBeUndefined();
   });
 
   it('matches experimenter emails in a case-insensitive manner', async () => {
@@ -73,17 +75,21 @@ describe('AuthGuard', () => {
   });
 
   it('rejects when experimenter email is not allowlisted', async () => {
-  delete allowlistData[experimenterEmail];
+    delete allowlistData[experimenterEmail];
 
-    await expect(AuthGuard.isExperimenter(makeRequest(experimenterEmail))).rejects.toMatchObject({
+    await expect(
+      AuthGuard.isExperimenter(makeRequest(experimenterEmail)),
+    ).rejects.toMatchObject({
       code: 'permission-denied',
     });
   });
 
   it('rejects experimenter requests without authentication context', async () => {
-    await expect(AuthGuard.isExperimenter(makeRequest())).rejects.toMatchObject({
-      code: 'unauthenticated',
-    });
+    await expect(AuthGuard.isExperimenter(makeRequest())).rejects.toMatchObject(
+      {
+        code: 'unauthenticated',
+      },
+    );
   });
 
   it('rejects experimenter requests without email claims', async () => {
@@ -100,21 +106,27 @@ describe('AuthGuard', () => {
   });
 
   it('allows admin emails with isAdmin flag', async () => {
-    await expect(AuthGuard.isAdmin(makeRequest(adminEmail))).resolves.toBeUndefined();
+    await expect(
+      AuthGuard.isAdmin(makeRequest(adminEmail)),
+    ).resolves.toBeUndefined();
   });
 
   it('rejects admin emails without isAdmin flag', async () => {
-  allowlistData[adminEmail] = {};
+    allowlistData[adminEmail] = {};
 
-    await expect(AuthGuard.isAdmin(makeRequest(adminEmail))).rejects.toMatchObject({
+    await expect(
+      AuthGuard.isAdmin(makeRequest(adminEmail)),
+    ).rejects.toMatchObject({
       code: 'permission-denied',
     });
   });
 
   it('rejects admin requests without allowlist entry', async () => {
-  delete allowlistData[adminEmail];
+    delete allowlistData[adminEmail];
 
-    await expect(AuthGuard.isAdmin(makeRequest(adminEmail))).rejects.toMatchObject({
+    await expect(
+      AuthGuard.isAdmin(makeRequest(adminEmail)),
+    ).rejects.toMatchObject({
       code: 'permission-denied',
     });
   });
@@ -139,10 +151,10 @@ describe('AuthGuard', () => {
   });
 
   it('throws HttpsError instances on rejection', async () => {
-  delete allowlistData[adminEmail];
+    delete allowlistData[adminEmail];
 
-    await expect(AuthGuard.isAdmin(makeRequest(adminEmail))).rejects.toBeInstanceOf(
-      functions.https.HttpsError,
-    );
+    await expect(
+      AuthGuard.isAdmin(makeRequest(adminEmail)),
+    ).rejects.toBeInstanceOf(functions.https.HttpsError);
   });
 });

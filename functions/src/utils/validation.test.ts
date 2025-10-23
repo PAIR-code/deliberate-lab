@@ -93,9 +93,8 @@ describe('validation utils', () => {
       }),
     } as unknown as Record<Index, ReturnType<typeof Type.Object>>;
 
-    expect(() => checkUnionErrorOnPath({payload: {}}, '/payload', unionValidators)).toThrow(
-      'Union error path must point to a value with a "kind" property',
-    );
+    expect(() =>
+      checkUnionErrorOnPath({payload: {}}, '/payload', unionValidators),
+    ).toThrow('Union error path must point to a value with a "kind" property');
   });
-
 });
