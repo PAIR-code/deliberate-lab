@@ -41,6 +41,7 @@ import {
   initializeTestEnvironment,
   RulesTestEnvironment,
 } from '@firebase/rules-unit-testing';
+import {Timestamp as ClientTimestamp} from '@firebase/firestore';
 
 import {app} from '../app';
 import {
@@ -69,7 +70,8 @@ import {
   getGroupChatTriggerLogRef,
   getPrivateChatTriggerLogRef,
 } from './firestore';
-import {Timestamp as ClientTimestamp} from 'firebase-admin/firestore';
+
+type FirestoreTimestamp = ReturnType<typeof ClientTimestamp.fromMillis>;
 
 type TestFirestore = ReturnType<
   ReturnType<RulesTestEnvironment['authenticatedContext']>['firestore']
