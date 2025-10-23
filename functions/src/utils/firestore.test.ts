@@ -71,8 +71,6 @@ import {
   getPrivateChatTriggerLogRef,
 } from './firestore';
 
-type FirestoreTimestamp = ReturnType<typeof ClientTimestamp.fromMillis>;
-
 type TestFirestore = ReturnType<
   ReturnType<RulesTestEnvironment['authenticatedContext']>['firestore']
 >;
