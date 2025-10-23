@@ -321,17 +321,6 @@ export class EditorComponent extends MobxLitElement {
           <label class="checkbox-wrapper">
             <input
               type="checkbox"
-              .checked=${item.includeHelpText}
-              @change=${() =>
-                this.updatePromptItem(item, {
-                  includeHelpText: !item.includeHelpText,
-                })}
-            />
-            <div>Include stage help popup</div>
-          </label>
-          <label class="checkbox-wrapper">
-            <input
-              type="checkbox"
               .checked=${item.includeStageDisplay}
               @change=${() =>
                 this.updatePromptItem(item, {

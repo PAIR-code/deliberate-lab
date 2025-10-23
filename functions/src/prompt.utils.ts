@@ -277,9 +277,7 @@ export async function getStageContextForPrompt(
   if (item.includeInfoText) {
     textItems.push(`- Additional info: ${stage.descriptions.infoText}`);
   }
-  if (item.includeHelpText) {
-    textItems.push(`- If you need help: ${stage.descriptions.helpText}`);
-  }
+  // Note: Help text not included since the field has been deprecated
 
   // Include stage display with answers embedded, or just answers
   if (item.includeStageDisplay) {

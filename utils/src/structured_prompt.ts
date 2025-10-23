@@ -94,6 +94,7 @@ export interface StageContextPromptItem extends BasePromptItem {
   stageId: string;
   includePrimaryText: boolean;
   includeInfoText: boolean;
+  // WARNING: includeHelpText field has been deprecated
   includeHelpText: boolean;
   // Include participant view of stage, e.g., chat history, game board
   includeStageDisplay: boolean;
