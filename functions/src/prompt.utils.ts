@@ -24,6 +24,7 @@ import {
   UserType,
   getChatPromptMessageHistory,
   getNameFromPublicId,
+  getRankingStageDisplayForPrompt,
   getStockInfoSummaryText,
   getSurveySummaryText,
   getSurveyAnswersText,
@@ -34,6 +35,7 @@ import {
   getAssetAllocationAnswersText,
   getAssetAllocationSummaryText,
 } from './stages/asset_allocation.utils';
+import {getParticipantsToRankInRankingStage} from './stages/ranking.utils';
 import {
   getFirestoreActiveParticipants,
   getFirestoreAnswersForStage,
@@ -209,6 +211,7 @@ async function processPromptItems(
               stageId,
               id,
               promptItem,
+              userProfile,
             ),
           );
         }
@@ -270,6 +273,7 @@ export async function getStageContextForPrompt(
   currentStageId: string,
   contextStageId: string, // use this and not item.stageId, which could be ''
   item: StageContextPromptItem,
+  userProfile: UserProfile, // current profile
 ) {
   // Get the specific stage
   const stage = await getFirestoreStage(experimentId, contextStageId);
@@ -299,6 +303,7 @@ export async function getStageContextForPrompt(
         participantIds,
         stage,
         item.includeParticipantAnswers,
+        userProfile.publicId,
       ),
     );
   } else if (item.includeParticipantAnswers) {
@@ -329,6 +334,7 @@ export async function getStageDisplayForPrompt(
   participantIds: string[], // participant private IDs for answer inclusion
   stage: StageConfig,
   includeAnswers: boolean,
+  currentPublicId: string, // current user profile public ID
 ) {
   switch (stage.kind) {
     case StageKind.TOS:
@@ -375,6 +381,21 @@ export async function getStageDisplayForPrompt(
         stage.id,
       );
       return getChatPromptMessageHistory(privateMessages, stage);
+    case StageKind.RANKING:
+      // TODO: Add "include answers" option
+      // TODO: FINISH
+      const rankingParticipants = await getParticipantsToRankInRankingStage(
+        experimentId,
+        cohortId,
+        stage,
+        currentPublicId,
+      );
+      return getRankingStageDisplayForPrompt(
+        experimentId,
+        cohortId,
+        stage,
+        rankingParticipants,
+      );
     case StageKind.ROLE:
       const rolePublicData = await getFirestoreStagePublicData(
         experimentId,
