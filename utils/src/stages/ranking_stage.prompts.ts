@@ -1,8 +1,33 @@
 /** Prompt constants and utils for interacting with ranking stage. */
 import {AgentParticipantPromptConfig} from '../agent';
 import {ParticipantProfile, ParticipantProfileExtended} from '../participant';
-import {RankingStageConfig, RankingType} from './ranking_stage';
+import {RankingItem, RankingStageConfig, RankingType} from './ranking_stage';
 import {getBaseStagePrompt} from './stage.prompts';
+
+/** Returns stage display for ranking stage.
+ * This content should be the same as what human participants see in the UI.
+ */
+export async function getRankingStageDisplayForPrompt(
+  experimentId: string,
+  cohortId: string,
+  stage: RankingStageConfig,
+  rankingParticipants: ParticipantProfileExtended[],
+): Promise<string> {
+  switch (stage.rankingType) {
+    case RankingType.ITEMS:
+      const items = stage.rankingItems.map((item: RankingItem) => {
+        return {id: item.id, text: item.text};
+      });
+      return `Items available in ranking stage: ${JSON.stringify(items)}`;
+    case RankingType.PARTICIPANTS:
+      const participants = rankingParticipants.map((participant) => {
+        return {id: participant.publicId, name: participant.name};
+      });
+      return `Participants available in ranking stage: ${JSON.stringify(participants)}`;
+    default:
+      return '';
+  }
+}
 
 // ************************************************************************* //
 // CONSTANTS                                                                 //

@@ -3,6 +3,7 @@ import {
   RankingStageConfig,
   RankingStageParticipantAnswer,
   RankingStagePublicData,
+  RankingType,
   StageKind,
   SurveyStagePublicData,
   filterRankingsByCandidates,
@@ -10,6 +11,7 @@ import {
   getRankingCandidatesFromWTL,
   LAS_WTL_STAGE_ID,
 } from '@deliberation-lab/utils';
+import {getFirestoreActiveParticipants} from '../utils/firestore';
 
 import {app} from '../app';
 
@@ -70,4 +72,26 @@ export async function addParticipantAnswerToRankingStagePublicData(
 
     transaction.set(publicDocument, publicStageData);
   });
+}
+
+/** Get list of participants to rank in ranking stage. */
+export async function getParticipantsToRankInRankingStage(
+  experimentId: string,
+  cohortId: string,
+  stage: rankingStageConfig,
+  participantId: string, // current participant's public ID
+): Promise<ParticipantProfileExtended[]> {
+  if (stage.rankingType !== RankingType.PARTICIPANTS) {
+    return [];
+  }
+  const participants = await getFirestoreActiveParticipants(
+    experimentId,
+    cohortId,
+  );
+  if (stage.enableSelfVoting) {
+    return participants;
+  }
+  return participants.filter(
+    (participant) => participant.publicId !== participantId,
+  );
 }
