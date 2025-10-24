@@ -6,7 +6,7 @@ import {customElement, property} from 'lit/decorators.js';
 
 import {
   MultiAssetAllocationStagePublicData,
-  MultiAssetAllocationStageConfig, // We'll need this for the stage name
+  MultiAssetAllocationStageConfig,
 } from '@deliberation-lab/utils';
 import {getParticipantInlineDisplay} from '../../shared/participant.utils';
 
@@ -14,9 +14,8 @@ import {core} from '../../core/core';
 import {CohortService} from '../../services/cohort.service';
 import {ExperimentService} from '../../services/experiment.service';
 
-import {styles} from './ranking_reveal_view.scss'; // Re-use existing styles
+import {styles} from './ranking_reveal_view.scss';
 
-/** Renders the results of a single MultiAssetAllocation stage. */
 @customElement('allocation-reveal-view')
 export class AllocationReveal extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
@@ -24,7 +23,6 @@ export class AllocationReveal extends MobxLitElement {
   private readonly cohortService = core.getService(CohortService);
   private readonly experimentService = core.getService(ExperimentService);
 
-  // --- Properties passed in by the parent reveal-summary-view ---
   @property() stage: MultiAssetAllocationStageConfig | undefined = undefined;
   @property() publicData: MultiAssetAllocationStagePublicData | undefined =
     undefined;
@@ -33,8 +31,6 @@ export class AllocationReveal extends MobxLitElement {
   private computeConsensusScore(): number {
     if (!this.publicData || !this.publicData.participantAnswerMap) return 0;
 
-    // Add the type annotation here.  This is the key to telling TypeScript
-    // what the type of this variable is.
     const participantAnswers = Object.values(
       this.publicData.participantAnswerMap,
     ) as any[];
@@ -63,8 +59,6 @@ export class AllocationReveal extends MobxLitElement {
     const participantAnswerMap = this.publicData.participantAnswerMap;
     const participantIds = Object.keys(participantAnswerMap);
     if (participantIds.length === 0) return nothing;
-
-    // Use the stage's stockOptions to get asset names, which is more robust.
     const assets = this.stage.stockOptions;
 
     return html`
@@ -123,12 +117,10 @@ export class AllocationReveal extends MobxLitElement {
       return html`<p><em>Waiting for allocation data...</em></p>`;
     }
 
-    // Use the displayMode property to decide what to render
     if (this.displayMode === 'scoreOnly') {
       return this.renderConsensusScoreOnly();
     }
 
-    // Default to the full view
     const consensusScore = this.computeConsensusScore();
     const stageName = this.experimentService.getStageName(this.stage.id);
 

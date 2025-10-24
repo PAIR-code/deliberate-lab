@@ -48,7 +48,6 @@ export class RevealView extends MobxLitElement {
     const stage = this.experimentService.getStage(item.id);
     const answer = this.participantService.answerMap[item.id];
     const publicData = this.cohortService.stagePublicDataMap[item.id];
-    console.log(`[Reveal Debug] Data for stage ID '${item.id}':`, publicData);
     if (!stage) return nothing;
 
     switch (item.kind) {
@@ -72,7 +71,6 @@ export class RevealView extends MobxLitElement {
           </survey-reveal-view>
         `;
       case StageKind.MULTI_ASSET_ALLOCATION:
-        // Cast the generic item to our specific type to access the new property
         const allocationItem = item as MultiAssetAllocationRevealItem;
         return html`
           <allocation-reveal-view
