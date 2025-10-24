@@ -1,4 +1,5 @@
 import {
+  createTextPromptItem,
   createChatStage,
   AgentMediatorTemplate,
   MediatorPromptConfig,
@@ -892,13 +893,6 @@ function createMetaFeedbackStage(): StageConfig {
       }),
     ],
   });
-}
-
-function createTextPromptItem(text: string): TextPromptItem {
-  return {
-    type: PromptItemType.TEXT,
-    text: text,
-  } as TextPromptItem;
 }
 
 function createStandardMediatorSchema(): StructuredOutputSchema {
