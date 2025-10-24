@@ -179,3 +179,10 @@ export function createDefaultPromptFromText(
     {type: PromptItemType.TEXT, text},
   ];
 }
+
+export function createTextPromptItem(text: string): TextPromptItem {
+  return {
+    type: PromptItemType.TEXT,
+    text: text,
+  } as TextPromptItem;
+}
