@@ -33,7 +33,7 @@ export class AllocationReveal extends MobxLitElement {
 
     const participantAnswers = Object.values(
       this.publicData.participantAnswerMap,
-    ) as any[];
+    );
     if (participantAnswers.length === 0) return 0;
 
     const firstAllocationMap = participantAnswers[0].allocationMap;
