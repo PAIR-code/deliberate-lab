@@ -37,6 +37,7 @@ import {
   createTextSurveyQuestion,
   createScaleSurveyQuestion,
   createStageTextConfig,
+  createStageProgressConfig,
   ExperimentTemplate,
   ProfileType,
   StageConfig,
@@ -51,6 +52,8 @@ import {
   createRevealStage,
   createMultiAssetAllocationRevealItem,
 } from '@deliberation-lab/utils';
+
+const EMOJIS = ['1️⃣', '2️⃣', '3️⃣'];
 
 // Agent configuration for the template.
 const HABERMAS_MEDIATOR_ID = 'habermas-mediator-agent';
@@ -122,7 +125,7 @@ interface CharityInfo {
 const CHARITY_DATA: CharityInfo[] = [
   {
     key: 'ifaw',
-    name: 'IFAW (animal welfare)',
+    name: '🐘 International Fund for Animal Welfare (IFAW)',
     link: 'https://www.charitynavigator.org/ein/542044674',
     score: '98%',
     mission:
@@ -130,7 +133,7 @@ const CHARITY_DATA: CharityInfo[] = [
   },
   {
     key: 'wildaid',
-    name: 'Wildaid (animal welfare)',
+    name: '🦁 WildAid (animal welfare)',
     link: 'https://www.charitynavigator.org/ein/203644441',
     score: '97%',
     mission:
@@ -138,7 +141,7 @@ const CHARITY_DATA: CharityInfo[] = [
   },
   {
     key: 'clean_ocean',
-    name: 'Clean Ocean Action',
+    name: '🌊 Clean Ocean Action',
     link: 'https://www.charitynavigator.org/ein/222897204',
     score: 'Not Rated', // Score not present in link text
     mission:
@@ -146,7 +149,7 @@ const CHARITY_DATA: CharityInfo[] = [
   },
   {
     key: 'sudan_aid',
-    name: 'Sudan Humanitarian Aid',
+    name: '🏥 Sudan Humanitarian Aid',
     link: 'https://www.charitynavigator.org/ein/472864379',
     score: '92%',
     mission:
@@ -154,7 +157,7 @@ const CHARITY_DATA: CharityInfo[] = [
   },
   {
     key: 'eyecare_india',
-    name: 'Eyecare in India',
+    name: '👁️ Eyecare in India',
     link: 'https://www.charitynavigator.org/ein/776141976',
     score: '100%',
     mission:
@@ -162,7 +165,7 @@ const CHARITY_DATA: CharityInfo[] = [
   },
   {
     key: 'global_housing',
-    name: 'Global housing for orphans',
+    name: '🏠 Global Housing for Orphans',
     link: 'https://www.charitynavigator.org/ein/562500794',
     score: '91%',
     mission:
@@ -170,7 +173,7 @@ const CHARITY_DATA: CharityInfo[] = [
   },
   {
     key: 'rainforest_action',
-    name: 'Rainforest Action',
+    name: '🌳 Rainforest Action',
     link: 'https://www.charitynavigator.org/ein/943045180',
     score: '100%',
     mission:
@@ -178,7 +181,7 @@ const CHARITY_DATA: CharityInfo[] = [
   },
   {
     key: 'aid_for_children',
-    name: 'Aid for children in remote villages',
+    name: '👶 Aid for Children in Remote Villages',
     link: 'https://www.charitynavigator.org/ein/300108263',
     score: '100%',
     mission:
@@ -186,7 +189,7 @@ const CHARITY_DATA: CharityInfo[] = [
   },
   {
     key: 'global_fund_women',
-    name: 'Global Fund for Women',
+    name: '♀ Global Fund for Women',
     link: 'https://www.charitynavigator.org/ein/770155782',
     score: '100%',
     mission:
@@ -211,7 +214,7 @@ const LIKERT_SCALE_PROPS = {
 
 const CONSENSUS_TOS_STAGE = createTOSStage({
   id: 'tos',
-  name: 'Terms of service',
+  name: '📜 Terms of service',
   tosLines: [
     'Thank you for your interest in this research. If you choose to participate, you will be asked to participate in debates about resource allocation, which have real-world consequences in the form of disbursing real funds to real charities, based on your / your teams actions.',
     '**Compensation & Impact**',
@@ -237,7 +240,7 @@ const TEXT_MEDIATED_INFO = [
 const TEXT_INSTRUCTIONS = [
   'The object of this study is understanding how groups make decisions together. Today, you’ll have *three* rounds of decision-making; in each round, your group will make decisions about how to allocate money across three charities. Each round has three steps:',
   '1. *Privately choose an initial allocation*. Given a fixed pool of money, decide how to split it among the three charities presented.',
-  '2. *Discuss your choices with the group*. Share your reasoning with 2 other participants and try to reach a consensus.',
+  '2. *Discuss your choices with the group*. Share your reasoning with 2 other participants and try to reach a consensus. You will have up to 10 minutes to discuss per round.',
   '3. *Privately update your allocation*. After the discussion, you can revise your initial allocation based on what you heard.',
   'Your goal is to work together to find the best way to split the funds.',
   '![Instructions](https://i.imgur.com/YOTgSAi.png)',
@@ -262,25 +265,19 @@ const TEXT_INSTRUCTIONS_4 = [
   'Today, our study will commit to donating **at least $100 per round**, split among the three charities. With 3 rounds total, at least **$300 will be donated in total**. Your group’s choices will help to inform where that money goes.',
   'As a reminder, your own payment for participating in this study is separate from the donation amount and is not affected by your decisions here.',
   '',
-  'Here are the charities for each round:',
+  'Here are the charities that will appear, in randomly assigned groups of 3, in each round:',
   '',
-  '**Round 1:**',
   '* 🐘 [International Fund for Animal Welfare (IFAW)](https://www.charitynavigator.org/ein/542044674)',
   '* 🏥 [Sudan Humanitarian Aid](https://www.charitynavigator.org/ein/472864379)',
   '* 🌊[Clean Ocean Action](https://www.charitynavigator.org/ein/222897204)',
-  '',
-
-  '**Round 2:**',
   '* 🦁 [WildAid (animal welfare)](https://www.charitynavigator.org/ein/203644441)',
   '* 👁️ [Eyecare in India](https://www.charitynavigator.org/ein/776141976)',
   '* 🏠 [Global Housing for Orphans](https://www.charitynavigator.org/ein/562500794)',
-  '',
-  '**Round 3:**',
   '* 🌳 [Rainforest Action](https://www.charitynavigator.org/ein/943045180)',
   '* 👶 [Aid for Children in Remote Villages](https://www.charitynavigator.org/ein/300108263)',
   '* ♀[Global Fund for Women](https://www.charitynavigator.org/ein/770155782)',
   '',
-  'We will provide more details on these charities before the rounds.',
+  'So, for example, you may have to allocate funds between *Eyecare in India*, *Sudan Humanitarian Aid*, and *Clean Ocean Action* in a round. We will provide more details on these charities before the rounds.',
 ];
 
 
@@ -312,11 +309,12 @@ export function getCharityDebateTemplate(
     stages.push(stage);
   }
 
+  // Mediator instructions
+  if (config.includeMediator) stages.push(createMediatedDiscussionInfoStage());
+  
   // Comprehension check
   stages.push(createCharityComprehensionStage());
 
-  // Mediator instructions
-  if (config.includeMediator) stages.push(createMediatedDiscussionInfoStage());
 
   // Surveys
   if (config.includeInitialParticipantSurvey)
@@ -330,27 +328,30 @@ export function getCharityDebateTemplate(
 
   debateRoundsCharities.forEach((charityGroup, index) => {
     const roundNum = index + 1;
-    const setting = `donations to: *${charityGroup.join(', ')}*`;
+    
+    const setting = `donations to:\n *${charityGroup
+  .map(key => CHARITY_DATA.find(c => c.key === key)?.name || key)
+  .join(', ')}*`;
     let mediatorForRound: string | undefined = undefined;
 
     if (config.includeMediator && index > 0) {
       mediatorForRound = `AI facilitator`;
     }
 
-    stages.push(createRoundStartStage(roundNum));
 
     stages.push(
       createAllocationStage(
         `vote-round-${roundNum}-pre`,
-        `Allocation (Pre-Discussion): Round ${roundNum}`,
+        `${EMOJIS[roundNum - 1]} Round ${roundNum}: Initial allocation`,
         charityGroup,
+        roundNum
       ),
     );
 
     stages.push(
       createAllocationDiscussionStage(
         `discussion-round-${roundNum}`,
-        `Discussion: Round ${roundNum}`,
+        `${EMOJIS[roundNum - 1]} Round ${roundNum}: Discussion`,
         setting,
         mediatorForRound,
       ),
@@ -359,18 +360,21 @@ export function getCharityDebateTemplate(
     stages.push(
       createAllocationStage(
         `vote-round-${roundNum}-post`,
-        `Allocation (Post-Discussion): Round ${roundNum}`,
+        `${EMOJIS[roundNum - 1]} Round ${roundNum}: Final allocation`,
         charityGroup,
+        roundNum,
+        false
       ),
     );
 
     const isMediatedRound = mediatorForRound !== undefined;
 
+    stages.push(createRoundOutcomeSurveyStage(roundNum, isMediatedRound));
+
     if (isMediatedRound) {
       stages.push(createPerMediatorEvaluationStage(roundNum));
     }
 
-    stages.push(createRoundOutcomeSurveyStage(roundNum, isMediatedRound));
     //stages.push(createConsensusScoreRevealStage(roundNum));
   });
 
@@ -385,7 +389,7 @@ export function getCharityDebateTemplate(
     stages.push(createExperimentFeedbackStage());
   }
 
-  if (config.includeMetaFeedback) stages.push(createMetaFeedbackStage());
+  // if (config.includeMetaFeedback) stages.push(createMetaFeedbackStage());
   stages.push(createExperimentEndInfoStage());
 
   return createExperimentTemplate({
@@ -421,7 +425,11 @@ function createConsensusScoreRevealStage(roundNum: number): StageConfig {
 export function createAllocationRevealStage(): StageConfig {
   return createRevealStage({
     id: 'final-results-summary',
-    name: 'Final Allocation Results',
+    name: '📊 Final allocation results',
+    descriptions: createStageTextConfig({
+      primaryText:
+        'Here are the final results of your group’s allocations across all three rounds.',
+    }),
 
     items: [
       createMultiAssetAllocationRevealItem({
@@ -449,7 +457,7 @@ function createRoundStartStage(roundNum: number): StageConfig {
   }
 
   return createInfoStage({
-    name: `Beginning of Round ${roundNum}`,
+    name: `${EMOJIS[roundNum - 1]} Beginning of Round ${roundNum}`,
     infoLines: infoLines,
   });
 }
@@ -631,9 +639,9 @@ function createRoundOutcomeSurveyStage(
   }
   return createSurveyStage({
     id: stageId,
-    name: `Round ${roundNum} Outcome Survey`,
+    name: `${EMOJIS[roundNum - 1]} Round ${roundNum}: Survey`,
     descriptions: createStageTextConfig({
-      primaryText: `Round ${roundNum} is now complete. Based on how close your votes were, your group achieved a **Consensus Score of [Placeholder]%**. This score contributes to your group's final spending power.\n\nPlease answer a few questions about your experience in this round.`,
+      primaryText: `Please answer a few questions about your experience in this round.`,
     }),
     questions,
   });
@@ -643,8 +651,16 @@ function createAllocationStage(
   id: string,
   name: string,
   charityGroup: string[],
+  roundNum: number,
+  isInitial: boolean = true,
 ): StageConfig {
-  let primaryText = `Please use the sliders below to allocate 100% of the funds among this round's charities.`;
+
+  let scope = `You are now beginning round ${roundNum} of 3.`;
+  if (!isInitial) {
+    scope = `Now that you have discussed with your group, make your final allocation for round ${roundNum}.`;
+  }
+
+  let primaryText = `${scope}\nPlease use the sliders to allocate 100\% of the funds among the following charities:\n`;
 
   charityGroup.forEach((charityKey, index) => {
     const info = CHARITY_DATA_MAP.get(charityKey);
@@ -676,7 +692,7 @@ function createAllocationStage(
 }
 
 const SET_PROFILE_STAGE_EXPANDED = createProfileStage({
-  name: 'Set profile',
+  name: '🎭 View your profile',
   profileType: ProfileType.ANONYMOUS_ANIMAL,
   descriptions: createStageTextConfig({
     primaryText:
@@ -811,19 +827,22 @@ function createAllocationDiscussionStage(
   mediator?: string,
 ): StageConfig {
   const mediatorText = mediator
-    ? `\n\nAn ${mediator} will be present in this discussion.`
+    ? `\n\n🤖 An ${mediator} will be present in this discussion.`
     : '';
-  const discussionText = `You will now engage in a discussion with other participants on what the ideal resource allocation for the ${setting}. Your objective, with the other participants, is to determine the optimal resource allocation.${mediatorText}`;
+  const discussionText = `Discuss the optimal allocation of ${setting}.${mediatorText}`;
   return createChatStage({
     id: stageId,
     name: stageName,
     descriptions: createStageTextConfig({primaryText: discussionText}),
+    progress: createStageProgressConfig({waitForAllParticipants: true}),
+    timeLimitInMinutes: 10,
+    requireFullTime: false,
   });
 }
 
 function createPerMediatorEvaluationStage(roundNum: number): StageConfig {
   return createSurveyStage({
-    name: `Post-Vote Mediator Feedback: Round ${roundNum}`,
+    name: `${EMOJIS[roundNum - 1]} Round ${roundNum}: Facilitator evaluation`,
     descriptions: createStageTextConfig({
       primaryText: `Please evaluate the AI facilitator from the discussion you just completed.`,
     }),
@@ -882,20 +901,20 @@ function createDiscussionEvaluationStage(): StageConfig {
 
 function createFinalMediatorPreferenceStage(): StageConfig {
   const preferenceOptions = [
-    {id: 'mediator-round-2', text: 'Mediator from Round 2', imageId: ''},
-    {id: 'mediator-round-3', text: 'Mediator from Round 3', imageId: ''},
+    {id: 'mediator-round-2', text: 'Round 2 Facilitator', imageId: ''},
+    {id: 'mediator-round-3', text: 'Round 3 Facilitator', imageId: ''},
   ];
 
   return createSurveyStage({
-    name: 'Mediator Evaluation',
+    name: '❓ Survey on AI facilitators',
     descriptions: createStageTextConfig({
       primaryText:
-        'Reflecting on all the discussions you participated in, please answer the following.',
+      'Think back to the three conversations you engaged in today: in the first round, there was no AI facilitator; in the second and third rounds, there were different AI facilitators with different styles. Please answer the following questions about your preferences regarding these facilitators.',
     }),
     questions: [
       createMultipleChoiceSurveyQuestion({
         questionTitle:
-          'If you were to engage in another debate, which mediator style would you prefer?',
+          'If you were to have another similar group discussion, which facilitator style would you prefer?',
         options: [
           {id: 'none', text: 'None', imageId: ''},
           ...preferenceOptions,
@@ -903,10 +922,10 @@ function createFinalMediatorPreferenceStage(): StageConfig {
       }),
       createTextSurveyQuestion({
         questionTitle:
-          'Please explain your selection: (If no preference, please write NA)',
+          'Please explain your preference and experiences with the AI facilitators.',
       }),
       createScaleSurveyQuestion({
-        questionTitle: 'I would include an AI facilitator in future discussions.',
+        questionTitle: 'Please rate how likely you would be to include an AI facilitator in future discussions.',
         ...LIKERT_SCALE_PROPS,
       }),
     ],
@@ -915,14 +934,14 @@ function createFinalMediatorPreferenceStage(): StageConfig {
 
 function createDebriefingStage(): StageConfig {
   return createInfoStage({
-    name: 'Debriefing',
+    name: '📃 Debriefing',
     infoLines: TEXT_DEBRIEFING,
   });
 }
 
 function createExperimentFeedbackStage(): StageConfig {
   return createSurveyStage({
-    name: 'Experiment Feedback',
+    name: '❓ Survey on experiment feedback',
     descriptions: createStageTextConfig({
       primaryText:
         'Before you finish, we would appreciate your feedback on your overall experience.',
@@ -938,7 +957,7 @@ function createExperimentFeedbackStage(): StageConfig {
       }),
       createScaleSurveyQuestion({
         questionTitle:
-          'How clear or unclear were the instructions and questions throughout the experiment?',
+          'How clear were the instructions and questions throughout the experiment?',
         lowerValue: 1,
         upperValue: 7,
         lowerText: 'Very Unclear',
@@ -946,11 +965,11 @@ function createExperimentFeedbackStage(): StageConfig {
       }),
       createTextSurveyQuestion({
         questionTitle:
-          'Please describe your overall interaction with the other participants, facilitators, and/or administrators. (If not applicable, please write NA)',
+          'Please describe your overall interaction with other participants and facilitators.'
+
       }),
       createTextSurveyQuestion({
-        questionTitle:
-          'Do you have any other feedback or concerns about your experience in this study? Did you experience any harmful / offensive behavior, from participants or the mediator? (If not applicable, please write NA)',
+        questionTitle: 'Do you have any other feedback or concerns about your experience in this study?',
       }),
     ],
   });
