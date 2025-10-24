@@ -68,6 +68,7 @@ export async function createAgentChatMessageFromPrompt(
       .get()
   ).data() as ChatPromptConfig | undefined;
 
+  // TODO: If no stored prompt, use default chat prompt
   if (!promptConfig) {
     return false; // No prompt configured for this stage
   }

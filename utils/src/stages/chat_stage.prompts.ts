@@ -32,33 +32,6 @@ Otherwise, do not respond.`;
 // ************************************************************************* //
 // PROMPTS                                                                   //
 // ************************************************************************* //
-export function getDefaultChatPrompt(
-  profile: ParticipantProfileBase,
-  agentConfig: ProfileAgentConfig, // TODO: Add to params
-  pastStageContext: string,
-  chatMessages: ChatMessage[],
-  promptConfig: ChatPromptConfig,
-  stageConfig: ChatStageConfig,
-) {
-  // TODO: Structure based on order of PromptItems
-  return [
-    // TODO: Move profile context up one level
-    getParticipantProfilePromptContext(
-      profile,
-      agentConfig?.promptContext ?? '',
-    ),
-    pastStageContext,
-    getChatStagePromptContext(
-      chatMessages,
-      stageConfig,
-      false, // TODO: check whether to include stage info
-    ),
-    promptConfig.prompt
-      .map((item) => (item.type === PromptItemType.TEXT ? item.text : ''))
-      .join('\n'),
-    makeStructuredOutputPrompt(promptConfig.structuredOutputConfig),
-  ].join('\n');
-}
 
 /** Get chat stage context
  *  (e.g., to include in prompt for a current/future stage)
