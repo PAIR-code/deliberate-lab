@@ -108,7 +108,7 @@ export const CHARITY_DEBATE_METADATA = createMetadataConfig({
   name: 'Mediated Charity Debate (3 Rounds)',
   publicName: 'Charity Allocation Debate',
   description:
-    'A multi-round debate where participants discuss and vote on how to allocate a budget among several real-world charities, with different AI mediators in each round.',
+    'A multi-round debate where participants discuss and vote on how to allocate a budget among several real-world charities, with different AI facilitators in each round.',
 });
 
 interface CharityInfo {
@@ -221,21 +221,69 @@ const CONSENSUS_TOS_STAGE = createTOSStage({
     '**Voluntary Participation**',
     'Your participation is voluntary, which means you can choose whether or not to participate. You may choose not to participate by exiting the survey at any point. There are no known costs to you for participating in this research study except for your time.',
     '**Contact**',
-    'Please feel free to contact us through Prolific or your game administrator if you have any questions, concerns, or complaints about this study.',
+    'Please feel free to contact us using the Help chat icon in the platform or through Prolific if you have any questions, concerns, or complaints about this study.',
     'By checking the box below and proceeding, you are acknowledging that you are over the age of 18 and that you consent to participate.',
   ],
 });
 
 const TEXT_MEDIATED_INFO = [
-  'In the last two rounds, your discussion will be joined by an AI Mediator. The style of the AI mediator will be different in each round.',
+  'To help facilitate your discussion, an AI-based facilitator will join your conversation for the second and third rounds.',
+  'The conversational style of the AI-based facilitator will be different in each round.',
+  '![AI facilitator](https://i.imgur.com/lnQVk8W.png)',
+  'Here is an example of how this facilitation may look:',
+  '![AI transcript](https://i.imgur.com/tFd4lxY.png)',
 ];
 
 const TEXT_INSTRUCTIONS = [
-  'Welcome! In this experiment, you will participate in three rounds of discussion and resource allocation for real-world charities. Your goal is to work with others to find the best allocation.',
-  '**How consensus is determined.** After each discussion, you will be asked how to distribute resources among the three charities presented. Your allocation will be compared with that of your group members to determine how much consensus your group achieved. The closer your allocations are to each other, the higher your consensus score will be.',
-  "**Your group's impact is tied to consensus.** At the end of the entire study, the total donation sum will be divided among all participating groups. The more consensus your group reaches, the more 'spending power' you will have. For example, a group that consistently reaches high agreement will allocate a much larger portion of the final donation pool than a group that consistently disagrees. Your main objective is to find common ground with your fellow participants to maximize your group's impact.",
-  '**Compensation Reminder:** Your base participation payment is guaranteed and is separate from any donation outcomes.',
+  'The object of this study is understanding how groups make decisions together. Today, you’ll have *three* rounds of decision-making; in each round, your group will make decisions about how to allocate money across three charities. Each round has three steps:',
+  '1. *Privately choose an initial allocation*. Given a fixed pool of money, decide how to split it among the three charities presented.',
+  '2. *Discuss your choices with the group*. Share your reasoning with 2 other participants and try to reach a consensus.',
+  '3. *Privately update your allocation*. After the discussion, you can revise your initial allocation based on what you heard.',
+  'Your goal is to work together to find the best way to split the funds.',
+  '![Instructions](https://i.imgur.com/YOTgSAi.png)',
 ];
+
+const TEXT_INSTRUCTIONS_2 = [
+  'The charities in each round are real. After your final decision, we will donate a **fixed total amount** to these charities based on your group’s choices.',
+  'If you were the only participant, your final allocation would directly determine how the donation is split.',
+  '![Donation example](https://i.imgur.com/6kHhHTg.png)',
+  'However, you are part of a group of 3 participants. Your **group\'s allocation** is the **average** of everyone\'s final allocation in that round.',
+];
+
+const TEXT_INSTRUCTIONS_3 = [
+  'Each round, your group will receive a **consensus score**, which measures how similar your final allocations are.',
+  'For example, if everyone agrees on 🐶 50% / 🐱 30% / 🐹 20%, the consensus score is high (100). If your allocations are very different, the score will be lower.',
+  'At the end of the study, all groups will be ranked by their consensus scores. **Groups with higher consensus will have more influence** over how the donation is split.',
+  'In the example image, Group 1 had high consensus and favored 🐹 Hamsters. Group 3 had low consensus and favored 🐶 Dogs. Because Group 1 had a higher consensus score, their decisions will be prioritized: more money will go to 🐹 Hamsters than to 🐶 Dogs.',
+  '![Consensus example](https://i.imgur.com/aPi5CkV.png)',
+];
+
+const TEXT_INSTRUCTIONS_4 = [
+  'Today, our study will commit to donating **at least $100 per round**, split among the three charities. With 3 rounds total, at least **$300 will be donated in total**. Your group’s choices will help to inform where that money goes.',
+  'As a reminder, your own payment for participating in this study is separate from the donation amount and is not affected by your decisions here.',
+  '',
+  'Here are the charities for each round:',
+  '',
+  '**Round 1:**',
+  '* 🐘 [International Fund for Animal Welfare (IFAW)](https://www.charitynavigator.org/ein/542044674)',
+  '* 🏥 [Sudan Humanitarian Aid](https://www.charitynavigator.org/ein/472864379)',
+  '* 🌊[Clean Ocean Action](https://www.charitynavigator.org/ein/222897204)',
+  '',
+
+  '**Round 2:**',
+  '* 🦁 [WildAid (animal welfare)](https://www.charitynavigator.org/ein/203644441)',
+  '* 👁️ [Eyecare in India](https://www.charitynavigator.org/ein/776141976)',
+  '* 🏠 [Global Housing for Orphans](https://www.charitynavigator.org/ein/562500794)',
+  '',
+  '**Round 3:**',
+  '* 🌳 [Rainforest Action](https://www.charitynavigator.org/ein/943045180)',
+  '* 👶 [Aid for Children in Remote Villages](https://www.charitynavigator.org/ein/300108263)',
+  '* ♀[Global Fund for Women](https://www.charitynavigator.org/ein/770155782)',
+  '',
+  'We will provide more details on these charities before the rounds.',
+];
+
+
 
 const TEXT_ALLOCATION_INFO_HINT = `Ensure your chosen percentages add up to 100%. (Hint: We recommend getting the percentages close and then adjusting one slider to make the total exactly 100%).`;
 
@@ -257,12 +305,23 @@ export function getCharityDebateTemplate(
 
   if (config.includeTos) stages.push(CONSENSUS_TOS_STAGE);
   stages.push(SET_PROFILE_STAGE_EXPANDED);
-  if (config.includeMediator) stages.push(createMediatedDiscussionInfoStage());
-  stages.push(createInstructionsStage());
+  
+  // Game instructions
+  const instructions = createInstructionsStages();
+  for (const stage of instructions) {
+    stages.push(stage);
+  }
+
+  // Comprehension check
   stages.push(createCharityComprehensionStage());
 
+  // Mediator instructions
+  if (config.includeMediator) stages.push(createMediatedDiscussionInfoStage());
+
+  // Surveys
   if (config.includeInitialParticipantSurvey)
     stages.push(createInitialParticipantSurveyStage());
+
   if (config.includeMediator) stages.push(createInitialMediatorSurveyStage());
 
   const debateRoundsCharities = [...CHARITY_BUNDLES].sort(
@@ -275,7 +334,7 @@ export function getCharityDebateTemplate(
     let mediatorForRound: string | undefined = undefined;
 
     if (config.includeMediator && index > 0) {
-      mediatorForRound = `AI Mediator`;
+      mediatorForRound = `AI facilitator`;
     }
 
     stages.push(createRoundStartStage(roundNum));
@@ -385,7 +444,7 @@ function createRoundStartStage(roundNum: number): StageConfig {
   const infoLines = [`You are now beginning Round ${roundNum}.`];
   if (roundNum > 1) {
     infoLines.push(
-      'The discussion in this round will be joined by an AI Mediator.',
+      'The discussion in this round will be joined by an AI facilitator.',
     );
   }
 
@@ -397,7 +456,7 @@ function createRoundStartStage(roundNum: number): StageConfig {
 
 function createCharityComprehensionStage(): StageConfig {
   return createComprehensionStage({
-    name: 'Comprehension Check',
+    name: '💯 Comprehension check',
     descriptions: createStageTextConfig({
       primaryText:
         'Please answer the following questions to ensure the instructions are clear.',
@@ -415,7 +474,7 @@ function createCharityComprehensionStage(): StageConfig {
             },
             {
               id: 'b',
-              text: 'By having the AI Mediator make the final decision.',
+              text: 'By having the AI facilitator make the final decision.',
               imageId: '',
             },
             {
@@ -464,7 +523,7 @@ function createCharityComprehensionStage(): StageConfig {
       createMultipleChoiceComprehensionQuestion(
         {
           questionTitle:
-            'Imagine the total donation pool is split between two groups. Group A achieves a 95% consensus score, while Group B only achieves a 10% score. Which is a likely outcome?',
+            'Imagine the total donation pool is split between two groups. Group A achieves a 95% consensus score, while Group B only achieves a 10% score. How will this affect the final allocation?',
           options: [
             {
               id: 'a',
@@ -560,7 +619,7 @@ function createRoundOutcomeSurveyStage(
     questions.push(
       createScaleSurveyQuestion({
         questionTitle:
-          'The AI mediator was helpful in resolving these disagreements.',
+          'The AI facilitator was helpful in resolving these disagreements.',
         ...LIKERT_SCALE_PROPS,
         condition: createComparisonCondition(
           {stageId, questionId: disagreementQuestionId},
@@ -621,56 +680,70 @@ const SET_PROFILE_STAGE_EXPANDED = createProfileStage({
   profileType: ProfileType.ANONYMOUS_ANIMAL,
   descriptions: createStageTextConfig({
     primaryText:
-      'Welcome! You will be assigned an anonymous identity for this study.',
+      'In this study, you’ll discuss how to allocate money to different charities with other participants in real time. The profile shown below is your assigned identity for this session. This is how others will see you.',
   }),
 });
 
 function createMediatedDiscussionInfoStage(): StageConfig {
   return createInfoStage({
-    name: 'Mediated-Discussion',
+    name: '📝 AI-based facilitation',
     infoLines: TEXT_MEDIATED_INFO,
   });
 }
 
 function createExperimentEndInfoStage(): StageConfig {
   return createInfoStage({
-    name: 'Experiment-End',
+    name: 'Experiment end',
     infoLines: [
       'This marks the end of the experiment. Thank you for participating!',
     ],
   });
 }
-function createInstructionsStage(): StageConfig {
-  return createInfoStage({
-    name: 'Instructions: Overview',
+function createInstructionsStages(): StageConfig[] {
+  return [
+    createInfoStage({
+    name: '📝 Today\'s task',
     infoLines: TEXT_INSTRUCTIONS,
-  });
+  }),
+   createInfoStage({
+    name: '📝 How your decisions impact donations',
+    infoLines: TEXT_INSTRUCTIONS_2,
+  }),
+   createInfoStage({
+    name: '📝 How your group is evaluated',
+    infoLines: TEXT_INSTRUCTIONS_3,
+  }),
+   createInfoStage({
+    name: '📝 Today\'s impact',
+    infoLines: TEXT_INSTRUCTIONS_4,
+  }),
+];
 }
 
 function createInitialParticipantSurveyStage(): StageConfig {
   return createSurveyStage({
-    name: 'Initial Participant Survey',
+    name: '❓ Survey on inital sentiments',
     descriptions: createStageTextConfig({
       primaryText:
-        'Please indicate how much you agree or disagree with the following statements.',
+        'Before you begin, we’d like to learn about how you might approach this task. Please indicate how much you agree or disagree with the following statements.',
     }),
     questions: [
       createScaleSurveyQuestion({
         questionTitle:
-          'It is important to me how the charity allocations today are decided.',
+          'It matters to me how today’s charity allocations are decided.',
         ...LIKERT_SCALE_PROPS,
       }),
       createScaleSurveyQuestion({
-        questionTitle: 'I try to avoid conﬂict.',
+        questionTitle: 'In group settings, I try to avoid conﬂict and negotiations.',
         ...LIKERT_SCALE_PROPS,
       }),
       createScaleSurveyQuestion({
-        questionTitle: 'I look for the best outcomes for all of us',
+        questionTitle: 'In group settings, I try to find the best outcome for everyone.',
         ...LIKERT_SCALE_PROPS,
       }),
       createScaleSurveyQuestion({
         questionTitle:
-          'When I have to make a decision, I like to make it quickly.',
+          'When making decisions, I prefer to decide quickly.',
         ...LIKERT_SCALE_PROPS,
       }),
     ],
@@ -679,37 +752,53 @@ function createInitialParticipantSurveyStage(): StageConfig {
 
 function createInitialMediatorSurveyStage(): StageConfig {
   return createSurveyStage({
-    name: 'Initial Mediator Survey',
+    name: '❓Survey on AI facilitation',
     descriptions: createStageTextConfig({
       primaryText:
-        'During your conversations today, you may receive facilitation assistance from an AI. Please answer the following questions about your experience with AI assistants.',
+        'Finally, we’d like to learn about your thoughts and experiences with AI tools that support or guide group discussions. Please indicate how much you agree or disagree with the following statements.',
     }),
     questions: [
+      // Background familiarity
       createScaleSurveyQuestion({
         questionTitle:
-          'On a scale of 1 to 7, how familiar are you with AI assistants?',
-        lowerValue: 1,
-        upperValue: 7,
-        lowerText: 'Not at all familiar',
-        upperText: 'Extremely familiar',
+          'I have used AI assistants (e.g., ChatGPT, Bard, Siri, Alexa) to help me with tasks.',
+        ...LIKERT_SCALE_PROPS,
+      }),
+      createScaleSurveyQuestion({
+        questionTitle:
+          'I have used AI assistants for interpersonal tasks, such as writing messages or resolving conflicts.',
+        ...LIKERT_SCALE_PROPS,
+      }),
+
+      // TAM: PU
+      createScaleSurveyQuestion({
+        questionTitle:
+          'I believe an AI facilitator could make group discussions more productive.',
+        ...LIKERT_SCALE_PROPS,
+      }),
+
+      // TAM: PEOU
+      createScaleSurveyQuestion({
+        questionTitle:
+          'I would feel comfortable having an AI facilitator in the group discussion.',
+        ...LIKERT_SCALE_PROPS,
+      }),
+
+      // TAM: BI
+      createScaleSurveyQuestion({
+        questionTitle:
+          'If given the option, I would be willing to use an AI facilitator in future discussions.',
+        ...LIKERT_SCALE_PROPS,
+      }),
+
+      // Open-ended questions
+      createTextSurveyQuestion({
+        questionTitle:
+          'If applicable, what kinds of tasks have you used AI assistants for?',
       }),
       createTextSurveyQuestion({
         questionTitle:
-          'What kind of work do you use AI assistants for? (If none, please write NA)',
-      }),
-      createScaleSurveyQuestion({
-        questionTitle:
-          'An AI mediator could be useful for a group to have a more productive discussion',
-        ...LIKERT_SCALE_PROPS,
-      }),
-      createScaleSurveyQuestion({
-        questionTitle: 'An AI mediator could make discussions more fair.',
-        ...LIKERT_SCALE_PROPS,
-      }),
-      createScaleSurveyQuestion({
-        questionTitle:
-          'I am concerned about the privacy of my conversations with an AI mediator.',
-        ...LIKERT_SCALE_PROPS,
+          'What are your thoughts on using AI to facilitate group discussions? What could be good or bad about it?',
       }),
     ],
   });
@@ -736,12 +825,12 @@ function createPerMediatorEvaluationStage(roundNum: number): StageConfig {
   return createSurveyStage({
     name: `Post-Vote Mediator Feedback: Round ${roundNum}`,
     descriptions: createStageTextConfig({
-      primaryText: `Please evaluate the AI mediator from the discussion you just completed.`,
+      primaryText: `Please evaluate the AI facilitator from the discussion you just completed.`,
     }),
     questions: [
       createScaleSurveyQuestion({
         questionTitle:
-          '[Performance] Overall, the AI mediator was useful in having a productive conversation.',
+          '[Performance] Overall, the AI facilitator was useful in having a productive conversation.',
         ...LIKERT_SCALE_PROPS,
       }),
       createScaleSurveyQuestion({
@@ -817,7 +906,7 @@ function createFinalMediatorPreferenceStage(): StageConfig {
           'Please explain your selection: (If no preference, please write NA)',
       }),
       createScaleSurveyQuestion({
-        questionTitle: 'I would include an AI mediator in future discussions.',
+        questionTitle: 'I would include an AI facilitator in future discussions.',
         ...LIKERT_SCALE_PROPS,
       }),
     ],
@@ -1077,7 +1166,7 @@ const HABERMAS_MEDIATOR_TEMPLATE: AgentMediatorTemplate = {
     id: HABERMAS_MEDIATOR_ID,
     name: 'Habermas Mediator',
     description:
-      'An AI mediator focused on promoting consensus and summarization.',
+      'An AI facilitator focused on promoting consensus and summarization.',
     defaultModelSettings: DEFAULT_AGENT_MODEL_SETTINGS,
   }),
   promptMap: {
@@ -1090,7 +1179,7 @@ const DYNAMIC_MEDIATOR_TEMPLATE: AgentMediatorTemplate = {
     id: DYNAMIC_MEDIATOR_ID,
     name: 'Dynamic Mediator (LAS-Informed)',
     description:
-      'An AI mediator focused on counteracting specific negative group dynamics.',
+      'An AI facilitator focused on counteracting specific negative group dynamics.',
     defaultModelSettings: DEFAULT_AGENT_MODEL_SETTINGS,
   }),
   promptMap: {
