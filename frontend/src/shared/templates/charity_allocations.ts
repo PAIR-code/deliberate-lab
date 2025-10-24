@@ -207,7 +207,7 @@ const CHARITY_BUNDLES: string[][] = [
 
 const LIKERT_SCALE_PROPS = {
   lowerValue: 1,
-  upperValue: 7,
+  upperValue: 5,
   lowerText: 'Strongly Disagree',
   upperText: 'Strongly Agree',
 };
@@ -428,7 +428,7 @@ export function createAllocationRevealStage(): StageConfig {
     name: '📊 Final allocation results',
     descriptions: createStageTextConfig({
       primaryText:
-        'Here are the final results of your group’s allocations across all three rounds.',
+        'Here are the final results of your group’s allocations across all three rounds. The higher the score, the more influence your group will have in directing the donations.',
     }),
 
     items: [
@@ -569,6 +569,11 @@ function createRoundOutcomeSurveyStage(
   const disagreementQuestionId = `had-disagreements-${roundNum}`;
 
   const questions = [
+    createTextSurveyQuestion({
+      questionTitle:
+        'If you changed your allocation, what influenced your decision? (If not, write NA.)',
+    }),
+
     createScaleSurveyQuestion({
       questionTitle: 'I felt strongly about my initial allocation.',
       ...LIKERT_SCALE_PROPS,
@@ -579,64 +584,25 @@ function createRoundOutcomeSurveyStage(
     }),
     createScaleSurveyQuestion({
       questionTitle:
-        "Overall, I am satisfied with the outcome of this round's discussion.",
+        "Overall, I am satisfied with the quality of this round's discussion.",
+      ...LIKERT_SCALE_PROPS,
+    }),
+    createScaleSurveyQuestion({
+      questionTitle:
+        'I feel that my perspective was heard and understood during the discussion.',
+      ...LIKERT_SCALE_PROPS,
+    }),
+    createScaleSurveyQuestion({
+      questionTitle:
+      'The group worked together effectively to reach a decision.',
       ...LIKERT_SCALE_PROPS,
     }),
     createTextSurveyQuestion({
       questionTitle:
-        'If you changed your allocation, what was the most important factor that influenced your decision? (If not, please write NA)',
-    }),
-    createScaleSurveyQuestion({
-      questionTitle:
-        'I feel that my perspective was heard and understood by the group.',
-      ...LIKERT_SCALE_PROPS,
-    }),
-    createScaleSurveyQuestion({
-      questionTitle:
-        "I feel that my input was influential in the group's discussion.",
-      ...LIKERT_SCALE_PROPS,
-    }),
-    createScaleSurveyQuestion({
-      questionTitle: 'I feel the final outcome was fair',
-      ...LIKERT_SCALE_PROPS,
-    }),
-    createMultipleChoiceSurveyQuestion({
-      id: disagreementQuestionId, // ID is REQUIRED here for the conditional logic below
-      questionTitle:
-        "Did you have any significant disagreements with other participants during this round's discussion?",
-      options: [
-        {id: 'yes', text: 'Yes', imageId: ''},
-        {id: 'no', text: 'No', imageId: ''},
-      ],
-    }),
-    createScaleSurveyQuestion({
-      questionTitle: 'How would you rate the intensity of these disagreements?',
-      lowerValue: 1,
-      upperValue: 7,
-      lowerText: 'Mild',
-      upperText: 'Intense',
-      condition: createComparisonCondition(
-        {stageId, questionId: disagreementQuestionId},
-        ComparisonOperator.EQUALS,
-        'yes',
-      ),
+      'Briefly describe how you felt the discussion went. (e.g., overall flow, any tensions or key moments)”',
     }),
   ];
 
-  if (isMediatedRound) {
-    questions.push(
-      createScaleSurveyQuestion({
-        questionTitle:
-          'The AI facilitator was helpful in resolving these disagreements.',
-        ...LIKERT_SCALE_PROPS,
-        condition: createComparisonCondition(
-          {stageId, questionId: disagreementQuestionId},
-          ComparisonOperator.EQUALS,
-          'yes',
-        ),
-      }),
-    );
-  }
   return createSurveyStage({
     id: stageId,
     name: `${EMOJIS[roundNum - 1]} Round ${roundNum}: Survey`,
@@ -775,11 +741,11 @@ function createInitialMediatorSurveyStage(): StageConfig {
     }),
     questions: [
       // Background familiarity
-      createScaleSurveyQuestion({
-        questionTitle:
-          'I have used AI assistants (e.g., ChatGPT, Bard, Siri, Alexa) to help me with tasks.',
-        ...LIKERT_SCALE_PROPS,
-      }),
+      //createScaleSurveyQuestion({
+      //  questionTitle:
+        //  'I have used AI assistants (e.g., ChatGPT, Bard, Siri, Alexa) to help me with tasks.',
+        //...LIKERT_SCALE_PROPS,
+      //}),
       createScaleSurveyQuestion({
         questionTitle:
           'I have used AI assistants for interpersonal tasks, such as writing messages or resolving conflicts.',
@@ -803,7 +769,7 @@ function createInitialMediatorSurveyStage(): StageConfig {
       // TAM: BI
       createScaleSurveyQuestion({
         questionTitle:
-          'If given the option, I would be willing to use an AI facilitator in future discussions.',
+          'If given the option, I would be willing to use an AI facilitator in group discussions.',
         ...LIKERT_SCALE_PROPS,
       }),
 
@@ -849,28 +815,24 @@ function createPerMediatorEvaluationStage(roundNum: number): StageConfig {
     questions: [
       createScaleSurveyQuestion({
         questionTitle:
-          '[Performance] Overall, the AI facilitator was useful in having a productive conversation.',
+             'I believe that the AI facilitator made the group discussion more productive.',
         ...LIKERT_SCALE_PROPS,
       }),
       createScaleSurveyQuestion({
         questionTitle:
-          '[Performance] The mediator helped me feel like my perspective was heard.',
+        'I felt comfortable having the AI facilitator in the group discussion.',
         ...LIKERT_SCALE_PROPS,
       }),
-      createScaleSurveyQuestion({
+
+      createTextSurveyQuestion({
         questionTitle:
-          '[Performance] The mediator helped our group stay focused on the topic.',
-        ...LIKERT_SCALE_PROPS,
+      'What did the AI facilitator do well (e.g., making sure your perspective was heard, helping the group stay on topic)?',
       }),
-      createScaleSurveyQuestion({
+
+
+      createTextSurveyQuestion({
         questionTitle:
-          '[Performance] The mediator interrupted the conversation too often.',
-        ...LIKERT_SCALE_PROPS,
-      }),
-      createScaleSurveyQuestion({
-        questionTitle:
-          '[Fairness] The mediator seemed to favor one participant or viewpoint over others.',
-        ...LIKERT_SCALE_PROPS,
+      'What could the AI facilitator have done better (e.g., being more fair, interrupting less)?',
       }),
     ],
   });
