@@ -930,11 +930,19 @@ function createStandardMediatorSchema(): StructuredOutputSchema {
         },
       },
       {
+        name: DEFAULT_READY_TO_END_FIELD, // 'readyToEndChat'
+        schema: {
+          type: StructuredOutputDataType.INTEGER,
+          description:
+            'State the exact # of utterances between participants since you last intervened.',
+        },
+      },
+      {
         name: 'consensusLevel', // Custom field
         schema: {
           type: StructuredOutputDataType.STRING,
           description:
-            'Should be low, medium, or high, depending on how much agreement there is between participants.',
+            'How much consensus has been reached in the group. LOW means little to no consensus. MEDIUM means some agreement. HIGH means a strong majority.',
         },
       },
     ],
@@ -971,7 +979,7 @@ function createDynamicMediatorSchema(): StructuredOutputSchema {
   );
 
   if (shouldRespondProperty) {
-    shouldRespondProperty.schema.description = `Whether or not to respond. Should be FALSE if nothing has been said by participants, or if consensusLevel is HIGH, or if we have responded within the last 2 messages. If consensusLevel is not HIGH and >2 messages have passed, AND/OR if a failure mode is detected, consider responding.`;
+    shouldRespondProperty.schema.description = `Whether or not to respond. Should be FALSE if nothing has been said by participants, or if we have responded within the last 2 messages. If  >2 messages have passed, AND if failureMode detects some failure mode, should be TRUshould be TRUE.`;
   }
 
   return standardSchema;
@@ -992,7 +1000,7 @@ function createHabermasMediatorPromptConfig(): MediatorPromptConfig {
 
   const generationConfig = createModelGenerationConfig();
 
-  const habermasInstruction = `Summarize the conversation periodically to help participants track the state of the conversation and come to a consensus`;
+  const habermasInstruction = `Summarize the conversation periodically to help participants track the state of the conversation and come to a consensus\nKeep your responses AS SHORT AND FOCUSED AS POSSIBLE to serve this goal.`;
 
   return createChatPromptConfig(HABERMAS_STAGE_ID, {
     prompt: [
@@ -1029,8 +1037,8 @@ function createDynamicMediatorPromptConfig(): MediatorPromptConfig {
   const generationConfig = createModelGenerationConfig();
 
   const dynamicInstruction = `Your goal is to improve deliberation quality. First, analyze the conversation to diagnose a specific failure mode by setting the 'observedFailureMode' field.
-
 Next, you MUST use the following Lookup Table to select the correct 'proposedSolution' that maps to your diagnosis.
+The idea is NOT to settle on any specific outcome, but to ensure that participants properly discuss / weigh options before settling. 
 
 --- STRATEGY LOOKUP TABLE ---
 - IF 'observedFailureMode' is 'NoFailureModeDetected', THEN 'proposedSolution' MUST BE 'NoSolutionNeeded'.
@@ -1042,8 +1050,9 @@ Next, you MUST use the following Lookup Table to select the correct 'proposedSol
 - IF 'observedFailureMode' is 'Using Abnormal Communication (e.g., Repetitive loops)', THEN 'proposedSolution' MUST BE 'Summarize to Break a Loop or Gently Re-focus Conversation'.
 - IF 'observedFailureMode' is 'Failing to Explore Diverse Viewpoints', THEN 'proposedSolution' MUST BE 'Prompt for Brainstorming of New Ideas or Alternatives'.
 ---
-
+Keep your responses AS SHORT AND FOCUSED AS POSSIBLE. Don't reiterate points unless it's vital to your intervention to do so. 
 Finally, craft a 'response' message that implements your chosen solution. If the solution is 'NoSolutionNeeded', your 'response' must be an empty string and 'shouldRespond' must be false.`;
+
 
   return createChatPromptConfig(DYNAMIC_STAGE_ID, {
     prompt: [
