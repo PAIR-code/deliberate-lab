@@ -77,8 +77,8 @@ specificially for prompt use).
 "Stage display" is the main content (e.g., actual survey questions, as opposed
 to stage description) inside a "stage context" prompt item.
 
-See `getStageDisplayForPrompt` in `functions/src/prompt.utils.ts` for a switch
-statement with all supported stages.
+See `getStageDisplayForPrompt` in `functions/src/structured_prompt.utils.ts`
+for a switch statement with all supported stages.
 
 > NOTE: Make sure to add stage display support for new stages, currently
 unsupported stages, etc.
@@ -106,8 +106,8 @@ be moved into a guide for adding a new stage to Deliberate Lab
 ### Enable stage context in structured prompts
 First, make sure structured prompts are able to support your stage type.
 
-See `getStageDisplayForPrompt` in `functions/src/prompt.utils.ts` for a switch
-statement with all supported stages.
+See `getStageDisplayForPrompt` in `functions/src/structured_prompt.utils.ts`
+for a switch statement with all supported stages.
 
 If your stage is not supported, add a helper function to fetch relevant data
 (doing it in the helper function is fine for now; we may eventually fetch all

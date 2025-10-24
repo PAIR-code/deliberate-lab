@@ -115,7 +115,7 @@ async function getAllPrecedingStageIds(experimentId: string, stageId: string) {
   return experiment.stageIds.slice(0, experiment.stageIds.indexOf(stageId) + 1);
 }
 
-/** Assemble prompt items into final prompt.
+/** Assemble prompt items into final prompt string.
  * This is the main function called to get a final prompt string that
  * can be sent to an LLM API without any further edits.
  *
@@ -127,7 +127,7 @@ async function getAllPrecedingStageIds(experimentId: string, stageId: string) {
  * structured prompts with fake data (e.g., to preview prompts in experiment
  * builder).
  */
-export async function getStructuredPrompt(
+export async function getPromptFromConfig(
   experimentId: string,
   cohortId: string,
   // List of participant private IDs for participants to include for answers
@@ -136,7 +136,7 @@ export async function getStructuredPrompt(
   userProfile: UserProfile,
   agentConfig: ProfileAgentConfig,
   promptConfig: BasePromptConfig,
-): string {
+): Promise<string> {
   const promptText = await processPromptItems(
     promptConfig.prompt,
     experimentId,

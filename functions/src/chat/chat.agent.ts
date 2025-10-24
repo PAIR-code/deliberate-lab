@@ -15,7 +15,7 @@ import {
 } from '@deliberation-lab/utils';
 import {Timestamp} from 'firebase-admin/firestore';
 import {processModelResponse} from '../agent.utils';
-import {getStructuredPrompt} from '../prompt.utils';
+import {getPromptFromConfig} from '../structured_prompt.utils';
 import {
   convertChatToMessages,
   shouldUseMessageFormat,
@@ -216,7 +216,7 @@ export async function getAgentChatMessage(
 
   // Use provided participant IDs for prompt context
   // Get structured prompt
-  const structuredPrompt = await getStructuredPrompt(
+  const structuredPrompt = await getPromptFromConfig(
     experimentId,
     cohortId,
     participantIds,
