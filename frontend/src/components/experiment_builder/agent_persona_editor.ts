@@ -8,6 +8,7 @@ import '@material/web/checkbox/checkbox.js';
 import {MobxLitElement} from '@adobe/lit-mobx';
 import {CSSResultGroup, html, nothing} from 'lit';
 import {customElement, property, state} from 'lit/decorators.js';
+import 'emoji-picker-element';
 
 import {core} from '../../core/core';
 import {ExperimentEditor} from '../../services/experiment.editor';
@@ -232,46 +233,21 @@ export class AgentPersonaEditorComponent extends MobxLitElement {
     `;
   }
 
+  private handleAvatarChange(event: CustomEvent) {
+    if (!this.agent) {
+      return;
+    }
+    const emoji = event.detail.unicode;
+    this.updatePersona({
+      defaultProfile: {...this.agent.defaultProfile, avatar: emoji},
+    });
+  }
+
   private renderAvatars(agent: AgentPersonaConfig) {
-    const handleAvatarClick = (e: Event) => {
-      const value = Number((e.target as HTMLInputElement).value);
-      const avatar = LLM_AGENT_AVATARS[value];
-      this.updatePersona({
-        defaultProfile: {...agent.defaultProfile, avatar},
-      });
-    };
-
-    const renderAvatarRadio = (emoji: string, index: number) => {
-      return html`
-        <div class="radio-button">
-          <md-radio
-            id=${emoji}
-            name="${agent.id}-avatar"
-            value=${index}
-            aria-label=${emoji}
-            ?checked=${agent.defaultProfile.avatar === emoji}
-            ?disabled=${!this.experimentEditor.canEditStages}
-            @change=${handleAvatarClick}
-          >
-          </md-radio>
-          <avatar-icon
-            .emoji=${emoji}
-            .square=${true}
-            .color=${getHashBasedColor(emoji)}
-          >
-          </avatar-icon>
-        </div>
-      `;
-    };
-
     return html`
-      <div class="radio-question">
-        <div class="radio-question-label">Avatar</div>
-        <div class="radio-wrapper">
-          ${LLM_AGENT_AVATARS.map((avatar, index) =>
-            renderAvatarRadio(avatar, index),
-          )}
-        </div>
+      <div class="form-field">
+        <label for="avatar">Avatar</label>
+        <emoji-picker @emoji-click=${this.handleAvatarChange}></emoji-picker>
       </div>
     `;
   }
