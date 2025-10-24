@@ -27,6 +27,7 @@ import {
   RevealAudience,
   createModelGenerationConfig,
   createChatPromptConfig,
+  createTransferStage,
   createTOSStage,
   createExperimentConfig,
   createExperimentTemplate,
@@ -322,6 +323,7 @@ export function getCharityDebateTemplate(
 
   if (config.includeMediator) stages.push(createInitialMediatorSurveyStage());
 
+  stages.push(TRANSFER_STAGE);
   const debateRoundsCharities = [...CHARITY_BUNDLES].sort(
     () => 0.5 - Math.random(),
   );
@@ -663,6 +665,20 @@ const SET_PROFILE_STAGE_EXPANDED = createProfileStage({
   descriptions: createStageTextConfig({
     primaryText:
       'In this study, you’ll discuss how to allocate money to different charities with other participants in real time. The profile shown below is your assigned identity for this session. This is how others will see you.',
+  }),
+});
+
+export const TRANSFER_STAGE = createTransferStage({
+  id: 'transfer',
+  name: '⏸️ Transfer stage',
+  descriptions: createStageTextConfig({
+    primaryText:
+      'Please wait on this page for up to 10 minutes as you are transferred to the next stage of this experiment; we are waiting for 2 more participants to join this live session. Thank you for your patience.',
+  }),
+  enableTimeout: true,
+  timeoutSeconds: 600, // 10 minutes
+  progress: createStageProgressConfig({
+    showParticipantProgress: false,
   }),
 });
 
