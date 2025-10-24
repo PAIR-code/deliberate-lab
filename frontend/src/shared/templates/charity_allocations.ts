@@ -189,7 +189,7 @@ const CHARITY_DATA: CharityInfo[] = [
     link: 'https://www.charitynavigator.org/ein/770155782',
     score: '100%',
     mission:
-      "Global Fund for Women advances women’s human rights by investing in women-led organizations worldwide. Our international network of supporters mobilizes financial and other resources to support women’s actions for social justice, equality and peace.",
+      'Global Fund for Women advances women’s human rights by investing in women-led organizations worldwide. Our international network of supporters mobilizes financial and other resources to support women’s actions for social justice, equality and peace.',
   },
 ];
 
@@ -200,7 +200,6 @@ const CHARITY_BUNDLES: string[][] = [
   ['wildaid', 'eyecare_india', 'global_housing'],
   ['rainforest_action', 'aid_for_children', 'global_fund_women'],
 ];
-
 
 const LIKERT_SCALE_PROPS = {
   lowerValue: 1,
@@ -312,7 +311,7 @@ export function getCharityDebateTemplate(
     }
 
     stages.push(createRoundOutcomeSurveyStage(roundNum, isMediatedRound));
-    stages.push(createConsensusScoreRevealStage(roundNum));
+    //stages.push(createConsensusScoreRevealStage(roundNum));
   });
 
   stages.push(createAllocationRevealStage());
@@ -334,8 +333,8 @@ export function getCharityDebateTemplate(
       metadata: CHARITY_DEBATE_METADATA,
     }),
     stageConfigs: stages,
-    //agentMediators: [HABERMAS_MEDIATOR_TEMPLATE, DYNAMIC_MEDIATOR_TEMPLATE],
-    agentMediators: [],
+    agentMediators: [HABERMAS_MEDIATOR_TEMPLATE, DYNAMIC_MEDIATOR_TEMPLATE],
+    // agentMediators: [],
     agentParticipants: [],
   });
 }
@@ -353,7 +352,6 @@ function createConsensusScoreRevealStage(roundNum: number): StageConfig {
       createMultiAssetAllocationRevealItem({
         id: sourceStageId,
         revealAudience: RevealAudience.ALL_PARTICIPANTS,
-        // This is the key that tells the component to only show the score.
         displayMode: 'scoreOnly',
       }),
     ],
@@ -365,8 +363,6 @@ export function createAllocationRevealStage(): StageConfig {
     id: 'final-results-summary',
     name: 'Final Allocation Results',
 
-    // This is the crucial part. We are listing the stages whose
-    // results we want this stage to "reveal".
     items: [
       createMultiAssetAllocationRevealItem({
         id: 'vote-round-1-post',
@@ -384,12 +380,12 @@ export function createAllocationRevealStage(): StageConfig {
   });
 }
 
-
 function createRoundStartStage(roundNum: number): StageConfig {
-  // Start with the base message for all rounds.
   const infoLines = [`You are now beginning Round ${roundNum}.`];
   if (roundNum > 1) {
-    infoLines.push('The discussion in this round will be joined by an AI Mediator.');
+    infoLines.push(
+      'The discussion in this round will be joined by an AI Mediator.',
+    );
   }
 
   return createInfoStage({
@@ -397,7 +393,6 @@ function createRoundStartStage(roundNum: number): StageConfig {
     infoLines: infoLines,
   });
 }
-
 
 function createCharityComprehensionStage(): StageConfig {
   return createComprehensionStage({
@@ -514,14 +509,14 @@ function createRoundOutcomeSurveyStage(
       questionTitle: 'I feel strongly about my final allocation.',
       ...LIKERT_SCALE_PROPS,
     }),
-    createTextSurveyQuestion({
-      questionTitle:
-        'Did you change your allocation after the discussion? If so, what was the most important factor that influenced your decision? (If not, please write NA)',
-    }),
     createScaleSurveyQuestion({
       questionTitle:
         "Overall, I am satisfied with the outcome of this round's discussion.",
       ...LIKERT_SCALE_PROPS,
+    }),
+    createTextSurveyQuestion({
+      questionTitle:
+        'If you changed your allocation, what was the most important factor that influenced your decision? (If not, please write NA)',
     }),
     createScaleSurveyQuestion({
       questionTitle:
@@ -534,7 +529,7 @@ function createRoundOutcomeSurveyStage(
       ...LIKERT_SCALE_PROPS,
     }),
     createScaleSurveyQuestion({
-      questionTitle: 'I feel the final outcome was a fair compromise.',
+      questionTitle: 'I feel the final outcome was fair',
       ...LIKERT_SCALE_PROPS,
     }),
     createMultipleChoiceSurveyQuestion({
@@ -574,7 +569,6 @@ function createRoundOutcomeSurveyStage(
       }),
     );
   }
-
   return createSurveyStage({
     id: stageId,
     name: `Round ${roundNum} Outcome Survey`,
@@ -584,7 +578,6 @@ function createRoundOutcomeSurveyStage(
     questions,
   });
 }
-
 
 function createAllocationStage(
   id: string,
@@ -641,7 +634,9 @@ function createMediatedDiscussionInfoStage(): StageConfig {
 function createExperimentEndInfoStage(): StageConfig {
   return createInfoStage({
     name: 'Experiment-End',
-    infoLines: ["This marks the end of the experiment. Thank you for participating!",],
+    infoLines: [
+      'This marks the end of the experiment. Thank you for participating!',
+    ],
   });
 }
 function createInstructionsStage(): StageConfig {
@@ -660,34 +655,21 @@ function createInitialParticipantSurveyStage(): StageConfig {
     }),
     questions: [
       createScaleSurveyQuestion({
-        questionTitle: 'I enjoy discussing controversial topics.',
-        ...LIKERT_SCALE_PROPS,
-      }),
-      createScaleSurveyQuestion({
-        questionTitle:
-          'People feel comfortable discussing controversial topics with me.',
-        ...LIKERT_SCALE_PROPS,
-      }),
-      createScaleSurveyQuestion({
-        questionTitle: 'I feel comfortable disagreeing with other people.',
-        ...LIKERT_SCALE_PROPS,
-      }),
-      createScaleSurveyQuestion({
-        questionTitle: 'People feel comfortable disagreeing with me.',
-        ...LIKERT_SCALE_PROPS,
-      }),
-      createScaleSurveyQuestion({
-        questionTitle:
-          'I try to make sure everyone agrees before making a decision.',
-        ...LIKERT_SCALE_PROPS,
-      }),
-      createScaleSurveyQuestion({
-        questionTitle: 'I prefer quick decisions even if not everyone agrees.',
-        ...LIKERT_SCALE_PROPS,
-      }),
-      createScaleSurveyQuestion({
         questionTitle:
           'It is important to me how the charity allocations today are decided.',
+        ...LIKERT_SCALE_PROPS,
+      }),
+      createScaleSurveyQuestion({
+        questionTitle: 'I try to avoid conﬂict.',
+        ...LIKERT_SCALE_PROPS,
+      }),
+      createScaleSurveyQuestion({
+        questionTitle: 'I look for the best outcomes for all of us',
+        ...LIKERT_SCALE_PROPS,
+      }),
+      createScaleSurveyQuestion({
+        questionTitle:
+          'When I have to make a decision, I like to make it quickly.',
         ...LIKERT_SCALE_PROPS,
       }),
     ],
@@ -716,32 +698,16 @@ function createInitialMediatorSurveyStage(): StageConfig {
       }),
       createScaleSurveyQuestion({
         questionTitle:
-          'Conversations would benefit from the presence of a neutral AI mediator.',
+          'An AI mediator could be useful for a group to have a more productive discussion',
         ...LIKERT_SCALE_PROPS,
       }),
       createScaleSurveyQuestion({
-        questionTitle:
-          'I believe an AI mediator could help keep a conversation on track.',
-        ...LIKERT_SCALE_PROPS,
-      }),
-      createScaleSurveyQuestion({
-        questionTitle:
-          'A neutral AI mediator could make discussions more fair.',
+        questionTitle: 'An AI mediator could make discussions more fair.',
         ...LIKERT_SCALE_PROPS,
       }),
       createScaleSurveyQuestion({
         questionTitle:
           'I am concerned about the privacy of my conversations with an AI mediator.',
-        ...LIKERT_SCALE_PROPS,
-      }),
-      createScaleSurveyQuestion({
-        questionTitle:
-          'An AI mediator might misunderstand the nuances of human conversation.',
-        ...LIKERT_SCALE_PROPS,
-      }),
-      createScaleSurveyQuestion({
-        questionTitle:
-          'An AI mediator might make the conversation feel less natural.',
         ...LIKERT_SCALE_PROPS,
       }),
     ],
@@ -773,36 +739,29 @@ function createPerMediatorEvaluationStage(roundNum: number): StageConfig {
     }),
     questions: [
       createScaleSurveyQuestion({
-        questionTitle: `[Performance] I was satisfied with this mediator’s performance.`,
-        ...LIKERT_SCALE_PROPS,
-      }),
-      createScaleSurveyQuestion({
-        questionTitle: `[Performance] The mediator helped me feel like my perspective was heard.`,
-        ...LIKERT_SCALE_PROPS,
-      }),
-      createScaleSurveyQuestion({
-        questionTitle: `[Performance] The mediator helped our group reach a better outcome.`,
-        ...LIKERT_SCALE_PROPS,
-      }),
-      createScaleSurveyQuestion({
-        questionTitle: `[Performance] The mediator helped our group stay focused on the topic.`,
-        ...LIKERT_SCALE_PROPS,
-      }),
-      createScaleSurveyQuestion({
-        questionTitle: `[Performance] The mediator's suggestions were relevant and useful.`,
-        ...LIKERT_SCALE_PROPS,
-      }),
-      createScaleSurveyQuestion({
-        questionTitle: `[Performance] The mediator interrupted the conversation too often.`,
-        ...LIKERT_SCALE_PROPS,
-      }),
-      createScaleSurveyQuestion({
-        questionTitle: `[Fairness] The mediator seemed to favor one participant or viewpoint over others.`,
-        ...LIKERT_SCALE_PROPS,
-      }),
-      createTextSurveyQuestion({
         questionTitle:
-          `Do you have any additional feedback on this mediator's performance in the discussion? (If none, please write NA)`,
+          '[Performance] Overall, the AI mediator was useful in having a productive conversation.',
+        ...LIKERT_SCALE_PROPS,
+      }),
+      createScaleSurveyQuestion({
+        questionTitle:
+          '[Performance] The mediator helped me feel like my perspective was heard.',
+        ...LIKERT_SCALE_PROPS,
+      }),
+      createScaleSurveyQuestion({
+        questionTitle:
+          '[Performance] The mediator helped our group stay focused on the topic.',
+        ...LIKERT_SCALE_PROPS,
+      }),
+      createScaleSurveyQuestion({
+        questionTitle:
+          '[Performance] The mediator interrupted the conversation too often.',
+        ...LIKERT_SCALE_PROPS,
+      }),
+      createScaleSurveyQuestion({
+        questionTitle:
+          '[Fairness] The mediator seemed to favor one participant or viewpoint over others.',
+        ...LIKERT_SCALE_PROPS,
       }),
     ],
   });
@@ -897,19 +856,11 @@ function createExperimentFeedbackStage(): StageConfig {
       }),
       createTextSurveyQuestion({
         questionTitle:
-          'Please describe your overall interaction with the other participants. (If not applicable, please write NA)',
+          'Please describe your overall interaction with the other participants, facilitators, and/or administrators. (If not applicable, please write NA)',
       }),
       createTextSurveyQuestion({
         questionTitle:
-          'If you interacted with a proctor or experiment administrator, please describe the experience. (If not applicable, please write NA)',
-      }),
-      createTextSurveyQuestion({
-        questionTitle:
-          'Do you have any other feedback or concerns about your experience in this study? (If not applicable, please write NA)',
-      }),
-      createTextSurveyQuestion({
-        questionTitle:
-          'Did you experience any harmful / offensive behavior, from participants or the mediator? (If not applicable, please write NA). \nYou may also reach out directly to the proctors',
+          'Do you have any other feedback or concerns about your experience in this study? Did you experience any harmful / offensive behavior, from participants or the mediator? (If not applicable, please write NA)',
       }),
     ],
   });
@@ -999,7 +950,7 @@ function createStandardMediatorSchema(): StructuredOutputSchema {
 function createDynamicMediatorSchema(): StructuredOutputSchema {
   const standardSchema = createStandardMediatorSchema();
 
-  // 1. Add the Failure Mode Diagnosis Field
+  // Add the Failure Mode Diagnosis Field
   const failureModeField = {
     name: 'observedFailureMode',
     schema: {
@@ -1010,7 +961,7 @@ function createDynamicMediatorSchema(): StructuredOutputSchema {
     },
   };
 
-  // 2. Add the Solution Strategy Selection Field
+  // Add the Solution Strategy Selection Field
   const solutionStrategyField = {
     name: 'proposedSolution',
     schema: {
