@@ -334,8 +334,8 @@ export function getCharityDebateTemplate(
       metadata: CHARITY_DEBATE_METADATA,
     }),
     stageConfigs: stages,
-    agentMediators: [HABERMAS_MEDIATOR_TEMPLATE, DYNAMIC_MEDIATOR_TEMPLATE],
-    // agentMediators: [],
+    // agentMediators: [HABERMAS_MEDIATOR_TEMPLATE, DYNAMIC_MEDIATOR_TEMPLATE],
+    agentMediators: [],
     agentParticipants: [],
   });
 }
@@ -1052,7 +1052,6 @@ The idea is NOT to settle on any specific outcome, but to ensure that participan
 ---
 Keep your responses AS SHORT AND FOCUSED AS POSSIBLE. Don't reiterate points unless it's vital to your intervention to do so. 
 Finally, craft a 'response' message that implements your chosen solution. If the solution is 'NoSolutionNeeded', your 'response' must be an empty string and 'shouldRespond' must be false.`;
-
 
   return createChatPromptConfig(DYNAMIC_STAGE_ID, {
     prompt: [
