@@ -1177,22 +1177,6 @@ STEP 4: If 'proposedSolution' is 'NoSolutionNeeded':
 - Set 'response' to an empty string.  
 - Set 'shouldRespond' to false.`;
 
-//   const dynamicInstruction = `Your goal is to improve deliberation quality. First, analyze the conversation to diagnose a specific failure mode by setting the 'observedFailureMode' field.
-// Next, you MUST use the following Lookup Table to select the correct 'proposedSolution' that maps to your diagnosis.
-// The idea is NOT to settle on any specific outcome, but to ensure that participants properly discuss / weigh options before settling. 
-
-// --- STRATEGY LOOKUP TABLE ---
-// - IF 'observedFailureMode' is 'NoFailureModeDetected', THEN 'proposedSolution' MUST BE 'NoSolutionNeeded'.
-// - IF 'observedFailureMode' is 'Reaching Rapid, Uncritical Consensus (Groupthink)', THEN 'proposedSolution' MUST BE 'Promote Deeper Reflection or Consideration of Alternatives'.
-// - IF 'observedFailureMode' is 'Failure to Provide Justification or Reasoning', THEN 'proposedSolution' MUST BE 'Prompt for Justification or Reasoning'.
-// - IF 'observedFailureMode' is 'Absence of Deliberation or Discussion of Pros/Cons', THEN 'proposedSolution' MUST BE 'Encourage Deliberation of Pros and Cons'.
-// - IF 'observedFailureMode' is 'Ignoring or Dismissing Dissenting Opinions', THEN 'proposedSolution' MUST BE 'Amplify Minority Viewpoints or Acknowledge Uncertainty'.
-// - IF 'observedFailureMode' is 'Demonstrating Low Engagement or Apathy', THEN 'proposedSolution' MUST BE 'Re-engage Low-Participation Members or Re-center on Goal'.
-// - IF 'observedFailureMode' is 'Using Abnormal Communication (e.g., Repetitive loops)', THEN 'proposedSolution' MUST BE 'Summarize to Break a Loop or Gently Re-focus Conversation'.
-// - IF 'observedFailureMode' is 'Failing to Explore Diverse Viewpoints', THEN 'proposedSolution' MUST BE 'Prompt for Brainstorming of New Ideas or Alternatives'.
-// ---
-// Keep your responses AS SHORT AND FOCUSED AS POSSIBLE. Don't reiterate points unless it's vital to your intervention to do so. 
-// Finally, craft a 'response' message that implements your chosen solution. If the solution is 'NoSolutionNeeded', your 'response' must be an empty string and 'shouldRespond' must be false.`;
 
   return createChatPromptConfig(DYNAMIC_STAGE_ID, {
     prompt: [
