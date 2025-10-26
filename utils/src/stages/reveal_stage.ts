@@ -56,7 +56,7 @@ export interface SurveyRevealItem extends BaseRevealItem {
 
 export interface MultiAssetAllocationRevealItem extends BaseRevealItem {
   kind: StageKind.MULTI_ASSET_ALLOCATION;
-  displayMode?: 'full' | 'scoreOnly';
+  displayMode: 'full' | 'scoreOnly';
 }
 
 /** Specifies which answers to reveal. */
@@ -143,6 +143,6 @@ export function createMultiAssetAllocationRevealItem(
     id: config.id ?? generateId(),
     kind: StageKind.MULTI_ASSET_ALLOCATION,
     revealAudience: config.revealAudience ?? RevealAudience.ALL_PARTICIPANTS,
-    displayMode: config.displayMode ?? 'full', // Add this line, defaulting to 'full'
+    displayMode: config.displayMode ?? 'full', 
   };
 }

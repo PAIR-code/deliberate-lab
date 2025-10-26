@@ -87,19 +87,19 @@ export interface MultiAssetAllocationStagePublicData
   >;
 }
 
+// ************************************************************************* //
+// FUNCTIONS                                                                 //
+// ************************************************************************* //
 export function createMultiAssetAllocationStagePublicData(
   config: Partial<MultiAssetAllocationStagePublicData> = {},
 ): MultiAssetAllocationStagePublicData {
   return {
-    id: config.id ?? '',
+    id: config.id ?? generateId(),
     kind: StageKind.MULTI_ASSET_ALLOCATION,
     participantAnswerMap: config.participantAnswerMap ?? {},
   };
 }
 
-// ************************************************************************* //
-// FUNCTIONS                                                                 //
-// ************************************************************************* //
 
 /** Create stock config for asset allocation. */
 export function createAssetAllocationStockInfoConfig(

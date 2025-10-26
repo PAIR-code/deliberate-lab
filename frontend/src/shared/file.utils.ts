@@ -279,7 +279,7 @@ export async function getExperimentDownload(
         ),
       )
     ).docs.map((doc) => doc.data() as AlertMessage);
-    experimentDownload.alerts = alertList;
+    //experimentDownload.alerts = alertList;
   }
 
   return experimentDownload;
@@ -943,9 +943,9 @@ export function getAlertData(data: ExperimentDownload) {
   // Add headings
   alertData.push(getAllAlertCSVColumns(null));
   // Add alerts
-  for (const alert of data.alerts) {
-    alertData.push(getAllAlertCSVColumns(alert));
-  }
+  //for (const alert of data.alerts) {
+  //  alertData.push(getAllAlertCSVColumns(alert));
+  //}
 
   return alertData;
 }

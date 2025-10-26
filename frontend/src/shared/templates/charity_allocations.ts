@@ -377,7 +377,7 @@ export function getCharityDebateTemplate(
       stages.push(createPerMediatorEvaluationStage(roundNum));
     }
 
-    //stages.push(createConsensusScoreRevealStage(roundNum));
+    stages.push(createRoundOutcomeSurveyStage(roundNum, isMediatedRound));
   });
 
   stages.push(createAllocationRevealStage());
@@ -399,8 +399,7 @@ export function getCharityDebateTemplate(
       metadata: CHARITY_DEBATE_METADATA,
     }),
     stageConfigs: stages,
-    // agentMediators: [HABERMAS_MEDIATOR_TEMPLATE, DYNAMIC_MEDIATOR_TEMPLATE],
-    agentMediators: [],
+    agentMediators: [HABERMAS_MEDIATOR_TEMPLATE, DYNAMIC_MEDIATOR_TEMPLATE],
     agentParticipants: [],
   });
 }
@@ -459,8 +458,8 @@ function createRoundStartStage(roundNum: number): StageConfig {
   }
 
   return createInfoStage({
-    name: `${EMOJIS[roundNum - 1]} Beginning of Round ${roundNum}`,
-    infoLines: infoLines,
+    name: `Beginning of Round ${roundNum}`,
+    infoLines,
   });
 }
 
@@ -652,7 +651,7 @@ function createAllocationStage(
     id,
     name,
     descriptions: createStageTextConfig({
-      primaryText: primaryText,
+      primaryText,
       infoText: TEXT_ALLOCATION_INFO_HINT,
     }),
     stockOptions: charityStocks,
