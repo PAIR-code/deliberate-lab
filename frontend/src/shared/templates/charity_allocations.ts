@@ -622,7 +622,7 @@ function createAllocationStage(
     scope = `Now that you have discussed with your group, make your final allocation for round ${roundNum}.`;
   }
 
-  let primaryText = `${scope}\nPlease use the sliders to allocate 100\% of the funds among the following charities:\n`;
+  let primaryText = `${scope}\nPlease use the sliders to allocate 100\% of the funds among the following charities:`;
 
   charityGroup.forEach((charityKey, index) => {
     const info = CHARITY_DATA_MAP.get(charityKey);
