@@ -29,31 +29,6 @@ Respond in a quick sentence if you would like to say something.
 Make sure your response sounds like a human with the phrasing and punctuation people use when casually chatting and no animal sounds.
 Otherwise, do not respond.`;
 
-export const DEFAULT_AGENT_PARTICIPANT_READY_TO_END_CHAT_PROMPT = `Are you ready to end the conversation and stop talking? Please consider whether you have met your goals and communicated with other participants.`;
-export const DEFAULT_AGENT_PARTICIPANT_READY_TO_END_CHAT_STRUCTURED_OUTPUT =
-  createStructuredOutputConfig({
-    schema: {
-      type: StructuredOutputDataType.OBJECT,
-      properties: [
-        {
-          name: 'explanation',
-          schema: {
-            type: StructuredOutputDataType.STRING,
-            description: 'Your concise reasoning in a few sentences',
-          },
-        },
-        {
-          name: 'response',
-          schema: {
-            type: StructuredOutputDataType.BOOLEAN,
-            description:
-              'Whether or not you are ready to end the current discussion',
-          },
-        },
-      ],
-    },
-  });
-
 // ************************************************************************* //
 // PROMPTS                                                                   //
 // ************************************************************************* //

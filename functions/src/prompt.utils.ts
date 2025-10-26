@@ -37,6 +37,7 @@ import {
 import {
   getFirestoreActiveParticipants,
   getFirestoreAnswersForStage,
+  getFirestoreExperiment,
   getFirestoreParticipant,
   getFirestoreStage,
   getFirestoreStagePublicData,
@@ -108,7 +109,24 @@ async function getStageAnswersWithDisplayNames<
   return addDisplayNamesToAnswers(experimentId, answers, stageId);
 }
 
-/** Assemble prompt items into final prompt. */
+/** Return list of stage IDs preceding *and including* given stage ID. */
+async function getAllPrecedingStageIds(experimentId: string, stageId: string) {
+  const experiment = await getFirestoreExperiment(experimentId);
+  return experiment.stageIds.slice(0, experiment.stageIds.indexOf(stageId) + 1);
+}
+
+/** Assemble prompt items into final prompt.
+ * This is the main function called to get a final prompt string that
+ * can be sent to an LLM API without any further edits.
+ *
+ * TODO: Instead of having the functions under this fetch documents
+ * from Firestore, pass in a data structure containing all the database docs
+ * needed (e.g., stage configs, cohort participants, private/public answers).
+ *
+ * This could save duplicate fetching and will also enable us to easily build
+ * structured prompts with fake data (e.g., to preview prompts in experiment
+ * builder).
+ */
 export async function getStructuredPrompt(
   experimentId: string,
   cohortId: string,
@@ -118,7 +136,7 @@ export async function getStructuredPrompt(
   userProfile: UserProfile,
   agentConfig: ProfileAgentConfig,
   promptConfig: BasePromptConfig,
-) {
+): string {
   const promptText = await processPromptItems(
     promptConfig.prompt,
     experimentId,
@@ -179,15 +197,21 @@ async function processPromptItems(
         }
         break;
       case PromptItemType.STAGE_CONTEXT:
-        items.push(
-          await getStageContextForPrompt(
-            experimentId,
-            cohortId,
-            participantIds,
-            stageId,
-            promptItem,
-          ),
-        );
+        const stageContextIds = promptItem.stageId
+          ? [stageId]
+          : await getAllPrecedingStageIds(experimentId, stageId);
+        for (const id of stageContextIds) {
+          items.push(
+            await getStageContextForPrompt(
+              experimentId,
+              cohortId,
+              participantIds,
+              stageId,
+              id,
+              promptItem,
+            ),
+          );
+        }
         break;
       case PromptItemType.GROUP:
         const promptGroup = promptItem as PromptItemGroup;
@@ -233,30 +257,38 @@ async function processPromptItems(
   return items.join('\n');
 }
 
+/**
+ * Assembles content from the given stage (e.g., information provided to
+ * human participants for the stage) based on the prompt item settings of
+ * what to include (e.g., stage description, participant's answers for the
+ * stage) and formatted specifically for inserting into an LLM prompt.
+ */
 export async function getStageContextForPrompt(
   experimentId: string,
   cohortId: string,
   participantIds: string[],
   currentStageId: string,
+  contextStageId: string, // use this and not item.stageId, which could be ''
   item: StageContextPromptItem,
 ) {
   // Get the specific stage
-  const stage = await getFirestoreStage(experimentId, item.stageId);
+  const stage = await getFirestoreStage(experimentId, contextStageId);
   if (!stage) {
     return '';
   }
 
   const textItems: string[] = [];
 
-  if (item.includePrimaryText) {
+  // Include name of stage
+  textItems.push(`----- STAGE: ${stage.name ?? stage.id} -----`);
+
+  if (item.includePrimaryText && stage.descriptions.primaryText.trim() !== '') {
     textItems.push(`- Stage description: ${stage.descriptions.primaryText}`);
   }
   if (item.includeInfoText) {
     textItems.push(`- Additional info: ${stage.descriptions.infoText}`);
   }
-  if (item.includeHelpText) {
-    textItems.push(`- If you need help: ${stage.descriptions.helpText}`);
-  }
+  // Note: Help text not included since the field has been deprecated
 
   // Include stage display with answers embedded, or just answers
   if (item.includeStageDisplay) {
@@ -283,6 +315,14 @@ export async function getStageContextForPrompt(
   return textItems.join('\n');
 }
 
+/** Formats the body content for the given stage, e.g., the terms of service
+ * in a TOS stage or all the survey questions in a survey stage.
+ *
+ * NOTE: This shows all content visible to the participant, so a survey
+ * stage will produce a complete list of all the survey questions
+ * even if not all of them have been answered (just as a human participant
+ * would see all the survey questions in the stage UI).
+ */
 export async function getStageDisplayForPrompt(
   experimentId: string,
   cohortId: string,
@@ -388,7 +428,7 @@ export async function getStageDisplayForPrompt(
           : assetAllocationDisplay;
       }
       return assetAllocationDisplay;
-    case StageKind.SURVEY:
+    case StageKind.SURVEY: // Same logic as survey per participant below
     case StageKind.SURVEY_PER_PARTICIPANT:
       const surveyDisplay = getSurveySummaryText(
         stage as SurveyStageConfig | SurveyPerParticipantStageConfig,

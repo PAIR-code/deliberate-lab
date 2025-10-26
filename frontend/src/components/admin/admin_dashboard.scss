@@ -1,12 +1,31 @@
-@use "../../sass/colors";
-@use "../../sass/common";
-@use "../../sass/typescale";
+@use '../../sass/colors';
+@use '../../sass/common';
+@use '../../sass/typescale';
 
 :host {
   @include common.flex-column;
 }
 
 $tab-bar-weight: 3px;
+
+.admin-header {
+  @include common.flex-row;
+  justify-content: flex-end;
+  padding: common.$spacing-medium;
+  border-bottom: 1px solid var(--md-sys-color-outline-variant);
+}
+
+.normalize-section {
+  @include common.flex-row-align-center;
+  gap: common.$spacing-medium;
+}
+
+.result-message {
+  @include typescale.body-small;
+  color: var(--md-sys-color-outline);
+  white-space: pre-line;
+  max-width: 600px;
+}
 
 .tabs {
   @include common.flex-row;

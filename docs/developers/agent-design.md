@@ -4,7 +4,7 @@ layout: default
 ---
 
 <div class="banner">
-  ⚠️ Documentation may be out-of-date
+  ⚠️ Documentation in progress
 </div>
 
 ## Context
@@ -12,6 +12,9 @@ layout: default
 Deliberate Lab supports two types of agents:
 - **Agent mediators**: Can read and write chat messages during chat stages only
 - [alpha] **Agent participants**: Can progress through experiment stages and read/write chat messages for any relevant stages
+
+Both agent types use experimenter-specified *structured prompts* (see below)
+when querying LLM APIs.
 
 ## Agent participants (alpha mode)
 
@@ -40,10 +43,11 @@ so that the agents can start the conversation; otherwise, the chat logic below
 is used to complete the chat stage.</small>
 
 Additionally, every time a chat message is written (for a specific
-experiment/cohort/stage path), the backend will trigger the following
-functions for all agent participants in that experiment/cohort:
+experiment/cohort/stage path), the backend will trigger logic to
+send chat messages* and (progress in the experiment if applicable**)
+for all agent participants in that experiment/cohort:
 
-> `sendAgentParticipantMessage`: For all active agent participants on the
+> <small>*For all active agent participants on the
 current stage, asynchronously query an LLM API for a chat message response.
 If a valid response is generated, wait for the agent's "typing delay"
 (calculated based on the agent's "words per minute" setting), then check
@@ -52,10 +56,90 @@ responded to the initial chat message that caused this trigger. (This "trigger
 log" check prevents multiple agents from responding all at once, or the same
 agent from responding multiple times.) If no agents have responded yet, record
 the current agent as the responder in `triggerLogs` and write the chat message
-to Firestore.
+to Firestore.</small>
 
-> `checkReadyToEndChat`: For all active agent participants on the current
-stage, query an LLM API to see if that agent is ready to move on from the
-current conversation. If true, then either move the agent to the next
-discussion (if the chat stage has discussion threads) or the next stage
-(if there are not discussion threads or the agent is on the last thread).
+> <small>**The chat message API query includes a structured output field for
+"ready to end chat." If this comes back as true, the agent participant
+proceeds to the next stage or the next discussion thread in the chat.
+</small>
+
+## Structured prompts
+Each agent persona is defined with a collection of prompts, where each prompt
+is a *structured prompt* (see `utils/src/structured_prompt.ts`) corresponding
+to the stage with which the agent is interacting.
+
+A structured prompt is comprised of *structured prompt items*, which can
+include blocks like freeform text and "stage context" (the content that a
+human participant would see during the stage in the UI, but formatted
+specificially for prompt use).
+
+### Stage display (in stage context prompt item)
+"Stage display" is the main content (e.g., actual survey questions, as opposed
+to stage description) inside a "stage context" prompt item.
+
+See `getStageDisplayForPrompt` in `functions/src/prompt.utils.ts` for a switch
+statement with all supported stages.
+
+> NOTE: Make sure to add stage display support for new stages, currently
+unsupported stages, etc.
+
+As of September 2025, stage display (for prompts) is supported for the
+following stages:
+
+Stage | Stage display notes
+--- | ---
+Terms of Service | Shows the terms of service
+Info | Shows the info
+Group Chat | Shows a list of active participants plus chat history so far, with some explanation of how profiles/timestamps should be interpreted
+Private Chat | Same as group chat, minus list of active participants (instead an explanation of who the other participant is)
+Role | Shows the display lines specified in the role stage plus the assigned role
+Stock Info | Shows stock info stage information
+Asset Allocation | Shows asset allocation information
+Survey | Shows survey information (and answers if specified in settings)
+Survey Per Participant | Shows survey per participant information (and answers if specified in settings)
+
+## [Developer workflow] Adding agent participant support for a stage
+
+> NOTE: This documentation, along with additional content, will eventually
+be moved into a guide for adding a new stage to Deliberate Lab
+
+### Enable stage context in structured prompts
+First, make sure structured prompts are able to support your stage type.
+
+See `getStageDisplayForPrompt` in `functions/src/prompt.utils.ts` for a switch
+statement with all supported stages.
+
+If your stage is not supported, add a helper function to fetch relevant data
+(doing it in the helper function is fine for now; we may eventually fetch all
+data up front) and build the stage display.
+
+<small>Note: "stage display" is just the main UI
+content of the stage; other parts like "stage description" and "stage progress"
+are already built via other logic for "stage context" prompt items.</small>
+
+<small>Note: Make sure you have an option
+to include participant answers in the display (this would just be the
+current participant's answers for an agent participants, but could include
+all cohort participants' answers for a mediator)
+</small>
+
+**Testing:** The fastest way to test this is to set up an agent mediator OR
+participant (since both use structured prompts) for a chat stage, add
+your stage immediately before, and make sure the agent's chat prompt includes
+all stages before it as context. Then, send a chat message, wait for an
+agent response, and check the agent logging dashboard to verify that API
+queries contain your stage display in the prompt.
+
+### Add logic to completeStageAsAgentParticipant
+Make sure the `completeStageAsAgentParticipant`
+(in `functions/src/agent_participant.utils.ts`) includes your stage type.
+
+If relevant, add a helper function to make an API query, update participant
+profile status, call `completeStage` (to progress participant to next
+stage in experiment config), etc.
+
+If an API query is needed, define a default structured prompt (to be used
+if no custom prompt is saved in the experiment builder). If the stage requires
+additional settings (e.g., for survey stage, an option to complete all
+questions via one API call vs. complete one question per call), create a new
+prompt config extending `BasePromptConfig` in `utils/src/structured_prompt.ts`.

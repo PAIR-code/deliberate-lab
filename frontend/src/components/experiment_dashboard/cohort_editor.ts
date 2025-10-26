@@ -30,6 +30,7 @@ import {
   ParticipantProfileExtended,
   ParticipantStatus,
   StageKind,
+  getAgentStatusDisplayText,
 } from '@deliberation-lab/utils';
 
 import {styles} from './cohort_editor.scss';
@@ -206,7 +207,9 @@ export class Component extends MobxLitElement {
           return nothing;
         }
         return html`
-          <div class="chip secondary">🤖 ${mediator.currentStatus}</div>
+          <div class="chip secondary">
+            🤖 ${getAgentStatusDisplayText(mediator.currentStatus)}
+          </div>
         `;
       };
 

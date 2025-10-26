@@ -24,6 +24,8 @@ export class AdminDashboard extends MobxLitElement {
   private readonly routerService = core.getService(RouterService);
 
   @state() showExperiments = true;
+  @state() isNormalizing = false;
+  @state() normalizationResult: string | null = null;
 
   override render() {
     // If not admin, do not show dashboard
@@ -36,6 +38,7 @@ export class AdminDashboard extends MobxLitElement {
     };
 
     return html`
+      <div class="admin-header">${this.renderNormalizeButton()}</div>
       <div class="tabs">
         <div
           class="tab ${this.showExperiments ? 'active' : ''}"
@@ -146,6 +149,66 @@ export class AdminDashboard extends MobxLitElement {
     return html`
       <div class="empty-message">
         No ${isExperimenters ? 'experimenters' : 'experiments'} yet
+      </div>
+    `;
+  }
+
+  private renderNormalizeButton() {
+    const handleNormalize = async () => {
+      if (
+        !confirm(
+          'This will create lowercase versions of any allowlist emails that have uppercase letters. ' +
+            'Original mixed-case entries will remain (for manual deletion after verification). Continue?',
+        )
+      ) {
+        return;
+      }
+
+      this.isNormalizing = true;
+      this.normalizationResult = null;
+
+      try {
+        const result = await this.adminService.normalizeAllowlistEmails();
+
+        let message = `✅ Normalization complete!\n\n`;
+        message += `Total processed: ${result.totalProcessed}\n`;
+        message += `Already lowercase: ${result.alreadyLowercaseCount}\n`;
+        message += `Normalized: ${result.normalizedCount}\n`;
+        message += `Conflicts: ${result.conflictCount}\n`;
+
+        if (result.details.length > 0) {
+          message += `\nDetails:\n${result.details.join('\n')}`;
+        }
+
+        if (result.normalizedCount > 0) {
+          message += `\n\n⚠️ Please verify the new lowercase entries and manually delete the original mixed-case ones.`;
+        }
+
+        this.normalizationResult = message;
+        alert(message);
+      } catch (error) {
+        const errorMessage = `❌ Error normalizing emails: ${error}`;
+        this.normalizationResult = errorMessage;
+        alert(errorMessage);
+      } finally {
+        this.isNormalizing = false;
+      }
+    };
+
+    return html`
+      <div class="normalize-section">
+        <pr-button
+          ?disabled=${this.isNormalizing}
+          @click=${handleNormalize}
+          variant="outlined"
+        >
+          ${this.isNormalizing
+            ? 'Normalizing...'
+            : 'Normalize Allowlist Emails'}
+        </pr-button>
+        ${this.normalizationResult
+          ? html`<div class="result-message">${this.normalizationResult}</div>`
+          : nothing}
       </div>
     `;
   }
