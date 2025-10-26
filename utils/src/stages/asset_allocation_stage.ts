@@ -100,7 +100,6 @@ export function createMultiAssetAllocationStagePublicData(
   };
 }
 
-
 /** Create stock config for asset allocation. */
 export function createAssetAllocationStockInfoConfig(
   config: Partial<AssetAllocationStockInfoConfig> = {},

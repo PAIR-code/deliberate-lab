@@ -143,6 +143,6 @@ export function createMultiAssetAllocationRevealItem(
     id: config.id ?? generateId(),
     kind: StageKind.MULTI_ASSET_ALLOCATION,
     revealAudience: config.revealAudience ?? RevealAudience.ALL_PARTICIPANTS,
-    displayMode: config.displayMode ?? 'full', 
+    displayMode: config.displayMode ?? 'full',
   };
 }

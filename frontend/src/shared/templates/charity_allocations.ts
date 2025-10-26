@@ -251,7 +251,7 @@ const TEXT_INSTRUCTIONS_2 = [
   'The charities in each round are real. After your final decision, we will donate a **fixed total amount** to these charities based on your group’s choices.',
   'If you were the only participant, your final allocation would directly determine how the donation is split.',
   '![Donation example](https://i.imgur.com/6kHhHTg.png)',
-  'However, you are part of a group of 3 participants. Your **group\'s allocation** is the **average** of everyone\'s final allocation in that round.',
+  "However, you are part of a group of 3 participants. Your **group's allocation** is the **average** of everyone's final allocation in that round.",
 ];
 
 const TEXT_INSTRUCTIONS_3 = [
@@ -281,8 +281,6 @@ const TEXT_INSTRUCTIONS_4 = [
   'So, for example, you may have to allocate funds between *Eyecare in India*, *Sudan Humanitarian Aid*, and *Clean Ocean Action* in a round. We will provide more details on these charities before the rounds.',
 ];
 
-
-
 const TEXT_ALLOCATION_INFO_HINT = `Ensure your chosen percentages add up to 100%. (Hint: We recommend getting the percentages close and then adjusting one slider to make the total exactly 100%).`;
 
 const TEXT_DEBRIEFING = [
@@ -303,7 +301,7 @@ export function getCharityDebateTemplate(
 
   if (config.includeTos) stages.push(CONSENSUS_TOS_STAGE);
   stages.push(SET_PROFILE_STAGE_EXPANDED);
-  
+
   // Game instructions
   const instructions = createInstructionsStages();
   for (const stage of instructions) {
@@ -312,10 +310,9 @@ export function getCharityDebateTemplate(
 
   // Mediator instructions
   if (config.includeMediator) stages.push(createMediatedDiscussionInfoStage());
-  
+
   // Comprehension check
   stages.push(createCharityComprehensionStage());
-
 
   // Surveys
   if (config.includeInitialParticipantSurvey)
@@ -330,23 +327,22 @@ export function getCharityDebateTemplate(
 
   debateRoundsCharities.forEach((charityGroup, index) => {
     const roundNum = index + 1;
-    
+
     const setting = `donations to:\n *${charityGroup
-  .map(key => CHARITY_DATA.find(c => c.key === key)?.name || key)
-  .join(', ')}*`;
+      .map((key) => CHARITY_DATA.find((c) => c.key === key)?.name || key)
+      .join(', ')}*`;
     let mediatorForRound: string | undefined = undefined;
 
     if (config.includeMediator && index > 0) {
       mediatorForRound = `AI facilitator`;
     }
 
-
     stages.push(
       createAllocationStage(
         `vote-round-${roundNum}-pre`,
         `${EMOJIS[roundNum - 1]} Round ${roundNum}: Initial allocation`,
         charityGroup,
-        roundNum
+        roundNum,
       ),
     );
 
@@ -365,7 +361,7 @@ export function getCharityDebateTemplate(
         `${EMOJIS[roundNum - 1]} Round ${roundNum}: Final allocation`,
         charityGroup,
         roundNum,
-        false
+        false,
       ),
     );
 
@@ -595,12 +591,12 @@ function createRoundOutcomeSurveyStage(
     }),
     createScaleSurveyQuestion({
       questionTitle:
-      'The group worked together effectively to reach a decision.',
+        'The group worked together effectively to reach a decision.',
       ...LIKERT_SCALE_PROPS,
     }),
     createTextSurveyQuestion({
       questionTitle:
-      'Briefly describe how you felt the discussion went. (e.g., overall flow, any tensions or key moments)”',
+        'Briefly describe how you felt the discussion went. (e.g., overall flow, any tensions or key moments)”',
     }),
   ];
 
@@ -621,7 +617,6 @@ function createAllocationStage(
   roundNum: number,
   isInitial: boolean = true,
 ): StageConfig {
-
   let scope = `You are now beginning round ${roundNum} of 3.`;
   if (!isInitial) {
     scope = `Now that you have discussed with your group, make your final allocation for round ${roundNum}.`;
@@ -699,22 +694,22 @@ function createExperimentEndInfoStage(): StageConfig {
 function createInstructionsStages(): StageConfig[] {
   return [
     createInfoStage({
-    name: '📝 Today\'s task',
-    infoLines: TEXT_INSTRUCTIONS,
-  }),
-   createInfoStage({
-    name: '📝 How your decisions impact donations',
-    infoLines: TEXT_INSTRUCTIONS_2,
-  }),
-   createInfoStage({
-    name: '📝 How your group is evaluated',
-    infoLines: TEXT_INSTRUCTIONS_3,
-  }),
-   createInfoStage({
-    name: '📝 Today\'s impact',
-    infoLines: TEXT_INSTRUCTIONS_4,
-  }),
-];
+      name: "📝 Today's task",
+      infoLines: TEXT_INSTRUCTIONS,
+    }),
+    createInfoStage({
+      name: '📝 How your decisions impact donations',
+      infoLines: TEXT_INSTRUCTIONS_2,
+    }),
+    createInfoStage({
+      name: '📝 How your group is evaluated',
+      infoLines: TEXT_INSTRUCTIONS_3,
+    }),
+    createInfoStage({
+      name: "📝 Today's impact",
+      infoLines: TEXT_INSTRUCTIONS_4,
+    }),
+  ];
 }
 
 function createInitialParticipantSurveyStage(): StageConfig {
@@ -731,16 +726,17 @@ function createInitialParticipantSurveyStage(): StageConfig {
         ...LIKERT_SCALE_PROPS,
       }),
       createScaleSurveyQuestion({
-        questionTitle: 'In group settings, I try to avoid conﬂict and negotiations.',
-        ...LIKERT_SCALE_PROPS,
-      }),
-      createScaleSurveyQuestion({
-        questionTitle: 'In group settings, I try to find the best outcome for everyone.',
+        questionTitle:
+          'In group settings, I try to avoid conﬂict and negotiations.',
         ...LIKERT_SCALE_PROPS,
       }),
       createScaleSurveyQuestion({
         questionTitle:
-          'When making decisions, I prefer to decide quickly.',
+          'In group settings, I try to find the best outcome for everyone.',
+        ...LIKERT_SCALE_PROPS,
+      }),
+      createScaleSurveyQuestion({
+        questionTitle: 'When making decisions, I prefer to decide quickly.',
         ...LIKERT_SCALE_PROPS,
       }),
     ],
@@ -758,8 +754,8 @@ function createInitialMediatorSurveyStage(): StageConfig {
       // Background familiarity
       //createScaleSurveyQuestion({
       //  questionTitle:
-        //  'I have used AI assistants (e.g., ChatGPT, Bard, Siri, Alexa) to help me with tasks.',
-        //...LIKERT_SCALE_PROPS,
+      //  'I have used AI assistants (e.g., ChatGPT, Bard, Siri, Alexa) to help me with tasks.',
+      //...LIKERT_SCALE_PROPS,
       //}),
       createScaleSurveyQuestion({
         questionTitle:
@@ -830,24 +826,23 @@ function createPerMediatorEvaluationStage(roundNum: number): StageConfig {
     questions: [
       createScaleSurveyQuestion({
         questionTitle:
-             'I believe that the AI facilitator made the group discussion more productive.',
+          'I believe that the AI facilitator made the group discussion more productive.',
         ...LIKERT_SCALE_PROPS,
       }),
       createScaleSurveyQuestion({
         questionTitle:
-        'I felt comfortable having the AI facilitator in the group discussion.',
+          'I felt comfortable having the AI facilitator in the group discussion.',
         ...LIKERT_SCALE_PROPS,
       }),
 
       createTextSurveyQuestion({
         questionTitle:
-      'What did the AI facilitator do well (e.g., making sure your perspective was heard, helping the group stay on topic)?',
+          'What did the AI facilitator do well (e.g., making sure your perspective was heard, helping the group stay on topic)?',
       }),
-
 
       createTextSurveyQuestion({
         questionTitle:
-      'What could the AI facilitator have done better (e.g., being more fair, interrupting less)?',
+          'What could the AI facilitator have done better (e.g., being more fair, interrupting less)?',
       }),
     ],
   });
@@ -886,7 +881,7 @@ function createFinalMediatorPreferenceStage(): StageConfig {
     name: '❓ Survey on AI facilitators',
     descriptions: createStageTextConfig({
       primaryText:
-      'Think back to the three conversations you engaged in today: in the first round, there was no AI facilitator; in the second and third rounds, there were different AI facilitators with different styles. Please answer the following questions about your preferences regarding these facilitators.',
+        'Think back to the three conversations you engaged in today: in the first round, there was no AI facilitator; in the second and third rounds, there were different AI facilitators with different styles. Please answer the following questions about your preferences regarding these facilitators.',
     }),
     questions: [
       createMultipleChoiceSurveyQuestion({
@@ -902,7 +897,8 @@ function createFinalMediatorPreferenceStage(): StageConfig {
           'Please explain your preference and experiences with the AI facilitators.',
       }),
       createScaleSurveyQuestion({
-        questionTitle: 'Please rate how likely you would be to include an AI facilitator in future discussions.',
+        questionTitle:
+          'Please rate how likely you would be to include an AI facilitator in future discussions.',
         ...LIKERT_SCALE_PROPS,
       }),
     ],
@@ -942,11 +938,11 @@ function createExperimentFeedbackStage(): StageConfig {
       }),
       createTextSurveyQuestion({
         questionTitle:
-          'Please describe your overall interaction with other participants and facilitators.'
-
+          'Please describe your overall interaction with other participants and facilitators.',
       }),
       createTextSurveyQuestion({
-        questionTitle: 'Do you have any other feedback or concerns about your experience in this study?',
+        questionTitle:
+          'Do you have any other feedback or concerns about your experience in this study?',
       }),
     ],
   });
@@ -1101,7 +1097,6 @@ function createHabermasMediatorPromptConfig(): MediatorPromptConfig {
   - Example: “It sounds like two main ideas have emerged so far: A and B.” or “You seem close to agreement on X, but Y is still being debated.”
   `;
 
-
   return createChatPromptConfig(HABERMAS_STAGE_ID, {
     prompt: [
       createTextPromptItem(
@@ -1176,7 +1171,6 @@ STEP 3: Respond only when needed.
 STEP 4: If 'proposedSolution' is 'NoSolutionNeeded':
 - Set 'response' to an empty string.  
 - Set 'shouldRespond' to false.`;
-
 
   return createChatPromptConfig(DYNAMIC_STAGE_ID, {
     prompt: [
