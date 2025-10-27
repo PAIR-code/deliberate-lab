@@ -97,8 +97,11 @@ export interface StageContextPromptItem extends BasePromptItem {
   // WARNING: includeHelpText field has been deprecated
   includeHelpText: boolean;
   // Include participant view of stage, e.g., chat history, game board
+  // WARNING: Deprecated so that stage context prompt item ALWAYS includes
+  // stage display
   includeStageDisplay: boolean;
-  // Include answers for current participant (or all participants if mediator)
+  // Include answers for current participant
+  // (or all participants AND public data results if mediator)
   includeParticipantAnswers: boolean;
 }
 

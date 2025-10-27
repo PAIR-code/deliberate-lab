@@ -13,6 +13,7 @@ import {
   PromptItemType,
   RoleStagePublicData,
   StageConfig,
+  StageContextData,
   StageContextPromptItem,
   StageKind,
   StageParticipantAnswer,
@@ -27,6 +28,7 @@ import {
   getStockInfoSummaryText,
   getSurveySummaryText,
   getSurveyAnswersText,
+  initializeStageContextData,
   makeStructuredOutputPrompt,
   shuffleWithSeed,
 } from '@deliberation-lab/utils';
@@ -154,6 +156,144 @@ export async function getStructuredPromptConfig(
   }
 }
 
+/** Populates data object with Firestore documents needed for given
+ * structured prompt
+ */
+export async function getFirestoreDataForStructuredPrompt(
+  experimentId: string,
+  cohortId: string,
+  currentStageId: string,
+  userProfile: ParticipantProfileExtended | MediatorProfileExtended,
+  promptConfig: BasePromptConfig,
+): Record<string, StageContextData> {
+  const data: Record<string, StageContextData> = {};
+
+  // Fetch participants used for prompt
+  // (if participant, this is just the current participant;
+  // if mediator, it's all active cohort participants)
+  let participants: ParticipantProfileExtended = [];
+  if (userProfile.type === UserType.PARTICIPANT) {
+    participants.push(
+      await getFirestoreParticipant(experimentId, userProfile.privateId),
+    );
+  } else if (userProfile.type === UserType.MEDIATOR) {
+    participants = await getFirestoreActiveParticipants(experimentId, cohortId);
+  }
+
+  for (const item of promptConfig.prompt) {
+    await addFirestoreDataForPromptItem(
+      experimentId,
+      cohortId,
+      currentStageId,
+      item,
+      participants,
+      data,
+    );
+  }
+
+  return data;
+}
+
+/** Populates data object with Firestore documents needed for given single
+ * prompt item.
+ */
+export async function addFirestoreDataForPromptItem(
+  experimentId: string,
+  cohortId: string,
+  currentStageId: string,
+  promptItem: PromptItem,
+  // Participants to include in any potential answers
+  participants: ParticipantProfileExtended[],
+  data: Record<string, StageContextData> = {},
+) {
+  switch (promptItem.type) {
+    case PromptItemType.STAGE_CONTEXT:
+      // If stage ID is empty, call this function for all stage IDs
+      // leading up to this stage ID
+      if (!promptItem.stageId) {
+        for (const stageId of await getAllPrecedingStageIds(
+          experimentId,
+          currentStageId,
+        )) {
+          await addFirestoreDataForPromptItem(
+            experimentId,
+            cohortId,
+            currentStageId,
+            {...promptItem, stageId},
+            participants,
+            data,
+          );
+        }
+        return;
+      }
+
+      // Fetch stage config if not already fetched
+      if (!data[promptItem.stageId]) {
+        const stage = await getFirestoreStage(experimentId, promptItem.stageId);
+        if (!stage) break;
+
+        // Store stage config in stage context object
+        data[promptItem.stageId] = initializeStageContextData(stage);
+
+        // If group chat, fetch group chat messages
+        if (stage.kind === StageKind.CHAT) {
+          data[promptItem.stageId].publicChatMessages =
+            await getFirestorePublicStageChatMessages(
+              experimentId,
+              cohortId,
+              promptItem.stageId,
+            );
+        }
+
+        // If private chat, fetch private chat messages for each participant
+        if (stage.kind === StageKind.PRIVATE_CHAT) {
+          for (const participant of participants) {
+            data[promptItem.stageId].privateChatMap[participant.publicId] =
+              await getFirestorePrivateChatMessages(
+                experimentId,
+                participant.privateId,
+                promptItem.stageId,
+              );
+          }
+        }
+      }
+      // If answers needed and not populated, fetch private/public data
+      const stageData = data[promptItem.stageId];
+      if (
+        promptItem.includeParticipantAnswers &&
+        stageData.privateAnswers.length === 0
+      ) {
+        // Fill private answers for each participant
+        stageData.privateAnswers = await getFirestoreAnswersForStage(
+          experimentId,
+          cohortId,
+          promptItem.stageId,
+          participants.map((participant) => participant.privateId),
+        );
+        // Fill public data for cohort
+        stageData.publicData = await getFirestoreStagePublicData(
+          experimentId,
+          cohortId,
+          promptItem.stageId,
+        );
+      }
+      break;
+    case PromptItemType.GROUP:
+      for (const item of promptItem.items) {
+        await addFirestoreDataForPromptItem(
+          experimentId,
+          cohortId,
+          item,
+          participants,
+          data,
+        );
+      }
+      break;
+    default:
+      return;
+  }
+}
+
 /** Assemble prompt items into final prompt string.
  * This is the main function called to get a final prompt string that
  * can be sent to an LLM API without any further edits.
@@ -176,6 +316,17 @@ export async function getPromptFromConfig(
   agentConfig: ProfileAgentConfig,
   promptConfig: BasePromptConfig,
 ): Promise<string> {
+  // TODO: Remove temporary logging of fetched data
+  console.log(
+    await getFirestoreDataForStructuredPrompt(
+      experimentId,
+      cohortId,
+      stageId,
+      userProfile,
+      promptConfig,
+    ),
+  );
+
   const promptText = await processPromptItems(
     promptConfig.prompt,
     experimentId,
