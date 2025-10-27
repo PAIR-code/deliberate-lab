@@ -1,6 +1,7 @@
 import {
   createTextPromptItem,
   createChatStage,
+  createDefaultStageContextPromptItem,
   AgentMediatorTemplate,
   MediatorPromptConfig,
   AgentPersonaType,
@@ -366,8 +367,6 @@ export function getCharityDebateTemplate(
     );
 
     const isMediatedRound = mediatorForRound !== undefined;
-
-    stages.push(createRoundOutcomeSurveyStage(roundNum, isMediatedRound));
 
     if (isMediatedRound) {
       stages.push(createPerMediatorEvaluationStage(roundNum));
@@ -1097,10 +1096,7 @@ function createHabermasMediatorPromptConfig(): MediatorPromptConfig {
       ),
       {type: PromptItemType.PROFILE_INFO} as ProfileInfoPromptItem,
       {type: PromptItemType.PROFILE_CONTEXT} as ProfileContextPromptItem,
-      {
-        type: PromptItemType.STAGE_CONTEXT,
-        stageId: HABERMAS_STAGE_ID,
-      } as StageContextPromptItem,
+      createDefaultStageContextPromptItem(HABERMAS_STAGE_ID),
       createTextPromptItem(habermasInstruction),
     ],
     structuredOutputConfig,
@@ -1172,10 +1168,7 @@ STEP 4: If 'proposedSolution' is 'NoSolutionNeeded':
       ),
       {type: PromptItemType.PROFILE_INFO} as ProfileInfoPromptItem,
       {type: PromptItemType.PROFILE_CONTEXT} as ProfileContextPromptItem,
-      {
-        type: PromptItemType.STAGE_CONTEXT,
-        stageId: DYNAMIC_STAGE_ID,
-      } as StageContextPromptItem,
+      createDefaultStageContextPromptItem(DYNAMIC_STAGE_ID),
       createTextPromptItem(dynamicInstruction),
     ],
     structuredOutputConfig,
