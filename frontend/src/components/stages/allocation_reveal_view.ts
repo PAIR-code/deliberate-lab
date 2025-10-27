@@ -7,6 +7,7 @@ import {customElement, property} from 'lit/decorators.js';
 import {
   MultiAssetAllocationStagePublicData,
   MultiAssetAllocationStageConfig,
+  computeMultiAssetConsensusScore,
 } from '@deliberation-lab/utils';
 import {getParticipantInlineDisplay} from '../../shared/participant.utils';
 
@@ -27,31 +28,6 @@ export class AllocationReveal extends MobxLitElement {
   @property() publicData: MultiAssetAllocationStagePublicData | undefined =
     undefined;
   @property({type: String}) displayMode: 'full' | 'scoreOnly' = 'full';
-
-  private computeConsensusScore(): number {
-    if (!this.publicData || !this.publicData.participantAnswerMap) return 0;
-
-    const participantAnswers = Object.values(
-      this.publicData.participantAnswerMap,
-    );
-    if (participantAnswers.length === 0) return 0;
-
-    const firstAllocationMap = participantAnswers[0].allocationMap;
-    const assetIds = Object.keys(firstAllocationMap);
-    if (assetIds.length === 0) return 0;
-
-    const perAssetAverages: number[] = [];
-
-    for (const assetId of assetIds) {
-      const sumForAsset = participantAnswers.reduce((sum, currentAnswer) => {
-        return sum + (currentAnswer.allocationMap[assetId]?.percentage || 0);
-      }, 0);
-      perAssetAverages.push(sumForAsset / participantAnswers.length);
-    }
-
-    const totalAverage = perAssetAverages.reduce((sum, avg) => sum + avg, 0);
-    return totalAverage / perAssetAverages.length;
-  }
 
   private renderAllocationTable() {
     if (!this.publicData || !this.stage) return nothing;
@@ -99,7 +75,7 @@ export class AllocationReveal extends MobxLitElement {
 
   private renderConsensusScoreOnly() {
     const stageName = this.experimentService.getStageName(this.stage!.id);
-    const consensusScore = this.computeConsensusScore();
+    const consensusScore = computeMultiAssetConsensusScore(this.publicData);
 
     return html`
       <div class="round-results-wrapper consensus-only">
@@ -121,7 +97,7 @@ export class AllocationReveal extends MobxLitElement {
       return this.renderConsensusScoreOnly();
     }
 
-    const consensusScore = this.computeConsensusScore();
+    const consensusScore = computeMultiAssetConsensusScore(this.publicData);
     const stageName = this.experimentService.getStageName(this.stage.id);
 
     return html`

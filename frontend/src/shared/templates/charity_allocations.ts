@@ -387,7 +387,6 @@ export function getCharityDebateTemplate(
     stages.push(createExperimentFeedbackStage());
   }
 
-  // if (config.includeMetaFeedback) stages.push(createMetaFeedbackStage());
   stages.push(createExperimentEndInfoStage());
 
   return createExperimentTemplate({
@@ -751,12 +750,6 @@ function createInitialMediatorSurveyStage(): StageConfig {
         'Finally, we’d like to learn about your thoughts and experiences with AI tools that support or guide group discussions. Please indicate how much you agree or disagree with the following statements.',
     }),
     questions: [
-      // Background familiarity
-      //createScaleSurveyQuestion({
-      //  questionTitle:
-      //  'I have used AI assistants (e.g., ChatGPT, Bard, Siri, Alexa) to help me with tasks.',
-      //...LIKERT_SCALE_PROPS,
-      //}),
       createScaleSurveyQuestion({
         questionTitle:
           'I have used AI assistants for interpersonal tasks, such as writing messages or resolving conflicts.',
