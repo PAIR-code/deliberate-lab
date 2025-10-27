@@ -15,10 +15,10 @@ import {
   ProlificConfig,
   StageConfig,
   StageKind,
+  StageManager,
   checkApiKeyExists,
   createAgentMediatorPersonaConfig,
   createAgentParticipantPersonaConfig,
-  createChatPromptConfig,
   createExperimentConfig,
   createMetadataConfig,
   createPermissionsConfig,
@@ -61,6 +61,9 @@ export class ExperimentEditor extends Service {
   @observable stages: StageConfig[] = [];
   @observable agentMediators: AgentMediatorTemplate[] = [];
   @observable agentParticipants: AgentParticipantTemplate[] = [];
+
+  // Stage manager that handles prompt-related actions
+  private stageManager: StageManager = new StageManager();
 
   // Loading
   @observable isWritingExperiment = false;
@@ -381,14 +384,33 @@ export class ExperimentEditor extends Service {
 
   addAgentMediatorPrompt(agentId: string, stageId: string) {
     const agent = this.getAgentMediator(agentId);
-    if (!agent) return;
-    agent.promptMap[stageId] = createChatPromptConfig(stageId);
+    const stage = this.getStage(stageId);
+    if (!agent || !stage) return;
+    // Can only add mediator to chat prompts for now
+    if (
+      stage.kind !== StageKind.CHAT &&
+      stage.kind !== StageKind.PRIVATE_CHAT
+    ) {
+      return;
+    }
+
+    const prompt = this.stageManager.getDefaultMediatorStructuredPrompt(stage);
+
+    if (prompt) {
+      agent.promptMap[stageId] = prompt;
+    }
   }
 
   addAgentParticipantPrompt(agentId: string, stageId: string) {
     const agent = this.getAgentParticipant(agentId);
-    if (!agent) return;
-    agent.promptMap[stageId] = createChatPromptConfig(stageId);
+    const stage = this.getStage(stageId);
+    if (!agent || !stage) return;
+
+    const prompt =
+      this.stageManager.getDefaultParticipantStructuredPrompt(stage);
+    if (prompt) {
+      agent.promptMap[stageId] = prompt;
+    }
   }
 
   updateAgentMediatorPersona(

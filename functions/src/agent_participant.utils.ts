@@ -92,6 +92,11 @@ export async function completeStageAsAgentParticipant(
       // Initial messages are now handled by sendInitialChatMessages in agent_participant.triggers.ts
       // when currentStageId changes, so no action needed here.
       break;
+    case StageKind.PRIVATE_CHAT:
+      // Do not complete stage as agent participant must chat first.
+      // Initial messages are now handled by sendInitialChatMessages in agent_participant.triggers.ts
+      // when currentStageId changes, so no action needed here.
+      break;
     case StageKind.PROFILE:
       await completeProfile(experimentId, participant, stage);
       await completeStage();

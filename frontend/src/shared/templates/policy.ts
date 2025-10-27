@@ -29,6 +29,7 @@ import {
   MediatorPromptConfig,
   ProfileType,
   StageConfig,
+  StageKind,
   SeedStrategy,
   createTextSurveyQuestion,
   PromptItem,
@@ -1022,6 +1023,7 @@ function createPolicyAssistantAgent(): AgentMediatorTemplate {
   const promptMap: Record<string, MediatorPromptConfig> = {};
   promptMap[POLICY_CHAT_STAGE_ID] = createChatPromptConfig(
     POLICY_CHAT_STAGE_ID,
+    StageKind.PRIVATE_CHAT,
     {
       prompt: assistantPrompt,
       structuredOutputConfig: createStructuredOutputConfig({

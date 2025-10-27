@@ -34,7 +34,7 @@ export type ParticipantPromptConfig = ChatPromptConfig;
 
 /** Currently used for both mediator and participant chat prompts. */
 export interface ChatPromptConfig extends BasePromptConfig {
-  type: StageKind.CHAT;
+  type: StageKind.CHAT | StageKind.PRIVATE_CHAT;
   structuredOutputConfig: ChatMediatorStructuredOutputConfig;
   chatSettings: AgentChatSettings;
 }
@@ -113,22 +113,6 @@ export interface PromptItemGroup extends BasePromptItem {
 // ****************************************************************************
 // FUNCTIONS
 // ****************************************************************************
-
-export function createChatPromptConfig(
-  id: string, // stage ID
-  config: Partial<ChatPromptConfig> = {},
-): ChatPromptConfig {
-  return {
-    id,
-    type: StageKind.CHAT,
-    prompt: config.prompt ?? createDefaultPromptFromText('', id),
-    numRetries: config.numRetries ?? 0,
-    generationConfig: config.generationConfig ?? createModelGenerationConfig(),
-    structuredOutputConfig:
-      config.structuredOutputConfig ?? createStructuredOutputConfig(),
-    chatSettings: config.chatSettings ?? createAgentChatSettings(),
-  };
-}
 
 // Default stage context
 export function createDefaultStageContextPromptItem(
