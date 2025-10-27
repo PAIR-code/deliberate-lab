@@ -13,6 +13,7 @@ export * from './mediator.endpoints';
 export * from './participant.endpoints';
 
 export * from './stages/asset_allocation.endpoints';
+export * from './stages/bargain.endpoints';
 export * from './stages/chat.endpoints';
 export * from './stages/chip.endpoints';
 export * from './stages/flipcard.endpoints';

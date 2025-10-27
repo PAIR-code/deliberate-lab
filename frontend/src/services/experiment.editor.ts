@@ -478,7 +478,7 @@ export class ExperimentEditor extends Service {
         experimentTemplate: {
           id: '',
           experiment: this.experiment,
-          stageConfigs: this.stages,
+          stageConfigs: this.stages as any,
           agentMediators: this.agentMediators,
           agentParticipants: this.agentParticipants,
         },
@@ -505,7 +505,7 @@ export class ExperimentEditor extends Service {
         experimentTemplate: {
           id: '',
           experiment: this.experiment,
-          stageConfigs: this.stages,
+          stageConfigs: this.stages as any,
           agentMediators: this.agentMediators,
           agentParticipants: this.agentParticipants,
         },

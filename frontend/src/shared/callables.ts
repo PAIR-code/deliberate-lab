@@ -12,11 +12,14 @@ import {
   ExperimentDeletionData,
   ExperimentDownloadResponse,
   ExperimentTemplate,
+  InitializeBargainData,
   InitiateParticipantTransferData,
   ParticipantNextStageResponse,
   ParticipantProfile,
   RequestChipAssistanceData,
   SendAlertMessageData,
+  SendBargainOfferData,
+  SendBargainResponseData,
   SendChipOfferData,
   SendChipResponseData,
   SendParticipantCheckData,
@@ -472,6 +475,42 @@ export const setChipTurnCallable = async (
   const {data} = await httpsCallable<SetChipTurnData, SuccessResponse>(
     functions,
     'setChipTurn',
+  )(config);
+  return data;
+};
+
+/** Generic endpoint for sending bargain offer. */
+export const sendBargainOfferCallable = async (
+  functions: Functions,
+  config: SendBargainOfferData,
+) => {
+  const {data} = await httpsCallable<SendBargainOfferData, SuccessResponse>(
+    functions,
+    'sendBargainOffer',
+  )(config);
+  return data;
+};
+
+/** Generic endpoint for sending bargain response. */
+export const sendBargainResponseCallable = async (
+  functions: Functions,
+  config: SendBargainResponseData,
+) => {
+  const {data} = await httpsCallable<SendBargainResponseData, SuccessResponse>(
+    functions,
+    'sendBargainResponse',
+  )(config);
+  return data;
+};
+
+/** Generic endpoint for initializing bargain stage. */
+export const initializeBargainCallable = async (
+  functions: Functions,
+  config: InitializeBargainData,
+) => {
+  const {data} = await httpsCallable<InitializeBargainData, SuccessResponse>(
+    functions,
+    'initializeBargain',
   )(config);
   return data;
 };

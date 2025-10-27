@@ -1,0 +1,320 @@
+:host {
+  height: 100%;
+  width: 100%;
+}
+
+.bargain-container {
+  display: flex;
+  gap: 20px;
+  height: 100%;
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+.left-column {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  width: 350px;
+  flex-shrink: 0;
+}
+
+.right-column {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.panel {
+  background: var(--md-sys-color-surface-container);
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.panel-title {
+  font-size: 18px;
+  font-weight: 600;
+  margin: 0 0 16px 0;
+  color: var(--md-sys-color-on-surface);
+}
+
+.info-row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  font-size: 14px;
+}
+
+.info-label {
+  font-weight: 500;
+  color: var(--md-sys-color-on-surface-variant);
+}
+
+.info-value {
+  font-weight: 600;
+  color: var(--md-sys-color-on-surface);
+}
+
+.profit-formula {
+  background: var(--md-sys-color-surface-variant);
+  padding: 12px;
+  border-radius: 8px;
+  font-family: monospace;
+  font-size: 13px;
+  margin-top: 8px;
+  color: var(--md-sys-color-on-surface-variant);
+}
+
+.role-badge {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 12px;
+  text-transform: uppercase;
+}
+
+.role-badge.buyer {
+  background: var(--md-sys-color-primary-container);
+  color: var(--md-sys-color-on-primary-container);
+}
+
+.role-badge.seller {
+  background: var(--md-sys-color-tertiary-container);
+  color: var(--md-sys-color-on-tertiary-container);
+}
+
+.action-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.input-label {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--md-sys-color-on-surface);
+}
+
+.price-input {
+  padding: 12px;
+  border: 2px solid var(--md-sys-color-outline);
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  font-family: inherit;
+  background: var(--md-sys-color-surface);
+  color: var(--md-sys-color-on-surface);
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.price-input:focus {
+  outline: none;
+  border-color: var(--md-sys-color-primary);
+}
+
+.chat-input {
+  padding: 12px;
+  border: 2px solid var(--md-sys-color-outline);
+  border-radius: 8px;
+  font-size: 14px;
+  font-family: inherit;
+  background: var(--md-sys-color-surface);
+  color: var(--md-sys-color-on-surface);
+  resize: vertical;
+  min-height: 80px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.chat-input:focus {
+  outline: none;
+  border-color: var(--md-sys-color-primary);
+}
+
+.action-buttons {
+  display: flex;
+  gap: 12px;
+}
+
+.action-buttons pr-button {
+  flex: 1;
+}
+
+.dialogue-panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.turn-indicator {
+  background: var(--md-sys-color-secondary-container);
+  color: var(--md-sys-color-on-secondary-container);
+  padding: 12px;
+  border-radius: 8px;
+  text-align: center;
+  font-weight: 600;
+  margin-bottom: 16px;
+}
+
+.dialogue-history {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding-right: 8px;
+}
+
+.transaction-item {
+  background: var(--md-sys-color-surface);
+  border: 2px solid var(--md-sys-color-outline-variant);
+  border-radius: 12px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.transaction-item.accepted {
+  border-color: var(--md-sys-color-primary);
+  background: var(--md-sys-color-primary-container);
+}
+
+.transaction-item.rejected {
+  border-color: var(--md-sys-color-error);
+  background: var(--md-sys-color-error-container);
+}
+
+.transaction-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.transaction-turn {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--md-sys-color-on-surface-variant);
+  text-transform: uppercase;
+}
+
+.transaction-status {
+  font-size: 13px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 8px;
+}
+
+.transaction-status.accepted {
+  background: var(--md-sys-color-primary);
+  color: var(--md-sys-color-on-primary);
+}
+
+.transaction-status.rejected {
+  background: var(--md-sys-color-error);
+  color: var(--md-sys-color-on-error);
+}
+
+.transaction-status.pending {
+  background: var(--md-sys-color-secondary);
+  color: var(--md-sys-color-on-secondary);
+}
+
+.transaction-offer {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.offer-price {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--md-sys-color-on-surface);
+}
+
+.offer-sender {
+  font-size: 13px;
+  color: var(--md-sys-color-on-surface-variant);
+}
+
+.chat-message {
+  background: var(--md-sys-color-surface-variant);
+  padding: 12px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-style: italic;
+  color: var(--md-sys-color-on-surface-variant);
+  margin-top: 8px;
+}
+
+.waiting-message {
+  text-align: center;
+  padding: 40px;
+  color: var(--md-sys-color-on-surface-variant);
+  font-size: 16px;
+}
+
+.game-summary {
+  background: var(--md-sys-color-primary-container);
+  padding: 24px;
+  border-radius: 12px;
+  text-align: center;
+}
+
+.game-summary.no-deal {
+  background: var(--md-sys-color-error-container);
+}
+
+.summary-title {
+  font-size: 24px;
+  font-weight: 700;
+  margin-bottom: 16px;
+  color: var(--md-sys-color-on-primary-container);
+}
+
+.game-summary.no-deal .summary-title {
+  color: var(--md-sys-color-on-error-container);
+}
+
+.summary-details {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  font-size: 16px;
+}
+
+.payout-display {
+  font-size: 32px;
+  font-weight: 700;
+  margin-top: 16px;
+  color: var(--md-sys-color-primary);
+}
+
+.game-summary.no-deal .payout-display {
+  color: var(--md-sys-color-error);
+}
+
+.error-message {
+  background: var(--md-sys-color-error-container);
+  color: var(--md-sys-color-on-error-container);
+  padding: 12px;
+  border-radius: 8px;
+  margin-top: 12px;
+  font-size: 14px;
+}
+
+.disabled {
+  opacity: 0.5;
+  pointer-events: none;
+}

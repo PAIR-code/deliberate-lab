@@ -52,6 +52,8 @@ import {
   requestChipAssistanceCallable,
   selectChipAssistanceModeCallable,
   sendAlertMessageCallable,
+  sendBargainOfferCallable,
+  sendBargainResponseCallable,
   sendChipOfferCallable,
   sendChipResponseCallable,
   setChipTurnCallable,
@@ -943,6 +945,54 @@ export class ParticipantService extends Service {
         cohortId: this.profile.currentCohortId,
         stageId,
       });
+    }
+    return response;
+  }
+
+  /** Send participant bargain offer. */
+  async sendParticipantBargainOffer(
+    stageId: string,
+    price: number,
+    message: string,
+  ) {
+    let response = {};
+    if (this.experimentId && this.profile) {
+      response = await sendBargainOfferCallable(
+        this.sp.firebaseService.functions,
+        {
+          experimentId: this.experimentId,
+          cohortId: this.profile.currentCohortId,
+          participantPublicId: this.profile.publicId,
+          participantPrivateId: this.profile.privateId,
+          stageId,
+          price,
+          message,
+        },
+      );
+    }
+    return response;
+  }
+
+  /** Send participant bargain response. */
+  async sendParticipantBargainResponse(
+    stageId: string,
+    accept: boolean,
+    message: string,
+  ) {
+    let response = {};
+    if (this.experimentId && this.profile) {
+      response = await sendBargainResponseCallable(
+        this.sp.firebaseService.functions,
+        {
+          experimentId: this.experimentId,
+          cohortId: this.profile.currentCohortId,
+          participantPublicId: this.profile.publicId,
+          participantPrivateId: this.profile.privateId,
+          stageId,
+          accept,
+          message,
+        },
+      );
     }
     return response;
   }

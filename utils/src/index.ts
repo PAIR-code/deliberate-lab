@@ -86,6 +86,8 @@ export * from './stages/stockinfo_stage.validation';
 export * from './stages/asset_allocation_stage';
 export * from './stages/asset_allocation_stage.utils';
 export * from './stages/asset_allocation_stage.validation';
+export * from './stages/bargain_stage';
+export * from './stages/bargain_stage.validation';
 export * from './stages/survey_stage';
 export * from './stages/survey_stage.prompts';
 export * from './stages/survey_stage.validation';

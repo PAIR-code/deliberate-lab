@@ -86,6 +86,10 @@ import {
   POLICY_METADATA,
   getPolicyExperimentTemplate,
 } from '../../shared/templates/policy';
+import {
+  getBargainMetadata,
+  getBargainStageConfigs,
+} from '../../shared/templates/bargain';
 
 import {styles} from './stage_builder_dialog.scss';
 
@@ -173,7 +177,8 @@ export class StageBuilderDialog extends MobxLitElement {
       <div class="card-gallery-wrapper">
         ${this.renderLASCard()} ${this.renderLASCard(true)}
         ${this.renderRealityTVCard()} ${this.renderChipNegotiationCard()}
-        ${this.renderSalespersonGameCard()} ${this.renderFlipCardTemplateCard()}
+        ${this.renderBargainCard()} ${this.renderSalespersonGameCard()}
+        ${this.renderFlipCardTemplateCard()}
         ${this.renderFruitTestTemplateCard()} ${this.renderStockInfoGameCard()}
         ${this.renderAssetAllocationTemplateCard()}
         ${this.renderConditionalSurveyTemplateCard()}
@@ -288,6 +293,19 @@ export class StageBuilderDialog extends MobxLitElement {
       <div class="card" @click=${() => addGame(4)}>
         <div class="title">${getChipMetadata(4).name}</div>
         <div>${getChipMetadata(4).description}</div>
+      </div>
+    `;
+  }
+
+  private renderBargainCard() {
+    const addGame = () => {
+      this.addGame(getBargainMetadata(), getBargainStageConfigs());
+    };
+
+    return html`
+      <div class="card" @click=${addGame}>
+        <div class="title">${getBargainMetadata().name}</div>
+        <div>${getBargainMetadata().description}</div>
       </div>
     `;
   }

@@ -1,0 +1,87 @@
+:host {
+  display: block;
+}
+
+.section {
+  margin-bottom: 24px;
+}
+
+.title {
+  font-size: 16px;
+  font-weight: 500;
+  margin-bottom: 8px;
+  color: var(--md-sys-color-on-surface);
+}
+
+.description {
+  font-size: 14px;
+  margin-bottom: 16px;
+  color: var(--md-sys-color-on-surface-variant);
+}
+
+.info-box {
+  background-color: var(--md-sys-color-secondary-container);
+  color: var(--md-sys-color-on-secondary-container);
+  padding: 16px;
+  border-radius: 8px;
+  margin-bottom: 16px;
+}
+
+.info-box .info-title {
+  font-weight: 500;
+  margin-bottom: 8px;
+}
+
+.number-input {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.number-input label {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--md-sys-color-on-surface);
+}
+
+.number-input input {
+  padding: 8px 12px;
+  border: 1px solid var(--md-sys-color-outline);
+  border-radius: 4px;
+  font-size: 14px;
+  background-color: var(--md-sys-color-surface);
+  color: var(--md-sys-color-on-surface);
+}
+
+.number-input input:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.text-input {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.text-input label {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--md-sys-color-on-surface);
+}
+
+.text-input input {
+  padding: 8px 12px;
+  border: 1px solid var(--md-sys-color-outline);
+  border-radius: 4px;
+  font-size: 14px;
+  background-color: var(--md-sys-color-surface);
+  color: var(--md-sys-color-on-surface);
+}
+
+.text-input input:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

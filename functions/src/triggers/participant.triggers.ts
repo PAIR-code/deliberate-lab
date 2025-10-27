@@ -4,6 +4,7 @@ import {
 } from 'firebase-functions/v2/firestore';
 
 import {
+  BargainStageConfig,
   ParticipantProfileExtended,
   StageConfig,
   StageKind,
@@ -14,7 +15,8 @@ import {
   getParticipantRecord,
   initializeParticipantStageAnswers,
 } from '../participant.utils';
-import {getFirestoreParticipant} from '../utils/firestore';
+import {getFirestoreParticipant, getFirestoreStage} from '../utils/firestore';
+import {checkAndInitializeBargainStage} from '../stages/bargain.utils';
 
 import {app} from '../app';
 
@@ -114,6 +116,35 @@ export const onParticipantReconnect = onDocumentUpdated(
             }
           }
         });
+      }
+    }
+  },
+);
+
+/** Trigger when participant's current stage changes - initialize bargain stage if needed. */
+export const onParticipantStageChange = onDocumentUpdated(
+  {
+    document: 'experiments/{experimentId}/participants/{participantId}',
+  },
+  async (event) => {
+    if (!event.data) return;
+    const experimentId = event.params.experimentId;
+
+    const before = event.data.before.data() as ParticipantProfileExtended;
+    const after = event.data.after.data() as ParticipantProfileExtended;
+
+    // Check if participant moved to a new stage
+    if (before.currentStageId !== after.currentStageId) {
+      // Get the stage config for the new stage
+      const stage = await getFirestoreStage(experimentId, after.currentStageId);
+
+      if (stage && stage.kind === StageKind.BARGAIN) {
+        // Initialize bargain stage if both participants are ready
+        await checkAndInitializeBargainStage(
+          experimentId,
+          stage as BargainStageConfig,
+          after,
+        );
       }
     }
   },

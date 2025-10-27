@@ -54,6 +54,12 @@ import {
   createAssetAllocationStagePublicData,
 } from './asset_allocation_stage';
 import {
+  BargainStageConfig,
+  BargainStageParticipantAnswer,
+  BargainStagePublicData,
+  createBargainStagePublicData,
+} from './bargain_stage';
+import {
   SurveyPerParticipantStageConfig,
   SurveyPerParticipantStageParticipantAnswer,
   SurveyStageConfig,
@@ -78,6 +84,7 @@ export enum StageKind {
   PROFILE = 'profile', // set profile
   CHAT = 'chat', // group chat
   CHIP = 'chip', // "chip" negotiation
+  BARGAIN = 'bargain', // bilateral bargaining
   COMPREHENSION = 'comprehension',
   FLIPCARD = 'flipcard', // flip card selection
   RANKING = 'ranking',
@@ -123,6 +130,7 @@ export interface StageProgressConfig {
 export type StageConfig =
   | ChatStageConfig
   | ChipStageConfig
+  | BargainStageConfig
   | ComprehensionStageConfig
   | FlipCardStageConfig
   | RankingStageConfig
@@ -156,6 +164,7 @@ export interface BaseStageParticipantAnswer {
 export type StageParticipantAnswer =
   | AssetAllocationStageParticipantAnswer
   | MultiAssetAllocationStageParticipantAnswer
+  | BargainStageParticipantAnswer
   | ChatStageParticipantAnswer
   | ChipStageParticipantAnswer
   | ComprehensionStageParticipantAnswer
@@ -180,6 +189,7 @@ export interface BaseStagePublicData {
 }
 
 export type StagePublicData =
+  | BargainStagePublicData
   | ChatStagePublicData
   | ChipStagePublicData
   | FlipCardStagePublicData
@@ -225,6 +235,9 @@ export function createPublicDataFromStageConfigs(stages: StageConfig[]) {
   const publicData: StagePublicData[] = [];
   stages.forEach((stage) => {
     switch (stage.kind) {
+      case StageKind.BARGAIN:
+        publicData.push(createBargainStagePublicData(stage.id));
+        break;
       case StageKind.CHAT:
         publicData.push(createChatStagePublicData(stage));
         break;

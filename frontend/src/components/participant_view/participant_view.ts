@@ -5,6 +5,7 @@ import '../progress/progress_stage_waiting';
 import '../stages/group_chat_participant_view';
 import '../stages/private_chat_participant_view';
 import '../stages/chip_participant_view';
+import '../stages/bargain_participant_view';
 import '../stages/comprehension_participant_view';
 import '../stages/flipcard_participant_view';
 import '../stages/ranking_participant_view';
@@ -241,6 +242,11 @@ export class ParticipantView extends MobxLitElement {
         return html`
           <chip-participant-view .stage=${stage} .answer=${answer}>
           </chip-participant-view>
+        `;
+      case StageKind.BARGAIN:
+        return html`
+          <bargain-participant-view .stage=${stage} .answer=${answer}>
+          </bargain-participant-view>
         `;
       case StageKind.COMPREHENSION:
         return html`
