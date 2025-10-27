@@ -35,6 +35,8 @@ import {
   getAssetAllocationSummaryText,
 } from './stages/asset_allocation.utils';
 import {
+  getAgentMediatorPrompt,
+  getAgentParticipantPrompt,
   getFirestoreActiveParticipants,
   getFirestoreAnswersForStage,
   getFirestoreExperiment,
@@ -44,6 +46,7 @@ import {
   getFirestorePublicStageChatMessages,
   getFirestorePrivateChatMessages,
 } from './utils/firestore';
+import {stageManager} from './app';
 
 // ****************************************************************************
 // Helper functions related to assembling structured prompts.
@@ -113,6 +116,42 @@ async function getStageAnswersWithDisplayNames<
 async function getAllPrecedingStageIds(experimentId: string, stageId: string) {
   const experiment = await getFirestoreExperiment(experimentId);
   return experiment.stageIds.slice(0, experiment.stageIds.indexOf(stageId) + 1);
+}
+
+/** Attempts to fetch corresponding prompt config from storage,
+ * else returns the stage's default config.
+ */
+export async function getStructuredPromptConfig(
+  experimentId: string,
+  stage: StageConfig,
+  user: ParticipantProfileExtended | MediatorProfileExtended,
+): BasePromptConfig | undefined {
+  if (!user.agentConfig) {
+    return undefined;
+  }
+  switch (user.type) {
+    case UserType.PARTICIPANT:
+      const participantPrompt = await getAgentParticipantPrompt(
+        experimentId,
+        stage.id,
+        user.agentConfig?.agentId,
+      );
+      return (
+        participantPrompt ??
+        stageManager.getDefaultParticipantStructuredPrompt(stage)
+      );
+    case UserType.MEDIATOR:
+      const mediatorPrompt = await getAgentMediatorPrompt(
+        experimentId,
+        stage.id,
+        user.agentConfig?.agentId,
+      );
+      return (
+        mediatorPrompt ?? stageManager.getDefaultMediatorStructuredPrompt(stage)
+      );
+    default:
+      return undefined;
+  }
 }
 
 /** Assemble prompt items into final prompt string.

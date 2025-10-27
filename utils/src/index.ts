@@ -48,11 +48,15 @@ export * from './structured_prompt';
 
 // Stages
 export * from './stages/stage';
+export * from './stages/stage.manager';
 export * from './stages/stage.prompts';
 export * from './stages/stage.validation';
+
 export * from './stages/chat_stage';
+export * from './stages/chat_stage.manager';
 export * from './stages/chat_stage.prompts';
 export * from './stages/chat_stage.validation';
+
 export * from './stages/chip_stage';
 export * from './stages/chip_stage.prompts';
 export * from './stages/chip_stage.utils';
@@ -72,8 +76,11 @@ export * from './stages/info_stage.prompts';
 export * from './stages/info_stage.validation';
 export * from './stages/payout_stage';
 export * from './stages/payout_stage.validation';
+
 export * from './stages/private_chat_stage';
+export * from './stages/private_chat_stage.manager';
 export * from './stages/private_chat_stage.validation';
+
 export * from './stages/profile_stage';
 export * from './stages/profile_stage.validation';
 export * from './stages/reveal_stage';
