@@ -5,7 +5,7 @@ import '../../pair-components/tooltip';
 
 import '../chat/chat_input';
 import '../participant_profile/avatar_icon';
-import '../shared/avatar_picker';
+import '../avatar_picker/avatar_picker';
 
 import {MobxLitElement} from '@adobe/lit-mobx';
 import {CSSResultGroup, html, nothing} from 'lit';
@@ -16,7 +16,7 @@ import {AuthService} from '../../services/auth.service';
 import {ExperimentManager} from '../../services/experiment.manager';
 import {ParticipantService} from '../../services/participant.service';
 
-import type {EmojiSelectedDetail} from '../shared/avatar_picker';
+import type {EmojiSelectedDetail} from '../avatar_picker/avatar_picker';
 
 import {styles} from './experimenter_manual_chat.scss';
 

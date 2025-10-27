@@ -4,7 +4,7 @@ import '../progress/progress_stage_completed';
 import '../stages/stage_description';
 import '../stages/stage_footer';
 import '../participant_profile/avatar_icon';
-import '../shared/avatar_picker';
+import '../avatar_picker/avatar_picker';
 
 import '@material/web/radio/radio.js';
 
@@ -17,7 +17,7 @@ import {core} from '../../core/core';
 import {ParticipantService} from '../../services/participant.service';
 import {ParticipantAnswerService} from '../../services/participant.answer';
 import {ProfileStageConfig, ProfileType} from '@deliberation-lab/utils';
-import type {EmojiSelectedDetail} from '../shared/avatar_picker';
+import type {EmojiSelectedDetail} from '../avatar_picker/avatar_picker';
 import {MAN_EMOJIS, WOMAN_EMOJIS, PERSON_EMOJIS} from '../../shared/constants';
 
 import {styles} from './profile_participant_editor.scss';
