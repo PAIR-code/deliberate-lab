@@ -372,8 +372,6 @@ export function getCharityDebateTemplate(
     if (isMediatedRound) {
       stages.push(createPerMediatorEvaluationStage(roundNum));
     }
-
-    stages.push(createRoundOutcomeSurveyStage(roundNum, isMediatedRound));
   });
 
   stages.push(createAllocationRevealStage());
