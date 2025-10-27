@@ -23,6 +23,7 @@ export const ProfileStageConfigData = Type.Object(
     progress: StageProgressConfigSchema,
     profileType: Type.Union([
       Type.Literal(ProfileType.DEFAULT),
+      Type.Literal(ProfileType.DEFAULT_GENDERED),
       Type.Literal(ProfileType.ANONYMOUS_ANIMAL),
       Type.Literal(ProfileType.ANONYMOUS_PARTICIPANT),
     ]),

@@ -58,6 +58,17 @@ export class ProfileStageEditorComponent extends MobxLitElement {
         <div class="profile-option">
           <md-radio
             name="profile-type"
+            value="default-gendered"
+            ?checked=${this.stage.profileType === ProfileType.DEFAULT_GENDERED}
+            ?disabled=${!this.experimentEditor.canEditStages}
+            @change=${() =>
+              handleProfileTypeChange(ProfileType.DEFAULT_GENDERED)}
+          ></md-radio>
+          <label>Let participants choose from the default gendered set</label>
+        </div>
+        <div class="profile-option">
+          <md-radio
+            name="profile-type"
             value="animal"
             ?checked=${this.stage.profileType === ProfileType.ANONYMOUS_ANIMAL}
             ?disabled=${!this.experimentEditor.canEditStages}

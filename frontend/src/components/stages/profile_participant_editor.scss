@@ -36,3 +36,57 @@
   gap: common.$spacing-xxl;
   max-width: 500px;
 }
+
+.gendered-avatar-groups {
+  @include common.flex-column;
+  gap: common.$spacing-large;
+}
+
+.gendered-avatar-group {
+  @include common.flex-column;
+  gap: common.$spacing-medium;
+}
+
+.group-label {
+  @include typescale.label-medium;
+  color: var(--md-sys-color-on-surface-variant, #5f5f61);
+}
+
+.avatar-choice {
+  align-items: center;
+  background: transparent;
+  border: 2px solid transparent;
+  border-radius: common.$spacing-small;
+  cursor: pointer;
+  display: inline-flex;
+  justify-content: center;
+  padding: common.$spacing-small;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.avatar-choice:disabled {
+  cursor: default;
+  opacity: 0.5;
+}
+
+.avatar-choice--selected {
+  border-color: var(--md-sys-color-primary, #6750a4);
+  box-shadow: 0 0 0 2px rgba(103, 80, 164, 0.35);
+}
+
+.avatar-choice:focus-visible {
+  outline: 2px solid var(--md-sys-color-primary, #6750a4);
+  outline-offset: 2px;
+}
+
+.avatar-choice--blue {
+  border-color: var(--md-sys-color-avatar-blue, #b5c8ff);
+}
+
+.avatar-choice--pink {
+  border-color: var(--md-sys-color-avatar-pink, #f5b7d8);
+}
+
+.avatar-choice--purple {
+  border-color: var(--md-sys-color-avatar-purple, #d0c4ff);
+}
