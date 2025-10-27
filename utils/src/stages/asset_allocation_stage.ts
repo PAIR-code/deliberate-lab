@@ -78,9 +78,27 @@ export interface MultiAssetAllocationStageParticipantAnswer
   confirmedTimestamp: UnifiedTimestamp | null;
 }
 
+export interface MultiAssetAllocationStagePublicData
+  extends BaseStagePublicData {
+  kind: StageKind.MULTI_ASSET_ALLOCATION;
+  participantAnswerMap: Record<
+    string,
+    MultiAssetAllocationStageParticipantAnswer
+  >;
+}
+
 // ************************************************************************* //
 // FUNCTIONS                                                                 //
 // ************************************************************************* //
+export function createMultiAssetAllocationStagePublicData(
+  config: Partial<MultiAssetAllocationStagePublicData> = {},
+): MultiAssetAllocationStagePublicData {
+  return {
+    id: config.id ?? generateId(),
+    kind: StageKind.MULTI_ASSET_ALLOCATION,
+    participantAnswerMap: config.participantAnswerMap ?? {},
+  };
+}
 
 /** Create stock config for asset allocation. */
 export function createAssetAllocationStockInfoConfig(
@@ -206,4 +224,30 @@ export function createMultiAssetAllocationStage(
       createStock({name: 'Stock B'}),
     ],
   };
+}
+
+export function computeMultiAssetConsensusScore(
+  publicData: MultiAssetAllocationStagePublicData | undefined,
+): number {
+  if (!publicData || !publicData.participantAnswerMap) return 0;
+
+  const participantAnswers = Object.values(publicData.participantAnswerMap);
+  if (participantAnswers.length === 0) return 0;
+
+  // We need at least one answer to determine the asset IDs
+  const firstAllocationMap = participantAnswers[0].allocationMap;
+  const assetIds = Object.keys(firstAllocationMap);
+  if (assetIds.length === 0) return 0;
+
+  const perAssetAverages: number[] = [];
+
+  for (const assetId of assetIds) {
+    const sumForAsset = participantAnswers.reduce((sum, currentAnswer) => {
+      return sum + (currentAnswer.allocationMap[assetId]?.percentage || 0);
+    }, 0);
+    perAssetAverages.push(sumForAsset / participantAnswers.length);
+  }
+
+  const totalAverage = perAssetAverages.reduce((sum, avg) => sum + avg, 0);
+  return totalAverage / perAssetAverages.length;
 }

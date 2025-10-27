@@ -32,7 +32,11 @@ export interface BaseRevealItem {
 }
 
 /** Reveal item. */
-export type RevealItem = ChipRevealItem | RankingRevealItem | SurveyRevealItem;
+export type RevealItem =
+  | ChipRevealItem
+  | RankingRevealItem
+  | SurveyRevealItem
+  | MultiAssetAllocationRevealItem;
 
 /** Reveal settings for chip stage. */
 export interface ChipRevealItem extends BaseRevealItem {
@@ -48,6 +52,11 @@ export interface RankingRevealItem extends BaseRevealItem {
 export interface SurveyRevealItem extends BaseRevealItem {
   kind: StageKind.SURVEY;
   revealScorableOnly: boolean;
+}
+
+export interface MultiAssetAllocationRevealItem extends BaseRevealItem {
+  kind: StageKind.MULTI_ASSET_ALLOCATION;
+  displayMode: 'full' | 'scoreOnly';
 }
 
 /** Specifies which answers to reveal. */
@@ -86,6 +95,8 @@ export function createNewRevealItem(
       return createRankingRevealItem({id});
     case StageKind.SURVEY:
       return createSurveyRevealItem({id});
+    case StageKind.MULTI_ASSET_ALLOCATION:
+      return createMultiAssetAllocationRevealItem({id});
     default:
       return null;
   }
@@ -122,5 +133,16 @@ export function createSurveyRevealItem(
     kind: StageKind.SURVEY,
     revealAudience: config.revealAudience ?? RevealAudience.CURRENT_PARTICIPANT,
     revealScorableOnly: config.revealScorableOnly ?? false,
+  };
+}
+
+export function createMultiAssetAllocationRevealItem(
+  config: Partial<MultiAssetAllocationRevealItem> = {},
+): MultiAssetAllocationRevealItem {
+  return {
+    id: config.id ?? generateId(),
+    kind: StageKind.MULTI_ASSET_ALLOCATION,
+    revealAudience: config.revealAudience ?? RevealAudience.ALL_PARTICIPANTS,
+    displayMode: config.displayMode ?? 'full',
   };
 }

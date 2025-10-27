@@ -51,6 +51,8 @@ import {
   AssetAllocationStagePublicData,
   MultiAssetAllocationStageConfig,
   MultiAssetAllocationStageParticipantAnswer,
+  MultiAssetAllocationStagePublicData,
+  createMultiAssetAllocationStagePublicData,
   createAssetAllocationStagePublicData,
 } from './asset_allocation_stage';
 import {
@@ -187,6 +189,7 @@ export type StagePublicData =
   | RoleStagePublicData
   | SalespersonStagePublicData
   | AssetAllocationStagePublicData
+  | MultiAssetAllocationStagePublicData
   | SurveyStagePublicData;
 
 // ************************************************************************* //
@@ -250,6 +253,11 @@ export function createPublicDataFromStageConfigs(stages: StageConfig[]) {
         break;
       case StageKind.ASSET_ALLOCATION:
         publicData.push(createAssetAllocationStagePublicData({id: stage.id}));
+        break;
+      case StageKind.MULTI_ASSET_ALLOCATION:
+        publicData.push(
+          createMultiAssetAllocationStagePublicData({id: stage.id}),
+        );
         break;
       default:
         break;
