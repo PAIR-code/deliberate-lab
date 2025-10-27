@@ -42,7 +42,7 @@
 }
 
 .picker__emoji {
-  font-size: 20px;
+  @include typescale.title-large;
   line-height: 1;
 }
 

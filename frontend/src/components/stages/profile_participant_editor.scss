@@ -49,13 +49,13 @@
 
 .group-label {
   @include typescale.label-medium;
-  color: var(--md-sys-color-on-surface-variant, #5f5f61);
+  color: var(--md-sys-color-on-surface-variant);
 }
 
 .avatar-choice {
   align-items: center;
   background: transparent;
-  border: 2px solid transparent;
+  border: 0px solid transparent;
   border-radius: common.$spacing-small;
   cursor: pointer;
   display: inline-flex;
@@ -70,23 +70,23 @@
 }
 
 .avatar-choice--selected {
-  border-color: var(--md-sys-color-primary, #6750a4);
-  box-shadow: 0 0 0 2px rgba(103, 80, 164, 0.35);
+  border-color: var(--md-sys-color-primary);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--md-sys-color-primary) 35%, transparent);
 }
 
 .avatar-choice:focus-visible {
-  outline: 2px solid var(--md-sys-color-primary, #6750a4);
-  outline-offset: 2px;
+  border-color: var(--md-sys-color-primary);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--md-sys-color-primary) 35%, transparent);
 }
 
 .avatar-choice--blue {
-  border-color: var(--md-sys-color-avatar-blue, #b5c8ff);
+  border-color: var(--md-sys-color-avatar-blue);
 }
 
 .avatar-choice--pink {
-  border-color: var(--md-sys-color-avatar-pink, #f5b7d8);
+  border-color: var(--md-sys-color-avatar-pink);
 }
 
 .avatar-choice--purple {
-  border-color: var(--md-sys-color-avatar-purple, #d0c4ff);
+  border-color: var(--md-sys-color-avatar-purple);
 }
