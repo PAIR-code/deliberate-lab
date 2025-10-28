@@ -7,6 +7,7 @@ import '../participant_profile/profile_display';
 import './cohort_summary';
 import './participant_summary';
 import './agent_participant_configuration_dialog';
+import './agent_mediator_add_dialog';
 
 import {MobxLitElement} from '@adobe/lit-mobx';
 import {CSSResultGroup, html, nothing, TemplateResult} from 'lit';
@@ -23,6 +24,8 @@ import {HomeService} from '../../services/home.service';
 import {Pages, RouterService} from '../../services/router.service';
 
 import {
+  AgentPersonaConfig,
+  AgentPersonaType,
   CohortConfig,
   MediatorProfileExtended,
   MediatorStatus,
@@ -47,6 +50,7 @@ export class Component extends MobxLitElement {
 
   @property() cohort: CohortConfig | undefined = undefined;
   @property() showAgentParticipantDialog = false;
+  @property() showAgentMediatorDialog = false;
 
   @state() isStatusLoading = false;
 
@@ -185,6 +189,7 @@ export class Component extends MobxLitElement {
         ${this.renderMediatorTable(
           'Agent mediators',
           this.experimentManager.getCohortAgentMediators(this.cohort.id),
+          html`${this.renderAddMediator()}`,
         )}
       </div>
     `;
@@ -193,6 +198,7 @@ export class Component extends MobxLitElement {
   private renderMediatorTable(
     title: string,
     mediators: MediatorProfileExtended[],
+    actionBar: TemplateResult,
   ) {
     const renderEmptyMessage = () => {
       if (mediators.length === 0) {
@@ -253,6 +259,7 @@ export class Component extends MobxLitElement {
       <div class="table-wrapper">
         <div class="table-header">
           <div>${title}</div>
+          <div>${actionBar}</div>
         </div>
         <div class="table-body">
           ${renderEmptyMessage()}
@@ -380,6 +387,67 @@ export class Component extends MobxLitElement {
               this.showAgentParticipantDialog = false;
             }}
           ></agent-participant-configuration-dialog>`
+        : nothing}
+    `;
+  }
+
+  private getAvailableMediatorPersonas(cohortId: string): AgentPersonaConfig[] {
+    const assignedAgentIds = new Set(
+      this.experimentManager
+        .getCohortAgentMediators(cohortId)
+        .map((mediator) => mediator.agentConfig?.agentId)
+        .filter((id): id is string => Boolean(id)),
+    );
+
+    return this.experimentManager.agentPersonas.filter(
+      (persona) =>
+        persona.type === AgentPersonaType.MEDIATOR &&
+        !assignedAgentIds.has(persona.id),
+    );
+  }
+
+  private renderAddMediator() {
+    if (!this.cohort) {
+      return nothing;
+    }
+
+    const availableMediators = this.getAvailableMediatorPersonas(this.cohort.id);
+    const isLocked = Boolean(
+      this.experimentService.experiment?.cohortLockMap[this.cohort.id],
+    );
+    const tooltipText = isLocked
+      ? 'Unlock cohort to add mediators'
+      : availableMediators.length === 0
+        ? 'No mediator personas available to add'
+        : 'Add agent mediator';
+
+    const isDisabled =
+      isLocked ||
+      availableMediators.length === 0 ||
+      this.experimentManager.isWritingMediator;
+
+    return html`
+      <pr-tooltip text=${tooltipText} position="BOTTOM_END">
+        <pr-icon-button
+          icon="support_agent"
+          color="tertiary"
+          variant="default"
+          ?disabled=${isDisabled}
+          ?loading=${this.experimentManager.isWritingMediator}
+          @click=${() => {
+            if (isDisabled) return;
+            this.showAgentMediatorDialog = true;
+          }}
+        >
+        </pr-icon-button>
+      </pr-tooltip>
+      ${this.showAgentMediatorDialog
+        ? html`<agent-mediator-add-dialog
+            .cohort=${this.cohort}
+            @close=${() => {
+              this.showAgentMediatorDialog = false;
+            }}
+          ></agent-mediator-add-dialog>`
         : nothing}
     `;
   }

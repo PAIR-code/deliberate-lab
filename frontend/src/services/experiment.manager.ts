@@ -51,6 +51,7 @@ import {
   bootParticipantCallable,
   createChatMessageCallable,
   createCohortCallable,
+  createMediatorCallable,
   createParticipantCallable,
   deleteCohortCallable,
   deleteExperimentCallable,
@@ -126,6 +127,7 @@ export class ExperimentManager extends Service {
   // Firestore loading (not included in general isLoading)
   @observable isWritingCohort = false;
   @observable isWritingParticipant = false;
+  @observable isWritingMediator = false;
 
   // Experiment edit state
   @observable isEditing = false; // is on an edit page
@@ -811,6 +813,22 @@ export class ExperimentManager extends Service {
     }
     this.isWritingParticipant = false;
     return response;
+  }
+
+  /** Create agent mediator for cohort. */
+  async createMediator(cohortId: string, agentPersonaId: string) {
+    if (!this.experimentId) return;
+
+    this.isWritingMediator = true;
+    try {
+      await createMediatorCallable(this.sp.firebaseService.functions, {
+        experimentId: this.experimentId,
+        cohortId,
+        agentPersonaId,
+      });
+    } finally {
+      this.isWritingMediator = false;
+    }
   }
 
   /** Send check to participant. */

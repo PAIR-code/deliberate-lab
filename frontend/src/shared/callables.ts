@@ -6,6 +6,7 @@ import {
   CohortCreationData,
   CohortDeletionData,
   CreateParticipantData,
+  CreateMediatorData,
   CreationResponse,
   ExperimentCohortLockData,
   ExperimentCreationData,
@@ -544,6 +545,18 @@ export const setSalespersonResponseCallable = async (
   >(
     functions,
     'setSalespersonResponse',
+  )(config);
+  return data;
+};
+
+/** Generic endpoint for creating MediatorProfile. */
+export const createMediatorCallable = async (
+  functions: Functions,
+  config: CreateMediatorData,
+) => {
+  const {data} = await httpsCallable<CreateMediatorData, CreationResponse>(
+    functions,
+    'createMediator',
   )(config);
   return data;
 };

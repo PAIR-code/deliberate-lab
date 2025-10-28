@@ -52,9 +52,11 @@ export class AgentPersonaEditorComponent extends MobxLitElement {
       <div class="agent-wrapper">
         ${this.renderAgentPrivateName(agentConfig)}
         ${this.renderAgentPrivateDescription(agentConfig)}
-        ${this.renderAgentName(agentConfig)} ${this.renderAvatars(agentConfig)}
+        ${this.renderAgentName(agentConfig)}
+        ${this.renderAvatars(agentConfig)}
         ${this.renderAgentApiType(agentConfig)}
         ${this.renderAgentModel(agentConfig)}
+        ${this.renderMediatorCohortPreference(agentConfig)}
       </div>
       <div class="divider main">
         <slot></slot>
@@ -230,6 +232,30 @@ export class AgentPersonaEditorComponent extends MobxLitElement {
         @input=${updateModel}
       >
       </md-filled-text-field>
+    `;
+  }
+
+  private renderMediatorCohortPreference(agent: AgentPersonaConfig) {
+    if (agent.type !== AgentPersonaType.MEDIATOR) {
+      return nothing;
+    }
+
+    const togglePreference = (event: Event) => {
+      const checked = (event.target as HTMLInputElement).checked;
+      this.updatePersona({isDefaultAddToCohort: !checked});
+    };
+
+    return html`
+      <div class="checkbox-wrapper">
+        <md-checkbox
+          touch-target="wrapper"
+          ?checked=${!agent.isDefaultAddToCohort}
+          ?disabled=${!this.experimentEditor.canEditStages}
+          @change=${togglePreference}
+        >
+        </md-checkbox>
+        <div>Don't automatically add mediator to cohort</div>
+      </div>
     `;
   }
 
