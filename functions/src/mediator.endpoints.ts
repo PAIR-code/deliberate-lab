@@ -62,17 +62,19 @@ export const createMediator = onCall(async (request) => {
     throw new functions.https.HttpsError('invalid-argument', 'Invalid data');
   }
 
-  const existingMediator = (
+  const mediatorsInCohort = (
     await app
       .firestore()
       .collection('experiments')
       .doc(data.experimentId)
       .collection('mediators')
-      .where('agentConfig.agentId', '==', data.agentPersonaId)
+      .where('currentCohortId', '==', data.cohortId)
       .get()
-  ).docs
-    .map((doc) => doc.data() as MediatorProfileExtended)
-    .find((mediator) => mediator.currentCohortId === data.cohortId);
+  ).docs.map((doc) => doc.data() as MediatorProfileExtended);
+
+  const existingMediator = mediatorsInCohort.find(
+    (mediator) => mediator.agentConfig?.agentId === data.agentPersonaId,
+  );
 
   if (existingMediator) {
     throw new functions.https.HttpsError(
