@@ -212,10 +212,8 @@ export async function getAgentChatMessage(
   const structuredPrompt = await getPromptFromConfig(
     experimentId,
     cohortId,
-    participantIds,
     stageId,
     user,
-    user.agentConfig,
     promptConfig,
   );
 

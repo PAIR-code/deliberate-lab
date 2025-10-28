@@ -101,10 +101,8 @@ export async function completeProfile(
   const structuredPrompt = await getPromptFromConfig(
     experimentId,
     participant.currentCohortId,
-    /*participantIds=*/ [participant.privateId],
     stageConfig.id,
     participant,
-    agentConfig,
     promptConfig,
   );
 

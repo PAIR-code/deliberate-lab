@@ -1,4 +1,5 @@
 import {ChatMessage} from '../chat_message';
+import {AnonymousProfileMetadata} from '../participant';
 import {
   ChatStageConfig,
   ChatStageParticipantAnswer,
@@ -197,7 +198,8 @@ export type StagePublicData =
 export interface StageContextData {
   stage: StageConfig;
   privateAnswers: Array<{
-    participantId: string;
+    participantPublicId: string;
+    participantDisplayName: string;
     answer: StageParticipantAnswer;
   }>;
   privateChatMap: Record<string, ChatMessage[]>;

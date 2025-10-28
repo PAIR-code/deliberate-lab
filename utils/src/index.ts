@@ -69,11 +69,16 @@ export * from './stages/flipcard_stage.validation';
 export * from './stages/ranking_stage';
 export * from './stages/ranking_stage.prompts';
 export * from './stages/ranking_stage.validation';
+
 export * from './stages/role_stage';
+export * from './stages/role_stage.manager';
 export * from './stages/role_stage.validation';
+
 export * from './stages/info_stage';
+export * from './stages/info_stage.manager';
 export * from './stages/info_stage.prompts';
 export * from './stages/info_stage.validation';
+
 export * from './stages/payout_stage';
 export * from './stages/payout_stage.validation';
 
@@ -87,18 +92,28 @@ export * from './stages/reveal_stage';
 export * from './stages/reveal_stage.validation';
 export * from './stages/salesperson_stage';
 export * from './stages/salesperson_stage.validation';
+
 export * from './stages/stockinfo_stage';
+export * from './stages/stockinfo_stage.manager';
 export * from './stages/stockinfo_stage.utils';
 export * from './stages/stockinfo_stage.validation';
+
 export * from './stages/asset_allocation_stage';
+export * from './stages/asset_allocation_stage.manager';
 export * from './stages/asset_allocation_stage.utils';
 export * from './stages/asset_allocation_stage.validation';
+
 export * from './stages/survey_stage';
+export * from './stages/survey_stage.manager';
+export * from './stages/survey_per_participant_stage.manager';
 export * from './stages/survey_stage.prompts';
 export * from './stages/survey_stage.validation';
+
 export * from './stages/tos_stage';
+export * from './stages/tos_stage.manager';
 export * from './stages/tos_stage.prompts';
 export * from './stages/tos_stage.validation';
+
 export * from './stages/transfer_stage';
 export * from './stages/transfer_stage.validation';
 

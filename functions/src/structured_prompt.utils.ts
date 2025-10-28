@@ -25,19 +25,13 @@ import {
   UserProfile,
   UserType,
   getAllPrecedingStageIds,
-  getChatPromptMessageHistory,
   getNameFromPublicId,
-  getStockInfoSummaryText,
   getSurveySummaryText,
   getSurveyAnswersText,
   initializeStageContextData,
   makeStructuredOutputPrompt,
   shuffleWithSeed,
 } from '@deliberation-lab/utils';
-import {
-  getAssetAllocationAnswersText,
-  getAssetAllocationSummaryText,
-} from './stages/asset_allocation.utils';
 import {
   getAgentMediatorPrompt,
   getAgentParticipantPrompt,
@@ -51,70 +45,6 @@ import {
   getFirestorePrivateChatMessages,
 } from './utils/firestore';
 import {stageManager} from './app';
-
-// ****************************************************************************
-// Helper functions related to assembling structured prompts.
-// ****************************************************************************
-
-/** Helper to add display names (with avatars and pronouns) to participant answers */
-async function addDisplayNamesToAnswers<T>(
-  experimentId: string,
-  participantAnswers: Array<{participantId: string; answer: T}>,
-  stageId: string,
-): Promise<Array<{participantId: string; answer: T}>> {
-  // Fetch all participant profiles
-  const participantProfiles = await Promise.all(
-    participantAnswers.map(({participantId}) =>
-      getFirestoreParticipant(experimentId, participantId),
-    ),
-  );
-
-  // Determine profile set based on stage ID
-  const profileSetId = stageId.includes(SECONDARY_PROFILE_SET_ID)
-    ? PROFILE_SET_ANIMALS_2_ID
-    : stageId.includes(TERTIARY_PROFILE_SET_ID)
-      ? PROFILE_SET_NATURE_ID
-      : '';
-
-  return participantAnswers.map(({participantId, answer}, index) => {
-    const participant = participantProfiles[index];
-    if (!participant) {
-      return {participantId, answer};
-    }
-
-    // Get display name with avatar and pronouns
-    const displayName = getNameFromPublicId(
-      [participant],
-      participant.publicId,
-      profileSetId,
-      true, // includeAvatar
-      true, // includePronouns
-    );
-
-    return {
-      participantId: displayName,
-      answer,
-    };
-  });
-}
-
-/** Convenience function to get stage answers with display names */
-async function getStageAnswersWithDisplayNames<
-  T extends StageParticipantAnswer,
->(
-  experimentId: string,
-  cohortId: string,
-  stageId: string,
-  participantIds?: string[],
-): Promise<Array<{participantId: string; answer: T}>> {
-  const answers = await getFirestoreAnswersForStage<T>(
-    experimentId,
-    cohortId,
-    stageId,
-    participantIds,
-  );
-  return addDisplayNamesToAnswers(experimentId, answers, stageId);
-}
 
 /** Attempts to fetch corresponding prompt config from storage,
  * else returns the stage's default config.
@@ -193,7 +123,7 @@ export async function getFirestoreDataForStructuredPrompt(
     );
   }
 
-  return {participants, data};
+  return {experiment, participants, data};
 }
 
 /** Populates data object with Firestore documents needed for given single
@@ -208,6 +138,17 @@ export async function addFirestoreDataForPromptItem(
   participants: ParticipantProfileExtended[],
   data: Record<string, StageContextData> = {},
 ) {
+  // Get profile set ID based on stage ID
+  // (Temporary workaround before profile sets are refactored)
+  const getProfileSetId = (stageId: string) => {
+    if (stageId.includes(SECONDARY_PROFILE_SET_ID)) {
+      return PROFILE_SET_ANIMALS_2_ID;
+    } else if (stageId.includes(TERTIARY_PROFILE_SET_ID)) {
+      return PROFILE_SET_NATURE_ID;
+    }
+    return '';
+  };
+
   switch (promptItem.type) {
     case PromptItemType.STAGE_CONTEXT:
       // If stage ID is empty, call this function for all stage IDs
@@ -273,7 +214,8 @@ export async function addFirestoreDataForPromptItem(
           experiment.id,
           cohortId,
           promptItem.stageId,
-          participants.map((participant) => participant.privateId),
+          participants,
+          getProfileSetId(promptItem.stageId),
         );
         // Fill public data for cohort
         stageData.publicData = await getFirestoreStagePublicData(
@@ -314,11 +256,8 @@ export async function addFirestoreDataForPromptItem(
 export async function getPromptFromConfig(
   experimentId: string,
   cohortId: string,
-  // List of participant private IDs for participants to include for answers
-  participantIds: string[],
   stageId: string, // current stage ID
-  userProfile: UserProfile,
-  agentConfig: ProfileAgentConfig,
+  userProfile: ParticipantProfileExtended | MediatorProfileExtended,
   promptConfig: BasePromptConfig,
 ): Promise<string> {
   // Get Firestore data used to construct prompt
@@ -332,12 +271,10 @@ export async function getPromptFromConfig(
 
   const promptText = await processPromptItems(
     promptConfig.prompt,
-    promptData.experiment,
     cohortId,
-    participantIds,
     stageId,
+    promptData,
     userProfile,
-    agentConfig,
   );
 
   // Add structured output if relevant
@@ -351,14 +288,18 @@ export async function getPromptFromConfig(
 /** Process prompt items recursively. */
 async function processPromptItems(
   promptItems: PromptItem[],
-  experiment: Experiment,
   cohortId: string,
-  participantIds: string[],
   stageId: string,
-  userProfile: UserProfile,
-  agentConfig: ProfileAgentConfig,
+  promptData: {
+    experiment: Experiment;
+    participants: ParticipantProfileExtended[];
+    data: Record<string, StageContextData>;
+  },
+  userProfile: ParticipantProfileExtended | MediatorProfileExtended,
 ): Promise<string> {
+  const experiment = promptData.experiment;
   const items: string[] = [];
+
   for (const promptItem of promptItems) {
     switch (promptItem.type) {
       case PromptItemType.TEXT:
@@ -391,15 +332,13 @@ async function processPromptItems(
         break;
       case PromptItemType.STAGE_CONTEXT:
         const stageContextIds = promptItem.stageId
-          ? [stageId]
+          ? [promptItem.stageId]
           : getAllPrecedingStageIds(experiment.stageIds, stageId);
         for (const id of stageContextIds) {
           items.push(
             await getStageContextForPrompt(
-              experiment.id,
-              cohortId,
-              participantIds,
-              stageId,
+              promptData.participants,
+              promptData.data[id],
               id,
               promptItem,
             ),
@@ -434,12 +373,10 @@ async function processPromptItems(
 
         const groupText = await processPromptItems(
           groupItems,
-          experiment,
           cohortId,
-          participantIds,
           stageId,
+          promptData,
           userProfile,
-          agentConfig,
         );
         if (groupText) items.push(groupText);
         break;
@@ -457,18 +394,13 @@ async function processPromptItems(
  * stage) and formatted specifically for inserting into an LLM prompt.
  */
 export async function getStageContextForPrompt(
-  experimentId: string,
-  cohortId: string,
-  participantIds: string[],
+  participants: ParticipantProfileExtended[],
+  stageContext: StageContextData,
   currentStageId: string,
-  contextStageId: string, // use this and not item.stageId, which could be ''
   item: StageContextPromptItem,
 ) {
   // Get the specific stage
-  const stage = await getFirestoreStage(experimentId, contextStageId);
-  if (!stage) {
-    return '';
-  }
+  const stage = stageContext.stage;
 
   const textItems: string[] = [];
 
@@ -483,213 +415,13 @@ export async function getStageContextForPrompt(
   }
   // Note: Help text not included since the field has been deprecated
 
-  // Include stage display with answers embedded, or just answers
-  if (item.includeStageDisplay) {
-    textItems.push(
-      await getStageDisplayForPrompt(
-        experimentId,
-        cohortId,
-        participantIds,
-        stage,
-        item.includeParticipantAnswers,
-      ),
-    );
-  } else if (item.includeParticipantAnswers) {
-    textItems.push(
-      await getStageAnswersForPrompt(
-        experimentId,
-        cohortId,
-        participantIds,
-        stage,
-      ),
-    );
-  }
+  // Always include stage display (with answers if specified by prompt item)
+  const stageDisplay = stageManager.getStageDisplayForPrompt(
+    stage,
+    item.includeParticipantAnswers ? participants : [],
+    stageContext,
+  );
+  textItems.push(stageDisplay);
 
   return textItems.join('\n');
-}
-
-/** Formats the body content for the given stage, e.g., the terms of service
- * in a TOS stage or all the survey questions in a survey stage.
- *
- * NOTE: This shows all content visible to the participant, so a survey
- * stage will produce a complete list of all the survey questions
- * even if not all of them have been answered (just as a human participant
- * would see all the survey questions in the stage UI).
- */
-export async function getStageDisplayForPrompt(
-  experimentId: string,
-  cohortId: string,
-  participantIds: string[], // participant private IDs for answer inclusion
-  stage: StageConfig,
-  includeAnswers: boolean,
-) {
-  switch (stage.kind) {
-    case StageKind.TOS:
-      // TODO: Add timestamp for TOS for given participant
-      return stage.tosLines.join('\n');
-    case StageKind.INFO:
-      return stage.infoLines.join('\n');
-    case StageKind.CHAT:
-      const messages = await getFirestorePublicStageChatMessages(
-        experimentId,
-        cohortId,
-        stage.id,
-      );
-      // List active participants in group chat
-      const getProfileSetId = () => {
-        if (stage.id.includes(SECONDARY_PROFILE_SET_ID)) {
-          return PROFILE_SET_ANIMALS_2_ID;
-        } else if (stage.id.includes(TERTIARY_PROFILE_SET_ID)) {
-          return PROFILE_SET_NATURE_ID;
-        }
-        return '';
-      };
-      const participants = (
-        await getFirestoreActiveParticipants(experimentId, cohortId, stage.id)
-      )
-        .map((participant) =>
-          getNameFromPublicId(
-            [participant],
-            participant.publicId,
-            getProfileSetId(),
-            true,
-            true,
-          ),
-        )
-        .join(', ');
-      return `Group chat participants: ${participants}\n${getChatPromptMessageHistory(messages, stage)}`;
-    case StageKind.PRIVATE_CHAT:
-      // Private chat should have exactly 1 participant
-      if (participantIds.length === 0) return '';
-      const participantIdForPrivate = participantIds[0];
-      const privateMessages = await getFirestorePrivateChatMessages(
-        experimentId,
-        participantIdForPrivate,
-        stage.id,
-      );
-      return getChatPromptMessageHistory(privateMessages, stage);
-    case StageKind.ROLE:
-      const rolePublicData = await getFirestoreStagePublicData(
-        experimentId,
-        cohortId,
-        stage.id,
-      );
-      const getRoleDisplay = (roleId: string) => {
-        if (stage.kind !== StageKind.ROLE) return '';
-        return (
-          stage.roles.find((role) => role.id === roleId)?.displayLines ?? []
-        );
-      };
-      const roleInfo: string[] = [];
-      for (const participantId of participantIds) {
-        const participant = await getFirestoreParticipant(
-          experimentId,
-          participantId,
-        );
-        if (participant && rolePublicData) {
-          roleInfo.push(
-            `${participant.publicId}: ${getRoleDisplay(rolePublicData.participantMap[participant.publicId] ?? '').join('\n\n')}`,
-          );
-        } else {
-          if (!participant) {
-            console.error(
-              `Could not create roleInfo for participant ${participantId} in stage ${stage.id}: Participant not found.`,
-            );
-          }
-          if (!rolePublicData) {
-            console.error(
-              `Could not create roleInfo for participant ${participantId} in stage ${stage.id}: rolePublicData is missing.`,
-            );
-          }
-        }
-      }
-      return roleInfo.join('\n');
-    case StageKind.STOCKINFO:
-      return getStockInfoSummaryText(stage);
-    case StageKind.ASSET_ALLOCATION:
-      const assetAllocationDisplay = getAssetAllocationSummaryText(stage);
-
-      if (includeAnswers) {
-        const assetAllocationAnswers = await getStageAnswersForPrompt(
-          experimentId,
-          cohortId,
-          participantIds,
-          stage,
-        );
-        return assetAllocationAnswers
-          ? `${assetAllocationDisplay}\n\n${assetAllocationAnswers}`
-          : assetAllocationDisplay;
-      }
-      return assetAllocationDisplay;
-    case StageKind.SURVEY: // Same logic as survey per participant below
-    case StageKind.SURVEY_PER_PARTICIPANT:
-      const surveyDisplay = getSurveySummaryText(
-        stage as SurveyStageConfig | SurveyPerParticipantStageConfig,
-      );
-      if (includeAnswers) {
-        const surveyAnswers = await getStageAnswersForPrompt(
-          experimentId,
-          cohortId,
-          participantIds,
-          stage,
-        );
-        return surveyAnswers
-          ? `${surveyDisplay}\n\n${surveyAnswers}`
-          : surveyDisplay;
-      }
-      return surveyDisplay;
-    default:
-      // TODO: Set up display/answers for ranking stage
-      return '';
-  }
-}
-
-export async function getStageAnswersForPrompt(
-  experimentId: string,
-  cohortId: string,
-  participantIds: string[], // participant private IDs
-  stage: StageConfig,
-) {
-  switch (stage.kind) {
-    case StageKind.ASSET_ALLOCATION:
-      const assetParticipantAnswers =
-        await getStageAnswersWithDisplayNames<AssetAllocationStageParticipantAnswer>(
-          experimentId,
-          cohortId,
-          stage.id,
-          participantIds,
-        );
-      return getAssetAllocationAnswersText(assetParticipantAnswers, true);
-    case StageKind.SURVEY:
-      const surveyParticipantAnswers =
-        await getStageAnswersWithDisplayNames<SurveyStageParticipantAnswer>(
-          experimentId,
-          cohortId,
-          stage.id,
-          participantIds,
-        );
-      const surveyStage = stage as SurveyStageConfig;
-      return getSurveyAnswersText(
-        surveyParticipantAnswers,
-        surveyStage.questions,
-        true, // Always show participant names
-      );
-    case StageKind.SURVEY_PER_PARTICIPANT:
-      const surveyPerParticipantAnswers =
-        await getStageAnswersWithDisplayNames<SurveyPerParticipantStageParticipantAnswer>(
-          experimentId,
-          cohortId,
-          stage.id,
-          participantIds,
-        );
-      const surveyPerParticipantStage =
-        stage as SurveyPerParticipantStageConfig;
-      return getSurveyAnswersText(
-        surveyPerParticipantAnswers,
-        surveyPerParticipantStage.questions,
-        true, // Always show participant names
-      );
-    default:
-      return '';
-  }
 }

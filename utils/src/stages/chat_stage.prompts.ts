@@ -24,6 +24,7 @@ import {
   ChatDiscussionType,
   ChatStageConfig,
 } from './chat_stage';
+import {PrivateChatStageConfig} from './private_chat_stage';
 import {StageKind} from './stage';
 import {getBaseStagePrompt} from './stage.prompts';
 
@@ -60,7 +61,7 @@ export function getChatStagePromptContext(
 /** Return prompt for processing chat history. */
 export function getChatPromptMessageHistory(
   messages: ChatMessage[],
-  stage: ChatStageConfig,
+  stage: ChatStageConfig | PrivateChatStageConfig,
 ) {
   if (messages.length === 0) {
     return `No one in the discussion has spoken yet.`;
@@ -84,7 +85,7 @@ export function convertChatMessageToPromptFormat(message: ChatMessage) {
 /** Convert chat messages into chat history string for prompt. */
 function buildChatHistoryForPrompt(
   messages: ChatMessage[],
-  stage: ChatStageConfig,
+  stage: ChatStageConfig | PrivateChatStageConfig,
 ) {
   const concatMessages = (messages: ChatMessage[]) => {
     return messages
