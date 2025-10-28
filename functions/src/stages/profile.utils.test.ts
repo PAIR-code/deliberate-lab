@@ -9,6 +9,7 @@ import {
   createExperimenterData,
   createParticipantProfileExtended,
   createProfileStage,
+  PROFILE_AVATARS,
 } from '@deliberation-lab/utils';
 
 import * as firestoreUtils from '../utils/firestore';
@@ -75,7 +76,7 @@ describe('stages/profile.utils', () => {
 
       jest
         .spyOn(promptUtils, 'getStructuredPrompt')
-        .mockResolvedValue('test-prompt');
+        .mockResolvedValue('test-prompt' as never);
 
       const mockResponse = {
         status: ModelResponseStatus.OK,
@@ -153,7 +154,7 @@ describe('stages/profile.utils', () => {
 
       jest
         .spyOn(promptUtils, 'getStructuredPrompt')
-        .mockResolvedValue('test-prompt');
+        .mockResolvedValue('test-prompt' as never);
 
       const mockResponse = {
         status: ModelResponseStatus.PROVIDER_UNAVAILABLE_ERROR,
@@ -167,6 +168,49 @@ describe('stages/profile.utils', () => {
       expect(participant.name).toEqual('Initial Name');
       expect(participant.avatar).toEqual('🤔');
       expect(participant.pronouns).toEqual('she/her');
+    });
+
+    it('should fall back to default gendered emoji when model returns an invalid option', async () => {
+      const participant = {
+        ...defaultParticipant,
+        avatar: '',
+      };
+      const stageConfig = {
+        ...defaultStageConfig,
+        profileType: ProfileType.DEFAULT_GENDERED,
+      };
+
+      jest
+        .spyOn(firestoreUtils, 'getExperimenterDataFromExperiment')
+        .mockResolvedValue(defaultExperimenterData);
+
+      jest
+        .spyOn(promptUtils, 'getStructuredPrompt')
+        .mockResolvedValue('test-prompt' as never);
+
+      const mockResponse = {
+        status: ModelResponseStatus.OK,
+        parsedResponse: {
+          name: 'Agent Name',
+          emoji: '😊',
+          pronouns: 'they/them',
+        },
+      };
+      jest
+        .spyOn(agentUtils, 'processModelResponse')
+        .mockResolvedValue(mockResponse);
+
+      const warnSpy = jest
+        .spyOn(console, 'warn')
+        .mockImplementation(() => undefined);
+      const randomSpy = jest.spyOn(Math, 'random').mockReturnValue(0);
+
+      await completeProfile(experimentId, participant, stageConfig);
+
+      expect(participant.avatar).toEqual(PROFILE_AVATARS[0]);
+      expect(warnSpy).toHaveBeenCalled();
+      warnSpy.mockRestore();
+      randomSpy.mockRestore();
     });
   });
 });
