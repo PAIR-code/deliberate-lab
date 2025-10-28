@@ -137,10 +137,8 @@ export const SD_ITEMS: Record<string, SDItem> = {
 //export function getSDItemImageId(itemId: string) {
  // return `https://raw.githubusercontent.com/PAIR-code/deliberate-lab/refs/heads/main/frontend/assets/survival_desert/${itemId}.jpg`;
 //}
-
 export function getSDItemImageId(itemId: string) {
-  // ✅ Use local static assets when running frontend locally
-  return `http://localhost:4201/assets/survival_desert/${itemId}.jpg`;
+  return `https://raw.githubusercontent.com/clebouleau/deliberate-lab/tree/main/frontend/assets/survival_desert/${itemId}.jpg`;
 }
 export const SD_ITEM_MULTIPLE_CHOICE_QUESTION_TITLE =
   'Choose the item that would be more helpful to your survival.';
