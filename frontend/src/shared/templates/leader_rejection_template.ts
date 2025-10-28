@@ -41,7 +41,6 @@ import {
   LAS_WTL_QUESTION_ID,
 } from '@deliberation-lab/utils';
 
-
 // ****************************************************************************
 // Experiment config
 // ****************************************************************************
@@ -63,7 +62,7 @@ export function getLeadershipRejectionStageConfigs(): StageConfig[] {
   stages.push(LR_TOS_STAGE);
   stages.push(LR_INTRO_STAGE);
 
- // Profile
+  // Profile
   stages.push(LR_PERSONAL_INFO_STAGE);
   stages.push(LR_PROFILE_STAGE);
 
@@ -91,10 +90,10 @@ export function getLeadershipRejectionStageConfigs(): StageConfig[] {
   stages.push(LR_R2_INSTRUCTIONS);
   stages.push(LR_R2_APPLY_STAGE);
   stages.push(LR_R2_BELIEF_CANDIDATES);
- // stages.push(LR_R2_SELECTION_STAGE);
+  // stages.push(LR_R2_SELECTION_STAGE);
   stages.push(LR_R2_INSTRUCTIONS_GROUP);
   stages.push(LR_R2_GROUP_TASK_STAGE);
- // stages.push(LR_R2_STATUS_FEEDBACK_STAGE);
+  // stages.push(LR_R2_STATUS_FEEDBACK_STAGE);
   stages.push(LR_R2_BELIEF_STAGE);
 
   // Group Stage - Hypothetical Round 3
@@ -102,7 +101,7 @@ export function getLeadershipRejectionStageConfigs(): StageConfig[] {
   stages.push(LR_R3_APPLY_STAGE);
 
   // Final feedback, survey, payout
- // stages.push(LR_FEEDBACK_STAGE);
+  // stages.push(LR_FEEDBACK_STAGE);
   //stages.push(LR_FINAL_SURVEY_STAGE);
   // stages.push(LR_PAYOUT_STAGE);
 
@@ -122,8 +121,8 @@ interface SDItem {
   ranking: number;
 }
 export const SD_ITEMS: Record<string, SDItem> = {
- mirror: {name: 'A Mirror', ranking: 1},
- raincoat: {name: 'A plastic raincoat per Person', ranking: 2},
+  mirror: {name: 'A Mirror', ranking: 1},
+  raincoat: {name: 'A plastic raincoat per Person', ranking: 2},
   water: {name: 'Water (2L / per Person)', ranking: 3},
   flashlight: {name: 'A flashlight with 4 batteries', ranking: 4},
   parachute: {name: 'A Parachute (red and white)', ranking: 5},
@@ -132,14 +131,15 @@ export const SD_ITEMS: Record<string, SDItem> = {
   aid: {name: 'A First-Aid Kit', ranking: 8},
   book: {name: 'A book titled “Edible Animals in the Desert”', ranking: 9},
   salt: {name: 'A bottle of salt tablets', ranking: 10},
- };
+};
 
 //export function getSDItemImageId(itemId: string) {
- // return `https://raw.githubusercontent.com/PAIR-code/deliberate-lab/refs/heads/main/frontend/assets/survival_desert/${itemId}.jpg`;
+// return `https://raw.githubusercontent.com/PAIR-code/deliberate-lab/refs/heads/main/frontend/assets/survival_desert/${itemId}.jpg`;
 //}
 export function getSDItemImageId(itemId: string) {
-  return `https://raw.githubusercontent.com/clebouleau/deliberate-lab/tree/main/frontend/assets/survival_desert/${itemId}.jpg`;
+  return `https://raw.githubusercontent.com/clebouleau/deliberate-lab/main/frontend/assets/survival_desert/${itemId}.jpg`;
 }
+
 export const SD_ITEM_MULTIPLE_CHOICE_QUESTION_TITLE =
   'Choose the item that would be more helpful to your survival.';
 
@@ -333,7 +333,6 @@ export function createLASMultipleChoiceQuestion(
   };
 }
 
-
 // ─────────────────────────────────────────────────────────────────────────────
 //  Terms of Service
 // ─────────────────────────────────────────────────────────────────────────────
@@ -346,7 +345,6 @@ const LR_TOS_LINES = [
   '\n\nIf you have any questions, you can write to us at pse.experimenter@gmail.com.',
 ];
 
-
 const LR_TOS_STAGE = createTOSStage({
   tosLines: LR_TOS_LINES,
   progress: createStageProgressConfig({
@@ -354,13 +352,12 @@ const LR_TOS_STAGE = createTOSStage({
   }),
 });
 
-
 // ****************************************************************************
 // Intro info stage
 // ****************************************************************************
-const LR_INTRO_INFO_DESCRIPTION_PRIMARY  = `This experiment is part of a research project that explores human decisions in various online environments. You will play an engaging game that presents a survival scenario, and answer questions. You may also interact with others during the experiment.`;
+const LR_INTRO_INFO_DESCRIPTION_PRIMARY = `This experiment is part of a research project that explores human decisions in various online environments. You will play an engaging game that presents a survival scenario, and answer questions. You may also interact with others during the experiment.`;
 
-const LR_INTRO_INFO_LINES  = [
+const LR_INTRO_INFO_LINES = [
   'You will receive a **fixed fee of £3** for your participation, with an opportunity to earn a **£2 bonus**. We will explain precisely how your bonus is determined later.',
   'At the end of the experiment, you will be redirected to a waiting page. This waiting time is part of the experiment and has been factored into your payment. **You will not be approved for the payout if you do not remain on this waiting page for the full requested duration**.',
   'During this waiting time, you may be invited to continue the experiment by completing two additional parts, Part 2 and Part 3. These parts will be played in *groups of four*, and should take an estimated additional 30 minutes.  You will receive a **fixed fee of £6 for completing Parts 2 and 3. Additionally, you will have the opportunity to earn a **£2 bonus**, based on your decisions and the decisions of other participants  in these parts. One of the 2 parts will be randomly selected to determine this bonus.',
@@ -437,7 +434,6 @@ const LR_PROFILE_STAGE = createProfileStage({
   }),
 });
 
-
 // ****************************************************************************
 // Part 1 - Task 1
 // ****************************************************************************
@@ -471,7 +467,7 @@ const LR_P1_TASK1_INSTRUCTIONS_STAGE = createInfoStage({
 export const LR_BASELINE_TASK1_ID = 'baseline1';
 
 const LR_BASELINE_TASK_1 = createSurveyStage({
-  id:  LR_BASELINE_TASK1_ID,
+  id: LR_BASELINE_TASK1_ID,
   name: 'Individual survival task baseline 1',
   descriptions: createStageTextConfig({infoText: LAS_SCENARIO_REMINDER}),
   questions: createLASSurvivalSurvey(
@@ -483,7 +479,6 @@ const LR_BASELINE_TASK_1 = createSurveyStage({
   }),
 });
 
-
 // ****************************************************************************
 // Part 1 - Task 2
 // ****************************************************************************
@@ -493,7 +488,7 @@ const LR_BASELINE_TASK_1 = createSurveyStage({
 
 const LR_P1_TASK2_INSTRUCTIONS_INFO_LINES = [
   '## Imagine the following scenario:',
-  "It is approximately 10:00 am in mid-July and you, together with three of your friends, have just crash landed in the Atacama Desert in South America. Your light twin-engine plane including the pilot and co-pilot has completely burned out with only the frame remaining. None of you have been injured. The pilot was unable to notify anyone of your position before the crash. However, he had indicated before impact that you were 50 miles from a mining camp, which is the nearest known settlement, and approximately 65 miles off the course that was filed in your Flight Plan. The immediate area is quite flat, except for occasional cacti, and appears to be rather barren. The last weather report indicated that the temperature would reach 110 F today, which means that the temperature at ground level will be 130 F. You are dressed in lightweight clothing-short-sleeved shirts, pants, socks, and street shoes.",
+  'It is approximately 10:00 am in mid-July and you, together with three of your friends, have just crash landed in the Atacama Desert in South America. Your light twin-engine plane including the pilot and co-pilot has completely burned out with only the frame remaining. None of you have been injured. The pilot was unable to notify anyone of your position before the crash. However, he had indicated before impact that you were 50 miles from a mining camp, which is the nearest known settlement, and approximately 65 miles off the course that was filed in your Flight Plan. The immediate area is quite flat, except for occasional cacti, and appears to be rather barren. The last weather report indicated that the temperature would reach 110 F today, which means that the temperature at ground level will be 130 F. You are dressed in lightweight clothing-short-sleeved shirts, pants, socks, and street shoes.',
   '*Before your plane caught fire, your group was able to salvage 10 items, undamaged and intact. In addition, Everyone has a handkerchief and collectively, you have 3 packs of cigarettes and a ballpoint pen.*.',
   '## Your task:',
   'You are asked to **evaluate these 10 items in terms of their importance for your survival, as you wait to be rescued**. The computer will randomly generate pairs of items, and you will select which of the two is the most useful in your situation.',
@@ -517,7 +512,7 @@ const LR_P1_TASK2_INSTRUCTIONS_STAGE = createInfoStage({
 export const LR_BASELINE_TASK2_ID = 'baseline2';
 
 const LR_BASELINE_TASK_2 = createSurveyStage({
-  id:  LR_BASELINE_TASK2_ID,
+  id: LR_BASELINE_TASK2_ID,
   name: 'Individual survival task baseline 2',
   descriptions: createStageTextConfig({infoText: SD_SCENARIO_REMINDER}),
   questions: createSDSurvivalSurvey(
@@ -529,7 +524,6 @@ const LR_BASELINE_TASK_2 = createSurveyStage({
   }),
 });
 
-
 // ****************************************************************************
 // Part 1 - Confidence Stage
 // ****************************************************************************
@@ -537,7 +531,7 @@ export const LR_BASELINE_CONF_INFO =
   'We would like you to guess how well you did in Part 1 compared to a sample of 100 other participants who completed the same task before you. Please answer the questions below.';
 
 const LR_BASELINE_CONFIDENCE = createSurveyStage({
-  name:'Performance Estimation',
+  name: 'Performance Estimation',
   descriptions: createStageTextConfig({
     primaryText: LR_BASELINE_CONF_INFO,
   }),
@@ -597,7 +591,7 @@ export const LR_TRANSFER_STAGE = createTransferStage({
 //==========================================================
 //==========================================================
 //==========================================================
- // GROUP STAGE - ROUND 1
+// GROUP STAGE - ROUND 1
 //==========================================================
 //==========================================================
 //==========================================================
@@ -606,10 +600,12 @@ export const LR_TRANSFER_STAGE = createTransferStage({
 // Info stage
 //==========================================================
 
-const LR_R1_INSTRUCTIONS_INFO = [`You will now play in a group of 6 participants.`,
-    'Each round, one participant is chosen as the leader. The leader’s answers determine the payoff for all group members.',
-'The leader will be chosen based on performance in the initial tasks, combined with a random component.',
-    'Better performers have higher chances of being selected, but the process is not fully deterministic.'];
+const LR_R1_INSTRUCTIONS_INFO = [
+  `You will now play in a group of 6 participants.`,
+  'Each round, one participant is chosen as the leader. The leader’s answers determine the payoff for all group members.',
+  'The leader will be chosen based on performance in the initial tasks, combined with a random component.',
+  'Better performers have higher chances of being selected, but the process is not fully deterministic.',
+];
 
 const LR_R1_INSTRUCTIONS = createInfoStage({
   name: 'Round 1 - Instructions',
@@ -628,8 +624,8 @@ const LR_R1_APPLY_STAGE = createSurveyStage({
       id: 'apply_r1',
       questionTitle: 'Would you like to apply to become the leader?',
       options: [
-        { id: 'yes', imageId: '', text: 'Yes' },
-        { id: 'no', imageId: '', text: 'No' },
+        {id: 'yes', imageId: '', text: 'Yes'},
+        {id: 'no', imageId: '', text: 'No'},
       ],
     }),
     createScaleSurveyQuestion({
@@ -645,12 +641,13 @@ const LR_R1_APPLY_STAGE = createSurveyStage({
 });
 
 const LR_R1_BELIEF_CANDIDATES = createSurveyStage({
-   id: 'r1_belief_candidate',
+  id: 'r1_belief_candidate',
   name: 'Round 1 - Survey',
   questions: [
-       createScaleSurveyQuestion({
+    createScaleSurveyQuestion({
       id: 'r1_belief_candidate',
-      questionTitle: 'How many members of the group applied to the role (excluding you), according to you?',
+      questionTitle:
+        'How many members of the group applied to the role (excluding you), according to you?',
       lowerText: '0',
       upperText: '5',
       lowerValue: 0,
@@ -684,14 +681,15 @@ Store the status of each participant:
 //==========================================================
 
 //Instructions
-export const LR_R1_INSTRUCTIONS_GROUP_INFO  = [
-    "You are invited to complete the group task, while the computer gathers information to determine who the selected leader is. In this part, everyone will complete the same task as in Part 1, but with a new set of questions. However, only the leader's answers will determine the payoff for this task.",
+export const LR_R1_INSTRUCTIONS_GROUP_INFO = [
+  "You are invited to complete the group task, while the computer gathers information to determine who the selected leader is. In this part, everyone will complete the same task as in Part 1, but with a new set of questions. However, only the leader's answers will determine the payoff for this task.",
   "\n\nSince you could potentially be the leader without knowing it yet, keep in mind that your performance might determine everyone's payoff for this part.",
   "\n\nFor each question, the leader's answers will be evaluated in the same manner as in Part 1 and will determine the payoff for all group members. Thus, if a question from Part 3 is selected to determine your final payoff, it will be the leader's answer that counts.",
   '\n\nAfter the task ends, you will be informed of whether or not you were the leader for this round.',
-'Remember also that in the extreme case where no one applied, you could be selected as the leader. As a result, try to perform to the best of your ability in the following task, regardless of your application status.'];
+  'Remember also that in the extreme case where no one applied, you could be selected as the leader. As a result, try to perform to the best of your ability in the following task, regardless of your application status.',
+];
 
-export const  LR_R1_INSTRUCTIONS_GROUP = createInfoStage({
+export const LR_R1_INSTRUCTIONS_GROUP = createInfoStage({
   name: 'Round 1 - Task Instructions',
   infoLines: LR_R1_INSTRUCTIONS_GROUP_INFO,
 });
@@ -757,15 +755,17 @@ const LR_R1_BELIEF_STAGE = createSurveyStage({
 //==========================================================
 // Info stage
 //==========================================================
-export const LR_R2_INSTRUCTIONS_INFO = [  `You will now start Round 2 with the same group of 6 participants.`,
-    'A new leader will be selected using the same rule as before.',
-    'The leader’s answers determine the payoff for all group members.',
-    'The leader will be chosen based on performance in the initial tasks, combined with a random component.',
-    'Better performers have higher chances of being selected, but the process is not fully deterministic.']
+export const LR_R2_INSTRUCTIONS_INFO = [
+  `You will now start Round 2 with the same group of 6 participants.`,
+  'A new leader will be selected using the same rule as before.',
+  'The leader’s answers determine the payoff for all group members.',
+  'The leader will be chosen based on performance in the initial tasks, combined with a random component.',
+  'Better performers have higher chances of being selected, but the process is not fully deterministic.',
+];
 
 export const LR_R2_INSTRUCTIONS = createInfoStage({
   name: 'Round 2 - Instructions',
-  infoLines: LR_R2_INSTRUCTIONS_INFO
+  infoLines: LR_R2_INSTRUCTIONS_INFO,
 });
 
 //==========================================================
@@ -780,8 +780,8 @@ const LR_R2_APPLY_STAGE = createSurveyStage({
       id: 'apply_r2',
       questionTitle: 'Would you like to apply to become the leader?',
       options: [
-        { id: 'yes', imageId: '', text: 'Yes' },
-        { id: 'no', imageId: '', text: 'No' },
+        {id: 'yes', imageId: '', text: 'Yes'},
+        {id: 'no', imageId: '', text: 'No'},
       ],
     }),
     createScaleSurveyQuestion({
@@ -796,14 +796,14 @@ const LR_R2_APPLY_STAGE = createSurveyStage({
   ],
 });
 
-
 const LR_R2_BELIEF_CANDIDATES = createSurveyStage({
-   id: 'r2_belief_candidate',
+  id: 'r2_belief_candidate',
   name: 'Round 2 - Survey',
   questions: [
-       createScaleSurveyQuestion({
+    createScaleSurveyQuestion({
       id: 'r1_belief_candidate',
-      questionTitle: 'How many members of the group applied to the role (excluding you), according to you?',
+      questionTitle:
+        'How many members of the group applied to the role (excluding you), according to you?',
       lowerText: '0',
       upperText: '5',
       lowerValue: 0,
@@ -815,21 +815,22 @@ const LR_R2_BELIEF_CANDIDATES = createSurveyStage({
 //==========================================================
 // LEADER SELECTION
 //==========================================================
-  // Same logic as for Round 1
+// Same logic as for Round 1
 
 //==========================================================
 // Group Task
 //==========================================================
 
 // Instructions
-export const LR_R2_INSTRUCTIONS_GROUP_INFO  = [
-    "You are invited to complete the group task, while the computer gathers information to determine who the selected leader is. In this part, everyone will complete the same task as in Part 1, but with a new set of questions. However, only the leader's answers will determine the payoff for this task.",
+export const LR_R2_INSTRUCTIONS_GROUP_INFO = [
+  "You are invited to complete the group task, while the computer gathers information to determine who the selected leader is. In this part, everyone will complete the same task as in Part 1, but with a new set of questions. However, only the leader's answers will determine the payoff for this task.",
   "\n\nSince you could potentially be the leader without knowing it yet, keep in mind that your performance might determine everyone's payoff for this part.",
   "\n\nFor each question, the leader's answers will be evaluated in the same manner as in Part 1 and will determine the payoff for all group members. Thus, if a question from Part 3 is selected to determine your final payoff, it will be the leader's answer that counts.",
   '\n\nAfter the task ends, you will be informed of whether or not you were the leader for this round.',
-'Remember also that in the extreme case where no one applied, you could be selected as the leader. As a result, try to perform to the best of your ability in the following task, regardless of your application status.'];
+  'Remember also that in the extreme case where no one applied, you could be selected as the leader. As a result, try to perform to the best of your ability in the following task, regardless of your application status.',
+];
 
-export const  LR_R2_INSTRUCTIONS_GROUP = createInfoStage({
+export const LR_R2_INSTRUCTIONS_GROUP = createInfoStage({
   name: 'Round 2 - Task Instructions',
   infoLines: LR_R2_INSTRUCTIONS_GROUP_INFO,
 });
@@ -841,16 +842,13 @@ export const LR_R2_GROUP_TASK_STAGE = createSurveyStage({
   id: LR_R2_GROUP_TASK_ID,
   name: 'Group task 2',
   descriptions: createStageTextConfig({infoText: SD_SCENARIO_REMINDER}),
-  questions: createSDSurvivalSurvey(
-    SD_LEADER_ITEMS_MULTIPLE_CHOICE_QUESTIONS,
-  ),
+  questions: createSDSurvivalSurvey(SD_LEADER_ITEMS_MULTIPLE_CHOICE_QUESTIONS),
 });
 
 //==========================================================
 // Feedback Stage
 //==========================================================
 //Same logic as for Round 1
-
 
 //==========================================================
 // Attribution beliefs Stage
@@ -882,15 +880,17 @@ const LR_R2_BELIEF_STAGE = createSurveyStage({
 //==========================================================
 // Info stage
 //==========================================================
-export const LR_R3_INSTRUCTIONS_INFO = [  `Imagine you could play a third round.`,
-    'A new leader would be selected using the same rule as before.',
+export const LR_R3_INSTRUCTIONS_INFO = [
+  `Imagine you could play a third round.`,
+  'A new leader would be selected using the same rule as before.',
   'The leader’s answers determine the payoff for all group members.',
   'The leader will be chosen based on performance in the initial tasks, combined with a random component.',
-    'Better performers have higher chances of being selected, but the process is not fully deterministic.']
+  'Better performers have higher chances of being selected, but the process is not fully deterministic.',
+];
 
 export const LR_R3_INSTRUCTIONS = createInfoStage({
   name: 'Round 3 - Instructions',
-  infoLines: LR_R3_INSTRUCTIONS_INFO
+  infoLines: LR_R3_INSTRUCTIONS_INFO,
 });
 
 //==========================================================
@@ -903,10 +903,11 @@ const LR_R3_APPLY_STAGE = createSurveyStage({
   questions: [
     createMultipleChoiceSurveyQuestion({
       id: 'apply_r3',
-      questionTitle: 'Would you like to apply to become the leader in this hypothetical round?',
+      questionTitle:
+        'Would you like to apply to become the leader in this hypothetical round?',
       options: [
-        { id: 'yes', imageId: '', text: 'Yes' },
-        { id: 'no', imageId: '', text: 'No' },
+        {id: 'yes', imageId: '', text: 'Yes'},
+        {id: 'no', imageId: '', text: 'No'},
       ],
     }),
     createScaleSurveyQuestion({
@@ -928,8 +929,7 @@ const LR_R3_APPLY_STAGE = createSurveyStage({
 //==========================================================
 //==========================================================
 //==========================================================
-export const LR_FEEDBACK_STAGE_PRIMARY =
-  'Here are the results from the task.';
+export const LR_FEEDBACK_STAGE_PRIMARY = 'Here are the results from the task.';
 
 export const LR_FEEDBACK_STAGE_INFO = `An explanation of the results can be found [here](https://raw.githubusercontent.com/PAIR-code/deliberate-lab/main/frontend/src/assets/lost_at_sea/task_answers.pdf).`;
 
@@ -979,7 +979,7 @@ export const LR_FINAL_SURVEY_QUESTION: SurveyQuestion[] = [
     upperText: 'Very satisfied',
     upperValue: 10,
   }),
-createScaleSurveyQuestion({
+  createScaleSurveyQuestion({
     id: '1bis',
     questionTitle:
       "On the scale from 1 to 10, how satisfied are you by the leader's performance in the second group task? (if you're the leader, rate your own performance)",
@@ -1045,8 +1045,6 @@ const LR_FINAL_SURVEY_STAGE = createSurveyStage({
   questions: LR_FINAL_SURVEY_QUESTION,
 });
 
-
-
 //==========================================================
 // * PAYOUT STAGE
 //==========================================================
@@ -1062,4 +1060,3 @@ e) add a £50 bonus for each time one was leader (so up to 1£)
 
 
  */
-
