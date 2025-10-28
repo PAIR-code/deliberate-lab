@@ -326,6 +326,20 @@ export class ExperimentManager extends Service {
     );
   }
 
+  getAvailableMediatorPersonas(cohortId: string) {
+    const assignedAgentIds = new Set(
+      this.getCohortAgentMediators(cohortId)
+        .map((mediator) => mediator.agentConfig?.agentId)
+        .filter((id): id is string => Boolean(id)),
+    );
+
+    return this.agentPersonas.filter(
+      (persona) =>
+        persona.type === AgentPersonaType.MEDIATOR &&
+        !assignedAgentIds.has(persona.id),
+    );
+  }
+
   getNumExperimentParticipants(countObsoleteParticipants = true) {
     const participants = Object.values(this.participantMap);
     if (countObsoleteParticipants) {

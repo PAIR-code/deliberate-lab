@@ -24,8 +24,6 @@ import {HomeService} from '../../services/home.service';
 import {Pages, RouterService} from '../../services/router.service';
 
 import {
-  AgentPersonaConfig,
-  AgentPersonaType,
   CohortConfig,
   MediatorProfileExtended,
   MediatorStatus,
@@ -391,27 +389,13 @@ export class Component extends MobxLitElement {
     `;
   }
 
-  private getAvailableMediatorPersonas(cohortId: string): AgentPersonaConfig[] {
-    const assignedAgentIds = new Set(
-      this.experimentManager
-        .getCohortAgentMediators(cohortId)
-        .map((mediator) => mediator.agentConfig?.agentId)
-        .filter((id): id is string => Boolean(id)),
-    );
-
-    return this.experimentManager.agentPersonas.filter(
-      (persona) =>
-        persona.type === AgentPersonaType.MEDIATOR &&
-        !assignedAgentIds.has(persona.id),
-    );
-  }
-
   private renderAddMediator() {
     if (!this.cohort) {
       return nothing;
     }
 
-    const availableMediators = this.getAvailableMediatorPersonas(this.cohort.id);
+    const availableMediators =
+      this.experimentManager.getAvailableMediatorPersonas(this.cohort.id);
     const isLocked = Boolean(
       this.experimentService.experiment?.cohortLockMap[this.cohort.id],
     );

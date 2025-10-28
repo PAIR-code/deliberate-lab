@@ -9,11 +9,7 @@ import {core} from '../../core/core';
 import {AnalyticsService, ButtonClick} from '../../services/analytics.service';
 import {ExperimentManager} from '../../services/experiment.manager';
 
-import {
-  AgentPersonaConfig,
-  AgentPersonaType,
-  CohortConfig,
-} from '@deliberation-lab/utils';
+import {AgentPersonaConfig, CohortConfig} from '@deliberation-lab/utils';
 
 import {styles} from './cohort_settings_dialog.scss';
 
@@ -74,7 +70,9 @@ export class AgentMediatorAddDialog extends MobxLitElement {
   }
 
   private renderForm() {
-    const personas = this.getAvailableMediatorPersonas();
+    const personas = this.cohort
+      ? this.experimentManager.getAvailableMediatorPersonas(this.cohort.id)
+      : [];
 
     if (personas.length === 0) {
       return html`
@@ -151,25 +149,6 @@ export class AgentMediatorAddDialog extends MobxLitElement {
         </div>
       </div>
     `;
-  }
-
-  private getAvailableMediatorPersonas(): AgentPersonaConfig[] {
-    if (!this.cohort) {
-      return [];
-    }
-
-    const assignedAgentIds = new Set(
-      this.experimentManager
-        .getCohortAgentMediators(this.cohort.id)
-        .map((mediator) => mediator.agentConfig?.agentId)
-        .filter((id): id is string => Boolean(id)),
-    );
-
-    return this.experimentManager.agentPersonas.filter(
-      (persona) =>
-        persona.type === AgentPersonaType.MEDIATOR &&
-        !assignedAgentIds.has(persona.id),
-    );
   }
 
   private async addMediator() {
