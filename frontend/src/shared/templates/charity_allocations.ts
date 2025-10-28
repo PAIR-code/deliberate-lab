@@ -1,5 +1,6 @@
 import {
   createTextPromptItem,
+  createTextPromptItem,
   createChatStage,
   createDefaultStageContextPromptItem,
   AgentMediatorTemplate,
@@ -310,8 +311,20 @@ export function getCharityDebateTemplate(
   }
 
   // Mediator instructions
+
+  // Game instructions
+  const instructions = createInstructionsStages();
+  for (const stage of instructions) {
+    stages.push(stage);
+  }
+
+  // Mediator instructions
   if (config.includeMediator) stages.push(createMediatedDiscussionInfoStage());
 
+  // Comprehension check
+  stages.push(createCharityComprehensionStage());
+
+  // Surveys
   // Comprehension check
   stages.push(createCharityComprehensionStage());
 
@@ -321,6 +334,7 @@ export function getCharityDebateTemplate(
 
   if (config.includeMediator) stages.push(createInitialMediatorSurveyStage());
 
+  stages.push(TRANSFER_STAGE);
   stages.push(TRANSFER_STAGE);
   const debateRoundsCharities = [...CHARITY_BUNDLES].sort(
     () => 0.5 - Math.random(),
@@ -368,11 +382,11 @@ export function getCharityDebateTemplate(
 
     const isMediatedRound = mediatorForRound !== undefined;
 
+    stages.push(createRoundOutcomeSurveyStage(roundNum, isMediatedRound));
+
     if (isMediatedRound) {
       stages.push(createPerMediatorEvaluationStage(roundNum));
     }
-
-    stages.push(createRoundOutcomeSurveyStage(roundNum, isMediatedRound));
   });
 
   stages.push(createAllocationRevealStage());
@@ -1011,7 +1025,7 @@ function createStandardMediatorSchema(): StructuredOutputSchema {
         },
       },
       {
-        name: 'consensusLevel', // Custom field
+        name: 'consensusLevel',
         schema: {
           type: StructuredOutputDataType.STRING,
           description:
