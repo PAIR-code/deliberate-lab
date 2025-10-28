@@ -41,6 +41,10 @@ import {
   getAnonLASStageConfigs,
 } from '../../shared/templates/lost_at_sea';
 import {
+  LR_METADATA,
+  getLeadershipRejectionStageConfigs,
+} from '../../shared/templates/leader_rejection_template';
+import {
   getChipMetadata,
   getChipNegotiationStageConfigs,
 } from '../../shared/templates/chip_negotiation';
@@ -172,6 +176,7 @@ export class StageBuilderDialog extends MobxLitElement {
       </div>
       <div class="card-gallery-wrapper">
         ${this.renderLASCard()} ${this.renderLASCard(true)}
+        ${this.renderLRCard()}
         ${this.renderRealityTVCard()} ${this.renderChipNegotiationCard()}
         ${this.renderSalespersonGameCard()} ${this.renderFlipCardTemplateCard()}
         ${this.renderFruitTestTemplateCard()} ${this.renderStockInfoGameCard()}
@@ -240,6 +245,26 @@ export class StageBuilderDialog extends MobxLitElement {
   private renderLASCard(isAnon: boolean = false) {
     const metadata = isAnon ? ANON_LAS_METADATA : LAS_METADATA;
     const configs = isAnon ? getAnonLASStageConfigs() : getLASStageConfigs();
+
+    const addGame = () => {
+      this.addGame(metadata, configs);
+    };
+
+    return html`
+      <div class="card" @click=${addGame}>
+        <div class="title">${metadata.name}</div>
+        <div>
+          ${metadata.description}
+          <div></div>
+        </div>
+      </div>
+    `;
+  }
+
+
+  private renderLRCard() {
+    const metadata = LR_METADATA;
+    const configs = getLeadershipRejectionStageConfigs();
 
     const addGame = () => {
       this.addGame(metadata, configs);

@@ -17,6 +17,7 @@ import {addParticipantAnswerToFlipCardStagePublicData} from '../stages/flipcard.
 import {addParticipantAnswerToAssetAllocationStagePublicData} from '../stages/asset_allocation.utils';
 import {addParticipantAnswerToMultiAssetAllocationStagePublicData} from '../stages/multi_asset_allocation.utils';
 
+//database.instance
 /** When participant (private) stage data is updated. */
 export const onParticipantStageDataUpdated = onDocumentWritten(
   {
