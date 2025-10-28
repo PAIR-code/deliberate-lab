@@ -4,24 +4,21 @@ import '../progress/progress_stage_completed';
 import '../stages/stage_description';
 import '../stages/stage_footer';
 import '../participant_profile/avatar_icon';
+import '../avatar_picker/avatar_picker';
 
 import '@material/web/radio/radio.js';
 
 import {MobxLitElement} from '@adobe/lit-mobx';
 import {CSSResultGroup, html, nothing} from 'lit';
+import {classMap} from 'lit/directives/class-map.js';
 import {customElement, property} from 'lit/decorators.js';
 
 import {core} from '../../core/core';
 import {ParticipantService} from '../../services/participant.service';
 import {ParticipantAnswerService} from '../../services/participant.answer';
-
-import {
-  PROFILE_AVATARS,
-  MAN_EMOJIS,
-  WOMAN_EMOJIS,
-  PERSON_EMOJIS,
-} from '../../shared/constants';
-import {ProfileStageConfig} from '@deliberation-lab/utils';
+import {ProfileStageConfig, ProfileType} from '@deliberation-lab/utils';
+import type {EmojiSelectedDetail} from '../avatar_picker/avatar_picker';
+import {MAN_EMOJIS, WOMAN_EMOJIS, PERSON_EMOJIS} from '../../shared/constants';
 
 import {styles} from './profile_participant_editor.scss';
 
@@ -54,7 +51,10 @@ export class ProfileEditor extends MobxLitElement {
     return html`
       <stage-description .stage=${this.stage}></stage-description>
       <div class="profile-wrapper">
-        ${this.renderName()} ${this.renderPronouns()} ${this.renderAvatars()}
+        ${this.renderName()} ${this.renderPronouns()}
+        ${this.stage.profileType === ProfileType.DEFAULT_GENDERED
+          ? this.renderGenderedAvatars()
+          : this.renderAvatars()}
       </div>
       <stage-footer .disabled=${!filled} .onNextClick=${updateProfile}>
         ${this.stage.progress.showParticipantProgress
@@ -200,50 +200,86 @@ export class ProfileEditor extends MobxLitElement {
     `;
   }
 
-  private renderAvatars() {
-    const handleAvatarClick = (e: Event) => {
-      const value = Number((e.target as HTMLInputElement).value);
-      const avatar = PROFILE_AVATARS[value];
+  private handleAvatarChange(event: CustomEvent<EmojiSelectedDetail>) {
+    const emoji = event.detail?.value;
+    if (!emoji) return;
+    this.participantAnswerService.updateProfile({avatar: emoji});
+  }
 
-      this.participantAnswerService.updateProfile({avatar});
+  private renderAvatars() {
+    return html`
+      <div class="radio-question">
+        <div class="title">Avatar</div>
+        <dl-avatar-picker
+          .value=${this.participantAnswerService.profile?.avatar ?? null}
+          button-label="Choose avatar"
+          ?disabled=${this.participantService.disableStage}
+          @emoji-selected=${this.handleAvatarChange}
+        ></dl-avatar-picker>
+      </div>
+    `;
+  }
+
+  private renderGenderedAvatars() {
+    const groups = [
+      {emojis: WOMAN_EMOJIS},
+      {emojis: MAN_EMOJIS},
+      {emojis: PERSON_EMOJIS},
+    ];
+    const selectedAvatar = this.participantAnswerService.profile?.avatar;
+
+    const handleClick = (emoji: string) => {
+      this.participantAnswerService.updateProfile({avatar: emoji});
     };
 
-    const renderAvatarRadio = (emoji: string, index: number) => {
-      const getColor = () => {
-        if (MAN_EMOJIS.indexOf(emoji) > -1) {
-          return 'blue';
-        } else if (WOMAN_EMOJIS.indexOf(emoji) > -1) {
-          return 'pink';
-        } else if (PERSON_EMOJIS.indexOf(emoji) > -1) {
-          return 'purple';
-        } else {
-          return '';
-        }
-      };
-
-      return html`
-        <div class="radio-button">
-          <md-radio
-            id=${emoji}
-            name="avatar"
-            value=${index}
-            ?checked=${this.participantAnswerService.profile?.avatar === emoji}
-            ?disabled=${this.participantService.disableStage}
-            @change=${handleAvatarClick}
-          >
-          </md-radio>
-          <avatar-icon .emoji=${emoji} .square=${true} .color=${getColor()}>
-          </avatar-icon>
-        </div>
-      `;
+    const getAvatarColor = (emoji: string) => {
+      if (MAN_EMOJIS.indexOf(emoji) > -1) {
+        return 'blue';
+      } else if (WOMAN_EMOJIS.indexOf(emoji) > -1) {
+        return 'pink';
+      } else if (PERSON_EMOJIS.indexOf(emoji) > -1) {
+        return 'purple';
+      }
+      return '';
     };
 
     return html`
       <div class="radio-question">
         <div class="title">Avatar</div>
-        <div class="avatars-wrapper">
-          ${PROFILE_AVATARS.map((avatar, index) =>
-            renderAvatarRadio(avatar, index),
+        <div class="gendered-avatar-groups">
+          ${groups.map(
+            ({emojis}) => html`
+              <div class="gendered-avatar-group">
+                <div class="avatars-wrapper">
+                  ${emojis.map((emoji) => {
+                    const isSelected = selectedAvatar === emoji;
+                    const color = getAvatarColor(emoji);
+                    return html`
+                      <button
+                        type="button"
+                        class=${classMap({
+                          'avatar-choice': true,
+                          'avatar-choice--selected': isSelected,
+                          'avatar-choice--blue': color === 'blue',
+                          'avatar-choice--pink': color === 'pink',
+                          'avatar-choice--purple': color === 'purple',
+                        })}
+                        ?disabled=${this.participantService.disableStage}
+                        aria-pressed=${isSelected}
+                        aria-label=${`Select ${emoji}`}
+                        @click=${() => handleClick(emoji)}
+                      >
+                        <avatar-icon
+                          .emoji=${emoji}
+                          .square=${true}
+                          .color=${color}
+                        ></avatar-icon>
+                      </button>
+                    `;
+                  })}
+                </div>
+              </div>
+            `,
           )}
         </div>
       </div>

@@ -5,6 +5,7 @@ import '../../pair-components/tooltip';
 
 import '../chat/chat_input';
 import '../participant_profile/avatar_icon';
+import '../avatar_picker/avatar_picker';
 
 import {MobxLitElement} from '@adobe/lit-mobx';
 import {CSSResultGroup, html, nothing} from 'lit';
@@ -15,9 +16,7 @@ import {AuthService} from '../../services/auth.service';
 import {ExperimentManager} from '../../services/experiment.manager';
 import {ParticipantService} from '../../services/participant.service';
 
-import {EXPERIMENTER_MANUAL_CHAT_SENDER_ID} from '@deliberation-lab/utils';
-import {LLM_AGENT_AVATARS} from '../../shared/constants';
-import {getHashBasedColor} from '../../shared/utils';
+import type {EmojiSelectedDetail} from '../avatar_picker/avatar_picker';
 
 import {styles} from './experimenter_manual_chat.scss';
 
@@ -34,7 +33,6 @@ export class Chat extends MobxLitElement {
   @state() name = 'Moderator';
   @state() avatar = '🙋';
   @state() isLoading = false;
-
   private renderName() {
     const updateName = (e: InputEvent) => {
       const value = (e.target as HTMLTextAreaElement).value;
@@ -56,42 +54,22 @@ export class Chat extends MobxLitElement {
     `;
   }
 
+  private handleAvatarChange(event: CustomEvent<EmojiSelectedDetail>) {
+    const unicode = event.detail?.value;
+    if (!unicode) return;
+    this.avatar = unicode;
+  }
+
   private renderAvatars() {
-    const handleAvatarClick = (e: Event) => {
-      const value = Number((e.target as HTMLInputElement).value);
-      const avatar = LLM_AGENT_AVATARS[value];
-      this.avatar = avatar;
-    };
-
-    const renderAvatarRadio = (emoji: string, index: number) => {
-      return html`
-        <div class="radio-button">
-          <md-radio
-            id=${emoji}
-            name="manual-chat-avatar"
-            value=${index}
-            ?checked=${this.avatar === emoji}
-            @change=${handleAvatarClick}
-          >
-          </md-radio>
-          <avatar-icon
-            .emoji=${emoji}
-            .square=${true}
-            .color=${getHashBasedColor(EXPERIMENTER_MANUAL_CHAT_SENDER_ID)}
-          >
-          </avatar-icon>
-        </div>
-      `;
-    };
-
     return html`
       <div class="radio-question">
         <div class="title">Avatar</div>
-        <div class="radio-wrapper">
-          ${LLM_AGENT_AVATARS.map((avatar, index) =>
-            renderAvatarRadio(avatar, index),
-          )}
-        </div>
+        <dl-avatar-picker
+          .value=${this.avatar}
+          button-label="Choose avatar"
+          ?disabled=${this.isLoading}
+          @emoji-selected=${this.handleAvatarChange}
+        ></dl-avatar-picker>
       </div>
     `;
   }
