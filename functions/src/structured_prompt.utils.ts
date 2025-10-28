@@ -6,6 +6,7 @@ import {
   AssetAllocationStageParticipantAnswer,
   BasePromptConfig,
   ChatStageConfig,
+  Experiment,
   PrivateChatStageConfig,
   ProfileAgentConfig,
   PromptItem,
@@ -23,6 +24,7 @@ import {
   SurveyPerParticipantStageParticipantAnswer,
   UserProfile,
   UserType,
+  getAllPrecedingStageIds,
   getChatPromptMessageHistory,
   getNameFromPublicId,
   getStockInfoSummaryText,
@@ -114,12 +116,6 @@ async function getStageAnswersWithDisplayNames<
   return addDisplayNamesToAnswers(experimentId, answers, stageId);
 }
 
-/** Return list of stage IDs preceding *and including* given stage ID. */
-async function getAllPrecedingStageIds(experimentId: string, stageId: string) {
-  const experiment = await getFirestoreExperiment(experimentId);
-  return experiment.stageIds.slice(0, experiment.stageIds.indexOf(stageId) + 1);
-}
-
 /** Attempts to fetch corresponding prompt config from storage,
  * else returns the stage's default config.
  */
@@ -165,8 +161,14 @@ export async function getFirestoreDataForStructuredPrompt(
   currentStageId: string,
   userProfile: ParticipantProfileExtended | MediatorProfileExtended,
   promptConfig: BasePromptConfig,
-): Record<string, StageContextData> {
+): {
+  participants: ParticipantProfileExtended[];
+  data: Record<string, StageContextData>;
+} {
   const data: Record<string, StageContextData> = {};
+
+  // Fetch experiment config, which is used to grab preceding stages
+  const experiment = await getFirestoreExperiment(experimentId);
 
   // Fetch participants used for prompt
   // (if participant, this is just the current participant;
@@ -182,7 +184,7 @@ export async function getFirestoreDataForStructuredPrompt(
 
   for (const item of promptConfig.prompt) {
     await addFirestoreDataForPromptItem(
-      experimentId,
+      experiment,
       cohortId,
       currentStageId,
       item,
@@ -191,14 +193,14 @@ export async function getFirestoreDataForStructuredPrompt(
     );
   }
 
-  return data;
+  return {participants, data};
 }
 
 /** Populates data object with Firestore documents needed for given single
  * prompt item.
  */
 export async function addFirestoreDataForPromptItem(
-  experimentId: string,
+  experiment: Experiment,
   cohortId: string,
   currentStageId: string,
   promptItem: PromptItem,
@@ -211,12 +213,12 @@ export async function addFirestoreDataForPromptItem(
       // If stage ID is empty, call this function for all stage IDs
       // leading up to this stage ID
       if (!promptItem.stageId) {
-        for (const stageId of await getAllPrecedingStageIds(
-          experimentId,
+        for (const stageId of getAllPrecedingStageIds(
+          experiment.stageIds,
           currentStageId,
         )) {
           await addFirestoreDataForPromptItem(
-            experimentId,
+            experiment.id,
             cohortId,
             currentStageId,
             {...promptItem, stageId},
@@ -229,7 +231,10 @@ export async function addFirestoreDataForPromptItem(
 
       // Fetch stage config if not already fetched
       if (!data[promptItem.stageId]) {
-        const stage = await getFirestoreStage(experimentId, promptItem.stageId);
+        const stage = await getFirestoreStage(
+          experiment.id,
+          promptItem.stageId,
+        );
         if (!stage) break;
 
         // Store stage config in stage context object
@@ -239,7 +244,7 @@ export async function addFirestoreDataForPromptItem(
         if (stage.kind === StageKind.CHAT) {
           data[promptItem.stageId].publicChatMessages =
             await getFirestorePublicStageChatMessages(
-              experimentId,
+              experiment.id,
               cohortId,
               promptItem.stageId,
             );
@@ -250,7 +255,7 @@ export async function addFirestoreDataForPromptItem(
           for (const participant of participants) {
             data[promptItem.stageId].privateChatMap[participant.publicId] =
               await getFirestorePrivateChatMessages(
-                experimentId,
+                experiment.id,
                 participant.privateId,
                 promptItem.stageId,
               );
@@ -265,14 +270,14 @@ export async function addFirestoreDataForPromptItem(
       ) {
         // Fill private answers for each participant
         stageData.privateAnswers = await getFirestoreAnswersForStage(
-          experimentId,
+          experiment.id,
           cohortId,
           promptItem.stageId,
           participants.map((participant) => participant.privateId),
         );
         // Fill public data for cohort
         stageData.publicData = await getFirestoreStagePublicData(
-          experimentId,
+          experiment.id,
           cohortId,
           promptItem.stageId,
         );
@@ -281,7 +286,7 @@ export async function addFirestoreDataForPromptItem(
     case PromptItemType.GROUP:
       for (const item of promptItem.items) {
         await addFirestoreDataForPromptItem(
-          experimentId,
+          experiment.id,
           cohortId,
           item,
           participants,
@@ -316,20 +321,18 @@ export async function getPromptFromConfig(
   agentConfig: ProfileAgentConfig,
   promptConfig: BasePromptConfig,
 ): Promise<string> {
-  // TODO: Remove temporary logging of fetched data
-  console.log(
-    await getFirestoreDataForStructuredPrompt(
-      experimentId,
-      cohortId,
-      stageId,
-      userProfile,
-      promptConfig,
-    ),
+  // Get Firestore data used to construct prompt
+  const promptData = await getFirestoreDataForStructuredPrompt(
+    experimentId,
+    cohortId,
+    stageId,
+    userProfile,
+    promptConfig,
   );
 
   const promptText = await processPromptItems(
     promptConfig.prompt,
-    experimentId,
+    promptData.experiment,
     cohortId,
     participantIds,
     stageId,
@@ -348,7 +351,7 @@ export async function getPromptFromConfig(
 /** Process prompt items recursively. */
 async function processPromptItems(
   promptItems: PromptItem[],
-  experimentId: string,
+  experiment: Experiment,
   cohortId: string,
   participantIds: string[],
   stageId: string,
@@ -389,11 +392,11 @@ async function processPromptItems(
       case PromptItemType.STAGE_CONTEXT:
         const stageContextIds = promptItem.stageId
           ? [stageId]
-          : await getAllPrecedingStageIds(experimentId, stageId);
+          : getAllPrecedingStageIds(experiment.stageIds, stageId);
         for (const id of stageContextIds) {
           items.push(
             await getStageContextForPrompt(
-              experimentId,
+              experiment.id,
               cohortId,
               participantIds,
               stageId,
@@ -431,7 +434,7 @@ async function processPromptItems(
 
         const groupText = await processPromptItems(
           groupItems,
-          experimentId,
+          experiment,
           cohortId,
           participantIds,
           stageId,

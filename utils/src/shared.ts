@@ -193,3 +193,8 @@ export function getAgentStatusDisplayText(
   // For other statuses, return as-is
   return status;
 }
+
+/** Return list of stage IDs preceding *and including* given stage ID. */
+function getAllPrecedingStageIds(stageIds: string[], stageId: string) {
+  return stageIds.slice(0, stageIds.indexOf(stageId) + 1);
+}
