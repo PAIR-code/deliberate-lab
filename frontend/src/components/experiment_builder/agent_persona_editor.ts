@@ -52,8 +52,7 @@ export class AgentPersonaEditorComponent extends MobxLitElement {
       <div class="agent-wrapper">
         ${this.renderAgentPrivateName(agentConfig)}
         ${this.renderAgentPrivateDescription(agentConfig)}
-        ${this.renderAgentName(agentConfig)}
-        ${this.renderAvatars(agentConfig)}
+        ${this.renderAgentName(agentConfig)} ${this.renderAvatars(agentConfig)}
         ${this.renderAgentApiType(agentConfig)}
         ${this.renderAgentModel(agentConfig)}
         ${this.renderMediatorCohortPreference(agentConfig)}

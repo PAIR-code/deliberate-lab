@@ -77,8 +77,9 @@ export class AgentMediatorAddDialog extends MobxLitElement {
     if (personas.length === 0) {
       return html`
         <div class="error">
-          No mediator personas are available to add. Create a mediator persona in
-          the experiment editor or remove an existing mediator from this cohort.
+          No mediator personas are available to add. Create a mediator persona
+          in the experiment editor or remove an existing mediator from this
+          cohort.
         </div>
         <div class="buttons-wrapper">
           <pr-button variant="tonal" @click=${this.close}>Close</pr-button>
