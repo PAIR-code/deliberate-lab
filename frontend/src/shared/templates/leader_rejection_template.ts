@@ -40,6 +40,7 @@ import {
   RevealAudience,
   LAS_WTL_QUESTION_ID,
 } from '@deliberation-lab/utils';
+import {mustWaitForAllParticipants} from '../experiment.utils';
 
 // ****************************************************************************
 // Experiment config
@@ -52,6 +53,24 @@ export const LR_METADATA = createMetadataConfig({
     'A multi-round experiment examining individual and group decision-making.',
 });
 
+export function getLeaderStatusMessage(status: string): string {
+  switch (status) {
+    case 'candidate_accepted':
+      return '✅ Your application to be the leader in this round was accepted.';
+    case 'candidate_rejected':
+      return '❌ Your application to be the leader in this round was rejected.';
+    case 'non_candidate_accepted':
+      return '✅ You did not apply to be the leader, but because no one applied, you were selected.';
+    case 'non_candidate_rejected':
+      return '❌ You did not apply to be the leader. Since no one applied in your group, everyone was considered; you were not selected.';
+    case 'non_candidate_hypo_selected':
+      return 'ℹ️ You did not apply to be the leader, and someone else was selected. Had you applied, you would have been selected.';
+    case 'non_candidate_hypo_rejected':
+      return 'ℹ️ You did not apply to be the leader, and someone else was selected. Had you applied, you would have been rejected.';
+    default:
+      return '⏳ Waiting for the group selection to finish...';
+  }
+}
 /* ---------------------------------------------------------------------------
  * Stage flow
  * ------------------------------------------------------------------------- */
@@ -80,7 +99,7 @@ export function getLeadershipRejectionStageConfigs(): StageConfig[] {
   stages.push(LR_R1_INSTRUCTIONS);
   stages.push(LR_R1_APPLY_STAGE);
   stages.push(LR_R1_BELIEF_CANDIDATES);
-  //stages.push(LR_R1_SELECTION_STAGE);
+  stages.push(LR_R1_SELECTION_STAGE);
   stages.push(LR_R1_INSTRUCTIONS_GROUP);
   stages.push(LR_R1_GROUP_TASK_STAGE);
   //stages.push(LR_R1_STATUS_FEEDBACK_STAGE);
@@ -90,10 +109,10 @@ export function getLeadershipRejectionStageConfigs(): StageConfig[] {
   stages.push(LR_R2_INSTRUCTIONS);
   stages.push(LR_R2_APPLY_STAGE);
   stages.push(LR_R2_BELIEF_CANDIDATES);
-  // stages.push(LR_R2_SELECTION_STAGE);
+  stages.push(LR_R2_SELECTION_STAGE);
   stages.push(LR_R2_INSTRUCTIONS_GROUP);
   stages.push(LR_R2_GROUP_TASK_STAGE);
-  // stages.push(LR_R2_STATUS_FEEDBACK_STAGE);
+  stages.push(LR_R2_STATUS_FEEDBACK_STAGE);
   stages.push(LR_R2_BELIEF_STAGE);
 
   // Group Stage - Hypothetical Round 3
@@ -658,9 +677,20 @@ const LR_R1_BELIEF_CANDIDATES = createSurveyStage({
 
 /* //==========================================================
 // Selection function (not shown to participant)
-//==========================================================
+//==========================================================*/
+export const LR_R1_SELECTION_STAGE = createInfoStage({
+  id: 'r1_selection',
+  name: 'Leader selection (backend only)',
+  descriptions: createStageTextConfig({
+    infoText: 'Determining leader...', // hidden anyway, but required by type
+  }),
+  infoLines: [],
+  progress: createStageProgressConfig({
+    showParticipantProgress: false,
+  }),
+});
 
- NEED A FUNCTION TO COMPUTE WHO IS THE SELECTED LEADER BASED ON
+/* NEED A FUNCTION TO COMPUTE WHO IS THE SELECTED LEADER BASED ON
     a) performance in individual stages (score Task 1a + score Task 1b)
     b) applications (apply_r1 = yes)
  => Apply a weighted probability lottery to select the leader, where weights depends on i) performance and ii) number of candidates to select
@@ -709,6 +739,24 @@ export const LR_R1_GROUP_TASK_STAGE = createSurveyStage({
 //==========================================================
 // Feedback Stage
 //==========================================================
+
+export const LR_R1_STATUS_FEEDBACK_STAGE = createRevealStage({
+  id: 'r1_status_feedback',
+  name: 'Round 1 — Leader Selection Result',
+  descriptions: createStageTextConfig({
+    primaryText: 'Results of leader selection for this round.',
+  }),
+  progress: createStageProgressConfig({
+    showParticipantProgress: false,
+  }),
+  items: [
+    createSurveyRevealItem({
+      id: 'leader_status_r1',
+      revealAudience: RevealAudience.CURRENT_PARTICIPANT,
+      revealScorableOnly: false,
+    }),
+  ],
+});
 
 /* Here we need everyone synchronized !!!
 
@@ -815,7 +863,17 @@ const LR_R2_BELIEF_CANDIDATES = createSurveyStage({
 //==========================================================
 // LEADER SELECTION
 //==========================================================
-// Same logic as for Round 1
+export const LR_R2_SELECTION_STAGE = createInfoStage({
+  id: 'r2_selection',
+  name: 'Leader selection',
+  descriptions: createStageTextConfig({
+    infoText: 'Determining leader...', // hidden anyway, but required by type
+  }),
+  infoLines: [],
+  progress: createStageProgressConfig({
+    showParticipantProgress: false,
+  }),
+});
 
 //==========================================================
 // Group Task
@@ -848,7 +906,24 @@ export const LR_R2_GROUP_TASK_STAGE = createSurveyStage({
 //==========================================================
 // Feedback Stage
 //==========================================================
-//Same logic as for Round 1
+
+export const LR_R2_STATUS_FEEDBACK_STAGE = createRevealStage({
+  id: 'r2_status_feedback',
+  name: 'Round 2 — Leader Selection Result',
+  descriptions: createStageTextConfig({
+    primaryText: 'Results of leader selection for this round.',
+  }),
+  progress: createStageProgressConfig({
+    showParticipantProgress: false,
+  }),
+  items: [
+    createSurveyRevealItem({
+      id: 'leader_status_r2',
+      revealAudience: RevealAudience.CURRENT_PARTICIPANT,
+      revealScorableOnly: false,
+    }),
+  ],
+});
 
 //==========================================================
 // Attribution beliefs Stage
