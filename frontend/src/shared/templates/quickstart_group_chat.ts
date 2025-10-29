@@ -98,6 +98,7 @@ function createMediatorAgent(): AgentMediatorTemplate {
   const promptMap: Record<string, MediatorPromptConfig> = {};
   promptMap[CHAT_STAGE_ID] = createChatPromptConfig(
     CHAT_STAGE_ID, // stage ID
+    StageKind.CHAT,
     {
       prompt: createDefaultPromptFromText(
         'You are facilitating a group chat. Make sure all participants have a chance to speak and that everyone is polite to one another.',

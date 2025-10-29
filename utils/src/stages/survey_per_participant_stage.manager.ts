@@ -1,0 +1,42 @@
+import {ParticipantProfileExtended} from '../participant';
+import {
+  SurveyPerParticipantStageConfig,
+  SurveyPerParticipantStageParticipantAnswer,
+} from './survey_stage';
+import {
+  getSurveyAnswersText,
+  getSurveySummaryText,
+} from './survey_stage.prompts';
+import {StageConfig, StageContextData, StageKind} from './stage';
+import {StageHandler} from './stage.manager';
+
+export class SurveyPerParticipantStageHandler
+  implements StageHandler<SurveyPerParticipantStageConfig>
+{
+  getStageDisplayForPrompt(
+    participants: ParticipantProfileExtended[],
+    stageContext: StageContextData,
+  ) {
+    const stage = stageContext.stage as SurveyPerParticipantStageConfig;
+
+    // If no participants with answers, just return the text
+    if (participants.length === 0) {
+      return getSurveySummaryText(stage);
+    }
+
+    const participantAnswers = stageContext.privateAnswers as {
+      participantPublicId: string;
+      participantDisplayName: string;
+      answer: SurveyPerParticipantStageParticipantAnswer;
+    }[];
+    return getSurveyAnswersText(participantAnswers, stage.questions, true);
+  }
+
+  getDefaultMediatorStructuredPrompt(stageId: string) {
+    return undefined;
+  }
+
+  getDefaultParticipantStructuredPrompt(stageId: string) {
+    return undefined;
+  }
+}

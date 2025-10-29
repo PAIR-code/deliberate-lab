@@ -153,7 +153,8 @@ export function getSurveySummaryText(
 
 export function getSurveyAnswersText(
   participantAnswers: Array<{
-    participantId: string;
+    participantPublicId: string;
+    participantDisplayName: string;
     answer:
       | SurveyStageParticipantAnswer
       | SurveyPerParticipantStageParticipantAnswer;
@@ -167,11 +168,15 @@ export function getSurveyAnswersText(
 
   const answerSummaries: string[] = [];
 
-  for (const {participantId, answer} of participantAnswers) {
+  for (const {
+    participantPublicId,
+    participantDisplayName,
+    answer,
+  } of participantAnswers) {
     // Include participant names based on configuration or if multiple participants
     const showNames =
       alwaysShowParticipantNames || participantAnswers.length > 1;
-    const prefix = showNames ? `* Participant ${participantId}:` : '';
+    const prefix = showNames ? `* Participant ${participantDisplayName}:` : '';
 
     if (answer.kind === StageKind.SURVEY) {
       const surveyAnswer = answer as SurveyStageParticipantAnswer;

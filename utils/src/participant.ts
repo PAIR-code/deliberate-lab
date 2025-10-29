@@ -304,7 +304,21 @@ export function getNameFromPublicId(
   includePronouns = false,
 ) {
   const profile = participants.find((p) => p.publicId === publicId);
+  if (!profile) return publicId;
+  return getParticipantDisplayName(
+    profile,
+    profileSetId,
+    includeAvatar,
+    includePronouns,
+  );
+}
 
+export function getParticipantDisplayName(
+  profile: ParticipantProfile,
+  profileSetId: string, // leave empty to use default profile
+  includeAvatar = true,
+  includePronouns = false,
+) {
   // If profile set ID specified, use the corresponding anonymous profile
   const profileName = profileSetId
     ? profile?.anonymousProfiles[profileSetId]?.name
@@ -320,5 +334,5 @@ export function getNameFromPublicId(
       includePronouns && profilePronouns ? ` (${profilePronouns})` : '';
     return `${avatar}${profileName}${pronouns}`;
   }
-  return publicId;
+  return profile.publicId;
 }

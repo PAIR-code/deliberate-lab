@@ -14,8 +14,8 @@ import {
 
 import * as firestoreUtils from '../utils/firestore';
 import * as agentUtils from '../agent.utils';
-import * as promptUtils from '../prompt.utils';
 import {completeProfile} from './profile.utils';
+import * as promptUtils from '../structured_prompt.utils';
 
 describe('stages/profile.utils', () => {
   describe('completeProfile', () => {
@@ -75,7 +75,7 @@ describe('stages/profile.utils', () => {
         .mockResolvedValue(defaultExperimenterData);
 
       jest
-        .spyOn(promptUtils, 'getStructuredPrompt')
+        .spyOn(promptUtils, 'getPromptFromConfig')
         .mockResolvedValue('test-prompt' as never);
 
       const mockResponse = {
@@ -153,7 +153,7 @@ describe('stages/profile.utils', () => {
         .mockResolvedValue(defaultExperimenterData);
 
       jest
-        .spyOn(promptUtils, 'getStructuredPrompt')
+        .spyOn(promptUtils, 'getPromptFromConfig')
         .mockResolvedValue('test-prompt' as never);
 
       const mockResponse = {
@@ -185,7 +185,7 @@ describe('stages/profile.utils', () => {
         .mockResolvedValue(defaultExperimenterData);
 
       jest
-        .spyOn(promptUtils, 'getStructuredPrompt')
+        .spyOn(promptUtils, 'getPromptFromConfig')
         .mockResolvedValue('test-prompt' as never);
 
       const mockResponse = {

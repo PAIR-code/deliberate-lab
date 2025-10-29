@@ -69,6 +69,7 @@ function createMediatorAgent(): AgentMediatorTemplate {
   const promptMap: Record<string, MediatorPromptConfig> = {};
   promptMap[CHAT_STAGE_ID] = createChatPromptConfig(
     CHAT_STAGE_ID, // stage ID
+    StageKind.PRIVATE_CHAT,
     {
       prompt: createDefaultPromptFromText(
         'You are having a private chat with a human user. Make sure you help them with whatever they need',

@@ -1,4 +1,5 @@
 import {
+  AgentMediatorPromptConfig,
   AgentParticipantPromptConfig,
   AgentPersonaConfig,
   ChatMessage,
@@ -12,6 +13,7 @@ import {
   StageConfig,
   StageParticipantAnswer,
   StagePublicData,
+  getParticipantDisplayName,
 } from '@deliberation-lab/utils';
 
 import {app} from '../app';
@@ -239,25 +241,28 @@ export async function getFirestoreAnswersForStage<
   experimentId: string,
   cohortId: string,
   stageId: string,
-  participantIds?: string[], // if undefined, use active cohort participants
+  participants: ParticipantProfileExtended[],
+  profileSetId = '', // used for fetching display names
 ): Promise<Array<{participantId: string; answer: T}>> {
-  const targetParticipants =
-    participantIds ??
-    (await getFirestoreActiveParticipants(experimentId, cohortId)).map(
-      (p) => p.privateId,
-    );
-
   const answers: Array<{participantId: string; answer: T}> = [];
-
   await Promise.all(
-    targetParticipants.map(async (participantId) => {
+    participants.map(async (participant) => {
       const answer = await getFirestoreParticipantAnswer(
         experimentId,
-        participantId,
+        participant.privateId,
         stageId,
       );
       if (answer) {
-        answers.push({participantId, answer: answer as T});
+        answers.push({
+          participantPublicId: participant.publicId,
+          participantDisplayName: getParticipantDisplayName(
+            participant,
+            profileSetId,
+            true, // include avatars
+            true, // include pronouns
+          ),
+          answer: answer as T,
+        });
       }
     }),
   );
@@ -345,26 +350,48 @@ export async function getAgentMediatorPersonas(experimentId: string) {
   );
 }
 
-/** Return agent participant prompt that corresponds to agent. */
-export async function getAgentParticipantPrompt(
+/** Return agent mediator prompt that corresponds to agent. */
+export async function getAgentMediatorPrompt(
   experimentId: string,
   stageId: string,
   agentId: string,
-): Promise<AgentParticipantPromptConfig | null> {
+): Promise<MediatorPromptConfig | null> {
   const prompt = await app
     .firestore()
     .collection('experiments')
     .doc(experimentId)
-    .collection('agents')
+    .collection('agentMediators')
     .doc(agentId)
-    .collection('participantPrompts')
+    .collection('prompts')
     .doc(stageId)
     .get();
 
   if (!prompt.exists) {
     return null;
   }
-  return prompt.data() as AgentParticipantPromptConfig;
+  return prompt.data() as MediatorPromptConfig;
+}
+
+/** Return agent participant prompt that corresponds to agent. */
+export async function getAgentParticipantPrompt(
+  experimentId: string,
+  stageId: string,
+  agentId: string,
+): Promise<ParticipantPromptConfig | null> {
+  const prompt = await app
+    .firestore()
+    .collection('experiments')
+    .doc(experimentId)
+    .collection('agentParticipants')
+    .doc(agentId)
+    .collection('prompts')
+    .doc(stageId)
+    .get();
+
+  if (!prompt.exists) {
+    return null;
+  }
+  return prompt.data() as ParticipantPromptConfig;
 }
 
 /** Get group chat messages for given cohort and stage ID. */

@@ -15,7 +15,10 @@ import {
 } from '@deliberation-lab/utils';
 import {Timestamp} from 'firebase-admin/firestore';
 import {processModelResponse} from '../agent.utils';
-import {getStructuredPrompt} from '../prompt.utils';
+import {
+  getPromptFromConfig,
+  getStructuredPromptConfig,
+} from '../structured_prompt.utils';
 import {
   convertChatToMessages,
   shouldUseMessageFormat,
@@ -52,29 +55,20 @@ export async function createAgentChatMessageFromPrompt(
 ) {
   if (!user.agentConfig) return false;
 
-  const promptConfig = (
-    await app
-      .firestore()
-      .collection('experiments')
-      .doc(experimentId)
-      .collection(
-        user.type === UserType.PARTICIPANT
-          ? 'agentParticipants'
-          : 'agentMediators',
-      )
-      .doc(user.agentConfig.agentId)
-      .collection('prompts')
-      .doc(stageId)
-      .get()
-  ).data() as ChatPromptConfig | undefined;
-
-  if (!promptConfig) {
-    return false; // No prompt configured for this stage
-  }
-
-  // Stage (in order to determin stage kind)
+  // Stage (in order to determine stage kind)
   const stage = await getFirestoreStage(experimentId, stageId);
   if (!stage) return false;
+
+  // Fetches stored (else default) prompt config for given stage
+  const promptConfig = (await getStructuredPromptConfig(
+    experimentId,
+    stage,
+    user,
+  )) as ChatPromptConfig | undefined;
+
+  if (!promptConfig) {
+    return false;
+  }
 
   // Check if this is an initial message request (empty triggerChatId)
   if (triggerChatId === '') {
@@ -215,13 +209,11 @@ export async function getAgentChatMessage(
 
   // Use provided participant IDs for prompt context
   // Get structured prompt
-  const structuredPrompt = await getStructuredPrompt(
+  const structuredPrompt = await getPromptFromConfig(
     experimentId,
     cohortId,
-    participantIds,
     stageId,
     user,
-    user.agentConfig,
     promptConfig,
   );
 
