@@ -6,38 +6,9 @@
 import * as admin from 'firebase-admin';
 import {randomBytes, scrypt, createHash} from 'crypto';
 import {promisify} from 'util';
+import {APIKeyPermission, APIKeyData} from '@deliberation-lab/utils';
 
 const scryptAsync = promisify(scrypt);
-
-export interface APIKeyData {
-  hash: string;
-  salt: string;
-  experimenterId: string;
-  name: string;
-  permissions: string[];
-  createdAt: number;
-  lastUsed: number | null;
-  expiresAt?: number;
-}
-
-export interface APIKeyPermissions {
-  experiments: {
-    create: boolean;
-    read: boolean;
-    update: boolean;
-    delete: boolean;
-    export: boolean;
-  };
-  participants: {
-    create: boolean;
-    read: boolean;
-    update: boolean;
-  };
-  admin: {
-    manageUsers: boolean;
-    viewAnalytics: boolean;
-  };
-}
 
 /**
  * Extract API key from Bearer token in Authorization header
@@ -88,7 +59,10 @@ export function getKeyId(apiKey: string): string {
 export async function createAPIKey(
   experimenterId: string,
   keyName: string,
-  permissions: string[] = ['read', 'write'],
+  permissions: APIKeyPermission[] = [
+    APIKeyPermission.READ,
+    APIKeyPermission.WRITE,
+  ],
 ): Promise<{apiKey: string; keyId: string}> {
   const app = admin.app();
   const firestore = app.firestore();
@@ -189,7 +163,7 @@ export async function listAPIKeys(experimenterId: string): Promise<
     name: string;
     createdAt: number;
     lastUsed: number | null;
-    permissions: string[];
+    permissions: APIKeyPermission[];
   }>
 > {
   const app = admin.app();

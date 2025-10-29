@@ -9,6 +9,7 @@ import express from 'express';
 import rateLimit from 'express-rate-limit';
 import {authenticateAPIKey, rejectBrowserRequests} from './api.utils';
 import {AuthGuard} from '../utils/auth-guard';
+import {APIKeyPermission} from '@deliberation-lab/utils';
 import * as apiKeyService from './api_key.utils';
 import {
   listExperiments,
@@ -114,7 +115,7 @@ export const createAPIKey = onCall(
     // Check if user is authenticated
     await AuthGuard.isExperimenter(request);
 
-    const {keyName} = request.data;
+    const {keyName, permissions} = request.data;
 
     if (!keyName || typeof keyName !== 'string') {
       throw new functions.https.HttpsError(
@@ -126,10 +127,11 @@ export const createAPIKey = onCall(
     const experimenterId = request.auth!.uid;
 
     try {
-      // Create the API key
+      // Create the API key with optional permissions
       const {apiKey, keyId} = await apiKeyService.createAPIKey(
         experimenterId,
         keyName,
+        permissions || [APIKeyPermission.READ, APIKeyPermission.WRITE],
       );
 
       return {

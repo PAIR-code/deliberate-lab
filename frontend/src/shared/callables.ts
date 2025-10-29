@@ -1,6 +1,7 @@
 import {
   AckAlertMessageData,
   AgentConfigTestData,
+  APIKeyPermission,
   BaseParticipantData,
   CreateChatMessageData,
   CohortCreationData,
@@ -630,5 +631,54 @@ export const ackAlertMessageCallable = async (
     functions,
     'ackAlertMessage',
   )(config);
+  return data;
+};
+
+/** Generic endpoint to create an API key. */
+export const createAPIKeyCallable = async (
+  functions: Functions,
+  keyName: string,
+  permissions?: APIKeyPermission[],
+) => {
+  const {data} = await httpsCallable<
+    {keyName: string; permissions?: APIKeyPermission[]},
+    {success: boolean; apiKey: string; keyId: string; message: string}
+  >(
+    functions,
+    'createAPIKey',
+  )({keyName, permissions});
+  return data;
+};
+
+/** Generic endpoint to list API keys. */
+export const listAPIKeysCallable = async (functions: Functions) => {
+  const {data} = await httpsCallable<
+    undefined,
+    {
+      success: boolean;
+      keys: Array<{
+        keyId: string;
+        name: string;
+        createdAt: number;
+        lastUsed: number | null;
+        permissions: APIKeyPermission[];
+      }>;
+    }
+  >(functions, 'listAPIKeys')();
+  return data;
+};
+
+/** Generic endpoint to revoke an API key. */
+export const revokeAPIKeyCallable = async (
+  functions: Functions,
+  keyId: string,
+) => {
+  const {data} = await httpsCallable<
+    {keyId: string},
+    {success: boolean; message: string}
+  >(
+    functions,
+    'revokeAPIKey',
+  )({keyId});
   return data;
 };
