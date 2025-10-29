@@ -757,7 +757,7 @@ export const LR_R1_STATUS_FEEDBACK_STAGE = createRevealStage({
   items: [
     {
       id: 'leader_status_r1',
-      kind: 'SURVEY' as const, // ✅ explicit literal, no cast
+      kind: StageKind.SURVEY,
       revealAudience: RevealAudience.CURRENT_PARTICIPANT,
       revealScorableOnly: false,
       customRender: (
@@ -949,7 +949,7 @@ export const LR_R2_STATUS_FEEDBACK_STAGE = createRevealStage({
   items: [
     {
       id: 'leader_status_r2',
-      kind: 'SURVEY' as const, // ✅ explicit literal, no cast
+      kind: StageKind.SURVEY,
       revealAudience: RevealAudience.CURRENT_PARTICIPANT,
       revealScorableOnly: false,
       customRender: (
