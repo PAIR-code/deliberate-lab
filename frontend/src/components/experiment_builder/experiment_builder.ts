@@ -45,7 +45,6 @@ import {styles} from './experiment_builder.scss';
 enum PanelView {
   AGENT_MEDIATORS = 'agent_mediators',
   AGENT_PARTICIPANTS = 'agent_participants',
-  ALPHA = 'alpha',
   API_KEY = 'api_key',
   COHORT = 'cohort',
   METADATA = 'metadata',
@@ -102,17 +101,6 @@ export class ExperimentBuilder extends MobxLitElement {
               <div class="subtitle">Experiment name and description</div>
             </div>
             <div
-              class="general-item ${this.panelView === PanelView.PERMISSIONS
-                ? 'current'
-                : ''}"
-              @click=${() => {
-                this.panelView = PanelView.PERMISSIONS;
-              }}
-            >
-              <div>Permissions</div>
-              <div class="subtitle">Set visibility of experiment dashboard</div>
-            </div>
-            <div
               class="general-item ${this.panelView === PanelView.STAGES
                 ? 'current'
                 : ''}"
@@ -123,6 +111,21 @@ export class ExperimentBuilder extends MobxLitElement {
               <div>Experiment stages</div>
               <div class="subtitle">Add and configure experiment stages</div>
             </div>
+            <div class="panel-view-header">
+              <div class="header-title">Other settings</div>
+            </div>
+            <div
+              class="general-item ${this.panelView === PanelView.PERMISSIONS
+                ? 'current'
+                : ''}"
+              @click=${() => {
+                this.panelView = PanelView.PERMISSIONS;
+              }}
+            >
+              <div>Permissions</div>
+              <div class="subtitle">Set visibility of experiment dashboard</div>
+            </div>
+
             <div
               class="general-item ${this.panelView === PanelView.PROLIFIC
                 ? 'current'
@@ -192,23 +195,27 @@ export class ExperimentBuilder extends MobxLitElement {
                   </div>
                 `
               : nothing}
-            <div class="panel-view-header">
-              <div class="header-title">Additional settings</div>
-            </div>
-            <div
-              class="general-item ${this.panelView === PanelView.ALPHA
-                ? 'current'
-                : ''}"
-              @click=${() => {
-                this.panelView = PanelView.ALPHA;
-              }}
-            >
-              <div>
-                Alpha features
-                <div class="subtitle">Toggle alpha features in editor</div>
-              </div>
-            </div>
+
             <div class="bottom">${this.renderDeleteButton()}</div>
+            <div class="alpha-toggle">
+              <span class="label">🧪 Alpha features</span>
+              <label
+                class="switch"
+                title=${this.experimentEditor.showAlphaFeatures
+                  ? 'Alpha features enabled'
+                  : 'Alpha features disabled'}
+              >
+                <input
+                  type="checkbox"
+                  ?checked=${this.experimentEditor.showAlphaFeatures}
+                  @change=${(e: Event) => {
+                    const checked = (e.target as HTMLInputElement).checked;
+                    this.experimentEditor.showAlphaFeatures = checked;
+                  }}
+                />
+                <span class="slider"></span>
+              </label>
+            </div>
           </div>
         </div>
       </div>
@@ -343,28 +350,6 @@ export class ExperimentBuilder extends MobxLitElement {
       return this.renderAgentParticipantsBuilder();
     } else if (this.panelView === PanelView.STAGES) {
       return this.renderStageBuilder();
-    } else if (this.panelView === PanelView.ALPHA) {
-      return html`
-        <div class="inner-wrapper">
-          <div class="title">Alpha mode</div>
-          <div class="checkbox-wrapper">
-            <md-checkbox
-              touch-target="wrapper"
-              ?checked=${this.experimentEditor.showAlphaFeatures}
-              @click=${() => {
-                this.experimentEditor.setShowAlphaFeatures(
-                  !this.experimentEditor.showAlphaFeatures,
-                );
-              }}
-            >
-            </md-checkbox>
-            <div>
-              Show "alpha mode" options when building experiment. Note that
-              alpha features are still in progress and may not work as intended.
-            </div>
-          </div>
-        </div>
-      `;
     }
     return nothing;
   }
