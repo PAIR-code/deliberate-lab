@@ -64,6 +64,7 @@ export async function getStructuredPromptConfig(
         stage.id,
         user.agentConfig?.agentId,
       );
+      // Return stored prompt or fallback default prompt
       return (
         participantPrompt ??
         stageManager.getDefaultParticipantStructuredPrompt(stage)
@@ -74,9 +75,8 @@ export async function getStructuredPromptConfig(
         stage.id,
         user.agentConfig?.agentId,
       );
-      return (
-        mediatorPrompt ?? stageManager.getDefaultMediatorStructuredPrompt(stage)
-      );
+      // If prompt not stored under experiment, then return undefined
+      return mediatorPrompt;
     default:
       return undefined;
   }
