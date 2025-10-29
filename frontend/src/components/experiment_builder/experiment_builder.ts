@@ -112,7 +112,7 @@ export class ExperimentBuilder extends MobxLitElement {
               <div class="subtitle">Add and configure experiment stages</div>
             </div>
             <div class="panel-view-header">
-              <div class="header-title">Other settings</div>
+              <div class="header-title">Additional settings</div>
             </div>
             <div
               class="general-item ${this.panelView === PanelView.PERMISSIONS

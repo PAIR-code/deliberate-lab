@@ -218,19 +218,24 @@ export class ExperimentCohortEditor extends MobxLitElement {
             @click=${updateCheck}
           >
           </md-checkbox>
-          <div>Limit cohort to maximum number of participants</div>
+          <div>Set a default maximum number of participants per cohort (can be changed later)</div>
         </div>
-        <md-filled-text-field
-          label="Maximum number of participants"
-          type="number"
-          id="maxParticipants"
-          name="maxParticipants"
-          min="0"
-          .value=${maxParticipants ?? ''}
-          ?disabled=${!this.experimentManager.isCreator || !maxParticipants}
-          @input=${updateNum}
-        >
-        </md-filled-text-field>
+        ${maxParticipants === null
+          ? ''
+          : html` <div class="conditional-section">
+              <md-filled-text-field
+                label="Maximum number of participants"
+                type="number"
+                id="maxParticipants"
+                name="maxParticipants"
+                min="0"
+                .value=${maxParticipants ?? ''}
+                ?disabled=${!this.experimentManager.isCreator ||
+                !maxParticipants}
+                @input=${updateNum}
+              >
+              </md-filled-text-field>
+            </div>`}
       </div>
     `;
   }
@@ -295,7 +300,7 @@ export class ExperimentProlificEditor extends MobxLitElement {
             @click=${updateProlificIntegration}
           >
           </md-checkbox>
-          <div>Enable integration with Prolific</div>
+          <div>Enable participant recruitment integration with <a href="https://www.prolific.co/" target="_blank">Prolific</a></div>
         </div>
         ${this.renderProlificRedirectCodes(isProlific)}
       </div>
@@ -317,35 +322,40 @@ export class ExperimentProlificEditor extends MobxLitElement {
       const bootedRedirectCode = (e.target as HTMLTextAreaElement).value;
       this.experimentEditor.updateProlificConfig({bootedRedirectCode});
     };
+    if (!isEnabled) {
+      return nothing;
+    }
 
     return html`
-      <md-filled-text-field
-        required
-        label="Default redirect code (e.g., when experiment ends)"
-        .value=${this.experimentEditor.experiment.prolificConfig
-          .defaultRedirectCode ?? ''}
-        .error=${!this.experimentEditor.experiment.prolificConfig
-          .defaultRedirectCode}
-        ?disabled=${!this.experimentManager.isCreator || !isEnabled}
-        @input=${updateDefault}
-      >
-      </md-filled-text-field>
-      <md-filled-text-field
-        label="Attention redirect code (used when participants fail attention checks)"
-        .value=${this.experimentEditor.experiment.prolificConfig
-          .attentionFailRedirectCode ?? ''}
-        ?disabled=${!this.experimentManager.isCreator || !isEnabled}
-        @input=${updateAttention}
-      >
-      </md-filled-text-field>
-      <md-filled-text-field
-        label="Booted redirect code (used when experimenters boot a participant from an experiment)"
-        .value=${this.experimentEditor.experiment.prolificConfig
-          .bootedRedirectCode ?? ''}
-        ?disabled=${!this.experimentManager.isCreator || !isEnabled}
-        @input=${updateBooted}
-      >
-      </md-filled-text-field>
+      <div class="conditional-section">
+        <md-filled-text-field
+          required
+          label="Default redirect code (e.g., when experiment ends)"
+          .value=${this.experimentEditor.experiment.prolificConfig
+            .defaultRedirectCode ?? ''}
+          .error=${!this.experimentEditor.experiment.prolificConfig
+            .defaultRedirectCode}
+          ?disabled=${!this.experimentManager.isCreator || !isEnabled}
+          @input=${updateDefault}
+        >
+        </md-filled-text-field>
+        <md-filled-text-field
+          label="Attention redirect code (used when participants fail attention checks)"
+          .value=${this.experimentEditor.experiment.prolificConfig
+            .attentionFailRedirectCode ?? ''}
+          ?disabled=${!this.experimentManager.isCreator || !isEnabled}
+          @input=${updateAttention}
+        >
+        </md-filled-text-field>
+        <md-filled-text-field
+          label="Booted redirect code (used when experimenters boot a participant from an experiment)"
+          .value=${this.experimentEditor.experiment.prolificConfig
+            .bootedRedirectCode ?? ''}
+          ?disabled=${!this.experimentManager.isCreator || !isEnabled}
+          @input=${updateBooted}
+        >
+        </md-filled-text-field>
+      </div>
     `;
   }
 }
