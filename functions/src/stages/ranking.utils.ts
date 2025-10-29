@@ -25,7 +25,7 @@ import {
 import {app} from '../app';
 
 /** Update ranking stage public data to include participant private data. */
-export async function addParticipantAnswerToLRRankingStagePublicData(
+export async function addParticipantAnswerToRankingStagePublicData(
   experimentId: string,
   stage: RankingStageConfig,
   participant: ParticipantProfileExtended,
