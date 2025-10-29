@@ -413,7 +413,7 @@ export class Component extends MobxLitElement {
     return html`
       <pr-tooltip text=${tooltipText} position="BOTTOM_END">
         <pr-icon-button
-          icon="support_agent"
+          icon="person_add"
           color="tertiary"
           variant="default"
           ?disabled=${isDisabled}
