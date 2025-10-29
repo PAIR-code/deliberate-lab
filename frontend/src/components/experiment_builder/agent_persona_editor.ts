@@ -241,19 +241,19 @@ export class AgentPersonaEditorComponent extends MobxLitElement {
 
     const togglePreference = (event: Event) => {
       const checked = (event.target as HTMLInputElement).checked;
-      this.updatePersona({isDefaultAddToCohort: !checked});
+      this.updatePersona({isDefaultAddToCohort: checked});
     };
 
     return html`
       <div class="checkbox-wrapper">
         <md-checkbox
           touch-target="wrapper"
-          ?checked=${!agent.isDefaultAddToCohort}
+          ?checked=${agent.isDefaultAddToCohort}
           ?disabled=${!this.experimentEditor.canEditStages}
           @change=${togglePreference}
         >
         </md-checkbox>
-        <div>Don't automatically add mediator to cohort</div>
+        <div>Automatically add this mediator to every cohort</div>
       </div>
     `;
   }
