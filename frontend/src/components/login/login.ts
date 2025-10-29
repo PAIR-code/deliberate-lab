@@ -22,33 +22,48 @@ export class Login extends MobxLitElement {
 
   @state() experimentId = '';
   @state() participantId = '';
-
   override render() {
     const handleLogin = () => {
       this.analyticsService.trackButtonClick(ButtonClick.LOGIN);
       this.authService.signInWithGoogle();
     };
 
-    // TODO: Enable developers to customize info by importing a Git-ignored
-    // app_info.md file (and push app_info.example.md to repository)
     return html`
-      <div class="login">
-        <h1>🕊️ Welcome to ${APP_NAME}</h1>
-        <div>
-          ${APP_NAME} is
-          <a href="https://pair-code.github.io/deliberate-lab/" target="blank">
-            an open-source platform
-          </a>
-          for running online research experiments on human + LLM group dynamics.
+      <header class="header">
+        <div class="logo">🕊️ ${APP_NAME}</div>
+        <div class="header-actions">
+          <pr-button
+            variant="tonal"
+            @click=${() =>
+              window.open('https://forms.gle/K87ACqV3H5mwPUoN8', '_blank')}
+          >
+            Apply to run experiments
+          </pr-button>
+          <pr-button @click=${handleLogin}> Sign in </pr-button>
         </div>
+      </header>
+
+      <div class="login">
+        <h1 class="hero-title">
+          Run social human–AI experiments on ${APP_NAME}.
+        </h1>
+        <p class="hero-subhead">
+          ${APP_NAME} is
+          <a href="https://pair-code.github.io/deliberate-lab/" target="_blank"
+            >an experimental open-source platform</a
+          >
+          for conducting online research on human + LLM group dynamics. It is
+          managed by Google DeepMind's
+          <a href="https://pair.withgoogle.com/" target="_blank">PAIR</a> team.
+        </p>
+        <img src="https://i.imgur.com/BcUPGKo.png" alt="Platform preview" />
+
         <div class="info">
           <div>
-            ⚠️ The owner(s) of this deployment will have access to any
+            ⚠️ The administrators of this deployment have access to any
             experiment data created. Contact the owner(s) for information about
-            analytics tracking, data retention policies, etc.
-          </div>
-          <div>
-            To run the platform locally or create your own deployment,
+            analytics tracking and data retention policies. To run the platform
+            locally or create your own deployment,
             <a
               href="https://github.com/PAIR-code/deliberate-lab"
               target="_blank"
@@ -57,23 +72,41 @@ export class Login extends MobxLitElement {
             >.
           </div>
         </div>
-        <div class="info">
-          <div>
-            📋 The platform is currently closed access. If you're a researcher
-            interested in running experiments on this platform, please reach out
-            to the developers through
+      </div>
+
+      <footer>
+        <div class="footer-container">
+          <div class="footer-links">
+            <a
+              href="https://github.com/PAIR-code/deliberate-lab"
+              target="_blank"
+              rel="noopener"
+              >GitHub</a
+            >
+            <a
+              href="https://arxiv.org/abs/2510.13011"
+              target="_blank"
+              rel="noopener"
+              >Technical Paper</a
+            >
             <a
               href="https://github.com/PAIR-code/deliberate-lab/issues/new"
               target="_blank"
-              >Github</a
-            >.
+              rel="noopener"
+              >Contact</a
+            >
+          </div>
+
+          <div class="version">
+            Version:
+            <a
+              href="https://github.com/PAIR-code/llm-mediation-experiments/commit/${GIT_COMMIT_HASH}"
+              target="_blank"
+              >${GIT_VERSION}</a
+            >
           </div>
         </div>
-        <div class="action-buttons">
-          <pr-button @click=${handleLogin}>Sign in with Google</pr-button>
-        </div>
-      </div>
-      <div class="version">Version: ${GIT_VERSION}</div>
+      </footer>
     `;
   }
 }
