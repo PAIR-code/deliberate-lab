@@ -195,6 +195,6 @@ export function getAgentStatusDisplayText(
 }
 
 /** Return list of stage IDs preceding *and including* given stage ID. */
-function getAllPrecedingStageIds(stageIds: string[], stageId: string) {
+export function getAllPrecedingStageIds(stageIds: string[], stageId: string) {
   return stageIds.slice(0, stageIds.indexOf(stageId) + 1);
 }

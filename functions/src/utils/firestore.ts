@@ -1,13 +1,13 @@
 import {
-  AgentMediatorPromptConfig,
-  AgentParticipantPromptConfig,
   AgentPersonaConfig,
   ChatMessage,
   CohortConfig,
   Experiment,
   ExperimenterData,
+  MediatorPromptConfig,
   MediatorProfileExtended,
   MediatorStatus,
+  ParticipantPromptConfig,
   ParticipantProfileExtended,
   ParticipantStatus,
   StageConfig,
@@ -243,8 +243,18 @@ export async function getFirestoreAnswersForStage<
   stageId: string,
   participants: ParticipantProfileExtended[],
   profileSetId = '', // used for fetching display names
-): Promise<Array<{participantId: string; answer: T}>> {
-  const answers: Array<{participantId: string; answer: T}> = [];
+): Promise<
+  Array<{
+    participantPublicId: string;
+    participantDisplayName: string;
+    answer: T;
+  }>
+> {
+  const answers: Array<{
+    participantPublicId: string;
+    participantDisplayName: string;
+    answer: T;
+  }> = [];
   await Promise.all(
     participants.map(async (participant) => {
       const answer = await getFirestoreParticipantAnswer(

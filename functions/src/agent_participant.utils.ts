@@ -11,9 +11,7 @@ import {
   updateParticipantNextStage,
 } from './participant.utils';
 import {completeProfile} from './stages/profile.utils';
-import {getAgentParticipantRankingStageResponse} from './stages/ranking.agent';
 import {assignRolesToParticipants} from './stages/role.utils';
-import {getAgentParticipantSurveyStageResponse} from './stages/survey.agent';
 import {
   getExperimenterData,
   getFirestoreParticipantRef,
