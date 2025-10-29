@@ -17,7 +17,9 @@ import {
   StageConfig,
   SurveyQuestion,
   SurveyQuestionKind,
-  ParticipantProfilePublic,
+  ParticipantProfile,
+  ParticipantProfileBase,
+  ParticipantProfileExtended,
   choice,
   createExperimentConfig,
   createInfoStage,
@@ -742,7 +744,7 @@ export const LR_R1_GROUP_TASK_STAGE = createSurveyStage({
 // Feedback Stage
 //==========================================================
 
-export const LR_R2_STATUS_FEEDBACK_STAGE = createRevealStage({
+export const LR_R1_STATUS_FEEDBACK_STAGE = createRevealStage({
   id: 'r1_status_feedback',
   name: 'Round 1 — Leader Selection Result',
   descriptions: createStageTextConfig({
@@ -759,7 +761,7 @@ export const LR_R2_STATUS_FEEDBACK_STAGE = createRevealStage({
       revealAudience: RevealAudience.CURRENT_PARTICIPANT,
       revealScorableOnly: false,
       customRender: (
-        participant: ParticipantProfilePublic,
+        participant: ParticipantProfileExtended,
         publicStageData: LRRankingStagePublicData,
       ): string => {
         const status = publicStageData.leaderStatusMap?.[participant.publicId];
@@ -951,7 +953,7 @@ export const LR_R2_STATUS_FEEDBACK_STAGE = createRevealStage({
       revealAudience: RevealAudience.CURRENT_PARTICIPANT,
       revealScorableOnly: false,
       customRender: (
-        participant: ParticipantProfilePublic,
+        participant: ParticipantProfileExtended,
         publicStageData: LRRankingStagePublicData,
       ): string => {
         const status = publicStageData.leaderStatusMap?.[participant.publicId];
