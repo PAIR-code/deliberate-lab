@@ -8,6 +8,7 @@ import './cohort_summary';
 import './participant_summary';
 import './agent_participant_configuration_dialog';
 import './agent_mediator_add_dialog';
+import {renderMediatorStatusChip} from './mediator_status';
 
 import {MobxLitElement} from '@adobe/lit-mobx';
 import {CSSResultGroup, html, nothing, TemplateResult} from 'lit';
@@ -31,7 +32,6 @@ import {
   ParticipantProfileExtended,
   ParticipantStatus,
   StageKind,
-  getAgentStatusDisplayText,
 } from '@deliberation-lab/utils';
 
 import {styles} from './cohort_editor.scss';
@@ -207,14 +207,7 @@ export class Component extends MobxLitElement {
 
     const renderMediator = (mediator: MediatorProfileExtended) => {
       const renderStatus = () => {
-        if (!mediator.agentConfig) {
-          return nothing;
-        }
-        return html`
-          <div class="chip secondary">
-            🤖 ${getAgentStatusDisplayText(mediator.currentStatus)}
-          </div>
-        `;
+        return renderMediatorStatusChip(mediator);
       };
 
       const toggleStatus = async () => {
