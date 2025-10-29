@@ -5,6 +5,22 @@ import {MediatorStatus} from './mediator';
 const strict = {additionalProperties: false} as const;
 
 // ****************************************************************************
+// createMediator
+// ****************************************************************************
+
+/** createMediator input validation. */
+export const CreateMediatorData = Type.Object(
+  {
+    experimentId: Type.String({minLength: 1}),
+    cohortId: Type.String({minLength: 1}),
+    agentPersonaId: Type.String({minLength: 1}),
+  },
+  strict,
+);
+
+export type CreateMediatorData = Static<typeof CreateMediatorData>;
+
+// ****************************************************************************
 // updateMediatorStatus
 // ****************************************************************************
 

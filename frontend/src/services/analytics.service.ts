@@ -7,6 +7,7 @@ interface ServiceProvider {
 }
 
 export enum ButtonClick {
+  AGENT_MEDIATOR_ADD = 'click_agent_mediator_add',
   AGENT_PARTICIPANT_ADD = 'click_agent_participant_add',
   ATTENTION_CHECK_SEND = 'click_attention_check', // sending attention check
   ATTENTION_ACCEPT = 'click_attention_accept', // responded to attention check
