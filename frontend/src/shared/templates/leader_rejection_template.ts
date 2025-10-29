@@ -17,6 +17,7 @@ import {
   StageConfig,
   SurveyQuestion,
   SurveyQuestionKind,
+  ParticipantProfilePublic,
   choice,
   createExperimentConfig,
   createInfoStage,
@@ -38,6 +39,7 @@ import {
   createStageProgressConfig,
   randint,
   RevealAudience,
+  LRRankingStagePublicData,
   LAS_WTL_QUESTION_ID,
 } from '@deliberation-lab/utils';
 import {mustWaitForAllParticipants} from '../experiment.utils';
@@ -102,7 +104,7 @@ export function getLeadershipRejectionStageConfigs(): StageConfig[] {
   stages.push(LR_R1_SELECTION_STAGE);
   stages.push(LR_R1_INSTRUCTIONS_GROUP);
   stages.push(LR_R1_GROUP_TASK_STAGE);
-  //stages.push(LR_R1_STATUS_FEEDBACK_STAGE);
+  stages.push(LR_R1_STATUS_FEEDBACK_STAGE);
   stages.push(LR_R1_BELIEF_STAGE);
 
   // Group Stage - Round 2
@@ -740,21 +742,46 @@ export const LR_R1_GROUP_TASK_STAGE = createSurveyStage({
 // Feedback Stage
 //==========================================================
 
-export const LR_R1_STATUS_FEEDBACK_STAGE = createRevealStage({
+export const LR_R2_STATUS_FEEDBACK_STAGE = createRevealStage({
   id: 'r1_status_feedback',
   name: 'Round 1 — Leader Selection Result',
   descriptions: createStageTextConfig({
     primaryText: 'Results of leader selection for this round.',
+    infoText: 'Please wait until everyone in your group has reached this page.',
   }),
   progress: createStageProgressConfig({
     showParticipantProgress: false,
   }),
   items: [
-    createSurveyRevealItem({
+    {
       id: 'leader_status_r1',
+      kind: 'SURVEY' as const, // ✅ explicit literal, no cast
       revealAudience: RevealAudience.CURRENT_PARTICIPANT,
       revealScorableOnly: false,
-    }),
+      customRender: (
+        participant: ParticipantProfilePublic,
+        publicStageData: LRRankingStagePublicData,
+      ): string => {
+        const status = publicStageData.leaderStatusMap?.[participant.publicId];
+
+        switch (status) {
+          case 'candidate_accepted':
+            return '✅ Your application to be the leader in this round was accepted.';
+          case 'candidate_rejected':
+            return '❌ Your application to be the leader in this round was rejected.';
+          case 'non_candidate_accepted':
+            return '✅ You did not apply to be the leader, but since no one applied, you were selected.';
+          case 'non_candidate_rejected':
+            return '❌ You did not apply to be the leader. Since no one applied, everyone was considered, but you were not selected.';
+          case 'non_candidate_hypo_selected':
+            return '💡 You did not apply to be the leader, and someone else was selected. Had you applied, you would have been selected.';
+          case 'non_candidate_hypo_rejected':
+            return 'ℹ️ You did not apply to be the leader, and someone else was selected. Had you applied, you would have been rejected.';
+          default:
+            return '⏳ Waiting for results...';
+        }
+      },
+    },
   ],
 });
 
@@ -912,16 +939,41 @@ export const LR_R2_STATUS_FEEDBACK_STAGE = createRevealStage({
   name: 'Round 2 — Leader Selection Result',
   descriptions: createStageTextConfig({
     primaryText: 'Results of leader selection for this round.',
+    infoText: 'Please wait until everyone in your group has reached this page.',
   }),
   progress: createStageProgressConfig({
     showParticipantProgress: false,
   }),
   items: [
-    createSurveyRevealItem({
+    {
       id: 'leader_status_r2',
+      kind: 'SURVEY' as const, // ✅ explicit literal, no cast
       revealAudience: RevealAudience.CURRENT_PARTICIPANT,
       revealScorableOnly: false,
-    }),
+      customRender: (
+        participant: ParticipantProfilePublic,
+        publicStageData: LRRankingStagePublicData,
+      ): string => {
+        const status = publicStageData.leaderStatusMap?.[participant.publicId];
+
+        switch (status) {
+          case 'candidate_accepted':
+            return '✅ Your application to be the leader in this round was accepted.';
+          case 'candidate_rejected':
+            return '❌ Your application to be the leader in this round was rejected.';
+          case 'non_candidate_accepted':
+            return '✅ You did not apply to be the leader, but since no one applied, you were selected.';
+          case 'non_candidate_rejected':
+            return '❌ You did not apply to be the leader. Since no one applied, everyone was considered, but you were not selected.';
+          case 'non_candidate_hypo_selected':
+            return '💡 You did not apply to be the leader, and someone else was selected. Had you applied, you would have been selected.';
+          case 'non_candidate_hypo_rejected':
+            return 'ℹ️ You did not apply to be the leader, and someone else was selected. Had you applied, you would have been rejected.';
+          default:
+            return '⏳ Waiting for results...';
+        }
+      },
+    },
   ],
 });
 
