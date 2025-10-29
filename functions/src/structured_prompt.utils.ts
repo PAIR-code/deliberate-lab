@@ -7,6 +7,8 @@ import {
   BasePromptConfig,
   ChatStageConfig,
   Experiment,
+  MediatorProfileExtended,
+  ParticipantProfileExtended,
   PrivateChatStageConfig,
   ProfileAgentConfig,
   PromptItem,
@@ -53,7 +55,7 @@ export async function getStructuredPromptConfig(
   experimentId: string,
   stage: StageConfig,
   user: ParticipantProfileExtended | MediatorProfileExtended,
-): BasePromptConfig | undefined {
+): Promise<BasePromptConfig | undefined> {
   if (!user.agentConfig) {
     return undefined;
   }
@@ -91,10 +93,11 @@ export async function getFirestoreDataForStructuredPrompt(
   currentStageId: string,
   userProfile: ParticipantProfileExtended | MediatorProfileExtended,
   promptConfig: BasePromptConfig,
-): {
+): Promise<{
+  experiment: Experiment;
   participants: ParticipantProfileExtended[];
   data: Record<string, StageContextData>;
-} {
+}> {
   const data: Record<string, StageContextData> = {};
 
   // Fetch experiment config, which is used to grab preceding stages
@@ -103,7 +106,7 @@ export async function getFirestoreDataForStructuredPrompt(
   // Fetch participants used for prompt
   // (if participant, this is just the current participant;
   // if mediator, it's all active cohort participants)
-  let participants: ParticipantProfileExtended = [];
+  let participants: ParticipantProfileExtended[] = [];
   if (userProfile.type === UserType.PARTICIPANT) {
     participants.push(
       await getFirestoreParticipant(experimentId, userProfile.privateId),
@@ -159,7 +162,7 @@ export async function addFirestoreDataForPromptItem(
           currentStageId,
         )) {
           await addFirestoreDataForPromptItem(
-            experiment.id,
+            experiment,
             cohortId,
             currentStageId,
             {...promptItem, stageId},
@@ -171,7 +174,7 @@ export async function addFirestoreDataForPromptItem(
       }
 
       // Fetch stage config if not already fetched
-      if (!data[promptItem.stageId]) {
+      if (promptItem.stageId !== '' && !data[promptItem.stageId]) {
         const stage = await getFirestoreStage(
           experiment.id,
           promptItem.stageId,
@@ -228,8 +231,9 @@ export async function addFirestoreDataForPromptItem(
     case PromptItemType.GROUP:
       for (const item of promptItem.items) {
         await addFirestoreDataForPromptItem(
-          experiment.id,
+          experiment,
           cohortId,
+          currentStageId,
           item,
           participants,
           data,
@@ -306,7 +310,7 @@ async function processPromptItems(
         items.push(promptItem.text);
         break;
       case PromptItemType.PROFILE_CONTEXT:
-        items.push(agentConfig.promptContext);
+        items.push(userProfile.agentConfig.promptContext);
         break;
       case PromptItemType.PROFILE_INFO:
         const getProfileSetId = () => {
@@ -355,7 +359,7 @@ async function processPromptItems(
           let seedString = '';
           switch (promptGroup.shuffleConfig.seed) {
             case 'experiment':
-              seedString = experimentId;
+              seedString = experiment.id;
               break;
             case 'cohort':
               seedString = cohortId;

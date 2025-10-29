@@ -110,9 +110,6 @@ export interface BaseAgentPromptConfig {
   structuredOutputConfig: ChatMediatorStructuredOutputConfig;
 }
 
-/** Prompt config for completing stage (e.g., survey questions). */
-export type AgentParticipantPromptConfig = BaseAgentPromptConfig;
-
 /** Prompt config for sending chat messages
  * (sent to specified API on stage's chat trigger)
  */
@@ -156,7 +153,7 @@ export interface AgentMediatorPersonaConfig extends BaseAgentPersonaConfig {
 export interface AgentDataObject {
   persona: AgentPersonaConfig;
   // Maps from stage ID to prompt for completing stage
-  participantPromptMap: Record<string, AgentParticipantPromptConfig>;
+  participantPromptMap: Record<string, ParticipantPromptConfig>;
   // Maps from stage ID to prompt for sending chat messages
   chatPromptMap: Record<string, AgentChatPromptConfig>;
 }

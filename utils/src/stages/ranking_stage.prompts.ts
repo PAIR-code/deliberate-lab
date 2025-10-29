@@ -1,5 +1,4 @@
 /** Prompt constants and utils for interacting with ranking stage. */
-import {AgentParticipantPromptConfig} from '../agent';
 import {ParticipantProfile, ParticipantProfileExtended} from '../participant';
 import {RankingStageConfig, RankingType} from './ranking_stage';
 import {getBaseStagePrompt} from './stage.prompts';
