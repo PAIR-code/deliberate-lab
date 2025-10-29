@@ -8,6 +8,7 @@ import {
   createMultipleChoiceComprehensionQuestion,
   createMultipleChoiceItem,
   createPayoutStage,
+  createDefaultPayoutItem,
   createProfileStage,
   createStageProgressConfig,
   createStageTextConfig,
@@ -378,8 +379,16 @@ function createBargainGameStage() {
 const BARGAIN_PAYOUT_STAGE = createPayoutStage({
   id: 'payout',
   name: 'Your payout',
-  payoutItems: [],
-  // Payout calculation will be handled by the backend based on the bargain stage results
+  payoutItems: [
+    createDefaultPayoutItem({
+      id: 'bargain_payout',
+      name: 'Bargaining Game Bonus',
+      description: 'Bonus earned from the bargaining game based on your negotiation outcome.',
+      isActive: true,
+      stageId: BARGAIN_GAME_STAGE_ID,
+      baseCurrencyAmount: 0, // Calculated dynamically based on game outcome
+    }),
+  ],
 });
 
 // ****************************************************************************

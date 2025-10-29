@@ -52,17 +52,6 @@ export class BargainParticipantView extends MobxLitElement {
       return nothing;
     }
 
-    // Check if stage is complete
-    if (publicData.isGameOver) {
-      return html`
-        <div class="bargain-container">
-          <stage-description .stage=${this.stage}></stage-description>
-          <progress-stage-completed></progress-stage-completed>
-          ${this.renderGameSummary(publicData)}
-        </div>
-      `;
-    }
-
     // Check if game hasn't started yet (initialization phase)
     if (publicData.currentTurn === 0 || !this.answer) {
       return this.renderInitializationPhase();
@@ -79,6 +68,13 @@ export class BargainParticipantView extends MobxLitElement {
           ${this.renderDialoguePanel(publicData)}
         </div>
       </div>
+      ${publicData.isGameOver
+        ? html`
+            <stage-footer .disabled=${false}>
+              <progress-stage-completed></progress-stage-completed>
+            </stage-footer>
+          `
+        : nothing}
     `;
   }
 
@@ -159,6 +155,10 @@ export class BargainParticipantView extends MobxLitElement {
     return html`
       <div class="panel action-panel">
         <h3 class="panel-title">Action Panel</h3>
+        <div class="info-row" style="margin-bottom: 12px; padding: 8px; background-color: var(--md-sys-color-surface-container-low); border-radius: 4px;">
+          <span class="info-label">Maximum number of turns:</span>
+          <span class="info-value" style="font-weight: 600;">${this.answer.maxTurns}</span>
+        </div>
         ${this.errorMessage ? html`<div class="error-message">${this.errorMessage}</div>` : nothing}
         ${isMyTurn && !isPendingResponse
           ? this.renderOfferInput()
@@ -265,6 +265,7 @@ export class BargainParticipantView extends MobxLitElement {
             ? html`<div class="waiting-message">No offers yet. Negotiation will begin shortly...</div>`
             : publicData.transactions.map((transaction, index) => this.renderTransaction(transaction, index + 1))
           }
+          ${publicData.isGameOver ? this.renderGameSummaryInHistory(publicData) : nothing}
         </div>
       </div>
     `;
@@ -324,57 +325,38 @@ export class BargainParticipantView extends MobxLitElement {
     return 'Unknown';
   }
 
-  private renderGameSummary(publicData: BargainStagePublicData) {
+  private renderGameSummaryInHistory(publicData: BargainStagePublicData) {
     const dealReached = publicData.agreedPrice !== null;
 
     if (dealReached) {
-      return this.renderDealSummary(publicData.agreedPrice!);
+      return html`
+        <div class="transaction-item game-over accepted">
+          <div class="transaction-header">
+            <span class="transaction-turn">Game Over</span>
+            <span class="transaction-status accepted">✓ Deal Reached!</span>
+          </div>
+          <div class="transaction-offer">
+            <div class="offer-price">$${publicData.agreedPrice}</div>
+            <div class="offer-sender">Final agreed price</div>
+          </div>
+          <div class="chat-message" style="font-style: normal; color: var(--md-sys-color-on-surface);">
+            Congratulations! You and your partner reached an agreement. Your payout will be displayed on the next page.
+          </div>
+        </div>
+      `;
     } else {
-      return this.renderNoDealSummary();
-    }
-  }
-
-  private renderDealSummary(agreedPrice: number) {
-    if (!this.answer) return nothing;
-
-    const valuation = this.answer.valuation;
-    const role = this.answer.role;
-
-    let payout = 0;
-    if (role === BargainRole.BUYER) {
-      payout = valuation - agreedPrice;
-    } else if (role === BargainRole.SELLER) {
-      payout = agreedPrice - valuation;
-    }
-
-    return html`
-      <div class="game-summary">
-        <div class="summary-title">Deal Reached!</div>
-        <div class="summary-details">
-          <div class="info-row">
-            <span class="info-label">Agreed Price:</span>
-            <span class="info-value">$${agreedPrice}</span>
+      return html`
+        <div class="transaction-item game-over rejected">
+          <div class="transaction-header">
+            <span class="transaction-turn">Game Over</span>
+            <span class="transaction-status rejected">✗ No Deal</span>
           </div>
-          <div class="info-row">
-            <span class="info-label">Your Valuation:</span>
-            <span class="info-value">$${valuation}</span>
+          <div class="chat-message" style="font-style: normal; color: var(--md-sys-color-on-surface);">
+            The maximum number of turns was reached without agreement. Your payout will be displayed on the next page.
           </div>
         </div>
-        <div class="payout-display">Your Payout: $${payout}</div>
-      </div>
-    `;
-  }
-
-  private renderNoDealSummary() {
-    return html`
-      <div class="game-summary no-deal">
-        <div class="summary-title">No Deal</div>
-        <div class="summary-details">
-          <p>The maximum number of turns was reached without agreement.</p>
-        </div>
-        <div class="payout-display">Your Payout: $0</div>
-      </div>
-    `;
+      `;
+    }
   }
 
   private async handleSendOffer() {

@@ -8,6 +8,7 @@ import {ExperimentService} from '../../services/experiment.service';
 import {ParticipantService} from '../../services/participant.service';
 
 import {
+  BaseStageParticipantAnswer,
   ChipPayoutItemResult,
   ChipPayoutValueItem,
   DefaultPayoutItem,
@@ -49,12 +50,21 @@ export class PayoutView extends MobxLitElement {
       return nothing;
     }
 
+    // Filter out undefined values from answerMap
+    const participantAnswerMap: Record<string, BaseStageParticipantAnswer> = {};
+    Object.entries(this.participantService.answerMap).forEach(([key, value]) => {
+      if (value) {
+        participantAnswerMap[key] = value;
+      }
+    });
+
     const resultConfig = calculatePayoutResult(
       this.stage,
       this.answer,
       this.experimentService.stageConfigMap,
       this.cohortService.stagePublicDataMap,
       this.participantService.profile,
+      participantAnswerMap,
     );
 
     return html`

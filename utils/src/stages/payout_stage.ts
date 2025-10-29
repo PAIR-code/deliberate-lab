@@ -15,6 +15,7 @@ import {
   SurveyAnswer,
   SurveyQuestionKind,
 } from './survey_stage';
+import {BargainRole, BargainStageParticipantAnswer, BargainStagePublicData} from './bargain_stage';
 
 /** Payout stage types and functions. */
 
@@ -263,6 +264,7 @@ export function calculatePayoutResult(
   stageConfigMap: Record<string, StageConfig>, // stage ID to config
   publicDataMap: Record<string, StagePublicData>, // stage ID to public data
   profile: ParticipantProfile, // current participant profile
+  participantAnswerMap?: Record<string, BaseStageParticipantAnswer>, // stage ID to participant answer
 ): PayoutResultConfig {
   const results: PayoutItemResult[] = [];
 
@@ -285,6 +287,7 @@ export function calculatePayoutResult(
       stageConfigMap,
       publicDataMap,
       profile,
+      participantAnswerMap,
     );
     if (result) {
       results.push(result);
@@ -335,6 +338,7 @@ export function calculatePayoutItemResult(
   stageConfigMap: Record<string, StageConfig>,
   publicDataMap: Record<string, StagePublicData>,
   profile: ParticipantProfile, // current participant profile
+  participantAnswerMap?: Record<string, BaseStageParticipantAnswer>, // stage ID to participant answer
 ): PayoutItemResult | null {
   if (!item.isActive) return null;
 
@@ -352,6 +356,7 @@ export function calculatePayoutItemResult(
         stageConfigMap,
         publicDataMap,
         profile,
+        participantAnswerMap,
       );
     case PayoutItemType.SURVEY:
       return calculateSurveyPayoutItemResult(
@@ -371,6 +376,7 @@ export function calculateDefaultPayoutItemResult(
   stageConfigMap: Record<string, StageConfig>,
   publicDataMap: Record<string, StagePublicData>,
   profile: ParticipantProfile, // current participant profile
+  participantAnswerMap?: Record<string, BaseStageParticipantAnswer>,
 ): DefaultPayoutItemResult | null {
   if (!item.isActive) return null;
 
@@ -380,6 +386,25 @@ export function calculateDefaultPayoutItemResult(
   const stageTimestamp = profile.timestamps.completedStages[item.stageId];
   const completedStage =
     stageTimestamp !== null && stageTimestamp !== undefined;
+
+  // Special handling for BARGAIN stage - calculate based on game outcome
+  if (stage.kind === StageKind.BARGAIN) {
+    const bargainPayout = calculateBargainPayout(
+      item.stageId,
+      publicDataMap,
+      participantAnswerMap,
+    );
+    return {
+      id: item.id,
+      type: PayoutItemType.DEFAULT,
+      name: item.name,
+      description: item.description,
+      stageName: stage.name,
+      completedStage,
+      baseCurrencyAmount: item.baseCurrencyAmount,
+      baseAmountEarned: bargainPayout,
+    };
+  }
 
   return {
     id: item.id,
@@ -526,4 +551,49 @@ export function calculateSurveyPayoutItemResult(
     rankingWinner,
     questionResults,
   };
+}
+
+/** Calculate bargain stage payout based on game outcome. */
+export function calculateBargainPayout(
+  stageId: string,
+  publicDataMap: Record<string, StagePublicData>,
+  participantAnswerMap?: Record<string, BaseStageParticipantAnswer>,
+): number {
+  // Get bargain stage public data
+  const publicData = publicDataMap[stageId];
+  if (!publicData || publicData.kind !== StageKind.BARGAIN) {
+    return 0;
+  }
+
+  const bargainPublicData = publicData as BargainStagePublicData;
+
+  // If no deal was reached, payout is 0
+  if (bargainPublicData.agreedPrice === null) {
+    return 0;
+  }
+
+  // Get participant's answer data from participantAnswerMap
+  if (!participantAnswerMap) {
+    return 0;
+  }
+
+  const participantAnswer = participantAnswerMap[stageId] as BargainStageParticipantAnswer | undefined;
+  if (!participantAnswer || participantAnswer.kind !== StageKind.BARGAIN) {
+    return 0;
+  }
+
+  const agreedPrice = bargainPublicData.agreedPrice;
+  const valuation = participantAnswer.valuation;
+  const role = participantAnswer.role;
+
+  // Calculate payout based on role
+  if (role === BargainRole.BUYER) {
+    // Buyer profit = valuation - price
+    const profit = valuation - agreedPrice;
+    return Math.max(0, profit); // Ensure non-negative
+  } else {
+    // Seller profit = price - valuation
+    const profit = agreedPrice - valuation;
+    return Math.max(0, profit); // Ensure non-negative
+  }
 }

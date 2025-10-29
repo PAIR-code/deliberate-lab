@@ -68,6 +68,22 @@ export async function initializeBargainStage(
     return;
   }
 
+  // Validate configuration values
+  console.log(`[BARGAIN] Config validation - Buyer range: [${stageConfig.buyerValuationMin}, ${stageConfig.buyerValuationMax}], Seller range: [${stageConfig.sellerValuationMin}, ${stageConfig.sellerValuationMax}]`);
+
+  if (
+    stageConfig.buyerValuationMin < 6 ||
+    stageConfig.buyerValuationMax > 12 ||
+    stageConfig.sellerValuationMin < 6 ||
+    stageConfig.sellerValuationMax > 12
+  ) {
+    throw new Error(
+      `[BARGAIN] Invalid valuation configuration. All values must be in range [6, 12]. ` +
+      `Got buyer: [${stageConfig.buyerValuationMin}, ${stageConfig.buyerValuationMax}], ` +
+      `seller: [${stageConfig.sellerValuationMin}, ${stageConfig.sellerValuationMax}]`
+    );
+  }
+
   // Randomly assign roles
   const shuffled = [...participants].sort(() => Math.random() - 0.5);
   const buyer = shuffled[0];
@@ -76,8 +92,19 @@ export async function initializeBargainStage(
   // Generate valuations ensuring buyer valuation >= seller valuation
   let sellerValuation: number;
   let buyerValuation: number;
+  let iterationCount = 0;
+  const MAX_ITERATIONS = 100;
 
   do {
+    iterationCount++;
+    if (iterationCount > MAX_ITERATIONS) {
+      throw new Error(
+        `[BARGAIN] Failed to generate valid valuations after ${MAX_ITERATIONS} attempts. ` +
+        `Config: buyer [${stageConfig.buyerValuationMin}, ${stageConfig.buyerValuationMax}], ` +
+        `seller [${stageConfig.sellerValuationMin}, ${stageConfig.sellerValuationMax}]`
+      );
+    }
+
     // Generate seller valuation (lower bound)
     sellerValuation =
       Math.floor(
@@ -96,6 +123,23 @@ export async function initializeBargainStage(
             1),
       ) + stageConfig.buyerValuationMin;
   } while (buyerValuation < sellerValuation);
+
+  // Post-generation validation
+  if (
+    sellerValuation < 6 ||
+    sellerValuation > 12 ||
+    buyerValuation < 6 ||
+    buyerValuation > 12
+  ) {
+    throw new Error(
+      `[BARGAIN] Generated valuations out of valid range [6, 12]. ` +
+      `Generated buyer: ${buyerValuation}, seller: ${sellerValuation}`
+    );
+  }
+
+  console.log(
+    `[BARGAIN] Generated valuations - Buyer: ${buyerValuation}, Seller: ${sellerValuation} (iterations: ${iterationCount})`
+  );
 
   // Randomly select who makes the first move
   const firstMover = Math.random() < 0.5 ? buyer : seller;
@@ -119,6 +163,10 @@ export async function initializeBargainStage(
   const sellerOpponentInfo = sellerSeesBuyerInfo
     ? `Values between $${stageConfig.buyerValuationMin} - $${stageConfig.buyerValuationMax}`
     : 'You have no idea';
+
+  console.log(
+    `[BARGAIN] Opponent info - Buyer sees: "${buyerOpponentInfo}", Seller sees: "${sellerOpponentInfo}"`
+  );
 
   // Create participant answers
   const buyerAnswerDoc = app
@@ -404,12 +452,12 @@ export async function processBargainResponse(
       );
       transaction.set(logDoc, logEntry);
     } else {
-      // Continue negotiation - offerer gets to make another offer
+      // Continue negotiation - respondent (who rejected) becomes the next offerer
       updatedPublicData = {
         ...publicData,
         transactions: updatedTransactions,
         currentTurn: nextTurn,
-        currentOfferer: lastTransaction.offer.senderId, // Original offerer goes again
+        currentOfferer: participantPublicId, // Responder becomes next offerer
       };
     }
   }
