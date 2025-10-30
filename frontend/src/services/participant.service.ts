@@ -19,6 +19,7 @@ import {
   SurveyStageParticipantAnswer,
   UnifiedTimestamp,
   UpdateChatStageParticipantAnswerData,
+  VariableValue,
   createChatMessage,
   createChatStageParticipantAnswer,
   createParticipantChatMessage,
@@ -46,6 +47,7 @@ import {Service} from './service';
 
 import {
   acceptParticipantCheckCallable,
+  getParticipantVariablesCallable,
   acceptParticipantExperimentStartCallable,
   acceptParticipantTransferCallable,
   createChatMessageCallable,
@@ -106,6 +108,7 @@ export class ParticipantService extends Service {
     {};
   @observable privateChatMap: Record<string, ChatMessage[]> = {};
   @observable alertMap: Record<string, AlertMessage> = {};
+  @observable variables: Record<string, VariableValue> = {};
 
   // Loading
   @observable unsubscribe: Unsubscribe[] = [];
@@ -287,6 +290,9 @@ export class ParticipantService extends Service {
             );
           }
 
+          // Load participant variables
+          await this.loadVariables();
+
           // Load profile to participant answer service
           this.sp.participantAnswerService.setProfile(this.profile);
           // Set current stage (use undefined if experiment not started)
@@ -331,6 +337,28 @@ export class ParticipantService extends Service {
     // Subscribe to additional documents
     this.loadPrivateChatMessages();
     this.loadAlertMessages();
+  }
+
+  /** Load participant variables from the backend. */
+  private async loadVariables() {
+    if (!this.experimentId || !this.participantId) {
+      this.variables = {};
+      return;
+    }
+
+    try {
+      const result = await getParticipantVariablesCallable(
+        this.sp.firebaseService.functions,
+        {
+          experimentId: this.experimentId,
+          participantId: this.participantId,
+        },
+      );
+      this.variables = result.variables || {};
+    } catch (error) {
+      console.error('Failed to load participant variables:', error);
+      this.variables = {};
+    }
   }
 
   /** Subscribe to private chat message collections for each stage ID. */
