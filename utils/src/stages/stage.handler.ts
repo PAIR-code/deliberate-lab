@@ -34,13 +34,13 @@ export class BaseStageHandler {
   }
 
   getDefaultMediatorStructuredPrompt(
-    stageId: string,
+    stage: StageConfig,
   ): MediatorPromptConfig | undefined {
     return undefined;
   }
 
   getDefaultParticipantStructuredPrompt(
-    stageId: string,
+    stage: StageConfig,
   ): ParticipantPromptConfig | undefined {
     return undefined;
   }

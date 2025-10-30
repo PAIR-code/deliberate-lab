@@ -57,17 +57,17 @@ export class GroupChatStageHandler extends BaseStageHandler {
   }
 
   getDefaultMediatorStructuredPrompt(
-    stageId: string,
+    stage: ChatStageConfig,
   ): MediatorPromptConfig | undefined {
-    return createChatPromptConfig(stageId, StageKind.CHAT, {
+    return createChatPromptConfig(stage.id, StageKind.CHAT, {
       prompt: createDefaultPromptFromText(DEFAULT_AGENT_MEDIATOR_PROMPT),
     });
   }
 
   getDefaultParticipantStructuredPrompt(
-    stageId: string,
+    stage: ChatStageConfig,
   ): ParticipantPromptConfig | undefined {
-    return createChatPromptConfig(stageId, StageKind.CHAT, {
+    return createChatPromptConfig(stage.id, StageKind.CHAT, {
       prompt: createDefaultPromptFromText(
         DEFAULT_AGENT_PARTICIPANT_CHAT_PROMPT,
       ),

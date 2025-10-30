@@ -62,7 +62,7 @@ export class StageManager {
     return (
       this.handlerMap
         .get(stage.kind)
-        ?.getDefaultMediatorStructuredPrompt(stage.id) ?? undefined
+        ?.getDefaultMediatorStructuredPrompt(stage) ?? undefined
     );
   }
 
@@ -70,7 +70,7 @@ export class StageManager {
     return (
       this.handlerMap
         .get(stage.kind)
-        ?.getDefaultParticipantStructuredPrompt(stage.id) ?? undefined
+        ?.getDefaultParticipantStructuredPrompt(stage) ?? undefined
     );
   }
 }
