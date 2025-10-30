@@ -22,6 +22,8 @@
     url: /developers/agent-design
   - title: Deploying
     url: /developers/deploy
+  - title: API Reference
+    url: /developers/api
 - title: Feature Docs
   pages:
   - title: Help/alert panel
