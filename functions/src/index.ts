@@ -11,6 +11,7 @@ export * from './cohort.endpoints';
 export * from './experiment.endpoints';
 export * from './mediator.endpoints';
 export * from './participant.endpoints';
+export * from './variables.endpoints';
 
 export * from './stages/asset_allocation.endpoints';
 export * from './stages/chat.endpoints';

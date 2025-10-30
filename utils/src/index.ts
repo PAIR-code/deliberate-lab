@@ -124,3 +124,8 @@ export * from './utils/condition';
 export * from './utils/object.utils';
 export * from './utils/random.utils';
 export * from './utils/string.utils';
+
+// Variables
+export * from './variables';
+export * from './variables.template';
+export * from './variables.validation';
