@@ -6,7 +6,7 @@
 import {onRequest, onCall} from 'firebase-functions/v2/https';
 import * as functions from 'firebase-functions';
 import express from 'express';
-import rateLimit from 'express-rate-limit';
+import rateLimit, {ipKeyGenerator} from 'express-rate-limit';
 import {authenticateAPIKey, rejectBrowserRequests} from './api.utils';
 import {AuthGuard} from '../utils/auth-guard';
 import {APIKeyPermission} from '@deliberation-lab/utils';
@@ -37,8 +37,8 @@ const limiter = rateLimit({
   keyGenerator: (req) => {
     // Use shared utility to extract API key
     const apiKey = apiKeyService.extractBearerToken(req.headers.authorization);
-    // Use API key if found, otherwise fall back to IP or 'anonymous'
-    return apiKey || req.ip || 'anonymous';
+    // Use API key if found, otherwise fall back to properly normalized IP
+    return apiKey || ipKeyGenerator(req.ip || 'unknown');
   },
 });
 
