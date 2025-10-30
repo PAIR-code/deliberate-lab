@@ -11,6 +11,7 @@ import {PrivateChatStageHandler} from './private_chat_stage.manager';
 import {RoleStageHandler} from './role_stage.manager';
 import {SurveyStageHandler} from './survey_stage.manager';
 import {SurveyPerParticipantStageHandler} from './survey_per_participant_stage.manager';
+import {ProfileStageHandler} from './profile_stage.manager';
 import {
   StageConfig,
   StageContextData,
@@ -32,6 +33,7 @@ export class StageManager {
     this.handlerMap.set(StageKind.ROLE, new RoleStageHandler());
     this.handlerMap.set(StageKind.STOCKINFO, new StockInfoStageHandler());
     this.handlerMap.set(StageKind.SURVEY, new SurveyStageHandler());
+    this.handlerMap.set(StageKind.PROFILE, new ProfileStageHandler());
     this.handlerMap.set(
       StageKind.SURVEY_PER_PARTICIPANT,
       new SurveyPerParticipantStageHandler(),
