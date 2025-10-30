@@ -88,7 +88,9 @@ export * from './stages/private_chat_stage.manager';
 export * from './stages/private_chat_stage.validation';
 
 export * from './stages/profile_stage';
+export * from './stages/profile_stage.manager';
 export * from './stages/profile_stage.validation';
+
 export * from './stages/reveal_stage';
 export * from './stages/reveal_stage.validation';
 export * from './stages/salesperson_stage';

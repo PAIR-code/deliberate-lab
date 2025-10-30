@@ -449,6 +449,13 @@ export class ExperimentEditor extends Service {
     id: string,
     updatedPrompt: ParticipantPromptConfig,
   ) {
+    // TODO: Permit non-chat prompt edits
+    if (
+      updatedPrompt.type !== StageKind.CHAT &&
+      updatedPrompt.type !== StageKind.PRIVATE_CHAT
+    ) {
+      return;
+    }
     const agent = this.getAgentParticipant(id);
     if (!agent) return;
     agent.promptMap[updatedPrompt.id] = updatedPrompt;
