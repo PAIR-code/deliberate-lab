@@ -48,6 +48,7 @@ export * from './structured_prompt';
 
 // Stages
 export * from './stages/stage';
+export * from './stages/stage.handler';
 export * from './stages/stage.manager';
 export * from './stages/stage.prompts';
 export * from './stages/stage.validation';

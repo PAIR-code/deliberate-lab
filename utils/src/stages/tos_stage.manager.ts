@@ -1,22 +1,14 @@
 import {ParticipantProfileExtended} from '../participant';
 import {StageConfig, StageContextData, StageKind} from './stage';
-import {StageHandler} from './stage.manager';
+import {BaseStageHandler} from './stage.handler';
 import {TOSStageConfig} from './tos_stage';
 
-export class TOSStageHandler implements StageHandler<TOSStageConfig> {
+export class TOSStageHandler extends BaseStageHandler {
   getStageDisplayForPrompt(
     participants: ParticipantProfileExtended[],
     stageContext: StageContextData,
   ) {
     const stage = stageContext.stage as TOSStageConfig;
     return stage.tosLines.join('\n');
-  }
-
-  getDefaultMediatorStructuredPrompt(stageId: string) {
-    return undefined;
-  }
-
-  getDefaultParticipantStructuredPrompt(stageId: string) {
-    return undefined;
   }
 }
