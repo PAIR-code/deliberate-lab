@@ -5,7 +5,11 @@ import {
   PROFILE_SET_ANIMALS_2_ID,
   PROFILE_SET_NATURE_ID,
 } from '../profile_sets';
-import {createDefaultPromptFromText} from '../structured_prompt';
+import {
+  MediatorPromptConfig,
+  ParticipantPromptConfig,
+  createDefaultPromptFromText,
+} from '../structured_prompt';
 import {ChatStageConfig} from './chat_stage';
 import {
   DEFAULT_AGENT_MEDIATOR_PROMPT,
@@ -20,9 +24,9 @@ import {
   StageParticipantAnswer,
   StagePublicData,
 } from './stage';
-import {StageHandler} from './stage.manager';
+import {BaseStageHandler} from './stage.handler';
 
-export class GroupChatStageHandler implements StageHandler<ChatStageConfig> {
+export class GroupChatStageHandler extends BaseStageHandler {
   getStageDisplayForPrompt(
     participants: ParticipantProfileExtended[],
     stageContext: StageContextData,
@@ -52,13 +56,17 @@ export class GroupChatStageHandler implements StageHandler<ChatStageConfig> {
     return `Group chat participants: ${participantNames.join(', ')}\n${getChatPromptMessageHistory(messages, stage)}`;
   }
 
-  getDefaultMediatorStructuredPrompt(stageId: string) {
+  getDefaultMediatorStructuredPrompt(
+    stageId: string,
+  ): MediatorPromptConfig | undefined {
     return createChatPromptConfig(stageId, StageKind.CHAT, {
       prompt: createDefaultPromptFromText(DEFAULT_AGENT_MEDIATOR_PROMPT),
     });
   }
 
-  getDefaultParticipantStructuredPrompt(stageId: string) {
+  getDefaultParticipantStructuredPrompt(
+    stageId: string,
+  ): ParticipantPromptConfig | undefined {
     return createChatPromptConfig(stageId, StageKind.CHAT, {
       prompt: createDefaultPromptFromText(
         DEFAULT_AGENT_PARTICIPANT_CHAT_PROMPT,

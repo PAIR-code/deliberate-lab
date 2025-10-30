@@ -4,6 +4,7 @@ import {
   MediatorPromptConfig,
   ParticipantPromptConfig,
 } from '../structured_prompt';
+import {AgentParticipantStageActions, BaseStageHandler} from './stage.handler';
 import {GroupChatStageHandler} from './chat_stage.manager';
 import {InfoStageHandler} from './info_stage.manager';
 import {PrivateChatStageHandler} from './private_chat_stage.manager';
@@ -22,7 +23,7 @@ import {TOSStageHandler} from './tos_stage.manager';
 
 /** Manages stage handlers for different stage types. */
 export class StageManager {
-  private handlerMap: Map<string, StageHandler<StageConfig>> = new Map();
+  private handlerMap: Map<string, BaseStageHandler> = new Map();
 
   constructor() {
     this.handlerMap.set(StageKind.CHAT, new GroupChatStageHandler());
@@ -50,9 +51,11 @@ export class StageManager {
     participants: ParticipantProfileExtended[],
     stageContext: StageContextData,
   ) {
-    return this.handlerMap
-      .get(stage.kind)
-      ?.getStageDisplayForPrompt(participants, stageContext);
+    return (
+      this.handlerMap
+        .get(stage.kind)
+        ?.getStageDisplayForPrompt(participants, stageContext) ?? ''
+    );
   }
 
   getDefaultMediatorStructuredPrompt(stage: StageConfig) {
@@ -70,20 +73,4 @@ export class StageManager {
         ?.getDefaultParticipantStructuredPrompt(stage.id) ?? undefined
     );
   }
-}
-
-/** Manages actions (e.g., retrieving and editing) for stages.
- * Can be extended to handle a specific stage type.
- */
-export interface StageHandler<StageConfig> {
-  getDefaultMediatorStructuredPrompt(
-    stageId: string,
-  ): MediatorPromptConfig | undefined;
-  getDefaultParticipantStructuredPrompt(
-    stageId: string,
-  ): ParticipantPromptConfig | undefined;
-  getStageDisplayForPrompt(
-    participants: ParticipantProfileExtended[],
-    stageContext: StageContextData,
-  ): string;
 }
