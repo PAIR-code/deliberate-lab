@@ -71,3 +71,8 @@ jobs:
       working-directory: ./functions
       run: |
         npm test
+
+    - name: Test frontend
+      working-directory: ./frontend
+      run: |
+        npm test
