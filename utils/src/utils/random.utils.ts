@@ -22,9 +22,17 @@ export interface ShuffleConfig {
 // Seed shared by all random functions.
 let RANDOM_SEED = 0;
 
-/** Initialize the seed with a custom value */
-export const seed = (value: number) => {
-  RANDOM_SEED = value;
+/** Initialize the seed with a custom value (number or string) */
+export const seed = (value: number | string) => {
+  if (typeof value === 'string') {
+    let seedValue = 0;
+    for (let i = 0; i < value.length; i++) {
+      seedValue += value.charCodeAt(i);
+    }
+    RANDOM_SEED = seedValue;
+  } else {
+    RANDOM_SEED = value;
+  }
 };
 
 /** Update the seed using a Linear Congruential Generator */
@@ -77,16 +85,7 @@ export const shuffleWithSeed = <T>(
   array: readonly T[],
   seedString: string = '',
 ): T[] => {
-  // Convert string to numeric seed
-  let seedValue = 0;
-  for (let i = 0; i < seedString.length; i++) {
-    seedValue += seedString.charCodeAt(i);
-  }
-
-  // Set the seed
-  seed(seedValue);
-
-  // Return all items in shuffled order
+  seed(seedString);
   return choices(array, array.length);
 };
 
