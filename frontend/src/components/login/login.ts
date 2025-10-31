@@ -61,11 +61,10 @@ export class Login extends MobxLitElement {
             <a href="https://pair.withgoogle.com/" target="_blank">PAIR</a>
             team.
           </p>
-          <img src="https://i.imgur.com/BcUPGKo.png" alt="Platform preview" />
-          <!--<img
+          <img
             src="https://raw.githubusercontent.com/PAIR-code/deliberate-lab/refs/heads/main/frontend/assets/hero.png"
             alt="Platform preview"
-          />-->
+          />
 
           <div class="info">
             <div>
