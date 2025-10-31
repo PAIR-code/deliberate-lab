@@ -27,16 +27,15 @@ describe('File utils', () => {
             createMultipleChoiceItem({text: 'Red'}),
             createMultipleChoiceItem({text: 'Green'}),
             createMultipleChoiceItem({text: 'Blue'}),
-          ]
+          ],
         }),
         createScaleSurveyQuestion({
-          questionTitle: 'How much?'
+          questionTitle: 'How much?',
         }),
       ],
     });
 
     const columns = file_utils.getSurveyStageCSVColumns(config, null);
-
 
     const expectedColumns = [
       /"Describe." - Survey [-a-z0-9]+/,
