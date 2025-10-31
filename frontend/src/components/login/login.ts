@@ -22,6 +22,38 @@ export class Login extends MobxLitElement {
 
   @state() experimentId = '';
   @state() participantId = '';
+
+  // For the text animation.
+  @state() private phraseIndex = 0;
+  @state() private fadeClass = '';
+  private _interval: number | null = null;
+
+  private phrases = [
+    'run human–AI social experiments.',
+    'simulate group behavior with AI agents.',
+    'facilitate live group discussions.',
+    'build real-time interactive agents.',
+    'prototype interactive social systems.',
+  ];
+
+  connectedCallback() {
+    super.connectedCallback();
+    this._interval = window.setInterval(() => {
+      this.fadeClass = 'fade-out';
+      window.setTimeout(() => {
+        this.phraseIndex = (this.phraseIndex + 1) % this.phrases.length;
+        this.fadeClass = 'fade-in';
+      }, 400);
+    }, 4000);
+  }
+
+  disconnectedCallback() {
+    super.disconnectedCallback();
+    if (this._interval !== null) {
+      window.clearInterval(this._interval);
+    }
+  }
+
   override render() {
     const handleLogin = () => {
       this.analyticsService.trackButtonClick(ButtonClick.LOGIN);
@@ -47,7 +79,11 @@ export class Login extends MobxLitElement {
 
         <div class="login-content">
           <h1 class="hero-title">
-            Run social human–AI experiments on ${APP_NAME}.
+            On Deliberate Lab, you can 
+            <span class="rotating-wrapper">
+            <span class="rotating-term ${this.fadeClass}">
+              ${this.phrases[this.phraseIndex]}
+            </span>
           </h1>
           <p class="hero-subhead">
             ${APP_NAME} is
