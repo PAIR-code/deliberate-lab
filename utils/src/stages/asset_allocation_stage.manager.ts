@@ -8,11 +8,9 @@ import {
   getAssetAllocationAnswersText,
 } from './asset_allocation_stage.utils';
 import {StageConfig, StageContextData, StageKind} from './stage';
-import {StageHandler} from './stage.manager';
+import {BaseStageHandler} from './stage.handler';
 
-export class AssetAllocationStageHandler
-  implements StageHandler<AssetAllocationStageConfig>
-{
+export class AssetAllocationStageHandler extends BaseStageHandler {
   getStageDisplayForPrompt(
     participants: ParticipantProfileExtended[],
     stageContext: StageContextData,
@@ -26,13 +24,5 @@ export class AssetAllocationStageHandler
       answer: AssetAllocationStageParticipantAnswer;
     }[];
     return getAssetAllocationAnswersText(assetParticipantAnswers, true);
-  }
-
-  getDefaultMediatorStructuredPrompt(stageId: string) {
-    return undefined;
-  }
-
-  getDefaultParticipantStructuredPrompt(stageId: string) {
-    return undefined;
   }
 }

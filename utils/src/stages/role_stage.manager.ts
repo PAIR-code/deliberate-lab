@@ -1,9 +1,9 @@
 import {ParticipantProfileExtended} from '../participant';
 import {RoleStageConfig, RoleStagePublicData} from './role_stage';
 import {StageConfig, StageContextData, StageKind} from './stage';
-import {StageHandler} from './stage.manager';
+import {BaseStageHandler} from './stage.handler';
 
-export class RoleStageHandler implements StageHandler<RoleStageConfig> {
+export class RoleStageHandler extends BaseStageHandler {
   getStageDisplayForPrompt(
     participants: ParticipantProfileExtended[],
     stageContext: StageContextData,
@@ -34,13 +34,5 @@ export class RoleStageHandler implements StageHandler<RoleStageConfig> {
       }
     }
     return roleInfo.join('\n');
-  }
-
-  getDefaultMediatorStructuredPrompt(stageId: string) {
-    return undefined;
-  }
-
-  getDefaultParticipantStructuredPrompt(stageId: string) {
-    return undefined;
   }
 }
