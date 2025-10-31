@@ -1,5 +1,6 @@
-@use "../../sass/common";
-@use "../../sass/typescale";
+@use '../../sass/colors';
+@use '../../sass/common';
+@use '../../sass/typescale';
 
 :host {
   @include common.default;
@@ -8,24 +9,64 @@
   justify-content: center;
 }
 
-.login {
+.content {
+  overflow-y: auto;
+}
+
+/* ─────────────── HEADER ─────────────── */
+.hero-title {
+  @include typescale.title-large;
+  font-size: clamp(28px, 4vw, 44px);
+  margin: 0 0 0.75rem 0;
+  line-height: 1.1;
+}
+
+.hero-subhead {
+  @include typescale.body-large;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 90%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0.75rem 1.25rem;
+  border-bottom: 1px solid var(--md-sys-color-outline-variant);
+  position: sticky;
+  flex-wrap: wrap;
+}
+
+.logo {
+  @include typescale.label-large;
+  color: var(--md-sys-color-on-surface);
+}
+
+.header-actions {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-end;
+  gap: common.$spacing-medium;
+}
+
+/* ─────────────── HERO ─────────────── */
+
+.login-content {
   @include common.flex-column;
-  background: var(--md-sys-color-surface);
-  border-radius: common.$spacing-medium;
-  gap: common.$spacing-xxl;
-  max-width: 500px;
+  border-radius: common.$spacing-medium var(--md-sys-color-surface);
+  gap: common.$spacing-large;
+  max-width: 1200px;
   padding: common.$spacing-xxl;
+  margin-top: 2rem;
+  margin-bottom: 2rem;
   width: 100%;
 }
 
-.action-buttons {
-  @include common.flex-row;
-  justify-content: end;
-}
-
 h1 {
-  @include typescale.title-large;
-  margin: 0;
+  @include typescale.title-medium;
+  margin: 0 0 0.5rem 0;
 }
 
 h2 {
@@ -33,28 +74,78 @@ h2 {
   margin: 0;
 }
 
+.login img {
+  border: 1px solid var(--md-sys-color-outline-variant);
+  border-radius: 12px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+  max-width: 100%;
+  margin-top: 1.5rem;
+}
+
+/* ─────────────── DISCLAIMER ─────────────── */
+
 .info {
   @include common.flex-column;
-  background: var(--md-sys-color-surface-variant);
-  border-radius: common.$spacing-medium;
+  @include typescale.body-medium;
+
+  background: var(--md-sys-color-primary-container);
+  border: 1px solid;
+  border-radius: 8px;
   gap: common.$spacing-medium;
+  padding: common.$spacing-large;
+  font-size: 0.9rem;
+  line-height: 1.5;
   max-height: calc(100vh - 300px);
   overflow: auto;
-  padding: common.$spacing-large;
+}
 
-  &.primary {
-    background: var(--md-sys-color-primary-container);
-    color: var(--md-sys-color-on-primary-container);
-  }
+.info a {
+  text-decoration: underline;
+}
 
-  &.secondary {
-    background: var(--md-sys-color-secondary-container);
-    color: var(--md-sys-color-on-secondary-container);
-  }
+.info a:hover {
+  text-decoration: none;
+}
+
+/* ─────────────── FOOTER ─────────────── */
+
+footer {
+  width: 100%;
+  margin-top: 2rem;
+  position: sticky;
+}
+
+.footer-container {
+  margin: 0 auto;
+  padding: 1rem 1rem;
+  display: flex;
+  flex-direction: column; // stack links + version
+  justify-content: center;
+  align-items: center;
+  gap: 0.75rem;
+  border-top: 1px solid var(--md-sys-color-outline-variant);
+}
+
+.footer-links {
+  display: flex;
+  justify-content: center;
+  gap: 1.5rem;
+}
+
+.footer-links a {
+  color: var(--md-sys-color-on-surface-variant);
+  font-weight: 500;
+  font-size: 0.9rem;
 }
 
 .version {
-  float: right;
-  font-size: 8px;
+  font-size: 0.75rem;
   color: var(--md-sys-color-outline);
+  margin-top: 0.5rem;
+  text-align: center;
+}
+
+.version a {
+  color: var(--md-sys-color-outline);
+  text-align: center;
 }

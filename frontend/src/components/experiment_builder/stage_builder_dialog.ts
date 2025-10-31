@@ -168,7 +168,7 @@ export class StageBuilderDialog extends MobxLitElement {
     return html`
       <div class="banner error">
         ⚠️ Loading a template will override all existing stages in your
-        configuration
+        configuration!
       </div>
       <div class="card-gallery-wrapper">
         ${this.renderLASCard()} ${this.renderLASCard(true)}
@@ -205,10 +205,19 @@ export class StageBuilderDialog extends MobxLitElement {
         <div class="card-gallery-wrapper">
           ${this.renderTransferCard()} ${this.renderSurveyCard()}
           ${this.renderSurveyPerParticipantCard()}
-          ${this.renderComprehensionCard()} ${this.renderFlipCardCard()}
-          ${this.renderRankingCard()} ${this.renderRevealCard()}
-          ${this.renderPayoutCard()} ${this.renderRoleCard()}
-          ${this.renderStockInfoCard()} ${this.renderAssetAllocationCard()}
+          ${this.renderComprehensionCard()} ${this.renderRankingCard()}
+          ${this.renderRevealCard()} ${this.renderPayoutCard()}
+          ${this.renderRoleCard()}
+        </div>
+      </div>
+
+      <div class="gallery-section">
+        <div class="gallery-title">
+          Experimental stages: ⚠️ use with caution
+        </div>
+        <div class="card-gallery-wrapper">
+          ${this.renderFlipCardCard()} ${this.renderStockInfoCard()}
+          ${this.renderAssetAllocationCard()}
           ${this.renderMultiAssetAllocationCard()}
         </div>
       </div>
@@ -355,7 +364,7 @@ export class StageBuilderDialog extends MobxLitElement {
 
     return html`
       <div class="card" @click=${addStage}>
-        <div class="title">Role assignment</div>
+        <div class="title">🎭 Role assignment</div>
         <div>
           Randomly assign roles to participants and show different
           Markdown-rendered info for each role
@@ -371,7 +380,7 @@ export class StageBuilderDialog extends MobxLitElement {
 
     return html`
       <div class="card" @click=${addStage}>
-        <div class="title">Group chat</div>
+        <div class="title">👥 Group chat</div>
         <div>
           Host a conversation among <i>all</i> participants in a cohort and
           optional mediator(s).
@@ -387,7 +396,7 @@ export class StageBuilderDialog extends MobxLitElement {
 
     return html`
       <div class="card" @click=${addStage}>
-        <div class="title">Private chat</div>
+        <div class="title">💬 Private chat</div>
         <div>
           Enable each participant to privately chat <i>only</i> with added
           mediator(s).
@@ -435,7 +444,7 @@ export class StageBuilderDialog extends MobxLitElement {
 
     return html`
       <div class="card" @click=${addStage}>
-        <div class="title">2-Stock Asset Allocation</div>
+        <div class="title">🧮 2-Stock Asset Allocation</div>
         <div>
           Allow participants to allocate investment portfolios between two
           stocks using interactive sliders.
@@ -514,7 +523,7 @@ export class StageBuilderDialog extends MobxLitElement {
 
     return html`
       <div class="card" @click=${addStage}>
-        <div class="title">📋🧑‍🤝‍🧑 Survey per participant</div>
+        <div class="title">🧑‍🤝‍🧑 Survey per participant</div>
         <div>
           Ask each survey question about each participant in the current cohort.
         </div>

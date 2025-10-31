@@ -58,7 +58,7 @@ main {
   flex-grow: 1;
   max-width: common.$main-content-max-width;
   padding: common.$main-content-padding;
-
+  overflow: auto;
   &.info {
     max-width: common.$info-content-max-width;
   }
