@@ -4,6 +4,7 @@ import {
   InitializeVariableCohortsData,
   GetParticipantVariablesData,
   ExperimentVariables,
+  VariableCohort,
   validateInitialCohort,
   getAssignableCohorts,
   resolveParticipantVariables,
@@ -42,7 +43,6 @@ export const initializeVariableCohorts = onCall(
 
     // Check authentication
     await AuthGuard.isExperimenter(request);
-    const uid = request.auth?.uid;
 
     const {experimentId, variables, replaceExisting = false} = data;
 
@@ -122,11 +122,8 @@ export const initializeVariableCohorts = onCall(
         }
 
         // Create new cohorts based on variable configuration
-        const cohortIds: Record<string, string> = {};
-
-        for (const [cohortName, cohortConfig] of Object.entries(
-          variables.cohorts,
-        )) {
+        for (const cohortName of Object.keys(variables.cohorts)) {
+          const cohortConfig: VariableCohort = variables.cohorts[cohortName];
           // Create cohort configuration
           const cohort = createCohortConfig({
             metadata: createMetadataConfig({
@@ -144,10 +141,11 @@ export const initializeVariableCohorts = onCall(
           // Store cohort using internal utility
           await createCohortInternal(transaction, experimentId, cohort);
 
-          cohortIds[cohortName] = cohort.id;
+          // Store the cohort ID in the cohort config
+          cohortConfig.cohortId = cohort.id;
         }
 
-        // Update experiment with variables configuration
+        // Update experiment with variables configuration (now includes cohort IDs)
         const experimentRef = app
           .firestore()
           .collection('experiments')
@@ -155,7 +153,6 @@ export const initializeVariableCohorts = onCall(
 
         transaction.update(experimentRef, {
           variables: variables,
-          variableCohortIds: cohortIds,
           dateEdited: new Date(),
         });
       });

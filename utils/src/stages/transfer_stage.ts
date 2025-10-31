@@ -25,11 +25,13 @@ export interface TransferStageConfig extends BaseStageConfig {
 
 export type AutoTransferConfig =
   | DefaultAutoTransferConfig
-  | SurveyAutoTransferConfig;
+  | SurveyAutoTransferConfig
+  | VariableAutoTransferConfig;
 
 export enum AutoTransferType {
   DEFAULT = 'default', // group only based on number of participants
   SURVEY = 'survey', // match based on responses to specific survey question
+  VARIABLE = 'variable', // assign to cohorts based on experiment variables
 }
 
 export interface BaseAutoTransferConfig {
@@ -51,6 +53,12 @@ export interface SurveyAutoTransferConfig extends BaseAutoTransferConfig {
   surveyQuestionId: string;
   // Map of serialized survey answers to required participant counts
   participantCounts: {[key: string]: number};
+}
+
+export interface VariableAutoTransferConfig extends BaseAutoTransferConfig {
+  type: AutoTransferType.VARIABLE;
+  // Use experiment's variable configuration for cohort assignment
+  // No additional configuration needed - uses ExperimentVariables
 }
 
 // ************************************************************************* //
@@ -87,5 +95,16 @@ export function createSurveyAutoTransferConfig(
     surveyStageId: config.surveyStageId ?? '',
     surveyQuestionId: config.surveyQuestionId ?? '',
     participantCounts: config.participantCounts ?? {},
+  };
+}
+
+/** Create variable auto-transfer config. */
+export function createVariableAutoTransferConfig(
+  config: Partial<VariableAutoTransferConfig> = {},
+): VariableAutoTransferConfig {
+  return {
+    type: AutoTransferType.VARIABLE,
+    autoCohortParticipantConfig:
+      config.autoCohortParticipantConfig ?? createCohortParticipantConfig(),
   };
 }

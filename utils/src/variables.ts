@@ -1,4 +1,3 @@
-import {Condition} from './utils/condition';
 import {SeedStrategy} from './utils/random.utils';
 
 /** Experiment Variables - Defines experimental conditions and their values */
@@ -39,37 +38,21 @@ export interface VariableDefinition {
 // ************************************************************************* //
 
 /** Method for assigning participants to cohorts */
-export type AssignmentMethod = 'random' | 'manual' | 'conditional';
+export type AssignmentMethod = 'distribution' | 'manual';
 
-/** Configuration for random assignment */
-export interface RandomAssignmentConfig {
+/** Configuration for probability distribution assignment */
+export interface DistributionConfig {
   seedStrategy: SeedStrategy;
   customSeed?: string;
-  /** Optional weights per cohort (defaults to equal distribution) */
-  weights?: Record<string, number>;
-}
-
-/** Rule for conditional assignment */
-export interface ConditionalAssignmentRule {
-  condition: Condition;
-  cohort: string;
-}
-
-/** Configuration for conditional assignment */
-export interface ConditionalAssignmentConfig {
-  /** Maps conditions to cohorts */
-  rules: ConditionalAssignmentRule[];
-  /** Fallback if no condition matches */
-  defaultCohort?: string;
+  /** Optional probabilities per cohort (defaults to equal distribution) */
+  probabilities?: Record<string, number>;
 }
 
 /** Assignment strategy for distributing participants */
 export interface AssignmentConfig {
   method: AssignmentMethod;
-  /** Configuration for random assignment */
-  random?: RandomAssignmentConfig;
-  /** Configuration for conditional assignment */
-  conditional?: ConditionalAssignmentConfig;
+  /** Configuration for probability distribution assignment */
+  distribution?: DistributionConfig;
 }
 
 // ************************************************************************* //
@@ -83,6 +66,8 @@ export interface VariableCohort {
   isInitialCohort?: boolean;
   /** Variable values for this cohort */
   variables: Record<string, VariableValue>;
+  /** Cohort ID (set when cohort is created) */
+  cohortId?: string;
 }
 
 // ************************************************************************* //

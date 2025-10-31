@@ -69,7 +69,7 @@ const VariableCohortData = Type.Object(
 // Assignment Configuration Schema
 // ************************************************************************* //
 
-const RandomAssignmentConfigData = Type.Object(
+const DistributionConfigData = Type.Object(
   {
     seedStrategy: Type.Union([
       Type.Literal(SeedStrategy.EXPERIMENT),
@@ -78,20 +78,15 @@ const RandomAssignmentConfigData = Type.Object(
       Type.Literal(SeedStrategy.CUSTOM),
     ]),
     customSeed: Type.Optional(Type.String()),
-    weights: Type.Optional(Type.Record(Type.String(), Type.Number())),
+    probabilities: Type.Optional(Type.Record(Type.String(), Type.Number())),
   },
   strict,
 );
 
 const AssignmentConfigData = Type.Object(
   {
-    method: Type.Union([
-      Type.Literal('random'),
-      Type.Literal('manual'),
-      Type.Literal('conditional'),
-    ]),
-    random: Type.Optional(RandomAssignmentConfigData),
-    // Note: conditional assignment would need Condition schema imported
+    method: Type.Union([Type.Literal('distribution'), Type.Literal('manual')]),
+    distribution: Type.Optional(DistributionConfigData),
   },
   strict,
 );
