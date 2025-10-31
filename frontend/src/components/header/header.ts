@@ -17,7 +17,7 @@ import {ExperimentManager} from '../../services/experiment.manager';
 import {ParticipantService} from '../../services/participant.service';
 import {Pages, RouterService} from '../../services/router.service';
 
-import {DOCUMENTATION_URL} from '../../shared/constants';
+import {BUG_REPORT_URL, DOCUMENTATION_URL} from '../../shared/constants';
 import {
   getParticipantInlineDisplay,
   getParticipantStatusDetailText,
@@ -169,7 +169,7 @@ export class Header extends MobxLitElement {
 
     switch (activePage) {
       case Pages.HOME:
-        return 'Deliberate Lab';
+        return '🕊️ Deliberate Lab';
       case Pages.ADMIN:
         return 'Admin dashboard';
       case Pages.SETTINGS:
@@ -220,6 +220,18 @@ export class Header extends MobxLitElement {
               @click=${() => {
                 // TODO: Add Analytics tracking for documentation click
                 window.open(DOCUMENTATION_URL, '_blank');
+              }}
+            >
+            </pr-icon-button>
+          </pr-tooltip>
+          <pr-tooltip text="Report a bug" position="BOTTOM_END">
+            <pr-icon-button
+              icon="bug_report"
+              color="secondary"
+              variant="default"
+              @click=${() => {
+                // TODO: Add Analytics tracking for bug report click
+                window.open(BUG_REPORT_URL, '_blank');
               }}
             >
             </pr-icon-button>

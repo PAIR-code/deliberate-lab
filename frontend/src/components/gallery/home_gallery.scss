@@ -82,6 +82,7 @@ gallery-card {
 }
 
 .banner {
+  @include typescale.body-small;
   background: var(--md-sys-color-tertiary-container);
   border-radius: common.$spacing-medium;
   color: var(--md-sys-color-on-tertiary-container);
@@ -132,5 +133,107 @@ h1 {
   &:focus.blank,
   &:hover.blank {
     border-color: var(--md-sys-color-secondary);
+  }
+}
+
+.gallery-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width:100%;
+  max-width: $gallery-width;
+  padding: 0 24px;
+  margin-bottom: 12px;
+  box-sizing: border-box;
+}
+
+.controls {
+  margin-top: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Smooth fade when refreshing */
+.gallery-wrapper {
+  opacity: 1;
+  visibility: visible;
+  transition: opacity 150ms ease, visibility 150ms ease;
+}
+
+.gallery-wrapper.hidden {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+// Sort
+.menu-wrapper {
+  @include typescale.label-small;
+  @include common.flex-column;
+  gap: common.$spacing-small;
+  overflow: auto;
+}
+
+.menu-item {
+  @include common.nav-item;
+  display: flex;
+  min-width: 140px;
+  justify-content: space-between; /* pushes checkmark to right */
+  align-items: center;
+  gap: common.$spacing-small;
+}
+
+.menu-item .checkmark {
+  opacity: 0.9;
+}
+
+// Search
+.search-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+  height: 32px;
+  border: 1px solid var(--md-sys-color-outline-variant);
+  border-radius: 6px;
+  padding: 0 8px 0 28px; /* space for icon */
+  background: var(--md-sys-color-surface);
+  cursor: text;
+  transition: background 120ms ease, border-color 120ms ease;
+
+  &:hover {
+    background: var(--md-sys-color-surface-variant);
+  }
+
+  &:focus-within {
+    border-color: var(--md-sys-color-secondary);
+    background: var(--md-sys-color-surface);
+  }
+}
+
+.search-container pr-icon {
+  color: var(--md-sys-color-tertiary);
+  position: absolute;
+  left: 8px;
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+.search-container pr-textarea {
+  width: 140px;
+  margin: 0;
+}
+
+.search-container pr-textarea::part(textarea),
+.search-container textarea {
+  border: none;
+  padding: px 0;
+  background: transparent;
+  box-shadow: none;
+  resize: none;
+  font-size: 14px;
+
+  &:focus {
+    outline: none;
   }
 }
