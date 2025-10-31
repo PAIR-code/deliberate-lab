@@ -42,6 +42,8 @@ import {
   UpdateRankingStageParticipantAnswerData,
   UpdateSurveyPerParticipantStageParticipantAnswerData,
   UpdateSurveyStageParticipantAnswerData,
+  GetParticipantVariablesData,
+  VariableValue,
 } from '@deliberation-lab/utils';
 
 import {Functions, httpsCallable} from 'firebase/functions';
@@ -629,6 +631,21 @@ export const ackAlertMessageCallable = async (
   >(
     functions,
     'ackAlertMessage',
+  )(config);
+  return data;
+};
+
+/** Get participant variables for an experiment. */
+export const getParticipantVariablesCallable = async (
+  functions: Functions,
+  config: GetParticipantVariablesData,
+) => {
+  const {data} = await httpsCallable<
+    GetParticipantVariablesData,
+    {variables: Record<string, VariableValue>; cohortName?: string}
+  >(
+    functions,
+    'getParticipantVariables',
   )(config);
   return data;
 };

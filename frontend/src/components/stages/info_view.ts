@@ -7,11 +7,13 @@ import {MobxLitElement} from '@adobe/lit-mobx';
 import {CSSResultGroup, html, nothing} from 'lit';
 import {customElement, property} from 'lit/decorators.js';
 
-import {InfoStageConfig} from '@deliberation-lab/utils';
+import {InfoStageConfig, resolveTemplate} from '@deliberation-lab/utils';
 
 import {unsafeHTML} from 'lit/directives/unsafe-html.js';
 import {convertMarkdownToHTML} from '../../shared/utils';
 import {styles} from './info_view.scss';
+import {core} from '../../core/core';
+import {ParticipantService} from '../../services/participant.service';
 
 /** Info stage view for participants. */
 @customElement('info-view')
@@ -20,12 +22,18 @@ export class InfoView extends MobxLitElement {
 
   @property() stage: InfoStageConfig | null = null;
 
+  private readonly participantService = core.getService(ParticipantService);
+
   override render() {
     if (!this.stage) {
       return nothing;
     }
 
-    const infoLinesJoined = this.stage?.infoLines.join('\n\n');
+    // Resolve templates in info lines using participant variables
+    const resolvedInfoLines = this.stage.infoLines.map((line) =>
+      resolveTemplate(line, this.participantService.variables),
+    );
+    const infoLinesJoined = resolvedInfoLines.join('\n\n');
     return html`
       <stage-description .stage=${this.stage}></stage-description>
       <div class="html-wrapper">

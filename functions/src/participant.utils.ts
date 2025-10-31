@@ -2,6 +2,7 @@ import {Timestamp} from 'firebase-admin/firestore';
 import {
   AutoTransferType,
   ChipItem,
+  ChipStagePublicData,
   Experiment,
   ParticipantProfileExtended,
   ParticipantStatus,
@@ -15,7 +16,9 @@ import {
   SurveyQuestionKind,
   createChipStageParticipantAnswer,
   createPayoutStageParticipantAnswer,
-  ChipStagePublicData,
+  seed,
+  random,
+  SeedStrategy,
 } from '@deliberation-lab/utils';
 import {completeStageAsAgentParticipant} from './agent_participant.utils';
 import {getFirestoreActiveParticipants} from './utils/firestore';
@@ -185,6 +188,165 @@ export async function updateCohortStageUnlocked(
   });
 }
 
+/** Transfer a participant to a new cohort by setting transferCohortId and status. */
+function transferParticipantCohort(
+  transaction: FirebaseFirestore.Transaction,
+  experimentId: string,
+  participant: ParticipantProfileExtended,
+  targetCohortId: string,
+  transferType: string,
+) {
+  const firestore = app.firestore();
+
+  const participantDoc = firestore
+    .collection('experiments')
+    .doc(experimentId)
+    .collection('participants')
+    .doc(participant.privateId);
+
+  transaction.update(participantDoc, {
+    transferCohortId: targetCohortId,
+    currentStatus: ParticipantStatus.TRANSFER_PENDING,
+  });
+
+  // Update the passed-in participant as a side-effect
+  participant.currentStatus = ParticipantStatus.TRANSFER_PENDING;
+  participant.transferCohortId = targetCohortId;
+
+  console.log(
+    `${transferType} transfer: participant ${participant.publicId} -> cohort ${targetCohortId}`,
+  );
+}
+
+/** Handle variable-based automatic transfer. */
+async function handleVariableAutoTransfer(
+  transaction: FirebaseFirestore.Transaction,
+  experimentId: string,
+  stageConfig: TransferStageConfig,
+  participant: ParticipantProfileExtended,
+): Promise<{currentStageId: string; endExperiment: boolean} | null> {
+  const firestore = app.firestore();
+
+  // Get the experiment to access variable configuration
+  const experimentDoc = await transaction.get(
+    firestore.collection('experiments').doc(experimentId),
+  );
+  const experiment = experimentDoc.data() as Experiment;
+
+  if (!experiment?.variables) {
+    console.error('No variables configured for experiment');
+    return null;
+  }
+
+  // Get the assignable cohorts (non-initial cohorts)
+  const assignableCohorts = Object.entries(experiment.variables.cohorts)
+    .filter(([_, cohort]) => !cohort.isInitialCohort)
+    .map(([name]) => name);
+
+  if (assignableCohorts.length === 0) {
+    console.error('No assignable cohorts found in variable configuration');
+    return null;
+  }
+
+  // Determine target cohort based on assignment method
+  let targetCohortName: string | null = null;
+  const assignmentConfig = experiment.variables.assignment;
+
+  switch (assignmentConfig.method) {
+    case 'manual':
+      // Manual assignment should not use auto-transfer
+      console.error('Manual assignment method does not support auto-transfer');
+      return null;
+
+    case 'distribution': {
+      // Probability distribution assignment
+      const distributionConfig = assignmentConfig.distribution;
+      if (!distributionConfig) {
+        console.error('Distribution assignment config missing');
+        return null;
+      }
+
+      // Determine seed string for distributing participants to cohorts.
+      let seedString = '';
+      switch (distributionConfig.seedStrategy) {
+        case SeedStrategy.PARTICIPANT:
+          seedString = participant.privateId;
+          break;
+        case SeedStrategy.EXPERIMENT:
+          seedString = experimentId;
+          break;
+        case SeedStrategy.CUSTOM:
+          seedString = distributionConfig.customSeed || '';
+          break;
+        case SeedStrategy.COHORT:
+          seedString = participant.currentCohortId;
+          break;
+        default:
+          seedString = String(Date.now());
+      }
+
+      // Set seed from string and generate random value
+      seed(seedString);
+      const randomValue = random();
+
+      // Get probabilities (defaults to equal distribution)
+      const probabilities = distributionConfig.probabilities || {};
+      const defaultProb = 1.0 / assignableCohorts.length;
+
+      // Build cumulative probability distribution
+      let cumulative = 0;
+      for (const cohortName of assignableCohorts) {
+        const prob = probabilities[cohortName] ?? defaultProb;
+        cumulative += prob;
+
+        if (randomValue < cumulative) {
+          targetCohortName = cohortName;
+          break;
+        }
+      }
+
+      // Fallback to last cohort if not assigned (handles rounding errors)
+      if (!targetCohortName) {
+        targetCohortName = assignableCohorts[assignableCohorts.length - 1];
+      }
+
+      break;
+    }
+
+    default:
+      console.error(`Unknown assignment method: ${assignmentConfig.method}`);
+      return null;
+  }
+
+  // Validate target cohort name
+  if (!targetCohortName) {
+    console.error('No target cohort determined for participant');
+    return null;
+  }
+
+  // Get the cohort ID from the cohort configuration
+  const targetCohortConfig = experiment.variables.cohorts[targetCohortName];
+  const targetCohortId = targetCohortConfig?.cohortId;
+
+  if (!targetCohortId) {
+    console.error(
+      `No cohort ID found for variable cohort: ${targetCohortName}`,
+    );
+    return null;
+  }
+
+  // Transfer the participant to the target cohort
+  transferParticipantCohort(
+    transaction,
+    experimentId,
+    participant,
+    targetCohortId,
+    `Variable-based (${assignmentConfig.method})`,
+  );
+
+  return {currentStageId: stageConfig.id, endExperiment: false};
+}
+
 /** Automatically transfer participants based on survey answers. */
 export async function handleAutomaticTransfer(
   transaction: FirebaseFirestore.Transaction,
@@ -195,17 +357,30 @@ export async function handleAutomaticTransfer(
   const firestore = app.firestore();
 
   // If stage config does not have an auto-transfer config, ignore
-  // TODO: Remove temporary ignore of "default" transfer type
-  if (
-    !stageConfig.autoTransferConfig ||
-    stageConfig.autoTransferConfig.type !== AutoTransferType.SURVEY
-  ) {
+  if (!stageConfig.autoTransferConfig) {
     return null;
   }
 
-  // Auto-transfer config
-  // TODO: Add switch statement depending on transfer type
+  // Handle different transfer types
   const autoTransferConfig = stageConfig.autoTransferConfig;
+
+  switch (autoTransferConfig.type) {
+    case AutoTransferType.VARIABLE:
+      return await handleVariableAutoTransfer(
+        transaction,
+        experimentId,
+        stageConfig,
+        participant,
+      );
+    case AutoTransferType.SURVEY:
+      // Continue with existing survey transfer logic
+      break;
+    case AutoTransferType.DEFAULT:
+      // TODO: Implement default transfer type
+      return null;
+    default:
+      return null;
+  }
 
   // Do a read to lock the current participant's document for this transaction
   // The data itself might be outdated, so we discard it
@@ -356,27 +531,15 @@ export async function handleAutomaticTransfer(
 
   await createCohortInternal(transaction, experimentId, cohortConfig);
 
-  for (const participant of cohortParticipants) {
-    const participantDoc = firestore
-      .collection('experiments')
-      .doc(experimentId)
-      .collection('participants')
-      .doc(participant.privateId);
-
-    transaction.update(participantDoc, {
-      transferCohortId: cohortConfig.id,
-      currentStatus: ParticipantStatus.TRANSFER_PENDING,
-    });
-
-    console.log(
-      `Transferring participant ${participant.publicId} to cohort ${cohortConfig.id}`,
+  for (const cohortParticipant of cohortParticipants) {
+    transferParticipantCohort(
+      transaction,
+      experimentId,
+      cohortParticipant,
+      cohortConfig.id,
+      'Survey-based',
     );
   }
-
-  // Update the passed-in participant as a side-effect, since this is how we merge all the changes
-  // from the updateParticipantToNextStage endpoint
-  participant.currentStatus = ParticipantStatus.TRANSFER_PENDING;
-  participant.transferCohortId = cohortConfig.id;
 
   return {currentStageId: stageConfig.id, endExperiment: false};
 }
