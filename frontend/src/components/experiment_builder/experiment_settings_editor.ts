@@ -218,7 +218,10 @@ export class ExperimentCohortEditor extends MobxLitElement {
             @click=${updateCheck}
           >
           </md-checkbox>
-          <div>Set a default maximum number of participants per cohort (can be changed later)</div>
+          <div>
+            Set a default maximum number of participants per cohort (can be
+            changed later)
+          </div>
         </div>
         ${maxParticipants === null
           ? ''
@@ -300,7 +303,10 @@ export class ExperimentProlificEditor extends MobxLitElement {
             @click=${updateProlificIntegration}
           >
           </md-checkbox>
-          <div>Enable participant recruitment integration with <a href="https://www.prolific.co/" target="_blank">Prolific</a></div>
+          <div>
+            Enable participant recruitment integration with
+            <a href="https://www.prolific.co/" target="_blank">Prolific</a>
+          </div>
         </div>
         ${this.renderProlificRedirectCodes(isProlific)}
       </div>

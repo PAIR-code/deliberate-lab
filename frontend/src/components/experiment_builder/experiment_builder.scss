@@ -269,7 +269,7 @@ pr-button pr-icon {
   width: 18px;
   left: 3px;
   bottom: 3px;
-  background-color: white;
+  background-color: white; // This is the dot on the slider.
   transition: 0.3s;
   border-radius: 50%;
 }

@@ -1,3 +1,4 @@
+@use '../../sass/colors';
 @use '../../sass/common';
 @use '../../sass/typescale';
 
@@ -8,20 +9,20 @@
   justify-content: center;
 }
 
+.content {
+  overflow-y: auto;
+}
+
 /* ─────────────── HEADER ─────────────── */
 .hero-title {
-  font-weight: 600;
+  @include typescale.title-large;
   font-size: clamp(28px, 4vw, 44px);
-  line-height: 1.1;
-  letter-spacing: -0.01em;
   margin: 0 0 0.75rem 0;
-  color: var(--md-sys-color-on-surface);
+  line-height: 1.1;
 }
 
 .hero-subhead {
-  font-size: clamp(14px, 1.6vw, 18px);
-  color: var(--md-sys-color-on-surface-variant);
-  margin: 0;
+  @include typescale.body-large;
 }
 
 .header {
@@ -33,7 +34,8 @@
   margin: 0 auto;
   padding: 0.75rem 1.25rem;
   border-bottom: 1px solid var(--md-sys-color-outline-variant);
-  background: var(--md-sys-color-surface);
+  position: sticky;
+  flex-wrap: wrap;
 }
 
 .logo {
@@ -51,10 +53,9 @@
 
 /* ─────────────── HERO ─────────────── */
 
-.login {
+.login-content {
   @include common.flex-column;
-  background: var(--md-sys-color-surface);
-  border-radius: common.$spacing-medium;
+  border-radius: common.$spacing-medium var(--md-sys-color-surface);
   gap: common.$spacing-large;
   max-width: 1200px;
   padding: common.$spacing-xxl;
@@ -85,9 +86,10 @@ h2 {
 
 .info {
   @include common.flex-column;
-  background: #f6f6f6;
-  color: #333;
-  border: 1px solid #e0e0e0;
+  @include typescale.body-medium;
+
+  background: var(--md-sys-color-primary-container);
+  border: 1px solid;
   border-radius: 8px;
   gap: common.$spacing-medium;
   padding: common.$spacing-large;
@@ -98,7 +100,6 @@ h2 {
 }
 
 .info a {
-  color: var(--md-sys-color-primary);
   text-decoration: underline;
 }
 
@@ -110,8 +111,8 @@ h2 {
 
 footer {
   width: 100%;
-  background: var(--md-sys-color-surface);
   margin-top: 2rem;
+  position: sticky;
 }
 
 .footer-container {
@@ -133,13 +134,8 @@ footer {
 
 .footer-links a {
   color: var(--md-sys-color-on-surface-variant);
-  text-decoration: none;
   font-weight: 500;
   font-size: 0.9rem;
-}
-
-.footer-links a:hover {
-  text-decoration: underline;
 }
 
 .version {
@@ -150,11 +146,6 @@ footer {
 }
 
 .version a {
-  text-decoration: none;
   color: var(--md-sys-color-outline);
   text-align: center;
-}
-
-.version a:hover {
-  text-decoration: underline;
 }
