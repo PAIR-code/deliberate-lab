@@ -17,7 +17,7 @@ import {
  * to "complete" the stage.
  */
 export interface AgentParticipantStageActions {
-  callApi: 'answer' | 'profile' | 'none'; // Which document to update via API
+  callApi: boolean;
   moveToNextStage: boolean;
 }
 
@@ -30,7 +30,7 @@ export class BaseStageHandler {
     stage: StageConfig,
   ): AgentParticipantStageActions {
     // By default, do not change anything and just proceed to next stage
-    return {callApi: 'none', moveToNextStage: true};
+    return {callApi: false, moveToNextStage: true};
   }
 
   getDefaultMediatorStructuredPrompt(

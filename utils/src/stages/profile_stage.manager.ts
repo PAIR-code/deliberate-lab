@@ -27,10 +27,10 @@ export class ProfileStageHandler extends BaseStageHandler {
       stageProfileType === ProfileType.ANONYMOUS_ANIMAL ||
       stageProfileType === ProfileType.ANONYMOUS_PARTICIPANT
     ) {
-      return {callApi: 'none', moveToNextStage: true};
+      return {callApi: false, moveToNextStage: true};
     }
     // Otherwise, use API to update profile
-    return {callApi: 'profile', moveToNextStage: true};
+    return {callApi: true, moveToNextStage: true};
   }
 
   getDefaultParticipantStructuredPrompt(
