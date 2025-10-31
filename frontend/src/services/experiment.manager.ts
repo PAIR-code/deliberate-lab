@@ -267,7 +267,6 @@ export class ExperimentManager extends Service {
   }
 
   setCurrentCohortId(id: string | undefined) {
-    console.log(id);
     this.currentCohortId = id;
   }
 
