@@ -1,5 +1,4 @@
 import {createModelGenerationConfig} from '../agent';
-import {ExperimenterData} from '../experimenter';
 import {ParticipantProfileExtended} from '../participant';
 import {
   ParticipantPromptConfig,
@@ -10,7 +9,7 @@ import {
   createProfilePrompt,
   createProfileStructuredOutputConfig,
 } from './profile_stage.prompts';
-import {StageConfig, StageContextData, StageKind} from './stage';
+import {StageKind} from './stage';
 import {AgentParticipantStageActions, BaseStageHandler} from './stage.handler';
 
 export class ProfileStageHandler extends BaseStageHandler {
@@ -31,6 +30,31 @@ export class ProfileStageHandler extends BaseStageHandler {
     }
     // Otherwise, use API to update profile
     return {callApi: true, moveToNextStage: true};
+  }
+
+  extractAgentParticipantAnswerFromResponse(
+    participant: ParticipantProfileExtended,
+    stage: ProfileStageConfig,
+    response: Record<string, unknown>,
+  ) {
+    const name = response['name'];
+    if (typeof name === 'string') {
+      participant.name = name.trim();
+    }
+
+    const avatar = response['emoji'];
+    if (typeof avatar === 'string') {
+      // TODO: For DEFAULT_GENDERED profile type, set random emoji from
+      // PROFILE_AVATARS if the model-chosen emoji is not part of the set
+      participant.avatar = avatar;
+    }
+
+    const pronouns = response['pronouns'];
+    if (typeof pronouns === 'string') {
+      participant.pronouns = pronouns.trim();
+    }
+
+    return undefined;
   }
 
   getDefaultParticipantStructuredPrompt(

@@ -1,9 +1,4 @@
-import {Experiment} from '../experiment';
 import {ParticipantProfileExtended} from '../participant';
-import {
-  MediatorPromptConfig,
-  ParticipantPromptConfig,
-} from '../structured_prompt';
 import {AgentParticipantStageActions, BaseStageHandler} from './stage.handler';
 import {GroupChatStageHandler} from './chat_stage.manager';
 import {InfoStageHandler} from './info_stage.manager';
@@ -12,13 +7,7 @@ import {RoleStageHandler} from './role_stage.manager';
 import {SurveyStageHandler} from './survey_stage.manager';
 import {SurveyPerParticipantStageHandler} from './survey_per_participant_stage.manager';
 import {ProfileStageHandler} from './profile_stage.manager';
-import {
-  StageConfig,
-  StageContextData,
-  StageKind,
-  StageParticipantAnswer,
-  StagePublicData,
-} from './stage';
+import {StageConfig, StageContextData, StageKind} from './stage';
 import {StockInfoStageHandler} from './stockinfo_stage.manager';
 import {TOSStageHandler} from './tos_stage.manager';
 
@@ -39,6 +28,42 @@ export class StageManager {
       new SurveyPerParticipantStageHandler(),
     );
     this.handlerMap.set(StageKind.TOS, new TOSStageHandler());
+  }
+
+  /** Specifies what must be done to complete the given stage
+   * as an agent participant.
+   */
+  getAgentParticipantActionsForStage(
+    participant: ParticipantProfileExtended,
+    stage: StageConfig,
+  ): AgentParticipantStageActions {
+    return (
+      this.handlerMap
+        .get(stage.kind)
+        ?.getAgentParticipantActionsForStage(participant, stage) ?? {
+        callApi: false,
+        moveToNextStage: true,
+      }
+    );
+  }
+
+  /** Extracts relevant content from parsed model response to create
+   *  a private participant answer (or, for profile stage, update profile).
+   */
+  extractAgentParticipantAnswerFromResponse(
+    participant: ParticipantProfileExtended,
+    stage: StageConfig,
+    response: Record<string, unknown>,
+  ) {
+    return (
+      this.handlerMap
+        .get(stage.kind)
+        ?.extractAgentParticipantAnswerFromResponse(
+          participant,
+          stage,
+          response,
+        ) ?? undefined
+    );
   }
 
   /** Returns stage "display" (UI content) used in stage context prompt item.

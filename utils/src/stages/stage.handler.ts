@@ -1,17 +1,9 @@
-import {Experiment} from '../experiment';
-import {ExperimenterData} from '../experimenter';
 import {ParticipantProfileExtended} from '../participant';
 import {
   MediatorPromptConfig,
   ParticipantPromptConfig,
 } from '../structured_prompt';
-import {
-  StageConfig,
-  StageContextData,
-  StageKind,
-  StageParticipantAnswer,
-  StagePublicData,
-} from './stage';
+import {StageConfig, StageContextData, StageParticipantAnswer} from './stage';
 
 /** Specifies what actions should be taken for the agent participant
  * to "complete" the stage.
@@ -31,6 +23,14 @@ export class BaseStageHandler {
   ): AgentParticipantStageActions {
     // By default, do not change anything and just proceed to next stage
     return {callApi: false, moveToNextStage: true};
+  }
+
+  extractAgentParticipantAnswerFromResponse(
+    participant: ParticipantProfileExtended,
+    stage: StageConfig,
+    response: Record<string, unknown>,
+  ): StageParticipantAnswer | undefined {
+    return undefined;
   }
 
   getDefaultMediatorStructuredPrompt(
