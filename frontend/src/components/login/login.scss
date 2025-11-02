@@ -28,13 +28,13 @@
 .rotating-wrapper {
   display: inline-block;
   position: relative;
-  padding: 0 4px;
 }
 
 .rotating-term {
-  font-weight: 800;
+  font-weight: 600;
   color: var(--md-sys-color-tertiary);
   display: inline-block;
+  line-height: 1.1;
   transition:
     opacity 0.4s ease,
     transform 0.4s ease;
