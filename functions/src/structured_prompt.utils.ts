@@ -337,11 +337,13 @@ async function processPromptItems(
         };
         if (userProfile.type === UserType.PARTICIPANT) {
           items.push(
-            getNameFromPublicId(
-              [userProfile],
-              userProfile.publicId,
-              getProfileSetId(),
-            ),
+            userProfile.name
+              ? getNameFromPublicId(
+                  [userProfile],
+                  userProfile.publicId,
+                  getProfileSetId(),
+                )
+              : 'Profile not yet set',
           );
         } else {
           // TODO: Adjust display for mediator profiles
