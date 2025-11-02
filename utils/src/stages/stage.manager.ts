@@ -3,6 +3,7 @@ import {AgentParticipantStageActions, BaseStageHandler} from './stage.handler';
 import {GroupChatStageHandler} from './chat_stage.manager';
 import {InfoStageHandler} from './info_stage.manager';
 import {PrivateChatStageHandler} from './private_chat_stage.manager';
+import {RankingStageHandler} from './ranking_stage.manager';
 import {RoleStageHandler} from './role_stage.manager';
 import {SurveyStageHandler} from './survey_stage.manager';
 import {SurveyPerParticipantStageHandler} from './survey_per_participant_stage.manager';
@@ -19,6 +20,7 @@ export class StageManager {
     this.handlerMap.set(StageKind.CHAT, new GroupChatStageHandler());
     this.handlerMap.set(StageKind.INFO, new InfoStageHandler());
     this.handlerMap.set(StageKind.PRIVATE_CHAT, new PrivateChatStageHandler());
+    this.handlerMap.set(StageKind.RANKING, new RankingStageHandler());
     this.handlerMap.set(StageKind.ROLE, new RoleStageHandler());
     this.handlerMap.set(StageKind.STOCKINFO, new StockInfoStageHandler());
     this.handlerMap.set(StageKind.SURVEY, new SurveyStageHandler());

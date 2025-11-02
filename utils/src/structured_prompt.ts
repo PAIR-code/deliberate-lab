@@ -30,10 +30,17 @@ export interface BasePromptConfig {
 
 export type MediatorPromptConfig = ChatPromptConfig;
 
-export type ParticipantPromptConfig = ChatPromptConfig | ProfilePromptConfig;
+export type ParticipantPromptConfig =
+  | ChatPromptConfig
+  | ProfilePromptConfig
+  | RankingPromptConfig;
 
 export interface ProfilePromptConfig extends BasePromptConfig {
   type: StageKind.PROFILE;
+}
+
+export interface RankingPromptConfig extends BasePromptConfig {
+  type: StageKind.RANKING;
 }
 
 /** Currently used for both mediator and participant chat prompts. */

@@ -133,7 +133,6 @@ export async function getFirestoreDataForStructuredPrompt(
       data,
     );
   }
-
   return {experiment, participants: answerParticipants, data};
 }
 
