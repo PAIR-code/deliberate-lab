@@ -53,7 +53,7 @@ export class StageManager {
   extractAgentParticipantAnswerFromResponse(
     participant: ParticipantProfileExtended,
     stage: StageConfig,
-    response: Record<string, unknown>,
+    response: unknown,
   ) {
     return (
       this.handlerMap

@@ -179,7 +179,7 @@ export async function getParsedAgentParticipantPromptResponse(
     return null;
   }
 
-  const parsed = response.parsedResponse as Record<string, unknown>;
+  const parsed = response.parsedResponse;
   return parsed;
 }
 

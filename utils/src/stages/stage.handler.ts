@@ -28,7 +28,7 @@ export class BaseStageHandler {
   extractAgentParticipantAnswerFromResponse(
     participant: ParticipantProfileExtended,
     stage: StageConfig,
-    response: Record<string, unknown>,
+    response: unknown,
   ): StageParticipantAnswer | undefined {
     return undefined;
   }

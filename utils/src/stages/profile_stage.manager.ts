@@ -35,22 +35,23 @@ export class ProfileStageHandler extends BaseStageHandler {
   extractAgentParticipantAnswerFromResponse(
     participant: ParticipantProfileExtended,
     stage: ProfileStageConfig,
-    response: Record<string, unknown>,
+    response: unknown,
   ) {
-    const name = response['name'];
-    if (typeof name === 'string') {
+    const responseMap = response as Record<string, string>;
+    const name = responseMap['name'];
+    if (name) {
       participant.name = name.trim();
     }
 
-    const avatar = response['emoji'];
-    if (typeof avatar === 'string') {
+    const avatar = responseMap['emoji'];
+    if (avatar) {
       // TODO: For DEFAULT_GENDERED profile type, set random emoji from
       // PROFILE_AVATARS if the model-chosen emoji is not part of the set
       participant.avatar = avatar;
     }
 
-    const pronouns = response['pronouns'];
-    if (typeof pronouns === 'string') {
+    const pronouns = responseMap['pronouns'];
+    if (pronouns) {
       participant.pronouns = pronouns.trim();
     }
 
