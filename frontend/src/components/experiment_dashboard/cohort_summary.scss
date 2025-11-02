@@ -62,9 +62,54 @@
   max-height: 220px;
 }
 
+.section {
+  @include common.flex-column;
+  gap: common.$spacing-small;
+  padding: common.$spacing-medium common.$spacing-large;
+}
+
+.section-title {
+  @include typescale.label-small;
+  color: var(--md-sys-color-on-surface-variant);
+}
+
+.section-list {
+  @include common.flex-column;
+  gap: common.$spacing-small;
+}
+
 .empty-message {
   color: var(--md-sys-color-outline);
   padding: common.$spacing-large;
+}
+
+.empty-subsection {
+  color: var(--md-sys-color-outline);
+  font-style: italic;
+}
+
+.mediator-list {
+  gap: common.$spacing-small;
+}
+
+.mediator-row {
+  @include typescale.label-medium;
+  @include common.flex-row-align-center;
+  border-top: 1px solid var(--md-sys-color-outline-variant-high);
+  justify-content: space-between;
+  gap: common.$spacing-medium;
+  padding: common.$spacing-xs common.$spacing-large;
+
+  &:focus,
+  &:hover {
+    background: var(--md-sys-color-surface-container);
+  }
+}
+
+.status-chip {
+  @include common.chip;
+  background: var(--md-sys-color-secondary-container);
+  color: var(--md-sys-color-on-secondary-container);
 }
 
 .menu-wrapper {
@@ -81,4 +126,14 @@
   border-radius: common.$spacing-medium;
   gap: common.$spacing-small;
   padding: common.$spacing-medium;
+}
+
+.menu-item.disabled {
+  color: var(--md-sys-color-outline);
+  pointer-events: none;
+}
+
+.menu-item-helper {
+  @include typescale.body-small;
+  color: var(--md-sys-color-outline);
 }

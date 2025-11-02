@@ -1089,7 +1089,7 @@ function createHabermasMediatorPromptConfig(): MediatorPromptConfig {
   - Example: “It sounds like two main ideas have emerged so far: A and B.” or “You seem close to agreement on X, but Y is still being debated.”
   `;
 
-  return createChatPromptConfig(HABERMAS_STAGE_ID, {
+  return createChatPromptConfig(HABERMAS_STAGE_ID, StageKind.CHAT, {
     prompt: [
       createTextPromptItem(
         'You are participating in an experiment with the following online profile:',
@@ -1161,7 +1161,7 @@ STEP 4: If 'proposedSolution' is 'NoSolutionNeeded':
 - Set 'response' to an empty string.  
 - Set 'shouldRespond' to false.`;
 
-  return createChatPromptConfig(DYNAMIC_STAGE_ID, {
+  return createChatPromptConfig(DYNAMIC_STAGE_ID, StageKind.CHAT, {
     prompt: [
       createTextPromptItem(
         'You are participating in an experiment with the following online profile:',

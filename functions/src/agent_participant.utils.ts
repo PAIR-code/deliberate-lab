@@ -11,9 +11,7 @@ import {
   updateParticipantNextStage,
 } from './participant.utils';
 import {completeProfile} from './stages/profile.utils';
-import {getAgentParticipantRankingStageResponse} from './stages/ranking.agent';
 import {assignRolesToParticipants} from './stages/role.utils';
-import {getAgentParticipantSurveyStageResponse} from './stages/survey.agent';
 import {
   getExperimenterData,
   getFirestoreParticipantRef,
@@ -88,6 +86,11 @@ export async function completeStageAsAgentParticipant(
 
   switch (stage.kind) {
     case StageKind.CHAT:
+      // Do not complete stage as agent participant must chat first.
+      // Initial messages are now handled by sendInitialChatMessages in agent_participant.triggers.ts
+      // when currentStageId changes, so no action needed here.
+      break;
+    case StageKind.PRIVATE_CHAT:
       // Do not complete stage as agent participant must chat first.
       // Initial messages are now handled by sendInitialChatMessages in agent_participant.triggers.ts
       // when currentStageId changes, so no action needed here.

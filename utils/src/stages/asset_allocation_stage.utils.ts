@@ -1,4 +1,8 @@
-import {AssetAllocation} from './asset_allocation_stage';
+import {
+  AssetAllocation,
+  AssetAllocationStageConfig,
+  AssetAllocationStageParticipantAnswer,
+} from './asset_allocation_stage';
 
 // ************************************************************************* //
 // DONUT CHART UTILITIES                                                     //
@@ -153,4 +157,46 @@ export function getStockTicker(stockName: string): string {
 
   // If no ticker found, return the full name
   return stockName;
+}
+
+// ************************************************************************* //
+// PROMPT UTILITIES                                                          //
+// ************************************************************************* //
+
+export function getAssetAllocationSummaryText(
+  stage: AssetAllocationStageConfig,
+): string {
+  const overview =
+    '## Asset Allocation: User has $1,000 to allocate between two stocks:';
+
+  return `${overview}\n* ${stage.stockConfig.stockA.name}\n* ${stage.stockConfig.stockB.name}`;
+}
+
+export function getAssetAllocationAnswersText(
+  participantAnswers: Array<{
+    participantPublicId: string;
+    participantDisplayName: string;
+    answer: AssetAllocationStageParticipantAnswer;
+  }>,
+  alwaysShowParticipantNames = false,
+): string {
+  if (participantAnswers.length === 0) {
+    return '';
+  }
+
+  const answerSummaries = participantAnswers.map(
+    ({participantPublicId, participantDisplayName, answer}) => {
+      const allocation = answer.allocation;
+      // Include participant names based on configuration or if multiple participants
+      const showNames =
+        alwaysShowParticipantNames || participantAnswers.length > 1;
+      const prefix = showNames
+        ? `Participant ${participantDisplayName}:\n`
+        : '';
+
+      return `${prefix}${allocation.stockA.name}: ${allocation.stockA.percentage}%, ${allocation.stockB.name}: ${allocation.stockB.percentage}%`;
+    },
+  );
+
+  return `## Current Asset Allocation:\n${answerSummaries.join('\n')}`;
 }

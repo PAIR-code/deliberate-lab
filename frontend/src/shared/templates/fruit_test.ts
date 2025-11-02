@@ -161,6 +161,7 @@ const createBbotAgent = () => {
   const promptMap: Record<string, MediatorPromptConfig> = {};
   promptMap[TG_CHAT_STAGE_ID] = createChatPromptConfig(
     TG_CHAT_STAGE_ID, // stage ID
+    StageKind.CHAT,
     {
       prompt: createDefaultPromptFromText(TG_AGENT_PROMPT, TG_CHAT_STAGE_ID),
       chatSettings: createAgentChatSettings({

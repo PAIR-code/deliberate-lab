@@ -13,7 +13,7 @@ import {
 
 import {processModelResponse} from '../agent.utils';
 import {getExperimenterDataFromExperiment} from '../utils/firestore';
-import {getStructuredPrompt} from '../prompt.utils';
+import {getPromptFromConfig} from '../structured_prompt.utils';
 
 const DEFAULT_GENDERED_PROMPT_SUFFIX =
   ' Pick your emoji from this list and return only one character: ';
@@ -98,13 +98,11 @@ export async function completeProfile(
       createProfileStructuredOutputConfig(stageProfileType),
     numRetries: 0,
   };
-  const structuredPrompt = await getStructuredPrompt(
+  const structuredPrompt = await getPromptFromConfig(
     experimentId,
     participant.currentCohortId,
-    /*participantIds=*/ [participant.privateId],
     stageConfig.id,
     participant,
-    agentConfig,
     promptConfig,
   );
 

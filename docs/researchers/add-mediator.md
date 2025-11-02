@@ -27,6 +27,11 @@ Below persona settings such as display name and API/model, you'll
 see a list of stage-specific prompts. Make sure that you have prompts
 added to the stages where your mediator will be active.
 
+Use the "Automatically add this mediator to every cohort" toggle if you
+want new cohorts to include the mediator by default. Leave it off when you
+prefer to add the mediator manually from the experiment dashboard for
+specific cohorts only.
+
 <img
   src="../assets/images/deliberate-lab-agent-mediator-prompt-config.png"
   alt="Screenshot of Deliberate Lab agent mediator prompt configuration"

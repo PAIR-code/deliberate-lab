@@ -1,3 +1,5 @@
+import {ChatMessage} from '../chat_message';
+import {AnonymousProfileMetadata} from '../participant';
 import {
   ChatStageConfig,
   ChatStageParticipantAnswer,
@@ -192,6 +194,19 @@ export type StagePublicData =
   | MultiAssetAllocationStagePublicData
   | SurveyStagePublicData;
 
+/** Stage context data (used for assembling prompts). */
+export interface StageContextData {
+  stage: StageConfig;
+  privateAnswers: Array<{
+    participantPublicId: string;
+    participantDisplayName: string;
+    answer: StageParticipantAnswer;
+  }>;
+  privateChatMap: Record<string, ChatMessage[]>;
+  publicChatMessages: ChatMessage[];
+  publicData: StagePublicData | undefined;
+}
+
 // ************************************************************************* //
 // FUNCTIONS                                                                 //
 // ************************************************************************* //
@@ -264,4 +279,17 @@ export function createPublicDataFromStageConfigs(stages: StageConfig[]) {
     }
   });
   return publicData;
+}
+
+/** Initializes StageContext object with just stage config. */
+export function initializeStageContextData(
+  stage: StageConfig,
+): StageContextData {
+  return {
+    stage,
+    privateAnswers: [],
+    privateChatMap: {},
+    publicChatMessages: [],
+    publicData: undefined,
+  };
 }

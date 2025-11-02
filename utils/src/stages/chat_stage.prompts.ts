@@ -1,5 +1,10 @@
 import {UnifiedTimestamp} from '../shared';
-import {BaseAgentPromptConfig, ProfileAgentConfig} from '../agent';
+import {
+  BaseAgentPromptConfig,
+  ProfileAgentConfig,
+  createAgentChatSettings,
+  createModelGenerationConfig,
+} from '../agent';
 import {ParticipantProfileBase} from '../participant';
 import {getParticipantProfilePromptContext} from '../participant.prompts';
 import {convertUnifiedTimestampToTime} from '../shared';
@@ -8,13 +13,18 @@ import {
   createStructuredOutputConfig,
   makeStructuredOutputPrompt,
 } from '../structured_output';
-import {ChatPromptConfig, PromptItemType} from '../structured_prompt';
+import {
+  ChatPromptConfig,
+  PromptItemType,
+  createDefaultPromptFromText,
+} from '../structured_prompt';
 import {ChatMessage} from '../chat_message';
 import {
   ChatDiscussion,
   ChatDiscussionType,
   ChatStageConfig,
 } from './chat_stage';
+import {PrivateChatStageConfig} from './private_chat_stage';
 import {StageKind} from './stage';
 import {getBaseStagePrompt} from './stage.prompts';
 
@@ -24,6 +34,7 @@ import {getBaseStagePrompt} from './stage.prompts';
 export const DEFAULT_AGENT_MEDIATOR_PROMPT = `You are a agent for a chat conversation. Your task is to ensure that the conversation is polite.
 If you notice that participants are being rude, step in to make sure that everyone is respectful. 
 Otherwise, do not respond.`;
+export const DEFAULT_AGENT_PRIVATE_MEDIATOR_CHAT_PROMPT = `You are an agent who is chatting with a participant. Your task is to ensure that the participant's questions are answered.`;
 export const DEFAULT_AGENT_PARTICIPANT_CHAT_PROMPT = `You are a human participating as the avatar mentioned above.
 Respond in a quick sentence if you would like to say something.
 Make sure your response sounds like a human with the phrasing and punctuation people use when casually chatting and no animal sounds.
@@ -32,33 +43,6 @@ Otherwise, do not respond.`;
 // ************************************************************************* //
 // PROMPTS                                                                   //
 // ************************************************************************* //
-export function getDefaultChatPrompt(
-  profile: ParticipantProfileBase,
-  agentConfig: ProfileAgentConfig, // TODO: Add to params
-  pastStageContext: string,
-  chatMessages: ChatMessage[],
-  promptConfig: ChatPromptConfig,
-  stageConfig: ChatStageConfig,
-) {
-  // TODO: Structure based on order of PromptItems
-  return [
-    // TODO: Move profile context up one level
-    getParticipantProfilePromptContext(
-      profile,
-      agentConfig?.promptContext ?? '',
-    ),
-    pastStageContext,
-    getChatStagePromptContext(
-      chatMessages,
-      stageConfig,
-      false, // TODO: check whether to include stage info
-    ),
-    promptConfig.prompt
-      .map((item) => (item.type === PromptItemType.TEXT ? item.text : ''))
-      .join('\n'),
-    makeStructuredOutputPrompt(promptConfig.structuredOutputConfig),
-  ].join('\n');
-}
 
 /** Get chat stage context
  *  (e.g., to include in prompt for a current/future stage)
@@ -77,7 +61,7 @@ export function getChatStagePromptContext(
 /** Return prompt for processing chat history. */
 export function getChatPromptMessageHistory(
   messages: ChatMessage[],
-  stage: ChatStageConfig,
+  stage: ChatStageConfig | PrivateChatStageConfig,
 ) {
   if (messages.length === 0) {
     return `No one in the discussion has spoken yet.`;
@@ -101,7 +85,7 @@ export function convertChatMessageToPromptFormat(message: ChatMessage) {
 /** Convert chat messages into chat history string for prompt. */
 function buildChatHistoryForPrompt(
   messages: ChatMessage[],
-  stage: ChatStageConfig,
+  stage: ChatStageConfig | PrivateChatStageConfig,
 ) {
   const concatMessages = (messages: ChatMessage[]) => {
     return messages
@@ -138,4 +122,21 @@ function getChatDiscussionDetailsForPrompt(discussion: ChatDiscussion) {
   const discussionItems = discussion.items.map((item) => item.name).join(', ');
   const description = `Discussion thread comparing the following items`;
   return `${description}: ${discussionItems}. ${discussion.description}`;
+}
+
+export function createChatPromptConfig(
+  id: string, // stage ID
+  type: StageKind.CHAT | StageKind.PRIVATE_CHAT,
+  config: Partial<ChatPromptConfig> = {},
+): ChatPromptConfig {
+  return {
+    id,
+    type,
+    prompt: config.prompt ?? createDefaultPromptFromText(''),
+    numRetries: config.numRetries ?? 0,
+    generationConfig: config.generationConfig ?? createModelGenerationConfig(),
+    structuredOutputConfig:
+      config.structuredOutputConfig ?? createStructuredOutputConfig(),
+    chatSettings: config.chatSettings ?? createAgentChatSettings(),
+  };
 }
