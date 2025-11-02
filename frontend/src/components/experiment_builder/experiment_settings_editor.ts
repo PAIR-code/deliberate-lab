@@ -224,7 +224,7 @@ export class ExperimentCohortEditor extends MobxLitElement {
           </div>
         </div>
         ${maxParticipants === null
-          ? ''
+          ? nothing
           : html` <div class="conditional-section">
               <md-filled-text-field
                 label="Maximum number of participants"
@@ -305,7 +305,12 @@ export class ExperimentProlificEditor extends MobxLitElement {
           </md-checkbox>
           <div>
             Enable participant recruitment integration with
-            <a href="https://www.prolific.co/" target="_blank">Prolific</a>
+            <a
+              href="https://www.prolific.co/"
+              target="_blank"
+              rel="noreferrer noopener"
+              >Prolific</a
+            >
           </div>
         </div>
         ${this.renderProlificRedirectCodes(isProlific)}

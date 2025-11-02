@@ -78,5 +78,5 @@ pr-textarea {
   margin-left: 3rem;
   display: flex;
   flex-direction: column;
-  gap: 1rem; // optional, nice spacing between fields
+  gap: common.$spacing-medium;
 }
