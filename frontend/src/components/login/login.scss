@@ -13,7 +13,6 @@
   overflow-y: auto;
 }
 
-/* ─────────────── HEADER ─────────────── */
 .hero-title {
   @include typescale.title-large;
   font-size: clamp(28px, 4vw, 44px);
@@ -32,7 +31,7 @@
 
 .rotating-term {
   font-weight: 600;
-  color: var(--md-sys-color-tertiary);
+  color: var(--md-sys-color-primary);
   display: inline-block;
   line-height: 1.1;
   transition:
@@ -51,16 +50,15 @@
 }
 
 .header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  width: 90%;
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 0.75rem 1.25rem;
+  @include common.flex-row-align-center;
+  background: var(--md-sys-color-surface);
   border-bottom: 1px solid var(--md-sys-color-outline-variant);
-  position: sticky;
   flex-wrap: wrap;
+  justify-content: space-between;
+  padding: common.$main-content-padding;
+  position: sticky;
+  top: 0;
+  z-index: 1;
 }
 
 .logo {
@@ -76,16 +74,11 @@
   gap: common.$spacing-medium;
 }
 
-/* ─────────────── HERO ─────────────── */
-
 .login-content {
   @include common.flex-column;
   border-radius: common.$spacing-medium var(--md-sys-color-surface);
   gap: common.$spacing-large;
-  max-width: 1200px;
-  padding: common.$spacing-xxl;
-  margin-top: 2rem;
-  margin-bottom: 2rem;
+  padding: common.$main-content-padding;
   width: 100%;
 }
 
@@ -99,22 +92,25 @@ h2 {
   margin: 0;
 }
 
-.login img {
-  border: 1px solid var(--md-sys-color-outline-variant);
-  border-radius: 12px;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
-  max-width: 100%;
-  margin-top: 1.5rem;
-}
+.login {
+  @include common.flex-column;
+  flex-grow: 1;
+  gap: common.$spacing-xxl;
 
-/* ─────────────── DISCLAIMER ─────────────── */
+  img {
+    border: 1px solid var(--md-sys-color-outline-variant);
+    border-radius: 12px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+    max-width: 100%;
+    margin-top: 1.5rem;
+  }
+}
 
 .info {
   @include common.flex-column;
   @include typescale.body-medium;
-
-  background: var(--md-sys-color-primary-container);
-  border: 1px solid;
+  color: var(--md-sys-color-on-tertiary-container);
+  background: var(--md-sys-color-tertiary-container);
   border-radius: 8px;
   gap: common.$spacing-medium;
   padding: common.$spacing-large;
@@ -132,23 +128,20 @@ h2 {
   text-decoration: none;
 }
 
-/* ─────────────── FOOTER ─────────────── */
-
 footer {
-  width: 100%;
-  margin-top: 2rem;
+  background: var(--md-sys-color-surface);
+  bottom: 0;
+  margin-top: auto;
   position: sticky;
+  z-index: 1;
 }
 
 .footer-container {
-  margin: 0 auto;
-  padding: 1rem 1rem;
-  display: flex;
-  flex-direction: column; // stack links + version
-  justify-content: center;
-  align-items: center;
-  gap: 0.75rem;
+  @include common.flex-column-align-center;
   border-top: 1px solid var(--md-sys-color-outline-variant);
+  justify-content: center;
+  gap: common.$spacing-medium;
+  padding: common.$main-content-padding;
 }
 
 .footer-links {
