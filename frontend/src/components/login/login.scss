@@ -145,21 +145,20 @@ footer {
 }
 
 .footer-links {
-  display: flex;
+  @include common.flex-row-align-center;
   justify-content: center;
-  gap: 1.5rem;
+  flex-wrap: wrap;
+  gap: common.$spacing-xxl;
 }
 
 .footer-links a {
+  @include typescale.body-small;
   color: var(--md-sys-color-on-surface-variant);
-  font-weight: 500;
-  font-size: 0.9rem;
 }
 
 .version {
-  font-size: 0.75rem;
+  @include typescale.label-small;
   color: var(--md-sys-color-outline);
-  margin-top: 0.5rem;
   text-align: center;
 }
 
