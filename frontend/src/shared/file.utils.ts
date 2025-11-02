@@ -11,6 +11,7 @@ import {
   orderBy,
   query,
 } from 'firebase/firestore';
+import {stringify as csvStringify} from 'csv-stringify/sync';
 import {
   AgentDataObject,
   AgentMediatorPersonaConfig,
@@ -60,6 +61,11 @@ import {convertUnifiedTimestampToISO} from './utils';
 // FILE DOWNLOAD FUNCTIONS
 // ****************************************************************************
 
+const CSV_STRINGIFY_OPTIONS = {
+  header: true,
+  escape_formulas: true,
+};
+
 /** Download blob (helper function for file downloads) */
 export function downloadBlob(blob: Blob, filename: string) {
   const url = URL.createObjectURL(blob);
@@ -93,6 +99,8 @@ export function downloadJSON(data: object, filename: string) {
   downloadBlob(blob, filename);
 }
 
+// TODO(mkbehr): convert all remaining CSV generation to use csvStringify, and
+// remove toCsv().
 /** Make text CSV-compatibile. */
 export function toCSV(text: string | null) {
   if (!text) return '';
@@ -919,21 +927,26 @@ export interface ChatHistoryData {
 // ****************************************************************************
 
 /** Returns CSV data for all participants in experiment download. */
-export function getParticipantData(data: ExperimentDownload) {
-  const participantData: string[][] = [];
-
-  // Add headings
-  participantData.push(
-    getAllParticipantCSVColumns(data, null, data.participantMap),
+export function getParticipantDataCSV(data: ExperimentDownload): string {
+  const columns: string[] = getAllParticipantCSVColumns(
+    data,
+    null,
+    data.participantMap,
+  );
+  const records: string[][] = Object.values(data.participantMap).map(
+    (participant) => {
+      return getAllParticipantCSVColumns(
+        data,
+        participant,
+        data.participantMap,
+      );
+    },
   );
 
-  // Add participants
-  for (const participant of Object.values(data.participantMap)) {
-    participantData.push(
-      getAllParticipantCSVColumns(data, participant, data.participantMap),
-    );
-  }
-  return participantData;
+  return csvStringify(records, {
+    columns: columns,
+    ...CSV_STRINGIFY_OPTIONS,
+  });
 }
 
 /** Returns CSV data for all alerts in experiment download. */

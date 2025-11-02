@@ -78,7 +78,7 @@ import {
   getChipNegotiationData,
   getChipNegotiationPlayerMapCSV,
   getExperimentDownload,
-  getParticipantData,
+  getParticipantDataCSV,
 } from '../shared/file.utils';
 import {
   isObsoleteParticipant,
@@ -966,14 +966,7 @@ export class ExperimentManager extends Service {
         // Add participant data to zip
         zip.file(
           `${experimentName}_ParticipantData.csv`,
-          new Blob(
-            [
-              getParticipantData(result)
-                .map((row) => row.join(','))
-                .join('\n'),
-            ],
-            {type: 'text/csv'},
-          ),
+          new Blob([getParticipantDataCSV(result)], {type: 'text/csv'}),
         );
 
         // Add alert data to zip
