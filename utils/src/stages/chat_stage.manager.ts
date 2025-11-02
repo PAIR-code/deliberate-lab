@@ -43,8 +43,8 @@ export class GroupChatStageHandler extends BaseStageHandler {
       }
       return '';
     };
-    // Get participant names
-    const participantNames = participants.map((participant) =>
+    // Get participant names (from all active participants)
+    const participantNames = stageContext.participants.map((participant) =>
       getNameFromPublicId(
         [participant],
         participant.publicId,

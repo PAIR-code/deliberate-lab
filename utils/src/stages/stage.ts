@@ -1,5 +1,5 @@
 import {ChatMessage} from '../chat_message';
-import {AnonymousProfileMetadata} from '../participant';
+import {ParticipantProfileExtended} from '../participant';
 import {
   ChatStageConfig,
   ChatStageParticipantAnswer,
@@ -197,6 +197,7 @@ export type StagePublicData =
 /** Stage context data (used for assembling prompts). */
 export interface StageContextData {
   stage: StageConfig;
+  participants: ParticipantProfileExtended[]; // all active cohort participants
   privateAnswers: Array<{
     participantPublicId: string;
     participantDisplayName: string;
@@ -287,6 +288,7 @@ export function initializeStageContextData(
 ): StageContextData {
   return {
     stage,
+    participants: [],
     privateAnswers: [],
     privateChatMap: {},
     publicChatMessages: [],
