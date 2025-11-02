@@ -90,9 +90,9 @@ export class ExperimentBuilder extends MobxLitElement {
               <div class="header-title">General settings</div>
             </div>
             <div
-              class="general-item ${this.panelView === PanelView.METADATA
-                ? 'current'
-                : ''}"
+              class="general-item ${
+                this.panelView === PanelView.METADATA ? 'current' : ''
+              }"
               @click=${() => {
                 this.panelView = PanelView.METADATA;
               }}
@@ -101,9 +101,9 @@ export class ExperimentBuilder extends MobxLitElement {
               <div class="subtitle">Experiment name and description</div>
             </div>
             <div
-              class="general-item ${this.panelView === PanelView.STAGES
-                ? 'current'
-                : ''}"
+              class="general-item ${
+                this.panelView === PanelView.STAGES ? 'current' : ''
+              }"
               @click=${() => {
                 this.panelView = PanelView.STAGES;
               }}
@@ -115,9 +115,9 @@ export class ExperimentBuilder extends MobxLitElement {
               <div class="header-title">Additional settings</div>
             </div>
             <div
-              class="general-item ${this.panelView === PanelView.PERMISSIONS
-                ? 'current'
-                : ''}"
+              class="general-item ${
+                this.panelView === PanelView.PERMISSIONS ? 'current' : ''
+              }"
               @click=${() => {
                 this.panelView = PanelView.PERMISSIONS;
               }}
@@ -127,9 +127,9 @@ export class ExperimentBuilder extends MobxLitElement {
             </div>
 
             <div
-              class="general-item ${this.panelView === PanelView.PROLIFIC
-                ? 'current'
-                : ''}"
+              class="general-item ${
+                this.panelView === PanelView.PROLIFIC ? 'current' : ''
+              }"
               @click=${() => {
                 this.panelView = PanelView.PROLIFIC;
               }}
@@ -138,9 +138,9 @@ export class ExperimentBuilder extends MobxLitElement {
               <div class="subtitle">Set up Prolific codes</div>
             </div>
             <div
-              class="general-item ${this.panelView === PanelView.COHORT
-                ? 'current'
-                : ''}"
+              class="general-item ${
+                this.panelView === PanelView.COHORT ? 'current' : ''
+              }"
               @click=${() => {
                 this.panelView = PanelView.COHORT;
               }}
@@ -152,9 +152,9 @@ export class ExperimentBuilder extends MobxLitElement {
               <div class="header-title">LLM settings</div>
             </div>
             <div
-              class="general-item ${this.panelView === PanelView.API_KEY
-                ? 'current'
-                : ''}"
+              class="general-item ${
+                this.panelView === PanelView.API_KEY ? 'current' : ''
+              }"
               @click=${() => {
                 this.panelView = PanelView.API_KEY;
               }}
@@ -163,9 +163,9 @@ export class ExperimentBuilder extends MobxLitElement {
               <div class="subtitle">Configure API key used for agent calls</div>
             </div>
             <div
-              class="general-item ${this.panelView === PanelView.AGENT_MEDIATORS
-                ? 'current'
-                : ''}"
+              class="general-item ${
+                this.panelView === PanelView.AGENT_MEDIATORS ? 'current' : ''
+              }"
               @click=${() => {
                 this.panelView = PanelView.AGENT_MEDIATORS;
                 this.experimentEditor.setAgentIdToLatest(true);
@@ -174,50 +174,56 @@ export class ExperimentBuilder extends MobxLitElement {
               <div>Agent mediators</div>
               <div class="subtitle">Add and configure agent mediators</div>
             </div>
-            ${this.experimentEditor.showAlphaFeatures
-              ? html`
-                  <div
-                    class="general-item ${this.panelView ===
-                    PanelView.AGENT_PARTICIPANTS
-                      ? 'current'
-                      : ''}"
-                    @click=${() => {
-                      this.panelView = PanelView.AGENT_PARTICIPANTS;
-                      this.experimentEditor.setAgentIdToLatest(false);
-                    }}
-                  >
-                    <div>
-                      Agent participants<span class="alpha">alpha</span>
-                    </div>
-                    <div class="subtitle">
-                      Add and configure agent participants
-                    </div>
-                  </div>
-                `
-              : nothing}
-
-            <div class="bottom">${this.renderDeleteButton()}</div>
-            <div class="alpha-toggle">
-              <span class="label">🧪 Alpha features</span>
-              <label
-                class="switch"
-                title=${this.experimentEditor.showAlphaFeatures
-                  ? 'Alpha features enabled'
-                  : 'Alpha features disabled'}
-              >
-                <input
-                  type="checkbox"
-                  ?checked=${this.experimentEditor.showAlphaFeatures}
-                  @change=${(e: Event) => {
-                    const checked = (e.target as HTMLInputElement).checked;
-                    this.experimentEditor.showAlphaFeatures = checked;
-                  }}
-                />
-                <span class="slider"></span>
-              </label>
+            ${this.experimentEditor.showAlphaFeatures ? this.renderAlphaMenuItems() : nothing}
+            </div>
+            <div class="bottom">
+              ${this.renderAlphaToggle()}
+              ${this.renderDeleteButton()}
             </div>
           </div>
         </div>
+      </div>
+    `;
+  }
+
+  private renderAlphaMenuItems() {
+    return html`
+      <div
+        class="general-item ${this.panelView === PanelView.AGENT_PARTICIPANTS
+          ? 'current'
+          : ''}"
+        @click=${() => {
+          this.panelView = PanelView.AGENT_PARTICIPANTS;
+          this.experimentEditor.setAgentIdToLatest(false);
+        }}
+      >
+        <div>Agent participants<span class="alpha">alpha</span></div>
+        <div class="subtitle">Add and configure agent participants</div>
+      </div>
+    `;
+  }
+
+  private renderAlphaToggle() {
+    // TODO: Also show this toggle in the experiment dashboard
+    return html`
+      <div class="alpha-toggle">
+        <span class="label">🧪 Alpha features</span>
+        <label
+          class="switch"
+          title=${this.experimentEditor.showAlphaFeatures
+            ? 'Alpha features enabled'
+            : 'Alpha features disabled'}
+        >
+          <input
+            type="checkbox"
+            ?checked=${this.experimentEditor.showAlphaFeatures}
+            @change=${(e: Event) => {
+              const checked = (e.target as HTMLInputElement).checked;
+              this.experimentEditor.showAlphaFeatures = checked;
+            }}
+          />
+          <span class="slider"></span>
+        </label>
       </div>
     `;
   }
