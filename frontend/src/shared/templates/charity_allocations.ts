@@ -96,7 +96,7 @@ export interface CharityDebateConfig {
   includeDiscussionEvaluation: boolean;
   includeDebriefingAndFeedback: boolean;
   includeMetaFeedback: boolean;
-  facilitatorConfigId: Number;
+  facilitatorConfigId: number;
 }
 
 export function createCharityDebateConfig(
