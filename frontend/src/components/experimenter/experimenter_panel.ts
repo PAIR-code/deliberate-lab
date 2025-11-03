@@ -186,6 +186,7 @@ export class Panel extends MobxLitElement {
         ${this.renderOutdatedWarning()} ${this.renderCohortListPanel()}
         ${this.renderCohortEditorPanel()}
         <div class="bottom">
+          <alpha-toggle></alpha-toggle>
           <div class="subtitle">
             Experiment Version: ${this.experimentService.experiment?.versionId}
             (latest version: ${EXPERIMENT_VERSION_ID})

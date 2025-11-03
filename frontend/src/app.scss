@@ -62,6 +62,13 @@ main {
   &.info {
     max-width: common.$info-content-max-width;
   }
+
+  &.login {
+    @include common.flex-column;
+    overflow: auto;
+    max-width: common.$login-content-max-width;
+    padding: 0;
+  }
 }
 
 .participant-content-wrapper {

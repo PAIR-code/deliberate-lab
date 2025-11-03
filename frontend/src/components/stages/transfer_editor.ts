@@ -7,6 +7,7 @@ import {customElement, property} from 'lit/decorators.js';
 import '@material/web/checkbox/checkbox.js';
 
 import {core} from '../../core/core';
+import {AuthService} from '../../services/auth.service';
 import {ExperimentEditor} from '../../services/experiment.editor';
 
 import {
@@ -23,6 +24,7 @@ import {styles} from './transfer_editor.scss';
 export class TransferEditorComponent extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
 
+  private readonly authService = core.getService(AuthService);
   private readonly experimentEditor = core.getService(ExperimentEditor);
 
   @property() stage: TransferStageConfig | undefined = undefined;
@@ -72,7 +74,7 @@ export class TransferEditorComponent extends MobxLitElement {
 
     return html`
       ${this.renderTimeout()}
-      ${this.experimentEditor.showAlphaFeatures
+      ${this.authService.showAlphaFeatures
         ? this.renderAutoTransfer()
         : nothing}
     `;

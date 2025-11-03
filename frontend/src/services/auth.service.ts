@@ -20,6 +20,7 @@ import {AdminService} from './admin.service';
 import {FirebaseService} from './firebase.service';
 import {HomeService} from './home.service';
 import {ExperimentManager} from './experiment.manager';
+import {Pages, RouterService} from './router.service';
 
 import {
   ExperimenterProfile,
@@ -32,6 +33,7 @@ interface ServiceProvider {
   experimentManager: ExperimentManager;
   firebaseService: FirebaseService;
   homeService: HomeService;
+  routerService: RouterService;
 }
 
 export class AuthService extends Service {
@@ -112,6 +114,10 @@ export class AuthService extends Service {
     return this.initialAuthCheck && this.user !== null;
   }
 
+  @computed get showAlphaFeatures() {
+    return this.experimenterData?.showAlphaFeatures;
+  }
+
   // If true and is experimenter, show debugging components
   // in experimenter preview
   @computed get isDebugMode() {
@@ -173,6 +179,7 @@ export class AuthService extends Service {
   signOut() {
     signOut(this.sp.firebaseService.auth);
     this.sp.homeService.unsubscribeAll();
+    this.sp.routerService.navigate(Pages.HOME);
   }
 
   /** Experimenter has viewed this experiment before. */
@@ -196,6 +203,18 @@ export class AuthService extends Service {
     this.writeExperimenterData({
       ...this.experimenterData,
       viewedExperiments: [...viewedExperiments, experimentId],
+    });
+  }
+
+  /** Update whether or not to show alpha features. */
+  updateAlphaToggle(showAlphaFeatures: boolean) {
+    if (!this.experimenterData) {
+      return;
+    }
+
+    this.writeExperimenterData({
+      ...this.experimenterData,
+      showAlphaFeatures,
     });
   }
 

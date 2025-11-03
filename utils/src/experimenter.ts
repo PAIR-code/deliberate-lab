@@ -28,6 +28,7 @@ export interface ExperimenterData {
   apiKeys: APIKeyConfig;
   // List of experiment IDs that the user has clicked on
   viewedExperiments: string[];
+  showAlphaFeatures: boolean;
 }
 
 export interface APIKeyConfig {
@@ -90,6 +91,7 @@ export function createExperimenterData(
     },
     email: experimenterEmail,
     viewedExperiments: [],
+    showAlphaFeatures: false,
   };
 }
 
