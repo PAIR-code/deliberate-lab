@@ -518,7 +518,7 @@ function createDiscussionStageWithMediator(
   mediatorTemplate: AgentMediatorTemplate,
 ): StageConfig {
   const mediatorText = `\n\n🤖 An ${mediatorTemplate.persona.name} will be present in this discussion.`;
-  const discussionText = `Discuss the optimal allocation of ${setting}.${mediatorText}`;
+  const discussionText = `Discuss the ideal allocation of ${setting}.${mediatorText}`;
   
   return createChatStage({
     id: stageId,
@@ -896,7 +896,7 @@ function createAllocationDiscussionStage(
   const mediatorText = mediator
     ? `\n\n🤖 An ${mediator} will be present in this discussion.`
     : '';
-  const discussionText = `Discuss the optimal allocation of ${setting}.${mediatorText}`;
+  const discussionText = `Discuss the ideal allocation of ${setting}.${mediatorText}`;
   return createChatStage({
     id: stageId,
     name: stageName,
