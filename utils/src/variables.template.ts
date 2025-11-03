@@ -2,6 +2,46 @@ import Mustache from 'mustache';
 import {VariableItem, VariableType} from './variables';
 
 /**
+ * Resolve Mustache template variables in a given string.
+ * https://mustache.github.io/mustache.5.html
+ */
+export function resolveTemplateVariables(
+  template: string,
+  variableMap: Record<string, VariableItem>,
+  valueMap: Record<string, string>,
+) {
+  const typedValueMap: Record<string, string | boolean | number | object> = {};
+  Object.keys(valueMap).forEach((variableName) => {
+    const variable = variableMap[variableName];
+    switch (variable?.type) {
+      case VariableType.STRING:
+        typedValueMap[variableName] = valueMap[variableName] ?? '';
+        break;
+      case VariableType.BOOLEAN:
+        typedValueMap[variableName] = valueMap[variableName] === 'true';
+        break;
+      case VariableType.NUMBER:
+        typedValueMap[variableName] = Number(valueMap[variableName]);
+        break;
+      case VariableType.OBJECT:
+        typedValueMap[variableName] = JSON.parse(valueMap[variableName]);
+        break;
+      default:
+        break;
+    }
+  });
+
+  try {
+    Mustache.parse(template);
+    return Mustache.render(template, typedValueMap);
+  } catch (error) {
+    console.warn('Failed to render Mustache template:', error);
+    // Return original template string
+    return template;
+  }
+}
+
+/**
  * Validate that a template's variable references are defined.
  * Also validates that the template is valid Mustache syntax.
  */

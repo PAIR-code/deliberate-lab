@@ -1,10 +1,57 @@
 import {VariableItem, VariableType} from './variables';
 import {
   extractVariableReferences,
+  resolveTemplateVariables,
   validateTemplateVariables,
 } from './variables.template';
 
 describe('Mustache Template Resolution', () => {
+  const variableMap: Record<string, VariableItem> = {
+    name: {
+      name: 'name',
+      description: '',
+      type: VariableType.STRING,
+    },
+    department: {
+      name: 'department',
+      description: '',
+      type: VariableType.OBJECT,
+      schema: {
+        name: VariableType.STRING,
+        numEmployees: VariableType.NUMBER,
+        hasSnacks: VariableType.BOOLEAN,
+      },
+    },
+  };
+  const valueMap: Record<string, string> = {
+    name: 'Helly R',
+    age: '42',
+    isActive: 'true',
+    department: '{"name": "MDR", "numEmployees": "4", "hasSnacks": "true"}',
+  };
+
+  describe('resolveTemplateVariables', () => {
+    it('should resolve string variable', () => {
+      const template = 'Welcome, {{name}}';
+      const resolution = resolveTemplateVariables(
+        template,
+        variableMap,
+        valueMap,
+      );
+      expect(resolution).toEqual('Welcome, Helly R');
+    });
+
+    it('should resolve object field', () => {
+      const template = 'Welcome to {{department.name}}';
+      const resolution = resolveTemplateVariables(
+        template,
+        variableMap,
+        valueMap,
+      );
+      expect(resolution).toEqual('Welcome to MDR');
+    });
+  });
+
   describe('extractVariableReferences', () => {
     it('should extract simple variable names', () => {
       const template = 'Hello {{name}}, you are {{age}} years old';

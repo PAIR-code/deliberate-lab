@@ -1,4 +1,5 @@
 import {ParticipantProfileExtended} from '../participant';
+import {VariableItem} from '../variables';
 import {AgentParticipantStageActions, BaseStageHandler} from './stage.handler';
 import {GroupChatStageHandler} from './chat_stage.manager';
 import {InfoStageHandler} from './info_stage.manager';
@@ -30,6 +31,21 @@ export class StageManager {
       new SurveyPerParticipantStageHandler(),
     );
     this.handlerMap.set(StageKind.TOS, new TOSStageHandler());
+  }
+
+  /** Returns an updated stage config that has template variables
+   *  resolved if applicable.
+   */
+  resolveTemplateVariablesInStage(
+    stage: StageConfig,
+    variableMap: Record<string, VariableItem>,
+    valueMap: Record<string, string>,
+  ) {
+    return (
+      this.handlerMap
+        .get(stage.kind)
+        ?.resolveTemplateVariablesInStage(stage, variableMap, valueMap) ?? stage
+    );
   }
 
   /** Specifies what must be done to complete the given stage

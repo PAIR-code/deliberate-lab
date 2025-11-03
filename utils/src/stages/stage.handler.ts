@@ -1,4 +1,5 @@
 import {ParticipantProfileExtended} from '../participant';
+import {VariableItem} from '../variables';
 import {
   MediatorPromptConfig,
   ParticipantPromptConfig,
@@ -17,6 +18,15 @@ export interface AgentParticipantStageActions {
  * Can be extended to handle a specific stage type.
  */
 export class BaseStageHandler {
+  resolveTemplateVariablesInStage(
+    stage: StageConfig,
+    variableMap: Record<string, VariableItem>,
+    valueMap: Record<string, string>,
+  ) {
+    // By default, do not change any of the fields
+    return stage;
+  }
+
   getAgentParticipantActionsForStage(
     participant: ParticipantProfileExtended,
     stage: StageConfig,
