@@ -678,7 +678,7 @@ export class StageBuilderDialog extends MobxLitElement {
     return html`
       <label class="custom-textbox">
         <input
-          type="number" 
+          type="number"
           .value=${currentValue}
           @input=${(e: Event) => {
             const inputValue = (e.target as HTMLInputElement).value;
@@ -694,12 +694,11 @@ export class StageBuilderDialog extends MobxLitElement {
     `;
   }
 
-
   private renderCharityDebateTemplateCard() {
     const loadTemplate = () => {
       this.addTemplate(getCharityDebateTemplate(this.charityDebateConfig));
     };
-    
+
     const onFacilitatorConfigInput = (e: Event) => {
       this.consensusTopics = (e.target as HTMLInputElement).value;
     };
@@ -736,8 +735,8 @@ export class StageBuilderDialog extends MobxLitElement {
             '[Optional] Include Meta-Feedback Survey',
           )}
           ${this.renderFacilitatorTextbox(
-            'facilitatorConfigId', 
-            '[Optional] Choose from a preset faciliator order (default is None, Habermas, Dynamic mediators). '
+            'facilitatorConfigId',
+            '[Optional] Choose from a preset faciliator order (default is None, Habermas, Dynamic mediators). ',
           )}
         </div>
 

@@ -430,7 +430,7 @@ export function getCharityDebateTemplate(
         `${EMOJIS[roundNum - 1]} Round ${roundNum}: Discussion`,
         setting,
         {
-          persona: { id: mediatorAgentId, name: mediatorFriendlyName },
+          persona: {id: mediatorAgentId, name: mediatorFriendlyName},
         } as AgentMediatorTemplate,
       );
     } else {
@@ -466,8 +466,8 @@ export function getCharityDebateTemplate(
     stages.push(createDiscussionEvaluationStage());
 
   if (config.includeMediator) {
-    let habermasOption: { id: string; name: string } | undefined;
-    let dynamicOption: { id: string; name: string } | undefined;
+    let habermasOption: {id: string; name: string} | undefined;
+    let dynamicOption: {id: string; name: string} | undefined;
 
     if (habermasRound) {
       habermasOption = {
@@ -519,14 +519,14 @@ function createDiscussionStageWithMediator(
 ): StageConfig {
   const mediatorText = `\n\n🤖 An ${mediatorTemplate.persona.name} will be present in this discussion.`;
   const discussionText = `Discuss the ideal allocation of ${setting}.${mediatorText}`;
-  
+
   return createChatStage({
     id: stageId,
     name: stageName,
-    descriptions: createStageTextConfig({ primaryText: discussionText }),
-    progress: createStageProgressConfig({ waitForAllParticipants: true }),
+    descriptions: createStageTextConfig({primaryText: discussionText}),
+    progress: createStageProgressConfig({waitForAllParticipants: true}),
     timeLimitInMinutes: 5,
-    requireFullTime: true, // Setting this to True causes the timeLimit to be a min AND maximum. 
+    requireFullTime: true, // Setting this to True causes the timeLimit to be a min AND maximum.
   });
 }
 
@@ -900,8 +900,8 @@ function createAllocationDiscussionStage(
   return createChatStage({
     id: stageId,
     name: stageName,
-    descriptions: createStageTextConfig({ primaryText: discussionText }),
-    progress: createStageProgressConfig({ waitForAllParticipants: true }),
+    descriptions: createStageTextConfig({primaryText: discussionText}),
+    progress: createStageProgressConfig({waitForAllParticipants: true}),
     timeLimitInMinutes: 10,
     requireFullTime: false,
   });
@@ -960,8 +960,8 @@ function createDiscussionEvaluationStage(): StageConfig {
 }
 
 function createFinalMediatorPreferenceStage(
-  mediatorOption1?: { id: string; name: string },
-  mediatorOption2?: { id: string; name: string },
+  mediatorOption1?: {id: string; name: string},
+  mediatorOption2?: {id: string; name: string},
 ): StageConfig {
   const preferenceOptions = [];
 
@@ -981,7 +981,7 @@ function createFinalMediatorPreferenceStage(
     });
   }
   const allOptions = [
-    { id: 'none', text: 'None', imageId: '' },
+    {id: 'none', text: 'None', imageId: ''},
     ...preferenceOptions,
   ];
 
@@ -1207,8 +1207,8 @@ function createHabermasMediatorPromptConfig(
       createTextPromptItem(
         'You are participating in an experiment with the following online profile:',
       ),
-      { type: PromptItemType.PROFILE_INFO } as ProfileInfoPromptItem,
-      { type: PromptItemType.PROFILE_CONTEXT } as ProfileContextPromptItem,
+      {type: PromptItemType.PROFILE_INFO} as ProfileInfoPromptItem,
+      {type: PromptItemType.PROFILE_CONTEXT} as ProfileContextPromptItem,
       createDefaultStageContextPromptItem(roundId),
       createTextPromptItem(habermasInstruction),
     ],
@@ -1281,8 +1281,8 @@ STEP 4: If 'proposedSolution' is 'NoSolutionNeeded':
       createTextPromptItem(
         'You are participating in an experiment with the following online profile:',
       ),
-      { type: PromptItemType.PROFILE_INFO } as ProfileInfoPromptItem,
-      { type: PromptItemType.PROFILE_CONTEXT } as ProfileContextPromptItem,
+      {type: PromptItemType.PROFILE_INFO} as ProfileInfoPromptItem,
+      {type: PromptItemType.PROFILE_CONTEXT} as ProfileContextPromptItem,
       createDefaultStageContextPromptItem(roundId),
       createTextPromptItem(dynamicInstruction),
     ],
@@ -1295,7 +1295,7 @@ STEP 4: If 'proposedSolution' is 'NoSolutionNeeded':
 function createHabermasMediatorTemplate(
   stageIds: string[],
 ): AgentMediatorTemplate {
-  const promptMap: { [key: string]: MediatorPromptConfig } = {};
+  const promptMap: {[key: string]: MediatorPromptConfig} = {};
   for (const id of stageIds) {
     promptMap[id] = createHabermasMediatorPromptConfig(id);
   }
@@ -1315,7 +1315,7 @@ function createHabermasMediatorTemplate(
 function createDynamicMediatorTemplate(
   stageIds: string[],
 ): AgentMediatorTemplate {
-  const promptMap: { [key: string]: MediatorPromptConfig } = {};
+  const promptMap: {[key: string]: MediatorPromptConfig} = {};
   for (const id of stageIds) {
     promptMap[id] = createDynamicMediatorPromptConfig(id);
   }
