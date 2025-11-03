@@ -9,6 +9,7 @@ import {core} from '../../core/core';
 import {ExperimentEditor} from '../../services/experiment.editor';
 
 import {
+  SeedStrategy,
   VariableConfig,
   VariableConfigType,
   createRandomPermutationVariableConfig,
@@ -72,6 +73,13 @@ export class VariableEditor extends MobxLitElement {
         index,
       );
     };
+    const updateSeed = (e: Event) => {
+      const seedStrategy = (e.target as HTMLSelectElement)
+        .value as SeedStrategy;
+      if (seedStrategy) {
+        this.updateVariableConfig(variableConfig, {seedStrategy}, index);
+      }
+    };
 
     return html`
       <div class="variable-wrapper">
@@ -96,6 +104,15 @@ export class VariableEditor extends MobxLitElement {
               <option value="STRING">STRING</option>
             </select>
           </pr-tooltip>
+          <div class="divider"></div>
+          <div class="title">Seed strategy</div>
+          <div class="description">
+            This is what level the variable should be assigned at
+          </div>
+          <select .value=${variableConfig.seedStrategy} @change=${updateSeed}>
+            <option value="${SeedStrategy.COHORT}">Cohort</option>
+            <option value="${SeedStrategy.PARTICIPANT}">Participant</option>
+          </select>
           <div class="divider"></div>
           <div class="title">Variables</div>
           ${variableConfig.variableNames.map((name, variableIndex) =>

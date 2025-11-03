@@ -57,6 +57,9 @@ export interface ParticipantProfile extends UserProfileBase {
   timestamps: ProgressTimestamps;
   anonymousProfiles: Record<string, AnonymousProfileMetadata>;
   connected: boolean | null;
+  // Maps variable name to value assigned specifically for this participant
+  // This overrides any variable values set at the cohort/experiment levels.
+  variableMap?: Record<string, string>;
 }
 
 /** Anonymous profile data generated from profile set. */
@@ -177,6 +180,7 @@ export function createParticipantProfileExtended(
     anonymousProfiles: {},
     connected: config.agentConfig ? true : false,
     agentConfig: config.agentConfig ?? null,
+    variableMap: config.variableMap ?? {},
   };
 }
 

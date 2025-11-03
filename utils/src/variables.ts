@@ -1,3 +1,5 @@
+import {SeedStrategy} from './utils/random.utils';
+
 /** Variable config for defining variables. */
 export type VariableConfig = RandomPermutationVariableConfig;
 
@@ -8,6 +10,7 @@ export interface BaseVariableConfig {
 
 export interface RandomPermutationVariableConfig extends BaseVariableConfig {
   type: VariableConfigType.RANDOM_PERMUTATION;
+  seedStrategy: SeedStrategy;
   variableNames: string[];
   variableType: VariableType;
   // Only set schema if variable item type is OBJECT

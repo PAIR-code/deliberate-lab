@@ -1,4 +1,5 @@
 import {Type, type Static} from '@sinclair/typebox';
+import {SeedStrategy} from './utils/random.utils';
 import {VariableConfigType, VariableType} from './variables';
 
 /** Shorthand for strict TypeBox object validation */
@@ -9,6 +10,12 @@ export const RandomPermutationVariableConfigData = Type.Object(
   {
     id: Type.String({minLength: 1}),
     type: Type.Literal(VariableConfigType.RANDOM_PERMUTATION),
+    seedStrategy: Type.Union([
+      Type.Literal(SeedStrategy.EXPERIMENT),
+      Type.Literal(SeedStrategy.COHORT),
+      Type.Literal(SeedStrategy.PARTICIPANT),
+      Type.Literal(SeedStrategy.CUSTOM),
+    ]),
     variableNames: Type.Array(Type.String()),
     variableType: Type.Union([
       Type.Literal(VariableType.STRING),

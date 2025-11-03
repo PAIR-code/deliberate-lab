@@ -45,6 +45,8 @@ export class BaseStageHandler {
     return undefined;
   }
 
+  // TODO: Consider how to handle variables when populating stage display
+  // with multiple participants (who could have different variable values).
   getStageDisplayForPrompt(
     participants: ParticipantProfileExtended[],
     stageContext: StageContextData,

@@ -50,6 +50,7 @@ export interface Experiment {
   stageIds: string[]; // Ordered list of stage IDs
   cohortLockMap: Record<string, boolean>; // maps cohort ID to is locked
   variableConfigs?: VariableConfig[]; // list of variable configs used in experiment
+  variableMap?: Record<string, string>; // variable to assigned value
 }
 
 /** Experiment template (used to load experiments). */
@@ -104,6 +105,7 @@ export function createExperimentConfig(
     stageIds: stages.map((stage) => stage.id),
     cohortLockMap: config.cohortLockMap ?? {},
     variableConfigs: config.variableConfigs ?? [],
+    variableMap: config.variableMap ?? {},
   };
 }
 
