@@ -1,3 +1,4 @@
+import {VariableItem, VariableType} from './variables';
 import {
   extractVariableReferences,
   validateTemplateVariables,
@@ -37,8 +38,21 @@ describe('Mustache Template Resolution', () => {
   });
 
   describe('validateTemplateVariables', () => {
-    const variableMap: Record<string, string> = {
-      name: 'Helly R',
+    const variableMap: Record<string, VariableItem> = {
+      name: {
+        name: 'name',
+        description: '',
+        type: VariableType.STRING,
+      },
+      department: {
+        name: 'department',
+        description: '',
+        type: VariableType.OBJECT,
+        schema: {
+          name: VariableType.STRING,
+          floor: VariableType.NUMBER,
+        },
+      },
     };
 
     it('should validate defined variables', () => {
@@ -50,10 +64,26 @@ describe('Mustache Template Resolution', () => {
     });
 
     it('should detect missing variables', () => {
-      const template = 'Hello, {{name}} from {{department}}!';
+      const template = 'Hello, {{name}} from {{city}}!';
       const result = validateTemplateVariables(template, variableMap);
       expect(result.valid).toBe(false);
-      expect(result.missingVariables).toEqual(['department']);
+      expect(result.missingVariables).toEqual(['city']);
+      expect(result.syntaxError).toBeUndefined();
+    });
+
+    it('should detect if template references a field, but variable is not an object', () => {
+      const template = 'Hello, {{name.first}}!';
+      const result = validateTemplateVariables(template, variableMap);
+      expect(result.valid).toBe(false);
+      expect(result.missingVariables).toEqual(['name.first']);
+      expect(result.syntaxError).toBeUndefined();
+    });
+
+    it('should detect if variable is an object and template references an undefined field', () => {
+      const template = 'Hello, {{department.chief}}';
+      const result = validateTemplateVariables(template, variableMap);
+      expect(result.valid).toBe(false);
+      expect(result.missingVariables).toEqual(['department.chief']);
       expect(result.syntaxError).toBeUndefined();
     });
 

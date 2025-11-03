@@ -1,4 +1,5 @@
 import Mustache from 'mustache';
+import {VariableItem, VariableType} from './variables';
 
 /**
  * Validate that a template's variable references are defined.
@@ -6,8 +7,7 @@ import Mustache from 'mustache';
  */
 export function validateTemplateVariables(
   template: string,
-  // Temporary map for variable name to value
-  variableMap: Record<string, string> = {},
+  variableMap: Record<string, VariableItem> = {},
 ): {valid: boolean; missingVariables: string[]; syntaxError?: string} {
   try {
     // First, check if template is valid Mustache syntax
@@ -18,11 +18,20 @@ export function validateTemplateVariables(
     const missingVariables: string[] = [];
 
     for (const ref of references) {
-      const baseName = ref.split('.')[0];
-      // TODO: Once variables can also be objects, confirm that if the
-      // template references a specific field {{item.name}}, that field exists
-      if (!variableMap[baseName]) {
+      const refParts = ref.split('.');
+      const baseName = refParts[0];
+      const variable = variableMap[baseName];
+      if (!variable) {
         missingVariables.push(baseName);
+      } else if (refParts.length > 1) {
+        // If variable is an object, check if field exists
+        const field = refParts[1];
+        if (
+          variable.type !== VariableType.OBJECT ||
+          (variable.schema && !variable.schema[field])
+        ) {
+          missingVariables.push(ref);
+        }
       }
     }
 
