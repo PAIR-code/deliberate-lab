@@ -8,7 +8,11 @@ import {customElement, property, state} from 'lit/decorators.js';
 import {core} from '../../core/core';
 import {ExperimentEditor} from '../../services/experiment.editor';
 
-import {VariableItem, VariableType} from '@deliberation-lab/utils';
+import {
+  VariableConfig,
+  VariableConfigType,
+  createRandomPermutationVariableConfig,
+} from '@deliberation-lab/utils';
 
 import {styles} from './experiment_settings_editor.scss';
 
@@ -20,49 +24,172 @@ export class VariableEditor extends MobxLitElement {
   private readonly experimentEditor = core.getService(ExperimentEditor);
 
   override render() {
-    const addVariable = () => {
-      this.experimentEditor.addVariable({
-        name: '',
-        description: '',
-        type: VariableType.STRING,
-      });
+    const addVariableConfig = () => {
+      this.experimentEditor.addVariableConfig(
+        createRandomPermutationVariableConfig(),
+      );
     };
 
-    const variables = this.experimentEditor.experiment?.variables ?? [];
+    const variableConfigs =
+      this.experimentEditor.experiment?.variableConfigs ?? [];
 
     return html`
       <div class="inner-wrapper">
         <div class="title">Variables</div>
-        ${variables.map((variable, index) =>
-          this.renderVariable(variable, index),
+        ${variableConfigs.map((variableConfig, index) =>
+          this.renderVariableConfig(variableConfig, index),
         )}
-        <pr-button @click=${addVariable}>Add new variable</pr-button>
+        <pr-button @click=${addVariableConfig}
+          >Add new variable config</pr-button
+        >
       </div>
     `;
   }
 
-  private renderVariable(variable: VariableItem, index: number) {
-    const updateVariable = (updated: Partial<VariableItem>) => {
-      this.experimentEditor.updateVariable({...variable, ...updated}, index);
+  private updateVariableConfig(
+    variableConfig: VariableConfig,
+    updated: Partial<VariableConfig>,
+    index: number,
+  ) {
+    this.experimentEditor.updateVariableConfig(
+      {...variableConfig, ...updated},
+      index,
+    );
+  }
+
+  private renderVariableConfig(variableConfig: VariableConfig, index: number) {
+    const addVariable = () => {
+      this.updateVariableConfig(
+        variableConfig,
+        {variableNames: [...variableConfig.variableNames, '']},
+        index,
+      );
     };
-    const updateName = (e: InputEvent) => {
-      updateVariable({name: (e.target as HTMLTextAreaElement).value});
+    const addValue = () => {
+      this.updateVariableConfig(
+        variableConfig,
+        {values: [...variableConfig.values, '']},
+        index,
+      );
     };
 
     return html`
       <div class="variable-wrapper">
-        <div class="label">Variable ${index + 1}</div>
+        <div class="label">Variable Group ${index + 1}</div>
         <div class="variable">
-          <pr-textarea
-            placeholder="Name of variable"
-            .value=${variable.name}
-            variant="outlined"
-            ?disabled=${!this.experimentEditor.canEditStages}
-            @input=${updateName}
-          >
-          </pr-textarea>
+          <div class="title">Configuration type</div>
+          <div class="select-field">
+            <pr-tooltip text="Other variable config options coming soon">
+              <select disabled .value="">
+                <option value="">Partial permutation</option>
+              </select>
+            </pr-tooltip>
+            <div class="description">
+              The variables defined will be filled (randomly selected from
+              possible permutations) by the set of values defined
+            </div>
+          </div>
+          <div class="divider"></div>
+          <div class="title">Type</div>
+          <pr-tooltip text="Other variable types coming soon">
+            <select disabled .value="STRING">
+              <option value="STRING">STRING</option>
+            </select>
+          </pr-tooltip>
+          <div class="divider"></div>
+          <div class="title">Variables</div>
+          ${variableConfig.variableNames.map((name, variableIndex) =>
+            this.renderVariableNameEditor(
+              variableConfig,
+              name,
+              index,
+              variableIndex,
+            ),
+          )}
+          <pr-button @click=${addVariable} color="neutral" variant="default">
+            + Add variable
+          </pr-button>
+          <div class="divider"></div>
+          <div class="title">Set of values to choose from</div>
+          ${variableConfig.values.map((value, valueIndex) =>
+            this.renderVariableValueEditor(
+              variableConfig,
+              value,
+              index,
+              valueIndex,
+            ),
+          )}
+          <pr-button @click=${addValue} color="neutral" variant="default">
+            + Add value
+          </pr-button>
         </div>
       </div>
+    `;
+  }
+
+  private renderVariableValueEditor(
+    variableConfig: VariableConfig,
+    value: string,
+    configIndex: number,
+    valueIndex: number,
+  ) {
+    const updateValue = (e: InputEvent) => {
+      const newValue = (e.target as HTMLTextAreaElement).value;
+      this.updateVariableConfig(
+        variableConfig,
+        {
+          values: [
+            ...variableConfig.values.slice(0, valueIndex),
+            newValue,
+            ...variableConfig.values.slice(valueIndex + 1),
+          ],
+        },
+        configIndex,
+      );
+    };
+
+    return html`
+      <pr-textarea
+        placeholder="Value"
+        .value=${value}
+        variant="outlined"
+        ?disabled=${!this.experimentEditor.canEditStages}
+        @input=${updateValue}
+      >
+      </pr-textarea>
+    `;
+  }
+
+  private renderVariableNameEditor(
+    variableConfig: VariableConfig,
+    name: string,
+    configIndex: number,
+    variableIndex: number,
+  ) {
+    const updateName = (e: InputEvent) => {
+      const newName = (e.target as HTMLTextAreaElement).value;
+      this.updateVariableConfig(
+        variableConfig,
+        {
+          variableNames: [
+            ...variableConfig.variableNames.slice(0, variableIndex),
+            newName,
+            ...variableConfig.variableNames.slice(variableIndex + 1),
+          ],
+        },
+        configIndex,
+      );
+    };
+
+    return html`
+      <pr-textarea
+        placeholder="Name of variable"
+        .value=${name}
+        variant="outlined"
+        ?disabled=${!this.experimentEditor.canEditStages}
+        @input=${updateName}
+      >
+      </pr-textarea>
     `;
   }
 }

@@ -44,6 +44,7 @@ import {
   StageConfig,
   StageKind,
   VariableItem,
+  extractVariablesFromVariableConfigs,
   generateId,
   validateTemplateVariables,
 } from '@deliberation-lab/utils';
@@ -564,12 +565,11 @@ export class ExperimentBuilder extends MobxLitElement {
 
   private renderVariableCheck() {
     const stage = this.experimentEditor.currentStage;
-    const variables = this.experimentEditor.experiment?.variables ?? [];
+    const variableConfigs =
+      this.experimentEditor.experiment?.variableConfigs ?? [];
     const {valid, missingVariables, syntaxError} = validateTemplateVariables(
       JSON.stringify(stage),
-      Object.fromEntries(
-        variables.map((variable) => [variable.name, variable]),
-      ),
+      extractVariablesFromVariableConfigs(variableConfigs),
     );
 
     if (valid) {
