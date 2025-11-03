@@ -25,6 +25,9 @@ export * from './chat_message';
 export * from './cohort';
 export * from './cohort.validation';
 
+// Variable
+export * from './variables.template';
+
 // Log
 export * from './log';
 

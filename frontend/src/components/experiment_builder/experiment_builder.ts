@@ -39,7 +39,12 @@ import {ExperimentEditor} from '../../services/experiment.editor';
 import {ExperimentManager} from '../../services/experiment.manager';
 import {Pages, RouterService} from '../../services/router.service';
 
-import {StageConfig, StageKind, generateId} from '@deliberation-lab/utils';
+import {
+  StageConfig,
+  StageKind,
+  generateId,
+  validateTemplateVariables,
+} from '@deliberation-lab/utils';
 
 import {styles} from './experiment_builder.scss';
 
@@ -465,6 +470,7 @@ export class ExperimentBuilder extends MobxLitElement {
       <experiment-builder-nav></experiment-builder-nav>
       <div class="experiment-builder">
         <div class="header">${this.renderTitle()} ${this.renderActions()}</div>
+        ${this.renderVariableCheck()}
         <div class="content">${this.renderContent()}</div>
       </div>
     `;
@@ -532,6 +538,23 @@ export class ExperimentBuilder extends MobxLitElement {
       >
       </pr-icon-button>
     </pr-tooltip>`;
+  }
+
+  private renderVariableCheck() {
+    const stage = this.experimentEditor.currentStage;
+    const {valid, missingVariables, syntaxError} = validateTemplateVariables(
+      JSON.stringify(stage),
+    );
+
+    if (valid) {
+      return nothing;
+    }
+    const missingText = `Variables ${JSON.stringify(missingVariables)} are not defined`;
+    return html`
+      <div class="banner warning">
+        ⚠️ ${missingVariables.length > 0 ? missingText : ''} ${syntaxError}
+      </div>
+    `;
   }
 
   private renderContent() {
