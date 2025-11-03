@@ -145,7 +145,7 @@ const CHARITY_DATA: CharityInfo[] = [
     key: 'clean_ocean',
     name: '🌊 Clean Ocean Action',
     link: 'https://www.charitynavigator.org/ein/222897204',
-    score: 'Not Rated', // Score not present in link text
+    score: '99%%',
     mission:
       "Clean Oceans International is dedicated to reducing plastic pollution in the world's ocean through Research, Innovation, and Direct Action.",
   },
