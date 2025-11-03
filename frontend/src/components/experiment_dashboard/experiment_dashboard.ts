@@ -10,26 +10,26 @@ import './cohort_list';
 import './log_dashboard';
 import './participant_stats';
 
-import {MobxLitElement} from '@adobe/lit-mobx';
-import {CSSResultGroup, html, nothing} from 'lit';
-import {customElement, property} from 'lit/decorators.js';
+import { MobxLitElement } from '@adobe/lit-mobx';
+import { CSSResultGroup, html, nothing } from 'lit';
+import { customElement, property } from 'lit/decorators.js';
 
-import {core} from '../../core/core';
-import {AnalyticsService, ButtonClick} from '../../services/analytics.service';
-import {AuthService} from '../../services/auth.service';
-import {CohortService} from '../../services/cohort.service';
-import {ExperimentManager} from '../../services/experiment.manager';
-import {ExperimentService} from '../../services/experiment.service';
-import {ParticipantService} from '../../services/participant.service';
+import { core } from '../../core/core';
+import { AnalyticsService, ButtonClick } from '../../services/analytics.service';
+import { AuthService } from '../../services/auth.service';
+import { CohortService } from '../../services/cohort.service';
+import { ExperimentManager } from '../../services/experiment.manager';
+import { ExperimentService } from '../../services/experiment.service';
+import { ParticipantService } from '../../services/participant.service';
 
-import {CohortConfig, StageKind} from '@deliberation-lab/utils';
-import {getCohortDescription, getCohortName} from '../../shared/cohort.utils';
+import { CohortConfig, StageKind } from '@deliberation-lab/utils';
+import { getCohortDescription, getCohortName } from '../../shared/cohort.utils';
 import {
   getParticipantStatusDetailText,
   isObsoleteParticipant,
 } from '../../shared/participant.utils';
 
-import {styles} from './experiment_dashboard.scss';
+import { styles } from './experiment_dashboard.scss';
 
 /** Experiment dashboard used to view/update cohorts, participants */
 @customElement('experiment-dashboard')
@@ -209,8 +209,8 @@ export class Component extends MobxLitElement {
           variant="default"
           size="small"
           @click=${() => {
-            this.experimentManager.setShowParticipantStats(isPreview, true);
-          }}
+          this.experimentManager.setShowParticipantStats(isPreview, true);
+        }}
         >
           Show ${isPreview ? 'stats' : 'preview'}
         </pr-button>
@@ -229,8 +229,8 @@ export class Component extends MobxLitElement {
             variant="default"
             size="small"
             @click=${() => {
-              this.experimentManager.setShowLogs(true);
-            }}
+        this.experimentManager.setShowLogs(true);
+      }}
           >
             Open log dashboard
           </pr-button>
@@ -257,8 +257,8 @@ export class Component extends MobxLitElement {
           color="neutral"
           variant="default"
           @click=${() => {
-            this.authService.setDebugMode(!debugMode);
-          }}
+        this.authService.setDebugMode(!debugMode);
+      }}
         >
         </pr-icon-button>
       </pr-tooltip>
@@ -288,10 +288,10 @@ export class Component extends MobxLitElement {
       <pr-menu name="Transfer">
         <div class="menu-wrapper">
           ${this.experimentManager.availableCohorts
-            .sort((a, b) => {
-              return a.metadata.name.localeCompare(b.metadata.name);
-            })
-            .map((cohort) => this.renderTransferOption(cohort))}
+        .sort((a, b) => {
+          return a.metadata.name.localeCompare(b.metadata.name);
+        })
+        .map((cohort) => this.renderTransferOption(cohort))}
         </div>
       </pr-menu>
     `;
@@ -317,8 +317,26 @@ export class Component extends MobxLitElement {
         return;
       }
 
+      const participant = this.experimentManager.currentParticipant;
+      const cohortParticipants = this.experimentManager.getCohortParticipants(
+        cohort.id,
+      );
+
+      // Check if there is already a participant with the same name in the cohort
+      if (participant.name) {
+        const duplicateName = cohortParticipants.find(
+          (p) => p.name === participant.name,
+        );
+        if (duplicateName) {
+          const isConfirmed = window.confirm(
+            `Warning: A participant with the name "${participant.name}" already exists in cohort ${cohort.metadata.name}. Do you still want to transfer?`,
+          );
+          if (!isConfirmed) return;
+        }
+      }
+
       const stage = this.experimentService.getStage(
-        this.experimentManager.currentParticipant.currentStageId,
+        participant.currentStageId,
       );
       if (!stage || !(stage.kind === StageKind.TRANSFER)) {
         const isConfirmed = window.confirm(
@@ -329,7 +347,7 @@ export class Component extends MobxLitElement {
 
       this.analyticsService.trackButtonClick(ButtonClick.TRANSFER_INITIATE);
       this.experimentManager.initiateParticipantTransfer(
-        this.experimentManager.currentParticipant.privateId,
+        participant.privateId,
         cohort.id,
       );
     };
@@ -340,9 +358,9 @@ export class Component extends MobxLitElement {
         <div class="subtitle">${getCohortDescription(cohort)}</div>
         <div class="subtitle">
           ${this.experimentManager.getCohortParticipants(
-            cohort.id,
-            cohort.participantConfig.includeAllParticipantsInCohortCount,
-          ).length}
+      cohort.id,
+      cohort.participantConfig.includeAllParticipantsInCohortCount,
+    ).length}
           participants
         </div>
       </div>
