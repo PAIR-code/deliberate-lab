@@ -17,6 +17,7 @@ import {
   StageKind,
   StageManager,
   VariableConfig,
+  STAGE_MANAGER,
   checkApiKeyExists,
   createAgentMediatorPersonaConfig,
   createAgentParticipantPersonaConfig,
@@ -62,9 +63,6 @@ export class ExperimentEditor extends Service {
   @observable stages: StageConfig[] = [];
   @observable agentMediators: AgentMediatorTemplate[] = [];
   @observable agentParticipants: AgentParticipantTemplate[] = [];
-
-  // Stage manager that handles prompt-related actions
-  private stageManager: StageManager = new StageManager();
 
   // Loading
   @observable isWritingExperiment = false;
@@ -412,7 +410,7 @@ export class ExperimentEditor extends Service {
       return;
     }
 
-    const prompt = this.stageManager.getDefaultMediatorStructuredPrompt(stage);
+    const prompt = STAGE_MANAGER.getDefaultMediatorStructuredPrompt(stage);
 
     if (prompt) {
       agent.promptMap[stageId] = prompt;
@@ -424,8 +422,7 @@ export class ExperimentEditor extends Service {
     const stage = this.getStage(stageId);
     if (!agent || !stage) return;
 
-    const prompt =
-      this.stageManager.getDefaultParticipantStructuredPrompt(stage);
+    const prompt = STAGE_MANAGER.getDefaultParticipantStructuredPrompt(stage);
     if (prompt) {
       agent.promptMap[stageId] = prompt;
     }

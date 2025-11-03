@@ -103,3 +103,6 @@ export class StageManager {
     );
   }
 }
+
+/** Specific instance used on frontend. */
+export const STAGE_MANAGER = new StageManager();
