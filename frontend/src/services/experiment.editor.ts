@@ -73,7 +73,6 @@ export class ExperimentEditor extends Service {
   @observable currentStageId: string | undefined = undefined;
   @observable showStageBuilderDialog = false;
   @observable showTemplatesTab = false;
-  @observable showAlphaFeatures = false;
 
   // **************************************************************************
   // EXPERIMENT LOADING
@@ -181,10 +180,6 @@ export class ExperimentEditor extends Service {
 
   isInitializedExperiment() {
     return this.experiment.id.length > 0;
-  }
-
-  setShowAlphaFeatures(show: boolean) {
-    this.showAlphaFeatures = show;
   }
 
   updateMetadata(metadata: Partial<MetadataConfig>) {

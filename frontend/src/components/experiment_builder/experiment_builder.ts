@@ -33,6 +33,7 @@ import {customElement, property, state} from 'lit/decorators.js';
 import '@material/web/checkbox/checkbox.js';
 
 import {core} from '../../core/core';
+import {AuthService} from '../../services/auth.service';
 import {AnalyticsService, ButtonClick} from '../../services/analytics.service';
 import {ExperimentEditor} from '../../services/experiment.editor';
 import {ExperimentManager} from '../../services/experiment.manager';
@@ -59,6 +60,7 @@ export class ExperimentBuilder extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
 
   private readonly analyticsService = core.getService(AnalyticsService);
+  private readonly authService = core.getService(AuthService);
   private readonly experimentEditor = core.getService(ExperimentEditor);
   private readonly experimentManager = core.getService(ExperimentManager);
   private readonly routerService = core.getService(RouterService);
@@ -174,10 +176,10 @@ export class ExperimentBuilder extends MobxLitElement {
               <div>Agent mediators</div>
               <div class="subtitle">Add and configure agent mediators</div>
             </div>
-            ${this.experimentEditor.showAlphaFeatures ? this.renderAlphaMenuItems() : nothing}
+            ${this.authService.showAlphaFeatures ? this.renderAlphaMenuItems() : nothing}
             </div>
             <div class="bottom">
-              ${this.renderAlphaToggle()}
+              <alpha-toggle></alpha-toggle>
               ${this.renderDeleteButton()}
             </div>
           </div>
@@ -199,31 +201,6 @@ export class ExperimentBuilder extends MobxLitElement {
       >
         <div>Agent participants<span class="alpha">alpha</span></div>
         <div class="subtitle">Add and configure agent participants</div>
-      </div>
-    `;
-  }
-
-  private renderAlphaToggle() {
-    // TODO: Also show this toggle in the experiment dashboard
-    return html`
-      <div class="alpha-toggle">
-        <span class="label">🧪 Alpha features</span>
-        <label
-          class="switch"
-          title=${this.experimentEditor.showAlphaFeatures
-            ? 'Alpha features enabled'
-            : 'Alpha features disabled'}
-        >
-          <input
-            type="checkbox"
-            ?checked=${this.experimentEditor.showAlphaFeatures}
-            @change=${(e: Event) => {
-              const checked = (e.target as HTMLInputElement).checked;
-              this.experimentEditor.showAlphaFeatures = checked;
-            }}
-          />
-          <span class="slider"></span>
-        </label>
       </div>
     `;
   }
@@ -692,8 +669,40 @@ export class ExperimentBuilder extends MobxLitElement {
   }
 }
 
+@customElement('alpha-toggle')
+export class AlphaToggle extends MobxLitElement {
+  static override styles: CSSResultGroup = [styles];
+
+  private readonly authService = core.getService(AuthService);
+
+  override render() {
+    return html`
+      <div class="alpha-toggle">
+        <span class="label">🧪 Show Alpha features</span>
+        <label
+          class="switch"
+          title=${this.authService.showAlphaFeatures
+            ? 'Alpha features enabled'
+            : 'Alpha features disabled'}
+        >
+          <input
+            type="checkbox"
+            ?checked=${this.authService.showAlphaFeatures}
+            @change=${(e: Event) => {
+              const checked = (e.target as HTMLInputElement).checked;
+              this.authService.updateAlphaToggle(checked);
+            }}
+          />
+          <span class="slider"></span>
+        </label>
+      </div>
+    `;
+  }
+}
+
 declare global {
   interface HTMLElementTagNameMap {
     'experiment-builder': ExperimentBuilder;
+    'alpha-toggle': AlphaToggle;
   }
 }

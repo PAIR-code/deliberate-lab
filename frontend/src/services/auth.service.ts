@@ -114,6 +114,10 @@ export class AuthService extends Service {
     return this.initialAuthCheck && this.user !== null;
   }
 
+  @computed get showAlphaFeatures() {
+    return this.experimenterData?.showAlphaFeatures;
+  }
+
   // If true and is experimenter, show debugging components
   // in experimenter preview
   @computed get isDebugMode() {
@@ -199,6 +203,18 @@ export class AuthService extends Service {
     this.writeExperimenterData({
       ...this.experimenterData,
       viewedExperiments: [...viewedExperiments, experimentId],
+    });
+  }
+
+  /** Update whether or not to show alpha features. */
+  updateAlphaToggle(showAlphaFeatures: boolean) {
+    if (!this.experimenterData) {
+      return;
+    }
+
+    this.writeExperimenterData({
+      ...this.experimenterData,
+      showAlphaFeatures,
     });
   }
 
