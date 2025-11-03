@@ -11,10 +11,15 @@ export class InfoStageHandler extends BaseStageHandler {
     variableMap: Record<string, VariableItem>,
     valueMap: Record<string, string>,
   ) {
-    const infoLines = stage.infoLines.map((line) =>
+    const updatedStage = super.resolveTemplateVariablesInStage(
+      stage,
+      variableMap,
+      valueMap,
+    ) as InfoStageConfig;
+    const infoLines = updatedStage.infoLines.map((line) =>
       resolveTemplateVariables(line, variableMap, valueMap),
     );
-    return {...stage, infoLines};
+    return {...updatedStage, infoLines};
   }
 
   getStageDisplayForPrompt(
