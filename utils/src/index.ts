@@ -26,7 +26,9 @@ export * from './cohort';
 export * from './cohort.validation';
 
 // Variable
+export * from './variables';
 export * from './variables.template';
+export * from './variables.validation';
 
 // Log
 export * from './log';

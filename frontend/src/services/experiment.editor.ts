@@ -16,6 +16,7 @@ import {
   StageConfig,
   StageKind,
   StageManager,
+  VariableItem,
   checkApiKeyExists,
   createAgentMediatorPersonaConfig,
   createAgentParticipantPersonaConfig,
@@ -180,6 +181,27 @@ export class ExperimentEditor extends Service {
 
   isInitializedExperiment() {
     return this.experiment.id.length > 0;
+  }
+
+  addVariable(variable: VariableItem) {
+    this.experiment.variables = [
+      ...(this.experiment.variables ?? []),
+      variable,
+    ];
+  }
+
+  // TODO: Ensure that variable names are unique
+  updateVariable(newVariable: VariableItem, index: number) {
+    if (!this.experiment.variables) {
+      return false;
+    }
+    if (index >= 0) {
+      this.experiment.variables = [
+        ...this.experiment.variables.slice(0, index),
+        newVariable,
+        ...this.experiment.variables.slice(index + 1),
+      ];
+    }
   }
 
   updateMetadata(metadata: Partial<MetadataConfig>) {

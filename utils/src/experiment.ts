@@ -7,6 +7,7 @@ import {
   generateId,
 } from './shared';
 import {StageConfig} from './stages/stage';
+import {VariableItem} from './variables';
 
 /** Experiment types and functions. */
 
@@ -48,6 +49,7 @@ export interface Experiment {
   prolificConfig: ProlificConfig;
   stageIds: string[]; // Ordered list of stage IDs
   cohortLockMap: Record<string, boolean>; // maps cohort ID to is locked
+  variables?: VariableItem[]; // list of variables defined for experiment
 }
 
 /** Experiment template (used to load experiments). */
@@ -101,6 +103,7 @@ export function createExperimentConfig(
     prolificConfig: config.prolificConfig ?? createProlificConfig(),
     stageIds: stages.map((stage) => stage.id),
     cohortLockMap: config.cohortLockMap ?? {},
+    variables: config.variables ?? [],
   };
 }
 

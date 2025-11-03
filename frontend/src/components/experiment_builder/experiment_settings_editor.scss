@@ -48,6 +48,10 @@ pr-textarea {
   width: 100%;
 }
 
+pr-button {
+  width: max-content;
+}
+
 .checkbox-wrapper {
   @include common.flex-row-align-center;
   gap: common.$spacing-small;
@@ -79,4 +83,35 @@ pr-textarea {
   display: flex;
   flex-direction: column;
   gap: common.$spacing-medium;
+}
+
+.variable-wrapper {
+  @include common.flex-column;
+  gap: common.$spacing-small;
+}
+
+.variable {
+  @include common.flex-column;
+  background: var(--md-sys-color-surface-variant);
+  border-radius: common.$spacing-medium;
+  gap: common.$spacing-medium;
+  padding: common.$spacing-xl;
+}
+
+.label {
+  @include typescale.label-small;
+  color: var(--md-sys-color-outline);
+}
+
+.select-field {
+  @include typescale.label-small;
+  @include common.flex-column;
+  gap: common.$spacing-small;
+}
+
+select {
+  @include common.select;
+  background: var(--md-sys-color-surface-variant);
+  border-radius: common.$spacing-medium;
+  color: var(--md-sys-color-on-surface-variant);
 }

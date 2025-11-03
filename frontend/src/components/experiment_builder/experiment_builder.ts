@@ -25,6 +25,7 @@ import './agent_persona_editor';
 import './experiment_builder_nav';
 import './experiment_settings_editor';
 import './stage_builder_dialog';
+import './variable_editor';
 
 import {MobxLitElement} from '@adobe/lit-mobx';
 import {CSSResultGroup, html, nothing} from 'lit';
@@ -42,6 +43,7 @@ import {Pages, RouterService} from '../../services/router.service';
 import {
   StageConfig,
   StageKind,
+  VariableItem,
   generateId,
   validateTemplateVariables,
 } from '@deliberation-lab/utils';
@@ -57,6 +59,7 @@ enum PanelView {
   PERMISSIONS = 'permissions',
   PROLIFIC = 'prolific',
   STAGES = 'stages',
+  VARIABLES = 'variables',
 }
 
 /** Experiment builder used to create/edit experiments */
@@ -132,7 +135,6 @@ export class ExperimentBuilder extends MobxLitElement {
               <div>Permissions</div>
               <div class="subtitle">Set visibility of experiment dashboard</div>
             </div>
-
             <div
               class="general-item ${
                 this.panelView === PanelView.PROLIFIC ? 'current' : ''
@@ -195,6 +197,20 @@ export class ExperimentBuilder extends MobxLitElement {
 
   private renderAlphaMenuItems() {
     return html`
+      <div class="panel-view-header">
+        <div class="header-title">Alpha features</div>
+      </div>
+      <div
+        class="general-item ${this.panelView === PanelView.VARIABLES
+          ? 'current'
+          : ''}"
+        @click=${() => {
+          this.panelView = PanelView.VARIABLES;
+        }}
+      >
+        <div>Variables <span class="alpha">alpha</span></div>
+        <div class="subtitle">Set up variables to use in stage text</div>
+      </div>
       <div
         class="general-item ${this.panelView === PanelView.AGENT_PARTICIPANTS
           ? 'current'
@@ -318,6 +334,12 @@ export class ExperimentBuilder extends MobxLitElement {
       return html`
         <div class="experiment-builder">
           <experiment-permissions-editor></experiment-permissions-editor>
+        </div>
+      `;
+    } else if (this.panelView === PanelView.VARIABLES) {
+      return html`
+        <div class="experiment-builder">
+          <variable-editor></variable-editor>
         </div>
       `;
     } else if (this.panelView === PanelView.PROLIFIC) {
@@ -542,8 +564,12 @@ export class ExperimentBuilder extends MobxLitElement {
 
   private renderVariableCheck() {
     const stage = this.experimentEditor.currentStage;
+    const variables = this.experimentEditor.experiment?.variables ?? [];
     const {valid, missingVariables, syntaxError} = validateTemplateVariables(
       JSON.stringify(stage),
+      Object.fromEntries(
+        variables.map((variable) => [variable.name, variable]),
+      ),
     );
 
     if (valid) {
