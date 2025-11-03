@@ -16,6 +16,7 @@ import {customElement, property, state} from 'lit/decorators.js';
 import {classMap} from 'lit/directives/class-map.js';
 
 import {core} from '../../core/core';
+import {AuthService} from '../../services/auth.service';
 import {AnalyticsService, ButtonClick} from '../../services/analytics.service';
 import {ExperimentEditor} from '../../services/experiment.editor';
 import {ExperimentManager} from '../../services/experiment.manager';
@@ -40,6 +41,7 @@ export class CohortSummary extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
 
   private readonly analyticsService = core.getService(AnalyticsService);
+  private readonly authService = core.getService(AuthService);
   private readonly experimentEditor = core.getService(ExperimentEditor);
   private readonly experimentManager = core.getService(ExperimentManager);
   private readonly experimentService = core.getService(ExperimentService);
@@ -188,7 +190,7 @@ export class CohortSummary extends MobxLitElement {
           >
             Add human participant
           </div>
-          ${this.experimentEditor.showAlphaFeatures
+          ${this.authService.showAlphaFeatures
             ? html`
                 <div
                   class="menu-item"

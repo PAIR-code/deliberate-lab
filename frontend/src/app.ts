@@ -161,7 +161,7 @@ export class App extends MobxLitElement {
       // Render login screen if relevant after initial auth check
       return html`
         <div class="app-wrapper mode--${this.settingsService.colorMode}">
-          <div class="content">
+          <div class="content login">
             ${this.authService.initialAuthCheck
               ? html`<login-page></login-page>`
               : nothing}

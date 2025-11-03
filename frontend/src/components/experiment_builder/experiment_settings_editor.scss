@@ -8,6 +8,11 @@
   overflow: auto;
 }
 
+a {
+  color: var(--md-sys-color-primary);
+  text-decoration: underline;
+}
+
 .inner-wrapper {
   @include common.flex-column;
   gap: common.$spacing-xxl;
@@ -67,4 +72,11 @@ pr-textarea {
 
 .required {
   color: var(--md-sys-color-error);
+}
+
+.conditional-section {
+  margin-left: 3rem;
+  display: flex;
+  flex-direction: column;
+  gap: common.$spacing-medium;
 }
