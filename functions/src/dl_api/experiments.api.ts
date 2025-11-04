@@ -11,10 +11,10 @@ import {
 } from './api.utils';
 import {
   createExperimentConfig,
-  createMetadataConfig,
   getExperimentDownload,
   StageConfig,
   MetadataConfig,
+  UnifiedTimestamp,
 } from '@deliberation-lab/utils';
 import {
   getFirestoreExperiment,
@@ -103,16 +103,19 @@ export async function createExperiment(
       return;
     }
 
-    // Validate stages if provided
-    if (!validateOrRespond(body.stages, validateStages, res)) return;
+    const timestamp = admin.firestore.Timestamp.now() as UnifiedTimestamp;
 
     // Use existing utility functions to create proper config
-    const metadata: MetadataConfig & {prolificRedirectCode?: string} =
-      createMetadataConfig({
-        name: body.name,
-        description: body.description || '',
-        creator: experimenterId,
-      });
+    const metadata: MetadataConfig & {prolificRedirectCode?: string} = {
+      name: body.name,
+      description: body.description || '',
+      publicName: '',
+      tags: [],
+      creator: experimenterId,
+      starred: {},
+      dateCreated: timestamp,
+      dateModified: timestamp,
+    };
 
     // Add prolific redirect code if provided
     if (body.prolificRedirectCode) {

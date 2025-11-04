@@ -18,7 +18,7 @@
     "node": "18"
   },
   "config": {
-    "firestore_tests": "src/log.utils.test.ts"
+    "firestore_tests": "src/log.utils.test.ts src/dl_api/experiments.api.integration.test.ts"
   },
   "main": "lib/index.js",
   "dependencies": {
@@ -47,6 +47,7 @@
     "@firebase/rules-unit-testing": "^5.0.0",
     "@types/express": "^5.0.5",
     "@types/jest": "^29.5.14",
+    "@types/supertest": "^6.0.3",
     "@types/uuid": "^9.0.8",
     "@typescript-eslint/eslint-plugin": "^5.12.0",
     "@typescript-eslint/parser": "^5.12.0",
@@ -61,6 +62,7 @@
     "firebase": "^12.1.0",
     "firebase-functions-test": "^3.1.0",
     "nock": "^14.0.1",
+    "supertest": "^7.1.4",
     "ts-jest": "^29.2.5",
     "typescript": "^4.9.0"
   },
