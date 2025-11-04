@@ -2,8 +2,6 @@
  * Functions for data downloads.
  */
 
-import {
-} from 'firebase/firestore';
 import {stringify as csvStringify} from 'csv-stringify/sync';
 import {
   AlertMessage,
