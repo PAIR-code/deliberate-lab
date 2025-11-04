@@ -3,6 +3,7 @@ import {
   AssetAllocationStageConfigData,
   MultiAssetAllocationStageConfigData,
 } from './asset_allocation_stage.validation';
+import {BargainStageConfigData} from './bargain_stage.validation';
 import {ChatStageConfigData} from './chat_stage.validation';
 import {ChipStageConfigData} from './chip_stage.validation';
 import {ComprehensionStageConfigData} from './comprehension_stage.validation';
@@ -31,6 +32,7 @@ import {TOSStageConfigData} from './tos_stage.validation';
 export const StageConfigData = Type.Union([
   AssetAllocationStageConfigData,
   MultiAssetAllocationStageConfigData,
+  BargainStageConfigData,
   ChatStageConfigData,
   ChipStageConfigData,
   ComprehensionStageConfigData,
