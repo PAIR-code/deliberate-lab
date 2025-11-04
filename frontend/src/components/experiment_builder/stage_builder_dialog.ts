@@ -669,9 +669,38 @@ export class StageBuilderDialog extends MobxLitElement {
     `;
   }
 
+  private renderFacilitatorTextbox(
+    field: keyof CharityDebateConfig,
+    labelText: string,
+  ) {
+    const currentValue = String(this.charityDebateConfig[field] ?? '');
+
+    return html`
+      <label class="custom-textbox">
+        <input
+          type="number"
+          .value=${currentValue}
+          @input=${(e: Event) => {
+            const inputValue = (e.target as HTMLInputElement).value;
+            const newNumberValue = Number(inputValue);
+            this.charityDebateConfig = {
+              ...this.charityDebateConfig,
+              [field]: newNumberValue,
+            };
+          }}
+        />
+        <span class="label-text">${labelText}</span>
+      </label>
+    `;
+  }
+
   private renderCharityDebateTemplateCard() {
     const loadTemplate = () => {
       this.addTemplate(getCharityDebateTemplate(this.charityDebateConfig));
+    };
+
+    const onFacilitatorConfigInput = (e: Event) => {
+      this.consensusTopics = (e.target as HTMLInputElement).value;
     };
 
     return html`
@@ -704,6 +733,10 @@ export class StageBuilderDialog extends MobxLitElement {
           ${this.renderCharityCheckbox(
             'includeMetaFeedback',
             '[Optional] Include Meta-Feedback Survey',
+          )}
+          ${this.renderFacilitatorTextbox(
+            'facilitatorConfigId',
+            '[Optional] Choose from a preset faciliator order (default is None, Habermas, Dynamic mediators). ',
           )}
         </div>
 

@@ -306,7 +306,7 @@ export class Component extends MobxLitElement {
     if (cohort.id == currentCohortId) {
       return;
     }
-    // Don't allow transferring to locked cohors
+    // Don't allow transferring to locked cohorts.
     if (
       this.experimentService.experiment &&
       this.experimentService.experiment.cohortLockMap[cohort.id]
@@ -319,9 +319,28 @@ export class Component extends MobxLitElement {
         return;
       }
 
-      const stage = this.experimentService.getStage(
-        this.experimentManager.currentParticipant.currentStageId,
+      const participant = this.experimentManager.currentParticipant;
+      const cohortParticipants = this.experimentManager.getCohortParticipants(
+        cohort.id,
       );
+
+      // Check if there is already a participant with the same name in the cohort.
+      if (participant.name) {
+        const normalize = (name: string) => name.replace(/\s*\d+$/, '');
+        const normalizedName = normalize(participant.name);
+        const duplicateParticipant = cohortParticipants.find(
+          (p) => p.name && normalize(p.name) === normalizedName,
+        );
+
+        if (duplicateParticipant) {
+          const isConfirmed = window.confirm(
+            `Warning: A participant with a similar name ("${duplicateParticipant.name}") already exists in cohort ${cohort.metadata.name}. Do you still want to transfer?`,
+          );
+          if (!isConfirmed) return;
+        }
+      }
+
+      const stage = this.experimentService.getStage(participant.currentStageId);
       if (!stage || !(stage.kind === StageKind.TRANSFER)) {
         const isConfirmed = window.confirm(
           `Participant is not in a transfer stage. Are you sure you want to transfer them?`,
@@ -331,7 +350,7 @@ export class Component extends MobxLitElement {
 
       this.analyticsService.trackButtonClick(ButtonClick.TRANSFER_INITIATE);
       this.experimentManager.initiateParticipantTransfer(
-        this.experimentManager.currentParticipant.privateId,
+        participant.privateId,
         cohort.id,
       );
     };
