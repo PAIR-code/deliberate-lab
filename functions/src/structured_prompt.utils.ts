@@ -95,6 +95,7 @@ export async function getFirestoreDataForStructuredPrompt(
   promptConfig: BasePromptConfig,
 ): Promise<{
   experiment: Experiment;
+  // participants whose answers should be used in prompt
   participants: ParticipantProfileExtended[];
   data: Record<string, StageContextData>;
 }> {
@@ -103,16 +104,22 @@ export async function getFirestoreDataForStructuredPrompt(
   // Fetch experiment config, which is used to grab preceding stages
   const experiment = await getFirestoreExperiment(experimentId);
 
-  // Fetch participants used for prompt
+  // Fetch all active participants in cohort
+  const activeParticipants = await getFirestoreActiveParticipants(
+    experimentId,
+    cohortId,
+  );
+
+  // Fetch participants whose answers should be included in prompt
   // (if participant, this is just the current participant;
   // if mediator, it's all active cohort participants)
-  let participants: ParticipantProfileExtended[] = [];
+  let answerParticipants: ParticipantProfileExtended[] = [];
   if (userProfile.type === UserType.PARTICIPANT) {
-    participants.push(
+    answerParticipants.push(
       await getFirestoreParticipant(experimentId, userProfile.privateId),
     );
   } else if (userProfile.type === UserType.MEDIATOR) {
-    participants = await getFirestoreActiveParticipants(experimentId, cohortId);
+    answerParticipants = activeParticipants;
   }
 
   for (const item of promptConfig.prompt) {
@@ -121,12 +128,12 @@ export async function getFirestoreDataForStructuredPrompt(
       cohortId,
       currentStageId,
       item,
-      participants,
+      activeParticipants,
+      answerParticipants,
       data,
     );
   }
-
-  return {experiment, participants, data};
+  return {experiment, participants: answerParticipants, data};
 }
 
 /** Populates data object with Firestore documents needed for given single
@@ -137,8 +144,10 @@ export async function addFirestoreDataForPromptItem(
   cohortId: string,
   currentStageId: string,
   promptItem: PromptItem,
+  // All active participants in cohort
+  activeParticipants: ParticipantProfileExtended[],
   // Participants to include in any potential answers
-  participants: ParticipantProfileExtended[],
+  answerParticipants: ParticipantProfileExtended[],
   data: Record<string, StageContextData> = {},
 ) {
   // Get profile set ID based on stage ID
@@ -166,7 +175,8 @@ export async function addFirestoreDataForPromptItem(
             cohortId,
             currentStageId,
             {...promptItem, stageId},
-            participants,
+            activeParticipants,
+            answerParticipants,
             data,
           );
         }
@@ -184,6 +194,9 @@ export async function addFirestoreDataForPromptItem(
         // Store stage config in stage context object
         data[promptItem.stageId] = initializeStageContextData(stage);
 
+        // Store all active participants
+        data[promptItem.stageId].participants = activeParticipants;
+
         // If group chat, fetch group chat messages
         if (stage.kind === StageKind.CHAT) {
           data[promptItem.stageId].publicChatMessages =
@@ -196,7 +209,7 @@ export async function addFirestoreDataForPromptItem(
 
         // If private chat, fetch private chat messages for each participant
         if (stage.kind === StageKind.PRIVATE_CHAT) {
-          for (const participant of participants) {
+          for (const participant of answerParticipants) {
             data[promptItem.stageId].privateChatMap[participant.publicId] =
               await getFirestorePrivateChatMessages(
                 experiment.id,
@@ -217,7 +230,7 @@ export async function addFirestoreDataForPromptItem(
           experiment.id,
           cohortId,
           promptItem.stageId,
-          participants,
+          answerParticipants,
           getProfileSetId(promptItem.stageId),
         );
         // Fill public data for cohort
@@ -235,7 +248,8 @@ export async function addFirestoreDataForPromptItem(
           cohortId,
           currentStageId,
           item,
-          participants,
+          activeParticipants,
+          answerParticipants,
           data,
         );
       }
@@ -323,11 +337,13 @@ async function processPromptItems(
         };
         if (userProfile.type === UserType.PARTICIPANT) {
           items.push(
-            getNameFromPublicId(
-              [userProfile],
-              userProfile.publicId,
-              getProfileSetId(),
-            ),
+            userProfile.name
+              ? getNameFromPublicId(
+                  [userProfile],
+                  userProfile.publicId,
+                  getProfileSetId(),
+                )
+              : 'Profile not yet set',
           );
         } else {
           // TODO: Adjust display for mediator profiles

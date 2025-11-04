@@ -5,7 +5,11 @@ import {
   PROFILE_SET_ANIMALS_2_ID,
   PROFILE_SET_NATURE_ID,
 } from '../profile_sets';
-import {createDefaultPromptFromText} from '../structured_prompt';
+import {
+  MediatorPromptConfig,
+  ParticipantPromptConfig,
+  createDefaultPromptFromText,
+} from '../structured_prompt';
 import {ChatStageConfig} from './chat_stage';
 import {
   DEFAULT_AGENT_MEDIATOR_PROMPT,
@@ -20,9 +24,9 @@ import {
   StageParticipantAnswer,
   StagePublicData,
 } from './stage';
-import {StageHandler} from './stage.manager';
+import {BaseStageHandler} from './stage.handler';
 
-export class GroupChatStageHandler implements StageHandler<ChatStageConfig> {
+export class GroupChatStageHandler extends BaseStageHandler {
   getStageDisplayForPrompt(
     participants: ParticipantProfileExtended[],
     stageContext: StageContextData,
@@ -39,8 +43,8 @@ export class GroupChatStageHandler implements StageHandler<ChatStageConfig> {
       }
       return '';
     };
-    // Get participant names
-    const participantNames = participants.map((participant) =>
+    // Get participant names (from all active participants)
+    const participantNames = stageContext.participants.map((participant) =>
       getNameFromPublicId(
         [participant],
         participant.publicId,
@@ -52,14 +56,18 @@ export class GroupChatStageHandler implements StageHandler<ChatStageConfig> {
     return `Group chat participants: ${participantNames.join(', ')}\n${getChatPromptMessageHistory(messages, stage)}`;
   }
 
-  getDefaultMediatorStructuredPrompt(stageId: string) {
-    return createChatPromptConfig(stageId, StageKind.CHAT, {
+  getDefaultMediatorStructuredPrompt(
+    stage: ChatStageConfig,
+  ): MediatorPromptConfig | undefined {
+    return createChatPromptConfig(stage.id, StageKind.CHAT, {
       prompt: createDefaultPromptFromText(DEFAULT_AGENT_MEDIATOR_PROMPT),
     });
   }
 
-  getDefaultParticipantStructuredPrompt(stageId: string) {
-    return createChatPromptConfig(stageId, StageKind.CHAT, {
+  getDefaultParticipantStructuredPrompt(
+    stage: ChatStageConfig,
+  ): ParticipantPromptConfig | undefined {
+    return createChatPromptConfig(stage.id, StageKind.CHAT, {
       prompt: createDefaultPromptFromText(
         DEFAULT_AGENT_PARTICIPANT_CHAT_PROMPT,
       ),

@@ -92,7 +92,8 @@ export class EditorComponent extends MobxLitElement {
           </div>
           ${promptConfig ? this.renderDialogButton() : nothing}
         </div>
-        ${promptConfig
+        ${promptConfig?.type === StageKind.CHAT ||
+        promptConfig?.type === StageKind.PRIVATE_CHAT
           ? html`
               ${this.renderAgentPrompt(this.agent, promptConfig)}
               ${this.renderDialog(stageConfig, promptConfig)}
@@ -147,7 +148,12 @@ export class EditorComponent extends MobxLitElement {
 
   private updatePrompt(updatedPrompt: Partial<ChatPromptConfig>) {
     const oldPrompt = this.getPrompt();
-    if (!this.agent || !oldPrompt) {
+    if (
+      !this.agent ||
+      !oldPrompt ||
+      (oldPrompt.type !== StageKind.CHAT &&
+        oldPrompt.type !== StageKind.PRIVATE_CHAT)
+    ) {
       return;
     }
 
