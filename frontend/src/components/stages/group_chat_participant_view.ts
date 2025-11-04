@@ -27,7 +27,7 @@ import {
   DiscussionItem,
   StageKind,
 } from '@deliberation-lab/utils';
-import { getChatTimeRemainingInSeconds } from '../../shared/stage.utils';
+import {getChatTimeRemainingInSeconds} from '../../shared/stage.utils';
 
 import {styles} from './group_chat_participant_view.scss';
 
