@@ -214,28 +214,15 @@ h1 {
   }
 }
 
+/* This is needed to render the search icon as part of the
+ * text area wrapper. */
 .search-container pr-icon {
-  color: var(--md-sys-color-tertiary);
   position: absolute;
   left: common.$spacing-medium;
-  opacity: 0.7;
   pointer-events: none;
 }
 
 .search-container pr-textarea {
   width: 140px;
   margin: 0;
-}
-
-.search-container pr-textarea::part(textarea),
-.search-container textarea {
-  border: none;
-  background: transparent;
-  box-shadow: none;
-  resize: none;
-  font-size: var(--md-sys-typescale-body-small-font-size);
-
-  &:focus {
-    outline: none;
-  }
 }
