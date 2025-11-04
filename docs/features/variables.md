@@ -4,7 +4,7 @@ layout: default
 ---
 
 > Note: This is an alpha feature and is not currently compatible with
-agent participants
+agent mediators or agent participants
 
 ## Experimenter setup
 Deliberate Lab offers early variable support within experiments.

@@ -94,8 +94,8 @@ export class VariableEditor extends MobxLitElement {
               </select>
             </pr-tooltip>
             <div class="description">
-              The variables defined will be filled (randomly selected from
-              possible permutations) by the set of values defined
+              The variables (1 or more) defined will be filled (randomly
+              selected from possible permutations) by the set of values defined
             </div>
           </div>
           <div class="divider"></div>
@@ -144,7 +144,7 @@ export class VariableEditor extends MobxLitElement {
               variableIndex,
             ),
           )}
-          <pr-button @click=${addVariable} color="neutral" variant="default">
+          <pr-button @click=${addVariable} color="secondary" variant="tonal">
             + Add variable
           </pr-button>
           <div class="divider"></div>
@@ -157,7 +157,7 @@ export class VariableEditor extends MobxLitElement {
               valueIndex,
             ),
           )}
-          <pr-button @click=${addValue} color="neutral" variant="default">
+          <pr-button @click=${addValue} color="secondary" variant="tonal">
             + Add value
           </pr-button>
         </div>
@@ -186,9 +186,10 @@ export class VariableEditor extends MobxLitElement {
       );
     };
 
+    const placeholder = `Value, e.g., 'San Francisco' for string variable or '{"name": "San Francisco"}' for object variable`;
     return html`
       <pr-textarea
-        placeholder="Value"
+        placeholder=${placeholder}
         .value=${value}
         variant="outlined"
         ?disabled=${!this.experimentEditor.canEditStages}
