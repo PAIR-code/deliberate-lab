@@ -38,6 +38,23 @@ export class VariableEditor extends MobxLitElement {
     return html`
       <div class="inner-wrapper">
         <div class="title">Variables</div>
+        <p>
+          Any variables configured below can be referenced in stage descriptions
+          (and other select stage fields) via
+          <a
+            href="https://mustache.github.io/mustache.5.html"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Mustache templating</a
+          >, e.g., {{my_variable}}.
+          <a
+            href="https://pair-code.github.io/deliberate-lab/features/variable"
+            target="_blank"
+            >See documentation</a
+          >
+          for more information.
+        </p>
         ${variableConfigs.map((variableConfig, index) =>
           this.renderVariableConfig(variableConfig, index),
         )}
@@ -222,7 +239,7 @@ export class VariableEditor extends MobxLitElement {
 
     return html`
       <pr-textarea
-        placeholder="Name of variable"
+        placeholder=${`Name of variable, e.g., city_${variableIndex + 1}`}
         .value=${name}
         variant="outlined"
         ?disabled=${!this.experimentEditor.canEditStages}

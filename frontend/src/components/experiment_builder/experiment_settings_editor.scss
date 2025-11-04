@@ -13,6 +13,10 @@ a {
   text-decoration: underline;
 }
 
+p {
+  margin: 0;
+}
+
 .inner-wrapper {
   @include common.flex-column;
   gap: common.$spacing-xxl;
