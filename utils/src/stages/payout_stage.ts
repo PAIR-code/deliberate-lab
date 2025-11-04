@@ -15,7 +15,7 @@ import {
   SurveyAnswer,
   SurveyQuestionKind,
 } from './survey_stage';
-import {BargainRole, BargainStageParticipantAnswer, BargainStagePublicData} from './bargain_stage';
+import {calculateBargainPayout} from '../payout/bargain_payout';
 
 /** Payout stage types and functions. */
 
@@ -303,6 +303,37 @@ export function calculatePayoutResult(
   return resultConfig;
 }
 
+/**
+ * Helper function to calculate payout result with automatic answer map filtering.
+ * This is a convenience wrapper around calculatePayoutResult that handles
+ * filtering undefined values from the answer map.
+ */
+export function calculatePayoutResultFromAnswerMap(
+  payoutConfig: PayoutStageConfig,
+  payoutAnswer: PayoutStageParticipantAnswer,
+  stageConfigMap: Record<string, StageConfig>,
+  publicDataMap: Record<string, StagePublicData>,
+  profile: ParticipantProfile,
+  answerMap: Record<string, BaseStageParticipantAnswer | undefined>,
+): PayoutResultConfig {
+  // Filter out undefined values from answer map
+  const filteredAnswerMap: Record<string, BaseStageParticipantAnswer> = {};
+  Object.entries(answerMap).forEach(([key, value]) => {
+    if (value) {
+      filteredAnswerMap[key] = value;
+    }
+  });
+
+  return calculatePayoutResult(
+    payoutConfig,
+    payoutAnswer,
+    stageConfigMap,
+    publicDataMap,
+    profile,
+    filteredAnswerMap,
+  );
+}
+
 /** Calculate total payout from PayoutResultConfig. */
 export function calculatePayoutTotal(resultConfig: PayoutResultConfig) {
   let total = 0;
@@ -553,47 +584,5 @@ export function calculateSurveyPayoutItemResult(
   };
 }
 
-/** Calculate bargain stage payout based on game outcome. */
-export function calculateBargainPayout(
-  stageId: string,
-  publicDataMap: Record<string, StagePublicData>,
-  participantAnswerMap?: Record<string, BaseStageParticipantAnswer>,
-): number {
-  // Get bargain stage public data
-  const publicData = publicDataMap[stageId];
-  if (!publicData || publicData.kind !== StageKind.BARGAIN) {
-    return 0;
-  }
-
-  const bargainPublicData = publicData as BargainStagePublicData;
-
-  // If no deal was reached, payout is 0
-  if (bargainPublicData.agreedPrice === null) {
-    return 0;
-  }
-
-  // Get participant's answer data from participantAnswerMap
-  if (!participantAnswerMap) {
-    return 0;
-  }
-
-  const participantAnswer = participantAnswerMap[stageId] as BargainStageParticipantAnswer | undefined;
-  if (!participantAnswer || participantAnswer.kind !== StageKind.BARGAIN) {
-    return 0;
-  }
-
-  const agreedPrice = bargainPublicData.agreedPrice;
-  const valuation = participantAnswer.valuation;
-  const role = participantAnswer.role;
-
-  // Calculate payout based on role
-  if (role === BargainRole.BUYER) {
-    // Buyer profit = valuation - price
-    const profit = valuation - agreedPrice;
-    return Math.max(0, profit); // Ensure non-negative
-  } else {
-    // Seller profit = price - valuation
-    const profit = agreedPrice - valuation;
-    return Math.max(0, profit); // Ensure non-negative
-  }
-}
+// Re-export bargain payout calculation for convenience
+export {calculateBargainPayout} from '../payout/bargain_payout';
