@@ -12,6 +12,7 @@ import {
   SeedStrategy,
   VariableConfig,
   VariableConfigType,
+  VariableType,
   createRandomPermutationVariableConfig,
 } from '@deliberation-lab/utils';
 
@@ -99,19 +100,39 @@ export class VariableEditor extends MobxLitElement {
           </div>
           <div class="divider"></div>
           <div class="title">Type</div>
-          <pr-tooltip text="Other variable types coming soon">
-            <select disabled .value="STRING">
-              <option value="STRING">STRING</option>
-            </select>
-          </pr-tooltip>
+          <select .value=${variableConfig.variableType}>
+            <option
+              value="${VariableType.STRING}"
+              ?selected=${VariableType.STRING === variableConfig.variableType}
+            >
+              string
+            </option>
+            <option
+              value="${VariableType.STRING}"
+              ?selected=${VariableType.OBJECT === variableConfig.variableType}
+            >
+              object
+            </option>
+          </select>
           <div class="divider"></div>
           <div class="title">Seed strategy</div>
           <div class="description">
             This is what level the variable should be assigned at
           </div>
           <select .value=${variableConfig.seedStrategy} @change=${updateSeed}>
-            <option value="${SeedStrategy.COHORT}">Cohort</option>
-            <option value="${SeedStrategy.PARTICIPANT}">Participant</option>
+            <option
+              value="${SeedStrategy.COHORT}"
+              ?selected=${SeedStrategy.COHORT === variableConfig.seedStrategy}
+            >
+              cohort
+            </option>
+            <option
+              value="${SeedStrategy.PARTICIPANT}"
+              ?selected=${SeedStrategy.PARTICIPANT ===
+              variableConfig.seedStrategy}
+            >
+              participant
+            </option>
           </select>
           <div class="divider"></div>
           <div class="title">Variables</div>
