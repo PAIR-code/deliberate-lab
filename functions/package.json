@@ -39,7 +39,10 @@
     "transform": {
       "^.+\\.[t|j]sx?$": "babel-jest"
     },
-    "testTimeout": 15000
+    "testTimeout": 15000,
+    "moduleNameMapper": {
+      "^@deliberation-lab/utils$": "<rootDir>/../utils/src"
+    }
   },
   "devDependencies": {
     "@babel/preset-env": "^7.26.0",

@@ -9,9 +9,11 @@
  * Or: firebase emulators:exec --only firestore "npx jest experiments.api.integration.test.ts"
  */
 
-// IMPORTANT: Set emulator environment variables BEFORE any imports so admin SDK connects to emulator
-process.env.FIRESTORE_EMULATOR_HOST = 'localhost:8081';
-process.env.GCLOUD_PROJECT = 'deliberate-lab-test';
+// Don't override GCLOUD_PROJECT - let firebase emulators:exec set it
+// If not set, use a demo project ID that the emulator will accept
+if (!process.env.GCLOUD_PROJECT) {
+  process.env.GCLOUD_PROJECT = 'demo-deliberate-lab';
+}
 
 import {
   initializeTestEnvironment,
@@ -27,7 +29,7 @@ import {
   Experiment,
   APIKeyPermission,
 } from '@deliberation-lab/utils';
-import {createAPIKey} from './api_key.utils';
+import {createAPIKey, verifyAPIKey} from './api_key.utils';
 
 // Import actual experiment templates from frontend
 import {getFlipCardExperimentTemplate} from '../../../frontend/src/shared/templates/flipcard';
@@ -44,18 +46,6 @@ import {
   deleteExperiment,
   exportExperimentData,
 } from './experiments.api';
-
-// Firestore rules for testing (allow all reads/writes)
-const RULES = `
-rules_version = '2';
-service cloud.firestore {
-  match /databases/{database}/documents {
-    match /{document=**} {
-      allow read, write: if true;
-    }
-  }
-}
-`;
 
 let testEnv: RulesTestEnvironment;
 // Use any for firestore as the RulesTestEnvironment type is complex
@@ -98,36 +88,40 @@ describe('API Experiment Creation Integration Tests', () => {
   const createdExperimentIds: string[] = [];
 
   beforeAll(async () => {
-    // Initialize test environment with emulator
+    // Use the same project ID that the emulator will use
+    const projectId = process.env.GCLOUD_PROJECT || 'demo-deliberate-lab';
+
     testEnv = await initializeTestEnvironment({
-      projectId: 'deliberate-lab-test',
+      projectId,
       firestore: {
-        rules: RULES,
         host: 'localhost',
-        port: 8081, // Port from firebase-test.json
+        port: 8081,
       },
     });
     firestore = testEnv.unauthenticatedContext().firestore();
     firestore.settings({ignoreUndefinedProperties: true, merge: true});
 
-    // Initialize Firebase Admin SDK (will use emulator via environment variable set at top of file)
+    // Initialize Firebase Admin SDK (will use emulator via FIRESTORE_EMULATOR_HOST environment variable)
     if (!admin.apps.length) {
       admin.initializeApp({
-        projectId: 'deliberate-lab-test',
+        projectId,
       });
     }
 
     // Create test API key (this will be stored in the emulator)
-    try {
-      const {apiKey} = await createAPIKey(
-        TEST_EXPERIMENTER_ID,
-        'Test API Key',
-        [APIKeyPermission.READ, APIKeyPermission.WRITE],
-      );
-      testAPIKey = apiKey;
-    } catch (error) {
-      console.error('Failed to create API key:', error);
-      throw error;
+    console.log('Creating API key...');
+    const {apiKey, keyId} = await createAPIKey(
+      TEST_EXPERIMENTER_ID,
+      'Test API Key',
+      [APIKeyPermission.READ, APIKeyPermission.WRITE],
+    );
+    testAPIKey = apiKey;
+    // Verify the key can be validated (this uses admin SDK internally)
+    console.log('Verifying API key...');
+    const {valid, data} = await verifyAPIKey(apiKey);
+    console.log('API key valid:', valid);
+    if (!valid || !data) {
+      throw new Error('API key verification failed');
     }
 
     // Create test Express app
