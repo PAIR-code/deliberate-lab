@@ -39,6 +39,7 @@ import {
   createCohortConfig,
   createExperimenterChatMessage,
   generateId,
+  getExperimentDownload,
 } from '@deliberation-lab/utils';
 import {
   ackAlertMessageCallable,
@@ -69,10 +70,8 @@ import {
   getChipNegotiationCSV,
   getChipNegotiationData,
   getChipNegotiationPlayerMapCSV,
-  getExperimentDownload,
   getParticipantDataCSV,
 } from '../shared/file.utils';
-import {getExperimentDownload} from '@deliberation-lab/utils';
 import {
   isObsoleteParticipant,
   requiresAnonymousProfiles,
