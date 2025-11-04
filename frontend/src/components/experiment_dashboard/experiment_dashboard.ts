@@ -324,12 +324,15 @@ export class Component extends MobxLitElement {
 
       // Check if there is already a participant with the same name in the cohort.
       if (participant.name) {
-        const duplicateName = cohortParticipants.find(
-          (p) => p.name === participant.name,
+        const normalize = (name: string) => name.replace(/\s*\d+$/, '');
+        const normalizedName = normalize(participant.name);
+        const duplicateParticipant = cohortParticipants.find(
+          (p) => p.name && normalize(p.name) === normalizedName,
         );
-        if (duplicateName) {
+
+        if (duplicateParticipant) {
           const isConfirmed = window.confirm(
-            `Warning: A participant with the name "${participant.name}" already exists in cohort ${cohort.metadata.name}. Do you still want to transfer?`,
+            `Warning: A participant with a similar name ("${duplicateParticipant.name}") already exists in cohort ${cohort.metadata.name}. Do you still want to transfer?`,
           );
           if (!isConfirmed) return;
         }
