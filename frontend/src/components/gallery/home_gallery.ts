@@ -14,7 +14,12 @@ import {ExperimentEditor} from '../../services/experiment.editor';
 import {HomeService} from '../../services/home.service';
 import {Pages, RouterService} from '../../services/router.service';
 
-import {Experiment} from '@deliberation-lab/utils';
+import {
+  Experiment,
+  SortMode,
+  sortLabel,
+  sortExperiments,
+} from '@deliberation-lab/utils';
 import {convertExperimentToGalleryItem} from '../../shared/experiment.utils';
 import {
   getQuickstartAgentGroupChatTemplate,
@@ -23,8 +28,6 @@ import {
 import {getQuickstartPrivateChatTemplate} from '../../shared/templates/quickstart_private_chat';
 
 import {styles} from './home_gallery.scss';
-
-type SortMode = 'newest' | 'oldest' | 'alpha_asc' | 'alpha_desc';
 
 @customElement('home-gallery')
 export class HomeGallery extends MobxLitElement {
@@ -35,21 +38,8 @@ export class HomeGallery extends MobxLitElement {
   private readonly routerService = core.getService(RouterService);
 
   @state() private searchQuery = '';
-  @state() private sortMode: SortMode = 'newest';
+  @state() private sortMode: SortMode = SortMode.NEWEST;
   @state() private refreshing = false;
-
-  private sortLabel(mode: SortMode) {
-    switch (mode) {
-      case 'newest':
-        return 'Newest first';
-      case 'oldest':
-        return 'Oldest first';
-      case 'alpha_asc':
-        return 'A–Z';
-      case 'alpha_desc':
-        return 'Z–A';
-    }
-  }
 
   private async setSort(mode: SortMode) {
     this.sortMode = mode;
@@ -58,35 +48,18 @@ export class HomeGallery extends MobxLitElement {
     this.refreshing = false;
   }
 
-  private sortExperiments(experiments: Experiment[]) {
-    switch (this.sortMode) {
-      case 'alpha_asc':
-        return experiments
-          .slice()
-          .sort((a, b) => a.metadata.name.localeCompare(b.metadata.name));
-      case 'alpha_desc':
-        return experiments
-          .slice()
-          .sort((a, b) => b.metadata.name.localeCompare(a.metadata.name));
-      case 'oldest':
-        return experiments
-          .slice()
-          .sort(
-            (a, b) =>
-              a.metadata.dateModified.seconds - b.metadata.dateModified.seconds,
-          );
-      case 'newest':
-      default:
-        return experiments
-          .slice()
-          .sort(
-            (a, b) =>
-              b.metadata.dateModified.seconds - a.metadata.dateModified.seconds,
-          );
-    }
-  }
-
-  private returnControlsHtml() {
+  private renderControls() {
+    const renderSortItem = (mode: SortMode, label: string) => {
+      const selected = this.sortMode === mode;
+      return html`
+        <div class="menu-item" @click=${() => this.setSort(mode)}>
+          ${label}
+          ${this.sortMode === mode
+            ? html`<span class="checkmark">✔</span>`
+            : nothing}
+        </div>
+      `;
+    };
     return html`
       <div class="controls">
         <div class="search-container">
@@ -99,39 +72,12 @@ export class HomeGallery extends MobxLitElement {
           ></pr-textarea>
         </div>
 
-        <pr-menu
-          name=${this.sortLabel(this.sortMode)}
-          icon="sort"
-          color="neutral"
-        >
+        <pr-menu name=${sortLabel(this.sortMode)} icon="sort" color="neutral">
           <div class="menu-wrapper">
-            <div class="menu-item" @click=${() => this.setSort('newest')}>
-              Newest first
-              ${this.sortMode === 'newest'
-                ? html`<span class="checkmark">✔</span>`
-                : nothing}
-            </div>
-
-            <div class="menu-item" @click=${() => this.setSort('oldest')}>
-              Oldest first
-              ${this.sortMode === 'oldest'
-                ? html`<span class="checkmark">✔</span>`
-                : nothing}
-            </div>
-
-            <div class="menu-item" @click=${() => this.setSort('alpha_asc')}>
-              Alphabetical (A–Z)
-              ${this.sortMode === 'alpha_asc'
-                ? html`<span class="checkmark">✔</span>`
-                : nothing}
-            </div>
-
-            <div class="menu-item" @click=${() => this.setSort('alpha_desc')}>
-              Alphabetical (Z–A)
-              ${this.sortMode === 'alpha_desc'
-                ? html`<span class="checkmark">✔</span>`
-                : nothing}
-            </div>
+            ${renderSortItem(SortMode.NEWEST, 'Newest first')}
+            ${renderSortItem(SortMode.OLDEST, 'Oldest first')}
+            ${renderSortItem(SortMode.ALPHA_ASC, 'Alphabetical (A–Z)')}
+            ${renderSortItem(SortMode.ALPHA_DESC, 'Alphabetical (Z–A)')}
           </div>
         </pr-menu>
       </div>
@@ -160,7 +106,7 @@ export class HomeGallery extends MobxLitElement {
       );
     }
 
-    experiments = this.sortExperiments(experiments);
+    experiments = sortExperiments(experiments, this.sortMode);
 
     const yourExperiments = experiments.filter(
       (e) => e.metadata.creator === this.authService.userEmail,
@@ -187,7 +133,7 @@ export class HomeGallery extends MobxLitElement {
 
     return html`
       <home-gallery-tabs>
-        <div slot="gallery-controls">${this.returnControlsHtml()}</div>
+        <div slot="gallery-controls">${this.renderControls()}</div>
       </home-gallery-tabs>
       <div class="gallery-wrapper ${this.refreshing ? 'hidden' : ''}">
         ${banner} ${this.renderEmptyMessage(list)}

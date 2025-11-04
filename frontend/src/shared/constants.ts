@@ -1,6 +1,6 @@
 /** Documentation URLs. */
 export const BUG_REPORT_URL =
-  'https://github.com/PAIR-code/deliberate-lab/issues/new';
+  'https://github.com/PAIR-code/deliberate-lab/issues/';
 export const DOCUMENTATION_URL = 'https://pair-code.github.io/deliberate-lab/';
 
 /** Prolific URL prefix. */
