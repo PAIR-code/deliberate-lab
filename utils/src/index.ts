@@ -113,6 +113,7 @@ export * from './stages/asset_allocation_stage';
 export * from './stages/asset_allocation_stage.manager';
 export * from './stages/asset_allocation_stage.utils';
 export * from './stages/asset_allocation_stage.validation';
+export * from './stages/multi_asset_allocation_stage.manager';
 
 export * from './stages/survey_stage';
 export * from './stages/survey_stage.manager';

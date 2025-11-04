@@ -1,6 +1,8 @@
 import {ParticipantProfileExtended} from '../participant';
 import {VariableItem} from '../variables';
 import {AgentParticipantStageActions, BaseStageHandler} from './stage.handler';
+import {AssetAllocationStageHandler} from './asset_allocation_stage.manager';
+import {MultiAssetAllocationStageHandler} from './multi_asset_allocation_stage.manager';
 import {GroupChatStageHandler} from './chat_stage.manager';
 import {InfoStageHandler} from './info_stage.manager';
 import {PrivateChatStageHandler} from './private_chat_stage.manager';
@@ -18,6 +20,14 @@ export class StageManager {
   private handlerMap: Map<string, BaseStageHandler> = new Map();
 
   constructor() {
+    this.handlerMap.set(
+      StageKind.ASSET_ALLOCATION,
+      new AssetAllocationStageHandler(),
+    );
+    this.handlerMap.set(
+      StageKind.MULTI_ASSET_ALLOCATION,
+      new MultiAssetAllocationStageHandler(),
+    );
     this.handlerMap.set(StageKind.CHAT, new GroupChatStageHandler());
     this.handlerMap.set(StageKind.INFO, new InfoStageHandler());
     this.handlerMap.set(StageKind.PRIVATE_CHAT, new PrivateChatStageHandler());
