@@ -42,6 +42,7 @@ export enum UserType {
   PARTICIPANT = 'participant',
   MEDIATOR = 'mediator',
   EXPERIMENTER = 'experimenter', // if experimenter needs to intervene
+  SYSTEM = 'system', // for automated messages (e.g., user left chat)
   UNKNOWN = 'unknown',
 }
 

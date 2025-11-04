@@ -52,6 +52,7 @@ export interface AgentChatResponse {
 // Sender ID for chat messages manually sent by experimenter
 // This should be consistent to ensure same background color for each message
 export const EXPERIMENTER_MANUAL_CHAT_SENDER_ID = 'experimenter';
+export const SYSTEM_CHAT_SENDER_ID = 'system';
 
 // ************************************************************************* //
 // FUNCTIONS                                                                 //
@@ -126,5 +127,23 @@ export function createExperimenterChatMessage(
     agentId: config.agentId ?? '',
     explanation: config.explanation ?? '',
     isError: config.isError ?? false,
+  };
+}
+
+/** Create system chat message. */
+export function createSystemChatMessage(
+  config: Partial<ChatMessage> = {},
+): ChatMessage {
+  return {
+    id: config.id ?? generateId(),
+    discussionId: config.discussionId ?? null,
+    type: UserType.SYSTEM,
+    message: config.message ?? '',
+    timestamp: config.timestamp ?? Timestamp.now(),
+    profile: config.profile ?? {name: 'System', avatar: '⚙️', pronouns: null},
+    senderId: SYSTEM_CHAT_SENDER_ID,
+    agentId: '',
+    explanation: '',
+    isError: false,
   };
 }
