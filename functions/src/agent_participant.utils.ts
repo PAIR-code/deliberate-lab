@@ -1,17 +1,20 @@
 import {Timestamp} from 'firebase-admin/firestore';
 import {
   Experiment,
+  ExperimenterData,
+  ModelResponseStatus,
   ParticipantProfileExtended,
+  ParticipantPromptConfig,
   ParticipantStatus,
   StageKind,
 } from '@deliberation-lab/utils';
-import {app} from './app';
+import {processModelResponse} from './agent.utils';
+import {app, stageManager} from './app';
 import {
   updateCohortStageUnlocked,
   updateParticipantNextStage,
 } from './participant.utils';
-import {completeProfile} from './stages/profile.utils';
-import {assignRolesToParticipants} from './stages/role.utils';
+import {getPromptFromConfig} from './structured_prompt.utils';
 import {
   getExperimenterData,
   getFirestoreParticipantRef,
@@ -30,34 +33,6 @@ export async function completeStageAsAgentParticipant(
     experimentId,
     participant.privateId,
   );
-
-  // Only update if participant is active, etc.
-  const status = participant.currentStatus;
-  if (status !== ParticipantStatus.IN_PROGRESS) {
-    return;
-  }
-
-  // Ensure participants have start experiment, TOS, and current stage
-  // ready marked appropriately
-  if (!participant.timestamps.startExperiment) {
-    participant.timestamps.startExperiment = Timestamp.now();
-  }
-  if (!participant.timestamps.acceptedTOS) {
-    participant.timestamps.acceptedTOS = Timestamp.now();
-  }
-  if (!participant.timestamps.readyStages[participant.currentStageId]) {
-    participant.timestamps.readyStages[participant.currentStageId] =
-      Timestamp.now();
-  }
-
-  const completeStage = async () => {
-    await updateParticipantNextStage(
-      experimentId,
-      participant,
-      experiment.stageIds,
-    );
-  };
-
   const stage = await getFirestoreStage(
     experimentId,
     participant.currentStageId,
@@ -70,77 +45,142 @@ export async function completeStageAsAgentParticipant(
     return;
   }
 
+  // Only update if participant is active, etc.
+  // TODO: Handle transfer pending, attention check, etc.
+  const status = participant.currentStatus;
+  let updatedStatus = false;
+  if (status !== ParticipantStatus.IN_PROGRESS) {
+    return;
+  }
+
+  // Ensure participants have start experiment, TOS, and current stage
+  // ready marked appropriately
+  if (!participant.timestamps.startExperiment) {
+    participant.timestamps.startExperiment = Timestamp.now();
+    updatedStatus = true;
+  }
+  if (!participant.timestamps.acceptedTOS) {
+    participant.timestamps.acceptedTOS = Timestamp.now();
+    updatedStatus = true;
+  }
+  if (!participant.timestamps.readyStages[participant.currentStageId]) {
+    participant.timestamps.readyStages[participant.currentStageId] =
+      Timestamp.now();
+    updatedStatus = true;
+  }
+
   // Fetch experiment creator's API key.
   const creatorId = experiment.metadata.creator;
   const experimenterData = await getExperimenterData(creatorId);
 
-  // ParticipantAnswer doc
-  const answerDoc = app
-    .firestore()
-    .collection('experiments')
-    .doc(experimentId)
-    .collection('participants')
-    .doc(participant.privateId)
-    .collection('stageData')
-    .doc(stage.id);
+  // Call stage manager to perform stage-specific actions
+  const stageActions = stageManager.getAgentParticipantActionsForStage(
+    participant,
+    stage,
+  );
 
-  switch (stage.kind) {
-    case StageKind.CHAT:
-      // Do not complete stage as agent participant must chat first.
-      // Initial messages are now handled by sendInitialChatMessages in agent_participant.triggers.ts
-      // when currentStageId changes, so no action needed here.
-      break;
-    case StageKind.PRIVATE_CHAT:
-      // Do not complete stage as agent participant must chat first.
-      // Initial messages are now handled by sendInitialChatMessages in agent_participant.triggers.ts
-      // when currentStageId changes, so no action needed here.
-      break;
-    case StageKind.PROFILE:
-      await completeProfile(experimentId, participant, stage);
-      await completeStage();
-      participantDoc.set(participant);
-      break;
-    case StageKind.ROLE:
-      await assignRolesToParticipants(
-        experimentId,
-        participant.currentCohortId,
-        stage.id,
+  if (stageActions.callApi) {
+    const response = await getParsedAgentParticipantPromptResponse(
+      experimenterData,
+      experiment.id,
+      participant.currentCohortId,
+      participant.currentStageId,
+      participant,
+      // TODO: Try fetching custom participant prompt first
+      stageManager.getDefaultParticipantStructuredPrompt(stage),
+    );
+    if (response) {
+      const answer = stageManager.extractAgentParticipantAnswerFromResponse(
+        participant,
+        stage,
+        response,
       );
-      await completeStage();
-      participantDoc.set(participant);
-      break;
-    case StageKind.SALESPERSON:
-      // Do not complete stage as agent participant must chat first.
-      // Initial messages are now handled by sendInitialChatMessages in agent_participant.triggers.ts
-      // when currentStageId changes, so no action needed here.
-      break;
-    case StageKind.RANKING:
-      if (!experimenterData) {
-        console.log('Could not find experimenter data and API key');
-        break;
+      // If profile stage, no action needed as there is no "answer"
+      // TODO: Consider making "set profile" not part of a stage
+      // Otherwise, write answer to storage
+      if (answer && stage.kind !== StageKind.PROFILE) {
+        // Write answer to storage
+        const answerDoc = app
+          .firestore()
+          .collection('experiments')
+          .doc(experiment.id)
+          .collection('participants')
+          .doc(participant.privateId)
+          .collection('stageData')
+          .doc(stage.id);
+        answerDoc.set(answer);
       }
-      // TODO: Add logic to complete ranking stage
-      await completeStage();
-      participantDoc.set(participant);
-      break;
-    case StageKind.SURVEY:
-      if (!experimenterData) {
-        console.log('Could not find experimenter data and API key');
-        break;
-      }
-      // TODO: Add logic to complete survey stage
-      answerDoc.set(surveyAnswer);
-      await completeStage();
-      participantDoc.set(participant);
-      break;
-    case StageKind.TRANSFER:
-      // Do not proceed to next stage. Instead, wait for proposed transfer
-      break;
-    default:
-      console.log(`Move to next stage (${participant.publicId})`);
-      await completeStage();
-      participantDoc.set(participant);
+    }
   }
+
+  if (stageActions.moveToNextStage) {
+    await updateParticipantNextStage(
+      experimentId,
+      participant,
+      experiment.stageIds,
+    );
+  }
+
+  // Write ParticipantAnswer doc if profile has been updated
+  if (stageActions.moveToNextStage || updatedStatus) {
+    participantDoc.set(participant);
+  }
+}
+
+/** Call model with agent participant prompt and return parsed response. */
+export async function getParsedAgentParticipantPromptResponse(
+  experimenterData: ExperimenterData | undefined,
+  experimentId: string,
+  cohortId: string,
+  stageId: string,
+  participant: ParticipantProfileExtended,
+  promptConfig: ParticipantPromptConfig | undefined,
+) {
+  const agentConfig = participant.agentConfig;
+  if (!experimenterData || !agentConfig || !promptConfig) {
+    // Log that API key, agent config, or prompt was not found
+    return null;
+  }
+
+  const structuredPrompt = await getPromptFromConfig(
+    experimentId,
+    cohortId,
+    stageId,
+    participant,
+    promptConfig,
+  );
+
+  // Call API and write log to storage
+  const response = await processModelResponse(
+    experimentId,
+    cohortId,
+    /*participantId=*/ participant.privateId,
+    stageId,
+    participant,
+    participant.publicId,
+    participant.privateId,
+    /*description=*/ '',
+    experimenterData.apiKeys,
+    structuredPrompt,
+    agentConfig.modelSettings,
+    promptConfig.generationConfig,
+    promptConfig.structuredOutputConfig,
+    promptConfig.numRetries ?? 0,
+  );
+
+  if (response.status !== ModelResponseStatus.OK) {
+    // TODO: Surface the error to the experimenter.
+    return null;
+  }
+
+  if (!response.parsedResponse) {
+    // Response is already logged in console during Gemini API call
+    console.log('Could not parse JSON!');
+    return null;
+  }
+
+  const parsed = response.parsedResponse;
+  return parsed;
 }
 
 /** Start agent participant. */

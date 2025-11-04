@@ -48,6 +48,7 @@ export * from './structured_prompt';
 
 // Stages
 export * from './stages/stage';
+export * from './stages/stage.handler';
 export * from './stages/stage.manager';
 export * from './stages/stage.prompts';
 export * from './stages/stage.validation';
@@ -66,7 +67,9 @@ export * from './stages/comprehension_stage.validation';
 export * from './stages/flipcard_stage';
 export * from './stages/flipcard_stage.utils';
 export * from './stages/flipcard_stage.validation';
+
 export * from './stages/ranking_stage';
+export * from './stages/ranking_stage.manager';
 export * from './stages/ranking_stage.prompts';
 export * from './stages/ranking_stage.validation';
 
@@ -87,7 +90,9 @@ export * from './stages/private_chat_stage.manager';
 export * from './stages/private_chat_stage.validation';
 
 export * from './stages/profile_stage';
+export * from './stages/profile_stage.manager';
 export * from './stages/profile_stage.validation';
+
 export * from './stages/reveal_stage';
 export * from './stages/reveal_stage.validation';
 export * from './stages/salesperson_stage';

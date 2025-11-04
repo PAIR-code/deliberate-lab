@@ -5,9 +5,9 @@ import {
   getSurveySummaryText,
 } from './survey_stage.prompts';
 import {StageConfig, StageContextData, StageKind} from './stage';
-import {StageHandler} from './stage.manager';
+import {BaseStageHandler} from './stage.handler';
 
-export class SurveyStageHandler implements StageHandler<SurveyStageConfig> {
+export class SurveyStageHandler extends BaseStageHandler {
   getStageDisplayForPrompt(
     participants: ParticipantProfileExtended[],
     stageContext: StageContextData,
@@ -25,13 +25,5 @@ export class SurveyStageHandler implements StageHandler<SurveyStageConfig> {
       answer: SurveyStageParticipantAnswer;
     }[];
     return getSurveyAnswersText(participantAnswers, stage.questions, true);
-  }
-
-  getDefaultMediatorStructuredPrompt(stageId: string) {
-    return undefined;
-  }
-
-  getDefaultParticipantStructuredPrompt(stageId: string) {
-    return undefined;
   }
 }
