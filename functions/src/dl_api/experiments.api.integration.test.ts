@@ -22,22 +22,17 @@ import request from 'supertest';
 import express from 'express';
 import {
   createExperimentConfig,
-  createExperimentTemplate,
-  createFlipCardStage,
-  createFlipCard,
-  createInfoStage,
-  createMetadataConfig,
-  createProfileStage,
-  createTOSStage,
-  createChatStage,
-  createStageTextConfig,
-  ProfileType,
   StageConfig,
   ExperimentTemplate,
   Experiment,
   APIKeyPermission,
 } from '@deliberation-lab/utils';
 import {createAPIKey} from './api_key.utils';
+
+// Import actual experiment templates from frontend
+import {getFlipCardExperimentTemplate} from '../../../frontend/src/shared/templates/flipcard';
+import {getQuickstartGroupChatTemplate} from '../../../frontend/src/shared/templates/quickstart_group_chat';
+import {getPolicyExperimentTemplate} from '../../../frontend/src/shared/templates/policy';
 
 // Import Express app (we'll need to extract it from the API module)
 import {authenticateAPIKey} from './api.utils';
@@ -445,20 +440,39 @@ describe('API Experiment Creation Integration Tests', () => {
     };
   }
 
-  describe('FlipCard Template Comparison', () => {
-    it('should create equivalent experiments via template and API', async () => {
-      // Create FlipCard template
-      const flipCardTemplate = createFlipCardTestTemplate();
+  // ============================================================================
+  // Template Test Configuration
+  // ============================================================================
+
+  const TEMPLATES_TO_TEST = [
+    getFlipCardExperimentTemplate,
+    getQuickstartGroupChatTemplate,
+    getPolicyExperimentTemplate,
+    // Add more templates here as needed.
+  ];
+
+  describe.each(
+    TEMPLATES_TO_TEST.map((getTemplate) => {
+      const template = getTemplate();
+      return {
+        name: template.experiment.metadata.name,
+        description: template.experiment.metadata.description,
+        getTemplate,
+      };
+    }),
+  )('$name Template Comparison', ({name, description, getTemplate}) => {
+    it(`should create equivalent experiments via template and API (${description})`, async () => {
+      // Get fresh template instance for this test
+      const template = getTemplate();
 
       // Create experiment via template system
-      const templateExperimentId =
-        await createExperimentViaTemplate(flipCardTemplate);
+      const templateExperimentId = await createExperimentViaTemplate(template);
 
       // Create experiment via API with same configuration
       const apiExperimentId = await createExperimentViaAPI(
-        flipCardTemplate.experiment.metadata.name,
-        flipCardTemplate.experiment.metadata.description,
-        flipCardTemplate.stageConfigs,
+        template.experiment.metadata.name,
+        template.experiment.metadata.description,
+        template.stageConfigs,
       );
 
       // Fetch both experiments from Firestore
@@ -476,230 +490,9 @@ describe('API Experiment Creation Integration Tests', () => {
       // Assert equivalence
       expect(comparison.equivalent).toBe(true);
       if (!comparison.equivalent) {
-        console.error('Differences found:', comparison.differences);
+        console.error(`[${name}] Differences found:`, comparison.differences);
       }
       expect(comparison.differences).toEqual([]);
     }, 30000); // 30 second timeout for Firestore operations
   });
-
-  describe('Group Chat Template Comparison', () => {
-    it('should create equivalent experiments via template and API', async () => {
-      // Create Group Chat template
-      const groupChatTemplate = createGroupChatTestTemplate();
-
-      // Create experiment via template system
-      const templateExperimentId =
-        await createExperimentViaTemplate(groupChatTemplate);
-
-      // Create experiment via API with same configuration
-      const apiExperimentId = await createExperimentViaAPI(
-        groupChatTemplate.experiment.metadata.name,
-        groupChatTemplate.experiment.metadata.description,
-        groupChatTemplate.stageConfigs,
-      );
-
-      // Fetch both experiments from Firestore
-      const templateData = await getExperimentWithStages(templateExperimentId);
-      const apiData = await getExperimentWithStages(apiExperimentId);
-
-      // Compare experiments
-      const comparison = compareExperiments(
-        templateData.experiment,
-        templateData.stages,
-        apiData.experiment,
-        apiData.stages,
-      );
-
-      // Assert equivalence
-      expect(comparison.equivalent).toBe(true);
-      if (!comparison.equivalent) {
-        console.error('Differences found:', comparison.differences);
-      }
-      expect(comparison.differences).toEqual([]);
-    }, 30000);
-  });
-
-  describe('Complex Multi-Stage Template Comparison', () => {
-    it('should create equivalent experiments with multiple stage types', async () => {
-      // Create a complex template with multiple stage types
-      const complexTemplate = createComplexTestTemplate();
-
-      // Create experiment via template system
-      const templateExperimentId =
-        await createExperimentViaTemplate(complexTemplate);
-
-      // Create experiment via API with same configuration
-      const apiExperimentId = await createExperimentViaAPI(
-        complexTemplate.experiment.metadata.name,
-        complexTemplate.experiment.metadata.description,
-        complexTemplate.stageConfigs,
-      );
-
-      // Fetch both experiments from Firestore
-      const templateData = await getExperimentWithStages(templateExperimentId);
-      const apiData = await getExperimentWithStages(apiExperimentId);
-
-      // Compare experiments
-      const comparison = compareExperiments(
-        templateData.experiment,
-        templateData.stages,
-        apiData.experiment,
-        apiData.stages,
-      );
-
-      // Assert equivalence
-      expect(comparison.equivalent).toBe(true);
-      if (!comparison.equivalent) {
-        console.error('Differences found:', comparison.differences);
-      }
-      expect(comparison.differences).toEqual([]);
-    }, 30000);
-  });
 });
-
-// ============================================================================
-// Test Template Factories
-// ============================================================================
-
-/**
- * Create a test FlipCard template (simplified version)
- */
-function createFlipCardTestTemplate(): ExperimentTemplate {
-  const stageConfigs: StageConfig[] = [
-    createTOSStage({
-      id: 'test_tos',
-      name: 'Consent',
-      tosLines: ['You must agree to participate in this test.'],
-    }),
-    createProfileStage({
-      id: 'test_profile',
-      name: 'Your identity',
-      profileType: ProfileType.ANONYMOUS_ANIMAL,
-    }),
-    createFlipCardStage({
-      id: 'test_flipcard',
-      name: 'Choose Your Option',
-      descriptions: createStageTextConfig({
-        primaryText: 'Select one of the options below.',
-      }),
-      cards: [
-        createFlipCard({
-          title: 'Option A',
-          frontContent: 'This is option A',
-          backContent: 'More details about option A',
-        }),
-        createFlipCard({
-          title: 'Option B',
-          frontContent: 'This is option B',
-          backContent: 'More details about option B',
-        }),
-      ],
-      allowMultipleSelections: false,
-      requireConfirmation: true,
-    }),
-  ];
-
-  return createExperimentTemplate({
-    experiment: createExperimentConfig(stageConfigs, {
-      metadata: createMetadataConfig({
-        name: 'Test FlipCard Experiment',
-        description: 'Integration test for FlipCard template',
-      }),
-    }),
-    stageConfigs,
-  });
-}
-
-/**
- * Create a test Group Chat template
- */
-function createGroupChatTestTemplate(): ExperimentTemplate {
-  const stageConfigs: StageConfig[] = [
-    createProfileStage({
-      id: 'test_profile',
-      name: 'Set your profile',
-      profileType: ProfileType.DEFAULT,
-    }),
-    createChatStage({
-      id: 'test_chat',
-      name: 'Group chat',
-    }),
-  ];
-
-  return createExperimentTemplate({
-    experiment: createExperimentConfig(stageConfigs, {
-      metadata: createMetadataConfig({
-        name: 'Test Group Chat Experiment',
-        description: 'Integration test for Group Chat template',
-      }),
-    }),
-    stageConfigs,
-  });
-}
-
-/**
- * Create a complex test template with multiple stage types
- */
-function createComplexTestTemplate(): ExperimentTemplate {
-  const stageConfigs: StageConfig[] = [
-    createTOSStage({
-      id: 'complex_tos',
-      name: 'Terms of Service',
-      tosLines: ['Agree to participate', 'Agree to data collection'],
-    }),
-    createProfileStage({
-      id: 'complex_profile',
-      name: 'Create Profile',
-      profileType: ProfileType.ANONYMOUS_ANIMAL,
-    }),
-    createInfoStage({
-      id: 'complex_info',
-      name: 'Instructions',
-      infoLines: [
-        'Welcome to this experiment',
-        'You will complete several tasks',
-        'Please read all instructions carefully',
-      ],
-    }),
-    createChatStage({
-      id: 'complex_chat',
-      name: 'Discussion',
-      descriptions: createStageTextConfig({
-        primaryText: 'Discuss the topic with your group',
-      }),
-    }),
-    createFlipCardStage({
-      id: 'complex_flipcard',
-      name: 'Make Your Choice',
-      cards: [
-        createFlipCard({
-          title: 'Choice 1',
-          frontContent: 'Front of choice 1',
-          backContent: 'Back of choice 1',
-        }),
-        createFlipCard({
-          title: 'Choice 2',
-          frontContent: 'Front of choice 2',
-          backContent: 'Back of choice 2',
-        }),
-        createFlipCard({
-          title: 'Choice 3',
-          frontContent: 'Front of choice 3',
-          backContent: 'Back of choice 3',
-        }),
-      ],
-      allowMultipleSelections: true,
-      requireConfirmation: true,
-    }),
-  ];
-
-  return createExperimentTemplate({
-    experiment: createExperimentConfig(stageConfigs, {
-      metadata: createMetadataConfig({
-        name: 'Complex Multi-Stage Test',
-        description: 'Integration test with multiple stage types',
-      }),
-    }),
-    stageConfigs,
-  });
-}
