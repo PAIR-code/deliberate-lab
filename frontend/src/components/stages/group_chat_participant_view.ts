@@ -1,3 +1,4 @@
+import '@material/mwc-icon';
 import '../../pair-components/button';
 import '../../pair-components/icon_button';
 import '../../pair-components/textarea';
@@ -26,6 +27,7 @@ import {
   DiscussionItem,
   StageKind,
 } from '@deliberation-lab/utils';
+import { getChatTimeRemainingInSeconds } from '../../shared/stage.utils';
 
 import {styles} from './group_chat_participant_view.scss';
 
@@ -212,6 +214,52 @@ export class GroupChatView extends MobxLitElement {
     `;
   }
 
+  private renderIndicators() {
+    if (!this.stage) return nothing;
+
+    const publicStageData = this.cohortService.stagePublicDataMap[
+      this.stage.id
+    ] as ChatStagePublicData;
+
+    // Check if timer has run out
+    const timeRemaining = getChatTimeRemainingInSeconds(
+      this.stage,
+      this.cohortService.chatMap,
+    );
+    if (timeRemaining !== null && timeRemaining <= 0) {
+      return html`
+        <div slot="indicators" class="description error">
+          <mwc-icon>timer_off</mwc-icon>
+          The time for this stage has ended.
+        </div>
+      `;
+    }
+
+    // Check if all other participants have completed the stage
+    const completed = this.cohortService.getStageCompletedParticipants(
+      this.stage.id,
+    );
+    // If current user is not in completed list, check if everyone else is
+    const isSelfCompleted = completed.find(
+      (p) => p.publicId === this.participantService.profile?.publicId,
+    );
+
+    if (
+      !isSelfCompleted &&
+      completed.length >= this.cohortService.activeParticipants.length - 1 &&
+      this.cohortService.activeParticipants.length > 1
+    ) {
+      return html`
+        <div slot="indicators" class="description">
+          <mwc-icon>done_all</mwc-icon>
+          All other participants have completed this stage.
+        </div>
+      `;
+    }
+
+    return nothing;
+  }
+
   override render() {
     if (!this.stage) return nothing;
     const currentDiscussionId = this.cohortService.getChatDiscussionId(
@@ -259,6 +307,7 @@ export class GroupChatView extends MobxLitElement {
         showPanel
       >
         <div slot="mobile-description">${this.renderStageDescription()}</div>
+        ${this.renderIndicators()}
         ${this.cohortService.isChatLoading
           ? html`<div>Loading...</div>`
           : this.renderChatHistory(currentDiscussionId)}
