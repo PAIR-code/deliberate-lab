@@ -8,6 +8,7 @@ import {customElement, state} from 'lit/decorators.js';
 
 import {core} from '../../core/core';
 import {ExperimentManager} from '../../services/experiment.manager';
+import {ExperimentService} from '../../services/experiment.service';
 
 import {
   convertUnifiedTimestampToDateTime,
@@ -40,6 +41,7 @@ export class Component extends MobxLitElement {
   @state() private showFilters = false;
 
   private readonly experimentManager = core.getService(ExperimentManager);
+  private readonly experimentService = core.getService(ExperimentService);
 
   private toggleFilters(e?: Event) {
     e?.stopPropagation();
@@ -102,9 +104,13 @@ export class Component extends MobxLitElement {
       <div class="log">
         <div class="log-header">
           <div class="chip">
-            ${user?.avatar} ${user?.name} ${user?.pronouns} (${log.publicId})
+            ${user?.avatar} ${user?.name} (${log.publicId})
           </div>
-          <div class="chip">| ${cohortName}| Stage: ${log.stageId}</div>
+          <br />
+          <div class="chip">
+            ${cohortName} | Stage:
+            ${this.experimentService.getStageName(log.stageId, true)}
+          </div>
         </div>
         ${log.description}
         ${log.type === LogEntryType.MODEL
