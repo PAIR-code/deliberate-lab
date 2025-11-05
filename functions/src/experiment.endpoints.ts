@@ -8,9 +8,11 @@ import {
   ExperimentDeletionData,
   MediatorPromptConfig,
   ParticipantPromptConfig,
+  SeedStrategy,
   StageConfig,
   createExperimentConfig,
   createExperimentTemplate,
+  createVariableToValueMapForSeed,
 } from '@deliberation-lab/utils';
 
 import * as functions from 'firebase-functions';
@@ -65,6 +67,12 @@ export const writeExperiment = onCall(async (request) => {
     for (const stage of template.stageConfigs) {
       transaction.set(document.collection('stages').doc(stage.id), stage);
     }
+
+    // Add variable values at the experiment level
+    experimentConfig.variableMap = createVariableToValueMapForSeed(
+      experimentConfig.variableConfigs ?? [],
+      SeedStrategy.EXPERIMENT,
+    );
 
     // Add agent configs and prompts
     // TODO: Remove old collection once new paths are fully connected

@@ -35,6 +35,7 @@ export const UserTypeData = Type.Union([
   Type.Literal(UserType.PARTICIPANT),
   Type.Literal(UserType.MEDIATOR),
   Type.Literal(UserType.EXPERIMENTER),
+  Type.Literal(UserType.SYSTEM),
   Type.Literal(UserType.UNKNOWN),
 ]);
 

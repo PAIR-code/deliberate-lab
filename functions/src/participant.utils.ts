@@ -18,9 +18,13 @@ import {
   ChipStagePublicData,
 } from '@deliberation-lab/utils';
 import {completeStageAsAgentParticipant} from './agent_participant.utils';
-import {getFirestoreActiveParticipants} from './utils/firestore';
+import {
+  getFirestoreActiveParticipants,
+  getFirestoreStage,
+} from './utils/firestore';
 import {generateId} from '@deliberation-lab/utils';
 import {createCohortInternal} from './cohort.utils';
+import {sendSystemChatMessage} from './chat/chat.utils';
 
 import {app} from './app';
 
@@ -37,6 +41,17 @@ export async function updateParticipantNextStage(
 
   const currentStageId = participant.currentStageId;
   const currentStageIndex = stageIds.indexOf(currentStageId);
+
+  // Check if current stage is a chat stage and send system message if so
+  const currentStage = await getFirestoreStage(experimentId, currentStageId);
+  if (currentStage?.kind === StageKind.CHAT) {
+    await sendSystemChatMessage(
+      experimentId,
+      participant.currentCohortId,
+      currentStageId,
+      `${participant.name ?? 'A participant'} has left the chat.`,
+    );
+  }
 
   // Mark current stage as completed
   const timestamp = Timestamp.now();

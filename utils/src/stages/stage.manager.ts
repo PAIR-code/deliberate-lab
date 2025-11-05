@@ -1,5 +1,8 @@
 import {ParticipantProfileExtended} from '../participant';
+import {VariableItem} from '../variables';
 import {AgentParticipantStageActions, BaseStageHandler} from './stage.handler';
+import {AssetAllocationStageHandler} from './asset_allocation_stage.manager';
+import {MultiAssetAllocationStageHandler} from './multi_asset_allocation_stage.manager';
 import {GroupChatStageHandler} from './chat_stage.manager';
 import {InfoStageHandler} from './info_stage.manager';
 import {PrivateChatStageHandler} from './private_chat_stage.manager';
@@ -17,6 +20,14 @@ export class StageManager {
   private handlerMap: Map<string, BaseStageHandler> = new Map();
 
   constructor() {
+    this.handlerMap.set(
+      StageKind.ASSET_ALLOCATION,
+      new AssetAllocationStageHandler(),
+    );
+    this.handlerMap.set(
+      StageKind.MULTI_ASSET_ALLOCATION,
+      new MultiAssetAllocationStageHandler(),
+    );
     this.handlerMap.set(StageKind.CHAT, new GroupChatStageHandler());
     this.handlerMap.set(StageKind.INFO, new InfoStageHandler());
     this.handlerMap.set(StageKind.PRIVATE_CHAT, new PrivateChatStageHandler());
@@ -30,6 +41,21 @@ export class StageManager {
       new SurveyPerParticipantStageHandler(),
     );
     this.handlerMap.set(StageKind.TOS, new TOSStageHandler());
+  }
+
+  /** Returns an updated stage config that has template variables
+   *  resolved if applicable.
+   */
+  resolveTemplateVariablesInStage(
+    stage: StageConfig,
+    variableMap: Record<string, VariableItem>,
+    valueMap: Record<string, string>,
+  ) {
+    return (
+      this.handlerMap
+        .get(stage.kind)
+        ?.resolveTemplateVariablesInStage(stage, variableMap, valueMap) ?? stage
+    );
   }
 
   /** Specifies what must be done to complete the given stage
@@ -103,3 +129,6 @@ export class StageManager {
     );
   }
 }
+
+/** Specific instance used on frontend. */
+export const STAGE_MANAGER = new StageManager();
