@@ -21,7 +21,10 @@ import {
   getStatusOptions,
   FilterState,
 } from '@deliberation-lab/utils';
-import {convertUnifiedTimestampToISO} from '../../shared/utils';
+import {
+  convertUnifiedTimestampToDateTime,
+  getUnifiedDurationSeconds,
+} from '../../shared/utils';
 
 import {styles} from './log_dashboard.scss';
 
@@ -104,12 +107,10 @@ export class Component extends MobxLitElement {
     return html`
       <div class="log">
         <div class="log-header">
-          <div class="chip">${log.type}</div>
-          <div class="chip">${cohortName}</div>
           <div class="chip">
             ${user?.avatar} ${user?.name} ${user?.pronouns} (${log.publicId})
           </div>
-          <div class="chip">Stage: ${log.stageId}</div>
+          <div class="chip">| ${cohortName} | Stage: ${log.stageId}</div>
         </div>
         ${log.description}
         ${log.type === LogEntryType.MODEL
@@ -124,21 +125,18 @@ export class Component extends MobxLitElement {
 
     return html`
       <div
-        class="chip ${status === ModelResponseStatus.OK ? 'success' : 'error'}"
+        class="chip model-call ${status === ModelResponseStatus.OK
+          ? 'success'
+          : 'error'}"
       >
-        ${status}
-      </div>
-      <div>
-        Start timestamp:
         ${log.queryTimestamp
-          ? convertUnifiedTimestampToISO(log.queryTimestamp)
-          : ''}
-      </div>
-      <div>
-        End timestamp:
-        ${log.responseTimestamp
-          ? convertUnifiedTimestampToISO(log.responseTimestamp)
-          : ''}
+          ? convertUnifiedTimestampToDateTime(log.queryTimestamp)
+          : ''}:
+        ${status.toUpperCase()}
+        (${getUnifiedDurationSeconds(
+          log.queryTimestamp,
+          log.responseTimestamp,
+        )}s)
       </div>
       <details>
         <summary>Prompt</summary>

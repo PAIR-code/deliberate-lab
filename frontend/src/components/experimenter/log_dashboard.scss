@@ -59,6 +59,10 @@
   width: max-content;
 }
 
+.model-call {
+  @include typescale.label-small;
+}
+
 pre {
   background: var(--md-sys-color-surface-variant);
   overflow: auto;
@@ -163,4 +167,13 @@ pr-menu {
 
 pr-icon {
   padding-right: common.$spacing-small;
+}
+
+.log details pre {
+  white-space: pre-wrap;
+  word-break: break-word;
+  overflow-x: auto;
+  max-width: 100%;
+  padding: common.$spacing-small;
+  border-radius: common.$spacing-xs;
 }

@@ -37,6 +37,15 @@ export function collectSnapshotWithId<T>(snapshot: Snapshot, idKey: keyof T) {
   return snapshot.docs.map((doc) => ({[idKey]: doc.id, ...doc.data()}) as T);
 }
 
+/** Returns the number of seconds between start time and end time. */
+export function getUnifiedDurationSeconds(
+  start?: UnifiedTimestamp | null,
+  end?: UnifiedTimestamp | null,
+): number | null {
+  if (!start || !end) return null;
+  return end.seconds - start.seconds;
+}
+
 /**
  * Converts UnifiedTimestamp to previewable date.
  */
@@ -56,6 +65,20 @@ export function convertUnifiedTimestampToDate(
       .toString()
       .padStart(2, '0')}`;
   }
+}
+
+/**
+ * Converts UnifiedTimestamp to %Y-%m-%d %H:%M
+ */
+export function convertUnifiedTimestampToDateTime(timestamp: UnifiedTimestamp) {
+  const date = new Date(timestamp.seconds * 1000);
+  const year = date.getFullYear();
+  const month = (date.getMonth() + 1).toString().padStart(2, '0');
+  const day = date.getDate().toString().padStart(2, '0');
+  const hours = date.getHours().toString().padStart(2, '0');
+  const minutes = date.getMinutes().toString().padStart(2, '0');
+
+  return `${year}-${month}-${day} ${hours}:${minutes}`;
 }
 
 /**
