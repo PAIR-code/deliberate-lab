@@ -140,7 +140,6 @@ export class ExperimentManager extends Service {
   @observable showCohortList = false;
   @observable showParticipantStats = false;
   @observable showParticipantPreview = true;
-  @observable showLogs = false;
   @observable hideLockedCohorts = false;
   @observable expandAllCohorts = true;
 
@@ -254,10 +253,6 @@ export class ExperimentManager extends Service {
     if (toggle) {
       this.showParticipantPreview = !showParticipantStats;
     }
-  }
-
-  setShowLogs(showLogs: boolean) {
-    this.showLogs = showLogs;
   }
 
   setHideLockedCohorts(hideLockedCohorts: boolean) {

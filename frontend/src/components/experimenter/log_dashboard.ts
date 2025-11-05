@@ -3,7 +3,7 @@ import '../../pair-components/icon_button';
 
 import {MobxLitElement} from '@adobe/lit-mobx';
 import {CSSResultGroup, html, nothing} from 'lit';
-import {customElement, property} from 'lit/decorators.js';
+import {customElement, property, state} from 'lit/decorators.js';
 
 import {core} from '../../core/core';
 import {ExperimentManager} from '../../services/experiment.manager';
@@ -22,19 +22,29 @@ import {styles} from './log_dashboard.scss';
 @customElement('log-dashboard')
 export class Component extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
-
+  @state() private fullscreen = false;
   private readonly experimentManager = core.getService(ExperimentManager);
 
   override render() {
     const logs = this.experimentManager.logs;
 
-    return html`
-      ${this.renderParticipantHeader()}
+    const content = html`
+      ${this.renderHeader()}
       <div class="main-wrapper">
         ${logs.map((log) => this.renderLog(log))}
         ${logs.length === 0
           ? html`<div class="empty-message">No logs yet</div>`
           : nothing}
+      </div>
+    `;
+
+    if (!this.fullscreen) {
+      return content;
+    }
+
+    return html`
+      <div class="modal" style="display: block;">
+        <div class="modal-content">${content}</div>
       </div>
     `;
   }
@@ -105,11 +115,7 @@ export class Component extends MobxLitElement {
     `;
   }
 
-  private renderParticipantHeader() {
-    if (!this.experimentManager.currentParticipant) {
-      return nothing;
-    }
-
+  private renderHeader() {
     const getProfileString = () => {
       const currentParticipant = this.experimentManager.currentParticipant;
       if (!currentParticipant) {
@@ -128,16 +134,25 @@ export class Component extends MobxLitElement {
           <div>Log dashboard</div>
         </div>
         <div class="right">
-          <pr-icon-button
-            icon="close"
-            color="neutral"
-            variant="default"
-            size="small"
-            @click=${() => {
-              this.experimentManager.setShowLogs(false);
-            }}
-          >
-          </pr-icon-button>
+          ${this.fullscreen
+            ? html`
+                <pr-icon-button
+                  icon="close_fullscreen"
+                  color="secondary"
+                  variant="default"
+                  size="small"
+                  @click=${() => (this.fullscreen = false)}
+                ></pr-icon-button>
+              `
+            : html`
+                <pr-icon-button
+                  icon="expand_content"
+                  color="secondary"
+                  variant="default"
+                  size="small"
+                  @click=${() => (this.fullscreen = true)}
+                ></pr-icon-button>
+              `}
         </div>
       </div>
     `;
