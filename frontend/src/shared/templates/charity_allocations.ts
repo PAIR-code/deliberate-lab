@@ -44,6 +44,11 @@ import {
   StageKind,
   createRevealStage,
   createMultiAssetAllocationRevealItem,
+  VariableConfig,
+  VariableConfigType,
+  VariableType,
+  RandomPermutationVariableConfig,
+  SeedStrategy,
 } from '@deliberation-lab/utils';
 
 const EMOJIS = ['1️⃣', '2️⃣', '3️⃣'];
@@ -199,13 +204,33 @@ const CHARITY_DATA: CharityInfo[] = [
   },
 ];
 
-const CHARITY_DATA_MAP = new Map(CHARITY_DATA.map((info) => [info.key, info]));
+const CHARITY_RANDOM_PERMUTATION_CONFIG: RandomPermutationVariableConfig = {
+  id: 'charity-permutation-config',
+  type: VariableConfigType.RANDOM_PERMUTATION,
+  seedStrategy: SeedStrategy.COHORT,
+  variableNames: [
+    'charity_1',
+    'charity_2',
+    'charity_3',
+    'charity_4',
+    'charity_5',
+    'charity_6',
+    'charity_7',
+    'charity_8',
+    'charity_9',
+  ],
 
-const CHARITY_BUNDLES: string[][] = [
-  ['ifaw', 'sudan_aid', 'clean_ocean'],
-  ['wildaid', 'eyecare_india', 'global_housing'],
-  ['rainforest_action', 'aid_for_children', 'global_fund_women'],
-];
+  variableType: VariableType.OBJECT,
+  variableSchema: {
+    key: VariableType.STRING,
+    name: VariableType.STRING,
+    link: VariableType.STRING,
+    score: VariableType.STRING,
+    mission: VariableType.STRING,
+  },
+
+  values: CHARITY_DATA.map((charity) => JSON.stringify(charity)),
+};
 
 const LIKERT_SCALE_PROPS = {
   lowerValue: 1,
@@ -345,6 +370,9 @@ export function getCharityDebateTemplate(
   config: CharityDebateConfig,
 ): ExperimentTemplate {
   const stages: StageConfig[] = [];
+  const variableTemplates: VariableConfig[] = [
+    CHARITY_RANDOM_PERMUTATION_CONFIG,
+  ];
   const habermasStageIds: string[] = [];
   const dynamicStageIds: string[] = [];
   const agentMediators: AgentMediatorTemplate[] = [];
@@ -370,9 +398,12 @@ export function getCharityDebateTemplate(
 
   stages.push(TRANSFER_STAGE);
 
-  const debateRoundsCharities = [...CHARITY_BUNDLES].sort(
-    () => 0.5 - Math.random(),
-  );
+  const debateRoundsCharities = [
+    ['charity_1', 'charity_2', 'charity_3'],
+    ['charity_4', 'charity_5', 'charity_6'],
+    ['charity_7', 'charity_8', 'charity_9'],
+  ];
+
   const roundMediatorTypes = getMediatorOrder(
     Number(config.facilitatorConfigId),
   );
@@ -388,7 +419,7 @@ export function getCharityDebateTemplate(
     const discussionStageId = `discussion-round-${roundNum}`;
 
     const setting = `donations to:\n *${charityGroup
-      .map((key) => CHARITY_DATA_MAP.get(key)?.name || key)
+      .map((variableName) => `{{${variableName}.name}}`)
       .join(', ')}*`;
 
     stages.push(
@@ -499,6 +530,7 @@ export function getCharityDebateTemplate(
   return createExperimentTemplate({
     experiment: createExperimentConfig(stages, {
       metadata: CHARITY_DEBATE_METADATA,
+      variableConfigs: variableTemplates,
     }),
     stageConfigs: stages,
     agentMediators: agentMediators,
@@ -733,7 +765,7 @@ function createRoundOutcomeSurveyStage(
 function createAllocationStage(
   id: string,
   name: string,
-  charityGroup: string[],
+  charityVariableNames: string[],
   roundNum: number,
   isInitial: boolean = true,
 ): StageConfig {
@@ -744,21 +776,16 @@ function createAllocationStage(
 
   let primaryText = `${scope}\nPlease use the sliders to allocate 100% of the funds among the following charities:\n`;
 
-  charityGroup.forEach((charityKey) => {
-    const info = CHARITY_DATA_MAP.get(charityKey);
-    if (info) {
-      primaryText += `\n
-[${info.name}](${info.link}) (Charity Navigator score: ${info.score})
-*${info.mission}*\n`;
-    }
+  charityVariableNames.forEach((variableName) => {
+    primaryText += `\n
+        [{{${variableName}.name}}]({{${variableName}.link}}) (Charity Navigator score: {{${variableName}.score}})
+        *{{${variableName}.mission}}*\n`;
   });
 
-  const charityStocks = charityGroup.map((charityKey) => {
-    const info = CHARITY_DATA_MAP.get(charityKey);
-
+  const charityStocks = charityVariableNames.map((variableName) => {
     return createStock({
-      name: info ? info.name : charityKey,
-      description: `Details for ${info ? info.name : charityKey}.`,
+      name: `{{${variableName}.name}}`,
+      description: `Details for {{${variableName}.name}}.`,
     });
   });
 
