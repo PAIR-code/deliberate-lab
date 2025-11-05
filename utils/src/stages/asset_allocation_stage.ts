@@ -226,6 +226,68 @@ export function createMultiAssetAllocationStage(
   };
 }
 
+export function computeKrippendorffsAlpha(
+  publicData: MultiAssetAllocationStagePublicData | undefined,
+): number {
+  if (!publicData || !publicData.participantAnswerMap) return 0;
+  const raters = Object.values(publicData.participantAnswerMap);
+
+  if (raters.length <= 1) {
+    return raters.length === 0 ? 0 : 100;
+  }
+  const numRaters = raters.length;
+
+  // Get the universe of all charities mentioned across all participants.
+  const allUnits = [
+    ...new Set(raters.flatMap((r) => Object.keys(r.allocationMap))),
+  ];
+  if (allUnits.length === 0) return 100;
+
+  // --- Calculate Observed Disagreement (Do) ---
+  let totalObservedDisagreement = 0;
+  for (const unit of allUnits) {
+    // CRITICAL RULE: Impute 0 for any missing allocation.
+    const valuesForUnit = raters.map(
+      (r) => r.allocationMap[unit]?.percentage ?? 0,
+    );
+
+    let sumOfSquaredDiffs = 0;
+    for (let i = 0; i < numRaters; i++) {
+      for (let j = i + 1; j < numRaters; j++) {
+        sumOfSquaredDiffs += Math.pow(valuesForUnit[i] - valuesForUnit[j], 2);
+      }
+    }
+    const numPairs = (numRaters * (numRaters - 1)) / 2;
+    totalObservedDisagreement += sumOfSquaredDiffs / numPairs;
+  }
+  const Do = totalObservedDisagreement / allUnits.length;
+
+  // --- Calculate Expected Disagreement (De) ---
+  // Create a single array of all values, including the imputed zeros.
+  const allValues = raters.flatMap((r) =>
+    allUnits.map((unit) => r.allocationMap[unit]?.percentage ?? 0),
+  );
+
+  let deNumerator = 0;
+  for (let i = 0; i < allValues.length; i++) {
+    for (let j = i + 1; j < allValues.length; j++) {
+      deNumerator += Math.pow(allValues[i] - allValues[j], 2);
+    }
+  }
+
+  const numTotalPairs = (allValues.length * (allValues.length - 1)) / 2;
+  if (numTotalPairs === 0) return 100;
+
+  const De = deNumerator / numTotalPairs;
+
+  if (De === 0) {
+    return 100; // If all values submitted are identical, De is 0, so agreement is perfect.
+  }
+
+  const alpha = 1 - Do / De;
+  return alpha * 100;
+}
+
 export function computeMultiAssetConsensusScore(
   publicData: MultiAssetAllocationStagePublicData | undefined,
 ): number {
@@ -233,21 +295,10 @@ export function computeMultiAssetConsensusScore(
 
   const participantAnswers = Object.values(publicData.participantAnswerMap);
   if (participantAnswers.length === 0) return 0;
+  const alpha = computeKrippendorffsAlpha(publicData);
 
-  // We need at least one answer to determine the asset IDs
-  const firstAllocationMap = participantAnswers[0].allocationMap;
-  const assetIds = Object.keys(firstAllocationMap);
-  if (assetIds.length === 0) return 0;
-
-  const perAssetAverages: number[] = [];
-
-  for (const assetId of assetIds) {
-    const sumForAsset = participantAnswers.reduce((sum, currentAnswer) => {
-      return sum + (currentAnswer.allocationMap[assetId]?.percentage || 0);
-    }, 0);
-    perAssetAverages.push(sumForAsset / participantAnswers.length);
-  }
-
-  const totalAverage = perAssetAverages.reduce((sum, avg) => sum + avg, 0);
-  return totalAverage / perAssetAverages.length;
+  // We observe that the max diagreement for allocations is -33%.
+  // We shift the interval [-33, 100] so it's compressed in [0, 100], and then clamp.
+  const transformAlpha = (3 * alpha + 100) / 4;
+  return Math.max(0, Math.min(100, transformAlpha));
 }
