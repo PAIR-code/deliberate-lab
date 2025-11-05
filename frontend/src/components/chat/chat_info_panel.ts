@@ -92,7 +92,10 @@ export class ChatPanel extends MobxLitElement {
       <div
         class=${`countdown ${publicStageData.discussionEndTimestamp ? 'ended' : ''}`}
       >
-        ${this.stage.timeLimitInMinutes} min chat ${renderStatus()}
+        ⏱️ Timer: ${this.stage.timeLimitInMinutes} minutes ${renderStatus()}
+        ${this.stage.requireFullTime && !publicStageData.discussionEndTimestamp
+          ? 'You must stay on this chat for the full time.'
+          : ''}
       </div>
       ${this.topLayout ? nothing : html`<div class="divider"></div>`}
     `;
