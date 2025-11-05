@@ -26,6 +26,8 @@
     url: /developers/deploy
 - title: Feature Docs
   pages:
+  - title: Variables
+    url: /features/variables
   - title: Help/alert panel
     url: /features/help
 - title: Other

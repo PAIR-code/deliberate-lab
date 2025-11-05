@@ -25,6 +25,12 @@ export * from './chat_message';
 export * from './cohort';
 export * from './cohort.validation';
 
+// Variable
+export * from './variables';
+export * from './variables.utils';
+export * from './variables.template';
+export * from './variables.validation';
+
 // Log
 export * from './log';
 
@@ -107,6 +113,7 @@ export * from './stages/asset_allocation_stage';
 export * from './stages/asset_allocation_stage.manager';
 export * from './stages/asset_allocation_stage.utils';
 export * from './stages/asset_allocation_stage.validation';
+export * from './stages/multi_asset_allocation_stage.manager';
 
 export * from './stages/survey_stage';
 export * from './stages/survey_stage.manager';

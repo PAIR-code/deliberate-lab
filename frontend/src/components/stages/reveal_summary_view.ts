@@ -17,6 +17,9 @@ import {
   RevealStageConfig,
   StageConfig,
   StageKind,
+  STAGE_MANAGER,
+  extractVariablesFromVariableConfigs,
+  resolveTemplateVariables,
 } from '@deliberation-lab/utils';
 
 import {styles} from './reveal_view.scss';
@@ -45,10 +48,29 @@ export class RevealView extends MobxLitElement {
   }
 
   private renderItem(item: RevealItem) {
-    const stage = this.experimentService.getStage(item.id);
+    const rawStage = this.experimentService.getStage(item.id);
     const answer = this.participantService.answerMap[item.id];
     const publicData = this.cohortService.stagePublicDataMap[item.id];
-    if (!stage) return nothing;
+    if (!rawStage) return nothing;
+
+    // Resolve template variables in stage
+    const experimentVariableMap =
+      this.experimentService.experiment?.variableMap ?? {};
+    const cohortVariableMap =
+      this.cohortService.cohortConfig?.variableMap ?? {};
+    const participantVariableMap =
+      this.participantService.profile?.variableMap ?? {};
+    const stage = STAGE_MANAGER.resolveTemplateVariablesInStage(
+      rawStage,
+      extractVariablesFromVariableConfigs(
+        this.experimentService.experiment?.variableConfigs ?? [],
+      ),
+      {
+        ...experimentVariableMap,
+        ...cohortVariableMap,
+        ...participantVariableMap,
+      },
+    );
 
     switch (item.kind) {
       case StageKind.CHIP:

@@ -1,4 +1,6 @@
 import {ParticipantProfileExtended} from '../participant';
+import {VariableItem} from '../variables';
+import {resolveTemplateVariables} from '../variables.template';
 import {
   MediatorPromptConfig,
   ParticipantPromptConfig,
@@ -17,6 +19,26 @@ export interface AgentParticipantStageActions {
  * Can be extended to handle a specific stage type.
  */
 export class BaseStageHandler {
+  resolveTemplateVariablesInStage(
+    stage: StageConfig,
+    variableMap: Record<string, VariableItem>,
+    valueMap: Record<string, string>,
+  ) {
+    // By default, resolve variables in stage descriptions
+    const primaryText = resolveTemplateVariables(
+      stage.descriptions.primaryText,
+      variableMap,
+      valueMap,
+    );
+    const infoText = resolveTemplateVariables(
+      stage.descriptions.infoText,
+      variableMap,
+      valueMap,
+    );
+    const descriptions = {...stage.descriptions, primaryText};
+    return {...stage, descriptions};
+  }
+
   getAgentParticipantActionsForStage(
     participant: ParticipantProfileExtended,
     stage: StageConfig,
@@ -45,6 +67,8 @@ export class BaseStageHandler {
     return undefined;
   }
 
+  // TODO: Consider how to handle variables when populating stage display
+  // with multiple participants (who could have different variable values).
   getStageDisplayForPrompt(
     participants: ParticipantProfileExtended[],
     stageContext: StageContextData,
