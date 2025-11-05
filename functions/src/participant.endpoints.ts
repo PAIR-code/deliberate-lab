@@ -9,12 +9,14 @@ import {
   ProfileStageConfig,
   ProfileType,
   RoleStagePublicData,
+  SeedStrategy,
   StageKind,
   SurveyStagePublicData,
-  createParticipantProfileExtended,
-  setProfile,
   StageConfig,
   TransferStageConfig,
+  createParticipantProfileExtended,
+  createVariableToValueMapForSeed,
+  setProfile,
 } from '@deliberation-lab/utils';
 import {
   updateCohortStageUnlocked,
@@ -125,6 +127,12 @@ export const createParticipant = onCall(async (request) => {
 
     // Set current stage ID in participant config
     participantConfig.currentStageId = experiment.stageIds[0];
+
+    // Add variable values at the participant level
+    participantConfig.variableMap = createVariableToValueMapForSeed(
+      experiment.variableConfigs ?? [],
+      SeedStrategy.PARTICIPANT,
+    );
 
     // Write new participant document
     transaction.set(document, participantConfig);

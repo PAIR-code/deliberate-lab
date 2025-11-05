@@ -9,6 +9,7 @@ import {
   AgentMediatorTemplateData,
   AgentParticipantTemplateData,
 } from './agent.validation';
+import {VariableConfigData} from './variables.validation';
 
 /** Shorthand for strict TypeBox object validation */
 const strict = {additionalProperties: false} as const;
@@ -88,6 +89,8 @@ export const ExperimentCreationData = Type.Object(
           prolificConfig: ProlificConfigSchema,
           stageIds: Type.Array(Type.String()),
           cohortLockMap: Type.Record(Type.String(), Type.Boolean()),
+          variableConfigs: Type.Optional(Type.Array(VariableConfigData)),
+          variableMap: Type.Optional(Type.Record(Type.String(), Type.String())),
         },
         strict,
       ),

@@ -137,9 +137,11 @@ export class Component extends MobxLitElement {
           </participant-stats>
         </div>
         <div class="content-wrapper">
-          <code>
-            ${JSON.stringify(this.experimentManager.currentParticipant)}
-          </code>
+          <pre><code>${JSON.stringify(
+            this.experimentManager.currentParticipant,
+            null,
+            2,
+          )}</code></pre>
         </div>
       </div>
     `;

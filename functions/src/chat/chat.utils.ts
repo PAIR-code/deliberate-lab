@@ -1,4 +1,8 @@
-import {ChatMessage, createChatMessage} from '@deliberation-lab/utils';
+import {
+  ChatMessage,
+  createChatMessage,
+  createSystemChatMessage,
+} from '@deliberation-lab/utils';
 import {Timestamp} from 'firebase-admin/firestore';
 import {app} from '../app';
 
@@ -27,4 +31,30 @@ export async function sendErrorPrivateChatMessage(
     .doc(chatMessage.id);
 
   agentDocument.set(chatMessage);
+}
+
+/** Send system chat message to public chat. */
+export async function sendSystemChatMessage(
+  experimentId: string,
+  cohortId: string,
+  stageId: string,
+  message: string,
+) {
+  const chatMessage = createSystemChatMessage({
+    message,
+    timestamp: Timestamp.now(),
+  });
+
+  const systemDocument = app
+    .firestore()
+    .collection('experiments')
+    .doc(experimentId)
+    .collection('cohorts')
+    .doc(cohortId)
+    .collection('publicStageData')
+    .doc(stageId)
+    .collection('chats')
+    .doc(chatMessage.id);
+
+  await systemDocument.set(chatMessage);
 }

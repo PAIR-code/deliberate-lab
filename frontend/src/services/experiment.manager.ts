@@ -886,6 +886,7 @@ export class ExperimentManager extends Service {
   }
 
   /** Download experiment as a zip file. */
+  // TODO: Include variable values in data download
   async downloadExperiment() {
     let data = {};
     const experimentId = this.sp.routerService.activeRoute.params['experiment'];

@@ -63,6 +63,11 @@ export function convertChatToMessages(
         currentUserType === UserType.MEDIATOR
           ? MessageRole.ASSISTANT
           : MessageRole.USER;
+    } else if (msg.type === UserType.SYSTEM) {
+      // System messages are treated as "user" messages for the AI to see them
+      role = MessageRole.USER;
+      // Prefix content to distinguish from regular user messages
+      msg.message = `[SYSTEM NOTIFICATION]: ${msg.message}`;
     } else {
       // Skip other message types for now
       continue;

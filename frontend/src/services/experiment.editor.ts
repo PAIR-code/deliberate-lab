@@ -16,6 +16,8 @@ import {
   StageConfig,
   StageKind,
   StageManager,
+  VariableConfig,
+  STAGE_MANAGER,
   checkApiKeyExists,
   createAgentMediatorPersonaConfig,
   createAgentParticipantPersonaConfig,
@@ -61,9 +63,6 @@ export class ExperimentEditor extends Service {
   @observable stages: StageConfig[] = [];
   @observable agentMediators: AgentMediatorTemplate[] = [];
   @observable agentParticipants: AgentParticipantTemplate[] = [];
-
-  // Stage manager that handles prompt-related actions
-  private stageManager: StageManager = new StageManager();
 
   // Loading
   @observable isWritingExperiment = false;
@@ -152,6 +151,7 @@ export class ExperimentEditor extends Service {
       permissions: template.experiment.permissions,
       defaultCohortConfig: template.experiment.defaultCohortConfig,
       prolificConfig: template.experiment.prolificConfig,
+      variableConfigs: template.experiment.variableConfigs,
     });
     this.setStages(template.stageConfigs);
     this.setAgentMediators(template.agentMediators);
@@ -180,6 +180,27 @@ export class ExperimentEditor extends Service {
 
   isInitializedExperiment() {
     return this.experiment.id.length > 0;
+  }
+
+  addVariableConfig(variable: VariableConfig) {
+    this.experiment.variableConfigs = [
+      ...(this.experiment.variableConfigs ?? []),
+      variable,
+    ];
+  }
+
+  // TODO: Ensure that variable names are unique
+  updateVariableConfig(newVariable: VariableConfig, index: number) {
+    if (!this.experiment.variableConfigs) {
+      return false;
+    }
+    if (index >= 0) {
+      this.experiment.variableConfigs = [
+        ...this.experiment.variableConfigs.slice(0, index),
+        newVariable,
+        ...this.experiment.variableConfigs.slice(index + 1),
+      ];
+    }
   }
 
   updateMetadata(metadata: Partial<MetadataConfig>) {
@@ -389,7 +410,7 @@ export class ExperimentEditor extends Service {
       return;
     }
 
-    const prompt = this.stageManager.getDefaultMediatorStructuredPrompt(stage);
+    const prompt = STAGE_MANAGER.getDefaultMediatorStructuredPrompt(stage);
 
     if (prompt) {
       agent.promptMap[stageId] = prompt;
@@ -401,8 +422,7 @@ export class ExperimentEditor extends Service {
     const stage = this.getStage(stageId);
     if (!agent || !stage) return;
 
-    const prompt =
-      this.stageManager.getDefaultParticipantStructuredPrompt(stage);
+    const prompt = STAGE_MANAGER.getDefaultParticipantStructuredPrompt(stage);
     if (prompt) {
       agent.promptMap[stageId] = prompt;
     }

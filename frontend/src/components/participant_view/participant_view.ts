@@ -43,6 +43,9 @@ import {
   ProfileType,
   StageConfig,
   StageKind,
+  STAGE_MANAGER,
+  extractVariablesFromVariableConfigs,
+  resolveTemplateVariables,
 } from '@deliberation-lab/utils';
 import {isParticipantEndedExperiment} from '../../shared/participant.utils';
 
@@ -174,10 +177,29 @@ export class ParticipantView extends MobxLitElement {
     return html`<transfer-popup></transfer-popup>`;
   }
 
-  private renderStageContent(stage: StageConfig) {
-    if (!stage) {
+  private renderStageContent(rawStage: StageConfig) {
+    if (!rawStage) {
       return nothing;
     }
+
+    // Resolve templates in stage
+    const experimentVariableMap =
+      this.experimentService.experiment?.variableMap ?? {};
+    const cohortVariableMap =
+      this.cohortService.cohortConfig?.variableMap ?? {};
+    const participantVariableMap =
+      this.participantService.profile?.variableMap ?? {};
+    const stage = STAGE_MANAGER.resolveTemplateVariablesInStage(
+      rawStage,
+      extractVariablesFromVariableConfigs(
+        this.experimentService.experiment?.variableConfigs ?? [],
+      ),
+      {
+        ...experimentVariableMap,
+        ...cohortVariableMap,
+        ...participantVariableMap,
+      },
+    );
 
     // If stage not yet unlocked, do not show to participants
     if (
