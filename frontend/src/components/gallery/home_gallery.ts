@@ -1,17 +1,25 @@
 import '../../pair-components/icon';
+import '../../pair-components/menu';
+import '../../pair-components/textarea';
+
 import './gallery_card';
 
 import {MobxLitElement} from '@adobe/lit-mobx';
 import {CSSResultGroup, html, nothing} from 'lit';
-import {customElement} from 'lit/decorators.js';
-
+import {customElement, state} from 'lit/decorators.js';
+import {repeat} from 'lit/directives/repeat.js';
 import {core} from '../../core/core';
 import {AuthService} from '../../services/auth.service';
 import {ExperimentEditor} from '../../services/experiment.editor';
 import {HomeService} from '../../services/home.service';
 import {Pages, RouterService} from '../../services/router.service';
 
-import {Experiment, Visibility} from '@deliberation-lab/utils';
+import {
+  Experiment,
+  SortMode,
+  sortLabel,
+  sortExperiments,
+} from '@deliberation-lab/utils';
 import {convertExperimentToGalleryItem} from '../../shared/experiment.utils';
 import {
   getQuickstartAgentGroupChatTemplate,
@@ -21,7 +29,6 @@ import {getQuickstartPrivateChatTemplate} from '../../shared/templates/quickstar
 
 import {styles} from './home_gallery.scss';
 
-/** Gallery for home/landing page */
 @customElement('home-gallery')
 export class HomeGallery extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
@@ -30,27 +37,76 @@ export class HomeGallery extends MobxLitElement {
   private readonly homeService = core.getService(HomeService);
   private readonly routerService = core.getService(RouterService);
 
+  @state() private searchQuery = '';
+  @state() private sortMode: SortMode = SortMode.NEWEST;
+  @state() private refreshing = false;
+
+  private async setSort(mode: SortMode) {
+    this.sortMode = mode;
+    this.refreshing = true;
+    await new Promise((r) => setTimeout(r, 120));
+    this.refreshing = false;
+  }
+
+  private renderControls() {
+    const renderSortItem = (mode: SortMode, label: string) => {
+      const selected = this.sortMode === mode;
+      return html`
+        <div class="menu-item" @click=${() => this.setSort(mode)}>
+          ${label}
+          ${this.sortMode === mode
+            ? html`<span class="checkmark">✔</span>`
+            : nothing}
+        </div>
+      `;
+    };
+    return html`
+      <div class="controls">
+        <div class="search-container">
+          <pr-icon icon="search" size="small"></pr-icon>
+          <pr-textarea
+            placeholder="Search"
+            .value=${this.searchQuery}
+            @input=${(e: InputEvent) =>
+              (this.searchQuery = (e.target as HTMLTextAreaElement).value)}
+          ></pr-textarea>
+        </div>
+
+        <pr-menu name=${sortLabel(this.sortMode)} icon="sort" color="neutral">
+          <div class="menu-wrapper">
+            ${renderSortItem(SortMode.NEWEST, 'Newest first')}
+            ${renderSortItem(SortMode.OLDEST, 'Oldest first')}
+            ${renderSortItem(SortMode.ALPHA_ASC, 'Alphabetical (A–Z)')}
+            ${renderSortItem(SortMode.ALPHA_DESC, 'Alphabetical (Z–A)')}
+          </div>
+        </pr-menu>
+      </div>
+    `;
+  }
+
   override render() {
     const renderExperiment = (experiment: Experiment) => {
       const item = convertExperimentToGalleryItem(experiment);
-
-      const navigate = () => {
+      const navigate = () =>
         this.routerService.navigate(Pages.EXPERIMENT, {
           experiment: experiment.id,
         });
-      };
-
-      return html`
-        <gallery-card .item=${item} @click=${navigate}></gallery-card>
-      `;
+      return html`<gallery-card
+        .item=${item}
+        @click=${navigate}
+      ></gallery-card>`;
     };
 
-    const experiments = this.homeService.experiments
-      .slice()
-      .sort(
-        (a, b) =>
-          b.metadata.dateCreated.seconds - a.metadata.dateCreated.seconds,
+    let experiments = [...this.homeService.experiments];
+
+    if (this.searchQuery.trim()) {
+      const q = this.searchQuery.toLowerCase();
+      experiments = experiments.filter((e) =>
+        e.metadata.name?.toLowerCase().includes(q),
       );
+    }
+
+    experiments = sortExperiments(experiments, this.sortMode);
 
     const yourExperiments = experiments.filter(
       (e) => e.metadata.creator === this.authService.userEmail,
@@ -61,26 +117,34 @@ export class HomeGallery extends MobxLitElement {
         this.authService.isViewedExperiment(e.id),
     );
 
-    if (this.homeService.showMyExperiments) {
-      return html`
-        <div class="gallery-wrapper">
-          ${this.renderEmptyMessage(yourExperiments)}
-          ${yourExperiments.map((e) => renderExperiment(e))}
-        </div>
-      `;
-    }
+    const list = this.homeService.showMyExperiments
+      ? yourExperiments
+      : otherExperiments;
+
+    const banner = this.homeService.showMyExperiments
+      ? nothing
+      : html`
+          <div class="banner">
+            Experiments by others will only be shown in this tab if they are
+            shared publicly and have been viewed by you before. Ask the creator
+            to share the link with you.
+          </div>
+        `;
 
     return html`
-      <div class="gallery-wrapper">
-        <div class="banner">
-          Experiments by others will only be shown in this tab if they are
-          shared publicly and have been viewed by you before. To view an
-          experiment, ask the creator to make the experiment public and share
-          the link with you.
-        </div>
-        ${this.renderEmptyMessage(otherExperiments)}
-        ${otherExperiments.map((e) => renderExperiment(e))}
+      <home-gallery-tabs>
+        <div slot="gallery-controls">${this.renderControls()}</div>
+      </home-gallery-tabs>
+      <div class="gallery-wrapper ${this.refreshing ? 'hidden' : ''}">
+        ${banner} ${this.renderEmptyMessage(list)}
+        ${repeat(
+          list,
+          (e) => e.id,
+          (e) => renderExperiment(e),
+        )}
       </div>
+
+      ${this.refreshing ? html`<div class="placeholder"></div>` : nothing}
     `;
   }
 
@@ -90,7 +154,6 @@ export class HomeGallery extends MobxLitElement {
   }
 }
 
-/** Tabs for home/landing page */
 @customElement('home-gallery-tabs')
 export class HomeGalleryTabs extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
@@ -98,33 +161,33 @@ export class HomeGalleryTabs extends MobxLitElement {
 
   override render() {
     return html`
-      <div class="gallery-tabs">
-        <div
-          class="gallery-tab ${this.homeService.showMyExperiments
-            ? 'active'
-            : ''}"
-          @click=${() => {
-            this.homeService.setShowMyExperiments(true);
-          }}
-        >
-          My experiments
+      <div class="gallery-header-row">
+        <div class="gallery-tabs">
+          <div
+            class="gallery-tab ${this.homeService.showMyExperiments
+              ? 'active'
+              : ''}"
+            @click=${() => this.homeService.setShowMyExperiments(true)}
+          >
+            My experiments
+          </div>
+          <div
+            class="gallery-tab ${!this.homeService.showMyExperiments
+              ? 'active'
+              : ''}"
+            @click=${() => this.homeService.setShowMyExperiments(false)}
+          >
+            Shared with me
+          </div>
         </div>
-        <div
-          class="gallery-tab ${!this.homeService.showMyExperiments
-            ? 'active'
-            : ''}"
-          @click=${() => {
-            this.homeService.setShowMyExperiments(false);
-          }}
-        >
-          Shared with me
-        </div>
+
+        <slot name="gallery-controls"></slot>
       </div>
     `;
   }
 }
 
-/** Quick start cards for home/landing page */
+/* Quick start cards for home/landing page */
 @customElement('quick-start-gallery')
 export class QuickStartGallery extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
