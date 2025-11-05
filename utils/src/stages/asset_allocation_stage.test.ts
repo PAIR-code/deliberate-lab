@@ -4,14 +4,14 @@ import {
   computeMultiAssetConsensusScore,
   computeKrippendorffsAlpha,
 } from './asset_allocation_stage';
+import {StageKind} from './stage';
 import {Timestamp} from 'firebase/firestore';
 
-// Helper to create a mock participant answer
 const createMockAnswer = (
   allocations: Record<string, number>,
 ): MultiAssetAllocationStageParticipantAnswer => ({
   id: `participant-${Math.random()}`,
-  kind: 'multi-asset-allocation',
+  kind: StageKind.MULTI_ASSET_ALLOCATION,
   allocationMap: Object.entries(allocations).reduce(
     (acc, [id, percentage]) => {
       acc[id] = {id, name: `Charity ${id}`, percentage};
@@ -27,7 +27,7 @@ describe('computeKrippendorffsAlpha', () => {
   it('should return 100 for perfect agreement', () => {
     const publicData: MultiAssetAllocationStagePublicData = {
       id: 'test-stage',
-      kind: 'multi-asset-allocation',
+      kind: StageKind.MULTI_ASSET_ALLOCATION,
       participantAnswerMap: {
         p1: createMockAnswer({assetA: 70, assetB: 30}),
         p2: createMockAnswer({assetA: 70, assetB: 30}),
@@ -39,7 +39,7 @@ describe('computeKrippendorffsAlpha', () => {
   it('should return a negative score for systematic disagreement', () => {
     const publicData: MultiAssetAllocationStagePublicData = {
       id: 'test-stage',
-      kind: 'multi-asset-allocation',
+      kind: StageKind.MULTI_ASSET_ALLOCATION,
       participantAnswerMap: {
         p1: createMockAnswer({assetA: 100, assetB: 0}),
         p2: createMockAnswer({assetA: 0, assetB: 100}),
@@ -52,7 +52,7 @@ describe('computeKrippendorffsAlpha', () => {
   it('should correctly calculate a non-zero agreement score', () => {
     const publicData: MultiAssetAllocationStagePublicData = {
       id: 'test-stage',
-      kind: 'multi-asset-allocation',
+      kind: StageKind.MULTI_ASSET_ALLOCATION,
       participantAnswerMap: {
         p1: createMockAnswer({assetA: 80, assetB: 20}),
         p2: createMockAnswer({assetA: 70, assetB: 30}),
@@ -68,7 +68,7 @@ describe('computeConsensusScore', () => {
   it('should return 100 for perfect agreement', () => {
     const publicData: MultiAssetAllocationStagePublicData = {
       id: 'test-stage',
-      kind: 'multi-asset-allocation',
+      kind: StageKind.MULTI_ASSET_ALLOCATION,
       participantAnswerMap: {
         p1: createMockAnswer({assetA: 70, assetB: 30}),
         p2: createMockAnswer({assetA: 70, assetB: 30}),
@@ -81,7 +81,7 @@ describe('computeConsensusScore', () => {
   it('should return 0 for agreement equal to random chance', () => {
     const publicData: MultiAssetAllocationStagePublicData = {
       id: 'test-stage',
-      kind: 'multi-asset-allocation',
+      kind: StageKind.MULTI_ASSET_ALLOCATION,
       participantAnswerMap: {
         p1: createMockAnswer({assetA: 100}),
         p2: createMockAnswer({assetB: 100}),
@@ -95,7 +95,7 @@ describe('computeConsensusScore', () => {
   it('should return 0 for systematic disagreement (polarization)', () => {
     const publicData: MultiAssetAllocationStagePublicData = {
       id: 'test-stage',
-      kind: 'multi-asset-allocation',
+      kind: StageKind.MULTI_ASSET_ALLOCATION,
       participantAnswerMap: {
         p1: createMockAnswer({assetA: 100}),
         p2: createMockAnswer({assetB: 100}),
@@ -108,7 +108,7 @@ describe('computeConsensusScore', () => {
   it('should return a correct partial consensus score', () => {
     const publicData: MultiAssetAllocationStagePublicData = {
       id: 'test-stage',
-      kind: 'multi-asset-allocation',
+      kind: StageKind.MULTI_ASSET_ALLOCATION,
       participantAnswerMap: {
         p1: createMockAnswer({assetA: 80, assetB: 20}),
         p2: createMockAnswer({assetA: 70, assetB: 30}),
