@@ -16,7 +16,7 @@ import {addParticipantAnswerToSurveyStagePublicData} from '../stages/survey.util
 import {addParticipantAnswerToFlipCardStagePublicData} from '../stages/flipcard.utils';
 import {addParticipantAnswerToAssetAllocationStagePublicData} from '../stages/asset_allocation.utils';
 import {addParticipantAnswerToMultiAssetAllocationStagePublicData} from '../stages/multi_asset_allocation.utils';
-import { updateParticipantReadyToEndChat } from '../chat/chat.utils';
+import {updateParticipantReadyToEndChat} from '../chat/chat.utils';
 
 /** When participant (private) stage data is updated. */
 export const onParticipantStageDataUpdated = onDocumentWritten(

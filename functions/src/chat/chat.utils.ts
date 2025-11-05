@@ -1,6 +1,6 @@
-import { ChatMessage, createChatMessage } from '@deliberation-lab/utils';
-import { Timestamp } from 'firebase-admin/firestore';
-import { app } from '../app';
+import {ChatMessage, createChatMessage} from '@deliberation-lab/utils';
+import {Timestamp} from 'firebase-admin/firestore';
+import {app} from '../app';
 import {
   getFirestoreParticipant,
   getFirestoreStage,
@@ -16,7 +16,7 @@ import {
   ChatStageParticipantAnswer,
   createChatStageParticipantAnswer,
 } from '@deliberation-lab/utils';
-import { updateParticipantNextStage } from '../participant.utils';
+import {updateParticipantNextStage} from '../participant.utils';
 
 /** Used for private chats if model response fails. */
 export async function sendErrorPrivateChatMessage(
@@ -78,16 +78,16 @@ export async function updateParticipantReadyToEndChat(
       participant.privateId,
       stage.id,
     )) as ChatStageParticipantAnswer | undefined) ??
-    createChatStageParticipantAnswer({ id: stage.id });
+    createChatStageParticipantAnswer({id: stage.id});
 
   // If threaded discussion (and not last thread), move to next thread
   if (
     (stage as ChatStageConfig).discussions.length > 0 &&
     (publicStageData as ChatStagePublicData).currentDiscussionId &&
     (publicStageData as ChatStagePublicData).currentDiscussionId !==
-    (stage as ChatStageConfig).discussions[
-      (stage as ChatStageConfig).discussions.length - 1
-    ].id
+      (stage as ChatStageConfig).discussions[
+        (stage as ChatStageConfig).discussions.length - 1
+      ].id
   ) {
     const chatPublicData = publicStageData as ChatStagePublicData;
     const currentDiscussionId = chatPublicData.currentDiscussionId!;

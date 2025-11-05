@@ -15,7 +15,7 @@ import {Timestamp} from 'firebase-admin/firestore';
 
 import {app} from '../app';
 import {updateParticipantNextStage} from '../participant.utils';
-import { updateParticipantReadyToEndChat } from '../chat/chat.utils';
+import {updateParticipantReadyToEndChat} from '../chat/chat.utils';
 import {
   getFirestoreActiveParticipants,
   getFirestoreExperiment,
@@ -235,4 +235,3 @@ export async function updateCurrentChatDiscussionId(
     transaction.set(publicDocument, publicStageData);
   });
 }
-
