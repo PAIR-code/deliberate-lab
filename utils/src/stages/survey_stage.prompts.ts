@@ -1,3 +1,7 @@
+import {
+  StructuredOutputDataType,
+  StructuredOutputSchema,
+} from '../structured_output';
 import {getBaseStagePrompt} from './stage.prompts';
 import {StageKind} from './stage';
 import {
@@ -16,6 +20,7 @@ import {
   MultipleChoiceSurveyAnswer,
   ScaleSurveyQuestion,
   ScaleSurveyAnswer,
+  createSurveyStageParticipantAnswer,
 } from './survey_stage';
 
 /** Prompt constants and utils for interacting with survey stage. */
@@ -104,6 +109,106 @@ export function createAgentParticipantSurveyQuestionPrompt(
     default:
       return '';
   }
+}
+
+/** Generate StructuredOutputSchema for a given survey question. */
+function getSchemaForQuestion(
+  question: SurveyQuestion,
+): StructuredOutputSchema {
+  const description = question.questionTitle;
+
+  switch (question.kind) {
+    case SurveyQuestionKind.TEXT:
+      return {type: StructuredOutputDataType.STRING, description};
+    case SurveyQuestionKind.CHECK:
+      return {type: StructuredOutputDataType.BOOLEAN, description};
+    case SurveyQuestionKind.MULTIPLE_CHOICE:
+      return {
+        type: StructuredOutputDataType.STRING,
+        description,
+        enumItems: question.options.map((option) => option.id),
+      };
+    case SurveyQuestionKind.SCALE:
+      // Since the range isn't enforced by the schema type,
+      // include the lower/upper values in the description
+      return {
+        type: StructuredOutputDataType.INTEGER,
+        description: `${description} (from ${question.lowerValue} to ${question.upperValue})`,
+      };
+  }
+}
+
+/** Generate SurveyStage structured output schema for agent participant. */
+export function generateSurveySchema(
+  questions: SurveyQuestion[],
+): StructuredOutputSchema {
+  const properties = questions.map((question) => {
+    return {name: question.id, schema: getSchemaForQuestion(question)};
+  });
+
+  return {
+    type: StructuredOutputDataType.OBJECT,
+    properties,
+  };
+}
+
+/** Convert model response into SurveyAnswer. */
+function parseAnswerForQuestion(
+  question: SurveyQuestion,
+  rawAnswer: unknown,
+): SurveyAnswer | undefined {
+  if (rawAnswer === undefined) return undefined;
+
+  switch (question.kind) {
+    case SurveyQuestionKind.TEXT:
+      return {
+        id: question.id,
+        kind: question.kind,
+        answer: rawAnswer as string,
+      };
+    case SurveyQuestionKind.CHECK:
+      return {
+        id: question.id,
+        kind: question.kind,
+        isChecked: rawAnswer as boolean,
+      };
+    case SurveyQuestionKind.MULTIPLE_CHOICE:
+      return {
+        id: question.id,
+        kind: question.kind,
+        choiceId: rawAnswer as string,
+      };
+    case SurveyQuestionKind.SCALE:
+      return {
+        id: question.id,
+        kind: question.kind,
+        value: rawAnswer as number,
+      };
+  }
+  return undefined;
+}
+
+/** Convert model response into SurveyStageParticipantAnswer
+ *  based on expected structured output schema.
+ */
+export function parseSurveyResponse(
+  stage: SurveyStageConfig,
+  responseMap: Record<string, unknown>,
+): SurveyStageParticipantAnswer {
+  const answerMap: Record<string, SurveyAnswer> = {};
+
+  for (const question of stage.questions) {
+    const rawAnswer = responseMap[question.id];
+    const surveyAnswer = parseAnswerForQuestion(question, rawAnswer);
+    if (surveyAnswer) {
+      answerMap[question.id] = surveyAnswer;
+    }
+  }
+
+  return createSurveyStageParticipantAnswer({
+    id: stage.id,
+    answerMap,
+  });
 }
 
 // ************************************************************************* //
