@@ -20,6 +20,7 @@ import {
   createChatStage,
   createRankingStage,
   createInfoStage,
+  createTutorialInfoStage,
   createFlipCardStage,
   createMultiAssetAllocationStage,
   createPayoutStage,
@@ -189,7 +190,7 @@ export class StageBuilderDialog extends MobxLitElement {
         <div class="gallery-title">Basic stages</div>
         <div class="card-gallery-wrapper">
           ${this.renderTOSCard()} ${this.renderInfoCard()}
-          ${this.renderProfileCard()}
+          ${this.renderProfileCard()} ${this.renderDLInfoCard()}
         </div>
       </div>
 
@@ -336,6 +337,19 @@ export class StageBuilderDialog extends MobxLitElement {
       <div class="card" @click=${addStage}>
         <div class="title">ℹ️ Info</div>
         <div>Display Markdown-rendered information.</div>
+      </div>
+    `;
+  }
+
+  private renderDLInfoCard() {
+    const addStage = () => {
+      this.addStage(createTutorialInfoStage());
+    };
+
+    return html`
+      <div class="card" @click=${addStage}>
+        <div class="title">🧪 Deliberate Lab tutorial</div>
+        <div>Display information about the Deliberate Lab interface.</div>
       </div>
     `;
   }
