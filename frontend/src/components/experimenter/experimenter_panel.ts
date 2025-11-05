@@ -6,6 +6,7 @@ import '../../pair-components/tooltip';
 import '../participant_profile/profile_display';
 import './experimenter_data_editor';
 import './experimenter_manual_chat';
+import './log_dashboard';
 
 import '@material/web/checkbox/checkbox.js';
 
@@ -39,6 +40,7 @@ enum PanelView {
   MANUAL_CHAT = 'manual_chat',
   API_KEY = 'api_key',
   ALERTS = 'alerts',
+  LOGS = 'logs',
 }
 
 /** Experimenter panel component */
@@ -138,6 +140,19 @@ export class Panel extends MobxLitElement {
             >
             </pr-icon-button>
           </pr-tooltip>
+
+          <pr-tooltip text="View LLM logs" position="RIGHT_END">
+            <pr-icon-button
+              color="secondary"
+              icon="browse_activity"
+              size="medium"
+              variant=${isSelected(PanelView.LOGS) ? 'tonal' : 'default'}
+              @click=${() => {
+                this.panelView = PanelView.LOGS;
+              }}
+            >
+            </pr-icon-button>
+          </pr-tooltip>
         </div>
         ${this.renderPanelView()}
       </div>
@@ -175,6 +190,8 @@ export class Panel extends MobxLitElement {
         return this.renderApiKeyPanel();
       case PanelView.ALERTS:
         return this.renderAlertPanel();
+      case PanelView.LOGS:
+        return this.renderLogsPanel();
       default:
         return this.renderDefaultPanel();
     }
@@ -407,6 +424,17 @@ export class Panel extends MobxLitElement {
         <div class="top">
           <div class="header">Experimenter settings</div>
           <experimenter-data-editor></experimenter-data-editor>
+        </div>
+      </div>
+    `;
+  }
+
+  private renderLogsPanel() {
+    return html`
+      <div class="main">
+        <div class="top">
+          <div class="header">Log dashboard</div>
+          <log-dashboard></log-dashboard>
         </div>
       </div>
     `;

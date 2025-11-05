@@ -33,6 +33,7 @@ export * from './variables.validation';
 
 // Log
 export * from './log';
+export * from './log_sort';
 
 // Mediator
 export * from './mediator';
