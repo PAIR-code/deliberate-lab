@@ -25,7 +25,7 @@ import {
 // Experiment config
 // ****************************************************************************
 export function getQuickstartGroupChatTemplate(): ExperimentTemplate {
-  const stageConfigs = getStageConfigs(true);
+  const stageConfigs = getStageConfigs(false);
   const metadata = createMetadataConfig({
     name: 'Group Chat Experiment',
     publicName: 'Group Chat',

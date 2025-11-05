@@ -20,7 +20,6 @@ import {
   createChatStage,
   createRankingStage,
   createInfoStage,
-  createTutorialInfoStage,
   createFlipCardStage,
   createMultiAssetAllocationStage,
   createPayoutStage,

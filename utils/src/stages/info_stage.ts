@@ -26,7 +26,7 @@ const TUTORIAL_NAME = 'ℹ️ Platform Tutorial';
 const TUTORIAL_INFO_LINES = [
   'Today, you will complete a task in a series of stages.',
   'Here are some parts of the interface that you may find useful.',
-  '![Inferface tutorial](https://raw.githubusercontent.com/PAIR-code/deliberate-lab/refs/heads/main/frontend/assets/tutorial.png)',
+  '![Interface tutorial](https://raw.githubusercontent.com/PAIR-code/deliberate-lab/refs/heads/main/frontend/assets/tutorial.png)',
 ];
 
 // ************************************************************************* //
