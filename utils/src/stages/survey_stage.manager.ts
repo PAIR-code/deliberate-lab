@@ -5,8 +5,7 @@ import {createDefaultPromptFromText} from '../structured_prompt';
 import {SurveyStageConfig, SurveyStageParticipantAnswer} from './survey_stage';
 import {
   generateSurveySchema,
-  getSurveyAnswersText,
-  getSurveySummaryText,
+  getSurveyStageDisplayPromptString,
   parseSurveyResponse,
 } from './survey_stage.prompts';
 import {StageContextData} from './stage';
@@ -60,16 +59,19 @@ export class SurveyStageHandler extends BaseStageHandler {
   ) {
     const stage = stageContext.stage as SurveyStageConfig;
 
-    // If no participants with answers, just return the text
-    if (participants.length === 0) {
-      return getSurveySummaryText(stage);
-    }
-
-    const participantAnswers = stageContext.privateAnswers as {
-      participantPublicId: string;
-      participantDisplayName: string;
-      answer: SurveyStageParticipantAnswer;
-    }[];
-    return getSurveyAnswersText(participantAnswers, stage.questions, true);
+    // Only send in answers for participants specified in param
+    const participantAnswers = (
+      stageContext.privateAnswers as {
+        participantPublicId: string;
+        participantDisplayName: string;
+        answer: SurveyStageParticipantAnswer;
+      }[]
+    ).filter((item) =>
+      participants.find((p) => p.publicId === item.participantPublicId),
+    );
+    return getSurveyStageDisplayPromptString(
+      participantAnswers,
+      stage.questions,
+    );
   }
 }

@@ -285,138 +285,163 @@ export function parseSurveyPerParticipantResponse(
   });
 }
 
-/** Get text for Survey or SurveyPerParticipant stage display.
- *  (no participant answers included).
- */
-export function getSurveySummaryText(
-  stage: SurveyStageConfig | SurveyPerParticipantStageConfig,
-): string {
-  const questionSummaries = stage.questions.map((question) => {
-    let questionText = `* ${question.questionTitle}`;
+/** Returns survey question as a formatting string for prompt use. */
+function getSurveyQuestionTextForPrompt(question: SurveyQuestion) {
+  let questionText = `* ${question.questionTitle}`;
 
-    switch (question.kind) {
-      case SurveyQuestionKind.TEXT:
-        const textQ = question as TextSurveyQuestion;
-        if (textQ.minCharCount || textQ.maxCharCount) {
-          const constraints = [];
-          if (textQ.minCharCount)
-            constraints.push(`min ${textQ.minCharCount} chars`);
-          if (textQ.maxCharCount)
-            constraints.push(`max ${textQ.maxCharCount} chars`);
-          questionText += ` (Text response: ${constraints.join(', ')})`;
-        } else {
-          questionText += ' (Text response)';
-        }
-        break;
-      case SurveyQuestionKind.CHECK:
-        const checkQ = question as CheckSurveyQuestion;
-        questionText += ` (Checkbox${checkQ.isRequired ? ', required' : ''})`;
-        break;
-      case SurveyQuestionKind.MULTIPLE_CHOICE:
-        const mcQ = question as MultipleChoiceSurveyQuestion;
-        const options = mcQ.options.map((opt) => opt.text).join(', ');
-        questionText += ` (Multiple choice: ${options})`;
-        break;
-      case SurveyQuestionKind.SCALE:
-        const scaleQ = question as ScaleSurveyQuestion;
-        questionText += ` (${formatScaleText(scaleQ)})`;
-        break;
-    }
+  switch (question.kind) {
+    case SurveyQuestionKind.TEXT:
+      const textQ = question as TextSurveyQuestion;
+      if (textQ.minCharCount || textQ.maxCharCount) {
+        const constraints = [];
+        if (textQ.minCharCount)
+          constraints.push(`min ${textQ.minCharCount} chars`);
+        if (textQ.maxCharCount)
+          constraints.push(`max ${textQ.maxCharCount} chars`);
+        questionText += ` (Text response: ${constraints.join(', ')})`;
+      } else {
+        questionText += ' (Text response)';
+      }
+      break;
+    case SurveyQuestionKind.CHECK:
+      const checkQ = question as CheckSurveyQuestion;
+      questionText += ` (Checkbox${checkQ.isRequired ? ', required' : ''})`;
+      break;
+    case SurveyQuestionKind.MULTIPLE_CHOICE:
+      const mcQ = question as MultipleChoiceSurveyQuestion;
+      const options = mcQ.options
+        .map((opt) => `${opt.text} (${opt.id})`)
+        .join(', ');
+      questionText += ` (Multiple choice: ${options})`;
+      break;
+    case SurveyQuestionKind.SCALE:
+      const scaleQ = question as ScaleSurveyQuestion;
+      questionText += ` (${formatScaleText(scaleQ)})`;
+      break;
+  }
 
-    return questionText;
-  });
-
-  return `## Survey Questions:\n${questionSummaries.join('\n')}`;
+  return questionText;
 }
 
-/** Get text for Survey or SurveyPerParticipant stage display.
- *  with participant answers included.
+/** Get stage display string for SurveyStage
+ *  with participant answers optionally included.
  */
-export function getSurveyAnswersText(
+export function getSurveyStageDisplayPromptString(
   participantAnswers: Array<{
     participantPublicId: string;
     participantDisplayName: string;
-    answer:
-      | SurveyStageParticipantAnswer
-      | SurveyPerParticipantStageParticipantAnswer;
+    answer: SurveyStageParticipantAnswer;
   }>,
   questions: SurveyQuestion[],
-  alwaysShowParticipantNames = false,
 ): string {
+  // If no answers, just return the questions
   if (participantAnswers.length === 0) {
-    return '';
+    return questions
+      .map((question) => getSurveyQuestionTextForPrompt(question))
+      .join('\n');
   }
 
-  const answerSummaries: string[] = [];
+  const answerSummaries = participantAnswers.map((answer) =>
+    getSurveyQuestionSetForPrompt(questions, answer),
+  );
+  return answerSummaries.join('\n');
+}
 
-  for (const {
-    participantPublicId,
-    participantDisplayName,
-    answer,
-  } of participantAnswers) {
-    // Include participant names based on configuration or if multiple participants
-    const showNames =
-      alwaysShowParticipantNames || participantAnswers.length > 1;
-    const prefix = showNames ? `* Participant ${participantDisplayName}:` : '';
+/** Return questions from survey with given participant's answers populated.*/
+export function getSurveyQuestionSetForPrompt(
+  questions: SurveyQuestion[],
+  surveyAnswer: {
+    participantPublicId: string;
+    participantDisplayName: string;
+    answer: SurveyStageParticipantAnswer;
+  },
+): string {
+  const prefix = `* Participant ${surveyAnswer.participantDisplayName}'s answers:`;
+  const responses = formatSurveyResponses(
+    surveyAnswer.answer.answerMap,
+    questions,
+  );
+  if (responses.length > 0) {
+    return `${prefix}\n${responses.join('\n')}`;
+  }
+  return '';
+}
 
-    if (answer.kind === StageKind.SURVEY) {
-      const surveyAnswer = answer as SurveyStageParticipantAnswer;
-      const responses = formatSurveyResponses(
-        surveyAnswer.answerMap,
-        questions,
-      );
-      if (responses.length > 0) {
-        answerSummaries.push(`\n${prefix}\n${responses.join('\n')}`);
-      }
-    } else if (answer.kind === StageKind.SURVEY_PER_PARTICIPANT) {
-      const perParticipantAnswer =
-        answer as SurveyPerParticipantStageParticipantAnswer;
-      // For survey per participant, we need to format differently
-      const responses: string[] = [];
-      for (const questionId in perParticipantAnswer.answerMap) {
-        const question = questions.find((q) => q.id === questionId);
-        if (!question) continue;
+/** Get stage display string for SurveyPerParticipantStage
+ *  with participant answers optionally included.
+ */
+export function getSurveyPerParticipantStageDisplayPromptString(
+  participantAnswers: Array<{
+    participantPublicId: string;
+    participantDisplayName: string;
+    answer: SurveyPerParticipantStageParticipantAnswer;
+  }>,
+  questions: SurveyQuestion[],
+): string {
+  // If no answers, just return the questions
+  if (participantAnswers.length === 0) {
+    return questions
+      .map((question) => getSurveyQuestionTextForPrompt(question))
+      .join('\n');
+  }
 
-        responses.push(`  * ${question.questionTitle}:`);
-        for (const targetParticipantId in perParticipantAnswer.answerMap[
-          questionId
-        ]) {
-          const surveyAnswer =
-            perParticipantAnswer.answerMap[questionId][targetParticipantId];
-          const formattedAnswer = formatSingleAnswer(surveyAnswer, question);
-          responses.push(
-            `    * About ${targetParticipantId}: ${formattedAnswer}`,
-          );
-        }
-      }
-      if (responses.length > 0) {
-        answerSummaries.push(`\n${prefix}\n${responses.join('\n')}`);
+  const answerSummaries = participantAnswers.map((answer) =>
+    getSurveyPerParticipantQuestionSetForPrompt(questions, answer),
+  );
+  return answerSummaries.join('\n');
+}
+
+/** Return questions from survey per participant
+ * with given participant's answers populated.
+ */
+export function getSurveyPerParticipantQuestionSetForPrompt(
+  questions: SurveyQuestion[],
+  answerObject: {
+    participantPublicId: string;
+    participantDisplayName: string;
+    answer: SurveyPerParticipantStageParticipantAnswer;
+  },
+): string {
+  const {participantPublicId, participantDisplayName, answer} = answerObject;
+  const prefix = `* Participant ${participantDisplayName}'s answers:`;
+  const responses: string[] = [];
+  for (const question of questions) {
+    responses.push(`  * ${question.questionTitle}:`);
+    for (const targetParticipantId of Object.keys(answer.answerMap)) {
+      const targetParticipantMap = answer.answerMap[targetParticipantId];
+      if (targetParticipantMap[question.id]) {
+        const surveyAnswer = targetParticipantMap[question.id];
+        const formattedAnswer = formatSingleAnswer(surveyAnswer, question);
+        responses.push(
+          `    * About ${targetParticipantId}: ${formattedAnswer}`,
+        );
       }
     }
   }
 
-  return answerSummaries.length > 0
-    ? `## Survey Responses: ${answerSummaries.join('\n')}`
-    : '';
+  return `${prefix}\n${responses.join('\n')}`;
 }
 
+/** Returns formatted list question/answers. */
 function formatSurveyResponses(
   answerMap: Record<string, SurveyAnswer>,
   questions: SurveyQuestion[],
 ): string[] {
   const responses: string[] = [];
 
+  // For each question, show question and answer (or just question if no answer)
   for (const question of questions) {
     const answer = answerMap[question.id];
-    if (!answer) continue;
-
-    const formattedAnswer = formatSingleAnswer(answer, question);
+    const formattedAnswer = answer
+      ? formatSingleAnswer(answer, question)
+      : '(not answered yet)';
     responses.push(`  * ${question.questionTitle}: ${formattedAnswer}`);
   }
 
   return responses;
 }
 
+/** Returns single formatted question/answer pair. */
 function formatSingleAnswer(
   answer: SurveyAnswer,
   question: SurveyQuestion,

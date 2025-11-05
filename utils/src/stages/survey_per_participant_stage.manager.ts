@@ -8,8 +8,7 @@ import {
 } from './survey_stage';
 import {
   generateSurveyPerParticipantSchema,
-  getSurveyAnswersText,
-  getSurveySummaryText,
+  getSurveyPerParticipantStageDisplayPromptString,
   parseSurveyPerParticipantResponse,
 } from './survey_stage.prompts';
 import {StageConfig, StageContextData, StageKind} from './stage';
@@ -75,11 +74,6 @@ export class SurveyPerParticipantStageHandler extends BaseStageHandler {
     );
     const perParticipantContext = `In this stage, answer each survey question with each of the following participants in question: ${participantItems}`;
 
-    // If no participants with answers, just return the text
-    if (participants.length === 0) {
-      return `${perParticipantContext}\n${getSurveySummaryText(stage)}`;
-    }
-
     // Only send in answers for participants specified in param
     const participantAnswers = (
       stageContext.privateAnswers as {
@@ -90,6 +84,6 @@ export class SurveyPerParticipantStageHandler extends BaseStageHandler {
     ).filter((item) =>
       participants.find((p) => p.publicId === item.participantPublicId),
     );
-    return `${perParticipantContext}\n${getSurveyAnswersText(participantAnswers, stage.questions, true)}`;
+    return `${perParticipantContext}\n${getSurveyPerParticipantStageDisplayPromptString(participantAnswers, stage.questions)}`;
   }
 }
