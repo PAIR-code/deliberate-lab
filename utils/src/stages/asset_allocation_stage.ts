@@ -226,6 +226,63 @@ export function createMultiAssetAllocationStage(
   };
 }
 
+export function computeKrippendorffsAlpha(
+  publicData: MultiAssetAllocationStagePublicData | undefined,
+): number {
+  if (!publicData || !publicData.participantAnswerMap) return 0;
+  const raters = Object.values(publicData.participantAnswerMap);
+
+  if (raters.length <= 1) {
+    return raters.length === 0 ? 0 : 100;
+  }
+  const numRaters = raters.length;
+
+  const units = [
+    ...new Set(raters.flatMap((r) => Object.keys(r.allocationMap))),
+  ];
+  if (units.length === 0) return 100;
+
+  // --- Calculate Observed Disagreement (Do) ---
+  // The average disagreement found within each specific unit (charity).
+  let totalObservedDisagreement = 0;
+  for (const unit of units) {
+    const valuesForUnit = raters.map(
+      (r) => r.allocationMap[unit]?.percentage || 0,
+    );
+    let sumOfSquaredDiffs = 0;
+    for (let i = 0; i < numRaters; i++) {
+      for (let j = i + 1; j < numRaters; j++) {
+        sumOfSquaredDiffs += Math.pow(valuesForUnit[i] - valuesForUnit[j], 2);
+      }
+    }
+    const numPairs = (numRaters * (numRaters - 1)) / 2;
+    totalObservedDisagreement += sumOfSquaredDiffs / numPairs;
+  }
+  const Do = totalObservedDisagreement / units.length;
+
+  // --- Calculate Expected Disagreement (De) ---
+  // The disagreement inherent in the total pool of all submitted values,
+  // representing what we'd expect by chance.
+  const allValues = raters.flatMap((r) =>
+    units.map((unit) => r.allocationMap[unit]?.percentage || 0),
+  );
+  let totalExpectedDisagreement = 0;
+  for (let i = 0; i < allValues.length; i++) {
+    for (let j = i + 1; j < allValues.length; j++) {
+      totalExpectedDisagreement += Math.pow(allValues[i] - allValues[j], 2);
+    }
+  }
+  const numTotalPairs = (allValues.length * (allValues.length - 1)) / 2;
+  const De = totalExpectedDisagreement / numTotalPairs;
+
+  if (De === 0) {
+    return 100;
+  }
+
+  const alpha = 1 - Do / De;
+  return alpha * 100;
+}
+
 export function computeMultiAssetConsensusScore(
   publicData: MultiAssetAllocationStagePublicData | undefined,
 ): number {
@@ -233,21 +290,6 @@ export function computeMultiAssetConsensusScore(
 
   const participantAnswers = Object.values(publicData.participantAnswerMap);
   if (participantAnswers.length === 0) return 0;
-
-  // We need at least one answer to determine the asset IDs
-  const firstAllocationMap = participantAnswers[0].allocationMap;
-  const assetIds = Object.keys(firstAllocationMap);
-  if (assetIds.length === 0) return 0;
-
-  const perAssetAverages: number[] = [];
-
-  for (const assetId of assetIds) {
-    const sumForAsset = participantAnswers.reduce((sum, currentAnswer) => {
-      return sum + (currentAnswer.allocationMap[assetId]?.percentage || 0);
-    }, 0);
-    perAssetAverages.push(sumForAsset / participantAnswers.length);
-  }
-
-  const totalAverage = perAssetAverages.reduce((sum, avg) => sum + avg, 0);
-  return totalAverage / perAssetAverages.length;
+  const alpha = computeKrippendorffsAlpha(publicData);
+  return Math.max(0, alpha);
 }

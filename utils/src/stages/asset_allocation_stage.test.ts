@@ -2,6 +2,7 @@ import {
   MultiAssetAllocationStagePublicData,
   MultiAssetAllocationStageParticipantAnswer,
   computeMultiAssetConsensusScore,
+  computeKrippendorffsAlpha,
 } from './asset_allocation_stage';
 import {Timestamp} from 'firebase/firestore';
 
@@ -22,85 +23,98 @@ const createMockAnswer = (
   confirmedTimestamp: Timestamp.now(),
 });
 
-describe('computeMultiAssetConsensusScore', () => {
-  it('should return 0 if publicData is undefined', () => {
-    expect(computeMultiAssetConsensusScore(undefined)).toBe(0);
-  });
-
-  it('should return 0 if participantAnswerMap is empty', () => {
-    const publicData: MultiAssetAllocationStagePublicData = {
-      id: 'test-stage',
-      kind: 'multi-asset-allocation',
-      participantAnswerMap: {},
-    };
-    expect(computeMultiAssetConsensusScore(publicData)).toBe(0);
-  });
-
-  it('should calculate the correct average score for multiple participants', () => {
+describe('computeKrippendorffsAlpha', () => {
+  it('should return 100 for perfect agreement', () => {
     const publicData: MultiAssetAllocationStagePublicData = {
       id: 'test-stage',
       kind: 'multi-asset-allocation',
       participantAnswerMap: {
         p1: createMockAnswer({assetA: 70, assetB: 30}),
-        p2: createMockAnswer({assetA: 50, assetB: 50}),
+        p2: createMockAnswer({assetA: 70, assetB: 30}),
       },
     };
-
-    // Calculation:
-    // Asset A average: (70 + 50) / 2 = 60
-    // Asset B average: (30 + 50) / 2 = 40
-    // Total average: (60 + 40) / 2 = 50
-    expect(computeMultiAssetConsensusScore(publicData)).toBe(50);
+    expect(computeKrippendorffsAlpha(publicData)).toBe(100);
   });
 
-  it('should treat missing allocations as 0', () => {
+  it('should return a negative score for systematic disagreement', () => {
     const publicData: MultiAssetAllocationStagePublicData = {
       id: 'test-stage',
       kind: 'multi-asset-allocation',
       participantAnswerMap: {
-        // p1 allocated to both assets
+        p1: createMockAnswer({assetA: 100, assetB: 0}),
+        p2: createMockAnswer({assetA: 0, assetB: 100}),
+      },
+    };
+    // Correct alpha is -50
+    expect(computeKrippendorffsAlpha(publicData)).toBeCloseTo(-50);
+  });
+
+  it('should correctly calculate a non-zero agreement score', () => {
+    const publicData: MultiAssetAllocationStagePublicData = {
+      id: 'test-stage',
+      kind: 'multi-asset-allocation',
+      participantAnswerMap: {
         p1: createMockAnswer({assetA: 80, assetB: 20}),
-        // p2 only allocated to assetA. assetB is missing.
-        p2: createMockAnswer({assetA: 40}),
+        p2: createMockAnswer({assetA: 70, assetB: 30}),
+        p3: createMockAnswer({assetA: 60, assetB: 40}),
       },
     };
-
-    // Calculation:
-    // The function derives asset IDs from the first participant ('assetA', 'assetB')
-    // Asset A average: (80 + 40) / 2 = 60
-    // Asset B average: (20 + 0) / 2 = 10 (p2's missing allocation is treated as 0)
-    // Total average: (60 + 10) / 2 = 35
-    expect(computeMultiAssetConsensusScore(publicData)).toBe(35);
+    // Correct alpha is 82.14
+    expect(computeKrippendorffsAlpha(publicData)).toBeCloseTo(82.14);
   });
+});
 
-  it('should handle a single participant correctly', () => {
+describe('computeConsensusScore', () => {
+  it('should return 100 for perfect agreement', () => {
     const publicData: MultiAssetAllocationStagePublicData = {
       id: 'test-stage',
       kind: 'multi-asset-allocation',
       participantAnswerMap: {
-        p1: createMockAnswer({assetA: 60, assetB: 20, assetC: 20}),
+        p1: createMockAnswer({assetA: 70, assetB: 30}),
+        p2: createMockAnswer({assetA: 70, assetB: 30}),
       },
     };
-
-    // Calculation:
-    // Asset A average: 60 / 1 = 60
-    // Asset B average: 20 / 1 = 20
-    // Asset C average: 20 / 1 = 20
-    // Total average: (60 + 20 + 20) / 3 = 33.333...
-    expect(computeMultiAssetConsensusScore(publicData)).toBeCloseTo(33.333);
+    // Alpha is 100, max(0, 100) = 100
+    expect(computeMultiAssetConsensusScore(publicData)).toBe(100);
   });
 
-  it('should return 0 if the first participant has no allocations', () => {
+  it('should return 0 for agreement equal to random chance', () => {
     const publicData: MultiAssetAllocationStagePublicData = {
       id: 'test-stage',
       kind: 'multi-asset-allocation',
       participantAnswerMap: {
-        p1: createMockAnswer({}), // No allocations
-        p2: createMockAnswer({assetA: 100}),
+        p1: createMockAnswer({assetA: 100}),
+        p2: createMockAnswer({assetB: 100}),
+        p3: createMockAnswer({assetA: 50, assetB: 50}),
       },
     };
+    // Alpha is ~0, max(0, 0) = 0
+    expect(computeMultiAssetConsensusScore(publicData)).toBeCloseTo(0);
+  });
 
-    // The function gets assetIds from p1, which is empty, so it returns 0.
+  it('should return 0 for systematic disagreement (polarization)', () => {
+    const publicData: MultiAssetAllocationStagePublicData = {
+      id: 'test-stage',
+      kind: 'multi-asset-allocation',
+      participantAnswerMap: {
+        p1: createMockAnswer({assetA: 100}),
+        p2: createMockAnswer({assetB: 100}),
+      },
+    };
+    // Alpha is ~-50, max(0, -50) = 0
     expect(computeMultiAssetConsensusScore(publicData)).toBe(0);
+  });
+
+  it('should return a correct partial consensus score', () => {
+    const publicData: MultiAssetAllocationStagePublicData = {
+      id: 'test-stage',
+      kind: 'multi-asset-allocation',
+      participantAnswerMap: {
+        p1: createMockAnswer({assetA: 80, assetB: 20}),
+        p2: createMockAnswer({assetA: 70, assetB: 30}),
+        p3: createMockAnswer({assetA: 60, assetB: 40}),
+      },
+    };
+    expect(computeMultiAssetConsensusScore(publicData)).toBeCloseTo(82.14);
   });
 });
