@@ -242,7 +242,7 @@ const TEXT_MEDIATED_INFO = [
 const TEXT_INSTRUCTIONS = [
   'The object of this study is understanding how groups make decisions together. Today, you’ll have *three* rounds of decision-making; in each round, your group will make decisions about how to allocate money across three charities. Each round has three steps:',
   '1. *Privately choose an initial allocation*. Given a fixed pool of money, decide how to split it among the three charities presented.',
-  '2. *Discuss your choices with the group*. Share your reasoning with 2 other participants and try to reach a consensus. You will have up to 10 minutes to discuss per round.',
+  '2. *Discuss your choices with the group*. Share your reasoning with 2 other participants and try to reach a consensus. You will have 5 minutes to discuss per round.',
   '3. *Privately update your allocation*. After the discussion, you can revise your initial allocation based on what you heard.',
   'Your goal is to work together to find the best way to split the funds.',
   '![Instructions](https://i.imgur.com/YOTgSAi.png)',
@@ -895,8 +895,8 @@ function createAllocationDiscussionStage(
     name: stageName,
     descriptions: createStageTextConfig({primaryText: discussionText}),
     progress: createStageProgressConfig({waitForAllParticipants: true}),
-    timeLimitInMinutes: 10,
-    requireFullTime: false,
+    timeLimitInMinutes: 5,
+    requireFullTime: true,
   });
 }
 
@@ -1112,7 +1112,8 @@ function createStandardMediatorSchema(): StructuredOutputSchema {
         name: 'turnsSinceLastIntervention',
         schema: {
           type: StructuredOutputDataType.INTEGER,
-          description: 'The number of participant messages that have occurred since your last facilitator message. Count only participant utterances, not your own.',
+          description:
+            'The number of participant messages that have occurred since your last facilitator message. Count only participant utterances, not your own.',
         },
       },
       {
