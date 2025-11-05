@@ -151,4 +151,3 @@ export async function sendSystemChatMessage(
 
   await systemDocument.set(chatMessage);
 }
-
