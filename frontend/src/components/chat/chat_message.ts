@@ -42,6 +42,8 @@ export class ChatMessageComponent extends MobxLitElement {
     switch (this.chat.type) {
       case UserType.PARTICIPANT:
         return this.renderParticipantMessage(this.chat);
+      case UserType.SYSTEM:
+        return this.renderSystemMessage(this.chat);
       default:
         return this.renderMediatorMessage(this.chat);
     }
@@ -113,6 +115,14 @@ export class ChatMessageComponent extends MobxLitElement {
           <div class="chat-bubble">${chatMessage.message}</div>
           ${this.renderDebuggingExplanation(chatMessage)}
         </div>
+      </div>
+    `;
+  }
+
+  renderSystemMessage(chatMessage: ChatMessage) {
+    return html`
+      <div class="system-message">
+        <div class="content">${chatMessage.message}</div>
       </div>
     `;
   }

@@ -190,6 +190,12 @@ export class Component extends MobxLitElement {
           this.experimentManager.getCohortAgentMediators(this.cohort.id),
           html`${this.renderAddMediator()}`,
         )}
+        <div class="table-wrapper table-header">
+          <details>
+            <summary>JSON Config</summary>
+            <pre><code>${JSON.stringify(this.cohort, null, 2)}</code></pre>
+          </details>
+        </div>
       </div>
     `;
   }

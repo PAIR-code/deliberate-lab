@@ -10,6 +10,7 @@ import '@material/web/textfield/filled-text-field.js';
 import {core} from '../../core/core';
 import {AuthService} from '../../services/auth.service';
 import {ExperimentManager} from '../../services/experiment.manager';
+import {ExperimentService} from '../../services/experiment.service';
 
 import {styles} from './experimenter_data_editor.scss';
 import {
@@ -33,15 +34,29 @@ export class ExperimenterDataEditor extends MobxLitElement {
 
   private readonly authService = core.getService(AuthService);
   private readonly experimentManager = core.getService(ExperimentManager);
+  private readonly experimentService = core.getService(ExperimentService);
 
   @state() geminiKeyResponse: null | boolean = null;
   @state() openAIKeyResponse: null | boolean = null;
   @state() ollamaKeyResponse: null | boolean = null;
 
   override render() {
+    const experiment = this.experimentService.experiment;
+    if (
+      experiment &&
+      experiment.metadata.creator !== this.authService.userEmail
+    ) {
+      return html`
+        <div>
+          This experiment uses API keys provided by the creator of the
+          experiment: ${experiment.metadata.creator}
+        </div>
+      `;
+    }
+
     return html`
       <div class="banner">
-        Note: API keys are shared across all experiments!
+        Note: API keys are shared across all of your experiments!
       </div>
       ${this.renderGeminiKey()}
       <div class="divider"></div>
