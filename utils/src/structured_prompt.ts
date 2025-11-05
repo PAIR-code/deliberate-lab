@@ -34,7 +34,8 @@ export type ParticipantPromptConfig =
   | ChatPromptConfig
   | ProfilePromptConfig
   | RankingPromptConfig
-  | SurveyPromptConfig;
+  | SurveyPromptConfig
+  | SurveyPerParticipantPromptConfig;
 
 export interface ProfilePromptConfig extends BasePromptConfig {
   type: StageKind.PROFILE;
@@ -46,6 +47,10 @@ export interface RankingPromptConfig extends BasePromptConfig {
 
 export interface SurveyPromptConfig extends BasePromptConfig {
   type: StageKind.SURVEY;
+}
+
+export interface SurveyPerParticipantPromptConfig extends BasePromptConfig {
+  type: StageKind.SURVEY_PER_PARTICIPANT;
 }
 
 /** Currently used for both mediator and participant chat prompts. */

@@ -21,6 +21,7 @@ import {
   ScaleSurveyQuestion,
   ScaleSurveyAnswer,
   createSurveyStageParticipantAnswer,
+  createSurveyPerParticipantStageParticipantAnswer,
 } from './survey_stage';
 
 /** Prompt constants and utils for interacting with survey stage. */
@@ -152,6 +153,46 @@ export function generateSurveySchema(
   };
 }
 
+/** Generate SurveyPerParticipantStage structured output schema for agent. */
+export function generateSurveyPerParticipantSchema(
+  questions: SurveyQuestion[],
+): StructuredOutputSchema {
+  const properties = questions.map((question) => {
+    // For each question, schema is a list of { participantId, answer } items
+    return {
+      name: question.id,
+      description: question.questionTitle,
+      schema: {
+        type: StructuredOutputDataType.ARRAY,
+        description:
+          'A list of {participantId, answer} items where each item is your answer to the question regarding a specific participant ID from the list of participants',
+        arrayItems: {
+          type: StructuredOutputDataType.OBJECT,
+          properties: [
+            {
+              name: 'participantId',
+              schema: {
+                type: StructuredOutputDataType.STRING,
+                description:
+                  'The ID of the participant whom you are answering the question about',
+              },
+            },
+            {
+              name: 'answer',
+              schema: getSchemaForQuestion(question),
+            },
+          ],
+        }, // end list of {participantId, answer} items
+      }, // end schema for question
+    };
+  });
+
+  return {
+    type: StructuredOutputDataType.OBJECT,
+    properties,
+  };
+}
+
 /** Convert model response into SurveyAnswer. */
 function parseAnswerForQuestion(
   question: SurveyQuestion,
@@ -211,10 +252,42 @@ export function parseSurveyResponse(
   });
 }
 
-// ************************************************************************* //
-// PROMPT UTILITIES FOR STAGECONTEXT                                         //
-// ************************************************************************* //
+/** Parse SurveyPerParticipant raw model response. */
+export function parseSurveyPerParticipantResponse(
+  stage: SurveyPerParticipantStageConfig,
+  // Expected map from question to list of { participantId, answer }
+  responseMap: Record<string, unknown[]>,
+): SurveyPerParticipantStageParticipantAnswer {
+  const answerMap: Record<string, Record<string, SurveyAnswer>> = {};
 
+  for (const question of stage.questions) {
+    const participantAnswers = responseMap[question.id];
+    for (const raw of participantAnswers) {
+      const {participantId, answer} = raw as {
+        participantId: string;
+        answer: unknown;
+      };
+      if (participantId && answer) {
+        if (!answerMap[participantId]) {
+          answerMap[participantId] = {};
+        }
+        const surveyAnswer = parseAnswerForQuestion(question, answer);
+        if (surveyAnswer) {
+          answerMap[participantId][question.id] = surveyAnswer;
+        }
+      }
+    }
+  }
+
+  return createSurveyPerParticipantStageParticipantAnswer({
+    id: stage.id,
+    answerMap,
+  });
+}
+
+/** Get text for Survey or SurveyPerParticipant stage display.
+ *  (no participant answers included).
+ */
 export function getSurveySummaryText(
   stage: SurveyStageConfig | SurveyPerParticipantStageConfig,
 ): string {
@@ -256,6 +329,9 @@ export function getSurveySummaryText(
   return `## Survey Questions:\n${questionSummaries.join('\n')}`;
 }
 
+/** Get text for Survey or SurveyPerParticipant stage display.
+ *  with participant answers included.
+ */
 export function getSurveyAnswersText(
   participantAnswers: Array<{
     participantPublicId: string;
