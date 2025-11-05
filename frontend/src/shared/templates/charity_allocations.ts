@@ -783,8 +783,8 @@ function createAllocationStage(
 
   charityVariableNames.forEach((variableName) => {
     primaryText += `\n
-        [{{${variableName}.name}}]({{${variableName}.link}}) (Charity Navigator score: {{${variableName}.score}})
-        *{{${variableName}.mission}}*\n`;
+[{{${variableName}.name}}]({{${variableName}.link}}) (Charity Navigator score: {{${variableName}.score}})
+*{{${variableName}.mission}}*\n`;
   });
 
   const charityStocks = charityVariableNames.map((variableName) => {
