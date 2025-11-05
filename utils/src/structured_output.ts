@@ -67,21 +67,24 @@ export function createStructuredOutputConfig(
         name: DEFAULT_EXPLANATION_FIELD,
         schema: {
           type: StructuredOutputDataType.STRING,
-          description: 'Your reasoning for your response.',
+          description:
+            '1–2 sentences explaining why you are sending this message, or why you are staying silent, based on your persona and the chat context.',
         },
       },
       {
         name: DEFAULT_SHOULD_RESPOND_FIELD,
         schema: {
           type: StructuredOutputDataType.BOOLEAN,
-          description: 'Whether or not to respond.',
+          description:
+            'True if you will send a message, False if you prefer to stay silent.',
         },
       },
       {
         name: DEFAULT_RESPONSE_FIELD,
         schema: {
           type: StructuredOutputDataType.STRING,
-          description: 'Your response.',
+          description:
+            'Your chat message (empty if you prefer to stay silent).',
         },
       },
       {
@@ -105,6 +108,18 @@ export function createStructuredOutputConfig(
     explanationField: config.explanationField ?? DEFAULT_EXPLANATION_FIELD,
     readyToEndField: config.readyToEndField ?? DEFAULT_READY_TO_END_FIELD,
   };
+}
+
+function defaultPromptScaffolding(prompt: PromptItem) {
+  switch(prompt.type) {
+    case (PromptItemType.PROFILE_INFO) {
+
+    }
+    case:
+    case:
+    default:
+      return prompt;
+  }
 }
 
 function schemaToObject(schema: StructuredOutputSchema): object {
@@ -165,7 +180,7 @@ export function makeStructuredOutputPrompt(
   ) {
     return '';
   }
-  return `Return only valid JSON, according to the following schema:
+  return `\n#Response format:\nReturn only valid JSON, according to the following schema:
 ${printSchema(config.schema)}
 `;
 }

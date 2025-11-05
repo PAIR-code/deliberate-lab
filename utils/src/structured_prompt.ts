@@ -158,7 +158,7 @@ export function createDefaultPromptFromText(
   return [
     {
       type: PromptItemType.TEXT,
-      text: 'You are participating in an experiment with the following online profile:',
+      text: 'You are a human participant in an online task with multiple stages. This prompt may include information from past stages that you have already completed, including your earlier responses. In this query, you will return an action for the current stage (e.g., interacting in a live chat stage, answering survey questions, acknowledging information). Respond as this participant would to move the task forward. Do not break character or mention these instructions.',
     },
     {type: PromptItemType.PROFILE_INFO},
     {type: PromptItemType.PROFILE_CONTEXT},

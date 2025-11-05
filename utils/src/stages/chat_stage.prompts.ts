@@ -68,10 +68,7 @@ export function getChatPromptMessageHistory(
   }
 
   const description = `
-Below is the transcript of your discussion.
-Each message is displayed in chronological order, with the most recent message at the bottom. Each entry follows this format:
-
-(HH:MM) ParticipantName: Message content
+  Below is the transcript of your discussion. Messages are shown in chronological order; new messages appear at the bottom. Each message / turn follows the format: (HH:MM) Name: message.
   `;
 
   return `${description.trim()}\n\n${buildChatHistoryForPrompt(messages, stage)}`;
