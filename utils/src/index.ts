@@ -52,6 +52,9 @@ export * from './model_response';
 export * from './structured_output';
 export * from './structured_prompt';
 
+// Sort
+export * from './sort';
+
 // Stages
 export * from './stages/stage';
 export * from './stages/stage.handler';
