@@ -25,6 +25,7 @@ import './agent_persona_editor';
 import './experiment_builder_nav';
 import './experiment_settings_editor';
 import './stage_builder_dialog';
+import './variable_editor';
 
 import {MobxLitElement} from '@adobe/lit-mobx';
 import {CSSResultGroup, html, nothing} from 'lit';
@@ -39,7 +40,14 @@ import {ExperimentEditor} from '../../services/experiment.editor';
 import {ExperimentManager} from '../../services/experiment.manager';
 import {Pages, RouterService} from '../../services/router.service';
 
-import {StageConfig, StageKind, generateId} from '@deliberation-lab/utils';
+import {
+  StageConfig,
+  StageKind,
+  VariableItem,
+  extractVariablesFromVariableConfigs,
+  generateId,
+  validateTemplateVariables,
+} from '@deliberation-lab/utils';
 
 import {styles} from './experiment_builder.scss';
 
@@ -52,6 +60,7 @@ enum PanelView {
   PERMISSIONS = 'permissions',
   PROLIFIC = 'prolific',
   STAGES = 'stages',
+  VARIABLES = 'variables',
 }
 
 /** Experiment builder used to create/edit experiments */
@@ -127,7 +136,6 @@ export class ExperimentBuilder extends MobxLitElement {
               <div>Permissions</div>
               <div class="subtitle">Set visibility of experiment dashboard</div>
             </div>
-
             <div
               class="general-item ${
                 this.panelView === PanelView.PROLIFIC ? 'current' : ''
@@ -190,6 +198,20 @@ export class ExperimentBuilder extends MobxLitElement {
 
   private renderAlphaMenuItems() {
     return html`
+      <div class="panel-view-header">
+        <div class="header-title">Alpha features</div>
+      </div>
+      <div
+        class="general-item ${this.panelView === PanelView.VARIABLES
+          ? 'current'
+          : ''}"
+        @click=${() => {
+          this.panelView = PanelView.VARIABLES;
+        }}
+      >
+        <div>Variables <span class="alpha">alpha</span></div>
+        <div class="subtitle">Set up variables to use in stage text</div>
+      </div>
       <div
         class="general-item ${this.panelView === PanelView.AGENT_PARTICIPANTS
           ? 'current'
@@ -313,6 +335,12 @@ export class ExperimentBuilder extends MobxLitElement {
       return html`
         <div class="experiment-builder">
           <experiment-permissions-editor></experiment-permissions-editor>
+        </div>
+      `;
+    } else if (this.panelView === PanelView.VARIABLES) {
+      return html`
+        <div class="experiment-builder">
+          <variable-editor></variable-editor>
         </div>
       `;
     } else if (this.panelView === PanelView.PROLIFIC) {
@@ -465,6 +493,7 @@ export class ExperimentBuilder extends MobxLitElement {
       <experiment-builder-nav></experiment-builder-nav>
       <div class="experiment-builder">
         <div class="header">${this.renderTitle()} ${this.renderActions()}</div>
+        ${this.renderVariableCheck()}
         <div class="content">${this.renderContent()}</div>
       </div>
     `;
@@ -532,6 +561,26 @@ export class ExperimentBuilder extends MobxLitElement {
       >
       </pr-icon-button>
     </pr-tooltip>`;
+  }
+
+  private renderVariableCheck() {
+    const stage = this.experimentEditor.currentStage;
+    const variableConfigs =
+      this.experimentEditor.experiment?.variableConfigs ?? [];
+    const {valid, missingVariables, syntaxError} = validateTemplateVariables(
+      JSON.stringify(stage),
+      extractVariablesFromVariableConfigs(variableConfigs),
+    );
+
+    if (valid) {
+      return nothing;
+    }
+    const missingText = `Variables ${JSON.stringify(missingVariables)} are not defined`;
+    return html`
+      <div class="banner warning">
+        ⚠️ ${missingVariables.length > 0 ? missingText : ''} ${syntaxError}
+      </div>
+    `;
   }
 
   private renderContent() {

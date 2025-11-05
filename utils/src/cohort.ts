@@ -22,6 +22,9 @@ export interface CohortConfig {
   participantConfig: CohortParticipantConfig;
   // Maps stage ID to whether stage is unlocked (i.e., participants are ready)
   stageUnlockMap: Record<string, boolean>;
+  // Maps variable name to value assigned specifically for this cohort.
+  // This overrides any variable values set at the experiment level.
+  variableMap?: Record<string, string>;
 }
 
 // ************************************************************************* //
@@ -38,5 +41,6 @@ export function createCohortConfig(
     participantConfig:
       config.participantConfig ?? createCohortParticipantConfig(),
     stageUnlockMap: config.stageUnlockMap ?? {},
+    variableMap: config.variableMap ?? {},
   };
 }

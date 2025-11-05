@@ -1,8 +1,11 @@
 import {
   CohortConfig,
-  StageConfig,
+  Experiment,
   MediatorProfileExtended,
+  SeedStrategy,
+  StageConfig,
   createPublicDataFromStageConfigs,
+  createVariableToValueMapForSeed,
 } from '@deliberation-lab/utils';
 import {createMediatorsForCohort} from './mediator.utils';
 import {app} from './app';
@@ -34,6 +37,11 @@ export async function createCohortInternal(
     stageDoc.data(),
   ) as StageConfig[];
 
+  // Fetch experiment in order to get variable configs
+  const experiment = (
+    await transaction.get(firestore.collection('experiments').doc(experimentId))
+  ).data() as Experiment;
+
   const publicData = createPublicDataFromStageConfigs(stages);
 
   for (const dataItem of publicData) {
@@ -57,6 +65,12 @@ export async function createCohortInternal(
       cohortConfig.stageUnlockMap[stage.id] = true;
     }
   }
+
+  // Add variable values at the cohort level
+  cohortConfig.variableMap = createVariableToValueMapForSeed(
+    experiment.variableConfigs ?? [],
+    SeedStrategy.COHORT,
+  );
 
   // Write cohort config
   transaction.set(document, cohortConfig);
