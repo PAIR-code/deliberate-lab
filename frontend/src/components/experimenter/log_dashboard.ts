@@ -10,6 +10,7 @@ import {core} from '../../core/core';
 import {ExperimentManager} from '../../services/experiment.manager';
 
 import {
+  convertUnifiedTimestampToDateTime,
   LogEntry,
   LogEntryType,
   ModelLogEntry,
@@ -19,12 +20,9 @@ import {
   getParticipantOptions,
   getStageOptions,
   getStatusOptions,
+  getUnifiedDurationSeconds,
   FilterState,
 } from '@deliberation-lab/utils';
-import {
-  convertUnifiedTimestampToDateTime,
-  getUnifiedDurationSeconds,
-} from '../../shared/utils';
 
 import {styles} from './log_dashboard.scss';
 
@@ -92,11 +90,7 @@ export class Component extends MobxLitElement {
     `;
 
     return this.fullscreen
-      ? html`
-          <div class="modal" style="display: block;">
-            <div class="modal-content">${content}</div>
-          </div>
-        `
+      ? html` <div class="modal" style="display: block;">${content}</div> `
       : content;
   }
 
@@ -110,7 +104,7 @@ export class Component extends MobxLitElement {
           <div class="chip">
             ${user?.avatar} ${user?.name} ${user?.pronouns} (${log.publicId})
           </div>
-          <div class="chip">| ${cohortName} | Stage: ${log.stageId}</div>
+          <div class="chip">| ${cohortName}| Stage: ${log.stageId}</div>
         </div>
         ${log.description}
         ${log.type === LogEntryType.MODEL
