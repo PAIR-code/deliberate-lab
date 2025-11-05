@@ -1,9 +1,10 @@
 import '../../pair-components/button';
 import '../../pair-components/icon_button';
+import '../../pair-components/icon';
 
 import {MobxLitElement} from '@adobe/lit-mobx';
 import {CSSResultGroup, html, nothing} from 'lit';
-import {customElement, property, state} from 'lit/decorators.js';
+import {customElement, state} from 'lit/decorators.js';
 
 import {core} from '../../core/core';
 import {ExperimentManager} from '../../services/experiment.manager';
@@ -13,6 +14,12 @@ import {
   LogEntryType,
   ModelLogEntry,
   ModelResponseStatus,
+  filterLogs,
+  getCohortOptions,
+  getParticipantOptions,
+  getStageOptions,
+  getStatusOptions,
+  FilterState,
 } from '@deliberation-lab/utils';
 import {convertUnifiedTimestampToISO} from '../../shared/utils';
 
@@ -22,11 +29,54 @@ import {styles} from './log_dashboard.scss';
 @customElement('log-dashboard')
 export class Component extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
+
   @state() private fullscreen = false;
+  @state() private sortMode: 'newest' | 'oldest' = 'newest';
+  @state() private filterCohort: string | null = null;
+  @state() private filterParticipant: string | null = null;
+  @state() private filterStage: string | null = null;
+  @state() private filterStatus: string | null = null;
+  @state() private showFilters = false;
+
   private readonly experimentManager = core.getService(ExperimentManager);
 
-  override render() {
+  private toggleFilters(e?: Event) {
+    e?.stopPropagation();
+    this.showFilters = !this.showFilters;
+  }
+
+  connectedCallback() {
+    super.connectedCallback();
+    this._outsideClick = (evt: MouseEvent) => {
+      if (!this.showFilters) return;
+      if (!this.contains(evt.target as Node)) this.showFilters = false;
+    };
+    window.addEventListener('mousedown', this._outsideClick);
+  }
+  disconnectedCallback() {
+    window.removeEventListener('mousedown', this._outsideClick);
+    super.disconnectedCallback();
+  }
+  private _outsideClick!: (e: MouseEvent) => void;
+
+  private getCohortName = (id: string) =>
+    this.experimentManager.getCohort(id)?.metadata?.name ?? `Cohort ${id}`;
+
+  private getFilteredLogs() {
     const logs = this.experimentManager.logs;
+    const filters: FilterState = {
+      cohort: this.filterCohort,
+      participant: this.filterParticipant,
+      stage: this.filterStage,
+      status: this.filterStatus,
+      sortMode: this.sortMode,
+    };
+
+    return filterLogs(logs, filters, this.getCohortName);
+  }
+
+  override render() {
+    const logs = this.getFilteredLogs();
 
     const content = html`
       ${this.renderHeader()}
@@ -38,22 +88,19 @@ export class Component extends MobxLitElement {
       </div>
     `;
 
-    if (!this.fullscreen) {
-      return content;
-    }
-
-    return html`
-      <div class="modal" style="display: block;">
-        <div class="modal-content">${content}</div>
-      </div>
-    `;
+    return this.fullscreen
+      ? html`
+          <div class="modal" style="display: block;">
+            <div class="modal-content">${content}</div>
+          </div>
+        `
+      : content;
   }
 
   private renderLog(log: LogEntry) {
     const user = log.userProfile;
-    const cohortName =
-      this.experimentManager.getCohort(log.cohortId)?.metadata?.name ??
-      `Cohort ${log.cohortId}`;
+    const cohortName = this.getCohortName(log.cohortId);
+
     return html`
       <div class="log">
         <div class="log-header">
@@ -74,16 +121,6 @@ export class Component extends MobxLitElement {
 
   private renderModelLogFields(log: ModelLogEntry) {
     const status = log.response.status;
-
-    const renderReasoning = () => {
-      if (!log.response.reasoning) return nothing;
-      return html`
-        <details>
-          <summary>Model reasoning</summary>
-          <div>${log.response.reasoning}</div>
-        </details>
-      `;
-    };
 
     return html`
       <div
@@ -111,28 +148,239 @@ export class Component extends MobxLitElement {
         <summary>Model response</summary>
         <pre><code>${JSON.stringify(log.response, null, 2)}</code></pre>
       </details>
-      ${renderReasoning()}
+      ${log.response.reasoning
+        ? html`
+            <details>
+              <summary>Model reasoning</summary>
+              <div>${log.response.reasoning}</div>
+            </details>
+          `
+        : nothing}
     `;
   }
 
   private renderHeader() {
-    const getProfileString = () => {
-      const currentParticipant = this.experimentManager.currentParticipant;
-      if (!currentParticipant) {
-        return nothing;
-      }
-      return `
-        ${currentParticipant.avatar ?? ''}
-        ${currentParticipant?.name ?? ''}
-        (${currentParticipant?.publicId})
-      `;
-    };
+    const logs = this.experimentManager.logs;
 
     return html`
       <div class="header">
         <div class="left">
-          <div>Log dashboard</div>
+          <div class="filter-group">
+            <pr-button
+              color="secondary"
+              variant="default"
+              @click=${(e: Event) => this.toggleFilters(e)}
+            >
+              <pr-icon
+                size="small"
+                color="secondary"
+                icon="filter_list"
+              ></pr-icon>
+              Filter
+            </pr-button>
+
+            ${this.showFilters
+              ? html`
+                  <div
+                    class="filter-popover"
+                    @mousedown=${(e: Event) => e.stopPropagation()}
+                    @click=${(e: Event) => e.stopPropagation()}
+                  >
+                    <!-- Cohort -->
+                    <div class="filter-row">
+                      <span>Cohort</span>
+                      <pr-menu name=${this.filterCohort ?? 'Any'}>
+                        <div class="menu-wrapper">
+                          ${getCohortOptions(
+                            logs,
+                            this.filterParticipant,
+                            this.getCohortName,
+                          ).map(
+                            (c) => html`
+                              <div
+                                class="menu-item"
+                                @click=${() => (this.filterCohort = c)}
+                              >
+                                ${c}
+                                ${this.filterCohort === c
+                                  ? html`<span class="checkmark">✔</span>`
+                                  : nothing}
+                              </div>
+                            `,
+                          )}
+                          <div
+                            class="menu-item"
+                            @click=${() => (this.filterCohort = null)}
+                          >
+                            Any
+                            ${this.filterCohort === null
+                              ? html`<span class="checkmark">✔</span>`
+                              : nothing}
+                          </div>
+                        </div>
+                      </pr-menu>
+                    </div>
+
+                    <!-- Participant -->
+                    <div class="filter-row">
+                      <span>Participant</span>
+                      <pr-menu name=${this.filterParticipant ?? 'Any'}>
+                        <div class="menu-wrapper">
+                          ${getParticipantOptions(
+                            logs,
+                            this.filterCohort,
+                            this.getCohortName,
+                          ).map(
+                            (p) => html`
+                              <div
+                                class="menu-item"
+                                @click=${() => (this.filterParticipant = p)}
+                              >
+                                ${p}
+                                ${this.filterParticipant === p
+                                  ? html`<span class="checkmark">✔</span>`
+                                  : nothing}
+                              </div>
+                            `,
+                          )}
+                          <div
+                            class="menu-item"
+                            @click=${() => (this.filterParticipant = null)}
+                          >
+                            Any
+                            ${this.filterParticipant === null
+                              ? html`<span class="checkmark">✔</span>`
+                              : nothing}
+                          </div>
+                        </div>
+                      </pr-menu>
+                    </div>
+
+                    <!-- Stage -->
+                    <div class="filter-row">
+                      <span>Stage</span>
+                      <pr-menu name=${this.filterStage ?? 'Any'}>
+                        <div class="menu-wrapper">
+                          ${getStageOptions(
+                            logs,
+                            {
+                              cohort: this.filterCohort,
+                              participant: this.filterParticipant,
+                            },
+                            this.getCohortName,
+                          ).map(
+                            (s) => html`
+                              <div
+                                class="menu-item"
+                                @click=${() => (this.filterStage = s)}
+                              >
+                                ${s}
+                                ${this.filterStage === s
+                                  ? html`<span class="checkmark">✔</span>`
+                                  : nothing}
+                              </div>
+                            `,
+                          )}
+                          <div
+                            class="menu-item"
+                            @click=${() => (this.filterStage = null)}
+                          >
+                            Any
+                            ${this.filterStage === null
+                              ? html`<span class="checkmark">✔</span>`
+                              : nothing}
+                          </div>
+                        </div>
+                      </pr-menu>
+                    </div>
+
+                    <!-- Status -->
+                    <div class="filter-row">
+                      <span>Status</span>
+                      <pr-menu name=${this.filterStatus ?? 'Any'}>
+                        <div class="menu-wrapper">
+                          ${getStatusOptions(
+                            logs,
+                            {
+                              cohort: this.filterCohort,
+                              participant: this.filterParticipant,
+                              stage: this.filterStage,
+                            },
+                            this.getCohortName,
+                          ).map(
+                            (st) => html`
+                              <div
+                                class="menu-item"
+                                @click=${() => (this.filterStatus = st)}
+                              >
+                                ${st}
+                                ${this.filterStatus === st
+                                  ? html`<span class="checkmark">✔</span>`
+                                  : nothing}
+                              </div>
+                            `,
+                          )}
+                          <div
+                            class="menu-item"
+                            @click=${() => (this.filterStatus = null)}
+                          >
+                            Any
+                            ${this.filterStatus === null
+                              ? html`<span class="checkmark">✔</span>`
+                              : nothing}
+                          </div>
+                        </div>
+                      </pr-menu>
+                    </div>
+
+                    <div class="filter-actions">
+                      <pr-button
+                        variant="text"
+                        @click=${() => {
+                          this.filterCohort =
+                            this.filterParticipant =
+                            this.filterStage =
+                            this.filterStatus =
+                              null;
+                        }}
+                      >
+                        Clear all
+                      </pr-button>
+                      <pr-button
+                        variant="tonal"
+                        @click=${() => (this.showFilters = false)}
+                      >
+                        Done
+                      </pr-button>
+                    </div>
+                  </div>
+                `
+              : nothing}
+          </div>
+
+          <!-- Sort -->
+          <pr-menu
+            name=${this.sortMode === 'newest' ? 'Newest first' : 'Oldest first'}
+            icon="sort"
+            color="neutral"
+          >
+            <div class="menu-wrapper">
+              <div class="menu-item" @click=${() => (this.sortMode = 'newest')}>
+                Newest first
+                ${this.sortMode === 'newest'
+                  ? html`<span class="checkmark">✔</span>`
+                  : nothing}
+              </div>
+              <div class="menu-item" @click=${() => (this.sortMode = 'oldest')}>
+                Oldest first
+                ${this.sortMode === 'oldest'
+                  ? html`<span class="checkmark">✔</span>`
+                  : nothing}
+              </div>
+            </div>
+          </pr-menu>
         </div>
+
         <div class="right">
           ${this.fullscreen
             ? html`
