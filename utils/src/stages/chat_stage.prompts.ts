@@ -5,7 +5,7 @@ import {
   createAgentChatSettings,
   createModelGenerationConfig,
 } from '../agent';
-import {ParticipantProfileBase} from '../participant';
+import {ParticipantProfileBase, UserType} from '../participant';
 import {getParticipantProfilePromptContext} from '../participant.prompts';
 import {convertUnifiedTimestampToTime} from '../shared';
 import {
@@ -79,6 +79,9 @@ Each message is displayed in chronological order, with the most recent message a
 
 /** Convert chat message to prompt format. */
 export function convertChatMessageToPromptFormat(message: ChatMessage) {
+  if (message.type === UserType.SYSTEM) {
+    return `${convertUnifiedTimestampToTime(message.timestamp)} [SYSTEM]: ${message.message}`;
+  }
   return `${convertUnifiedTimestampToTime(message.timestamp)} ${message.profile.name ?? message.senderId}: ${message.message}`;
 }
 
