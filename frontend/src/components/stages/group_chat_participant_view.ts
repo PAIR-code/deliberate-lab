@@ -27,7 +27,6 @@ import {
   DiscussionItem,
   StageKind,
 } from '@deliberation-lab/utils';
-import {getChatTimeRemainingInSeconds} from '../../shared/stage.utils';
 
 import {styles} from './group_chat_participant_view.scss';
 
@@ -220,20 +219,6 @@ export class GroupChatView extends MobxLitElement {
     const publicStageData = this.cohortService.stagePublicDataMap[
       this.stage.id
     ] as ChatStagePublicData;
-
-    // Check if timer has run out
-    const timeRemaining = getChatTimeRemainingInSeconds(
-      this.stage,
-      this.cohortService.chatMap,
-    );
-    if (timeRemaining !== null && timeRemaining <= 0) {
-      return html`
-        <div slot="indicators" class="description error">
-          <mwc-icon>timer_off</mwc-icon>
-          The time for this stage has ended.
-        </div>
-      `;
-    }
 
     // Check if all other participants have completed the stage
     const completed = this.cohortService.getStageCompletedParticipants(
