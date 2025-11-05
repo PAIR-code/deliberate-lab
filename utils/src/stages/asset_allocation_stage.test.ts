@@ -11,7 +11,7 @@ const createMockAnswer = (
   allocations: Record<string, number>,
 ): MultiAssetAllocationStageParticipantAnswer => ({
   id: `participant-${Math.random()}`,
-  kind: StageKind.MULTI_AS_SET_ALLOCATION,
+  kind: StageKind.MULTI_ASSET_ALLOCATION,
   allocationMap: Object.entries(allocations).reduce(
     (acc, [id, percentage]) => {
       acc[id] = {id, name: `Charity ${id}`, percentage};
