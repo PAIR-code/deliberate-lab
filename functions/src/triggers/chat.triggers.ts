@@ -3,6 +3,7 @@ import {
   ChatMessage,
   StageKind,
   createParticipantProfileBase,
+  UserType,
 } from '@deliberation-lab/utils';
 import {
   getFirestoreActiveMediators,
@@ -134,6 +135,7 @@ export const onPrivateChatMessageCreated = onDocumentCreated(
       event.params.experimentId,
       event.params.participantId,
     );
+    if (!participant) return;
 
     const mediators = await getFirestoreActiveMediators(
       event.params.experimentId,
@@ -183,6 +185,21 @@ export const onPrivateChatMessageCreated = onDocumentCreated(
           message: 'No mediators found',
         },
       );
+    }
+
+    // Send agent participant messages (if participant is an agent)
+    if (participant.agentConfig) {
+      // Ensure agent only responds to mediator, not themselves
+      if (message.type === UserType.MEDIATOR) {
+        await createAgentChatMessageFromPrompt(
+          event.params.experimentId,
+          participant.currentCohortId,
+          [participant.privateId], // Pass agent's own ID as array
+          stage.id,
+          event.params.chatId,
+          participant,
+        );
+      }
     }
   },
 );

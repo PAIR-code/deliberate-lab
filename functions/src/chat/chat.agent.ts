@@ -25,7 +25,7 @@ import {
   ConversationMessage,
   MessageRole,
 } from './message_converter.utils';
-import {updateParticipantReadyToEndChat} from '../stages/group_chat.utils';
+import {updateParticipantReadyToEndChat} from '../chat/chat.utils';
 import {
   getExperimenterDataFromExperiment,
   getFirestorePublicStageChatMessages,
@@ -36,6 +36,7 @@ import {
   getFirestoreActiveParticipants,
   getGroupChatTriggerLogRef,
   getPrivateChatTriggerLogRef,
+  getFirestoreParticipantAnswerRef,
 } from '../utils/firestore';
 import {app} from '../app';
 
@@ -128,6 +129,7 @@ export async function createAgentChatMessageFromPrompt(
       user,
       promptConfig,
     );
+    message = response.message;
     message = response.message;
     if (!message) {
       return response.success;
@@ -316,11 +318,36 @@ export async function getAgentChatMessage(
 
   // Only if agent participant is ready to end chat
   if (readyToEndChat && user.type === UserType.PARTICIPANT) {
-    // Call ready to end chat update to stage public data
-    updateParticipantReadyToEndChat(experimentId, stageId, user.privateId);
+    // Ensure we don't end chat on the very first message
+    if (chatMessages.length > 0) {
+      // Call ready to end chat update to stage public data
+      if (stage.kind === StageKind.PRIVATE_CHAT) {
+        const participantAnswerDoc = getFirestoreParticipantAnswerRef(
+          experimentId,
+          user.privateId,
+          stageId,
+        );
+        await participantAnswerDoc.set({readyToEndChat: true}, {merge: true});
+      } else {
+        updateParticipantReadyToEndChat(experimentId, stageId, user.privateId);
+      }
+    }
   }
 
   if (!shouldRespond) {
+    // If agent decides not to respond in private chat, they are ready to end
+    if (
+      stage.kind === StageKind.PRIVATE_CHAT &&
+      user.type === UserType.PARTICIPANT &&
+      chatMessages.length > 0
+    ) {
+      const participantAnswerDoc = getFirestoreParticipantAnswerRef(
+        experimentId,
+        user.privateId,
+        stageId,
+      );
+      await participantAnswerDoc.set({readyToEndChat: true}, {merge: true});
+    }
     return {message: null, success: true};
   }
 

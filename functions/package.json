@@ -15,7 +15,7 @@
     "typecheck": "tsc --noEmit"
   },
   "engines": {
-    "node": "18"
+    "node": "22"
   },
   "config": {
     "firestore_tests": "src/log.utils.test.ts src/dl_api/experiments.api.integration.test.ts"
