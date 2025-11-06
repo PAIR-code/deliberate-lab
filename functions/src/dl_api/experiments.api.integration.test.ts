@@ -74,11 +74,10 @@ describe('API Experiment Creation Integration Tests', () => {
 
     // Create test API key (this will be stored in the emulator)
     console.log('Creating API key...');
-    const {apiKey, keyId} = await createAPIKey(
-      TEST_EXPERIMENTER_ID,
-      'Test API Key',
-      [APIKeyPermission.READ, APIKeyPermission.WRITE],
-    );
+    const {apiKey} = await createAPIKey(TEST_EXPERIMENTER_ID, 'Test API Key', [
+      APIKeyPermission.READ,
+      APIKeyPermission.WRITE,
+    ]);
     testAPIKey = apiKey;
     // Verify the key can be validated (this uses admin SDK internally)
     console.log('Verifying API key...');

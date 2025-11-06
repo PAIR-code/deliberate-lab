@@ -66,7 +66,8 @@ export const authenticateAPIKey = asyncHandler(
         ? 'Invalid Authorization header format. Use: Authorization: Bearer YOUR_API_KEY'
         : 'Missing Authorization header. Use: Authorization: Bearer YOUR_API_KEY';
 
-      return res.status(401).json({error});
+      res.status(401).json({error});
+      return;
     }
 
     try {
@@ -74,7 +75,8 @@ export const authenticateAPIKey = asyncHandler(
       const {valid, data} = await verifyAPIKey(apiKey);
 
       if (!valid || !data) {
-        return res.status(401).json({error: 'Invalid or expired API key'});
+        res.status(401).json({error: 'Invalid or expired API key'});
+        return;
       }
 
       // Attach API key data to request
@@ -87,7 +89,7 @@ export const authenticateAPIKey = asyncHandler(
       next();
     } catch (error) {
       console.error('Error verifying API key:', error);
-      return res
+      res
         .status(500)
         .json({error: 'Internal server error during authentication'});
     }
