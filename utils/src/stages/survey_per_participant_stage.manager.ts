@@ -30,6 +30,8 @@ export class SurveyPerParticipantStageHandler extends BaseStageHandler {
       const responseMap = response as Record<string, unknown[]>;
       return parseSurveyPerParticipantResponse(stage, responseMap);
     } catch (error) {
+      // Parsing could error if model response is of the wrong
+      // structured output shape.
       return undefined;
     }
   }

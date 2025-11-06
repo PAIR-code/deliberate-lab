@@ -422,7 +422,16 @@ export function getSurveyPerParticipantQuestionSetForPrompt(
   return `${prefix}\n${responses.join('\n')}`;
 }
 
-/** Returns formatted list question/answers. */
+/** Returns formatted list question/answers
+ * where each question/answer pair is rendered as a single line
+ * in bulleted, indented style for prompts.
+ *
+ *   * What is your name?: Helly R
+ *   * Do you have other comments?: (no response)
+ *   * Rate your work-life balance: (not answered yet)
+ *
+ * See also ./survey_stage.prompts.test.ts for expected formatting.
+ */
 function formatSurveyResponses(
   answerMap: Record<string, SurveyAnswer>,
   questions: SurveyQuestion[],
@@ -441,7 +450,13 @@ function formatSurveyResponses(
   return responses;
 }
 
-/** Returns single formatted question/answer pair. */
+/** Returns answer as a formatting string for use in prompts, e.g.,
+ * "This is my freeform response"
+ * "Checked" (for a checkbox question)
+ * "1 (Strongly disagree)" (for a scale question)
+ *
+ * See also ./survey_stage.prompts.test.ts for how this is used.
+ */
 function formatSingleAnswer(
   answer: SurveyAnswer,
   question: SurveyQuestion,
