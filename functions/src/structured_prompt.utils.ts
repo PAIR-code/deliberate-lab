@@ -6,6 +6,7 @@ import {
   AssetAllocationStageParticipantAnswer,
   BasePromptConfig,
   ChatStageConfig,
+  CohortConfig,
   Experiment,
   MediatorProfileExtended,
   ParticipantProfileExtended,
@@ -26,10 +27,9 @@ import {
   SurveyPerParticipantStageParticipantAnswer,
   UserProfile,
   UserType,
+  extractVariablesFromVariableConfigs,
   getAllPrecedingStageIds,
   getNameFromPublicId,
-  getSurveySummaryText,
-  getSurveyAnswersText,
   initializeStageContextData,
   makeStructuredOutputPrompt,
   shuffleWithSeed,
@@ -39,6 +39,7 @@ import {
   getAgentParticipantPrompt,
   getFirestoreActiveParticipants,
   getFirestoreAnswersForStage,
+  getFirestoreCohort,
   getFirestoreExperiment,
   getFirestoreParticipant,
   getFirestoreStage,
@@ -95,6 +96,7 @@ export async function getFirestoreDataForStructuredPrompt(
   promptConfig: BasePromptConfig,
 ): Promise<{
   experiment: Experiment;
+  cohort: CohortConfig;
   // participants whose answers should be used in prompt
   participants: ParticipantProfileExtended[];
   data: Record<string, StageContextData>;
@@ -103,6 +105,9 @@ export async function getFirestoreDataForStructuredPrompt(
 
   // Fetch experiment config, which is used to grab preceding stages
   const experiment = await getFirestoreExperiment(experimentId);
+
+  // Fetch cohort config, which may be needed to populate variables
+  const cohort = await getFirestoreCohort(experimentId, cohortId);
 
   // Fetch all active participants in cohort
   const activeParticipants = await getFirestoreActiveParticipants(
@@ -133,7 +138,7 @@ export async function getFirestoreDataForStructuredPrompt(
       data,
     );
   }
-  return {experiment, participants: answerParticipants, data};
+  return {experiment, cohort, participants: answerParticipants, data};
 }
 
 /** Populates data object with Firestore documents needed for given single
@@ -310,6 +315,7 @@ async function processPromptItems(
   stageId: string,
   promptData: {
     experiment: Experiment;
+    cohort: CohortConfig;
     participants: ParticipantProfileExtended[];
     data: Record<string, StageContextData>;
   },
@@ -361,6 +367,9 @@ async function processPromptItems(
               promptData.data[id],
               id,
               promptItem,
+              promptData.experiment,
+              promptData.cohort,
+              userProfile,
             ),
           );
         }
@@ -415,12 +424,41 @@ async function processPromptItems(
  */
 export async function getStageContextForPrompt(
   participants: ParticipantProfileExtended[],
-  stageContext: StageContextData,
+  rawStageContext: StageContextData,
   currentStageId: string,
   item: StageContextPromptItem,
+  // The following params are needed for variable extraction
+  experiment: Experiment,
+  cohort: CohortConfig,
+  userProfile: ParticipantProfileExtended | MediatorProfileExtended,
 ) {
-  // Get the specific stage
-  const stage = stageContext.stage;
+  // Resolve template variables in the stage context before
+  // using it to assemble context for prompt.
+  // WARNING: This is a temporary hack and may not work as expected.
+  // TODO: Move this to an appropriate location/helper function.
+  const experimentVariableMap = experiment.variableMap ?? {};
+  const cohortVariableMap = cohort.variableMap ?? {};
+
+  // WARNING: This only uses the current participant's variables.
+  // If variables vary at the participant level, the other participants'
+  // variables are not yet shown, i.e., agent mediator prompts with
+  // participant-level variables will not work.
+  const participantVariableMap =
+    userProfile?.type === UserType.PARTICIPANT ? userProfile.variableMap : {};
+  const variableMap = extractVariablesFromVariableConfigs(
+    experiment.variableConfigs ?? [],
+  );
+  const valueMap = {
+    ...experimentVariableMap,
+    ...cohortVariableMap,
+    ...participantVariableMap,
+  };
+  const stage = stageManager.resolveTemplateVariablesInStage(
+    rawStageContext.stage,
+    variableMap,
+    valueMap,
+  );
+  const stageContext = {...rawStageContext, stage};
 
   const textItems: string[] = [];
 
