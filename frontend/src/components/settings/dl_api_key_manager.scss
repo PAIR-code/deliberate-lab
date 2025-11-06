@@ -7,23 +7,14 @@
   width: 100%;
 }
 
-.api-key-manager {
-  @include common.flex-column;
-  gap: common.$spacing-medium;
-}
-
-.section {
-  @include common.flex-column;
-  gap: common.$spacing-medium;
-}
-
-.divider {
-  border-bottom: 1px solid var(--md-sys-color-outline-variant);
-}
-
 .action-buttons {
   @include common.flex-row;
   flex-wrap: wrap;
+  gap: common.$spacing-medium;
+}
+
+.api-key-manager {
+  @include common.flex-column;
   gap: common.$spacing-medium;
 }
 
@@ -32,6 +23,13 @@
   @include common.flex-column;
   gap: common.$spacing-medium;
   padding: common.$spacing-medium;
+
+  &.error {
+    @include typescale.body-medium;
+    background: transparent;
+    border: 1px solid var(--md-sys-color-error);
+    color: var(--md-sys-color-error);
+  }
 
   &.success {
     background: var(--md-sys-color-tertiary-container);
@@ -42,37 +40,16 @@
       @include typescale.body-medium;
     }
   }
-
-  &.error {
-    @include typescale.body-medium;
-    color: var(--md-sys-color-error);
-    background: transparent;
-    border: 1px solid var(--md-sys-color-error);
-  }
 }
 
 .banner-header {
   @include common.flex-row-align-center;
-  gap: common.$spacing-small;
   @include typescale.title-small;
+  gap: common.$spacing-small;
 }
 
-.key-display {
-  @include common.flex-row-align-center;
-  gap: common.$spacing-medium;
-  padding: common.$spacing-medium;
-  background-color: var(--md-sys-color-surface-variant);
-  border-radius: common.$spacing-small;
-  flex-wrap: wrap;
-
-  code {
-    @include typescale.label-large;
-    font-family: monospace;
-    flex: 1;
-    min-width: 200px;
-    word-break: break-all;
-    color: var(--md-sys-color-on-surface-variant);
-  }
+.divider {
+  border-bottom: 1px solid var(--md-sys-color-outline-variant);
 }
 
 .empty-message {
@@ -82,30 +59,47 @@
   padding: common.$spacing-medium;
 }
 
-.list {
+.key-display {
+  @include common.flex-row-align-center;
+  background-color: var(--md-sys-color-surface-variant);
+  border-radius: common.$spacing-small;
+  flex-wrap: wrap;
+  gap: common.$spacing-medium;
+  padding: common.$spacing-medium;
+
+  code {
+    @include typescale.label-large;
+    color: var(--md-sys-color-on-surface-variant);
+    flex: 1;
+    font-family: monospace;
+    min-width: 200px;
+    word-break: break-all;
+  }
+}
+
+.key-info {
   @include common.flex-column;
+  flex: 1;
+  gap: common.$spacing-small;
 }
 
 .key-item {
   @include common.flex-row;
   align-items: center;
-  justify-content: space-between;
-  gap: common.$spacing-medium;
-  padding: common.$spacing-medium;
   border-bottom: 1px solid var(--md-sys-color-outline-variant);
   flex-wrap: wrap;
+  gap: common.$spacing-medium;
+  justify-content: space-between;
+  padding: common.$spacing-medium;
 }
 
-.key-info {
+.list {
   @include common.flex-column;
-  gap: common.$spacing-small;
-  flex: 1;
 }
 
-.title {
-  @include typescale.title-medium;
-  color: var(--md-sys-color-on-surface);
-  font-weight: 600;
+.section {
+  @include common.flex-column;
+  gap: common.$spacing-medium;
 }
 
 .subtitle {
@@ -115,4 +109,10 @@
   div {
     margin: 0;
   }
+}
+
+.title {
+  @include typescale.title-medium;
+  color: var(--md-sys-color-on-surface);
+  font-weight: 600;
 }
