@@ -7,6 +7,14 @@ layout: default
   .content-wrapper {
     max-width: 100%;
   }
+
+  code {
+    background: default;
+  }
+
+  pre {
+    background: default;
+  }
 </style>
 <div id="swagger-ui"></div>
 <link
