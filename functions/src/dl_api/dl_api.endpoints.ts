@@ -98,9 +98,9 @@ app.use(
 
 /**
  * Main Deliberate Lab REST API endpoint
- * Deploy as a Firebase Function
+ * Deployed as /api
  */
-export const deliberateLabAPI = onRequest(
+export const api = onRequest(
   {
     timeoutSeconds: 60,
     maxInstances: 100,
