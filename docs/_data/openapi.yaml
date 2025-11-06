@@ -36,12 +36,10 @@ info:
 
   version: 1.0.0
 servers:
-  - url: https://{project}.cloudfunctions.net/api/v1
-    description: Firebase Cloud Functions API
-    variables:
-      project:
-        default: your-project
-        description: Your Firebase project ID
+  - url: https://deliberate-lab.appspot.com/api/v1
+    description: Production API
+  - url: http://127.0.0.1:5001/demo-deliberate-lab/us-central1/api/v1
+    description: Local development (Firebase emulator)
 
 tags:
   - name: experiments

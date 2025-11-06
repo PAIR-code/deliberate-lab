@@ -27,6 +27,7 @@ export interface DeliberateLabAPIRequest extends Request {
 
 /**
  * Middleware to reject browser requests for Deliberate Lab API (server-to-server only)
+ * Allows localhost in development for Swagger UI testing
  */
 export function rejectBrowserRequestsForDeliberateLabAPI(
   req: Request,
@@ -35,11 +36,16 @@ export function rejectBrowserRequestsForDeliberateLabAPI(
 ): void {
   const origin = req.headers.origin || req.headers.referer;
   if (origin) {
-    res.status(403).json({
-      error:
-        'Browser access not allowed. Use API keys from server-side applications only.',
-    });
-    return;
+    // Allow localhost/127.0.0.1 origins for local development
+    const isLocalhost =
+      origin.includes('localhost') || origin.includes('127.0.0.1');
+    if (!isLocalhost) {
+      res.status(403).json({
+        error:
+          'Browser access not allowed. Use API keys from server-side applications only.',
+      });
+      return;
+    }
   }
   next();
 }
