@@ -346,7 +346,7 @@ async function processPromptItems(
         } else {
           // TODO: Adjust display for mediator profiles
           items.push(
-            `You are participating in a live conversation as the following online alias.\n\nAlias: ${userProfile.avatar} ${userProfile.name}.\n\nFollow any persona context or instructions carefully.`,
+            `You are participating in a live conversation as the following online alias.\n\nAlias: ${userProfile.avatar} ${userProfile.name}.\n\nFollow any persona context or instructions carefully. If none are given, respond in short, natural sentences (1–2 per turn). Adjust your response frequency based on group size: respond less often in groups with multiple participants so that all have a chance to speak.`,
           );
         }
         break;
