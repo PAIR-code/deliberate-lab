@@ -149,8 +149,11 @@ export class Settings extends MobxLitElement {
   private renderAPIKeySection() {
     return html`
       <div class="section">
-        <h2>API Access</h2>
-        <p>Manage API keys for programmatic access to your experiments.</p>
+        <h2>Deliberate Lab API Access</h2>
+        <p>
+          Manage Deliberate Lab API keys for programmatic access to your
+          experiments via the REST API.
+        </p>
         <dl-api-key-manager></dl-api-key-manager>
       </div>
     `;

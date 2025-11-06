@@ -90,7 +90,7 @@ export class DeliberateLabAPIKeyManager extends MobxLitElement {
   private async handleRevokeKey(keyId: string, keyName: string) {
     if (
       !confirm(
-        `Are you sure you want to revoke the API key "${keyName}"? This action cannot be undone.`,
+        `Are you sure you want to revoke the Deliberate Lab API key "${keyName}"? This action cannot be undone.`,
       )
     ) {
       return;
@@ -157,7 +157,7 @@ export class DeliberateLabAPIKeyManager extends MobxLitElement {
           this.showCreateForm = true;
         }}
       >
-        + Create API Key
+        + Create Deliberate Lab API Key
       </pr-button>
     `;
   }
@@ -176,7 +176,7 @@ export class DeliberateLabAPIKeyManager extends MobxLitElement {
       <div class="banner success">
         <div class="banner-header">
           <pr-icon icon="check_circle"></pr-icon>
-          <strong>API Key Created Successfully</strong>
+          <strong>Deliberate Lab API Key Created Successfully</strong>
         </div>
         <p>
           <strong
@@ -254,7 +254,8 @@ export class DeliberateLabAPIKeyManager extends MobxLitElement {
     if (this.apiKeys.length === 0) {
       return html`
         <div class="empty-message">
-          No API keys yet. Create one to get started.
+          No Deliberate Lab API keys yet. Create one to get started with
+          programmatic access to your experiments.
         </div>
       `;
     }
