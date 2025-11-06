@@ -32,7 +32,7 @@ export class Settings extends MobxLitElement {
         ${this.authService.isExperimenter
           ? this.renderExperimenterData()
           : nothing}
-        ${this.authService.isExperimenter
+        ${this.authService.isExperimenter && this.authService.showAlphaFeatures
           ? this.renderAPIKeySection()
           : nothing}
         ${this.authService.isExperimenter
