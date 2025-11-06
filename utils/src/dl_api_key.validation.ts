@@ -3,7 +3,7 @@
  */
 
 import {Type, Static} from '@sinclair/typebox';
-import {DeliberateLabAPIKeyPermission} from './api_key';
+import {DeliberateLabAPIKeyPermission} from './dl_api_key';
 
 /** Schema for DeliberateLabAPIKeyPermission enum */
 export const DeliberateLabAPIKeyPermissionSchema = Type.Enum(
