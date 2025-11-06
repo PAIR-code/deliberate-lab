@@ -7,7 +7,7 @@ import {Request, Response, NextFunction} from 'express';
 import {
   verifyDeliberateLabAPIKey,
   extractDeliberateLabBearerToken,
-} from './api_key.utils';
+} from './dl_api_key.utils';
 
 // ************************************************************************* //
 // TYPES                                                                     //

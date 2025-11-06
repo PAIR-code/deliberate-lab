@@ -8,7 +8,7 @@ import {
   DeliberateLabAPIRequest,
   hasDeliberateLabAPIPermission,
   validateOrRespond,
-} from './api.utils';
+} from './dl_api.utils';
 import {
   createExperimentConfig,
   getExperimentDownload,

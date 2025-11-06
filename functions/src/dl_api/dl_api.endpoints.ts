@@ -10,10 +10,10 @@ import rateLimit, {ipKeyGenerator} from 'express-rate-limit';
 import {
   authenticateDeliberateLabAPIKey,
   rejectBrowserRequestsForDeliberateLabAPI,
-} from './api.utils';
+} from './dl_api.utils';
 import {AuthGuard} from '../utils/auth-guard';
 import {DeliberateLabAPIKeyPermission} from '@deliberation-lab/utils';
-import * as deliberateLabAPIKeyService from './api_key.utils';
+import * as deliberateLabAPIKeyService from './dl_api_key.utils';
 import {
   listExperiments,
   createExperiment,
@@ -21,7 +21,7 @@ import {
   updateExperiment,
   deleteExperiment,
   exportExperimentData,
-} from './experiments.api';
+} from './experiments.dl_api';
 
 // Create Express app
 const app = express();
@@ -97,10 +97,10 @@ app.use(
 );
 
 /**
- * Main REST API endpoint
+ * Main Deliberate Lab REST API endpoint
  * Deploy as a Firebase Function
  */
-export const api = onRequest(
+export const deliberateLabAPI = onRequest(
   {
     timeoutSeconds: 60,
     maxInstances: 100,

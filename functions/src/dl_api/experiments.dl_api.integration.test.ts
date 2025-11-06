@@ -30,7 +30,7 @@ import {
 import {
   createDeliberateLabAPIKey,
   verifyDeliberateLabAPIKey,
-} from './api_key.utils';
+} from './dl_api_key.utils';
 
 // Import actual experiment templates from frontend
 import {getFlipCardExperimentTemplate} from '../../../frontend/src/shared/templates/flipcard';
