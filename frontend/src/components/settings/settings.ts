@@ -1,7 +1,7 @@
 import '../../pair-components/button';
 
 import '../experimenter/experimenter_data_editor';
-import './api_key_manager';
+import './dl_api_key_manager';
 
 import {MobxLitElement} from '@adobe/lit-mobx';
 import {CSSResultGroup, html, nothing} from 'lit';
@@ -151,7 +151,7 @@ export class Settings extends MobxLitElement {
       <div class="section">
         <h2>API Access</h2>
         <p>Manage API keys for programmatic access to your experiments.</p>
-        <api-key-manager></api-key-manager>
+        <dl-api-key-manager></dl-api-key-manager>
       </div>
     `;
   }

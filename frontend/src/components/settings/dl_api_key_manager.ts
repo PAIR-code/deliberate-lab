@@ -16,9 +16,9 @@ import {
   revokeDeliberateLabAPIKeyCallable,
 } from '../../shared/callables';
 
-import {styles} from './api_key_manager.scss';
+import {styles} from './dl_api_key_manager.scss';
 
-interface APIKey {
+interface DeliberateLabAPIKey {
   keyId: string;
   name: string;
   createdAt: number;
@@ -26,14 +26,14 @@ interface APIKey {
   permissions: string[];
 }
 
-/** API Key Management component */
-@customElement('api-key-manager')
-export class APIKeyManager extends MobxLitElement {
+/** Deliberate Lab API Key Management component */
+@customElement('dl-api-key-manager')
+export class DeliberateLabAPIKeyManager extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
 
   private readonly firebaseService = core.getService(FirebaseService);
 
-  @state() apiKeys: APIKey[] = [];
+  @state() apiKeys: DeliberateLabAPIKey[] = [];
   @state() isLoading = false;
   @state() newKeyName = '';
   @state() showCreateForm = false;
@@ -266,7 +266,7 @@ export class APIKeyManager extends MobxLitElement {
     `;
   }
 
-  private renderKeyItem(key: APIKey) {
+  private renderKeyItem(key: DeliberateLabAPIKey) {
     return html`
       <div class="key-item">
         <div class="key-info">
@@ -298,6 +298,6 @@ export class APIKeyManager extends MobxLitElement {
 
 declare global {
   interface HTMLElementTagNameMap {
-    'api-key-manager': APIKeyManager;
+    'dl-api-key-manager': DeliberateLabAPIKeyManager;
   }
 }
