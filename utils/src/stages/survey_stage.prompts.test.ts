@@ -169,6 +169,8 @@ const mockPerParticipantAnswerP2: SurveyPerParticipantStageParticipantAnswer = {
   },
 };
 
+// TODO: Test that all required survey answers are completed
+// (and in implementation, consider retrying for skipped answers)
 describe('Display strings for survey/survey-per-participant stages', () => {
   describe('getSurveyStageDisplayPromptString', () => {
     it('should return only the questions when there are no answers', () => {
