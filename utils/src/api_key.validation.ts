@@ -1,23 +1,27 @@
 /**
- * Runtime validation schemas for API key types
+ * Runtime validation schemas for Deliberate Lab API key types
  */
 
 import {Type, Static} from '@sinclair/typebox';
-import {APIKeyPermission} from './api_key';
+import {DeliberateLabAPIKeyPermission} from './api_key';
 
-/** Schema for APIKeyPermission enum */
-export const APIKeyPermissionSchema = Type.Enum(APIKeyPermission);
+/** Schema for DeliberateLabAPIKeyPermission enum */
+export const DeliberateLabAPIKeyPermissionSchema = Type.Enum(
+  DeliberateLabAPIKeyPermission,
+);
 
-/** Schema for APIKeyData */
-export const APIKeyDataSchema = Type.Object({
+/** Schema for DeliberateLabAPIKeyData */
+export const DeliberateLabAPIKeyDataSchema = Type.Object({
   hash: Type.String(),
   salt: Type.String(),
   experimenterId: Type.String(),
   name: Type.String(),
-  permissions: Type.Array(APIKeyPermissionSchema),
+  permissions: Type.Array(DeliberateLabAPIKeyPermissionSchema),
   createdAt: Type.Number(),
   lastUsed: Type.Union([Type.Number(), Type.Null()]),
   expiresAt: Type.Optional(Type.Number()),
 });
 
-export type APIKeyDataType = Static<typeof APIKeyDataSchema>;
+export type DeliberateLabAPIKeyDataType = Static<
+  typeof DeliberateLabAPIKeyDataSchema
+>;

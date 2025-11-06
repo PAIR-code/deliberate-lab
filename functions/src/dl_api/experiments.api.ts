@@ -5,8 +5,8 @@
 import * as admin from 'firebase-admin';
 import {Response} from 'express';
 import {
-  AuthenticatedRequest,
-  hasPermission,
+  DeliberateLabAPIRequest,
+  hasDeliberateLabAPIPermission,
   validateOrRespond,
 } from './api.utils';
 import {
@@ -42,17 +42,17 @@ interface UpdateExperimentRequest {
  * List experiments for the authenticated user
  */
 export async function listExperiments(
-  req: AuthenticatedRequest,
+  req: DeliberateLabAPIRequest,
   res: Response,
 ): Promise<void> {
-  if (!hasPermission(req, 'read')) {
+  if (!hasDeliberateLabAPIPermission(req, 'read')) {
     res.status(403).json({error: 'Insufficient permissions'});
     return;
   }
 
   const app = admin.app();
   const firestore = app.firestore();
-  const experimenterId = req.apiKeyData!.experimenterId;
+  const experimenterId = req.deliberateLabAPIKeyData!.experimenterId;
 
   try {
     // Get experiments where user is creator or has read access
@@ -80,17 +80,17 @@ export async function listExperiments(
  * Create a new experiment
  */
 export async function createExperiment(
-  req: AuthenticatedRequest,
+  req: DeliberateLabAPIRequest,
   res: Response,
 ): Promise<void> {
-  if (!hasPermission(req, 'write')) {
+  if (!hasDeliberateLabAPIPermission(req, 'write')) {
     res.status(403).json({error: 'Insufficient permissions'});
     return;
   }
 
   const app = admin.app();
   const firestore = app.firestore();
-  const experimenterId = req.apiKeyData!.experimenterId;
+  const experimenterId = req.deliberateLabAPIKeyData!.experimenterId;
 
   try {
     const body = req.body as CreateExperimentRequest;
@@ -166,16 +166,16 @@ export async function createExperiment(
  * Get a specific experiment
  */
 export async function getExperiment(
-  req: AuthenticatedRequest,
+  req: DeliberateLabAPIRequest,
   res: Response,
 ): Promise<void> {
-  if (!hasPermission(req, 'read')) {
+  if (!hasDeliberateLabAPIPermission(req, 'read')) {
     res.status(403).json({error: 'Insufficient permissions'});
     return;
   }
 
   const experimentId = req.params.id;
-  const experimenterId = req.apiKeyData!.experimenterId;
+  const experimenterId = req.deliberateLabAPIKeyData!.experimenterId;
 
   if (!experimentId) {
     res.status(400).json({error: 'Experiment ID required'});
@@ -214,10 +214,10 @@ export async function getExperiment(
  * Update an experiment
  */
 export async function updateExperiment(
-  req: AuthenticatedRequest,
+  req: DeliberateLabAPIRequest,
   res: Response,
 ): Promise<void> {
-  if (!hasPermission(req, 'write')) {
+  if (!hasDeliberateLabAPIPermission(req, 'write')) {
     res.status(403).json({error: 'Insufficient permissions'});
     return;
   }
@@ -225,7 +225,7 @@ export async function updateExperiment(
   const app = admin.app();
   const firestore = app.firestore();
   const experimentId = req.params.id;
-  const experimenterId = req.apiKeyData!.experimenterId;
+  const experimenterId = req.deliberateLabAPIKeyData!.experimenterId;
 
   if (!experimentId) {
     res.status(400).json({error: 'Experiment ID required'});
@@ -309,10 +309,10 @@ export async function updateExperiment(
  * Delete an experiment
  */
 export async function deleteExperiment(
-  req: AuthenticatedRequest,
+  req: DeliberateLabAPIRequest,
   res: Response,
 ): Promise<void> {
-  if (!hasPermission(req, 'write')) {
+  if (!hasDeliberateLabAPIPermission(req, 'write')) {
     res.status(403).json({error: 'Insufficient permissions'});
     return;
   }
@@ -320,7 +320,7 @@ export async function deleteExperiment(
   const app = admin.app();
   const firestore = app.firestore();
   const experimentId = req.params.id;
-  const experimenterId = req.apiKeyData!.experimenterId;
+  const experimenterId = req.deliberateLabAPIKeyData!.experimenterId;
 
   if (!experimentId) {
     res.status(400).json({error: 'Experiment ID required'});
@@ -363,10 +363,10 @@ export async function deleteExperiment(
  * Returns comprehensive ExperimentDownload structure with all related data
  */
 export async function exportExperimentData(
-  req: AuthenticatedRequest,
+  req: DeliberateLabAPIRequest,
   res: Response,
 ): Promise<void> {
-  if (!hasPermission(req, 'read')) {
+  if (!hasDeliberateLabAPIPermission(req, 'read')) {
     res.status(403).json({error: 'Insufficient permissions'});
     return;
   }
@@ -374,7 +374,7 @@ export async function exportExperimentData(
   const app = admin.app();
   const firestore = app.firestore();
   const experimentId = req.params.id;
-  const experimenterId = req.apiKeyData!.experimenterId;
+  const experimenterId = req.deliberateLabAPIKeyData!.experimenterId;
 
   if (!experimentId) {
     res.status(400).json({error: 'Experiment ID required'});

@@ -1,7 +1,7 @@
 import {
   AckAlertMessageData,
   AgentConfigTestData,
-  APIKeyPermission,
+  DeliberateLabAPIKeyPermission,
   BaseParticipantData,
   CreateChatMessageData,
   CohortCreationData,
@@ -634,24 +634,26 @@ export const ackAlertMessageCallable = async (
   return data;
 };
 
-/** Generic endpoint to create an API key. */
-export const createAPIKeyCallable = async (
+/** Create a Deliberate Lab API key. */
+export const createDeliberateLabAPIKeyCallable = async (
   functions: Functions,
   keyName: string,
-  permissions?: APIKeyPermission[],
+  permissions?: DeliberateLabAPIKeyPermission[],
 ) => {
   const {data} = await httpsCallable<
-    {keyName: string; permissions?: APIKeyPermission[]},
+    {keyName: string; permissions?: DeliberateLabAPIKeyPermission[]},
     {success: boolean; apiKey: string; keyId: string; message: string}
   >(
     functions,
-    'createAPIKey',
+    'createDeliberateLabAPIKey',
   )({keyName, permissions});
   return data;
 };
 
-/** Generic endpoint to list API keys. */
-export const listAPIKeysCallable = async (functions: Functions) => {
+/** List Deliberate Lab API keys. */
+export const listDeliberateLabAPIKeysCallable = async (
+  functions: Functions,
+) => {
   const {data} = await httpsCallable<
     undefined,
     {
@@ -661,15 +663,15 @@ export const listAPIKeysCallable = async (functions: Functions) => {
         name: string;
         createdAt: number;
         lastUsed: number | null;
-        permissions: APIKeyPermission[];
+        permissions: DeliberateLabAPIKeyPermission[];
       }>;
     }
-  >(functions, 'listAPIKeys')();
+  >(functions, 'listDeliberateLabAPIKeys')();
   return data;
 };
 
-/** Generic endpoint to revoke an API key. */
-export const revokeAPIKeyCallable = async (
+/** Revoke a Deliberate Lab API key. */
+export const revokeDeliberateLabAPIKeyCallable = async (
   functions: Functions,
   keyId: string,
 ) => {
@@ -678,7 +680,7 @@ export const revokeAPIKeyCallable = async (
     {success: boolean; message: string}
   >(
     functions,
-    'revokeAPIKey',
+    'revokeDeliberateLabAPIKey',
   )({keyId});
   return data;
 };

@@ -11,9 +11,9 @@ import {core} from '../../core/core';
 import {FirebaseService} from '../../services/firebase.service';
 
 import {
-  createAPIKeyCallable,
-  listAPIKeysCallable,
-  revokeAPIKeyCallable,
+  createDeliberateLabAPIKeyCallable,
+  listDeliberateLabAPIKeysCallable,
+  revokeDeliberateLabAPIKeyCallable,
 } from '../../shared/callables';
 
 import {styles} from './api_key_manager.scss';
@@ -50,7 +50,9 @@ export class APIKeyManager extends MobxLitElement {
     this.isLoading = true;
     this.error = null;
     try {
-      const result = await listAPIKeysCallable(this.firebaseService.functions);
+      const result = await listDeliberateLabAPIKeysCallable(
+        this.firebaseService.functions,
+      );
       this.apiKeys = result.keys;
     } catch (e) {
       console.error('Error loading API keys:', e);
@@ -69,7 +71,7 @@ export class APIKeyManager extends MobxLitElement {
     this.isLoading = true;
     this.error = null;
     try {
-      const result = await createAPIKeyCallable(
+      const result = await createDeliberateLabAPIKeyCallable(
         this.firebaseService.functions,
         this.newKeyName.trim(),
       );
@@ -97,7 +99,10 @@ export class APIKeyManager extends MobxLitElement {
     this.isLoading = true;
     this.error = null;
     try {
-      await revokeAPIKeyCallable(this.firebaseService.functions, keyId);
+      await revokeDeliberateLabAPIKeyCallable(
+        this.firebaseService.functions,
+        keyId,
+      );
       await this.loadAPIKeys();
     } catch (e) {
       console.error('Error revoking API key:', e);

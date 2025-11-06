@@ -25,9 +25,12 @@ import {
   StageConfig,
   ExperimentTemplate,
   Experiment,
-  APIKeyPermission,
+  DeliberateLabAPIKeyPermission,
 } from '@deliberation-lab/utils';
-import {createAPIKey, verifyAPIKey} from './api_key.utils';
+import {
+  createDeliberateLabAPIKey,
+  verifyDeliberateLabAPIKey,
+} from './api_key.utils';
 
 // Import actual experiment templates from frontend
 import {getFlipCardExperimentTemplate} from '../../../frontend/src/shared/templates/flipcard';
@@ -74,14 +77,15 @@ describe('API Experiment Creation Integration Tests', () => {
 
     // Create test API key (this will be stored in the emulator)
     console.log('Creating API key...');
-    const {apiKey} = await createAPIKey(TEST_EXPERIMENTER_ID, 'Test API Key', [
-      APIKeyPermission.READ,
-      APIKeyPermission.WRITE,
-    ]);
+    const {apiKey} = await createDeliberateLabAPIKey(
+      TEST_EXPERIMENTER_ID,
+      'Test API Key',
+      [DeliberateLabAPIKeyPermission.READ, DeliberateLabAPIKeyPermission.WRITE],
+    );
     testAPIKey = apiKey;
     // Verify the key can be validated (this uses admin SDK internally)
     console.log('Verifying API key...');
-    const {valid, data} = await verifyAPIKey(apiKey);
+    const {valid, data} = await verifyDeliberateLabAPIKey(apiKey);
     console.log('API key valid:', valid);
     if (!valid || !data) {
       throw new Error('API key verification failed');

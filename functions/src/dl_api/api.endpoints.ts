@@ -7,10 +7,13 @@ import {onRequest, onCall} from 'firebase-functions/v2/https';
 import * as functions from 'firebase-functions';
 import express from 'express';
 import rateLimit, {ipKeyGenerator} from 'express-rate-limit';
-import {authenticateAPIKey, rejectBrowserRequests} from './api.utils';
+import {
+  authenticateDeliberateLabAPIKey,
+  rejectBrowserRequestsForDeliberateLabAPI,
+} from './api.utils';
 import {AuthGuard} from '../utils/auth-guard';
-import {APIKeyPermission} from '@deliberation-lab/utils';
-import * as apiKeyService from './api_key.utils';
+import {DeliberateLabAPIKeyPermission} from '@deliberation-lab/utils';
+import * as deliberateLabAPIKeyService from './api_key.utils';
 import {
   listExperiments,
   createExperiment,
@@ -36,7 +39,9 @@ const limiter = rateLimit({
   // Use API key as identifier for rate limiting
   keyGenerator: (req) => {
     // Use shared utility to extract API key
-    const apiKey = apiKeyService.extractBearerToken(req.headers.authorization);
+    const apiKey = deliberateLabAPIKeyService.extractDeliberateLabBearerToken(
+      req.headers.authorization,
+    );
     // Use API key if found, otherwise fall back to properly normalized IP
     return apiKey || ipKeyGenerator(req.ip || 'unknown');
   },
@@ -47,10 +52,10 @@ const limiter = rateLimit({
 app.use(limiter);
 
 // 2. Reject browser requests (server-to-server only)
-app.use(rejectBrowserRequests);
+app.use(rejectBrowserRequestsForDeliberateLabAPI);
 
 // 3. Authenticate API key
-app.use(authenticateAPIKey);
+app.use(authenticateDeliberateLabAPIKey);
 
 // API Routes
 app.get('/v1/experiments', listExperiments);
@@ -104,10 +109,10 @@ export const api = onRequest(
 );
 
 /**
- * Create API key endpoint (uses Firebase Auth)
+ * Create Deliberate Lab API key endpoint (uses Firebase Auth)
  * This is a callable function that requires Firebase authentication
  */
-export const createAPIKey = onCall(
+export const createDeliberateLabAPIKey = onCall(
   {
     timeoutSeconds: 30,
   },
@@ -128,11 +133,15 @@ export const createAPIKey = onCall(
 
     try {
       // Create the API key with optional permissions
-      const {apiKey, keyId} = await apiKeyService.createAPIKey(
-        experimenterId,
-        keyName,
-        permissions || [APIKeyPermission.READ, APIKeyPermission.WRITE],
-      );
+      const {apiKey, keyId} =
+        await deliberateLabAPIKeyService.createDeliberateLabAPIKey(
+          experimenterId,
+          keyName,
+          permissions || [
+            DeliberateLabAPIKeyPermission.READ,
+            DeliberateLabAPIKeyPermission.WRITE,
+          ],
+        );
 
       return {
         success: true,
@@ -151,10 +160,10 @@ export const createAPIKey = onCall(
 );
 
 /**
- * List API keys for the authenticated user
+ * List Deliberate Lab API keys for the authenticated user
  * Returns metadata only (no actual keys)
  */
-export const listAPIKeys = onCall(
+export const listDeliberateLabAPIKeys = onCall(
   {
     timeoutSeconds: 30,
   },
@@ -165,7 +174,10 @@ export const listAPIKeys = onCall(
     const experimenterId = request.auth!.uid;
 
     try {
-      const keys = await apiKeyService.listAPIKeys(experimenterId);
+      const keys =
+        await deliberateLabAPIKeyService.listDeliberateLabAPIKeys(
+          experimenterId,
+        );
 
       return {
         success: true,
@@ -182,9 +194,9 @@ export const listAPIKeys = onCall(
 );
 
 /**
- * Revoke an API key
+ * Revoke a Deliberate Lab API key
  */
-export const revokeAPIKey = onCall(
+export const revokeDeliberateLabAPIKey = onCall(
   {
     timeoutSeconds: 30,
   },
@@ -204,7 +216,11 @@ export const revokeAPIKey = onCall(
     const experimenterId = request.auth!.uid;
 
     try {
-      const success = await apiKeyService.revokeAPIKey(keyId, experimenterId);
+      const success =
+        await deliberateLabAPIKeyService.revokeDeliberateLabAPIKey(
+          keyId,
+          experimenterId,
+        );
 
       if (!success) {
         throw new functions.https.HttpsError(

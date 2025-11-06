@@ -1,18 +1,18 @@
 /**
- * API Key types and enums shared between frontend and backend
+ * Deliberate Lab API Key types and enums shared between frontend and backend
  */
 
-export enum APIKeyPermission {
+export enum DeliberateLabAPIKeyPermission {
   READ = 'read',
   WRITE = 'write',
 }
 
-export interface APIKeyData {
+export interface DeliberateLabAPIKeyData {
   hash: string;
   salt: string;
   experimenterId: string;
   name: string;
-  permissions: APIKeyPermission[];
+  permissions: DeliberateLabAPIKeyPermission[];
   createdAt: number;
   lastUsed: number | null;
   expiresAt?: number;

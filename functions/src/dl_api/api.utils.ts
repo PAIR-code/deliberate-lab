@@ -1,17 +1,20 @@
 /**
- * Shared utilities for REST API endpoints
+ * Shared utilities for Deliberate Lab REST API endpoints
  * Includes authentication middleware and validation helpers
  */
 
 import {Request, Response, NextFunction} from 'express';
-import {verifyAPIKey, extractBearerToken} from './api_key.utils';
+import {
+  verifyDeliberateLabAPIKey,
+  extractDeliberateLabBearerToken,
+} from './api_key.utils';
 
 // ************************************************************************* //
 // TYPES                                                                     //
 // ************************************************************************* //
 
-export interface AuthenticatedRequest extends Request {
-  apiKeyData?: {
+export interface DeliberateLabAPIRequest extends Request {
+  deliberateLabAPIKeyData?: {
     experimenterId: string;
     permissions: string[];
     name: string;
@@ -23,9 +26,9 @@ export interface AuthenticatedRequest extends Request {
 // ************************************************************************* //
 
 /**
- * Middleware to reject browser requests (server-to-server only)
+ * Middleware to reject browser requests for Deliberate Lab API (server-to-server only)
  */
-export function rejectBrowserRequests(
+export function rejectBrowserRequestsForDeliberateLabAPI(
   req: Request,
   res: Response,
   next: NextFunction,
@@ -53,13 +56,13 @@ function asyncHandler(
 }
 
 /**
- * Express middleware to authenticate API key
+ * Express middleware to authenticate Deliberate Lab API key
  * Simplified async version using Express patterns
  */
-export const authenticateAPIKey = asyncHandler(
-  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+export const authenticateDeliberateLabAPIKey = asyncHandler(
+  async (req: DeliberateLabAPIRequest, res: Response, next: NextFunction) => {
     // Extract and validate Bearer token
-    const apiKey = extractBearerToken(req.headers.authorization);
+    const apiKey = extractDeliberateLabBearerToken(req.headers.authorization);
 
     if (!apiKey) {
       const error = req.headers.authorization
@@ -72,7 +75,7 @@ export const authenticateAPIKey = asyncHandler(
 
     try {
       // Verify API key
-      const {valid, data} = await verifyAPIKey(apiKey);
+      const {valid, data} = await verifyDeliberateLabAPIKey(apiKey);
 
       if (!valid || !data) {
         res.status(401).json({error: 'Invalid or expired API key'});
@@ -80,7 +83,7 @@ export const authenticateAPIKey = asyncHandler(
       }
 
       // Attach API key data to request
-      req.apiKeyData = {
+      req.deliberateLabAPIKeyData = {
         experimenterId: data.experimenterId,
         permissions: data.permissions,
         name: data.name,
@@ -97,25 +100,27 @@ export const authenticateAPIKey = asyncHandler(
 );
 
 /**
- * Check if the API key has a specific permission
+ * Check if the Deliberate Lab API key has a specific permission
  */
-export function hasPermission(
-  req: AuthenticatedRequest,
+export function hasDeliberateLabAPIPermission(
+  req: DeliberateLabAPIRequest,
   permission: string,
 ): boolean {
-  return req.apiKeyData?.permissions?.includes(permission) ?? false;
+  return (
+    req.deliberateLabAPIKeyData?.permissions?.includes(permission) ?? false
+  );
 }
 
 /**
- * Express middleware to check for a specific permission
+ * Express middleware to check for a specific Deliberate Lab API permission
  */
-export function requirePermission(permission: string) {
+export function requireDeliberateLabAPIPermission(permission: string) {
   return (
-    req: AuthenticatedRequest,
+    req: DeliberateLabAPIRequest,
     res: Response,
     next: NextFunction,
   ): void => {
-    if (!hasPermission(req, permission)) {
+    if (!hasDeliberateLabAPIPermission(req, permission)) {
       res.status(403).json({
         error: `Insufficient permissions. Required: ${permission}`,
       });
