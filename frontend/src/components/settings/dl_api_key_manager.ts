@@ -8,82 +8,34 @@ import {customElement, state} from 'lit/decorators.js';
 import '@material/web/textfield/filled-text-field.js';
 
 import {core} from '../../core/core';
-import {FirebaseService} from '../../services/firebase.service';
-
-import {
-  createDeliberateLabAPIKeyCallable,
-  listDeliberateLabAPIKeysCallable,
-  revokeDeliberateLabAPIKeyCallable,
-} from '../../shared/callables';
+import {SettingsService} from '../../services/settings.service';
+import {DeliberateLabAPIKey} from '@deliberation-lab/utils';
 
 import {styles} from './dl_api_key_manager.scss';
-
-interface DeliberateLabAPIKey {
-  keyId: string;
-  name: string;
-  createdAt: number;
-  lastUsed: number | null;
-  permissions: string[];
-}
 
 /** Deliberate Lab API Key Management component */
 @customElement('dl-api-key-manager')
 export class DeliberateLabAPIKeyManager extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
 
-  private readonly firebaseService = core.getService(FirebaseService);
+  private readonly settingsService = core.getService(SettingsService);
 
-  @state() apiKeys: DeliberateLabAPIKey[] = [];
-  @state() isLoading = false;
   @state() newKeyName = '';
   @state() showCreateForm = false;
-  @state() newlyCreatedKey: string | null = null;
-  @state() error: string | null = null;
   @state() copied = false;
 
   override connectedCallback() {
     super.connectedCallback();
-    this.loadAPIKeys();
-  }
-
-  private async loadAPIKeys() {
-    this.isLoading = true;
-    this.error = null;
-    try {
-      const result = await listDeliberateLabAPIKeysCallable(
-        this.firebaseService.functions,
-      );
-      this.apiKeys = result.keys;
-    } catch (e) {
-      console.error('Error loading API keys:', e);
-      this.error = 'Failed to load API keys';
-    } finally {
-      this.isLoading = false;
-    }
+    this.settingsService.loadDeliberateLabAPIKeys();
   }
 
   private async handleCreateKey() {
-    if (!this.newKeyName.trim()) {
-      this.error = 'Please enter a name for the API key';
-      return;
-    }
-
-    this.isLoading = true;
-    this.error = null;
-    try {
-      const result = await createDeliberateLabAPIKeyCallable(
-        this.firebaseService.functions,
-        this.newKeyName.trim(),
-      );
-      this.newlyCreatedKey = result.apiKey;
+    const success = await this.settingsService.createDeliberateLabAPIKey(
+      this.newKeyName,
+    );
+    if (success) {
       this.newKeyName = '';
       this.showCreateForm = false;
-      await this.loadAPIKeys();
-    } catch (e) {
-      console.error('Error creating API key:', e);
-      this.error = 'Failed to create API key';
-    } finally {
-      this.isLoading = false;
     }
   }
 
@@ -96,25 +48,14 @@ export class DeliberateLabAPIKeyManager extends MobxLitElement {
       return;
     }
 
-    this.isLoading = true;
-    this.error = null;
-    try {
-      await revokeDeliberateLabAPIKeyCallable(
-        this.firebaseService.functions,
-        keyId,
-      );
-      await this.loadAPIKeys();
-    } catch (e) {
-      console.error('Error revoking API key:', e);
-      this.error = 'Failed to revoke API key';
-    } finally {
-      this.isLoading = false;
-    }
+    await this.settingsService.revokeDeliberateLabAPIKey(keyId);
   }
 
   private handleCopyKey() {
-    if (this.newlyCreatedKey) {
-      navigator.clipboard.writeText(this.newlyCreatedKey);
+    if (this.settingsService.newlyCreatedDeliberateLabAPIKey) {
+      navigator.clipboard.writeText(
+        this.settingsService.newlyCreatedDeliberateLabAPIKey,
+      );
       this.copied = true;
       setTimeout(() => {
         this.copied = false;
@@ -123,7 +64,7 @@ export class DeliberateLabAPIKeyManager extends MobxLitElement {
   }
 
   private handleDismissNewKey() {
-    this.newlyCreatedKey = null;
+    this.settingsService.dismissNewDeliberateLabAPIKey();
     this.copied = false;
   }
 
@@ -138,8 +79,12 @@ export class DeliberateLabAPIKeyManager extends MobxLitElement {
   override render() {
     return html`
       <div>
-        ${this.error ? this.renderError() : nothing}
-        ${this.newlyCreatedKey ? this.renderNewKeyAlert() : nothing}
+        ${this.settingsService.deliberateLabAPIKeyError
+          ? this.renderError()
+          : nothing}
+        ${this.settingsService.newlyCreatedDeliberateLabAPIKey
+          ? this.renderNewKeyAlert()
+          : nothing}
         ${this.showCreateForm ? this.renderCreateForm() : nothing}
         ${!this.showCreateForm ? this.renderCreateButton() : nothing}
         ${this.renderKeyList()}
@@ -152,7 +97,7 @@ export class DeliberateLabAPIKeyManager extends MobxLitElement {
       <pr-button
         color="primary"
         variant="tonal"
-        ?disabled=${this.isLoading}
+        ?disabled=${this.settingsService.isLoadingDeliberateLabAPIKeys}
         @click=${() => {
           this.showCreateForm = true;
         }}
@@ -166,7 +111,7 @@ export class DeliberateLabAPIKeyManager extends MobxLitElement {
     return html`
       <div class="banner error">
         <pr-icon icon="error"></pr-icon>
-        ${this.error}
+        ${this.settingsService.deliberateLabAPIKeyError}
       </div>
     `;
   }
@@ -184,7 +129,7 @@ export class DeliberateLabAPIKeyManager extends MobxLitElement {
           >
         </p>
         <div class="key-display">
-          <code>${this.newlyCreatedKey}</code>
+          <code>${this.settingsService.newlyCreatedDeliberateLabAPIKey}</code>
           <pr-button
             color=${this.copied ? 'tertiary' : 'primary'}
             variant=${this.copied ? 'tonal' : 'default'}
@@ -224,7 +169,8 @@ export class DeliberateLabAPIKeyManager extends MobxLitElement {
           <pr-button
             color="primary"
             variant="tonal"
-            ?disabled=${this.isLoading || !this.newKeyName.trim()}
+            ?disabled=${this.settingsService.isLoadingDeliberateLabAPIKeys ||
+            !this.newKeyName.trim()}
             @click=${this.handleCreateKey}
           >
             Create Key
@@ -232,7 +178,7 @@ export class DeliberateLabAPIKeyManager extends MobxLitElement {
           <pr-button
             color="neutral"
             variant="outlined"
-            ?disabled=${this.isLoading}
+            ?disabled=${this.settingsService.isLoadingDeliberateLabAPIKeys}
             @click=${() => {
               this.showCreateForm = false;
               this.newKeyName = '';
@@ -247,11 +193,14 @@ export class DeliberateLabAPIKeyManager extends MobxLitElement {
   }
 
   private renderKeyList() {
-    if (this.isLoading && this.apiKeys.length === 0) {
+    if (
+      this.settingsService.isLoadingDeliberateLabAPIKeys &&
+      this.settingsService.deliberateLabAPIKeys.length === 0
+    ) {
       return html`<div class="empty-message">Loading API keys...</div>`;
     }
 
-    if (this.apiKeys.length === 0) {
+    if (this.settingsService.deliberateLabAPIKeys.length === 0) {
       return html`
         <div class="empty-message">
           No Deliberate Lab API keys yet. Create one to get started with
@@ -262,7 +211,9 @@ export class DeliberateLabAPIKeyManager extends MobxLitElement {
 
     return html`
       <div class="list">
-        ${this.apiKeys.map((key) => this.renderKeyItem(key))}
+        ${this.settingsService.deliberateLabAPIKeys.map((key) =>
+          this.renderKeyItem(key),
+        )}
       </div>
     `;
   }
@@ -287,7 +238,7 @@ export class DeliberateLabAPIKeyManager extends MobxLitElement {
         <pr-button
           color="error"
           variant="outlined"
-          ?disabled=${this.isLoading}
+          ?disabled=${this.settingsService.isLoadingDeliberateLabAPIKeys}
           @click=${() => this.handleRevokeKey(key.keyId, key.name)}
         >
           Revoke
