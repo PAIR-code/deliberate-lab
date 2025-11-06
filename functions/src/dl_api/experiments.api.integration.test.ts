@@ -20,8 +20,6 @@ import {
   RulesTestEnvironment,
 } from '@firebase/rules-unit-testing';
 import * as admin from 'firebase-admin';
-import request from 'supertest';
-import express from 'express';
 import {
   createExperimentConfig,
   StageConfig,
@@ -36,52 +34,16 @@ import {getFlipCardExperimentTemplate} from '../../../frontend/src/shared/templa
 import {getQuickstartGroupChatTemplate} from '../../../frontend/src/shared/templates/quickstart_group_chat';
 import {getPolicyExperimentTemplate} from '../../../frontend/src/shared/templates/policy';
 
-// Import Express app (we'll need to extract it from the API module)
-import {authenticateAPIKey} from './api.utils';
-import {
-  listExperiments,
-  createExperiment,
-  getExperiment,
-  updateExperiment,
-  deleteExperiment,
-  exportExperimentData,
-} from './experiments.api';
-
 let testEnv: RulesTestEnvironment;
 // Use any for firestore as the RulesTestEnvironment type is complex
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 let firestore: any;
 let testAPIKey: string;
-let testApp: express.Application;
+let baseUrl: string;
 
 // Test configuration
 const TEST_EXPERIMENTER_ID = 'test-experimenter@example.com';
 const EXPERIMENTS_COLLECTION = 'experiments';
-
-// Create Express app for testing (mimics api.endpoints.ts)
-function createTestAPIApp(): express.Application {
-  const app = express();
-  app.use(express.json());
-
-  // Skip rate limiting in tests
-  // Skip browser rejection in tests for supertest compatibility
-
-  // Add authentication
-  app.use(authenticateAPIKey);
-
-  // API Routes
-  app.post('/v1/experiments', createExperiment);
-  app.get('/v1/experiments/:id', getExperiment);
-  app.get('/v1/experiments', listExperiments);
-  app.put('/v1/experiments/:id', updateExperiment);
-  app.delete('/v1/experiments/:id', deleteExperiment);
-  app.get('/v1/experiments/:id/export', exportExperimentData);
-
-  return app;
-}
-
-// Note: We rely on FIRESTORE_EMULATOR_HOST environment variable to connect
-// both the admin SDK and the API code to the emulator
 
 describe('API Experiment Creation Integration Tests', () => {
   // Store created experiment IDs for cleanup
@@ -93,10 +55,12 @@ describe('API Experiment Creation Integration Tests', () => {
 
     testEnv = await initializeTestEnvironment({
       projectId,
-      firestore: {
-        host: 'localhost',
-        port: 8081,
-      },
+      firestore: process.env.FIRESTORE_EMULATOR_HOST
+        ? undefined
+        : {
+            host: 'localhost',
+            port: 8081,
+          },
     });
     firestore = testEnv.unauthenticatedContext().firestore();
     firestore.settings({ignoreUndefinedProperties: true, merge: true});
@@ -124,8 +88,16 @@ describe('API Experiment Creation Integration Tests', () => {
       throw new Error('API key verification failed');
     }
 
-    // Create test Express app
-    testApp = createTestAPIApp();
+    // Construct base URL dynamically from environment and config
+    // Firebase emulators don't set FIREBASE_FUNCTIONS_EMULATOR_HOST, so we use convention
+    const functionsHost =
+      process.env.FIREBASE_FUNCTIONS_EMULATOR_HOST || 'localhost';
+    const functionsPort =
+      process.env.FIREBASE_FUNCTIONS_EMULATOR_PORT || '5001';
+    const region = 'us-central1'; // Default region for Cloud Functions
+
+    baseUrl = `http://${functionsHost}:${functionsPort}/${projectId}/${region}/api`;
+    console.log('API base URL:', baseUrl);
   });
 
   afterAll(async () => {
@@ -248,19 +220,25 @@ describe('API Experiment Creation Integration Tests', () => {
     }
 
     // Make actual HTTP POST request to API
-    const response = await request(testApp)
-      .post('/v1/experiments')
-      .set('Authorization', `Bearer ${testAPIKey}`)
-      .send(requestBody);
+    const response = await fetch(`${baseUrl}/v1/experiments`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${testAPIKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(requestBody),
+    });
 
     // Assert successful creation
-    if (response.status !== 201) {
-      console.error('API request failed:', response.status, response.body);
+    if (!response.ok) {
+      const errorBody = await response.text();
+      console.error('API request failed:', response.status, errorBody);
     }
     expect(response.status).toBe(201);
 
     // Extract experiment ID from response
-    const experimentId = response.body.id;
+    const responseBody = await response.json();
+    const experimentId = responseBody.id;
     createdExperimentIds.push(experimentId);
     return experimentId;
   }
