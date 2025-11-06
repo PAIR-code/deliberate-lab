@@ -95,6 +95,8 @@ export class StageManager {
   }
 
   /** Returns stage "display" (UI content) used in stage context prompt item.
+   *  NOTE: This does not resolve variables. Stage context passed in should
+   *  already be ready for render.
    *
    * If N > 0 participant answers are provided, then the stage display consists
    * of N "completed" (answers inline) stage displays concatenated

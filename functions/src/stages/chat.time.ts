@@ -5,6 +5,7 @@ import {
   getTimeElapsed,
 } from '@deliberation-lab/utils';
 import {getFirestoreStagePublicDataRef} from '../utils/firestore';
+import {sendSystemChatMessage} from '../chat/chat.utils';
 
 /** Start tracking elapsed time. */
 export async function startTimeElapsed(
@@ -59,13 +60,8 @@ export async function updateTimeElapsed(
   // If elapsed time has reached/exceeded the limit, mark end
   const remainingTime = stage.timeLimitInMinutes - elapsedMinutes;
   if (remainingTime <= 0) {
-    await getFirestoreStagePublicDataRef(
-      experimentId,
-      cohortId,
-      stageId,
-    ).update({
-      discussionEndTimestamp: Timestamp.now(),
-    });
+    await handleTimeElapsed(experimentId, cohortId, stageId);
+    return;
   }
 
   // Otherwise, continue to wait
@@ -77,13 +73,8 @@ export async function updateTimeElapsed(
 
   // If time is now up, mark discussion as over
   if (remainingTime - intervalTime <= 0) {
-    await getFirestoreStagePublicDataRef(
-      experimentId,
-      cohortId,
-      stageId,
-    ).update({
-      discussionEndTimestamp: Timestamp.now(),
-    });
+    await handleTimeElapsed(experimentId, cohortId, stageId);
+    return;
   }
 
   // Otherwise, write timestamp as discussion checkpoint to public stage data.
@@ -91,5 +82,21 @@ export async function updateTimeElapsed(
   // call this function to re-evaluate elapsed time
   await getFirestoreStagePublicDataRef(experimentId, cohortId, stageId).update({
     discussionCheckpointTimestamp: Timestamp.now(),
+  });
+}
+
+async function handleTimeElapsed(
+  experimentId: string,
+  cohortId: string,
+  stageId: string,
+) {
+  await sendSystemChatMessage(
+    experimentId,
+    cohortId,
+    stageId,
+    'The timer for this stage has ended; you can no longer respond.',
+  );
+  await getFirestoreStagePublicDataRef(experimentId, cohortId, stageId).update({
+    discussionEndTimestamp: Timestamp.now(),
   });
 }
