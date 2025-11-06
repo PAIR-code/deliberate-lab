@@ -25,7 +25,12 @@ export class DeliberateLabAPIKeyManager extends MobxLitElement {
 
   override connectedCallback() {
     super.connectedCallback();
-    this.settingsService.loadDeliberateLabAPIKeys();
+    this.settingsService.subscribeToDeliberateLabAPIKeys();
+  }
+
+  override disconnectedCallback() {
+    super.disconnectedCallback();
+    this.settingsService.unsubscribeFromDeliberateLabAPIKeys();
   }
 
   private async handleCreateKey() {

@@ -77,16 +77,21 @@ export async function createDeliberateLabAPIKey(
   // Hash it for storage
   const {hash, salt} = await hashDeliberateLabAPIKey(apiKey);
 
-  // Store in Firestore
-  await firestore.collection('apiKeys').doc(keyId).set({
-    hash,
-    salt,
-    experimenterId,
-    name: keyName,
-    permissions,
-    createdAt: Date.now(),
-    lastUsed: null,
-  });
+  // Store in Firestore under experimenter's subcollection
+  await firestore
+    .collection('experimenters')
+    .doc(experimenterId)
+    .collection('apiKeys')
+    .doc(keyId)
+    .set({
+      hash,
+      salt,
+      experimenterId,
+      name: keyName,
+      permissions,
+      createdAt: Date.now(),
+      lastUsed: null,
+    });
 
   return {apiKey, keyId};
 }
@@ -103,12 +108,16 @@ export async function verifyDeliberateLabAPIKey(
   // Get key ID to look up the document
   const keyId = getDeliberateLabKeyId(apiKey);
 
-  // Look up in Firestore
-  const doc = await firestore.collection('apiKeys').doc(keyId).get();
-  if (!doc.exists) {
+  // Collection group query across all experimenters' apiKeys subcollections
+  const snapshot = await firestore.collectionGroup('apiKeys').get();
+
+  // Find the matching key document
+  // Can use a composite index here if number of API keys becomes very large.
+  const doc = snapshot.docs.find((doc) => doc.id === keyId);
+
+  if (!doc) {
     return {valid: false};
   }
-
   const data = doc.data() as DeliberateLabAPIKeyData;
 
   // Check expiration
@@ -122,7 +131,7 @@ export async function verifyDeliberateLabAPIKey(
 
   if (isValid) {
     // Update last used timestamp
-    await firestore.collection('apiKeys').doc(keyId).update({
+    await doc.ref.update({
       lastUsed: Date.now(),
     });
   }
@@ -140,7 +149,13 @@ export async function revokeDeliberateLabAPIKey(
   const app = admin.app();
   const firestore = app.firestore();
 
-  const doc = await firestore.collection('apiKeys').doc(keyId).get();
+  const doc = await firestore
+    .collection('experimenters')
+    .doc(experimenterId)
+    .collection('apiKeys')
+    .doc(keyId)
+    .get();
+
   if (!doc.exists) {
     return false;
   }
@@ -152,8 +167,14 @@ export async function revokeDeliberateLabAPIKey(
     return false;
   }
 
-  // Delete the key
-  await firestore.collection('apiKeys').doc(keyId).delete();
+  // Delete the key from subcollection
+  await firestore
+    .collection('experimenters')
+    .doc(experimenterId)
+    .collection('apiKeys')
+    .doc(keyId)
+    .delete();
+
   return true;
 }
 
@@ -173,8 +194,9 @@ export async function listDeliberateLabAPIKeys(experimenterId: string): Promise<
   const firestore = app.firestore();
 
   const snapshot = await firestore
+    .collection('experimenters')
+    .doc(experimenterId)
     .collection('apiKeys')
-    .where('experimenterId', '==', experimenterId)
     .get();
 
   return snapshot.docs.map((doc) => ({

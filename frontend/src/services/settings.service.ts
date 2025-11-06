@@ -1,17 +1,19 @@
 import {action, makeObservable, observable} from 'mobx';
+import {Unsubscribe, collection, onSnapshot} from 'firebase/firestore';
 import {DeliberateLabAPIKey} from '@deliberation-lab/utils';
 
 import {Service} from './service';
+import {AuthService} from './auth.service';
 import {FirebaseService} from './firebase.service';
 
 import {ColorMode} from '../shared/types';
 import {
   createDeliberateLabAPIKeyCallable,
-  listDeliberateLabAPIKeysCallable,
   revokeDeliberateLabAPIKeyCallable,
 } from '../shared/callables';
 
 interface ServiceProvider {
+  authService: AuthService;
   firebaseService: FirebaseService;
 }
 
@@ -23,6 +25,8 @@ export class SettingsService extends Service {
     super();
     makeObservable(this);
   }
+
+  private apiKeysUnsubscribe: Unsubscribe | null = null;
 
   @observable colorMode: ColorMode = ColorMode.DEFAULT;
 
@@ -37,22 +41,66 @@ export class SettingsService extends Service {
   @observable newlyCreatedDeliberateLabAPIKey: string | null = null;
 
   /**
-   * Load all Deliberate Lab API keys for the current user
+   * Subscribe to Deliberate Lab API keys for the current user
    */
   @action
-  async loadDeliberateLabAPIKeys() {
+  subscribeToDeliberateLabAPIKeys() {
+    // Unsubscribe from any existing listener
+    this.unsubscribeFromDeliberateLabAPIKeys();
+
+    const userId = this.sp.authService.userId;
+    if (!userId) {
+      this.deliberateLabAPIKeys = [];
+      return;
+    }
+
     this.isLoadingDeliberateLabAPIKeys = true;
     this.deliberateLabAPIKeyError = null;
+
     try {
-      const result = await listDeliberateLabAPIKeysCallable(
-        this.sp.firebaseService.functions,
+      const apiKeysRef = collection(
+        this.sp.firebaseService.firestore,
+        'experimenters',
+        userId,
+        'apiKeys',
       );
-      this.deliberateLabAPIKeys = result.keys;
+
+      this.apiKeysUnsubscribe = onSnapshot(
+        apiKeysRef,
+        (snapshot) => {
+          this.deliberateLabAPIKeys = snapshot.docs.map((doc) => ({
+            keyId: doc.id,
+            name: doc.data().name as string,
+            createdAt: doc.data().createdAt as number,
+            lastUsed: (doc.data().lastUsed as number | null) || null,
+            permissions: doc.data().permissions as string[],
+          }));
+          this.isLoadingDeliberateLabAPIKeys = false;
+        },
+        (error) => {
+          console.error('Error subscribing to Deliberate Lab API keys:', error);
+          this.deliberateLabAPIKeyError =
+            'Failed to load Deliberate Lab API keys';
+          this.isLoadingDeliberateLabAPIKeys = false;
+        },
+      );
     } catch (e) {
-      console.error('Error loading Deliberate Lab API keys:', e);
+      console.error(
+        'Error setting up Deliberate Lab API keys subscription:',
+        e,
+      );
       this.deliberateLabAPIKeyError = 'Failed to load Deliberate Lab API keys';
-    } finally {
       this.isLoadingDeliberateLabAPIKeys = false;
+    }
+  }
+
+  /**
+   * Unsubscribe from Deliberate Lab API keys
+   */
+  unsubscribeFromDeliberateLabAPIKeys() {
+    if (this.apiKeysUnsubscribe) {
+      this.apiKeysUnsubscribe();
+      this.apiKeysUnsubscribe = null;
     }
   }
 
@@ -75,7 +123,6 @@ export class SettingsService extends Service {
         name.trim(),
       );
       this.newlyCreatedDeliberateLabAPIKey = result.apiKey;
-      await this.loadDeliberateLabAPIKeys();
       return true;
     } catch (e) {
       console.error('Error creating Deliberate Lab API key:', e);
@@ -98,7 +145,6 @@ export class SettingsService extends Service {
         this.sp.firebaseService.functions,
         keyId,
       );
-      await this.loadDeliberateLabAPIKeys();
       return true;
     } catch (e) {
       console.error('Error revoking Deliberate Lab API key:', e);

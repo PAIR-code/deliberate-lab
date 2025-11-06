@@ -99,6 +99,11 @@ service cloud.firestore {
     match /experimenters/{experimenterId} {
       allow read: if true;
       allow write: if lowerEquals(experimenterId, request.auth.token.email) || lowerEquals(experimenterId, request.auth.uid);
+
+      // Deliberate Lab API keys subcollection (only owner can read/write)
+      match /apiKeys/{keyId} {
+        allow read, write: if lowerEquals(experimenterId, request.auth.token.email) || lowerEquals(experimenterId, request.auth.uid);
+      }
     }
 
     // Experiments
