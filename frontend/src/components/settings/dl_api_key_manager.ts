@@ -1,5 +1,4 @@
 import '../../pair-components/button';
-import '../../pair-components/icon';
 
 import {MobxLitElement} from '@adobe/lit-mobx';
 import {CSSResultGroup, html, nothing} from 'lit';
@@ -78,7 +77,7 @@ export class DeliberateLabAPIKeyManager extends MobxLitElement {
 
   override render() {
     return html`
-      <div>
+      <div class="api-key-manager">
         ${this.settingsService.deliberateLabAPIKeyError
           ? this.renderError()
           : nothing}
@@ -110,8 +109,7 @@ export class DeliberateLabAPIKeyManager extends MobxLitElement {
   private renderError() {
     return html`
       <div class="banner error">
-        <pr-icon icon="error"></pr-icon>
-        ${this.settingsService.deliberateLabAPIKeyError}
+        ⚠️ ${this.settingsService.deliberateLabAPIKeyError}
       </div>
     `;
   }
@@ -120,8 +118,7 @@ export class DeliberateLabAPIKeyManager extends MobxLitElement {
     return html`
       <div class="banner success">
         <div class="banner-header">
-          <pr-icon icon="check_circle"></pr-icon>
-          <strong>Deliberate Lab API Key Created Successfully</strong>
+          <strong>✅ Deliberate Lab API Key Created Successfully</strong>
         </div>
         <p>
           <strong

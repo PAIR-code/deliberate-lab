@@ -7,6 +7,11 @@
   width: 100%;
 }
 
+.api-key-manager {
+  @include common.flex-column;
+  gap: common.$spacing-medium;
+}
+
 .section {
   @include common.flex-column;
   gap: common.$spacing-medium;
@@ -39,7 +44,10 @@
   }
 
   &.error {
-    @include typescale.label-small;
+    @include typescale.body-medium;
+    color: var(--md-sys-color-error);
+    background: transparent;
+    border: 1px solid var(--md-sys-color-error);
   }
 }
 
@@ -50,8 +58,7 @@
 }
 
 .key-display {
-  @include common.flex-row;
-  align-items: center;
+  @include common.flex-row-align-center;
   gap: common.$spacing-medium;
   padding: common.$spacing-medium;
   background-color: var(--md-sys-color-surface-variant);
