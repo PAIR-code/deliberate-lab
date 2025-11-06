@@ -45,11 +45,11 @@ export class GroupChatStageHandler implements StageHandler<ChatStageConfig> {
         [participant],
         participant.publicId,
         getProfileSetId(),
-        true,
+        false,
         true,
       ),
     );
-    return `Group chat participants: ${participantNames.join(', ')}\n${getChatPromptMessageHistory(messages, stage)}`;
+    return `Participants in chat: ${participantNames.join(', ')}\n\n${getChatPromptMessageHistory(messages, stage)}`;
   }
 
   getDefaultMediatorStructuredPrompt(stageId: string) {

@@ -101,7 +101,7 @@ function createMediatorAgent(): AgentMediatorTemplate {
     StageKind.CHAT,
     {
       prompt: createDefaultPromptFromText(
-        'You are facilitating a group chat. Make sure all participants have a chance to speak and that everyone is polite to one another.',
+        'Your instructions are to facilitate this group chat. Make sure all participants have a chance to speak and that everyone is polite to one another.',
         CHAT_STAGE_ID,
       ),
     },

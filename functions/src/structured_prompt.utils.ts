@@ -310,7 +310,11 @@ async function processPromptItems(
         items.push(promptItem.text);
         break;
       case PromptItemType.PROFILE_CONTEXT:
-        items.push(userProfile.agentConfig.promptContext);
+        if (userProfile.agentConfig?.promptContext) {
+          items.push(
+            `Private persona context: ${userProfile.agentConfig.promptContext}\nThis information is private to you. Use it to guide your behavior in this task. Other participants do not know these attributes unless you choose to share it.`,
+          );
+        }
         break;
       case PromptItemType.PROFILE_INFO:
         const getProfileSetId = () => {
@@ -322,32 +326,73 @@ async function processPromptItems(
           return '';
         };
         if (userProfile.type === UserType.PARTICIPANT) {
+          const profileSetId = getProfileSetId();
+          const participantInstructions: string = `You are a human participant interacting in an online task with multiple stages. In this query, you will provide an action for the current stage - for example, participating in a live chat, answering survey questions, or acknowledging information. Respond as this participant in order to move the task forward.\n`;
+
+          let scaffolding: string = `This is your randomly assigned pseudonymous alias. Others will use it to refer to you. It’s only a label (such as an animal or object). You are still a human using this alias.`;
+          // TODO: Fix this.
+          if (profileSetId) {
+            scaffolding = `This is the display name you chose for others to see you as.`;
+          }
+
           items.push(
-            getNameFromPublicId(
+            `${participantInstructions}\n--- Participant description ---\nAlias: ${getNameFromPublicId(
               [userProfile],
               userProfile.publicId,
-              getProfileSetId(),
-            ),
+              profileSetId,
+            )}\n${scaffolding}
+          `,
           );
         } else {
           // TODO: Adjust display for mediator profiles
-          items.push(`${userProfile.avatar} ${userProfile.name}`);
+          items.push(
+            `You are participating in a live conversation as the following online alias.\n\nAlias: ${userProfile.avatar} ${userProfile.name}.\n\nFollow any persona context or instructions carefully.`,
+          );
         }
         break;
       case PromptItemType.STAGE_CONTEXT:
         const stageContextIds = promptItem.stageId
           ? [promptItem.stageId]
           : getAllPrecedingStageIds(experiment.stageIds, stageId);
-        for (const id of stageContextIds) {
-          items.push(
-            await getStageContextForPrompt(
-              promptData.participants,
-              promptData.data[id],
-              id,
-              promptItem,
-            ),
-          );
+
+        // Previous stages for non-mediators
+        const ids = stageContextIds;
+        if (userProfile.type === UserType.PARTICIPANT) {
+          items.push('\n--- Previously completed stages (read only) ---');
+
+          const prevIds = ids.slice(0, -1); // all except last
+
+          for (let i = 0; i < prevIds.length; i++) {
+            const id = prevIds[i];
+            const stageNumber = i + 1; // 1-based
+            items.push(
+              await getStageContextForPrompt(
+                promptData.participants,
+                promptData.data[id],
+                id,
+                promptItem,
+                stageNumber,
+              ),
+            );
+          }
         }
+
+        // Current stage
+        const lastId = ids[ids.length - 1];
+        const lastStage = promptData.data[lastId];
+        items.push(
+          `\n--- Current stage: ${lastStage.stage.name ?? lastStage.stage.id} ---`,
+        );
+        items.push(
+          await getStageContextForPrompt(
+            promptData.participants,
+            lastStage,
+            lastId,
+            promptItem,
+            ids.length, // Stage number
+          ),
+        );
+
         break;
       case PromptItemType.GROUP:
         const promptGroup = promptItem as PromptItemGroup;
@@ -402,6 +447,7 @@ export async function getStageContextForPrompt(
   stageContext: StageContextData,
   currentStageId: string,
   item: StageContextPromptItem,
+  stageNumber: number,
 ) {
   // Get the specific stage
   const stage = stageContext.stage;
@@ -409,13 +455,12 @@ export async function getStageContextForPrompt(
   const textItems: string[] = [];
 
   // Include name of stage
-  textItems.push(`----- STAGE: ${stage.name ?? stage.id} -----`);
-
+  textItems.push(`[Stage ${stageNumber}: ${stage.name ?? stage.id}]`);
   if (item.includePrimaryText && stage.descriptions.primaryText.trim() !== '') {
-    textItems.push(`- Stage description: ${stage.descriptions.primaryText}`);
+    textItems.push(`* Stage description: ${stage.descriptions.primaryText}`);
   }
   if (item.includeInfoText) {
-    textItems.push(`- Additional info: ${stage.descriptions.infoText}`);
+    textItems.push(`* Additional info: ${stage.descriptions.infoText}`);
   }
   // Note: Help text not included since the field has been deprecated
 

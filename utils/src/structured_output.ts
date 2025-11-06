@@ -110,18 +110,6 @@ export function createStructuredOutputConfig(
   };
 }
 
-function defaultPromptScaffolding(prompt: PromptItem) {
-  switch(prompt.type) {
-    case (PromptItemType.PROFILE_INFO) {
-
-    }
-    case:
-    case:
-    default:
-      return prompt;
-  }
-}
-
 function schemaToObject(schema: StructuredOutputSchema): object {
   let properties: Record<string, object> | undefined = undefined;
   let required = undefined;
@@ -180,7 +168,7 @@ export function makeStructuredOutputPrompt(
   ) {
     return '';
   }
-  return `\n#Response format:\nReturn only valid JSON, according to the following schema:
+  return `\n--- Response format ---\nReturn only valid JSON, according to the following schema:
 ${printSchema(config.schema)}
 `;
 }

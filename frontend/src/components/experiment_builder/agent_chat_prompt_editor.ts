@@ -17,8 +17,6 @@ import {ExperimentEditor} from '../../services/experiment.editor';
 import {
   AgentPersonaConfig,
   AgentPersonaType,
-  ApiKeyType,
-  BaseAgentPromptConfig,
   ChatMediatorStructuredOutputConfig,
   ChatPromptConfig,
   PromptItem,
@@ -29,7 +27,6 @@ import {
   StructuredOutputType,
   StructuredOutputDataType,
   StructuredOutputSchema,
-  createDefaultPromptFromText,
   makeStructuredOutputPrompt,
   structuredOutputEnabled,
   TextPromptItem,
