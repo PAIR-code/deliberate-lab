@@ -22,6 +22,7 @@ import {
   createModelGenerationConfig,
   createChatPromptConfig,
   createTransferStage,
+  createTutorialInfoStage,
   createTOSStage,
   createExperimentConfig,
   createExperimentTemplate,
@@ -380,7 +381,11 @@ export function getCharityDebateTemplate(
   let habermasRound: number | undefined;
   let dynamicRound: number | undefined;
 
+  // Tutorial stage.
+  stages.push(createTutorialInfoStage());
+
   if (config.includeTos) stages.push(CONSENSUS_TOS_STAGE);
+
   stages.push(SET_PROFILE_STAGE_EXPANDED);
 
   const instructions = createInstructionsStages();
@@ -778,8 +783,8 @@ function createAllocationStage(
 
   charityVariableNames.forEach((variableName) => {
     primaryText += `\n
-        [{{${variableName}.name}}]({{${variableName}.link}}) (Charity Navigator score: {{${variableName}.score}})
-        *{{${variableName}.mission}}*\n`;
+[{{${variableName}.name}}]({{${variableName}.link}}) (Charity Navigator score: {{${variableName}.score}})
+*{{${variableName}.mission}}*\n`;
   });
 
   const charityStocks = charityVariableNames.map((variableName) => {
