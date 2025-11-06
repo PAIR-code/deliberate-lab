@@ -60,30 +60,8 @@ export async function updateTimeElapsed(
   // If elapsed time has reached/exceeded the limit, mark end
   const remainingTime = stage.timeLimitInMinutes - elapsedMinutes;
   if (remainingTime <= 0) {
-    if (stage.requireFullTime) {
-      // If full time is required, just send a notification but don't end discussion
-      await sendSystemChatMessage(
-        experimentId,
-        cohortId,
-        stageId,
-        'The minimum required time for this stage has elapsed. You may continue discussing or move to the next stage.',
-      );
-    } else {
-      // Otherwise, end the discussion
-      await sendSystemChatMessage(
-        experimentId,
-        cohortId,
-        stageId,
-        'The timer for this stage has ended; you can no longer respond.',
-      );
-      await getFirestoreStagePublicDataRef(
-        experimentId,
-        cohortId,
-        stageId,
-      ).update({
-        discussionEndTimestamp: Timestamp.now(),
-      });
-    }
+    await handleTimeElapsed(experimentId, cohortId, stageId);
+    return;
   }
 
   // Otherwise, continue to wait
@@ -95,28 +73,8 @@ export async function updateTimeElapsed(
 
   // If time is now up, mark discussion as over
   if (remainingTime - intervalTime <= 0) {
-    if (stage.requireFullTime) {
-      await sendSystemChatMessage(
-        experimentId,
-        cohortId,
-        stageId,
-        'The minimum required time for this stage has elapsed. You may continue discussing or move to the next stage.',
-      );
-    } else {
-      await sendSystemChatMessage(
-        experimentId,
-        cohortId,
-        stageId,
-        'The timer for this stage has ended; you can no longer respond.',
-      );
-      await getFirestoreStagePublicDataRef(
-        experimentId,
-        cohortId,
-        stageId,
-      ).update({
-        discussionEndTimestamp: Timestamp.now(),
-      });
-    }
+    await handleTimeElapsed(experimentId, cohortId, stageId);
+    return;
   }
 
   // Otherwise, write timestamp as discussion checkpoint to public stage data.
@@ -124,5 +82,21 @@ export async function updateTimeElapsed(
   // call this function to re-evaluate elapsed time
   await getFirestoreStagePublicDataRef(experimentId, cohortId, stageId).update({
     discussionCheckpointTimestamp: Timestamp.now(),
+  });
+}
+
+async function handleTimeElapsed(
+  experimentId: string,
+  cohortId: string,
+  stageId: string,
+) {
+  await sendSystemChatMessage(
+    experimentId,
+    cohortId,
+    stageId,
+    'The timer for this stage has ended; you can no longer respond.',
+  );
+  await getFirestoreStagePublicDataRef(experimentId, cohortId, stageId).update({
+    discussionEndTimestamp: Timestamp.now(),
   });
 }
