@@ -129,7 +129,14 @@ export const createDeliberateLabAPIKey = onCall(
       );
     }
 
-    const experimenterId = request.auth!.uid;
+    // Use email as experimenterId to match the experimenters collection structure
+    const experimenterId = request.auth!.token.email?.toLowerCase();
+    if (!experimenterId) {
+      throw new functions.https.HttpsError(
+        'unauthenticated',
+        'User email not found',
+      );
+    }
 
     try {
       // Create the API key with optional permissions
@@ -171,7 +178,14 @@ export const listDeliberateLabAPIKeys = onCall(
     // Check if user is authenticated
     await AuthGuard.isExperimenter(request);
 
-    const experimenterId = request.auth!.uid;
+    // Use email as experimenterId to match the experimenters collection structure
+    const experimenterId = request.auth!.token.email?.toLowerCase();
+    if (!experimenterId) {
+      throw new functions.https.HttpsError(
+        'unauthenticated',
+        'User email not found',
+      );
+    }
 
     try {
       const keys =
@@ -213,7 +227,14 @@ export const revokeDeliberateLabAPIKey = onCall(
       );
     }
 
-    const experimenterId = request.auth!.uid;
+    // Use email as experimenterId to match the experimenters collection structure
+    const experimenterId = request.auth!.token.email?.toLowerCase();
+    if (!experimenterId) {
+      throw new functions.https.HttpsError(
+        'unauthenticated',
+        'User email not found',
+      );
+    }
 
     try {
       const success =
