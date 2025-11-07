@@ -34,30 +34,7 @@ export {StageTextConfigSchema, StageProgressConfigSchema};
 // writeExperiment, updateStageConfig endpoints                              //
 // ************************************************************************* //
 
-/** StageConfig input validation. */
-export const StageConfigData = Type.Union([
-  AssetAllocationStageConfigData,
-  MultiAssetAllocationStageConfigData,
-  ChatStageConfigData,
-  ChipStageConfigData,
-  ComprehensionStageConfigData,
-  FlipCardStageConfigData,
-  InfoStageConfigData,
-  PayoutStageConfigData,
-  PrivateChatStageConfigData,
-  ProfileStageConfigData,
-  RankingStageConfigData,
-  RevealStageConfigData,
-  RoleStageConfigData,
-  SalespersonStageConfigData,
-  StockInfoStageConfigData,
-  SurveyPerParticipantStageConfigData,
-  SurveyStageConfigData,
-  TOSStageConfigData,
-  TransferStageConfigData,
-]);
-
-/** Map of stage kinds to their validators (for union error drilling) */
+/** Map of stage kinds to their validators */
 export const CONFIG_DATA = {
   assetAllocation: AssetAllocationStageConfigData,
   multiAssetAllocation: MultiAssetAllocationStageConfigData,
@@ -79,3 +56,6 @@ export const CONFIG_DATA = {
   tos: TOSStageConfigData,
   transfer: TransferStageConfigData,
 };
+
+/** StageConfig input validation (union of all stage types) */
+export const StageConfigData = Type.Union(Object.values(CONFIG_DATA));
