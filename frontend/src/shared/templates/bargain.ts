@@ -366,14 +366,12 @@ function createBargainGameStage() {
     buyerValuationMax: 12,
     sellerValuationMin: 6,
     sellerValuationMax: 12,
-    // Randomly select max turns from [6, 8, 10, 12]
-    maxTurns: [6, 8, 10, 12][Math.floor(Math.random() * 4)],
-    // Randomly enable/disable chat (50% chance)
-    enableChat: Math.random() < 0.5,
-    // Randomly show/hide seller's valuation to buyer (50% chance)
-    showSellerValuationToBuyer: Math.random() < 0.5,
-    // Randomly show/hide buyer's valuation to seller (50% chance)
-    showBuyerValuationToSeller: Math.random() < 0.5
+    // These values are not used - randomization happens per cohort in backend
+    // during initialization (see functions/src/stages/bargain.utils.ts)
+    maxTurns: 8,
+    enableChat: false,
+    showSellerValuationToBuyer: false,
+    showBuyerValuationToSeller: false
   });
 }
 

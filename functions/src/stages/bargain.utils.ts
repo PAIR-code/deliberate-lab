@@ -153,22 +153,28 @@ export async function initializeBargainStage(
   // Randomly select who makes the first move
   const firstMover = Math.random() < 0.5 ? buyer : seller;
 
-  // Use config settings for max turns, chat, and info visibility
-  const maxTurns = stageConfig.maxTurns;
-  const chatEnabled = stageConfig.enableChat;
+  // Randomly select max turns from [6, 8, 10, 12] for this cohort
+  const maxTurnsOptions = [6, 8, 10, 12];
+  const maxTurns = maxTurnsOptions[Math.floor(Math.random() * maxTurnsOptions.length)];
 
-  // Calculate opponent info messages based on config booleans
-  const buyerOpponentInfo = stageConfig.showSellerValuationToBuyer
+  // Randomly enable/disable chat for this cohort (50% chance)
+  const chatEnabled = Math.random() < 0.5;
+
+  // Randomly decide if buyer sees seller info for this cohort (50% chance)
+  const showSellerToBuyer = Math.random() < 0.5;
+  const buyerOpponentInfo = showSellerToBuyer
     ? `Values between $${stageConfig.sellerValuationMin} - $${stageConfig.sellerValuationMax}`
     : 'You have no idea';
 
-  const sellerOpponentInfo = stageConfig.showBuyerValuationToSeller
+  // Randomly decide if seller sees buyer info for this cohort (50% chance)
+  const showBuyerToSeller = Math.random() < 0.5;
+  const sellerOpponentInfo = showBuyerToSeller
     ? `Values between $${stageConfig.buyerValuationMin} - $${stageConfig.buyerValuationMax}`
     : 'You have no idea';
 
   console.log(
-    `[BARGAIN] Settings - maxTurns: ${maxTurns}, chatEnabled: ${chatEnabled}, ` +
-    `showSellerToBuyer: ${stageConfig.showSellerValuationToBuyer}, showBuyerToSeller: ${stageConfig.showBuyerValuationToSeller}`
+    `[BARGAIN] Randomized settings for this cohort - maxTurns: ${maxTurns}, chatEnabled: ${chatEnabled}, ` +
+    `showSellerToBuyer: ${showSellerToBuyer}, showBuyerToSeller: ${showBuyerToSeller}`
   );
   console.log(
     `[BARGAIN] Opponent info - Buyer sees: "${buyerOpponentInfo}", Seller sees: "${sellerOpponentInfo}"`
@@ -441,7 +447,7 @@ export async function processBargainResponse(
     // Offer rejected - check if we've reached max turns
     const nextTurn = publicData.currentTurn + 1;
 
-    if (nextTurn > participantAnswer.maxTurns) {
+    if (nextTurn > publicData.maxTurns) {
       // Max turns reached - no deal
       updatedPublicData = {
         ...publicData,
@@ -453,7 +459,7 @@ export async function processBargainResponse(
       // Log no deal
       const logDoc = publicDataDoc.collection('logs').doc();
       const logEntry = createBargainNoDealLogEntry(
-        participantAnswer.maxTurns,
+        publicData.maxTurns,
         Timestamp.now() as any,
       );
       transaction.set(logDoc, logEntry);
