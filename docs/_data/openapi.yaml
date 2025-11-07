@@ -212,6 +212,54 @@ paths:
                   description: Updated array of stage configurations (optional)
                   items:
                     $ref: '#/components/schemas/Stage'
+            examples:
+              updateNameOnly:
+                summary: Update name only
+                value:
+                  name: My Updated Experiment Name
+              updateWithStages:
+                summary: Update with stages
+                value:
+                  name: My Updated Experiment
+                  description: Updated research on decision making
+                  stages:
+                    - id: stage1
+                      kind: info
+                      name: Welcome
+                      descriptions:
+                        primaryText: Welcome to the experiment
+                        infoText: ""
+                        helpText: ""
+                      progress:
+                        minParticipants: 1
+                        waitForAllParticipants: false
+                        showParticipantProgress: false
+                      infoLines:
+                        - This is the first line of information
+                        - This is the second line
+                        - You can use **markdown** in these lines
+                    - id: stage2
+                      kind: survey
+                      name: Demographics Survey
+                      descriptions:
+                        primaryText: Please complete this survey
+                        infoText: ""
+                        helpText: ""
+                      progress:
+                        minParticipants: 1
+                        waitForAllParticipants: false
+                        showParticipantProgress: false
+                      questions:
+                        - id: q1
+                          kind: scale
+                          questionTitle: How satisfied are you?
+                          lowerValue: 0
+                          upperValue: 10
+                          lowerText: Not at all
+                          upperText: Extremely
+                          middleText: ""
+                          useSlider: false
+                          stepSize: 1
       responses:
         '200':
           description: Experiment updated successfully
@@ -417,6 +465,12 @@ components:
 
     Stage:
       type: object
+      required:
+        - id
+        - kind
+        - name
+        - descriptions
+        - progress
       properties:
         id:
           type: string
@@ -433,17 +487,22 @@ components:
           example: Pre-study Survey
         descriptions:
           type: object
+          required:
+            - primaryText
           description: Stage text configuration
           properties:
             primaryText:
               type: string
               description: Text shown at top of screen under header
+              example: Please complete this survey
             infoText:
               type: string
               description: Text for info popup
+              example: This survey collects demographic information
             helpText:
               type: string
               description: Text for help popup
+              example: Select one option for each question
         progress:
           type: object
           description: Stage progress configuration
@@ -451,13 +510,16 @@ components:
             minParticipants:
               type: integer
               description: Minimum participants required for stage
+              example: 1
             waitForAllParticipants:
               type: boolean
               description: Wait for all participants to reach stage
+              example: false
             showParticipantProgress:
               type: boolean
               description: Show participants who completed stage
-      description: Stage configuration (extends BaseStageConfig with kind-specific fields)
+              example: false
+      description: Stage configuration (extends BaseStageConfig with kind-specific fields). Note that each stage kind has additional required fields beyond the base fields shown here.
 
     ParticipantProfile:
       type: object
