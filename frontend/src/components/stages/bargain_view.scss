@@ -318,3 +318,47 @@
   opacity: 0.5;
   pointer-events: none;
 }
+
+// Centered initialization/bystander panels
+.panel-centered {
+  margin: auto;
+  max-width: 600px;
+  text-align: center;
+}
+
+.panel-centered-wide {
+  margin: auto;
+  max-width: 800px;
+}
+
+.panel-centered p {
+  margin: 20px 0;
+  color: var(--md-sys-color-on-surface-variant);
+}
+
+.panel-centered .secondary-text {
+  color: var(--md-sys-color-secondary);
+}
+
+// Max turns display in action panel
+.max-turns-display {
+  margin-bottom: 12px;
+  padding: 8px;
+  background-color: var(--md-sys-color-surface-container-low);
+  border-radius: 4px;
+}
+
+.max-turns-display .info-value {
+  font-weight: 600;
+}
+
+// Response input current offer
+.current-offer-display {
+  margin-bottom: 16px;
+}
+
+// Game summary chat messages (non-italic)
+.chat-message.game-summary-message {
+  font-style: normal;
+  color: var(--md-sys-color-on-surface);
+}

@@ -8,7 +8,7 @@ import {
   createMultipleChoiceComprehensionQuestion,
   createMultipleChoiceItem,
   createPayoutStage,
-  createDefaultPayoutItem,
+  createBargainPayoutItem,
   createProfileStage,
   createStageProgressConfig,
   createStageTextConfig,
@@ -366,10 +366,14 @@ function createBargainGameStage() {
     buyerValuationMax: 12,
     sellerValuationMin: 6,
     sellerValuationMax: 12,
-    maxTurns: 8, // Default value, will be randomized from [6, 8, 10, 12]
-    enableChat: false, // Default value, will be randomized
-    buyerInfoAboutSeller: 'You have no idea.', // Default value, will be randomized
-    sellerInfoAboutBuyer: 'You have no idea.', // Default value, will be randomized
+    // Randomly select max turns from [6, 8, 10, 12]
+    maxTurns: [6, 8, 10, 12][Math.floor(Math.random() * 4)],
+    // Randomly enable/disable chat (50% chance)
+    enableChat: Math.random() < 0.5,
+    // Randomly show/hide seller's valuation to buyer (50% chance)
+    showSellerValuationToBuyer: Math.random() < 0.5,
+    // Randomly show/hide buyer's valuation to seller (50% chance)
+    showBuyerValuationToSeller: Math.random() < 0.5
   });
 }
 
@@ -380,7 +384,7 @@ const BARGAIN_PAYOUT_STAGE = createPayoutStage({
   id: 'payout',
   name: 'Your payout',
   payoutItems: [
-    createDefaultPayoutItem({
+    createBargainPayoutItem({
       id: 'bargain_payout',
       name: 'Bargaining Game Bonus',
       description: 'Bonus earned from the bargaining game based on your negotiation outcome.',

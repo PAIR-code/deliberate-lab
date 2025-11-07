@@ -37,11 +37,6 @@ export async function initializeBargainStage(
     participantCount: participants.length,
   });
 
-  if (participants.length !== 2) {
-    console.error('[BARGAIN] Wrong number of participants:', participants.length);
-    throw new Error('Bargain stage requires exactly 2 participants');
-  }
-
   // Get public data to check if already initialized
   const publicDataDoc = app
     .firestore()
@@ -57,16 +52,30 @@ export async function initializeBargainStage(
     | BargainStagePublicData
     | undefined;
 
-  console.log('[BARGAIN] Double-check initialization status:', {
+  console.log('[BARGAIN] Check initialization status:', {
     exists: !!publicData,
+    hasRoles: publicData?.participantRoles && Object.keys(publicData.participantRoles).length > 0,
     currentTurn: publicData?.currentTurn,
   });
 
-  // If already initialized (currentTurn > 0), don't reinitialize
-  if (publicData && publicData.currentTurn > 0) {
-    console.log('[BARGAIN] Already initialized in transaction, aborting');
+  // If already initialized (roles assigned), don't reinitialize
+  if (publicData?.participantRoles && Object.keys(publicData.participantRoles).length > 0) {
+    console.log('[BARGAIN] Already initialized with roles, aborting');
     return;
   }
+
+  // Need at least 2 participants to initialize
+  if (participants.length < 2) {
+    console.log('[BARGAIN] Not enough participants yet:', participants.length);
+    return;
+  }
+
+  // Use first 2 participants for the game
+  const gameParticipants = participants.slice(0, 2);
+  console.log('[BARGAIN] Initializing game with participants:', {
+    participant1: gameParticipants[0].publicId,
+    participant2: gameParticipants[1].publicId,
+  });
 
   // Validate configuration values
   console.log(`[BARGAIN] Config validation - Buyer range: [${stageConfig.buyerValuationMin}, ${stageConfig.buyerValuationMax}], Seller range: [${stageConfig.sellerValuationMin}, ${stageConfig.sellerValuationMax}]`);
@@ -84,8 +93,8 @@ export async function initializeBargainStage(
     );
   }
 
-  // Randomly assign roles
-  const shuffled = [...participants].sort(() => Math.random() - 0.5);
+  // Randomly assign roles to the first 2 participants
+  const shuffled = [...gameParticipants].sort(() => Math.random() - 0.5);
   const buyer = shuffled[0];
   const seller = shuffled[1];
 
@@ -144,26 +153,23 @@ export async function initializeBargainStage(
   // Randomly select who makes the first move
   const firstMover = Math.random() < 0.5 ? buyer : seller;
 
-  // Randomly select max turns from [6, 8, 10, 12]
-  const maxTurnsOptions = [6, 8, 10, 12];
-  const randomMaxTurns =
-    maxTurnsOptions[Math.floor(Math.random() * maxTurnsOptions.length)];
+  // Use config settings for max turns, chat, and info visibility
+  const maxTurns = stageConfig.maxTurns;
+  const chatEnabled = stageConfig.enableChat;
 
-  // Randomly enable/disable chat
-  const chatAllowed = Math.random() < 0.5;
-
-  // Randomly decide if buyer sees seller info
-  const buyerSeesSellerInfo = Math.random() < 0.5;
-  const buyerOpponentInfo = buyerSeesSellerInfo
+  // Calculate opponent info messages based on config booleans
+  const buyerOpponentInfo = stageConfig.showSellerValuationToBuyer
     ? `Values between $${stageConfig.sellerValuationMin} - $${stageConfig.sellerValuationMax}`
     : 'You have no idea';
 
-  // Randomly decide if seller sees buyer info
-  const sellerSeesBuyerInfo = Math.random() < 0.5;
-  const sellerOpponentInfo = sellerSeesBuyerInfo
+  const sellerOpponentInfo = stageConfig.showBuyerValuationToSeller
     ? `Values between $${stageConfig.buyerValuationMin} - $${stageConfig.buyerValuationMax}`
     : 'You have no idea';
 
+  console.log(
+    `[BARGAIN] Settings - maxTurns: ${maxTurns}, chatEnabled: ${chatEnabled}, ` +
+    `showSellerToBuyer: ${stageConfig.showSellerValuationToBuyer}, showBuyerToSeller: ${stageConfig.showBuyerValuationToSeller}`
+  );
   console.log(
     `[BARGAIN] Opponent info - Buyer sees: "${buyerOpponentInfo}", Seller sees: "${sellerOpponentInfo}"`
   );
@@ -181,11 +187,8 @@ export async function initializeBargainStage(
   const buyerAnswer: BargainStageParticipantAnswer = {
     id: stageConfig.id,
     kind: StageKind.BARGAIN,
-    role: BargainRole.BUYER,
     valuation: buyerValuation,
     makeFirstMove: firstMover.publicId === buyer.publicId,
-    maxTurns: randomMaxTurns,
-    chatAllowed: chatAllowed,
     opponentInfo: buyerOpponentInfo,
   };
 
@@ -201,11 +204,8 @@ export async function initializeBargainStage(
   const sellerAnswer: BargainStageParticipantAnswer = {
     id: stageConfig.id,
     kind: StageKind.BARGAIN,
-    role: BargainRole.SELLER,
     valuation: sellerValuation,
     makeFirstMove: firstMover.publicId === seller.publicId,
-    maxTurns: randomMaxTurns,
-    chatAllowed: chatAllowed,
     opponentInfo: sellerOpponentInfo,
   };
 
@@ -215,9 +215,15 @@ export async function initializeBargainStage(
     kind: StageKind.BARGAIN,
     isGameOver: false,
     currentTurn: 1,
+    maxTurns: maxTurns,
+    chatEnabled: chatEnabled,
     currentOfferer: firstMover.publicId,
     buyerId: buyer.publicId,
     sellerId: seller.publicId,
+    participantRoles: {
+      [buyer.publicId]: BargainRole.BUYER,
+      [seller.publicId]: BargainRole.SELLER,
+    },
     transactions: [],
     agreedPrice: null,
   };
@@ -231,8 +237,8 @@ export async function initializeBargainStage(
     firstMoverId: firstMover.publicId,
     buyerInfo: buyerOpponentInfo,
     sellerInfo: sellerOpponentInfo,
-    maxTurns: randomMaxTurns,
-    chatAllowed,
+    maxTurns: maxTurns,
+    chatEnabled: chatEnabled,
   });
 
   transaction.set(buyerAnswerDoc, buyerAnswer);

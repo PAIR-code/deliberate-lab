@@ -57,6 +57,13 @@ export class BargainParticipantView extends MobxLitElement {
       return this.renderInitializationPhase();
     }
 
+    // Check if participant is a bystander (spectator)
+    const myPublicId = this.participantService.profile?.publicId;
+    const myRole = myPublicId && publicData.participantRoles[myPublicId];
+    if (myRole === BargainRole.BYSTANDER) {
+      return this.renderBystanderView(publicData);
+    }
+
     return html`
       <div class="bargain-container">
         <div class="left-column">
@@ -82,13 +89,13 @@ export class BargainParticipantView extends MobxLitElement {
     return html`
       <stage-description .stage=${this.stage}></stage-description>
       <div class="bargain-container">
-        <div class="panel" style="margin: auto; max-width: 600px; text-align: center;">
+        <div class="panel panel-centered">
           <h3 class="panel-title">Waiting for Game to Start...</h3>
-          <p style="margin: 20px 0; color: var(--md-sys-color-on-surface-variant);">
+          <p>
             The negotiation will begin once both participants are ready.
             You will be assigned a role (buyer or seller) and a valuation for the item.
           </p>
-          <p style="color: var(--md-sys-color-secondary);">
+          <p class="secondary-text">
             Please wait while the game is being set up...
           </p>
         </div>
@@ -96,10 +103,41 @@ export class BargainParticipantView extends MobxLitElement {
     `;
   }
 
+  private renderBystanderView(publicData: BargainStagePublicData) {
+    return html`
+      <stage-description .stage=${this.stage}></stage-description>
+      <div class="bargain-container">
+        <div class="panel panel-centered-wide">
+          <h3 class="panel-title">Spectator View</h3>
+          <p>
+            You are observing this bargaining game as a bystander.
+            The negotiation is between a buyer and a seller, and you cannot participate in the offers.
+          </p>
+          ${this.renderDialoguePanel(publicData)}
+        </div>
+      </div>
+      ${publicData.isGameOver
+        ? html`
+            <stage-footer .disabled=${false}>
+              <progress-stage-completed></progress-stage-completed>
+            </stage-footer>
+          `
+        : nothing}
+    `;
+  }
+
   private renderInfoPanel() {
     if (!this.answer) return nothing;
 
-    const role = this.answer.role;
+    const publicData = this.cohortService.stagePublicDataMap[
+      this.stage?.id ?? ''
+    ] as BargainStagePublicData | undefined;
+
+    const myPublicId = this.participantService.profile?.publicId;
+    const role = myPublicId && publicData?.participantRoles[myPublicId];
+
+    if (!role) return nothing;
+
     const valuation = this.answer.valuation;
     const profitFormula = role === BargainRole.BUYER
       ? `Profit = Your Valuation - Price = $${valuation} - Price`
@@ -124,7 +162,15 @@ export class BargainParticipantView extends MobxLitElement {
   private renderOpponentInfoPanel() {
     if (!this.answer) return nothing;
 
-    const role = this.answer.role;
+    const publicData = this.cohortService.stagePublicDataMap[
+      this.stage?.id ?? ''
+    ] as BargainStagePublicData | undefined;
+
+    const myPublicId = this.participantService.profile?.publicId;
+    const role = myPublicId && publicData?.participantRoles[myPublicId];
+
+    if (!role) return nothing;
+
     const opponentRole = role === BargainRole.BUYER ? 'Seller' : 'Buyer';
 
     return html`
@@ -155,22 +201,22 @@ export class BargainParticipantView extends MobxLitElement {
     return html`
       <div class="panel action-panel">
         <h3 class="panel-title">Action Panel</h3>
-        <div class="info-row" style="margin-bottom: 12px; padding: 8px; background-color: var(--md-sys-color-surface-container-low); border-radius: 4px;">
+        <div class="info-row max-turns-display">
           <span class="info-label">Maximum number of turns:</span>
-          <span class="info-value" style="font-weight: 600;">${this.answer.maxTurns}</span>
+          <span class="info-value">${publicData.maxTurns}</span>
         </div>
         ${this.errorMessage ? html`<div class="error-message">${this.errorMessage}</div>` : nothing}
         ${isMyTurn && !isPendingResponse
-          ? this.renderOfferInput()
+          ? this.renderOfferInput(publicData)
           : amIRespondent
-            ? this.renderResponseInput(currentTransaction.offer.price)
+            ? this.renderResponseInput(currentTransaction.offer.price, publicData)
             : html`<div class="waiting-message">Waiting for opponent...</div>`
         }
       </div>
     `;
   }
 
-  private renderOfferInput() {
+  private renderOfferInput(publicData: BargainStagePublicData) {
     if (!this.answer) return nothing;
 
     return html`
@@ -188,7 +234,7 @@ export class BargainParticipantView extends MobxLitElement {
           step="1"
         />
       </div>
-      ${this.answer.chatAllowed ? html`
+      ${publicData.chatEnabled ? html`
         <div class="input-group">
           <label class="input-label">Optional message:</label>
           <textarea
@@ -211,15 +257,15 @@ export class BargainParticipantView extends MobxLitElement {
     `;
   }
 
-  private renderResponseInput(offerPrice: number) {
+  private renderResponseInput(offerPrice: number, publicData: BargainStagePublicData) {
     if (!this.answer) return nothing;
 
     return html`
-      <div class="info-row" style="margin-bottom: 16px;">
+      <div class="info-row current-offer-display">
         <span class="info-label">Current Offer:</span>
         <span class="offer-price">$${offerPrice}</span>
       </div>
-      ${this.answer.chatAllowed ? html`
+      ${publicData.chatEnabled ? html`
         <div class="input-group">
           <label class="input-label">Optional message:</label>
           <textarea
@@ -258,7 +304,7 @@ export class BargainParticipantView extends MobxLitElement {
       <div class="panel dialogue-panel">
         <h3 class="panel-title">Negotiation History</h3>
         <div class="turn-indicator">
-          Turn ${publicData.currentTurn} of ${this.answer.maxTurns}
+          Turn ${publicData.currentTurn} of ${publicData.maxTurns}
         </div>
         <div class="dialogue-history">
           ${publicData.transactions.length === 0
@@ -339,7 +385,7 @@ export class BargainParticipantView extends MobxLitElement {
             <div class="offer-price">$${publicData.agreedPrice}</div>
             <div class="offer-sender">Final agreed price</div>
           </div>
-          <div class="chat-message" style="font-style: normal; color: var(--md-sys-color-on-surface);">
+          <div class="chat-message game-summary-message">
             Congratulations! You and your partner reached an agreement. Your payout will be displayed on the next page.
           </div>
         </div>
@@ -351,7 +397,7 @@ export class BargainParticipantView extends MobxLitElement {
             <span class="transaction-turn">Game Over</span>
             <span class="transaction-status rejected">✗ No Deal</span>
           </div>
-          <div class="chat-message" style="font-style: normal; color: var(--md-sys-color-on-surface);">
+          <div class="chat-message game-summary-message">
             The maximum number of turns was reached without agreement. Your payout will be displayed on the next page.
           </div>
         </div>

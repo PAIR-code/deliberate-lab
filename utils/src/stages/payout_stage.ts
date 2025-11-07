@@ -36,7 +36,7 @@ export enum PayoutCurrency {
   USD = 'USD', // US dollar
 }
 
-export type PayoutItem = DefaultPayoutItem | ChipPayoutItem | SurveyPayoutItem;
+export type PayoutItem = DefaultPayoutItem | ChipPayoutItem | SurveyPayoutItem | BargainPayoutItem;
 
 export interface BasePayoutItem {
   id: string;
@@ -61,6 +61,7 @@ export enum PayoutItemType {
   DEFAULT = 'DEFAULT',
   CHIP = 'CHIP',
   SURVEY = 'SURVEY',
+  BARGAIN = 'BARGAIN',
 }
 
 export interface DefaultPayoutItem extends BasePayoutItem {
@@ -78,6 +79,10 @@ export interface SurveyPayoutItem extends BasePayoutItem {
   rankingStageId: string | null;
   // Map of question ID to payout amount if correct (or null if no payout)
   questionMap: Record<string, number | null>;
+}
+
+export interface BargainPayoutItem extends BasePayoutItem {
+  type: PayoutItemType.BARGAIN;
 }
 
 /** Participant settings for payout stage (e.g., random selection). */
@@ -101,7 +106,8 @@ export interface PayoutResultConfig {
 export type PayoutItemResult =
   | DefaultPayoutItemResult
   | ChipPayoutItemResult
-  | SurveyPayoutItemResult;
+  | SurveyPayoutItemResult
+  | BargainPayoutItemResult;
 
 export interface BasePayoutItemResult {
   id: string;
@@ -142,6 +148,10 @@ export interface SurveyPayoutQuestionResult {
   question: MultipleChoiceSurveyQuestion;
   answerId: string;
   amountEarned: number;
+}
+
+export interface BargainPayoutItemResult extends BasePayoutItemResult {
+  type: PayoutItemType.BARGAIN;
 }
 
 // ************************************************************************* //
@@ -187,6 +197,22 @@ export function createChipPayoutItem(
   return {
     id: config.id ?? generateId(),
     type: PayoutItemType.CHIP,
+    name: config.name ?? '',
+    description: config.description ?? '',
+    isActive: config.isActive ?? true,
+    stageId: config.stageId ?? '',
+    baseCurrencyAmount: config.baseCurrencyAmount ?? 0,
+    randomSelectionId: config.randomSelectionId ?? '',
+  };
+}
+
+/** Create bargain payout item. */
+export function createBargainPayoutItem(
+  config: Partial<BargainPayoutItem> = {},
+): BargainPayoutItem {
+  return {
+    id: config.id ?? generateId(),
+    type: PayoutItemType.BARGAIN,
     name: config.name ?? '',
     description: config.description ?? '',
     isActive: config.isActive ?? true,
@@ -271,17 +297,27 @@ export function calculatePayoutResult(
   // For each payout item, only add result to list if item is active;
   // if the payout item has a randomSelectionId,
   // only add the item if it was randomly selected for that participant
+  console.log('[PAYOUT] Processing payout items', {
+    itemCount: payoutConfig.payoutItems.length,
+    items: payoutConfig.payoutItems.map(i => ({id: i.id, type: i.type, isActive: i.isActive})),
+  });
+
   payoutConfig.payoutItems.forEach((item) => {
+    console.log('[PAYOUT] Processing item', {id: item.id, type: item.type, isActive: item.isActive});
+
     if (!item.isActive) {
+      console.log('[PAYOUT] Item not active, skipping');
       return;
     }
     if (
       item.randomSelectionId !== '' &&
       payoutAnswer.randomSelectionMap[item.randomSelectionId] !== item.id
     ) {
+      console.log('[PAYOUT] Item not randomly selected, skipping');
       return;
     }
     // Item is active and (if randomSelectionId) is selected
+    console.log('[PAYOUT] Calculating result for item', {id: item.id, type: item.type});
     const result = calculatePayoutItemResult(
       item,
       stageConfigMap,
@@ -289,6 +325,7 @@ export function calculatePayoutResult(
       profile,
       participantAnswerMap,
     );
+    console.log('[PAYOUT] Result calculated', {hasResult: !!result, result});
     if (result) {
       results.push(result);
     }
@@ -396,6 +433,14 @@ export function calculatePayoutItemResult(
         publicDataMap,
         profile,
       );
+    case PayoutItemType.BARGAIN:
+      return calculateBargainPayoutItemResult(
+        item,
+        stageConfigMap,
+        publicDataMap,
+        profile,
+        participantAnswerMap,
+      );
     default:
       return null;
   }
@@ -418,25 +463,6 @@ export function calculateDefaultPayoutItemResult(
   const completedStage =
     stageTimestamp !== null && stageTimestamp !== undefined;
 
-  // Special handling for BARGAIN stage - calculate based on game outcome
-  if (stage.kind === StageKind.BARGAIN) {
-    const bargainPayout = calculateBargainPayout(
-      item.stageId,
-      publicDataMap,
-      participantAnswerMap,
-    );
-    return {
-      id: item.id,
-      type: PayoutItemType.DEFAULT,
-      name: item.name,
-      description: item.description,
-      stageName: stage.name,
-      completedStage,
-      baseCurrencyAmount: item.baseCurrencyAmount,
-      baseAmountEarned: bargainPayout,
-    };
-  }
-
   return {
     id: item.id,
     type: PayoutItemType.DEFAULT,
@@ -446,6 +472,59 @@ export function calculateDefaultPayoutItemResult(
     completedStage,
     baseCurrencyAmount: item.baseCurrencyAmount,
     baseAmountEarned: completedStage ? item.baseCurrencyAmount : 0,
+  };
+}
+
+/** Calculate bargain payout results for a single item (or null if can't calculate). */
+export function calculateBargainPayoutItemResult(
+  item: BargainPayoutItem,
+  stageConfigMap: Record<string, StageConfig>,
+  publicDataMap: Record<string, StagePublicData>,
+  profile: ParticipantProfile, // current participant profile
+  participantAnswerMap?: Record<string, BaseStageParticipantAnswer>,
+): BargainPayoutItemResult | null {
+  console.log('[BARGAIN PAYOUT ITEM] Starting calculation', {
+    itemId: item.id,
+    stageId: item.stageId,
+    isActive: item.isActive,
+    profilePublicId: profile.publicId,
+  });
+
+  if (!item.isActive) {
+    console.log('[BARGAIN PAYOUT ITEM] Item not active');
+    return null;
+  }
+
+  const stage = stageConfigMap[item.stageId];
+  if (!stage) {
+    console.log('[BARGAIN PAYOUT ITEM] Stage not found in config map');
+    return null;
+  }
+
+  const stageTimestamp = profile.timestamps.completedStages[item.stageId];
+  const completedStage =
+    stageTimestamp !== null && stageTimestamp !== undefined;
+
+  console.log('[BARGAIN PAYOUT ITEM] Calling calculateBargainPayout');
+  // Calculate payout based on bargain game outcome
+  const bargainPayout = calculateBargainPayout(
+    item.stageId,
+    profile.publicId,
+    publicDataMap,
+    participantAnswerMap,
+  );
+
+  console.log('[BARGAIN PAYOUT ITEM] Payout calculated', {bargainPayout});
+
+  return {
+    id: item.id,
+    type: PayoutItemType.BARGAIN,
+    name: item.name,
+    description: item.description,
+    stageName: stage.name,
+    completedStage,
+    baseCurrencyAmount: item.baseCurrencyAmount,
+    baseAmountEarned: bargainPayout,
   };
 }
 

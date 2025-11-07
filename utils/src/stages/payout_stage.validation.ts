@@ -68,11 +68,27 @@ export const SurveyPayoutItemData = Type.Object(
   strict,
 );
 
+/** BargainPayoutItem input validation. */
+export const BargainPayoutItemData = Type.Object(
+  {
+    id: Type.String({minLength: 1}),
+    type: Type.Literal(PayoutItemType.BARGAIN),
+    name: Type.String(),
+    description: Type.String(),
+    isActive: Type.Boolean(),
+    stageId: Type.String(),
+    baseCurrencyAmount: Type.Number(),
+    randomSelectionId: Type.String(),
+  },
+  strict,
+);
+
 /** PayoutItem input validation. */
 export const PayoutItemData = Type.Union([
   DefaultPayoutItemData,
   ChipPayoutItemData,
   SurveyPayoutItemData,
+  BargainPayoutItemData,
 ]);
 
 /** PayoutStageConfig input validation. */

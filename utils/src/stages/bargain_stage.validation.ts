@@ -24,8 +24,8 @@ export const BargainStageConfigData = Type.Object(
     sellerValuationMax: Type.Number(),
     maxTurns: Type.Number(),
     enableChat: Type.Boolean(),
-    buyerInfoAboutSeller: Type.String(),
-    sellerInfoAboutBuyer: Type.String(),
+    showSellerValuationToBuyer: Type.Boolean(),
+    showBuyerValuationToSeller: Type.Boolean(),
   },
   strict,
 );

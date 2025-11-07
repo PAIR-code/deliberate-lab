@@ -30,20 +30,25 @@ export interface BargainStageConfig extends BaseStageConfig {
   // Valuation range for seller
   sellerValuationMin: number;
   sellerValuationMax: number;
-  // Maximum number of turns before negotiation ends (6, 8, 10, or 12)
+  // Maximum number of turns before negotiation ends (randomly assigned from [6, 8, 10, 12])
   maxTurns: number;
-  // Allow participants to chat during negotiation
+  // Allow participants to chat during negotiation (randomly assigned)
   enableChat: boolean;
-  // Information shown to buyer about seller (e.g., "Values between $6-$8" or "You have no idea")
-  buyerInfoAboutSeller: string;
-  // Information shown to seller about buyer
-  sellerInfoAboutBuyer: string;
+  // Whether to show seller's valuation range to buyer (randomly assigned)
+  // If true: buyer sees "Values between ${sellerValuationMin} - ${sellerValuationMax}"
+  // If false: buyer sees "You have no idea"
+  showSellerValuationToBuyer: boolean;
+  // Whether to show buyer's valuation range to seller (randomly assigned)
+  // If true: seller sees "Values between ${buyerValuationMin} - ${buyerValuationMax}"
+  // If false: seller sees "You have no idea"
+  showBuyerValuationToSeller: boolean;
 }
 
 /** Bargaining roles. */
 export enum BargainRole {
   BUYER = 'buyer',
   SELLER = 'seller',
+  BYSTANDER = 'bystander',
 }
 
 /**
@@ -54,18 +59,12 @@ export enum BargainRole {
  */
 export interface BargainStageParticipantAnswer extends BaseStageParticipantAnswer {
   kind: StageKind.BARGAIN;
-  // Participant's role (buyer or seller)
-  role: BargainRole;
   // Participant's private valuation for the item
   valuation: number;
   // Whether this participant makes the first move
   makeFirstMove: boolean;
-  // Maximum number of turns (randomly assigned from [6, 8, 10, 12])
-  maxTurns: number;
-  // Whether chat is allowed for this game (randomly assigned)
-  chatAllowed: boolean;
   // Information shown to this participant about opponent's valuation
-  // Either "Values between $6 - $12" or "You have no idea" (randomly assigned)
+  // Either "Values between $6 - $12" or "You have no idea" (calculated from config)
   opponentInfo: string;
 }
 
@@ -112,12 +111,18 @@ export interface BargainStagePublicData extends BaseStagePublicData {
   isGameOver: boolean;
   // Current turn number (1-indexed, max = maxTurns)
   currentTurn: number;
+  // Maximum number of turns for this game
+  maxTurns: number;
+  // Whether chat is enabled for this game
+  chatEnabled: boolean;
   // Public ID of participant whose turn it is to make an offer
   currentOfferer: string | null;
   // Buyer's public ID
   buyerId: string | null;
   // Seller's public ID
   sellerId: string | null;
+  // Mapping from participant public ID to their role
+  participantRoles: Record<string, BargainRole>;
   // Ordered list of all transactions in this negotiation
   transactions: BargainTransaction[];
   // If a deal was reached, the agreed price; otherwise null
@@ -215,8 +220,8 @@ export function createBargainStage(
     sellerValuationMax: config.sellerValuationMax ?? 12,
     maxTurns: config.maxTurns ?? 8,
     enableChat: config.enableChat ?? false,
-    buyerInfoAboutSeller: config.buyerInfoAboutSeller ?? 'You have no idea.',
-    sellerInfoAboutBuyer: config.sellerInfoAboutBuyer ?? 'You have no idea.',
+    showSellerValuationToBuyer: config.showSellerValuationToBuyer ?? false,
+    showBuyerValuationToSeller: config.showBuyerValuationToSeller ?? false,
   };
 }
 
@@ -259,21 +264,15 @@ export function createBargainTransaction(
 /** Create bargain stage participant answer. */
 export function createBargainStageParticipantAnswer(
   id: string, // stage ID
-  role: BargainRole,
   valuation: number,
   makeFirstMove: boolean,
-  maxTurns: number,
-  chatAllowed: boolean,
   opponentInfo: string,
 ): BargainStageParticipantAnswer {
   return {
     id,
     kind: StageKind.BARGAIN,
-    role,
     valuation,
     makeFirstMove,
-    maxTurns,
-    chatAllowed,
     opponentInfo,
   };
 }
@@ -281,15 +280,20 @@ export function createBargainStageParticipantAnswer(
 /** Create bargain stage public data. */
 export function createBargainStagePublicData(
   id: string, // stage ID
+  maxTurns: number,
+  chatEnabled: boolean,
 ): BargainStagePublicData {
   return {
     id,
     kind: StageKind.BARGAIN,
     isGameOver: false,
     currentTurn: 0,
+    maxTurns,
+    chatEnabled,
     currentOfferer: null,
     buyerId: null,
     sellerId: null,
+    participantRoles: {},
     transactions: [],
     agreedPrice: null,
   };

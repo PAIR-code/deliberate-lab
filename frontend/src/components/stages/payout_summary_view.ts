@@ -8,6 +8,7 @@ import {ExperimentService} from '../../services/experiment.service';
 import {ParticipantService} from '../../services/participant.service';
 
 import {
+  BargainPayoutItemResult,
   ChipPayoutItemResult,
   ChipPayoutValueItem,
   DefaultPayoutItem,
@@ -106,6 +107,8 @@ export class PayoutView extends MobxLitElement {
         return this.renderDefaultPayoutItemResult(item, currency);
       case PayoutItemType.SURVEY:
         return this.renderSurveyPayoutItemResult(item, currency);
+      case PayoutItemType.BARGAIN:
+        return this.renderBargainPayoutItemResult(item, currency);
       default:
         return nothing;
     }
@@ -119,6 +122,30 @@ export class PayoutView extends MobxLitElement {
       <div class="scoring-bundle">
         <h2>${item.name}</h2>
         <div class="scoring-description">${item.description}</div>
+        ${this.renderBaseAmountEarned(item, currency)}
+      </div>
+    `;
+  }
+
+  private renderBargainPayoutItemResult(
+    item: BargainPayoutItemResult,
+    currency: PayoutCurrency,
+  ) {
+    return html`
+      <div class="scoring-bundle">
+        <h2>${item.name}</h2>
+        <div class="scoring-description">
+          Bonus earned from the bargaining game based on your negotiation outcome.
+        </div>
+        <div class="scoring-item">
+          <h2>Bargaining game payout</h2>
+          <div class="row">
+            <div>Payout earned:</div>
+            <div class="chip secondary">
+              ${this.renderCurrency(item.baseAmountEarned, currency)}
+            </div>
+          </div>
+        </div>
         ${this.renderBaseAmountEarned(item, currency)}
       </div>
     `;
