@@ -8,7 +8,6 @@
  * - Multiple rounds with application, selection, feedback
  */
 
-import {createTextSurveyQuestion} from '@deliberation-lab/utils';
 import {
   Experiment,
   MultipleChoiceSurveyQuestion,
@@ -106,7 +105,7 @@ export function getLeadershipRejectionStageConfigs(): StageConfig[] {
   stages.push(LR_R1_INSTRUCTIONS_GROUP);
   stages.push(LR_R1_GROUP_TASK_STAGE);
   // stages.push(LR_R1_SELECTION_STAGE);
-  stages.push(LR_R1_STATUS_FEEDBACK_STAGE);
+  //stages.push(LR_R1_STATUS_FEEDBACK_STAGE);
   stages.push(LR_R1_BELIEF_STAGE);
 
   // Group Stage - Round 2
@@ -116,7 +115,7 @@ export function getLeadershipRejectionStageConfigs(): StageConfig[] {
   stages.push(LR_R2_INSTRUCTIONS_GROUP);
   stages.push(LR_R2_GROUP_TASK_STAGE);
   //  stages.push(LR_R2_SELECTION_STAGE);
-  stages.push(LR_R2_STATUS_FEEDBACK_STAGE);
+  //stages.push(LR_R2_STATUS_FEEDBACK_STAGE);
   stages.push(LR_R2_BELIEF_STAGE);
 
   // Group Stage - Hypothetical Round 3
@@ -733,7 +732,7 @@ export const LR_R1_GROUP_TASK_STAGE = createSurveyStage({
 //==========================================================
 // Feedback Stage
 //==========================================================
-
+/*
 function createLeaderStatusRevealStage(
   id: string,
   name: string,
@@ -761,11 +760,11 @@ function createLeaderStatusRevealStage(
     ],
   });
 }
-
+*/
 // ---------------------------------------------------------------------------
 // Use it for your reveal stages
 // ---------------------------------------------------------------------------
-
+/*
 export const LR_R1_STATUS_FEEDBACK_STAGE = createLeaderStatusRevealStage(
   'r1_status_feedback',
   'Round 1 — Leader Selection Result',
@@ -790,7 +789,7 @@ export const LR_R1_STATUS_FEEDBACK_STAGE = createLeaderStatusRevealStage(
   },
   'r1_selection', // 👈 this is the Firestore doc id containing LRRankingStagePublicData
 );
-
+*/
 /* Here we need everyone synchronized !!!
 
 Reveal to participants their status, conditional on
@@ -925,7 +924,7 @@ export const LR_R2_GROUP_TASK_STAGE = createSurveyStage({
 //==========================================================
 // Feedback Stage
 //==========================================================
-
+/*
 export const LR_R2_SELECTION_STAGE = createRevealStage({
   id: 'r2_selection',
   name: 'Leader selection (backend only)',
@@ -939,6 +938,7 @@ export const LR_R2_SELECTION_STAGE = createRevealStage({
     waitForAllParticipants: true, // ⏳ ensures all are present
   }),
 });
+/*
 
 export const LR_R2_STATUS_FEEDBACK_STAGE = createLeaderStatusRevealStage(
   'r2_status_feedback',
@@ -964,6 +964,8 @@ export const LR_R2_STATUS_FEEDBACK_STAGE = createLeaderStatusRevealStage(
   },
   'r2_selection',
 );
+
+ */
 //==========================================================
 // Attribution beliefs Stage
 //==========================================================
