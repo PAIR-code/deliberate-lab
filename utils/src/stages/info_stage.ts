@@ -22,7 +22,7 @@ export interface InfoStageConfig extends BaseStageConfig {
 // CONSTANTS                                                                 //
 // ************************************************************************* //
 
-const TUTORIAL_NAME = 'ℹ️ Platform Tutorial';
+const TUTORIAL_NAME = 'ℹ️ Platform tutorial';
 const TUTORIAL_INFO_LINES = [
   'Today, you will complete a task in a series of stages.',
   'Here are some parts of the interface that you may find useful.',
