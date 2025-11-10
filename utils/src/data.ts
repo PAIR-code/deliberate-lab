@@ -1,4 +1,13 @@
-import {AgentMediatorTemplate, AgentParticipantTemplate} from './agent';
+import {
+  AgentMediatorTemplate,
+  AgentParticipantTemplate,
+  AgentMediatorPersonaConfig,
+  AgentParticipantPersonaConfig,
+} from './agent';
+import {
+  MediatorPromptConfig,
+  ParticipantPromptConfig,
+} from './structured_prompt';
 import {AlertMessage} from './alert';
 import {CohortConfig} from './cohort';
 import {Experiment} from './experiment';
@@ -6,10 +15,10 @@ import {ParticipantProfileExtended} from './participant';
 import {ChatMessage} from './chat_message';
 import {
   StageConfig,
+  StageKind,
   StageParticipantAnswer,
   StagePublicData,
 } from './stages/stage';
-
 /** Experiment data download types and functions. */
 
 // ************************************************************************* //
