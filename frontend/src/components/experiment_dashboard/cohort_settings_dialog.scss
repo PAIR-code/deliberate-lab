@@ -70,6 +70,12 @@
   justify-content: end;
 }
 
+.persona-selector {
+  @include common.flex-row;
+  justify-content: space-between;
+  align-items: center;
+}
+
 /* Used in agent-participant-configuration-dialog */
 .agent-persona-wrapper {
   @include common.flex-row;
