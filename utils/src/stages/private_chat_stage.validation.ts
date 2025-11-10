@@ -13,6 +13,6 @@ export const PrivateChatStageConfigData = Type.Object({
   id: Type.String(),
   kind: Type.Literal(StageKind.PRIVATE_CHAT),
   name: Type.String(),
-  descriptions: StageTextConfigSchema,
-  progress: StageProgressConfigSchema,
+  descriptions: Type.Ref(StageTextConfigSchema),
+  progress: Type.Ref(StageProgressConfigSchema),
 });

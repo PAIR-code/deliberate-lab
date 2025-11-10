@@ -19,8 +19,8 @@ export const ProfileStageConfigData = Type.Object(
     id: Type.String({minLength: 1}),
     kind: Type.Literal(StageKind.PROFILE),
     name: Type.String({minLength: 1}),
-    descriptions: StageTextConfigSchema,
-    progress: StageProgressConfigSchema,
+    descriptions: Type.Ref(StageTextConfigSchema),
+    progress: Type.Ref(StageProgressConfigSchema),
     profileType: Type.Union([
       Type.Literal(ProfileType.DEFAULT),
       Type.Literal(ProfileType.DEFAULT_GENDERED),

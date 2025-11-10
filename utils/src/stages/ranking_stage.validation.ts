@@ -29,8 +29,8 @@ export const ItemRankingStageConfigData = Type.Object(
     id: Type.String({minLength: 1}),
     kind: Type.Literal(StageKind.RANKING),
     name: Type.String({minLength: 1}),
-    descriptions: StageTextConfigSchema,
-    progress: StageProgressConfigSchema,
+    descriptions: Type.Ref(StageTextConfigSchema),
+    progress: Type.Ref(StageProgressConfigSchema),
     rankingType: Type.Literal(RankingType.ITEMS),
     strategy: Type.Union([
       Type.Literal(ElectionStrategy.NONE),
@@ -46,8 +46,8 @@ export const ParticipantRankingStageConfigData = Type.Object(
     id: Type.String({minLength: 1}),
     kind: Type.Literal(StageKind.RANKING),
     name: Type.String({minLength: 1}),
-    descriptions: StageTextConfigSchema,
-    progress: StageProgressConfigSchema,
+    descriptions: Type.Ref(StageTextConfigSchema),
+    progress: Type.Ref(StageProgressConfigSchema),
     rankingType: Type.Literal(RankingType.PARTICIPANTS),
     strategy: Type.Union([
       Type.Literal(ElectionStrategy.NONE),

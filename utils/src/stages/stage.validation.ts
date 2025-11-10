@@ -1,5 +1,9 @@
 import {Type} from '@sinclair/typebox';
 import {
+  StageTextConfigSchema,
+  StageProgressConfigSchema,
+} from './stage.schemas';
+import {
   AssetAllocationStageConfigData,
   MultiAssetAllocationStageConfigData,
 } from './asset_allocation_stage.validation';
@@ -23,43 +27,35 @@ import {
 import {TransferStageConfigData} from './transfer_stage.validation';
 import {TOSStageConfigData} from './tos_stage.validation';
 
+// Re-export the schemas for convenience
+export {StageTextConfigSchema, StageProgressConfigSchema};
+
 // ************************************************************************* //
 // writeExperiment, updateStageConfig endpoints                              //
 // ************************************************************************* //
 
-/** StageConfig input validation. */
-export const StageConfigData = Type.Union([
-  AssetAllocationStageConfigData,
-  MultiAssetAllocationStageConfigData,
-  ChatStageConfigData,
-  ChipStageConfigData,
-  ComprehensionStageConfigData,
-  FlipCardStageConfigData,
-  InfoStageConfigData,
-  PayoutStageConfigData,
-  PrivateChatStageConfigData,
-  ProfileStageConfigData,
-  RankingStageConfigData,
-  RevealStageConfigData,
-  RoleStageConfigData,
-  SalespersonStageConfigData,
-  StockInfoStageConfigData,
-  SurveyPerParticipantStageConfigData,
-  SurveyStageConfigData,
-  TOSStageConfigData,
-  TransferStageConfigData,
-]);
+/** Map of stage kinds to their validators */
+export const CONFIG_DATA = {
+  assetAllocation: AssetAllocationStageConfigData,
+  multiAssetAllocation: MultiAssetAllocationStageConfigData,
+  chat: ChatStageConfigData,
+  chip: ChipStageConfigData,
+  comprehension: ComprehensionStageConfigData,
+  flipcard: FlipCardStageConfigData,
+  info: InfoStageConfigData,
+  payout: PayoutStageConfigData,
+  privateChat: PrivateChatStageConfigData,
+  profile: ProfileStageConfigData,
+  ranking: RankingStageConfigData,
+  reveal: RevealStageConfigData,
+  role: RoleStageConfigData,
+  salesperson: SalespersonStageConfigData,
+  stockinfo: StockInfoStageConfigData,
+  surveyPerParticipant: SurveyPerParticipantStageConfigData,
+  survey: SurveyStageConfigData,
+  tos: TOSStageConfigData,
+  transfer: TransferStageConfigData,
+};
 
-/** StageTextConfig input validation. */
-export const StageTextConfigSchema = Type.Object({
-  primaryText: Type.String(),
-  infoText: Type.String(),
-  helpText: Type.String(),
-});
-
-/** StageProgressConfig input validation. */
-export const StageProgressConfigSchema = Type.Object({
-  minParticipants: Type.Number(),
-  waitForAllParticipants: Type.Boolean(),
-  showParticipantProgress: Type.Boolean(),
-});
+/** StageConfig input validation (union of all stage types) */
+export const StageConfigData = Type.Union(Object.values(CONFIG_DATA));

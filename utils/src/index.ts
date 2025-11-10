@@ -56,7 +56,8 @@ export * from './structured_prompt';
 // Sort
 export * from './sort';
 
-// Stages
+// Stages - schemas must be exported first for Type.Ref() to work in bundled output
+export * from './stages/stage.schemas';
 export * from './stages/stage';
 export * from './stages/stage.handler';
 export * from './stages/stage.manager';
