@@ -1,12 +1,10 @@
 import {computed, makeObservable, observable} from 'mobx';
 import {
   collection,
-  doc,
   getDocs,
   onSnapshot,
   orderBy,
   query,
-  Timestamp,
   Unsubscribe,
   where,
 } from 'firebase/firestore';
@@ -21,7 +19,6 @@ import {Service} from './service';
 import JSZip from 'jszip';
 
 import {
-  DEFAULT_AGENT_MODEL_SETTINGS,
   AlertMessage,
   AlertStatus,
   AgentPersonaConfig,
@@ -31,8 +28,6 @@ import {
   CohortConfig,
   CohortParticipantConfig,
   CreateChatMessageData,
-  Experiment,
-  ExperimentDownload,
   LogEntry,
   MediatorProfileExtended,
   MediatorStatus,
@@ -40,7 +35,6 @@ import {
   ParticipantProfileExtended,
   ParticipantStatus,
   ProfileAgentConfig,
-  StageConfig,
   StageKind,
   createCohortConfig,
   createExperimenterChatMessage,
@@ -52,6 +46,7 @@ import {
   createChatMessageCallable,
   createCohortCallable,
   createMediatorCallable,
+  downloadExperimentCallable,
   createParticipantCallable,
   deleteCohortCallable,
   deleteExperimentCallable,
@@ -70,14 +65,11 @@ import {
   hasMaxParticipantsInCohort,
 } from '../shared/cohort.utils';
 import {
-  downloadCSV,
-  downloadJSON,
   getAlertData,
   getChatHistoryData,
   getChipNegotiationCSV,
   getChipNegotiationData,
   getChipNegotiationPlayerMapCSV,
-  getExperimentDownload,
   getParticipantDataCSV,
 } from '../shared/file.utils';
 import {
@@ -886,12 +878,13 @@ export class ExperimentManager extends Service {
     let data = {};
     const experimentId = this.sp.routerService.activeRoute.params['experiment'];
     if (experimentId) {
-      const result = await getExperimentDownload(
-        this.sp.firebaseService.firestore,
+      const response = await downloadExperimentCallable(
+        this.sp.firebaseService.functions,
         experimentId,
       );
 
-      if (result) {
+      if (response.data) {
+        const result = response.data;
         const zip = new JSZip();
         const experimentName = result.experiment.metadata.name;
 
