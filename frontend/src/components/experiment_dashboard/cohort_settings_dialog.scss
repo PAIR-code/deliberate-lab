@@ -12,6 +12,12 @@
   width: 800px;
 }
 
+.persona-selector {
+  @include common.flex-row;
+  justify-content: space-between;
+  align-items: center;
+}
+
 .header {
   @include typescale.title-medium;
   @include common.flex-row-align-center;
