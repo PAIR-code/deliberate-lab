@@ -39,7 +39,6 @@ import {
   createCohortConfig,
   createExperimenterChatMessage,
   generateId,
-  getExperimentDownload,
 } from '@deliberation-lab/utils';
 import {
   ackAlertMessageCallable,
@@ -47,6 +46,7 @@ import {
   createChatMessageCallable,
   createCohortCallable,
   createMediatorCallable,
+  downloadExperimentCallable,
   createParticipantCallable,
   deleteCohortCallable,
   deleteExperimentCallable,
@@ -878,12 +878,13 @@ export class ExperimentManager extends Service {
     let data = {};
     const experimentId = this.sp.routerService.activeRoute.params['experiment'];
     if (experimentId) {
-      const result = await getExperimentDownload(
-        this.sp.firebaseService.firestore,
+      const response = await downloadExperimentCallable(
+        this.sp.firebaseService.functions,
         experimentId,
       );
 
-      if (result) {
+      if (response.data) {
+        const result = response.data;
         const zip = new JSZip();
         const experimentName = result.experiment.metadata.name;
 

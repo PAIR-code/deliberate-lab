@@ -100,6 +100,21 @@ export const getExperimentTemplateCallable = async (
   return data;
 };
 
+/** Generic endpoint to download experiment data. */
+export const downloadExperimentCallable = async (
+  functions: Functions,
+  experimentId: string,
+) => {
+  const {data} = await httpsCallable<
+    {experimentId: string},
+    ExperimentDownloadResponse
+  >(
+    functions,
+    'downloadExperiment',
+  )({experimentId});
+  return data;
+};
+
 /** Generic endpoint to set experiment cohort lock */
 export const setExperimentCohortLockCallable = async (
   functions: Functions,

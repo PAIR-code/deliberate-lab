@@ -11,7 +11,6 @@ import {
 } from './dl_api.utils';
 import {
   createExperimentConfig,
-  getExperimentDownload,
   StageConfig,
   MetadataConfig,
   UnifiedTimestamp,
@@ -21,6 +20,7 @@ import {
   getFirestoreExperimentRef,
 } from '../utils/firestore';
 import {validateStages} from '../utils/validation';
+import {getExperimentDownload} from '../data';
 
 // Use simplified schemas for the REST API
 // The full ExperimentCreationData schema is for the internal endpoints

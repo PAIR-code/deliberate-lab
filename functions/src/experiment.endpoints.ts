@@ -6,6 +6,7 @@ import {
   AgentParticipantTemplate,
   Experiment,
   ExperimentDeletionData,
+  ExperimentDownloadResponse,
   MediatorPromptConfig,
   ParticipantPromptConfig,
   SeedStrategy,
@@ -14,6 +15,7 @@ import {
   createExperimentTemplate,
   createVariableToValueMapForSeed,
 } from '@deliberation-lab/utils';
+import {getExperimentDownload} from './data';
 
 import * as functions from 'firebase-functions';
 import {onCall} from 'firebase-functions/v2/https';
@@ -372,4 +374,31 @@ export const setExperimentCohortLock = onCall(async (request) => {
   });
 
   return {success: true};
+});
+
+// ************************************************************************* //
+// downloadExperiment for experimenters                                      //
+//                                                                           //
+// Input structure: { experimentId }                                         //
+// Returns: ExperimentDownloadResponse                                       //
+// ************************************************************************* //
+export const downloadExperiment = onCall(async (request) => {
+  await AuthGuard.isExperimenter(request);
+  const {data} = request;
+
+  try {
+    const experimentDownload = await getExperimentDownload(
+      app.firestore(),
+      data.experimentId,
+    );
+
+    const response: ExperimentDownloadResponse = {
+      data: experimentDownload,
+    };
+
+    return response;
+  } catch (error) {
+    console.error('Error downloading experiment:', error);
+    return {data: null};
+  }
 });
