@@ -8,6 +8,7 @@ import {customElement, property} from 'lit/decorators.js';
 
 import {core} from '../../core/core';
 import {AnalyticsService, ButtonClick} from '../../services/analytics.service';
+import {ExperimentEditor} from '../../services/experiment.editor';
 import {ExperimentManager} from '../../services/experiment.manager';
 
 import {AgentPersonaConfig, CohortConfig} from '@deliberation-lab/utils';
@@ -21,6 +22,7 @@ export class AgentParticipantDialog extends MobxLitElement {
 
   private readonly analyticsService = core.getService(AnalyticsService);
   private readonly experimentManager = core.getService(ExperimentManager);
+  private readonly experimentEditor = core.getService(ExperimentEditor);
 
   @property() isLoading = false;
   @property() isSuccess = false;
@@ -76,7 +78,9 @@ export class AgentParticipantDialog extends MobxLitElement {
             );
             if (this.cohort && this.agentId) {
               const agent =
-                this.experimentManager.agentPersonaMap[this.agentId];
+                this.experimentManager.agentPersonaMap[this.agentId] ??
+                this.experimentEditor.getAgentParticipant(this.agentId)
+                  ?.persona;
               this.experimentManager.createAgentParticipant(this.cohort.id, {
                 agentId: this.agentId,
                 promptContext: this.promptContext,
@@ -121,34 +125,61 @@ export class AgentParticipantDialog extends MobxLitElement {
           }}
         >
           <div>${persona.name ?? 'Untitled'}</div>
+          <div class="subtitle">${persona.defaultModelSettings.modelName}</div>
           <div class="subtitle">${persona.id}</div>
         </div>
       `;
     };
 
     const renderEmptyMessage = () => {
-      if (this.experimentManager.agentParticipantPersonas.length > 0) {
+      if (
+        this.experimentManager.agentParticipantPersonas.length +
+          this.experimentEditor.agentParticipants.length >
+        0
+      ) {
         return nothing;
       }
       return html`
         <div class="error">
-          No agent personas have been configured. Use the edit button at the top
-          of the experiment dashboard to add a persona.
+          No agent personas have been configured. Please add a new agent
+          persona.
         </div>
       `;
     };
 
     return html`
       <div>
-        <div>Persona to use for this specific agent participant</div>
+        <div class="persona-selector">
+          <div>Persona to use for this specific agent participant</div>
+          <div>${this.renderNewPersonaButton()}</div>
+        </div>
         <div class="agent-persona-wrapper">
           ${renderEmptyMessage()}
           ${this.experimentManager.agentParticipantPersonas.map((persona) =>
             renderAgentPersona(persona),
           )}
+          ${this.experimentEditor.agentParticipants.map((agent) =>
+            renderAgentPersona(agent.persona),
+          )}
         </div>
         <div></div>
       </div>
+    `;
+  }
+
+  renderNewPersonaButton() {
+    return html`
+      <pr-button
+        icon="person_add"
+        color="tertiary"
+        variant="tonal"
+        @click=${() => {
+          this.experimentEditor.addAgentParticipant();
+          this.agentId = this.experimentEditor.currentAgent?.persona.id ?? '';
+        }}
+      >
+        + New agent participant persona
+      </pr-button>
     `;
   }
 
