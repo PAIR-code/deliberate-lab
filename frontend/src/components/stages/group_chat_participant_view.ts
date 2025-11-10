@@ -1,5 +1,5 @@
-import '@material/mwc-icon';
 import '../../pair-components/button';
+import '../../pair-components/icon';
 import '../../pair-components/icon_button';
 import '../../pair-components/textarea';
 import '../../pair-components/tooltip';
@@ -236,7 +236,7 @@ export class GroupChatView extends MobxLitElement {
     ) {
       return html`
         <div slot="indicators" class="description">
-          <mwc-icon>done_all</mwc-icon>
+          <pr-icon icon="done_all"></pr-icon>
           All other participants have completed this stage.
         </div>
       `;
