@@ -503,19 +503,25 @@ export function getCharityDebateTemplate(
     if (habermasRound) {
       habermasOption = {
         id: HABERMAS_MEDIATOR_ID,
-        name: `Habermas Mediator (Round ${habermasRound})`,
+        name: `Round ${habermasRound} Mediator`,
       };
     }
     if (dynamicRound) {
       dynamicOption = {
         id: DYNAMIC_MEDIATOR_ID,
-        name: `Dynamic Mediator (Round ${dynamicRound})`,
+        name: `Round ${dynamicRound} Mediator`,
       };
     }
 
-    stages.push(
-      createFinalMediatorPreferenceStage(habermasOption, dynamicOption),
-    );
+    if (habermasRound! < dynamicRound!) {
+      stages.push(
+        createFinalMediatorPreferenceStage(habermasOption, dynamicOption),
+      );
+    } else {
+      stages.push(
+        createFinalMediatorPreferenceStage(dynamicOption, habermasOption),
+      );
+    }
   }
 
   if (config.includeDebriefingAndFeedback) {

@@ -13,8 +13,8 @@ export const SalespersonStageConfigData = Type.Object({
   id: Type.String(),
   kind: Type.Literal(StageKind.SALESPERSON),
   name: Type.String(),
-  descriptions: StageTextConfigSchema,
-  progress: StageProgressConfigSchema,
+  descriptions: Type.Ref(StageTextConfigSchema),
+  progress: Type.Ref(StageProgressConfigSchema),
   // TODO: Add board
 });
 

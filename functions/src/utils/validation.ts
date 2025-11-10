@@ -1,7 +1,13 @@
 /** Pretty printing and analysis utils for typebox validation */
 
-import {CONFIG_DATA, Index, StageConfigData} from '@deliberation-lab/utils';
-import {TObject} from '@sinclair/typebox';
+import {
+  CONFIG_DATA,
+  Index,
+  StageConfigData,
+  StageTextConfigSchema,
+  StageProgressConfigSchema,
+} from '@deliberation-lab/utils';
+import {TSchema} from '@sinclair/typebox';
 import {
   ValueError,
   ValueErrorIterator,
@@ -36,6 +42,8 @@ export const prettyPrintErrors = (
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const accessNestedValue = (obj: any, path: string, sep = '/') => {
   if (path.startsWith(sep)) path = path.slice(sep.length);
+  // If path is empty, return the object itself
+  if (path === '') return obj;
   return path.split(sep).reduce((acc, key) => {
     return acc[key];
   }, obj);
@@ -53,29 +61,39 @@ export const isUnionError = (error: ValueError) => error.type === 62;
 export const checkUnionErrorOnPath = (
   data: unknown,
   path: string,
-  unionValidators: Record<Index, TObject>,
+  unionValidators: Record<Index, TSchema>,
+  references?: TSchema[],
 ): ValueErrorIterator => {
   // Access the nested value that failed validation
   const value = accessNestedValue(data, path);
 
-  // Get the union validator related to the data kind
+  // Check if value exists and has a kind property
+  if (!value || typeof value !== 'object') {
+    throw new Error(
+      `Union error path "${path}" does not point to a valid object`,
+    );
+  }
+
   if (!('kind' in value)) {
     throw new Error(
       'Union error path must point to a value with a "kind" property',
     );
   }
 
-  const validator = unionValidators[value.kind];
+  const validator = unionValidators[value.kind as Index];
 
-  // Validate the value with the correct validator
-  return Value.Errors(validator, value);
+  // Validate the value with the correct validator, passing references for $ref resolution
+  return references
+    ? Value.Errors(validator, references, value)
+    : Value.Errors(validator, value);
 };
 
 // Variants
-export const checkConfigDataUnionOnPath = (data: unknown, path: string) =>
-  checkUnionErrorOnPath(data, path, CONFIG_DATA);
-
-// TODO: add more union validation variants if needed when something goes wrong
+export const checkConfigDataUnionOnPath = (
+  data: unknown,
+  path: string,
+  references?: TSchema[],
+) => checkUnionErrorOnPath(data, path, CONFIG_DATA, references);
 
 // ************************************************************************* //
 // STAGE VALIDATION                                                          //
@@ -94,9 +112,23 @@ export function validateStages(stages: unknown[]): string | null {
 
   const errorMessages: string[] = [];
 
+  // Pass schema references array for $ref resolution
+  const references: TSchema[] = [
+    StageTextConfigSchema,
+    StageProgressConfigSchema,
+  ];
+
   for (let i = 0; i < stages.length; i++) {
     const stage = stages[i];
-    const isValid = Value.Check(StageConfigData, stage);
+
+    let isValid = false;
+    try {
+      isValid = Value.Check(StageConfigData, references, stage);
+    } catch (error: unknown) {
+      // If validation throws an error, treat as invalid
+      console.error('TypeBox validation error:', error);
+      continue;
+    }
 
     if (!isValid) {
       // Extract stage metadata for context
@@ -109,15 +141,24 @@ export function validateStages(stages: unknown[]): string | null {
       );
 
       // Iterate through errors and handle union errors specially
-      for (const error of Value.Errors(StageConfigData, stage)) {
+      for (const error of Value.Errors(StageConfigData, references, stage)) {
         if (isUnionError(error)) {
           // For union errors (like StageConfig which is a union of many stage types),
           // drill down to get the specific validation error for this stage kind
-          const nested = checkConfigDataUnionOnPath(stage, error.path);
-          for (const nestedError of nested) {
-            errorMessages.push(
-              `  - ${nestedError.path}: ${nestedError.message}`,
+          try {
+            const nested = checkConfigDataUnionOnPath(
+              stage,
+              error.path,
+              references,
             );
+            for (const nestedError of nested) {
+              errorMessages.push(
+                `  - ${nestedError.path}: ${nestedError.message}`,
+              );
+            }
+          } catch (err) {
+            // If drilling into union fails, fall back to generic error
+            errorMessages.push(`  - ${error.path}: ${error.message}`);
           }
         } else {
           errorMessages.push(`  - ${error.path}: ${error.message}`);

@@ -17,8 +17,8 @@ export const ChatStageConfigData = Type.Object({
   id: Type.String(),
   kind: Type.Literal(StageKind.CHAT),
   name: Type.String(),
-  descriptions: StageTextConfigSchema,
-  progress: StageProgressConfigSchema,
+  descriptions: Type.Ref(StageTextConfigSchema),
+  progress: Type.Ref(StageProgressConfigSchema),
   timeLimitInMinutes: Type.Union([Type.Number(), Type.Null()]),
   requireFullTime: Type.Union([Type.Boolean(), Type.Null()]),
   // discussions
