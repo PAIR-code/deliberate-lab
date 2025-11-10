@@ -24,6 +24,7 @@ import {
   RankingStageConfig,
   RankingStageParticipantAnswer,
   RankingStagePublicData,
+  LRRankingStagePublicData,
   createRankingStagePublicData,
 } from './ranking_stage';
 import {InfoStageConfig} from './info_stage';
@@ -186,6 +187,7 @@ export type StagePublicData =
   | ChipStagePublicData
   | FlipCardStagePublicData
   | RankingStagePublicData
+  | LRRankingStagePublicData
   | RoleStagePublicData
   | SalespersonStagePublicData
   | AssetAllocationStagePublicData

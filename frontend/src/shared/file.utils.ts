@@ -38,6 +38,7 @@ import {
   PayoutStageParticipantAnswer,
   RankingStageConfig,
   RankingStagePublicData,
+  LRRankingStagePublicData,
   StageConfig,
   StageKind,
   StageParticipantAnswer,

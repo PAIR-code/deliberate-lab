@@ -36,6 +36,7 @@ export type RevealItem =
   | ChipRevealItem
   | RankingRevealItem
   | SurveyRevealItem
+  | LRSurveyRevealItem
   | MultiAssetAllocationRevealItem;
 
 /** Reveal settings for chip stage. */
@@ -52,6 +53,11 @@ export interface RankingRevealItem extends BaseRevealItem {
 export interface SurveyRevealItem extends BaseRevealItem {
   kind: StageKind.SURVEY;
   revealScorableOnly: boolean;
+}
+
+/** Reveal settings for LR survey stage. */
+export interface LRSurveyRevealItem extends SurveyRevealItem {
+  customRender: string;
 }
 
 export interface MultiAssetAllocationRevealItem extends BaseRevealItem {

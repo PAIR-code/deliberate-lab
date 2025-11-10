@@ -80,6 +80,11 @@ export interface RankingStagePublicData extends BaseStagePublicData {
   participantAnswerMap: Record<string, string[]>;
 }
 
+export interface LRRankingStagePublicData extends RankingStagePublicData {
+  leaderStatusMap?: Record<string, string>; // e.g. participant -> status
+  // debugLeaderSelection?: Record<string, unknown>;                 // debug info object
+}
+
 // ************************************************************************* //
 // FUNCTIONS                                                                 //
 // ************************************************************************* //
@@ -152,4 +157,27 @@ export function createRankingStagePublicData(
     winnerId: '',
     participantAnswerMap: {},
   };
+}
+
+export function createLRRankingStagePublicData(
+  id: string, // stage ID
+): LRRankingStagePublicData {
+  return {
+    id,
+    kind: StageKind.RANKING,
+    winnerId: '',
+    participantAnswerMap: {},
+    leaderStatusMap: {},
+    // debugLeaderSelection: {},
+  };
+}
+
+export function isLRRankingStagePublicData(
+  obj: unknown,
+): obj is LRRankingStagePublicData {
+  return (
+    obj &&
+    obj.kind === StageKind.RANKING &&
+    ('leaderStatusMap' in obj || 'debugLeaderSelection' in obj)
+  );
 }
