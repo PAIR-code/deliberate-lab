@@ -169,17 +169,17 @@ export function createTextPromptItem(text: string): TextPromptItem {
   } as TextPromptItem;
 }
 
+function getPromptItem(text: string) {
+  return {
+    text: text,
+    type: PromptItemType.TEXT,
+  } as PromptItem;
+}
+
 export function createDefaultMediatorPromptFromText(
   text: string,
   stageId: string = '', // defaults to context from past + current stages
 ): PromptItem[] {
-  const getPromptItem = (text: string) => {
-    return {
-      text: text,
-      type: PromptItemType.TEXT,
-    } as PromptItem;
-  };
-
   return [
     getPromptItem(DEFAULT_AGENT_MEDIATOR_PROFILE_PREAMBLE),
     {type: PromptItemType.PROFILE_INFO},
@@ -196,14 +196,6 @@ export function createDefaultParticipantPromptFromText(
   text: string,
   stageId: string = '', // defaults to context from past + current stages
 ): PromptItem[] {
-  const getPromptItem = (text: string) => {
-    return {
-      text: text,
-      type: PromptItemType.TEXT,
-    } as PromptItem;
-  };
-
-  // Agent participant.
   return [
     getPromptItem(DEFAULT_AGENT_PARTICIPANT_SCAFFOLDING),
     getPromptItem(HEADER_PARTICIPANT_DESCRIPTION),

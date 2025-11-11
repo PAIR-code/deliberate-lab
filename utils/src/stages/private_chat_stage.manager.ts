@@ -30,7 +30,7 @@ export class PrivateChatStageHandler
         stage,
       );
       conversations.push(
-        `Private chat with ${participant.name} (${participant.publicId})${history}`,
+        `Private chat with ${participant.name} (${participant.publicId})\n${history}`,
       );
     }
 

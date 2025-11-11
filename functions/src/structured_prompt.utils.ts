@@ -358,20 +358,20 @@ async function processPromptItems(
         // Previous stages for non-mediators
         const ids = stageContextIds;
         if (userProfile.type === UserType.PARTICIPANT) {
-          items.push('\n--- Previously completed stages (read only) ---');
+          items.push(
+            '\n--- Previously completed stages chronologically (read only) ---',
+          );
 
           const prevIds = ids.slice(0, -1); // all except last
 
           for (let i = 0; i < prevIds.length; i++) {
             const id = prevIds[i];
-            const stageNumber = i + 1; // 1-based
             items.push(
               await getStageContextForPrompt(
                 promptData.participants,
                 promptData.data[id],
                 id,
                 promptItem,
-                stageNumber,
               ),
             );
           }
@@ -389,7 +389,6 @@ async function processPromptItems(
             lastStage,
             lastId,
             promptItem,
-            ids.length, // Stage number
           ),
         );
 
@@ -447,7 +446,6 @@ export async function getStageContextForPrompt(
   stageContext: StageContextData,
   currentStageId: string,
   item: StageContextPromptItem,
-  stageNumber: number,
 ) {
   // Get the specific stage
   const stage = stageContext.stage;
@@ -455,7 +453,7 @@ export async function getStageContextForPrompt(
   const textItems: string[] = [];
 
   // Include name of stage
-  textItems.push(`[Stage ${stageNumber}: ${stage.name ?? stage.id}]`);
+  textItems.push(`[Stage: ${stage.name ?? stage.id}]`);
   if (item.includePrimaryText && stage.descriptions.primaryText.trim() !== '') {
     textItems.push(`* Stage description: ${stage.descriptions.primaryText}`);
   }
