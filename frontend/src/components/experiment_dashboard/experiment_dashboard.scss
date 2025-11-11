@@ -156,13 +156,15 @@ code {
 /* Active state for left (Details) */
 .toggle-option.active:not(:last-child) {
   border: 1px solid var(--md-sys-color-on-primary-container);
-  border-radius: 12px 0 0 12px; /* Rounded on the left */
+  border-radius: 12px 0 0 12px;
+  /* Rounded on the left */
   background-color: var(--md-sys-color-primary-container);
 }
 
 /* Active state for right (Preview) */
 .toggle-option.active:last-child {
   border: 1px solid var(--md-sys-color-on-primary-container);
-  border-radius: 0 12px 12px 0; /* Rounded on the right */
+  border-radius: 0 12px 12px 0;
+  /* Rounded on the right */
   background-color: var(--md-sys-color-primary-container);
 }
