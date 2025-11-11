@@ -22,6 +22,11 @@ export interface BasePromptConfig {
   type: StageKind; // stage type
   // Structured prompt
   prompt: PromptItem[];
+  // Whether or not prompt should include scaffolding when built.
+  // TODO: Consider making this an enum if we expect different types of
+  // scaffolding in the future. This will require backwards compatibility
+  // though.
+  includeScaffoldingInPrompt: boolean;
   // Number of times to retry prompt call if it fails
   numRetries: number;
   generationConfig: ModelGenerationConfig;

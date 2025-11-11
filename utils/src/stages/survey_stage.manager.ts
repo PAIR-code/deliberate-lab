@@ -43,6 +43,7 @@ export class SurveyStageHandler extends BaseStageHandler {
       id: stage.id,
       type: stage.kind,
       prompt: createDefaultPromptFromText(promptText),
+      includeScaffoldingInPrompt: true,
       generationConfig: createModelGenerationConfig(),
       structuredOutputConfig: {
         enabled: true,
