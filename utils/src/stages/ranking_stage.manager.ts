@@ -44,6 +44,7 @@ export class RankingStageHandler extends BaseStageHandler {
       id: stage.id,
       type: stage.kind,
       prompt: createDefaultPromptFromText(promptText),
+      includeScaffoldingInPrompt: true,
       generationConfig: createModelGenerationConfig(),
       structuredOutputConfig: RANKING_STRUCTURED_OUTPUT_CONFIG,
       numRetries: 3,

@@ -136,6 +136,7 @@ export function createChatPromptConfig(
     id,
     type,
     prompt: config.prompt ?? createDefaultPromptFromText(''),
+    includeScaffoldingInPrompt: config.includeScaffoldingInPrompt ?? true,
     numRetries: config.numRetries ?? 0,
     generationConfig: config.generationConfig ?? createModelGenerationConfig(),
     structuredOutputConfig:
