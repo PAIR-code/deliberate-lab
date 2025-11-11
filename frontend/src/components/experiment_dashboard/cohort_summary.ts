@@ -362,9 +362,12 @@ export class CohortSummary extends MobxLitElement {
       `,
       {listClass: 'mediator-list'},
     );
+    const showMediators = this.experimentManager.showMediatorsInCohortSummary;
 
     return html`
-      <div class="body">${participantSection} ${mediatorSection}</div>
+      <div class="body">
+        ${participantSection} ${showMediators ? mediatorSection : nothing}
+      </div>
     `;
   }
 
