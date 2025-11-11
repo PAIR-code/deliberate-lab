@@ -72,12 +72,9 @@ export const updateAgentParticipant = onDocumentUpdated(
 
       // Make ONE update for the agent participant (e.g., alter status
       // OR complete a stage)
-      if (participant.currentStatus === ParticipantStatus.TRANSFER_PENDING) {
-        // TODO: Resolve transfer (same logic as acceptParticipantTransfer)
-      } else if (
-        participant.currentStatus === ParticipantStatus.ATTENTION_CHECK
-      ) {
+      if (participant.currentStatus === ParticipantStatus.ATTENTION_CHECK) {
         // Resolve attention check
+        // TODO: Move logic into completeStageAsAgentParticipant
         // TODO: Move logic (copied from acceptParticipantCheck) into shared utils
         if (participant.transferCohortId) {
           participant.currentStatus = ParticipantStatus.TRANSFER_PENDING;
