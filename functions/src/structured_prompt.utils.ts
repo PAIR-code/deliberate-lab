@@ -48,9 +48,8 @@ import {
 } from './utils/firestore';
 import {stageManager} from './app';
 
-export const DEFAULT_AGENT_PARTICIPANT_PROFILE_ASSIGNED = `This is your randomly assigned pseudonymous alias. Others will use it to refer to you. It’s only a label (such as an animal or object). You are still a human using this alias.`;
-
-export const DEFAULT_AGENT_PARTICIPANT_PROFILE_SELECTED = `This is the display name you chose for others to see you as.`;
+// TODO: Differente between assigned and selected.
+export const DEFAULT_AGENT_PARTICIPANT_PROFILE_SELECTED = `This is the display name that others will use to refer to you. It may be a label such as an animal or object, but you are still a human using this alias.`;
 
 /** Attempts to fetch corresponding prompt config from storage,
  * else returns the stage's default config.
@@ -334,9 +333,7 @@ async function processPromptItems(
         };
         if (userProfile.type === UserType.PARTICIPANT) {
           const profileSetId = getProfileSetId();
-          const scaffolding = profileSetId
-            ? DEFAULT_AGENT_PARTICIPANT_PROFILE_SELECTED
-            : DEFAULT_AGENT_PARTICIPANT_PROFILE_ASSIGNED;
+          const scaffolding = DEFAULT_AGENT_PARTICIPANT_PROFILE_SELECTED;
 
           items.push(
             `Alias: ${getNameFromPublicId(
