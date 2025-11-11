@@ -420,6 +420,7 @@ async function processPromptItems(
               promptData.experiment,
               promptData.cohort,
               userProfile,
+              includeScaffolding,
             ),
           );
         }
@@ -482,6 +483,7 @@ export async function getStageContextForPrompt(
   experiment: Experiment,
   cohort: CohortConfig,
   userProfile: ParticipantProfileExtended | MediatorProfileExtended,
+  includeScaffolding: boolean,
 ) {
   // Resolve template variables in the stage context before
   // using it to assemble context for prompt.
@@ -513,14 +515,16 @@ export async function getStageContextForPrompt(
 
   const textItems: string[] = [];
 
-  // Include name of stage
-  textItems.push(`----- STAGE: ${stage.name ?? stage.id} -----`);
+  // Include name of stage if scaffolding
+  if (includeScaffolding) {
+    textItems.push(`[Stage: ${stage.name ?? stage.id}]`);
+  }
 
   if (item.includePrimaryText && stage.descriptions.primaryText.trim() !== '') {
-    textItems.push(`- Stage description: ${stage.descriptions.primaryText}`);
+    textItems.push(`* Stage description: ${stage.descriptions.primaryText}`);
   }
   if (item.includeInfoText) {
-    textItems.push(`- Additional info: ${stage.descriptions.infoText}`);
+    textItems.push(`* Additional info: ${stage.descriptions.infoText}`);
   }
   // Note: Help text not included since the field has been deprecated
 
