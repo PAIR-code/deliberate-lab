@@ -134,6 +134,7 @@ export class ExperimentManager extends Service {
   @observable showParticipantPreview = true;
   @observable hideLockedCohorts = false;
   @observable expandAllCohorts = true;
+  @observable showMediatorsInCohortSummary = false;
 
   // Copy of cohort being edited in settings dialog
   @observable cohortEditing: CohortConfig | undefined = undefined;
@@ -257,6 +258,10 @@ export class ExperimentManager extends Service {
 
   setCurrentCohortId(id: string | undefined) {
     this.currentCohortId = id;
+  }
+
+  setShowMediatorsInCohortSummary(show: boolean) {
+    this.showMediatorsInCohortSummary = show;
   }
 
   setCurrentParticipantId(id: string | undefined) {

@@ -42,6 +42,7 @@ export class Component extends MobxLitElement {
   private renderActions() {
     const hideLockedCohorts = this.experimentManager.hideLockedCohorts;
     const expandAllCohorts = this.experimentManager.expandAllCohorts;
+    const showMediators = this.experimentManager.showMediatorsInCohortSummary;
 
     return html`
       <div class="header">
@@ -77,6 +78,23 @@ export class Component extends MobxLitElement {
             >
             </pr-icon>
             <div>${expandAllCohorts ? 'Collapse' : 'Expand'} all cohorts</div>
+          </div>
+          <div
+            class="checkbox-wrapper"
+            @click=${() => {
+              this.experimentManager.setShowMediatorsInCohortSummary(
+                !showMediators,
+              );
+            }}
+          >
+            <pr-icon
+              color="secondary"
+              size="small"
+              variant="default"
+              icon=${showMediators ? 'visibility_off' : 'visibility'}
+            >
+            </pr-icon>
+            <div>${showMediators ? 'Hide' : 'Show'} mediators</div>
           </div>
         </div>
       </div>

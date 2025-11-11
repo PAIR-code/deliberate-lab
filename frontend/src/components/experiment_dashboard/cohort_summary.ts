@@ -340,8 +340,10 @@ export class CohortSummary extends MobxLitElement {
       return aIsTransfer - bIsTransfer || a.publicId.localeCompare(b.publicId);
     });
 
+    const showMediators = this.experimentManager.showMediatorsInCohortSummary;
+
     const participantSection = this.renderListSection(
-      'Participants',
+      showMediators ? 'Participants' : '',
       sortedParticipants,
       'No participants yet.',
       (participant) => html`
@@ -364,7 +366,9 @@ export class CohortSummary extends MobxLitElement {
     );
 
     return html`
-      <div class="body">${participantSection} ${mediatorSection}</div>
+      <div class="body">
+        ${participantSection} ${showMediators ? mediatorSection : nothing}
+      </div>
     `;
   }
 
@@ -381,8 +385,8 @@ export class CohortSummary extends MobxLitElement {
     }
 
     return html`
-      <div class="section">
-        <div class="section-title">${title}</div>
+      <div class="section-list">
+        ${title ? html`<div class="section-title">${title}</div>` : nothing}
         <div class=${listClasses.join(' ')}>
           ${items.length === 0
             ? html`<div class="empty-subsection">${emptyMessage}</div>`
