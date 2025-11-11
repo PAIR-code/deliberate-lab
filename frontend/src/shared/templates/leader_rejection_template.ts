@@ -44,6 +44,7 @@ import {
   RevealAudience,
   LRRankingStagePublicData,
   LAS_WTL_QUESTION_ID,
+  createRankingStage,
 } from '@deliberation-lab/utils';
 import {mustWaitForAllParticipants} from '../experiment.utils';
 import {
@@ -105,7 +106,7 @@ export function getLeadershipRejectionStageConfigs(): StageConfig[] {
   stages.push(LR_R1_INSTRUCTIONS_GROUP);
   stages.push(LR_R1_GROUP_TASK_STAGE);
   // stages.push(LR_R1_SELECTION_STAGE);
-  //stages.push(LR_R1_STATUS_FEEDBACK_STAGE);
+  stages.push(LR_R1_STATUS_FEEDBACK_STAGE);
   stages.push(LR_R1_BELIEF_STAGE);
 
   // Group Stage - Round 2
@@ -114,7 +115,6 @@ export function getLeadershipRejectionStageConfigs(): StageConfig[] {
   stages.push(LR_R2_BELIEF_CANDIDATES);
   stages.push(LR_R2_INSTRUCTIONS_GROUP);
   stages.push(LR_R2_GROUP_TASK_STAGE);
-  //  stages.push(LR_R2_SELECTION_STAGE);
   //stages.push(LR_R2_STATUS_FEEDBACK_STAGE);
   stages.push(LR_R2_BELIEF_STAGE);
 
@@ -711,10 +711,10 @@ export const LR_R1_INSTRUCTIONS_GROUP_INFO = [
   'Remember also that in the extreme case where no one applied, you could be selected as the leader. As a result, try to perform to the best of your ability in the following task, regardless of your application status.',
 ];
 
-export const LR_R1_INSTRUCTIONS_GROUP = createInfoStage({
+export const LR_R1_INSTRUCTIONS_GROUP = createRankingStage({
   id: 'r1_instructions',
   name: 'Round 1 - Task Instructions',
-  infoLines: LR_R1_INSTRUCTIONS_GROUP_INFO,
+  // infoLines: LR_R1_INSTRUCTIONS_GROUP_INFO,
 });
 
 //Task
@@ -732,6 +732,26 @@ export const LR_R1_GROUP_TASK_STAGE = createSurveyStage({
 //==========================================================
 // Feedback Stage
 //==========================================================
+
+export const LR_R1_STATUS_FEEDBACK_STAGE = createRevealStage({
+  id: 'r1_status_feedback',
+  name: 'Round 1 — Leader Selection Result',
+  descriptions: createStageTextConfig({
+    primaryText: 'Results of leader selection for this round.',
+    infoText: 'Please wait until everyone in your group has reached this page.',
+  }),
+  progress: createStageProgressConfig({
+    showParticipantProgress: false,
+    waitForAllParticipants: true,
+  }),
+  items: [
+    createRankingRevealItem({
+      id: 'r1_instructions',
+      customRender: 'leaderStatus', // 🧩 triggers your custom reveal
+      revealAudience: RevealAudience.CURRENT_PARTICIPANT,
+    }),
+  ],
+});
 /*
 function createLeaderStatusRevealStage(
   id: string,
@@ -753,6 +773,7 @@ function createLeaderStatusRevealStage(
     items: [
       {
         id: selectionId,
+        kind: StageKind.Ranking,
         revealAudience: RevealAudience.CURRENT_PARTICIPANT,
         revealScorableOnly: false,
         customRender: 'Chris', // we’ll handle display logic in your frontend UI
@@ -924,6 +945,26 @@ export const LR_R2_GROUP_TASK_STAGE = createSurveyStage({
 //==========================================================
 // Feedback Stage
 //==========================================================
+
+/* export const LR_R2_STATUS_FEEDBACK_STAGE = createRevealStage({
+  id: 'r2_status_feedback',
+  name: 'Round 2 — Leader Selection Result',
+  descriptions: createStageTextConfig({
+    primaryText: 'Results of leader selection for this round.',
+    infoText: 'Please wait until everyone in your group has reached this page.',
+  }),
+  progress: createStageProgressConfig({
+    showParticipantProgress: false,
+    waitForAllParticipants: true,
+  }),
+  items: [
+    createLRRankingRevealItem({
+      id: 'r2_instructions',
+      revealAudience: RevealAudience.CURRENT_PARTICIPANT,
+      customRender: 'leaderStatus', // 👈 triggers LR-specific rendering
+    }),
+  ],
+});
 /*
 export const LR_R2_SELECTION_STAGE = createRevealStage({
   id: 'r2_selection',

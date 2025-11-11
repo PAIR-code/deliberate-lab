@@ -26,6 +26,20 @@ export const RankingRevealItemData = Type.Object(
   strict,
 );
 
+/** LR Ranking reveal item input validation (with customRender). */
+export const LRRankingRevealItemData = Type.Object(
+  {
+    id: Type.String({minLength: 1}),
+    kind: Type.Literal(StageKind.REVEAL),
+    revealAudience: Type.Union([
+      Type.Literal(RevealAudience.CURRENT_PARTICIPANT),
+      Type.Literal(RevealAudience.ALL_PARTICIPANTS),
+    ]),
+    customRender: Type.Optional(Type.String({minLength: 1})),
+  },
+  strict,
+);
+
 /** Survey reveal item input validation. */
 export const SurveyRevealItemData = Type.Object(
   {
@@ -43,6 +57,7 @@ export const SurveyRevealItemData = Type.Object(
 /** Reveal item input validation. */
 export const RevealItemData = Type.Any([
   RankingRevealItemData,
+  LRRankingRevealItemData,
   SurveyRevealItemData,
 ]);
 
