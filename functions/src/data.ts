@@ -200,7 +200,7 @@ export async function getExperimentDownload(
       .get()
   ).docs.map((doc) => doc.data() as AlertMessage);
 
-  // Group alerts by participant public ID
+  // Group alerts by participant private ID
   for (const alert of alertList) {
     const participantId = alert.participantId;
     if (!experimentDownload.alerts[participantId]) {

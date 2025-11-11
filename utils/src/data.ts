@@ -39,7 +39,7 @@ export interface ExperimentDownload {
   agentMediatorMap: Record<string, AgentMediatorTemplate>;
   // Maps from agent participant ID to agent template
   agentParticipantMap: Record<string, AgentParticipantTemplate>;
-  // Map from participant public ID to alerts.
+  // Map from participant private ID to alerts.
   alerts: Record<string, AlertMessage[]>;
 }
 
