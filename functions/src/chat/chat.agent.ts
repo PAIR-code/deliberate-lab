@@ -217,6 +217,7 @@ export async function getAgentChatMessage(
     stageId,
     user,
     promptConfig,
+    participantIds, // Pass participant IDs to limit context scope (e.g., for private chats)
   );
 
   // Check if we should use message-based format

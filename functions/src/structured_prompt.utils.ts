@@ -94,6 +94,7 @@ export async function getFirestoreDataForStructuredPrompt(
   currentStageId: string,
   userProfile: ParticipantProfileExtended | MediatorProfileExtended,
   promptConfig: BasePromptConfig,
+  contextParticipantIds?: string[], // Optional: specific participant IDs for context (e.g., for private chats)
 ): Promise<{
   experiment: Experiment;
   cohort: CohortConfig;
@@ -116,14 +117,23 @@ export async function getFirestoreDataForStructuredPrompt(
   );
 
   // Fetch participants whose answers should be included in prompt
-  // (if participant, this is just the current participant;
-  // if mediator, it's all active cohort participants)
   let answerParticipants: ParticipantProfileExtended[] = [];
-  if (userProfile.type === UserType.PARTICIPANT) {
+
+  if (contextParticipantIds && contextParticipantIds.length > 0) {
+    // If specific participant IDs provided, use those
+    // (e.g., for private chats where mediator needs context about one participant)
+    answerParticipants = await Promise.all(
+      contextParticipantIds.map((id) =>
+        getFirestoreParticipant(experimentId, id),
+      ),
+    );
+  } else if (userProfile.type === UserType.PARTICIPANT) {
+    // Participant only needs their own context
     answerParticipants.push(
       await getFirestoreParticipant(experimentId, userProfile.privateId),
     );
   } else if (userProfile.type === UserType.MEDIATOR) {
+    // Mediator in group context needs all participants
     answerParticipants = activeParticipants;
   }
 
@@ -282,6 +292,7 @@ export async function getPromptFromConfig(
   stageId: string, // current stage ID
   userProfile: ParticipantProfileExtended | MediatorProfileExtended,
   promptConfig: BasePromptConfig,
+  contextParticipantIds?: string[], // Optional: specific participant IDs for context (e.g., for private chats)
 ): Promise<string> {
   // Get Firestore data used to construct prompt
   const promptData = await getFirestoreDataForStructuredPrompt(
@@ -290,6 +301,7 @@ export async function getPromptFromConfig(
     stageId,
     userProfile,
     promptConfig,
+    contextParticipantIds,
   );
 
   const promptText = await processPromptItems(
