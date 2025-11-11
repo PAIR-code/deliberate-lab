@@ -86,6 +86,10 @@ import {
   POLICY_METADATA,
   getPolicyExperimentTemplate,
 } from '../../shared/templates/policy';
+import {
+  INTEGRATION_METADATA,
+  getAgentParticipantIntegrationTemplate,
+} from '../../shared/templates/agent_participant_integration_template';
 
 import {styles} from './stage_builder_dialog.scss';
 
@@ -179,6 +183,7 @@ export class StageBuilderDialog extends MobxLitElement {
         ${this.renderConditionalSurveyTemplateCard()}
         ${this.renderPolicyTemplateCard()} ${this.renderConsensusDebateCard()}
         ${this.renderCharityDebateTemplateCard()}
+        ${this.renderAgentIntegrationCard()}
       </div>
     `;
   }
@@ -261,6 +266,18 @@ export class StageBuilderDialog extends MobxLitElement {
           ${metadata.description}
           <div></div>
         </div>
+      </div>
+    `;
+  }
+
+  private renderAgentIntegrationCard() {
+    const addTemplate = () => {
+      this.addTemplate(getAgentParticipantIntegrationTemplate());
+    };
+    return html`
+      <div class="card" @click=${addTemplate}>
+        <div class="title">${INTEGRATION_METADATA.name}</div>
+        <div>${INTEGRATION_METADATA.description}</div>
       </div>
     `;
   }
