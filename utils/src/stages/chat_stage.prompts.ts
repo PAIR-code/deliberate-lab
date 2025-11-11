@@ -121,7 +121,7 @@ export function createChatPromptConfig(
   config: Partial<ChatPromptConfig> = {},
   persona: AgentPersonaType = AgentPersonaType.MEDIATOR,
 ): ChatPromptConfig {
-  const defaultText =
+  const defaultPrompt =
     persona == AgentPersonaType.PARTICIPANT
       ? createDefaultParticipantPromptFromText('')
       : createDefaultMediatorPromptFromText('');
@@ -129,7 +129,7 @@ export function createChatPromptConfig(
   return {
     id,
     type,
-    prompt: config.prompt ?? defaultText,
+    prompt: config.prompt ?? defaultPrompt,
     numRetries: config.numRetries ?? 0,
     generationConfig: config.generationConfig ?? createModelGenerationConfig(),
     structuredOutputConfig:

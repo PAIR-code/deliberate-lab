@@ -49,7 +49,7 @@ export class GroupChatStageHandler implements StageHandler<ChatStageConfig> {
         [participant],
         participant.publicId,
         getProfileSetId(),
-        false,
+        true,
         true,
       ),
     );
