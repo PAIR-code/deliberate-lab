@@ -10,6 +10,7 @@ import {RankingStageHandler} from './ranking_stage.manager';
 import {RoleStageHandler} from './role_stage.manager';
 import {SurveyStageHandler} from './survey_stage.manager';
 import {SurveyPerParticipantStageHandler} from './survey_per_participant_stage.manager';
+import {TransferStageHandler} from './transfer_stage.manager';
 import {ProfileStageHandler} from './profile_stage.manager';
 import {StageConfig, StageContextData, StageKind} from './stage';
 import {StockInfoStageHandler} from './stockinfo_stage.manager';
@@ -35,6 +36,7 @@ export class StageManager {
     this.handlerMap.set(StageKind.ROLE, new RoleStageHandler());
     this.handlerMap.set(StageKind.STOCKINFO, new StockInfoStageHandler());
     this.handlerMap.set(StageKind.SURVEY, new SurveyStageHandler());
+    this.handlerMap.set(StageKind.TRANSFER, new TransferStageHandler());
     this.handlerMap.set(StageKind.PROFILE, new ProfileStageHandler());
     this.handlerMap.set(
       StageKind.SURVEY_PER_PARTICIPANT,
