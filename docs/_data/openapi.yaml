@@ -56,9 +56,8 @@ paths:
       tags:
         - health
       summary: Health check
-      description: Check API health status (does not require authentication)
+      description: Check API health status
       operationId: healthCheck
-      security: []
       responses:
         '200':
           description: API is healthy

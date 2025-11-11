@@ -65,7 +65,7 @@ app.put('/v1/experiments/:id', updateExperiment);
 app.delete('/v1/experiments/:id', deleteExperiment);
 app.get('/v1/experiments/:id/export', exportExperimentData);
 
-// Health check endpoint (doesn't require auth)
+// Health check endpoint (also requires authentication)
 app.get('/v1/health', (_req, res) => {
   res.status(200).json({
     status: 'healthy',
