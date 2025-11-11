@@ -3,6 +3,7 @@ import {
   TERTIARY_PROFILE_SET_ID,
   PROFILE_SET_ANIMALS_2_ID,
   PROFILE_SET_NATURE_ID,
+  PROMPT_ITEM_PROFILE_CONTEXT_PARTICIPANT_SCAFFOLDING,
   AssetAllocationStageParticipantAnswer,
   BasePromptConfig,
   ChatStageConfig,
@@ -310,6 +311,7 @@ export async function getPromptFromConfig(
     stageId,
     promptData,
     userProfile,
+    promptConfig.includeScaffoldingInPrompt,
   );
 
   // Add structured output if relevant
@@ -318,6 +320,23 @@ export async function getPromptFromConfig(
   );
 
   return structuredOutput ? `${promptText}\n${structuredOutput}` : promptText;
+}
+
+/** Returns string representing ProfileContext prompt item. */
+function getProfileContextForPrompt(
+  userProfile: ParticipantProfileExtended | MediatorProfileExtended,
+  includeScaffolding: boolean,
+): string {
+  const profileContext = userProfile.agentConfig?.promptContext;
+  if (profileContext) {
+    if (userProfile.type === UserType.PARTICIPANT && includeScaffolding) {
+      const instructions = PROMPT_ITEM_PROFILE_CONTEXT_PARTICIPANT_SCAFFOLDING;
+      return `Private persona context: ${profileContext}\n${instructions}`;
+    } else {
+      return profileContext;
+    }
+  }
+  return '';
 }
 
 /** Process prompt items recursively. */
@@ -332,6 +351,7 @@ async function processPromptItems(
     data: Record<string, StageContextData>;
   },
   userProfile: ParticipantProfileExtended | MediatorProfileExtended,
+  includeScaffolding: boolean,
 ): Promise<string> {
   const experiment = promptData.experiment;
   const items: string[] = [];
@@ -342,7 +362,13 @@ async function processPromptItems(
         items.push(promptItem.text);
         break;
       case PromptItemType.PROFILE_CONTEXT:
-        items.push(userProfile.agentConfig.promptContext);
+        const profileContext = getProfileContextForPrompt(
+          userProfile,
+          includeScaffolding,
+        );
+        if (profileContext) {
+          items.push(profileContext);
+        }
         break;
       case PromptItemType.PROFILE_INFO:
         const getProfileSetId = () => {
@@ -418,6 +444,7 @@ async function processPromptItems(
           stageId,
           promptData,
           userProfile,
+          includeScaffolding,
         );
         if (groupText) items.push(groupText);
         break;

@@ -15,6 +15,13 @@ import {
 import {ShuffleConfig, SeedStrategy} from './utils/random.utils';
 
 // ****************************************************************************
+// CONSTANTS
+// ****************************************************************************
+
+/** Scaffolding for ProfileContext prompt item (for participants). */
+export const PROMPT_ITEM_PROFILE_CONTEXT_PARTICIPANT_SCAFFOLDING = `This information is private to you. Use it to guide your behavior in this task. Other participants do not know these attributes unless you choose to share it.`;
+
+// ****************************************************************************
 // TYPES
 // ****************************************************************************
 export interface BasePromptConfig {
