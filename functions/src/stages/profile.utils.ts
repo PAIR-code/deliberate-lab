@@ -5,7 +5,7 @@ import {
   ProfileType,
   ProfileStageConfig,
   StructuredOutputDataType,
-  createDefaultPromptFromText,
+  createDefaultParticipantPromptFromText,
   createModelGenerationConfig,
   createStructuredOutputConfig,
   PROFILE_AVATARS,
@@ -89,7 +89,7 @@ export async function completeProfile(
   const promptConfig: BasePromptConfig = {
     id: stageConfig.id,
     type: stageConfig.kind,
-    prompt: createDefaultPromptFromText(
+    prompt: createDefaultParticipantPromptFromText(
       createProfilePrompt(stageProfileType),
       stageConfig.id,
     ),

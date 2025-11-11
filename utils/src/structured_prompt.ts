@@ -1,10 +1,8 @@
 /** Structured prompt types, constants, and functions. */
 import {
-  AgentChatPromptConfig,
   AgentChatSettings,
+  AgentPersonaType,
   ModelGenerationConfig,
-  createAgentChatSettings,
-  createModelGenerationConfig,
 } from './agent';
 import {StageKind} from './stages/stage';
 import {
@@ -52,6 +50,9 @@ export interface BasePromptItem {
 }
 
 export enum PromptItemType {
+  // Custom system context that can be overwritten
+  SYSTEM_INSTRUCTIONS = 'SYSTEM_INSTRUCTIONS',
+  // Custom stage-specific text
   TEXT = 'TEXT',
   // Profile name/avatar/pronouns
   PROFILE_INFO = 'PROFILE_INFO',
@@ -114,6 +115,17 @@ export interface PromptItemGroup extends BasePromptItem {
 }
 
 // ****************************************************************************
+// DEFAULT CONSTANTS
+// ****************************************************************************
+export const HEADER_PARTICIPANT_DESCRIPTION = `--- Participant description ---`;
+
+export const DEFAULT_AGENT_PARTICIPANT_SCAFFOLDING = `You are a human participant interacting in an online task with multiple stages. In this query, you will provide an action for the current stage - for example, participating in a live chat, answering survey questions, or acknowledging information. Respond as this participant in order to move the task forward.\n`;
+
+export const DEFAULT_AGENT_MEDIATOR_PROFILE_PREAMBLE = `You are participating in a live conversation as the following online alias:`;
+
+export const DEFAULT_AGENT_MEDIATOR_PROFILE_SCAFFOLDING = `Follow any persona context or instructions carefully. If none are given, respond in short, natural sentences (1–2 per turn). Adjust your response frequency based on group size: respond less often in groups with multiple participants so that all have a chance to speak.`;
+
+// ****************************************************************************
 // FUNCTIONS
 // ****************************************************************************
 
@@ -150,26 +162,54 @@ export function createDefaultPromptItemGroup(
   };
 }
 
-// Default prompt includes current stage context
-export function createDefaultPromptFromText(
-  text: string,
-  stageId: string = '', // defaults to context from past + current stages
-): PromptItem[] {
-  return [
-    {
-      type: PromptItemType.TEXT,
-      text: '',
-    },
-    {type: PromptItemType.PROFILE_INFO},
-    {type: PromptItemType.PROFILE_CONTEXT},
-    createDefaultStageContextPromptItem(stageId),
-    {type: PromptItemType.TEXT, text},
-  ];
-}
-
 export function createTextPromptItem(text: string): TextPromptItem {
   return {
     type: PromptItemType.TEXT,
     text: text,
   } as TextPromptItem;
+}
+
+export function createDefaultMediatorPromptFromText(
+  text: string,
+  stageId: string = '', // defaults to context from past + current stages
+): PromptItem[] {
+  const getPromptItem = (text: string) => {
+    return {
+      text: text,
+      type: PromptItemType.TEXT,
+    } as PromptItem;
+  };
+
+  return [
+    getPromptItem(DEFAULT_AGENT_MEDIATOR_PROFILE_PREAMBLE),
+    {type: PromptItemType.PROFILE_INFO},
+    {
+      text: DEFAULT_AGENT_MEDIATOR_PROFILE_SCAFFOLDING,
+      type: PromptItemType.TEXT,
+    },
+    createDefaultStageContextPromptItem(stageId),
+    {type: PromptItemType.TEXT, text},
+  ];
+}
+
+export function createDefaultParticipantPromptFromText(
+  text: string,
+  stageId: string = '', // defaults to context from past + current stages
+): PromptItem[] {
+  const getPromptItem = (text: string) => {
+    return {
+      text: text,
+      type: PromptItemType.TEXT,
+    } as PromptItem;
+  };
+
+  // Agent participant.
+  return [
+    getPromptItem(DEFAULT_AGENT_PARTICIPANT_SCAFFOLDING),
+    getPromptItem(HEADER_PARTICIPANT_DESCRIPTION),
+    {type: PromptItemType.PROFILE_INFO},
+    {type: PromptItemType.PROFILE_CONTEXT},
+    createDefaultStageContextPromptItem(stageId),
+    {type: PromptItemType.TEXT, text},
+  ];
 }

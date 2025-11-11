@@ -8,7 +8,8 @@ import {
   createChatPromptConfig,
   createChatStageParticipantAnswer,
   createParticipantChatMessage,
-  createDefaultPromptFromText,
+  createDefaultParticipantPromptFromText,
+  AgentPersonaType,
 } from '@deliberation-lab/utils';
 
 import {Timestamp} from 'firebase-admin/firestore';
@@ -133,11 +134,15 @@ export async function initiateChatDiscussion(
 
     const promptConfig =
       (await getAgentChatPrompt(experimentId, stageId, agentConfig.agentId)) ??
-      createChatPromptConfig(stageId, {
-        prompt: createDefaultPromptFromText(
-          'You are a participant. Respond in a quick sentence if you would like to say something. Otherwise, do not respond.',
-        ),
-      });
+      createChatPromptConfig(
+        stageId,
+        {
+          prompt: createDefaultParticipantPromptFromText(
+            'You are a participant. Respond in a quick sentence if you would like to say something. Otherwise, do not respond.',
+          ),
+        },
+        AgentPersonaType.PARTICIPANT,
+      );
 
     const chatMessages: ChatMessage[] = [];
     const publicStageData = await getFirestoreStagePublicData(

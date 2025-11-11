@@ -1,5 +1,6 @@
 import {UnifiedTimestamp} from '../shared';
 import {
+  AgentPersonaType,
   BaseAgentPromptConfig,
   ProfileAgentConfig,
   createAgentChatSettings,
@@ -8,15 +9,11 @@ import {
 import {ParticipantProfileBase} from '../participant';
 import {getParticipantProfilePromptContext} from '../participant.prompts';
 import {convertUnifiedTimestampToTime} from '../shared';
-import {
-  StructuredOutputDataType,
-  createStructuredOutputConfig,
-  makeStructuredOutputPrompt,
-} from '../structured_output';
+import {createStructuredOutputConfig} from '../structured_output';
 import {
   ChatPromptConfig,
-  PromptItemType,
-  createDefaultPromptFromText,
+  createDefaultMediatorPromptFromText,
+  createDefaultParticipantPromptFromText,
 } from '../structured_prompt';
 import {ChatMessage} from '../chat_message';
 import {
@@ -61,7 +58,7 @@ export function getChatPromptMessageHistory(
   stage: ChatStageConfig | PrivateChatStageConfig,
 ) {
   if (messages.length === 0) {
-    return `No one in the discussion has spoken yet.`;
+    return `\n\n--- Start of chat transcript ---\nNo messages yet.\n--- End of chat transcript ---\n`;
   }
 
   const description = `
@@ -122,11 +119,17 @@ export function createChatPromptConfig(
   id: string, // stage ID
   type: StageKind.CHAT | StageKind.PRIVATE_CHAT,
   config: Partial<ChatPromptConfig> = {},
+  persona: AgentPersonaType = AgentPersonaType.MEDIATOR,
 ): ChatPromptConfig {
+  const defaultText =
+    persona == AgentPersonaType.PARTICIPANT
+      ? createDefaultParticipantPromptFromText('')
+      : createDefaultMediatorPromptFromText('');
+
   return {
     id,
     type,
-    prompt: config.prompt ?? createDefaultPromptFromText(''),
+    prompt: config.prompt ?? defaultText,
     numRetries: config.numRetries ?? 0,
     generationConfig: config.generationConfig ?? createModelGenerationConfig(),
     structuredOutputConfig:

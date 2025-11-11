@@ -54,6 +54,7 @@ import {
   createRevealStage,
   createMultiAssetAllocationRevealItem,
 } from '@deliberation-lab/utils';
+import {AgentParticipantDialog} from '../../components/experiment_dashboard/agent_participant_configuration_dialog';
 
 const EMOJIS = ['1️⃣', '2️⃣', '3️⃣'];
 
@@ -1089,20 +1090,25 @@ function createHabermasMediatorPromptConfig(): MediatorPromptConfig {
   - Example: “It sounds like two main ideas have emerged so far: A and B.” or “You seem close to agreement on X, but Y is still being debated.”
   `;
 
-  return createChatPromptConfig(HABERMAS_STAGE_ID, StageKind.CHAT, {
-    prompt: [
-      createTextPromptItem(
-        'You are participating in an experiment with the following online profile:',
-      ),
-      {type: PromptItemType.PROFILE_INFO} as ProfileInfoPromptItem,
-      {type: PromptItemType.PROFILE_CONTEXT} as ProfileContextPromptItem,
-      createDefaultStageContextPromptItem(HABERMAS_STAGE_ID),
-      createTextPromptItem(habermasInstruction),
-    ],
-    structuredOutputConfig,
-    chatSettings,
-    generationConfig,
-  });
+  return createChatPromptConfig(
+    HABERMAS_STAGE_ID,
+    StageKind.CHAT,
+    {
+      prompt: [
+        createTextPromptItem(
+          'You are participating in an experiment with the following online profile:',
+        ),
+        {type: PromptItemType.PROFILE_INFO} as ProfileInfoPromptItem,
+        {type: PromptItemType.PROFILE_CONTEXT} as ProfileContextPromptItem,
+        createDefaultStageContextPromptItem(HABERMAS_STAGE_ID),
+        createTextPromptItem(habermasInstruction),
+      ],
+      structuredOutputConfig,
+      chatSettings,
+      generationConfig,
+    },
+    AgentPersonaType.MEDIATOR,
+  );
 }
 
 function createDynamicMediatorPromptConfig(): MediatorPromptConfig {
@@ -1161,20 +1167,25 @@ STEP 4: If 'proposedSolution' is 'NoSolutionNeeded':
 - Set 'response' to an empty string.  
 - Set 'shouldRespond' to false.`;
 
-  return createChatPromptConfig(DYNAMIC_STAGE_ID, StageKind.CHAT, {
-    prompt: [
-      createTextPromptItem(
-        'You are participating in an experiment with the following online profile:',
-      ),
-      {type: PromptItemType.PROFILE_INFO} as ProfileInfoPromptItem,
-      {type: PromptItemType.PROFILE_CONTEXT} as ProfileContextPromptItem,
-      createDefaultStageContextPromptItem(DYNAMIC_STAGE_ID),
-      createTextPromptItem(dynamicInstruction),
-    ],
-    structuredOutputConfig,
-    chatSettings,
-    generationConfig,
-  });
+  return createChatPromptConfig(
+    DYNAMIC_STAGE_ID,
+    StageKind.CHAT,
+    {
+      prompt: [
+        createTextPromptItem(
+          'You are participating in an experiment with the following online profile:',
+        ),
+        {type: PromptItemType.PROFILE_INFO} as ProfileInfoPromptItem,
+        {type: PromptItemType.PROFILE_CONTEXT} as ProfileContextPromptItem,
+        createDefaultStageContextPromptItem(DYNAMIC_STAGE_ID),
+        createTextPromptItem(dynamicInstruction),
+      ],
+      structuredOutputConfig,
+      chatSettings,
+      generationConfig,
+    },
+    AgentPersonaType.MEDIATOR,
+  );
 }
 
 const HABERMAS_MEDIATOR_TEMPLATE: AgentMediatorTemplate = {

@@ -1,5 +1,8 @@
 import {ParticipantProfileExtended} from '../participant';
-import {createDefaultPromptFromText} from '../structured_prompt';
+import {
+  createDefaultMediatorPromptFromText,
+  createDefaultParticipantPromptFromText,
+} from '../structured_prompt';
 import {PrivateChatStageConfig} from './private_chat_stage';
 import {
   DEFAULT_AGENT_PRIVATE_MEDIATOR_CHAT_PROMPT,
@@ -7,13 +10,8 @@ import {
   createChatPromptConfig,
   getChatPromptMessageHistory,
 } from './chat_stage.prompts';
-import {
-  StageConfig,
-  StageContextData,
-  StageKind,
-  StageParticipantAnswer,
-  StagePublicData,
-} from './stage';
+import {AgentPersonaType} from '../agent';
+import {StageContextData, StageKind} from './stage';
 import {StageHandler} from './stage.manager';
 
 export class PrivateChatStageHandler
@@ -32,7 +30,7 @@ export class PrivateChatStageHandler
         stage,
       );
       conversations.push(
-        `Private chat with ${participant.name} (${participant.publicId})\n${history}`,
+        `Private chat with ${participant.name} (${participant.publicId})${history}`,
       );
     }
 
@@ -41,15 +39,16 @@ export class PrivateChatStageHandler
 
   getDefaultMediatorStructuredPrompt(stageId: string) {
     return createChatPromptConfig(stageId, StageKind.CHAT, {
-      prompt: createDefaultPromptFromText(
+      prompt: createDefaultMediatorPromptFromText(
         DEFAULT_AGENT_PRIVATE_MEDIATOR_CHAT_PROMPT,
+        AgentPersonaType.MEDIATOR,
       ),
     });
   }
 
   getDefaultParticipantStructuredPrompt(stageId: string) {
     return createChatPromptConfig(stageId, StageKind.CHAT, {
-      prompt: createDefaultPromptFromText(
+      prompt: createDefaultParticipantPromptFromText(
         DEFAULT_AGENT_PARTICIPANT_CHAT_PROMPT,
       ),
     });

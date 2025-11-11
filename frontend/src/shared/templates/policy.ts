@@ -40,6 +40,7 @@ import {
   MultipleChoiceItem,
   StageContextPromptItem,
   ApiKeyType,
+  AgentPersonaType,
 } from '@deliberation-lab/utils';
 
 type Policy = {
@@ -1040,6 +1041,7 @@ function createPolicyAssistantAgent(): AgentMediatorTemplate {
         disableSafetyFilters: true,
       }),
     },
+    AgentPersonaType.MEDIATOR,
   );
   return {persona, promptMap};
 }

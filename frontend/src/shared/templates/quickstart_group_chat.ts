@@ -9,7 +9,7 @@ import {
   createMetadataConfig,
   createParticipantProfileBase,
   createProfileStage,
-  createDefaultPromptFromText,
+  createDefaultMediatorPromptFromText,
   AgentMediatorTemplate,
   AgentParticipantTemplate,
   AgentPersonaType,
@@ -100,11 +100,12 @@ function createMediatorAgent(): AgentMediatorTemplate {
     CHAT_STAGE_ID, // stage ID
     StageKind.CHAT,
     {
-      prompt: createDefaultPromptFromText(
+      prompt: createDefaultMediatorPromptFromText(
         'Your instructions are to facilitate this group chat. Make sure all participants have a chance to speak and that everyone is polite to one another.',
         CHAT_STAGE_ID,
       ),
     },
+    AgentPersonaType.MEDIATOR,
   );
 
   return {persona, promptMap};

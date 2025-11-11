@@ -48,6 +48,10 @@ import {
 } from './utils/firestore';
 import {stageManager} from './app';
 
+export const DEFAULT_AGENT_PARTICIPANT_PROFILE_ASSIGNED = `This is your randomly assigned pseudonymous alias. Others will use it to refer to you. It’s only a label (such as an animal or object). You are still a human using this alias.`;
+
+export const DEFAULT_AGENT_PARTICIPANT_PROFILE_SELECTED = `This is the display name you chose for others to see you as.`;
+
 /** Attempts to fetch corresponding prompt config from storage,
  * else returns the stage's default config.
  */
@@ -310,7 +314,10 @@ async function processPromptItems(
         items.push(promptItem.text);
         break;
       case PromptItemType.PROFILE_CONTEXT:
-        if (userProfile.agentConfig?.promptContext) {
+        if (
+          userProfile.agentConfig?.promptContext &&
+          userProfile.type === UserType.PARTICIPANT
+        ) {
           items.push(
             `Private persona context: ${userProfile.agentConfig.promptContext}\nThis information is private to you. Use it to guide your behavior in this task. Other participants do not know these attributes unless you choose to share it.`,
           );
@@ -327,27 +334,20 @@ async function processPromptItems(
         };
         if (userProfile.type === UserType.PARTICIPANT) {
           const profileSetId = getProfileSetId();
-          const participantInstructions: string = `You are a human participant interacting in an online task with multiple stages. In this query, you will provide an action for the current stage - for example, participating in a live chat, answering survey questions, or acknowledging information. Respond as this participant in order to move the task forward.\n`;
-
-          let scaffolding: string = `This is your randomly assigned pseudonymous alias. Others will use it to refer to you. It’s only a label (such as an animal or object). You are still a human using this alias.`;
-          // TODO: Fix this.
-          if (profileSetId) {
-            scaffolding = `This is the display name you chose for others to see you as.`;
-          }
+          const scaffolding = profileSetId
+            ? DEFAULT_AGENT_PARTICIPANT_PROFILE_SELECTED
+            : DEFAULT_AGENT_PARTICIPANT_PROFILE_ASSIGNED;
 
           items.push(
-            `${participantInstructions}\n--- Participant description ---\nAlias: ${getNameFromPublicId(
+            `Alias: ${getNameFromPublicId(
               [userProfile],
               userProfile.publicId,
               profileSetId,
-            )}\n${scaffolding}
-          `,
+            )}\n${scaffolding}\n`,
           );
         } else {
           // TODO: Adjust display for mediator profiles
-          items.push(
-            `You are participating in a live conversation as the following online alias.\n\nAlias: ${userProfile.avatar} ${userProfile.name}.\n\nFollow any persona context or instructions carefully. If none are given, respond in short, natural sentences (1–2 per turn). Adjust your response frequency based on group size: respond less often in groups with multiple participants so that all have a chance to speak.`,
-          );
+          items.push(`Alias: ${userProfile.avatar} ${userProfile.name}\n`);
         }
         break;
       case PromptItemType.STAGE_CONTEXT:

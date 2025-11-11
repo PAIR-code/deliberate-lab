@@ -14,7 +14,7 @@ import {
   createMultipleChoiceSurveyQuestion,
   createParticipantProfileBase,
   createProfileStage,
-  createDefaultPromptFromText,
+  createDefaultMediatorPromptFromText,
   createScaleSurveyQuestion,
   createStageProgressConfig,
   createStageTextConfig,
@@ -163,7 +163,10 @@ const createBbotAgent = () => {
     TG_CHAT_STAGE_ID, // stage ID
     StageKind.CHAT,
     {
-      prompt: createDefaultPromptFromText(TG_AGENT_PROMPT, TG_CHAT_STAGE_ID),
+      prompt: createDefaultMediatorPromptFromText(
+        TG_AGENT_PROMPT,
+        TG_CHAT_STAGE_ID,
+      ),
       chatSettings: createAgentChatSettings({
         wordsPerMinute: 300,
         minMessagesBeforeResponding: 5,
@@ -171,6 +174,7 @@ const createBbotAgent = () => {
         maxResponses: 1,
       }),
     },
+    AgentPersonaType.MEDIATOR,
   );
 
   return {persona, promptMap};

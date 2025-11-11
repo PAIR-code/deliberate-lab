@@ -10,7 +10,7 @@ import {
   createParticipantProfileBase,
   createPrivateChatStage,
   createProfileStage,
-  createDefaultPromptFromText,
+  createDefaultMediatorPromptFromText,
   AgentMediatorTemplate,
   AgentParticipantTemplate,
   AgentPersonaType,
@@ -71,11 +71,12 @@ function createMediatorAgent(): AgentMediatorTemplate {
     CHAT_STAGE_ID, // stage ID
     StageKind.PRIVATE_CHAT,
     {
-      prompt: createDefaultPromptFromText(
-        'You are having a private chat with a human user. Make sure you help them with whatever they need',
+      prompt: createDefaultMediatorPromptFromText(
+        'You are having a private chat with a human user. Be friendly and helpful to help the user achieve their goals.',
         CHAT_STAGE_ID,
       ),
     },
+    AgentPersonaType.MEDIATOR,
   );
 
   return {persona, promptMap};
