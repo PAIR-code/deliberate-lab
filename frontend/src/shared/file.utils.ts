@@ -742,9 +742,12 @@ export function getAlertData(data: ExperimentDownload) {
 
   // Add headings
   alertData.push(getAllAlertCSVColumns(null));
-  // Add alerts
-  for (const alert of data.alerts) {
-    alertData.push(getAllAlertCSVColumns(alert));
+  // Add alerts from all participants
+  for (const participantId of Object.keys(data.alerts)) {
+    const participantAlerts = data.alerts[participantId];
+    for (const alert of participantAlerts) {
+      alertData.push(getAllAlertCSVColumns(alert));
+    }
   }
 
   return alertData;

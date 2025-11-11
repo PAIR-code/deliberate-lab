@@ -199,7 +199,15 @@ export async function getExperimentDownload(
       .orderBy('timestamp', 'asc')
       .get()
   ).docs.map((doc) => doc.data() as AlertMessage);
-  experimentDownload.alerts = alertList;
+
+  // Group alerts by participant public ID
+  for (const alert of alertList) {
+    const participantId = alert.participantId;
+    if (!experimentDownload.alerts[participantId]) {
+      experimentDownload.alerts[participantId] = [];
+    }
+    experimentDownload.alerts[participantId].push(alert);
+  }
 
   // Convert all Timestamp objects to UnifiedTimestamp format
   const normalized = convertTimestamps(
