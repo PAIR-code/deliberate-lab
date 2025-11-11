@@ -24,6 +24,7 @@ import {styles} from './reveal_view.scss';
 
 /** Reveal stage summary view. */
 @customElement('reveal-summary-view')
+@customElement('leader-reveal-view')
 export class RevealView extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
 

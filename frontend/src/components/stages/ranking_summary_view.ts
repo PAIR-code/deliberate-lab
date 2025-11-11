@@ -23,6 +23,7 @@ import {styles} from './ranking_view.scss';
 
 /** Ranking summary view */
 @customElement('ranking-summary-view')
+@customElement('leader-reveal-view')
 export class RankingView extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
 
