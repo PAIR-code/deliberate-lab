@@ -191,6 +191,7 @@ const INT_PRIVATE_CHAT_STAGE = createPrivateChatStage({
     primaryText: INT_PRIVATE_CHAT_DESCRIPTION,
   }),
   timeLimitInMinutes: 5,
+  minNumberOfTurns: 2,
 });
 
 // ****************************************************************************
@@ -248,6 +249,12 @@ const INT_GROUP_CHAT_STAGE = createChatStage({
   descriptions: createStageTextConfig({
     primaryText: INT_GROUP_CHAT_DESCRIPTION,
   }),
+  progress: createStageProgressConfig({
+    waitForAllParticipants: true,
+    minParticipants: 2,
+  }),
+  timeLimitInMinutes: 2,
+  requireFullTime: true,
 });
 
 // ****************************************************************************
