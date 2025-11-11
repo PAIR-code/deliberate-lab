@@ -4,6 +4,7 @@ import {
   PROFILE_SET_ANIMALS_2_ID,
   PROFILE_SET_NATURE_ID,
   PROMPT_ITEM_PROFILE_CONTEXT_PARTICIPANT_SCAFFOLDING,
+  PROMPT_ITEM_PROFILE_INFO_PARTICIPANT_SCAFFOLDING,
   AssetAllocationStageParticipantAnswer,
   BasePromptConfig,
   ChatStageConfig,
@@ -339,6 +340,36 @@ function getProfileContextForPrompt(
   return '';
 }
 
+/** Returns string representing ProfileInfo prompt item. */
+function getProfileInfoForPrompt(
+  userProfile: ParticipantProfileExtended | MediatorProfileExtended,
+  includeScaffolding: boolean,
+  stageId: string, // Used for temporary stage ID hack that sets profiles
+): string {
+  const getProfileSetId = () => {
+    if (stageId.includes(SECONDARY_PROFILE_SET_ID)) {
+      return PROFILE_SET_ANIMALS_2_ID;
+    } else if (stageId.includes(TERTIARY_PROFILE_SET_ID)) {
+      return PROFILE_SET_NATURE_ID;
+    }
+    return '';
+  };
+
+  const scaffoldingPrefix = includeScaffolding ? `Alias: ` : '';
+  const scaffoldingSuffix = includeScaffolding
+    ? `\n${PROMPT_ITEM_PROFILE_INFO_PARTICIPANT_SCAFFOLDING}`
+    : '';
+
+  if (userProfile.type === UserType.PARTICIPANT) {
+    return userProfile.name
+      ? `${scaffoldingPrefix}${getNameFromPublicId([userProfile], userProfile.publicId, getProfileSetId())}${scaffoldingSuffix}`
+      : 'Profile not yet set';
+  } else {
+    // TODO: Adjust display for mediator profiles
+    return `${scaffoldingPrefix}${userProfile.avatar} ${userProfile.name}${scaffoldingSuffix}`;
+  }
+}
+
 /** Process prompt items recursively. */
 async function processPromptItems(
   promptItems: PromptItem[],
@@ -371,28 +402,9 @@ async function processPromptItems(
         }
         break;
       case PromptItemType.PROFILE_INFO:
-        const getProfileSetId = () => {
-          if (stageId.includes(SECONDARY_PROFILE_SET_ID)) {
-            return PROFILE_SET_ANIMALS_2_ID;
-          } else if (stageId.includes(TERTIARY_PROFILE_SET_ID)) {
-            return PROFILE_SET_NATURE_ID;
-          }
-          return '';
-        };
-        if (userProfile.type === UserType.PARTICIPANT) {
-          items.push(
-            userProfile.name
-              ? getNameFromPublicId(
-                  [userProfile],
-                  userProfile.publicId,
-                  getProfileSetId(),
-                )
-              : 'Profile not yet set',
-          );
-        } else {
-          // TODO: Adjust display for mediator profiles
-          items.push(`${userProfile.avatar} ${userProfile.name}`);
-        }
+        items.push(
+          getProfileInfoForPrompt(userProfile, includeScaffolding, stageId),
+        );
         break;
       case PromptItemType.STAGE_CONTEXT:
         const stageContextIds = promptItem.stageId
