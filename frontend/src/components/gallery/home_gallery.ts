@@ -37,7 +37,6 @@ export class HomeGallery extends MobxLitElement {
   private readonly homeService = core.getService(HomeService);
   private readonly routerService = core.getService(RouterService);
 
-  @state() private searchQuery = '';
   @state() private sortMode: SortMode = SortMode.NEWEST;
   @state() private refreshing = false;
 
@@ -60,16 +59,39 @@ export class HomeGallery extends MobxLitElement {
         </div>
       `;
     };
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        (e.target as HTMLTextAreaElement).blur();
+      }
+    };
+
+    const clearSearch = () => {
+      this.homeService.setSearchQuery('');
+    };
+
     return html`
       <div class="controls">
         <div class="search-container">
           <pr-icon icon="search" size="small"></pr-icon>
           <pr-textarea
             placeholder="Search"
-            .value=${this.searchQuery}
+            .value=${this.homeService.searchQuery}
             @input=${(e: InputEvent) =>
-              (this.searchQuery = (e.target as HTMLTextAreaElement).value)}
+              this.homeService.setSearchQuery(
+                (e.target as HTMLTextAreaElement).value,
+              )}
+            @keydown=${handleKeyDown}
           ></pr-textarea>
+          ${this.homeService.searchQuery
+            ? html`<pr-icon
+                icon="close"
+                size="small"
+                class="clear-button"
+                @click=${clearSearch}
+              ></pr-icon>`
+            : nothing}
         </div>
 
         <pr-menu name=${sortLabel(this.sortMode)} icon="sort" color="neutral">
@@ -99,8 +121,8 @@ export class HomeGallery extends MobxLitElement {
 
     let experiments = [...this.homeService.experiments];
 
-    if (this.searchQuery.trim()) {
-      const q = this.searchQuery.toLowerCase();
+    if (this.homeService.searchQuery.trim()) {
+      const q = this.homeService.searchQuery.toLowerCase();
       experiments = experiments.filter((e) =>
         e.metadata.name?.toLowerCase().includes(q),
       );
