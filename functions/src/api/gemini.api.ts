@@ -15,7 +15,6 @@ import {
   StructuredOutputSchema,
   ModelResponseStatus,
   ModelResponse,
-  addParsedModelResponse,
 } from '@deliberation-lab/utils';
 
 const GEMINI_DEFAULT_MODEL = 'gemini-2.5-flash';
@@ -49,7 +48,7 @@ const getSafetySettings = (disableSafetyFilters = false): SafetySetting[] => {
 };
 
 function makeStructuredOutputSchema(schema: StructuredOutputSchema): object {
-  const typeMap: {[key in StructuredOutputDataType]?: string} = {
+  const typeMap: { [key in StructuredOutputDataType]?: string } = {
     [StructuredOutputDataType.STRING]: 'STRING',
     [StructuredOutputDataType.NUMBER]: 'NUMBER',
     [StructuredOutputDataType.INTEGER]: 'INTEGER',
@@ -65,7 +64,7 @@ function makeStructuredOutputSchema(schema: StructuredOutputSchema): object {
     );
   }
 
-  let properties: {[key: string]: object} | null = null;
+  let properties: { [key: string]: object } | null = null;
   let orderedPropertyNames: string[] | null = null;
 
   if (schema.properties && schema.properties.length > 0) {
@@ -100,10 +99,10 @@ function makeStructuredOutputGenerationConfig(
     !structuredOutputConfig ||
     structuredOutputConfig.type === StructuredOutputType.NONE
   ) {
-    return {responseMimeType: 'text/plain'};
+    return { responseMimeType: 'text/plain' };
   }
   if (structuredOutputConfig.type === StructuredOutputType.JSON_FORMAT) {
-    return {responseMimeType: 'application/json'};
+    return { responseMimeType: 'application/json' };
   }
   if (!structuredOutputConfig.schema) {
     throw new Error(
@@ -123,14 +122,14 @@ function makeStructuredOutputGenerationConfig(
  * @returns Object with contents array and optional systemInstruction
  */
 function convertToGeminiFormat(
-  prompt: string | Array<{role: string; content: string; name?: string}>,
+  prompt: string | Array<{ role: string; content: string; name?: string }>,
 ): {
-  contents: Array<{role: string; parts: Array<{text: string}>}>;
+  contents: Array<{ role: string; parts: Array<{ text: string }> }>;
   systemInstruction?: string;
 } {
   if (typeof prompt === 'string') {
     return {
-      contents: [{role: 'user', parts: [{text: prompt}]}],
+      contents: [{ role: 'user', parts: [{ text: prompt }] }],
       systemInstruction: undefined,
     };
   }
@@ -148,30 +147,29 @@ function convertToGeminiFormat(
   // Convert conversation messages to Gemini format
   let contents = conversationMessages.map((msg) => ({
     role: msg.role === 'assistant' ? 'model' : 'user',
-    parts: [{text: msg.content}],
+    parts: [{ text: msg.content }],
   }));
 
   // If no conversation messages, add an empty user message
   if (contents.length === 0) {
-    contents = [{role: 'user', parts: [{text: ''}]}];
+    contents = [{ role: 'user', parts: [{ text: '' }] }];
   }
 
-  return {contents, systemInstruction};
+  return { contents, systemInstruction };
 }
 
 /** Makes Gemini API call. */
 export async function callGemini(
   apiKey: string,
-  prompt: string | Array<{role: string; content: string; name?: string}>,
+  prompt: string | Array<{ role: string; content: string; name?: string }>,
   generationConfig: GenerationConfig,
   modelName = GEMINI_DEFAULT_MODEL,
-  parseResponse = false, // parse if structured output
   safetySettings?: SafetySetting[],
 ): Promise<ModelResponse> {
-  const genAI = new GoogleGenAI({apiKey});
+  const genAI = new GoogleGenAI({ apiKey });
 
   // Convert to Gemini format
-  const {contents, systemInstruction} = convertToGeminiFormat(prompt);
+  const { contents, systemInstruction } = convertToGeminiFormat(prompt);
 
   // Build config with safety settings and system instruction
   const config: GenerateContentConfig = {
@@ -219,34 +217,39 @@ export async function callGemini(
     };
   }
 
+
   const textParts: string[] = [];
   const reasoningParts: string[] = [];
+  let imageData: { mimeType: string; data: string } | undefined = undefined;
 
   for (const part of response.candidates[0].content.parts) {
-    if (!part.text) {
-      continue;
-    }
-    if (part.thought) {
-      reasoningParts.push(part.text);
-    } else {
-      textParts.push(part.text);
+    if (part.text) {
+      if (part.thought) {
+        reasoningParts.push(part.text);
+      } else {
+        textParts.push(part.text);
+      }
+    } else if (part.inlineData && !imageData) {
+      imageData = {
+        mimeType: part.inlineData.mimeType ?? '',
+        data: part.inlineData.data ?? '',
+      };
+      if (!imageData.mimeType || !imageData.data) imageData = undefined;
     }
   }
-
   const text = textParts.length > 0 ? textParts.join('') : undefined;
   const reasoning =
     reasoningParts.length > 0 ? reasoningParts.join('') : undefined;
 
-  const modelResponse = {
+  const modelResponse: ModelResponse = {
     status: ModelResponseStatus.OK,
     text: text,
     rawResponse: JSON.stringify(response),
     generationConfig,
     reasoning: reasoning,
+    imageData: imageData,
   };
-  if (parseResponse) {
-    return addParsedModelResponse(modelResponse);
-  }
+
   return modelResponse;
 }
 
@@ -254,7 +257,7 @@ export async function callGemini(
 export async function getGeminiAPIResponse(
   apiKey: string,
   modelName: string,
-  promptText: string | Array<{role: string; content: string; name?: string}>,
+  promptText: string | Array<{ role: string; content: string; name?: string }>,
   generationConfig: ModelGenerationConfig,
   structuredOutputConfig?: StructuredOutputConfig,
 ): Promise<ModelResponse> {
@@ -280,10 +283,7 @@ export async function getGeminiAPIResponse(
       errorMessage: error instanceof Error ? error.message : String(error),
     };
   }
-  const thinkingConfig = {
-    thinkingBudget: generationConfig.reasoningBudget,
-    includeThoughts: generationConfig.includeReasoning,
-  };
+
   const geminiConfig: GenerationConfig = {
     stopSequences: generationConfig.stopSequences,
     maxOutputTokens: generationConfig.maxTokens,
@@ -292,7 +292,7 @@ export async function getGeminiAPIResponse(
     topK: 16,
     presencePenalty: generationConfig.presencePenalty,
     frequencyPenalty: generationConfig.frequencyPenalty,
-    thinkingConfig: thinkingConfig,
+    //thinkingConfig: thinkingConfig,
     ...structuredOutputGenerationConfig,
     ...customFields,
   };
@@ -305,7 +305,6 @@ export async function getGeminiAPIResponse(
       promptText,
       geminiConfig,
       modelName,
-      structuredOutputConfig?.enabled,
       safetySettings,
     );
     // eslint-disable-next-line @typescript-eslint/no-explicit-any

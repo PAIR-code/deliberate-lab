@@ -39,6 +39,7 @@ import {
   getFirestoreParticipantAnswerRef,
 } from '../utils/firestore';
 import {app} from '../app';
+import {uploadBase64ImageToGCS} from '../utils/storage';
 
 // ****************************************************************************
 // Functions for preparing, querying, and organizing agent chat responses.
@@ -273,6 +274,11 @@ export async function getAgentChatMessage(
     promptConfig.numRetries ?? 0, // Pass numRetries from config
   );
 
+  console.log(
+    'getAgentChatMessage ModelResponse:',
+    JSON.stringify(response, null, 2),
+  );
+
   // Process response
   if (response.status !== ModelResponseStatus.OK) {
     return {message: null, success: false};
@@ -280,41 +286,48 @@ export async function getAgentChatMessage(
 
   const structured = promptConfig.structuredOutputConfig;
 
-  let message: string;
-  let explanation: string | undefined;
+  let message = response.text || ''; // Use response.text as the default message
+  let explanation: string | undefined = response.reasoning || undefined;
   let shouldRespond = true;
   let readyToEndChat = false;
 
-  // Handle non-structured output case
-  if (!structured?.enabled) {
-    // When structured output is disabled, use the text field directly
-    if (!response.text) {
-      return {message: null, success: false};
-    }
-    message = response.text;
-    explanation = response.reasoning || undefined; // Use reasoning field if available
-  } else {
-    // Handle structured output case
-    if (!response.parsedResponse) {
-      return {message: null, success: false};
-    }
+  if (structured?.enabled && response.text) {
+    const jsonMatch = response.text.match(/```json\n(\{[\s\S]*\})\n```/);
+    if (jsonMatch && jsonMatch[1]) {
+      try {
+        const parsed = JSON.parse(jsonMatch[1]) as Record<string, unknown>;
 
-    // Get shouldRespond with fail-safe: default to true if field is missing or not defined
-    const shouldRespondValue = structured.shouldRespondField
-      ? response.parsedResponse[structured.shouldRespondField]
-      : undefined;
-    // If shouldRespond field exists and is explicitly false, don't respond. Otherwise, respond.
-    shouldRespond = shouldRespondValue === false ? false : true;
+        const shouldRespondValue = structured.shouldRespondField
+          ? parsed[structured.shouldRespondField]
+          : undefined;
+        shouldRespond = shouldRespondValue === false ? false : true;
 
-    message = structured.messageField
-      ? response.parsedResponse[structured.messageField]
-      : response.parsedResponse['response']; // fallback to default field name
-    explanation = structured.explanationField
-      ? response.parsedResponse[structured.explanationField]
-      : response.parsedResponse['explanation']; // fallback to default field name
-    readyToEndChat = structured.readyToEndField
-      ? response.parsedResponse[structured.readyToEndField]
-      : false; // default to not ready to end if field is missing
+        const messageField = structured.messageField || 'response';
+        if (typeof parsed[messageField] === 'string') {
+          message = parsed[messageField] as string;
+        }
+
+        const explanationField = structured.explanationField || 'explanation';
+        if (typeof parsed[explanationField] === 'string') {
+          explanation = parsed[explanationField] as string;
+        }
+
+        readyToEndChat = structured.readyToEndField
+          ? Boolean(parsed[structured.readyToEndField])
+          : false;
+      } catch (error) {
+        console.error('getAgentChatMessage JSON parse error in text:', error);
+        // message remains response.text
+      }
+    } else {
+      // JSON block not found, message remains response.text
+    }
+  } else if (!response.text && !response.imageData) {
+    return {message: null, success: false};
+  }
+
+  if (!shouldRespond) {
+    // Logic for not responding (handled below)
   }
 
   // Only if agent participant is ready to end chat
@@ -368,6 +381,20 @@ export async function getAgentChatMessage(
     }
   }
 
+  let imageUrl: string | undefined = undefined;
+  if (response.imageData) {
+    try {
+      imageUrl = await uploadBase64ImageToGCS(
+        response.imageData.data,
+        response.imageData.mimeType,
+        `experiments/${experimentId}/chats/${stage.id}`,
+      );
+    } catch (error) {
+      console.error('Error uploading image to GCS:', error);
+      // Optionally handle error, e.g., send an error message to chat
+    }
+  }
+
   const chatMessage = createChatMessage({
     type: user.type,
     discussionId,
@@ -377,6 +404,7 @@ export async function getAgentChatMessage(
     senderId: user.publicId,
     agentId: user.agentConfig.agentId,
     timestamp: Timestamp.now(),
+    imageUrl: imageUrl,
   });
   return {message: chatMessage, success: true};
 }

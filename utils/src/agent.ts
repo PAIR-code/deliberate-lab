@@ -10,7 +10,6 @@ import {
 } from './stages/chat_stage.prompts';
 import {
   ChatMediatorStructuredOutputConfig,
-  StructuredOutputConfig,
   createStructuredOutputConfig,
 } from './structured_output';
 import {
@@ -210,7 +209,7 @@ export function createModelGenerationConfig(
     presencePenalty: config.presencePenalty ?? 0.0,
     customRequestBodyFields: config.customRequestBodyFields ?? [],
     reasoningBudget: config.reasoningBudget,
-    includeReasoning: config.includeReasoning ?? true,
+    includeReasoning: config.includeReasoning ?? false,
     disableSafetyFilters: config.disableSafetyFilters ?? false,
   };
 }
@@ -262,7 +261,6 @@ export function createAgentChatPromptConfig(
 export function createAgentMediatorPersonaConfig(
   config: Partial<AgentPersonaConfig> = {},
 ): AgentMediatorPersonaConfig {
-  const type = AgentPersonaType.MEDIATOR;
   return {
     id: config.id ?? generateId(),
     name: config.name ?? 'Agent Mediator',

@@ -45,6 +45,7 @@ export interface ModelResponse {
   // TODO(mkbehr): Ad-hoc reasoning output for the chip game. This could be
   // plumbed through to the chat stage's explanation field, but currently isn't.
   reasoning?: string;
+  imageData?: {mimeType: string; data: string};
 }
 
 /** Helper function for parsing model response. */
@@ -55,10 +56,18 @@ export function addParsedModelResponse(response: ModelResponse) {
 
   try {
     const cleanedText = response.text!.replace(/```json\s*|\s*```/g, '').trim();
+    console.log('addParsedModelResponse cleanedText:', cleanedText);
     response.parsedResponse = JSON.parse(cleanedText);
+    console.log(
+      'addParsedModelResponse parsedResponse:',
+      JSON.stringify(response.parsedResponse, null, 2),
+    );
     return response;
-  } catch {
+  } catch (error) {
+    console.error('addParsedModelResponse parsing error:', error);
     response.status = ModelResponseStatus.STRUCTURED_OUTPUT_PARSE_ERROR;
+    response.errorMessage =
+      error instanceof Error ? error.message : String(error);
     return response;
   }
 }
