@@ -4,6 +4,7 @@ import {
   BaseStageParticipantAnswer,
   BaseStagePublicData,
   StageKind,
+  StagePublicData,
   createStageProgressConfig,
   createStageTextConfig,
 } from './stage';
@@ -159,6 +160,7 @@ export function createRankingStagePublicData(
   };
 }
 
+/** Create LR ranking stage public data (Leadership Rejection version). */
 export function createLRRankingStagePublicData(
   id: string, // stage ID
 ): LRRankingStagePublicData {
@@ -167,13 +169,13 @@ export function createLRRankingStagePublicData(
     kind: StageKind.RANKING,
     winnerId: '',
     participantAnswerMap: {},
-    leaderStatusMap: {},
-    // debugLeaderSelection: {},
+    leaderStatusMap: {}, // 👈 critical addition
+    // debugLeaderSelection: {},    // optional
   };
 }
 
 export function isLRRankingStagePublicData(
-  obj: unknown,
+  obj: StagePublicData,
 ): obj is LRRankingStagePublicData {
   return (
     obj &&

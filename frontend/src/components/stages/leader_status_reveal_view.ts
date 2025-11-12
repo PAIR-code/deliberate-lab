@@ -41,6 +41,8 @@ export class LeaderRevealView extends MobxLitElement {
       waiting: '⏳ Waiting for results...',
     };
 
+    console.log('[LeaderRevealView] received publicData:', this.publicData);
+
     return html`
       <div class="leader-status-block">
         <h3>Leader Selection Result</h3>

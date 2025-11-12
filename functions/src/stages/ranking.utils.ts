@@ -9,10 +9,9 @@ import {
   filterRankingsByCandidates,
   getCondorcetElectionWinner,
   getRankingCandidatesFromWTL,
+  isLRRankingStagePublicData,
   LAS_WTL_STAGE_ID,
 } from '@deliberation-lab/utils';
-
-import {isLRRankingStagePublicData} from '/Users/clementinebouleau/PycharmProjects/js/deliberate-lab/utils/src/stages/ranking_stage';
 
 import {
   runLeaderLottery,
@@ -49,6 +48,11 @@ export async function addParticipantAnswerToRankingStagePublicData(
     const publicStageData = (await publicDocument.get()).data() as
       | RankingStagePublicData
       | LRRankingStagePublicData;
+
+    console.log(
+      '[LR] addParticipantAnswerToRankingStagePublicData: publicStageData=',
+      publicStageData,
+    );
 
     // 🧩 Leadership Rejection logic
     if (isLRRankingStagePublicData(publicStageData)) {

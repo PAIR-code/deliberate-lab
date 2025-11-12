@@ -65,7 +65,7 @@ export const LR_METADATA = createMetadataConfig({
     'A multi-round experiment examining individual and group decision-making.',
 });
 
-/** Custom reveal item with render callback */
+/** Custom reveal item with render callback
 interface CustomRevealItem {
   id: string;
   revealAudience: RevealAudience;
@@ -75,6 +75,8 @@ interface CustomRevealItem {
     publicStageData: LRRankingStagePublicData,
   ) => string;
 }
+**/
+
 /* ---------------------------------------------------------------------------
  * Stage flow
  * ------------------------------------------------------------------------- */
