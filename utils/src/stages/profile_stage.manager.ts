@@ -68,6 +68,7 @@ export class ProfileStageHandler extends BaseStageHandler {
         createProfilePrompt(stage.profileType),
         stage.id,
       ),
+      includeScaffoldingInPrompt: true,
       generationConfig: createModelGenerationConfig(),
       structuredOutputConfig: createProfileStructuredOutputConfig(
         stage.profileType,

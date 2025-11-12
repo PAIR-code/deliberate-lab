@@ -15,6 +15,16 @@ import {
 import {ShuffleConfig, SeedStrategy} from './utils/random.utils';
 
 // ****************************************************************************
+// CONSTANTS
+// ****************************************************************************
+
+/** Scaffolding for ProfileContext prompt item (for participants). */
+export const PROMPT_ITEM_PROFILE_CONTEXT_PARTICIPANT_SCAFFOLDING = `This information is private to you. Use it to guide your behavior in this task. Other participants do not know these attributes unless you choose to share it.`;
+
+/** Scaffolding for ProfileInfo prompt item (for participants). */
+export const PROMPT_ITEM_PROFILE_INFO_PARTICIPANT_SCAFFOLDING = `This is the display name that others will use to refer to you. It may be a label such as an animal or object, but you are still a human using this alias.`;
+
+// ****************************************************************************
 // TYPES
 // ****************************************************************************
 export interface BasePromptConfig {
@@ -22,6 +32,11 @@ export interface BasePromptConfig {
   type: StageKind; // stage type
   // Structured prompt
   prompt: PromptItem[];
+  // Whether or not prompt should include scaffolding when built.
+  // TODO: Consider making this an enum if we expect different types of
+  // scaffolding in the future. This will require backwards compatibility
+  // though.
+  includeScaffoldingInPrompt: boolean;
   // Number of times to retry prompt call if it fails
   numRetries: number;
   generationConfig: ModelGenerationConfig;

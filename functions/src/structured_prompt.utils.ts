@@ -3,6 +3,8 @@ import {
   TERTIARY_PROFILE_SET_ID,
   PROFILE_SET_ANIMALS_2_ID,
   PROFILE_SET_NATURE_ID,
+  PROMPT_ITEM_PROFILE_CONTEXT_PARTICIPANT_SCAFFOLDING,
+  PROMPT_ITEM_PROFILE_INFO_PARTICIPANT_SCAFFOLDING,
   AssetAllocationStageParticipantAnswer,
   BasePromptConfig,
   ChatStageConfig,
@@ -310,6 +312,7 @@ export async function getPromptFromConfig(
     stageId,
     promptData,
     userProfile,
+    promptConfig.includeScaffoldingInPrompt,
   );
 
   // Add structured output if relevant
@@ -318,6 +321,53 @@ export async function getPromptFromConfig(
   );
 
   return structuredOutput ? `${promptText}\n${structuredOutput}` : promptText;
+}
+
+/** Returns string representing ProfileContext prompt item. */
+function getProfileContextForPrompt(
+  userProfile: ParticipantProfileExtended | MediatorProfileExtended,
+  includeScaffolding: boolean,
+): string {
+  const profileContext = userProfile.agentConfig?.promptContext;
+  if (profileContext) {
+    if (userProfile.type === UserType.PARTICIPANT && includeScaffolding) {
+      const instructions = PROMPT_ITEM_PROFILE_CONTEXT_PARTICIPANT_SCAFFOLDING;
+      return `Private persona context: ${profileContext}\n${instructions}`;
+    } else {
+      return profileContext;
+    }
+  }
+  return '';
+}
+
+/** Returns string representing ProfileInfo prompt item. */
+function getProfileInfoForPrompt(
+  userProfile: ParticipantProfileExtended | MediatorProfileExtended,
+  includeScaffolding: boolean,
+  stageId: string, // Used for temporary stage ID hack that sets profiles
+): string {
+  const getProfileSetId = () => {
+    if (stageId.includes(SECONDARY_PROFILE_SET_ID)) {
+      return PROFILE_SET_ANIMALS_2_ID;
+    } else if (stageId.includes(TERTIARY_PROFILE_SET_ID)) {
+      return PROFILE_SET_NATURE_ID;
+    }
+    return '';
+  };
+
+  const scaffoldingPrefix = includeScaffolding ? `Alias: ` : '';
+  const scaffoldingSuffix = includeScaffolding
+    ? `\n${PROMPT_ITEM_PROFILE_INFO_PARTICIPANT_SCAFFOLDING}`
+    : '';
+
+  if (userProfile.type === UserType.PARTICIPANT) {
+    return userProfile.name
+      ? `${scaffoldingPrefix}${getNameFromPublicId([userProfile], userProfile.publicId, getProfileSetId())}${scaffoldingSuffix}`
+      : 'Profile not yet set';
+  } else {
+    // TODO: Adjust display for mediator profiles
+    return `${scaffoldingPrefix}${userProfile.avatar} ${userProfile.name}${scaffoldingSuffix}`;
+  }
 }
 
 /** Process prompt items recursively. */
@@ -332,6 +382,7 @@ async function processPromptItems(
     data: Record<string, StageContextData>;
   },
   userProfile: ParticipantProfileExtended | MediatorProfileExtended,
+  includeScaffolding: boolean,
 ): Promise<string> {
   const experiment = promptData.experiment;
   const items: string[] = [];
@@ -342,31 +393,18 @@ async function processPromptItems(
         items.push(promptItem.text);
         break;
       case PromptItemType.PROFILE_CONTEXT:
-        items.push(userProfile.agentConfig.promptContext);
+        const profileContext = getProfileContextForPrompt(
+          userProfile,
+          includeScaffolding,
+        );
+        if (profileContext) {
+          items.push(profileContext);
+        }
         break;
       case PromptItemType.PROFILE_INFO:
-        const getProfileSetId = () => {
-          if (stageId.includes(SECONDARY_PROFILE_SET_ID)) {
-            return PROFILE_SET_ANIMALS_2_ID;
-          } else if (stageId.includes(TERTIARY_PROFILE_SET_ID)) {
-            return PROFILE_SET_NATURE_ID;
-          }
-          return '';
-        };
-        if (userProfile.type === UserType.PARTICIPANT) {
-          items.push(
-            userProfile.name
-              ? getNameFromPublicId(
-                  [userProfile],
-                  userProfile.publicId,
-                  getProfileSetId(),
-                )
-              : 'Profile not yet set',
-          );
-        } else {
-          // TODO: Adjust display for mediator profiles
-          items.push(`${userProfile.avatar} ${userProfile.name}`);
-        }
+        items.push(
+          getProfileInfoForPrompt(userProfile, includeScaffolding, stageId),
+        );
         break;
       case PromptItemType.STAGE_CONTEXT:
         const stageContextIds = promptItem.stageId
@@ -382,6 +420,7 @@ async function processPromptItems(
               promptData.experiment,
               promptData.cohort,
               userProfile,
+              includeScaffolding,
             ),
           );
         }
@@ -418,6 +457,7 @@ async function processPromptItems(
           stageId,
           promptData,
           userProfile,
+          includeScaffolding,
         );
         if (groupText) items.push(groupText);
         break;
@@ -443,6 +483,7 @@ export async function getStageContextForPrompt(
   experiment: Experiment,
   cohort: CohortConfig,
   userProfile: ParticipantProfileExtended | MediatorProfileExtended,
+  includeScaffolding: boolean,
 ) {
   // Resolve template variables in the stage context before
   // using it to assemble context for prompt.
@@ -474,14 +515,16 @@ export async function getStageContextForPrompt(
 
   const textItems: string[] = [];
 
-  // Include name of stage
-  textItems.push(`----- STAGE: ${stage.name ?? stage.id} -----`);
+  // Include name of stage if scaffolding
+  if (includeScaffolding) {
+    textItems.push(`[Stage: ${stage.name ?? stage.id}]`);
+  }
 
   if (item.includePrimaryText && stage.descriptions.primaryText.trim() !== '') {
-    textItems.push(`- Stage description: ${stage.descriptions.primaryText}`);
+    textItems.push(`* Stage description: ${stage.descriptions.primaryText}`);
   }
   if (item.includeInfoText) {
-    textItems.push(`- Additional info: ${stage.descriptions.infoText}`);
+    textItems.push(`* Additional info: ${stage.descriptions.infoText}`);
   }
   // Note: Help text not included since the field has been deprecated
 
