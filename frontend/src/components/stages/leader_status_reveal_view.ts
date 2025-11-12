@@ -6,10 +6,7 @@ import {customElement, property} from 'lit/decorators.js';
 
 import {LRRankingStagePublicData} from '@deliberation-lab/utils';
 import {core} from '../../core/core';
-import {CohortService} from '../../services/cohort.service';
-import {ExperimentService} from '../../services/experiment.service';
 import {ParticipantService} from '../../services/participant.service';
-
 import {styles} from './ranking_reveal_view.scss';
 
 /** Leader selection reveal view */
@@ -25,7 +22,7 @@ export class LeaderRevealView extends MobxLitElement {
     if (!this.publicData) return html`<p><em>Waiting for results...</em></p>`;
 
     const leaderStatusMap = this.publicData.leaderStatusMap || {};
-    const participantId = this.participantService.participantId ?? '';
+    const participantId = this.participantService.profile?.publicId ?? ''; // ✅ FIXED
     const status = leaderStatusMap[participantId] ?? 'waiting';
 
     const messages: Record<string, string> = {
@@ -41,7 +38,12 @@ export class LeaderRevealView extends MobxLitElement {
       waiting: '⏳ Waiting for results...',
     };
 
-    console.log('[LeaderRevealView] received publicData:', this.publicData);
+    console.log('[LeaderRevealView] my ID:', participantId);
+    console.log('[LeaderRevealView] all keys:', Object.keys(leaderStatusMap));
+    console.log(
+      '[LeaderRevealView] publicData snapshot:',
+      JSON.parse(JSON.stringify(this.publicData)),
+    );
 
     return html`
       <div class="leader-status-block">

@@ -1264,6 +1264,30 @@ export function getRankingStageCSVColumns(
         : '',
   );
 
+  // 🧩 Leadership Rejection (LR) extension
+  if (
+    publicData &&
+    publicData.kind === StageKind.RANKING &&
+    'leaderStatusMap' in publicData
+  ) {
+    const lrData = publicData as LRRankingStagePublicData;
+    const participantPublicId = participant?.profile.publicId ?? '';
+
+    // Column for participant’s leader status
+    columns.push(
+      !participant
+        ? `Leader status - ${rankingStage.id}`
+        : (lrData.leaderStatusMap?.[participantPublicId] ?? ''),
+    );
+
+    // Optional: export winner ID again for clarity
+    columns.push(
+      !participant
+        ? `Leader winner ID - ${rankingStage.id}`
+        : (lrData.winnerId ?? ''),
+    );
+  }
+
   return columns;
 }
 
