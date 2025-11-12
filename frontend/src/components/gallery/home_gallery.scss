@@ -81,6 +81,11 @@ gallery-card {
   }
 }
 
+.gallery-link {
+  text-decoration: none;
+  color: inherit;
+}
+
 .banner {
   @include typescale.body-small;
   background: var(--md-sys-color-tertiary-container);

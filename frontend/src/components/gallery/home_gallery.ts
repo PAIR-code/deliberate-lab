@@ -35,7 +35,6 @@ export class HomeGallery extends MobxLitElement {
 
   private readonly authService = core.getService(AuthService);
   private readonly homeService = core.getService(HomeService);
-  private readonly routerService = core.getService(RouterService);
 
   @state() private searchQuery = '';
   @state() private sortMode: SortMode = SortMode.NEWEST;
@@ -50,7 +49,6 @@ export class HomeGallery extends MobxLitElement {
 
   private renderControls() {
     const renderSortItem = (mode: SortMode, label: string) => {
-      const selected = this.sortMode === mode;
       return html`
         <div class="menu-item" @click=${() => this.setSort(mode)}>
           ${label}
@@ -87,14 +85,10 @@ export class HomeGallery extends MobxLitElement {
   override render() {
     const renderExperiment = (experiment: Experiment) => {
       const item = convertExperimentToGalleryItem(experiment);
-      const navigate = () =>
-        this.routerService.navigate(Pages.EXPERIMENT, {
-          experiment: experiment.id,
-        });
-      return html`<gallery-card
-        .item=${item}
-        @click=${navigate}
-      ></gallery-card>`;
+      const href = `#/e/${experiment.id}`;
+      return html`<a href=${href} class="gallery-link">
+        <gallery-card .item=${item}></gallery-card>
+      </a>`;
     };
 
     let experiments = [...this.homeService.experiments];
