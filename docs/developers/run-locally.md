@@ -34,6 +34,29 @@ The Deliberate Lab repository contains the following subdirectories:
 
 ## Building, running, and developing locally
 
+### Quick Start
+
+You can use the `run_locally.sh` script to automate the setup and running of all services (utils, functions, emulators, and frontend).
+
+```bash
+# Make sure the script is executable
+chmod +x run_locally.sh
+
+# Run the script
+./run_locally.sh
+```
+
+This script will:
+1. Build and watch the `utils` package.
+2. Build and watch the `functions` package.
+3. Start the Firebase emulators.
+4. Start the frontend web app.
+5. Handle cleanup of all processes when you exit (Ctrl+C).
+
+### Manual Setup
+
+If you prefer to run each service individually or need to debug a specific component, you can follow these steps:
+
 In order to run the platform locally (using the Firebase emulators
 instead of a Firebase project for the backend):
 
