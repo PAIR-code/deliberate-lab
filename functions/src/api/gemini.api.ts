@@ -219,19 +219,23 @@ export async function callGemini(
     };
   }
 
-  let text: string | undefined = undefined;
-  let reasoning: string | undefined = undefined;
+  const textParts: string[] = [];
+  const reasoningParts: string[] = [];
 
   for (const part of response.candidates[0].content.parts) {
     if (!part.text) {
       continue;
     }
     if (part.thought) {
-      reasoning = part.text;
+      reasoningParts.push(part.text);
     } else {
-      text = part.text;
+      textParts.push(part.text);
     }
   }
+
+  const text = textParts.length > 0 ? textParts.join('') : undefined;
+  const reasoning =
+    reasoningParts.length > 0 ? reasoningParts.join('') : undefined;
 
   const modelResponse = {
     status: ModelResponseStatus.OK,
