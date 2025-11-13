@@ -165,7 +165,7 @@ export async function getParsedAgentParticipantPromptResponse(
   );
 
   // Call API and write log to storage
-  const response = await processModelResponse(
+  const {response} = await processModelResponse(
     experimentId,
     cohortId,
     /*participantId=*/ participant.privateId,

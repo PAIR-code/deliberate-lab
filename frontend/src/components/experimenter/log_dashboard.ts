@@ -154,6 +154,23 @@ export class Component extends MobxLitElement {
             </details>
           `
         : nothing}
+      ${log.imageUrls && log.imageUrls.length > 0
+        ? html`
+            <details>
+              <summary>Generated images (${log.imageUrls.length})</summary>
+              <div class="image-gallery">
+                ${log.imageUrls.map(
+                  (url) =>
+                    html`<img
+                      src="${url}"
+                      alt="Generated image"
+                      class="log-image"
+                    />`,
+                )}
+              </div>
+            </details>
+          `
+        : nothing}
     `;
   }
 

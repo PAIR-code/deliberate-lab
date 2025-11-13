@@ -41,6 +41,7 @@ import {
 } from '../utils/firestore';
 import {app} from '../app';
 import {uploadBase64ImageToGCS} from '../utils/storage';
+import {updateModelLogImageUrls} from '../log.utils';
 
 // ****************************************************************************
 // Functions for preparing, querying, and organizing agent chat responses.
@@ -258,7 +259,7 @@ export async function getAgentChatMessage(
     prompt = structuredPrompt;
   }
 
-  const response = await processModelResponse(
+  const {response, logId} = await processModelResponse(
     experimentId,
     cohortId,
     participantIds[0] || '', // Use first participant ID for logging/tracking
@@ -425,6 +426,9 @@ export async function getAgentChatMessage(
       imageUrls = await Promise.all(uploadPromises);
       // Add the uploaded URLs to the chat message
       chatMessage.imageUrls = imageUrls;
+
+      // Update the log with the image URLs for dashboard display
+      await updateModelLogImageUrls(experimentId, logId, imageUrls);
     } catch (error) {
       console.error('Error uploading images to GCS:', error);
       // Optionally handle error, e.g., send an error message to chat
