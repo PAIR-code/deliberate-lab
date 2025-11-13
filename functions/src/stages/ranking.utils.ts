@@ -176,6 +176,11 @@ export async function addParticipantAnswerToRankingStagePublicData(
       // -----------------------------------------
       // 🧩 Default Condorcet (e.g. LAS)
       // -----------------------------------------
+
+      // Do NOT re-declare publicStageData
+      publicStageData.participantAnswerMap[participant.publicId] =
+        answer.rankingList;
+
       const wtlDoc = app
         .firestore()
         .collection('experiments')
