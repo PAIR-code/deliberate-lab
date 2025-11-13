@@ -227,6 +227,19 @@ h1 {
   pointer-events: none;
 }
 
+.search-container pr-icon.clear-button {
+  right: common.$spacing-medium;
+  left: auto;
+  pointer-events: auto;
+  cursor: pointer;
+  color: var(--md-sys-color-outline);
+  transition: color 120ms ease;
+
+  &:hover {
+    color: var(--md-sys-color-secondary);
+  }
+}
+
 .search-container pr-textarea {
   width: 140px;
   margin: 0;

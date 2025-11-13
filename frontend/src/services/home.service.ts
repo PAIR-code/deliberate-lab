@@ -47,6 +47,7 @@ export class HomeService extends Service {
 
   // Home tabs
   @observable showMyExperiments = true;
+  @observable searchQuery = '';
 
   // Loading
   @observable unsubscribe: Unsubscribe[] = [];
@@ -133,5 +134,9 @@ export class HomeService extends Service {
 
   setShowMyExperiments(showMyExperiments: boolean) {
     this.showMyExperiments = showMyExperiments;
+  }
+
+  setSearchQuery(searchQuery: string) {
+    this.searchQuery = searchQuery;
   }
 }
