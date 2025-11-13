@@ -574,7 +574,7 @@ export function createAllocationRevealStage(): StageConfig {
     name: '📊 Final allocation results',
     descriptions: createStageTextConfig({
       primaryText:
-        'Here are the final results of your group’s allocations across all three rounds. The higher the score, the more influence your group will have in directing the donations.',
+        'Here are the final results of your group’s allocations across all three rounds. The higher the score, the more influence your group will have in directing the donations.\n\n‼️ Click `Next Stage` after viewing the final results to continue with the experiment.',
     }),
     items: [
       createMultiAssetAllocationRevealItem({
@@ -631,7 +631,7 @@ function createCharityComprehensionStage(): StageConfig {
     name: '💯 Comprehension check',
     descriptions: createStageTextConfig({
       primaryText:
-        'Please answer the following questions to ensure the instructions are clear.',
+        'Please answer the following questions to ensure the instructions are clear. You can click back to previous stages to review the instructions if needed.',
     }),
     questions: [
       createMultipleChoiceComprehensionQuestion(
