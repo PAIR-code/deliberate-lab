@@ -70,8 +70,10 @@
 
 .section-title {
   @include typescale.label-small;
+  @include common.flex-row-align-center;
   border-top: 1px solid var(--md-sys-color-outline-variant-high);
   color: var(--md-sys-color-on-surface-variant);
+  justify-content: space-between;
   padding: 0 common.$spacing-large;
 }
 
@@ -138,4 +140,13 @@
 .menu-item-helper {
   @include typescale.body-small;
   color: var(--md-sys-color-outline);
+}
+
+.sort-controls {
+  transform: scale(0.8);
+  transform-origin: right center;
+
+  pr-menu {
+    --pr-menu-icon-color: var(--md-sys-color-on-surface-variant);
+  }
 }
