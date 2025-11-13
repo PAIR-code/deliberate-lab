@@ -16,6 +16,9 @@ import {
 
 import {styles} from './profile_stage_editor.scss';
 
+export const SET_PROFILE_STAGE_DEFAULT_NAME = 'Set profile';
+export const VIEW_PROFILE_STAGE_DEFAULT_NAME = 'View randomly assigned profile';
+
 /** Editor for info stage. */
 @customElement('profile-stage-editor')
 export class ProfileStageEditorComponent extends MobxLitElement {
@@ -40,7 +43,26 @@ export class ProfileStageEditorComponent extends MobxLitElement {
 
     const handleProfileTypeChange = (profileType: ProfileType) => {
       if (!this.stage) return;
-      this.experimentEditor.updateStage({...this.stage, profileType});
+      let stageName = this.stage.name;
+
+      if (
+        profileType === ProfileType.DEFAULT ||
+        profileType === ProfileType.DEFAULT_GENDERED
+      ) {
+        // Update default stage name.
+        if (this.stage.name === VIEW_PROFILE_STAGE_DEFAULT_NAME) {
+          stageName = SET_PROFILE_STAGE_DEFAULT_NAME;
+        }
+      } else {
+        if (this.stage.name === SET_PROFILE_STAGE_DEFAULT_NAME) {
+          stageName = VIEW_PROFILE_STAGE_DEFAULT_NAME;
+        }
+      }
+      this.experimentEditor.updateStage({
+        ...this.stage,
+        profileType,
+        name: stageName,
+      });
     };
 
     return html`
