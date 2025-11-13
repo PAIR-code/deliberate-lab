@@ -25,9 +25,15 @@
     background: var(--md-sys-color-surface-container-highest);
   }
 
-  .left,
+    .left {
+      @include common.flex-row-align-center;
+      flex: 1;
+      gap: common.$spacing-xs;
+      min-width: 0;
+    }
   .right {
     @include common.flex-row-align-center;
+    flex-shrink: 0;
     gap: common.$spacing-xs;
   }
 }

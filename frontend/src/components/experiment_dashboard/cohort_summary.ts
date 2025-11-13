@@ -10,19 +10,19 @@ import './participant_summary';
 import './agent_participant_configuration_dialog';
 import './agent_mediator_add_dialog';
 
-import { MobxLitElement } from '@adobe/lit-mobx';
-import { CSSResultGroup, html, nothing, TemplateResult } from 'lit';
-import { customElement, property, state } from 'lit/decorators.js';
-import { classMap } from 'lit/directives/class-map.js';
+import {MobxLitElement} from '@adobe/lit-mobx';
+import {CSSResultGroup, html, nothing, TemplateResult} from 'lit';
+import {customElement, property, state} from 'lit/decorators.js';
+import {classMap} from 'lit/directives/class-map.js';
 
-import { core } from '../../core/core';
-import { AuthService } from '../../services/auth.service';
-import { AnalyticsService, ButtonClick } from '../../services/analytics.service';
-import { ExperimentEditor } from '../../services/experiment.editor';
-import { ExperimentManager } from '../../services/experiment.manager';
-import { ExperimentService } from '../../services/experiment.service';
-import { CohortService } from '../../services/cohort.service';
-import { Pages, RouterService } from '../../services/router.service';
+import {core} from '../../core/core';
+import {AuthService} from '../../services/auth.service';
+import {AnalyticsService, ButtonClick} from '../../services/analytics.service';
+import {ExperimentEditor} from '../../services/experiment.editor';
+import {ExperimentManager} from '../../services/experiment.manager';
+import {ExperimentService} from '../../services/experiment.service';
+import {CohortService} from '../../services/cohort.service';
+import {Pages, RouterService} from '../../services/router.service';
 
 import {
   CohortConfig,
@@ -31,11 +31,11 @@ import {
   ParticipantStatus,
   StageKind,
 } from '@deliberation-lab/utils';
-import { getCohortDescription, getCohortName } from '../../shared/cohort.utils';
-import { getCurrentStageStartTime } from '../../shared/participant.utils';
+import {getCohortDescription, getCohortName} from '../../shared/cohort.utils';
+import {getCurrentStageStartTime} from '../../shared/participant.utils';
 
-import { styles } from './cohort_summary.scss';
-import { renderMediatorStatusChip } from './mediator_status';
+import {styles} from './cohort_summary.scss';
+import {renderMediatorStatusChip} from './mediator_status';
 
 /** Cohort summary for experimenters. */
 @customElement('cohort-summary')
@@ -68,16 +68,16 @@ export class CohortSummary extends MobxLitElement {
         ? html`<agent-participant-configuration-dialog
             .cohort=${this.cohort}
             @close=${() => {
-            this.showAgentParticipantDialog = false;
-          }}
+              this.showAgentParticipantDialog = false;
+            }}
           ></agent-participant-configuration-dialog>`
         : nothing}
       ${this.showAgentMediatorDialog
         ? html`<agent-mediator-add-dialog
             .cohort=${this.cohort}
             @close=${() => {
-            this.showAgentMediatorDialog = false;
-          }}
+              this.showAgentMediatorDialog = false;
+            }}
           ></agent-mediator-add-dialog>`
         : nothing}
     `;
@@ -110,13 +110,13 @@ export class CohortSummary extends MobxLitElement {
         <div class="left">
           <pr-icon-button
             icon=${this.isExpanded
-        ? 'keyboard_arrow_up'
-        : 'keyboard_arrow_down'}
+              ? 'keyboard_arrow_up'
+              : 'keyboard_arrow_down'}
             color="neutral"
             variant="default"
             @click=${() => {
-        this.isExpanded = !this.isExpanded;
-      }}
+              this.isExpanded = !this.isExpanded;
+            }}
           >
           </pr-icon-button>
           <div class="header-details">
@@ -124,17 +124,17 @@ export class CohortSummary extends MobxLitElement {
               ${this.cohort ? getCohortName(this.cohort) : ''}
               <span class="subtitle">
                 (${this.experimentManager.getCohortParticipants(
-        this.cohort.id,
-        false,
-      ).length}
+                  this.cohort.id,
+                  false,
+                ).length}
                 participants)
               </span>
             </div>
             <cohort-progress-bar
               .cohortId=${this.cohort.id}
               .participantList=${this.experimentManager.getCohortParticipants(
-        this.cohort.id,
-      )}
+                this.cohort.id,
+              )}
             >
             </cohort-progress-bar>
           </div>
@@ -152,8 +152,8 @@ export class CohortSummary extends MobxLitElement {
   private renderAdd() {
     const isCohortLocked = this.cohort
       ? Boolean(
-        this.experimentService.experiment?.cohortLockMap[this.cohort.id],
-      )
+          this.experimentService.experiment?.cohortLockMap[this.cohort.id],
+        )
       : false;
     const availableMediators = this.cohort
       ? this.experimentManager.getAvailableMediatorPersonas(this.cohort.id)
@@ -185,44 +185,44 @@ export class CohortSummary extends MobxLitElement {
           <div
             class="menu-item"
             @click=${async () => {
-        if (!this.cohort) return;
-        this.analyticsService.trackButtonClick(
-          ButtonClick.PARTICIPANT_ADD,
-        );
-        await this.experimentManager.createParticipant(this.cohort.id);
-      }}
+              if (!this.cohort) return;
+              this.analyticsService.trackButtonClick(
+                ButtonClick.PARTICIPANT_ADD,
+              );
+              await this.experimentManager.createParticipant(this.cohort.id);
+            }}
           >
             Add human participant
           </div>
           ${this.authService.showAlphaFeatures
-        ? html`
+            ? html`
                 <div
                   class="menu-item"
                   @click=${() => {
-            if (!this.cohort) return;
-            this.showAgentParticipantDialog = true;
-          }}
+                    if (!this.cohort) return;
+                    this.showAgentParticipantDialog = true;
+                  }}
                 >
                   Add agent participant
                 </div>
               `
-        : nothing}
+            : nothing}
           <div
             class=${classMap({
-          'menu-item': true,
-          disabled: mediatorDisabled,
-        })}
+              'menu-item': true,
+              disabled: mediatorDisabled,
+            })}
             @click=${() => {
-        if (mediatorDisabled || !this.cohort) {
-          return;
-        }
-        this.showAgentMediatorDialog = true;
-      }}
+              if (mediatorDisabled || !this.cohort) {
+                return;
+              }
+              this.showAgentMediatorDialog = true;
+            }}
           >
             <div>Add agent mediator</div>
             ${mediatorHelperText
-        ? html`<div class="menu-item-helper">${mediatorHelperText}</div>`
-        : nothing}
+              ? html`<div class="menu-item-helper">${mediatorHelperText}</div>`
+              : nothing}
           </div>
         </div>
       </pr-menu>
@@ -245,11 +245,11 @@ export class CohortSummary extends MobxLitElement {
           color="neutral"
           variant="default"
           @click=${() => {
-        this.experimentManager.setCurrentCohortId(
-          this.cohort?.id ?? undefined,
-        );
-        this.experimentManager.setShowCohortEditor(true, true);
-      }}
+            this.experimentManager.setCurrentCohortId(
+              this.cohort?.id ?? undefined,
+            );
+            this.experimentManager.setShowCohortEditor(true, true);
+          }}
         >
         </pr-icon-button>
       </pr-tooltip>
@@ -270,8 +270,9 @@ export class CohortSummary extends MobxLitElement {
       await this.experimentManager.setCohortLock(this.cohort.id, !isLocked);
     };
 
-    const text = `${isLocked ? 'Unlock' : 'Lock'} this cohort to ${isLocked ? 'enable' : 'disable'
-      } participants joining`;
+    const text = `${isLocked ? 'Unlock' : 'Lock'} this cohort to ${
+      isLocked ? 'enable' : 'disable'
+    } participants joining`;
     return html`
       <pr-tooltip text=${text} position="BOTTOM_END">
         <pr-icon-button
@@ -309,7 +310,9 @@ export class CohortSummary extends MobxLitElement {
       <div class="sort-controls" @click=${(e: Event) => e.stopPropagation()}>
         <pr-menu
           name=${this.sortBy === 'waitTime' ? 'Wait time' : 'Name'}
-          icon=${this.sortBy === 'waitTime' ? 'hourglass_empty' : 'sort_by_alpha'}
+          icon=${this.sortBy === 'waitTime'
+            ? 'hourglass_empty'
+            : 'sort_by_alpha'}
           color="neutral"
           variant="outlined"
         >
@@ -317,16 +320,16 @@ export class CohortSummary extends MobxLitElement {
             <div
               class="menu-item"
               @click=${() => {
-        this.sortBy = 'waitTime';
-      }}
+                this.sortBy = 'waitTime';
+              }}
             >
               Sort by wait time
             </div>
             <div
               class="menu-item"
               @click=${() => {
-        this.sortBy = 'name';
-      }}
+                this.sortBy = 'name';
+              }}
             >
               Sort by name
             </div>
@@ -424,7 +427,7 @@ export class CohortSummary extends MobxLitElement {
           ${renderMediatorStatusChip(mediator, 'status-chip')}
         </div>
       `,
-      { listClass: 'mediator-list' },
+      {listClass: 'mediator-list'},
     );
 
     return html`
@@ -439,7 +442,7 @@ export class CohortSummary extends MobxLitElement {
     items: T[],
     emptyMessage: string,
     renderItem: (item: T, index: number) => TemplateResult | typeof nothing,
-    options: { listClass?: string; headerAction?: TemplateResult } = {},
+    options: {listClass?: string; headerAction?: TemplateResult} = {},
   ) {
     const listClasses = ['section-list'];
     if (options.listClass) {
@@ -449,15 +452,15 @@ export class CohortSummary extends MobxLitElement {
     return html`
       <div class="section-list">
         ${title || options.headerAction
-        ? html`<div class="section-title">
+          ? html`<div class="section-title">
               <span>${title}</span>
               ${options.headerAction ?? nothing}
             </div>`
-        : nothing}
+          : nothing}
         <div class=${listClasses.join(' ')}>
           ${items.length === 0
-        ? html`<div class="empty-subsection">${emptyMessage}</div>`
-        : items.map((item, index) => renderItem(item, index))}
+            ? html`<div class="empty-subsection">${emptyMessage}</div>`
+            : items.map((item, index) => renderItem(item, index))}
         </div>
       </div>
     `;
