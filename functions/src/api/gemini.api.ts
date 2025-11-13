@@ -218,23 +218,34 @@ export async function callGemini(
   }
 
 
+
   const textParts: string[] = [];
   const reasoningParts: string[] = [];
   let imageData: { mimeType: string; data: string } | undefined = undefined;
 
-  for (const part of response.candidates[0].content.parts) {
+
+  const imageDataList: Array<{ mimeType: string; data: string }> = [];
+
+  // Safely iterate over parts if they exist
+  const parts = response.candidates[0].content?.parts ?? [];
+  for (const part of parts) {
     if (part.text) {
       if (part.thought) {
+
+        // Collect all thought/reasoning blocks
         reasoningParts.push(part.text);
       } else {
         textParts.push(part.text);
       }
-    } else if (part.inlineData && !imageData) {
-      imageData = {
+    } else if (part.inlineData && !part.thought) {
+      // Only collect images that are NOT in thought blocks
+      const imageData = {
         mimeType: part.inlineData.mimeType ?? '',
         data: part.inlineData.data ?? '',
       };
-      if (!imageData.mimeType || !imageData.data) imageData = undefined;
+      if (imageData.mimeType && imageData.data) {
+        imageDataList.push(imageData);
+      }
     }
   }
   const text = textParts.length > 0 ? textParts.join('') : undefined;
@@ -243,11 +254,12 @@ export async function callGemini(
 
   const modelResponse: ModelResponse = {
     status: ModelResponseStatus.OK,
-    text: text,
+
+    text: textParts.length > 0 ? textParts.join('') : undefined,
     rawResponse: JSON.stringify(response),
     generationConfig,
-    reasoning: reasoning,
-    imageData: imageData,
+    reasoning: reasoningParts.length > 0 ? reasoningParts.join('') : undefined,
+    imageDataList: imageDataList.length > 0 ? imageDataList : undefined,
   };
 
   return modelResponse;

@@ -1,8 +1,6 @@
 import {app} from '../app';
 import {v4 as uuidv4} from 'uuid';
 
-const BUCKET_NAME = 'msgraham-deliberate-labs'; // TODO: Replace with your bucket name
-
 /**
  * Uploads a base64 encoded image to Google Cloud Storage.
  * @param base64Data The base64 encoded image string.
@@ -15,6 +13,7 @@ export async function uploadBase64ImageToGCS(
   mimeType: string,
   prefix = 'generated-images',
 ): Promise<string> {
+  const BUCKET_NAME = 'msgraham-deliberate-labs';
   const bucket = app.storage().bucket(BUCKET_NAME);
   const fileName = `${prefix}/${uuidv4()}.${mimeType.split('/')[1]}`;
   const file = bucket.file(fileName);

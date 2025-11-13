@@ -84,12 +84,15 @@ export class ChatMessageComponent extends MobxLitElement {
           </div>
           <div class="chat-bubble">${chatMessage.message}</div>
           ${this.renderDebuggingExplanation(chatMessage)}
-          ${chatMessage.imageUrl
-            ? html`<img
-                src="${chatMessage.imageUrl}"
-                alt="Generated Image"
-                class="generated-image"
-              />`
+          ${chatMessage.imageUrls && chatMessage.imageUrls.length > 0
+            ? chatMessage.imageUrls.map(
+                (imageUrl) =>
+                  html`<img
+                    src="${imageUrl}"
+                    alt="Generated Image"
+                    class="generated-image"
+                  />`,
+              )
             : nothing}
         </div>
       </div>
@@ -118,12 +121,15 @@ export class ChatMessageComponent extends MobxLitElement {
           </div>
           <div class="chat-bubble">${chatMessage.message}</div>
           ${this.renderDebuggingExplanation(chatMessage)}
-          ${chatMessage.imageUrl
-            ? html`<img
-                src="${chatMessage.imageUrl}"
-                alt="Generated Image"
-                class="generated-image"
-              />`
+          ${chatMessage.imageUrls && chatMessage.imageUrls.length > 0
+            ? chatMessage.imageUrls.map(
+                (imageUrl) =>
+                  html`<img
+                    src="${imageUrl}"
+                    alt="Generated Image"
+                    class="generated-image"
+                  />`,
+              )
             : nothing}
         </div>
       </div>

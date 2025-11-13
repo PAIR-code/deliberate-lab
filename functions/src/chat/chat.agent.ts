@@ -12,6 +12,7 @@ import {
   awaitTypingDelay,
   createChatMessage,
   createParticipantProfileBase,
+  sanitizeRawResponseForLogging,
 } from '@deliberation-lab/utils';
 import {Timestamp} from 'firebase-admin/firestore';
 import {processModelResponse} from '../agent.utils';
@@ -274,9 +275,22 @@ export async function getAgentChatMessage(
     promptConfig.numRetries ?? 0, // Pass numRetries from config
   );
 
+  // Log response with sanitized rawResponse and imageDataList to avoid overwhelming console with image data
+  const loggableResponse = {
+    ...response,
+    rawResponse: response.rawResponse
+      ? sanitizeRawResponseForLogging(response.rawResponse)
+      : undefined,
+    imageDataList: response.imageDataList
+      ? response.imageDataList.map((img) => ({
+          mimeType: img.mimeType,
+          data: '[IMAGE DATA]',
+        }))
+      : undefined,
+  };
   console.log(
     'getAgentChatMessage ModelResponse:',
-    JSON.stringify(response, null, 2),
+    JSON.stringify(loggableResponse, null, 2),
   );
 
   // Process response
@@ -322,7 +336,10 @@ export async function getAgentChatMessage(
     } else {
       // JSON block not found, message remains response.text
     }
-  } else if (!response.text && !response.imageData) {
+  } else if (
+    !response.text &&
+    (!response.imageDataList || response.imageDataList.length === 0)
+  ) {
     return {message: null, success: false};
   }
 
@@ -381,20 +398,7 @@ export async function getAgentChatMessage(
     }
   }
 
-  let imageUrl: string | undefined = undefined;
-  if (response.imageData) {
-    try {
-      imageUrl = await uploadBase64ImageToGCS(
-        response.imageData.data,
-        response.imageData.mimeType,
-        `experiments/${experimentId}/chats/${stage.id}`,
-      );
-    } catch (error) {
-      console.error('Error uploading image to GCS:', error);
-      // Optionally handle error, e.g., send an error message to chat
-    }
-  }
-
+  // Generate chat message ID first so we can use it in the image storage path
   const chatMessage = createChatMessage({
     type: user.type,
     discussionId,
@@ -404,8 +408,29 @@ export async function getAgentChatMessage(
     senderId: user.publicId,
     agentId: user.agentConfig.agentId,
     timestamp: Timestamp.now(),
-    imageUrl: imageUrl,
   });
+
+  // Upload all images from imageDataList using the chat message ID in the path
+  let imageUrls: string[] | undefined = undefined;
+  if (response.imageDataList && response.imageDataList.length > 0) {
+    try {
+      // Upload all images in parallel with index numbers
+      const uploadPromises = response.imageDataList.map((imageData, index) =>
+        uploadBase64ImageToGCS(
+          imageData.data,
+          imageData.mimeType,
+          `experiments/${experimentId}/chats/${stage.id}/${chatMessage.id}/${index}`,
+        ),
+      );
+      imageUrls = await Promise.all(uploadPromises);
+      // Add the uploaded URLs to the chat message
+      chatMessage.imageUrls = imageUrls;
+    } catch (error) {
+      console.error('Error uploading images to GCS:', error);
+      // Optionally handle error, e.g., send an error message to chat
+    }
+  }
+
   return {message: chatMessage, success: true};
 }
 
