@@ -370,6 +370,14 @@ export class CohortSummary extends MobxLitElement {
     };
 
     const sortedParticipants = participants.slice().sort((a, b) => {
+      if (this.sortBy === 'name') {
+        const aName = a.name ? a.name : a.publicId;
+        const bName = b.name ? b.name : b.publicId;
+        return aName.localeCompare(bName, undefined, {
+          sensitivity: 'base',
+        });
+      }
+
       const aIsReadyForTransfer = isReadyForTransfer(a);
       const bIsReadyForTransfer = isReadyForTransfer(b);
 
@@ -382,10 +390,6 @@ export class CohortSummary extends MobxLitElement {
 
       if (aTimeout !== bTimeout) {
         return aTimeout ? 1 : -1; // Timeouts go to the bottom
-      }
-
-      if (this.sortBy === 'name') {
-        return a.publicId.localeCompare(b.publicId);
       }
 
       // Sort by wait time
