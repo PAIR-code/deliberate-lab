@@ -23,6 +23,7 @@ import {
   createAgentPromptSettings,
   createModelGenerationConfig,
   checkApiKeyExists,
+  createClaudeServerConfig,
   createOpenAIServerConfig,
   createStructuredOutputConfig,
 } from '@deliberation-lab/utils';
@@ -38,6 +39,7 @@ export class ExperimenterDataEditor extends MobxLitElement {
 
   @state() geminiKeyResponse: null | boolean = null;
   @state() openAIKeyResponse: null | boolean = null;
+  @state() claudeKeyResponse: null | boolean = null; // Added for Claude
   @state() ollamaKeyResponse: null | boolean = null;
 
   override render() {
@@ -61,6 +63,8 @@ export class ExperimenterDataEditor extends MobxLitElement {
       ${this.renderGeminiKey()}
       <div class="divider"></div>
       ${this.renderOpenAISettings()}
+      <div class="divider"></div>
+      ${this.renderClaudeSettings()}
       <div class="divider"></div>
       ${this.renderOllamaSettings()}
     `;
@@ -91,6 +95,8 @@ export class ExperimenterDataEditor extends MobxLitElement {
         this.geminiKeyResponse = result;
       } else if (apiType === ApiKeyType.OPENAI_API_KEY) {
         this.openAIKeyResponse = result;
+      } else if (apiType === ApiKeyType.CLAUDE_API_KEY) { // Added for Claude
+        this.claudeKeyResponse = result;
       } else if (apiType === ApiKeyType.OLLAMA_CUSTOM_URL) {
         this.ollamaKeyResponse = result;
       }
@@ -101,6 +107,8 @@ export class ExperimenterDataEditor extends MobxLitElement {
         return this.geminiKeyResponse;
       } else if (apiType === ApiKeyType.OPENAI_API_KEY) {
         return this.openAIKeyResponse;
+      } else if (apiType === ApiKeyType.CLAUDE_API_KEY) { // Added for Claude
+        return this.claudeKeyResponse;
       } else if (apiType === ApiKeyType.OLLAMA_CUSTOM_URL) {
         return this.ollamaKeyResponse;
       }
@@ -153,6 +161,44 @@ export class ExperimenterDataEditor extends MobxLitElement {
           @input=${updateKey}
         ></md-filled-text-field>
         ${this.renderCheckApiKey(ApiKeyType.GEMINI_API_KEY)}
+      </div>
+    `;
+  }
+  
+  // ============ Claude ============
+  private renderClaudeSettings() {
+    const updateClaudeSettings = (e: InputEvent) => {
+      const oldData = this.authService.experimenterData;
+      if (!oldData) return;
+
+      const value = (e.target as HTMLInputElement).value;
+      this.claudeKeyResponse = null;
+
+      const newData = updateExperimenterData(oldData, {
+        apiKeys: {
+          ...oldData.apiKeys,
+          claudeApiKey: {
+            ...(oldData.apiKeys?.claudeApiKey ??
+              createClaudeServerConfig()),
+            apiKey: value,
+          },
+        },
+      });
+
+      this.authService.writeExperimenterData(newData);
+    };
+
+    const data = this.authService.experimenterData;
+    return html`
+      <div class="section">
+        <h3>Claude API settings</h3>
+        <md-filled-text-field
+          label="Claude API key"
+          placeholder="Add Claude API key"
+          .value=${data?.apiKeys.claudeApiKey?.apiKey ?? ''}
+          @input=${updateClaudeSettings}
+        ></md-filled-text-field>
+        ${this.renderCheckApiKey(ApiKeyType.CLAUDE_API_KEY)}
       </div>
     `;
   }

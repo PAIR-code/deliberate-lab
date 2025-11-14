@@ -182,6 +182,11 @@ export class AgentPersonaEditorComponent extends MobxLitElement {
           )}
           ${this.renderApiTypeButton(
             agentConfig,
+            'Claude or compatible API',
+            ApiKeyType.CLAUDE_API_KEY,
+          )}
+          ${this.renderApiTypeButton(
+            agentConfig,
             'Ollama Server',
             ApiKeyType.OLLAMA_CUSTOM_URL,
           )}
