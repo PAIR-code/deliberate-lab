@@ -109,8 +109,8 @@ export interface BargainStagePublicData extends BaseStagePublicData {
   kind: StageKind.BARGAIN;
   // True once negotiation ends (max turns reached or offer accepted)
   isGameOver: boolean;
-  // Current turn number (1-indexed, max = maxTurns)
-  currentTurn: number;
+  // Current turn number (1-indexed, max = maxTurns), null if game not started
+  currentTurn: number | null;
   // Maximum number of turns for this game
   maxTurns: number;
   // Whether chat is enabled for this game
@@ -123,6 +123,8 @@ export interface BargainStagePublicData extends BaseStagePublicData {
   sellerId: string | null;
   // Mapping from participant public ID to their role
   participantRoles: Record<string, BargainRole>;
+  // Array of participant public IDs who have clicked "Start Game" (ready to play)
+  readyParticipants: string[];
   // Ordered list of all transactions in this negotiation
   transactions: BargainTransaction[];
   // If a deal was reached, the agreed price; otherwise null
@@ -287,13 +289,14 @@ export function createBargainStagePublicData(
     id,
     kind: StageKind.BARGAIN,
     isGameOver: false,
-    currentTurn: 0,
+    currentTurn: null, // null indicates game not started yet
     maxTurns,
     chatEnabled,
     currentOfferer: null,
     buyerId: null,
     sellerId: null,
     participantRoles: {},
+    readyParticipants: [],
     transactions: [],
     agreedPrice: null,
   };

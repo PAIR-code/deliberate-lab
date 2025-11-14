@@ -37,7 +37,13 @@ export async function initializeBargainStage(
     participantCount: participants.length,
   });
 
-  // Get public data to check if already initialized
+  // Use first 2 participants for the game
+  const gameParticipants = participants.slice(0, 2);
+  console.log('[BARGAIN] Initializing game with participants:', {
+    participant1: gameParticipants[0].publicId,
+    participant2: gameParticipants[1].publicId,
+  });
+
   const publicDataDoc = app
     .firestore()
     .collection('experiments')
@@ -46,36 +52,6 @@ export async function initializeBargainStage(
     .doc(cohortId)
     .collection('publicStageData')
     .doc(stageConfig.id);
-
-  const publicDataSnapshot = await transaction.get(publicDataDoc);
-  const publicData = publicDataSnapshot.data() as
-    | BargainStagePublicData
-    | undefined;
-
-  console.log('[BARGAIN] Check initialization status:', {
-    exists: !!publicData,
-    hasRoles: publicData?.participantRoles && Object.keys(publicData.participantRoles).length > 0,
-    currentTurn: publicData?.currentTurn,
-  });
-
-  // If already initialized (roles assigned), don't reinitialize
-  if (publicData?.participantRoles && Object.keys(publicData.participantRoles).length > 0) {
-    console.log('[BARGAIN] Already initialized with roles, aborting');
-    return;
-  }
-
-  // Need at least 2 participants to initialize
-  if (participants.length < 2) {
-    console.log('[BARGAIN] Not enough participants yet:', participants.length);
-    return;
-  }
-
-  // Use first 2 participants for the game
-  const gameParticipants = participants.slice(0, 2);
-  console.log('[BARGAIN] Initializing game with participants:', {
-    participant1: gameParticipants[0].publicId,
-    participant2: gameParticipants[1].publicId,
-  });
 
   // Validate configuration values
   console.log(`[BARGAIN] Config validation - Buyer range: [${stageConfig.buyerValuationMin}, ${stageConfig.buyerValuationMax}], Seller range: [${stageConfig.sellerValuationMin}, ${stageConfig.sellerValuationMax}]`);

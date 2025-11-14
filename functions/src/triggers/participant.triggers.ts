@@ -4,10 +4,8 @@ import {
 } from 'firebase-functions/v2/firestore';
 
 import {
-  BargainStageConfig,
   ParticipantProfileExtended,
   StageConfig,
-  StageKind,
 } from '@deliberation-lab/utils';
 import {startAgentParticipant} from '../agent_participant.utils';
 import {
@@ -16,7 +14,6 @@ import {
   initializeParticipantStageAnswers,
 } from '../participant.utils';
 import {getFirestoreParticipant, getFirestoreStage} from '../utils/firestore';
-import {checkAndInitializeBargainStage} from '../stages/bargain.utils';
 
 import {app} from '../app';
 
@@ -135,16 +132,15 @@ export const onParticipantStageChange = onDocumentUpdated(
 
     // Check if participant moved to a new stage
     if (before.currentStageId !== after.currentStageId) {
-      // Get the stage config for the new stage
+      // Handle automatic stage initialization for stages that require it
+      // Note: Bargain stage initialization is now manual via "Start Game" button
+      // Get the stage config for the new stage if needed for other stage types
       const stage = await getFirestoreStage(experimentId, after.currentStageId);
 
-      if (stage && stage.kind === StageKind.BARGAIN) {
-        // Initialize bargain stage if both participants are ready
-        await checkAndInitializeBargainStage(
-          experimentId,
-          stage as BargainStageConfig,
-          after,
-        );
+      // Add automatic initialization logic for other stage types here if needed
+      // Bargain stage does NOT use automatic initialization
+      if (stage) {
+        // Future: Add other stage types that need automatic initialization
       }
     }
   },

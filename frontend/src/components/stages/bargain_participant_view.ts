@@ -5,11 +5,12 @@ import './stage_footer';
 
 import {MobxLitElement} from '@adobe/lit-mobx';
 import {CSSResultGroup, html, nothing} from 'lit';
-import {customElement, property} from 'lit/decorators.js';
+import {customElement, property, state} from 'lit/decorators.js';
 
 import {core} from '../../core/core';
 import {CohortService} from '../../services/cohort.service';
 import {ParticipantService} from '../../services/participant.service';
+import {ParticipantAnswerService} from '../../services/participant.answer';
 
 import {
   BargainRole,
@@ -29,6 +30,7 @@ export class BargainParticipantView extends MobxLitElement {
 
   private readonly cohortService = core.getService(CohortService);
   private readonly participantService = core.getService(ParticipantService);
+  private readonly participantAnswerService = core.getService(ParticipantAnswerService);
 
   @property() stage: BargainStageConfig | null = null;
   @property() answer: BargainStageParticipantAnswer | null = null;
@@ -38,6 +40,8 @@ export class BargainParticipantView extends MobxLitElement {
   @property() private offerMessage: string = '';
   @property() private responseMessage: string = '';
   @property() private errorMessage: string = '';
+
+  @state() isStartGameLoading = false;
 
   override render() {
     if (!this.stage) {
@@ -52,9 +56,14 @@ export class BargainParticipantView extends MobxLitElement {
       return nothing;
     }
 
-    // Check if game hasn't started yet (initialization phase)
-    if (publicData.currentTurn === 0 || !this.answer) {
-      return this.renderInitializationPhase();
+    // Check if game hasn't started yet (show Start Game button)
+    if (publicData.currentTurn === null) {
+      return this.renderStart();
+    }
+
+    // Check if participant has answer data
+    if (!this.answer) {
+      return nothing;
     }
 
     // Check if participant is a bystander (spectator)
@@ -85,19 +94,61 @@ export class BargainParticipantView extends MobxLitElement {
     `;
   }
 
-  private renderInitializationPhase() {
+  private renderStart() {
+    const publicData = this.cohortService.stagePublicDataMap[
+      this.stage?.id ?? ''
+    ] as BargainStagePublicData | undefined;
+
+    const myPublicId = this.participantService.profile?.publicId;
+    const readyParticipants = publicData?.readyParticipants ?? [];
+    const isReady = myPublicId ? readyParticipants.includes(myPublicId) : false;
+    const readyCount = readyParticipants.length;
+    const neededCount = 2;
+
+    const startGame = async () => {
+      if (!this.stage) return;
+      this.isStartGameLoading = true;
+      await this.participantAnswerService.startBargainGame(this.stage.id);
+      this.isStartGameLoading = false;
+    };
+
     return html`
       <stage-description .stage=${this.stage}></stage-description>
       <div class="bargain-container">
         <div class="panel panel-centered">
-          <h3 class="panel-title">Waiting for Game to Start...</h3>
+          <h3 class="panel-title">Ready to Start Bargaining?</h3>
           <p>
-            The negotiation will begin once both participants are ready.
-            You will be assigned a role (buyer or seller) and a valuation for the item.
+            Once the game starts, you will be randomly assigned a role (buyer or seller)
+            and a private valuation for the item.
           </p>
-          <p class="secondary-text">
-            Please wait while the game is being set up...
+          <p>
+            You will then negotiate with the other participant to try to reach
+            the best deal you can.
           </p>
+
+          ${isReady
+            ? html`
+                <div class="ready-status">
+                  <p class="success-message">
+                    ✓ You are ready! Waiting for other participants...
+                  </p>
+                  <p class="secondary-text">
+                    ${readyCount} of ${neededCount} participants ready
+                  </p>
+                </div>
+              `
+            : html`
+                <pr-button
+                  variant="tonal"
+                  ?loading=${this.isStartGameLoading}
+                  @click=${startGame}
+                >
+                  I'm ready to start
+                </pr-button>
+                <p class="secondary-text" style="margin-top: 8px;">
+                  ${readyCount} of ${neededCount} participants ready
+                </p>
+              `}
         </div>
       </div>
     `;

@@ -79,6 +79,19 @@ export const SendBargainResponseData = Type.Object(
 
 export type SendBargainResponseData = Static<typeof SendBargainResponseData>;
 
+/** startBargainGame endpoint data validation. */
+export const StartBargainGameData = Type.Object(
+  {
+    experimentId: Type.String({minLength: 1}),
+    cohortId: Type.String({minLength: 1}),
+    stageId: Type.String({minLength: 1}),
+    participantPublicId: Type.String({minLength: 1}),
+  },
+  strict,
+);
+
+export type StartBargainGameData = Static<typeof StartBargainGameData>;
+
 /** initializeBargain endpoint data validation. */
 export const InitializeBargainData = Type.Object(
   {

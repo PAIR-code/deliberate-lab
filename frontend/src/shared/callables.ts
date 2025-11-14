@@ -14,6 +14,7 @@ import {
   ExperimentTemplate,
   InitializeBargainData,
   InitiateParticipantTransferData,
+  StartBargainGameData,
   ParticipantNextStageResponse,
   ParticipantProfile,
   RequestChipAssistanceData,
@@ -499,6 +500,18 @@ export const sendBargainResponseCallable = async (
   const {data} = await httpsCallable<SendBargainResponseData, SuccessResponse>(
     functions,
     'sendBargainResponse',
+  )(config);
+  return data;
+};
+
+/** Generic endpoint for starting bargain game. */
+export const startBargainGameCallable = async (
+  functions: Functions,
+  config: StartBargainGameData,
+) => {
+  const {data} = await httpsCallable<StartBargainGameData, SuccessResponse>(
+    functions,
+    'startBargainGame',
   )(config);
   return data;
 };

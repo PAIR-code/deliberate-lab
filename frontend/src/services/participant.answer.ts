@@ -334,6 +334,10 @@ export class ParticipantAnswerService extends Service {
     await this.sp.participantService.setChipTurn(stageId);
   }
 
+  async startBargainGame(stageId: string) {
+    await this.sp.participantService.startBargainGame(stageId);
+  }
+
   async saveSurveyAnswers(stageId: string) {
     const answer = this.answerMap[stageId];
     if (!answer || answer.kind !== StageKind.SURVEY) return;

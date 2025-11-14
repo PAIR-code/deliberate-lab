@@ -57,6 +57,7 @@ import {
   sendChipOfferCallable,
   sendChipResponseCallable,
   setChipTurnCallable,
+  startBargainGameCallable,
   setParticipantRolesCallable,
   setSalespersonControllerCallable,
   setSalespersonMoveCallable,
@@ -945,6 +946,23 @@ export class ParticipantService extends Service {
         cohortId: this.profile.currentCohortId,
         stageId,
       });
+    }
+    return response;
+  }
+
+  /** Start bargain game for current stage and cohort. */
+  async startBargainGame(stageId: string) {
+    let response = {};
+    if (this.experimentId && this.profile) {
+      response = await startBargainGameCallable(
+        this.sp.firebaseService.functions,
+        {
+          experimentId: this.experimentId,
+          cohortId: this.profile.currentCohortId,
+          stageId,
+          participantPublicId: this.profile.publicId,
+        },
+      );
     }
     return response;
   }
