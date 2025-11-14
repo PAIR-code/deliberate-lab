@@ -88,16 +88,35 @@ function drawWeightedWinner(weights: Record<string, number>): {
 /**
  * Main selection logic for one round.
  */
+
 export function runLeaderLottery(
   participants: LeaderSelectionInput[],
 ): LeaderSelectionResult {
+  console.log('──────────────────────────────────────────────');
+  console.log('[LR][lottery] START Leader Lottery');
+  console.log('[LR][lottery] Raw inputs:');
+  for (const p of participants) {
+    console.log(
+      `  - ${p.publicId} | applied=${p.applied} | score=${p.performanceScore}`,
+    );
+  }
+  console.log('──────────────────────────────────────────────');
   // 1. Who applied?
   const applicants = participants.filter((p) => p.applied);
 
   const hasApplicants = applicants.length > 0;
+  console.log(
+    '[LR][lottery] Applicants:',
+    applicants.map((a) => a.publicId),
+  );
+  console.log('[LR][lottery] hasApplicants =', hasApplicants);
 
   // 2. Candidate pool
   const candidatePool = hasApplicants ? applicants : participants;
+  console.log(
+    '[LR][lottery] Candidate pool:',
+    candidatePool.map((p) => p.publicId),
+  );
 
   // 3. Rank candidate pool by performanceScore desc, tiebreak deterministic
   const ranked = [...candidatePool].sort((a, b) => {
@@ -109,9 +128,11 @@ export function runLeaderLottery(
   });
 
   const rankedIds = ranked.map((p) => p.publicId);
+  console.log('[LR][lottery] Ranked order (best → worst):', rankedIds);
 
   // 4. Weights
   const weights = computeWeights(rankedIds);
+  console.log('[LR][lottery] Weights:', weights);
 
   // 5. Draw winner
   const {winnerId, roll} = drawWeightedWinner(weights);
@@ -123,6 +144,8 @@ export function runLeaderLottery(
     // applied & selected → candidate_accepted
     // applied & not → candidate_rejected
     // did not apply → non_candidate (+ hypothetical check)
+    console.log('[LR][lottery] Assigning statuses because applicants > 0');
+
     const winner = winnerId;
 
     // first assign accepted/rejected or non_candidate
@@ -176,6 +199,10 @@ export function runLeaderLottery(
     // case 0 applied -> everyone is a "candidate"
     // winner → non_candidate_accepted
     // others → non_candidate_rejected
+    console.log(
+      '[LR][lottery] NO applicants → everyone considered non_candidate_*',
+    );
+
     for (const p of participants) {
       participantStatusMap[p.publicId] =
         p.publicId === winnerId

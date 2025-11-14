@@ -131,22 +131,31 @@ export async function addParticipantAnswerToRankingStagePublicData(
             .doc(applyStageId);
 
           const docSnap = await stageRef.get();
+          console.log(
+            `[LR][applyCheck] Checking apply stage for ${pPublicId} at ${applyStageId}`,
+          );
+          console.log(`[LR][applyCheck] exists = ${docSnap.exists}`);
           if (!docSnap.exists) return false;
 
           const data = docSnap.data() || {};
+          console.log(`[LR][applyCheck] data =`, JSON.stringify(data));
+
           const answers = data.answers || data.surveyAnswers || [];
+          console.log(`[LR][applyCheck] answers =`, JSON.stringify(answers));
 
           for (const q of answers) {
             const qid = q.questionId ?? q.id;
             const answerId = q.answerId ?? q.selected ?? q.answer;
+            console.log(`[LR][applyCheck] qid=${qid}, answerId=${answerId}`);
             if (
               (qid === 'apply_r1' || qid === 'apply_r2') &&
               answerId === 'yes'
             ) {
+              console.log(`[LR][applyCheck] ${pPublicId} APPLIED`);
               return true;
             }
           }
-
+          console.log(`[LR][applyCheck] ${pPublicId} did NOT apply`);
           return false;
         }
 
@@ -159,6 +168,12 @@ export async function addParticipantAnswerToRankingStagePublicData(
             performanceScore: await getPerformanceScore(pData.publicId),
             applied: await didApplyThisRound(pData.publicId),
           });
+        }
+        console.log(`[LR] Inputs passed into lottery:`);
+        for (const inp of leaderInputs) {
+          console.log(
+            `[LR][input] publicId=${inp.publicId} applied=${inp.applied} score=${inp.performanceScore}`,
+          );
         }
 
         const lotteryResult: LeaderSelectionResult =
