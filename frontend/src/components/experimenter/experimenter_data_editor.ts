@@ -39,7 +39,7 @@ export class ExperimenterDataEditor extends MobxLitElement {
 
   @state() geminiKeyResponse: null | boolean = null;
   @state() openAIKeyResponse: null | boolean = null;
-  @state() claudeKeyResponse: null | boolean = null; // Added for Claude
+  @state() claudeKeyResponse: null | boolean = null;
   @state() ollamaKeyResponse: null | boolean = null;
 
   override render() {
@@ -95,7 +95,7 @@ export class ExperimenterDataEditor extends MobxLitElement {
         this.geminiKeyResponse = result;
       } else if (apiType === ApiKeyType.OPENAI_API_KEY) {
         this.openAIKeyResponse = result;
-      } else if (apiType === ApiKeyType.CLAUDE_API_KEY) { // Added for Claude
+      } else if (apiType === ApiKeyType.CLAUDE_API_KEY) {
         this.claudeKeyResponse = result;
       } else if (apiType === ApiKeyType.OLLAMA_CUSTOM_URL) {
         this.ollamaKeyResponse = result;
@@ -107,7 +107,7 @@ export class ExperimenterDataEditor extends MobxLitElement {
         return this.geminiKeyResponse;
       } else if (apiType === ApiKeyType.OPENAI_API_KEY) {
         return this.openAIKeyResponse;
-      } else if (apiType === ApiKeyType.CLAUDE_API_KEY) { // Added for Claude
+      } else if (apiType === ApiKeyType.CLAUDE_API_KEY) {
         return this.claudeKeyResponse;
       } else if (apiType === ApiKeyType.OLLAMA_CUSTOM_URL) {
         return this.ollamaKeyResponse;

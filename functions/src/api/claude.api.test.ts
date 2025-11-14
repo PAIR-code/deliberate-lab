@@ -8,9 +8,9 @@ import {
   ModelResponse,
   ModelResponseStatus,
 } from '@deliberation-lab/utils';
-import { getClaudeAPIChatCompletionResponse } from './claude.api'; // Assuming the new file is claude.api.ts
+import { getClaudeAPIChatCompletionResponse } from './claude.api';
 
-const MODEL_NAME = 'claude-3-opus-20240229';
+const MODEL_NAME = 'claude-3-5-haiku-latest';
 const CLAUDE_API_HOST = 'https://api.anthropic.com';
 const CLAUDE_API_PATH = '/v1/messages';
 
@@ -39,7 +39,6 @@ describe('Claude API', () => {
             },
           ],
           stop_reason: 'end_turn',
-          // FIX: Add the usage block to make the mock valid
           usage: {
             input_tokens: 10,
             output_tokens: 25,
@@ -53,8 +52,8 @@ describe('Claude API', () => {
       stopSequences: [],
       temperature: 0.4,
       topP: 0.9,
-      frequencyPenalty: 0, // Note: Not used by Claude API
-      presencePenalty: 0,  // Note: Not used by Claude API
+      frequencyPenalty: 0,
+      presencePenalty: 0, 
       customRequestBodyFields: [],
     };
 
@@ -67,7 +66,6 @@ describe('Claude API', () => {
 
     expect(response.status).toBe(ModelResponseStatus.OK);
     expect(response.text).toBeDefined();
-    // Assertions check the content echoed by the mock
     expect(response.text).toContain('test output');
     expect(response.text).toContain('"temperature":0.4');
     expect(response.text).toContain('"top_p":0.9');
