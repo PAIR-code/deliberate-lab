@@ -13,6 +13,7 @@ import {
 
 import {getGeminiAPIResponse} from './api/gemini.api';
 import {getOpenAIAPIChatCompletionResponse} from './api/openai.api';
+import {getClaudeAPIChatCompletionResponse} from './api/claude.api';
 import {ollamaChat} from './api/ollama.api';
 
 import {writeModelLogEntry} from './log.utils';
@@ -148,6 +149,14 @@ export async function getAgentResponse(
       generationConfig,
       structuredOutputConfig,
     );
+  } else if (modelSettings.apiType === ApiKeyType.CLAUDE_API_KEY) {
+    response = await getClaudeAPIResponse(
+      apiKeyConfig,
+      modelSettings.modelName,
+      prompt,
+      generationConfig,
+      structuredOutputConfig,
+    );
   } else if (modelSettings.apiType === ApiKeyType.OLLAMA_CUSTOM_URL) {
     response = await getOllamaResponse(
       apiKeyConfig,
@@ -198,6 +207,23 @@ export async function getOpenAIAPIResponse(
   return await getOpenAIAPIChatCompletionResponse(
     apiKeyConfig.openAIApiKey?.apiKey || '',
     apiKeyConfig.openAIApiKey?.baseUrl || null,
+    model,
+    prompt,
+    generationConfig,
+    structuredOutputConfig,
+  );
+}
+
+export async function getClaudeAPIResponse(
+  apiKeyConfig: APIKeyConfig,
+  model: string,
+  prompt: string | Array<{role: string; content: string; name?: string}>,
+  generationConfig: ModelGenerationConfig,
+  structuredOutputConfig?: StructuredOutputConfig,
+): Promise<ModelResponse> {
+  return await getClaudeAPIChatCompletionResponse(
+    apiKeyConfig.ClaudeApiKey?.apiKey || '',
+    apiKeyConfig.ClaudeApiKey?.baseUrl || null,
     model,
     prompt,
     generationConfig,
