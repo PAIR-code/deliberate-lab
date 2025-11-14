@@ -64,8 +64,14 @@ export async function completeStageAsAgentParticipant(
     updatedStatus = true;
   }
 
-  // Transfer logic: if pending, set back to in progress
+  // Transfer logic: if pending, update timestamp, cohort ID, and status
   if (status === ParticipantStatus.TRANSFER_PENDING) {
+    const timestamp = Timestamp.now();
+    participant.timestamps.cohortTransfers[participant.currentCohortId] =
+      timestamp;
+    participant.currentCohortId = participant.transferCohortId;
+    participant.transferCohortId = null;
+
     participant.currentStatus = ParticipantStatus.IN_PROGRESS;
     // If in a transfer stage, progress to next stage
     if (stage.kind === StageKind.TRANSFER) {
