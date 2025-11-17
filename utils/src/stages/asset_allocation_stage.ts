@@ -266,7 +266,7 @@ export function computeKrippendorffsAlpha(
     }
   }
   const Do = totalObservedDisagreement / allUnits.length;
-  
+
   let deNumerator = 0;
   for (let i = 0; i < allValues.length; i++) {
     for (let j = i + 1; j < allValues.length; j++) {
@@ -276,9 +276,9 @@ export function computeKrippendorffsAlpha(
 
   const numTotalPairs = (allValues.length * (allValues.length - 1)) / 2;
   if (numTotalPairs === 0) return 100;
-  
+
   const De = deNumerator / numTotalPairs;
-  
+
   if (De === 0) {
     return 100;
   }
@@ -286,8 +286,6 @@ export function computeKrippendorffsAlpha(
   const alpha = 1 - Do / De;
   return alpha * 100;
 }
-
-
 
 export function computeMultiAssetConsensusScore(
   publicData: MultiAssetAllocationStagePublicData | undefined,
