@@ -38,6 +38,20 @@ participant-profile-display {
   padding: 0 common.$spacing-medium;
 }
 
+.timer {
+  @include common.flex-row-align-center;
+  @include typescale.label-large;
+  gap: common.$spacing-xs;
+  color: var(--md-sys-color-on-surface-variant);
+  margin-left: common.$spacing-medium; // Add some separation from the title
+
+  pr-icon {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+    color: var(--md-sys-color-primary);
+  }
+}
 @include common.viewport-small {
   .menu-button {
     display: none;
