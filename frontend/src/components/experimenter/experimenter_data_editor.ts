@@ -164,7 +164,7 @@ export class ExperimenterDataEditor extends MobxLitElement {
       </div>
     `;
   }
-  
+
   // ============ Claude ============
   private renderClaudeSettings() {
     const updateClaudeSettings = (e: InputEvent) => {
@@ -178,8 +178,7 @@ export class ExperimenterDataEditor extends MobxLitElement {
         apiKeys: {
           ...oldData.apiKeys,
           claudeApiKey: {
-            ...(oldData.apiKeys?.claudeApiKey ??
-              createClaudeServerConfig()),
+            ...(oldData.apiKeys?.claudeApiKey ?? createClaudeServerConfig()),
             apiKey: value,
           },
         },

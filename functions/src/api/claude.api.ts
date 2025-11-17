@@ -84,9 +84,9 @@ function makeStructuredOutputGenerationConfig(
 
 function convertToClaudeFormat(
   prompt: string | Array<{role: string; content: string; name?: string}>,
-): { role: 'user' | 'assistant'; content: string }[] {
+): {role: 'user' | 'assistant'; content: string}[] {
   if (typeof prompt === 'string') {
-    return [{ role: 'user', content: prompt }];
+    return [{role: 'user', content: prompt}];
   }
   return prompt.map((msg) => ({
     role: msg.role as 'user' | 'assistant',
@@ -101,10 +101,12 @@ export async function callClaudeChatCompletion(
   generationConfig: ModelGenerationConfig,
   structuredOutputConfig?: StructuredOutputConfig,
 ): Promise<ModelResponse> {
-  const client = new Anthropic({ apiKey });
+  const client = new Anthropic({apiKey});
 
   const messages = convertToClaudeFormat(prompt);
-
+  console.log('Claude api key: ', apiKey);
+  console.log('Claude message format: ', messages);
+  console.log('Claude model: ', modelName);
   let response;
   try {
     response = await client.messages.create({
@@ -204,6 +206,7 @@ export async function getClaudeAPIChatCompletionResponse(
       };
     }
     return response;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (error: any) {
     return {
       status: ModelResponseStatus.UNKNOWN_ERROR,

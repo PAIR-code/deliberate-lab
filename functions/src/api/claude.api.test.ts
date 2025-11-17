@@ -8,7 +8,7 @@ import {
   ModelResponse,
   ModelResponseStatus,
 } from '@deliberation-lab/utils';
-import { getClaudeAPIChatCompletionResponse } from './claude.api';
+import {getClaudeAPIChatCompletionResponse} from './claude.api';
 
 const MODEL_NAME = 'claude-3-5-haiku-latest';
 const CLAUDE_API_HOST = 'https://api.anthropic.com';
@@ -22,6 +22,7 @@ describe('Claude API', () => {
   it('handles text completion request', async () => {
     nock(CLAUDE_API_HOST)
       .post(CLAUDE_API_PATH)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       .reply(200, (uri, requestBody: any) => {
         return {
           id: 'msg_mock_12345',
@@ -46,14 +47,13 @@ describe('Claude API', () => {
         };
       });
 
-
     const generationConfig: ModelGenerationConfig = {
       maxTokens: 300,
       stopSequences: [],
       temperature: 0.4,
       topP: 0.9,
       frequencyPenalty: 0,
-      presencePenalty: 0, 
+      presencePenalty: 0,
       customRequestBodyFields: [],
     };
 
@@ -70,5 +70,4 @@ describe('Claude API', () => {
     expect(response.text).toContain('"temperature":0.4');
     expect(response.text).toContain('"top_p":0.9');
   });
-
 });
