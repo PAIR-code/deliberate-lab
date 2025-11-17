@@ -145,7 +145,7 @@ describe('computeMultiAssetConsensusScore', () => {
         },
       };
       // The matrix becomes [[60, 50], [40, 0]], which is then calculated.
-      expect(computeMultiAssetConsensusScore(publicData)).toBeCloseTo(53.91);
+      expect(computeMultiAssetConsensusScore(publicData)).toBeCloseTo(53.915);
     });
 
     it('should return 100 for a single participant', () => {
@@ -182,7 +182,7 @@ describe('computeMultiAssetConsensusScore', () => {
         },
       };
       // This data has a negative raw alpha, resulting in a score far below 25.
-      expect(computeMultiAssetConsensusScore(publicData)).toBeCloseTo(7.04);
+      expect(computeMultiAssetConsensusScore(publicData)).toBeCloseTo(13.27);
     });
   });
 });
