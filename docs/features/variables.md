@@ -7,7 +7,7 @@ layout: default
 agent mediators or agent participants
 
 ## Experimenter setup
-Deliberate Lab offers variable support within experiments using JSON Schema for type validation.
+Deliberate Lab offers variable support within experiments.
 Variable configs can be defined in the experiment builder; for the currently
 available config type ("random permutation"),
 experimenters can specify:
