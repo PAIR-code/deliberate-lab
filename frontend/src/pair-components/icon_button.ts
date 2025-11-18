@@ -48,6 +48,7 @@ export class IconButton extends LitElement {
       'palette-tertiary': this.color === 'tertiary',
       'palette-neutral': this.color === 'neutral',
       'palette-error': this.color === 'error',
+      'palette-on-error-container': this.color === 'on-error-container',
       'variant-default': this.variant === 'default',
       'variant-filled': this.variant === 'filled',
       'variant-outlined': this.variant === 'outlined',
