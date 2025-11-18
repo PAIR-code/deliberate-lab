@@ -53,7 +53,7 @@ export class GroupChatStageHandler extends BaseStageHandler {
         true,
       ),
     );
-    return `Group chat participants: ${participantNames.join(', ')}\n${getChatPromptMessageHistory(messages, stage)}`;
+    return `Participants in chat: ${participantNames.join(', ')}\n${getChatPromptMessageHistory(messages, stage)}`;
   }
 
   getDefaultMediatorStructuredPrompt(
