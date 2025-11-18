@@ -222,8 +222,8 @@ export async function getClaudeAPIResponse(
   structuredOutputConfig?: StructuredOutputConfig,
 ): Promise<ModelResponse> {
   return await getClaudeAPIChatCompletionResponse(
-    apiKeyConfig.ClaudeApiKey?.apiKey || '',
-    apiKeyConfig.ClaudeApiKey?.baseUrl || null,
+    apiKeyConfig.claudeApiKey?.apiKey || '',
+    apiKeyConfig.claudeApiKey?.baseUrl || null,
     model,
     prompt,
     generationConfig,

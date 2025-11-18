@@ -84,34 +84,40 @@ function makeStructuredOutputGenerationConfig(
 
 function convertToClaudeFormat(
   prompt: string | Array<{role: string; content: string; name?: string}>,
-): {role: 'user' | 'assistant'; content: string}[] {
+): Array<{role: string; content: string; name?: string}> {
   if (typeof prompt === 'string') {
     return [{role: 'user', content: prompt}];
   }
-  return prompt.map((msg) => ({
-    role: msg.role as 'user' | 'assistant',
-    content: msg.content,
-  }));
+  return prompt;
 }
 
 export async function callClaudeChatCompletion(
   apiKey: string,
+  baseUrl: string | null,
   modelName: string,
   prompt: string | Array<{role: string; content: string; name?: string}>,
   generationConfig: ModelGenerationConfig,
   structuredOutputConfig?: StructuredOutputConfig,
 ): Promise<ModelResponse> {
-  const client = new Anthropic({apiKey});
+  const client = new Anthropic({apiKey, baseURL: baseUrl});
+  const allMessages = convertToClaudeFormat(prompt);
 
-  const messages = convertToClaudeFormat(prompt);
-  console.log('Claude api key: ', apiKey);
-  console.log('Claude message format: ', messages);
-  console.log('Claude model: ', modelName);
+  const systemMessage = allMessages.find((msg) => msg.role === 'system');
+  const systemPrompt = systemMessage?.content;
+
+  const filteredMessages = allMessages
+    .filter((msg) => msg.role === 'user' || msg.role === 'assistant')
+    .map(({role, content}) => ({role, content})) as {
+    role: 'user' | 'assistant';
+    content: string;
+  }[];
+
   let response;
   try {
     response = await client.messages.create({
       model: modelName,
-      messages: messages,
+      system: systemPrompt, // The system prompt as a top-level string
+      messages: filteredMessages, // The array containing only user/assistant turns
       max_tokens: generationConfig.maxTokens,
       temperature: generationConfig.temperature,
       top_p: generationConfig.topP,
@@ -185,6 +191,7 @@ export async function callClaudeChatCompletion(
 
 export async function getClaudeAPIChatCompletionResponse(
   apiKey: string,
+  baseUrl: string | null,
   modelName: string,
   promptText: string | Array<{role: string; content: string; name?: string}>,
   generationConfig: ModelGenerationConfig,
@@ -193,6 +200,7 @@ export async function getClaudeAPIChatCompletionResponse(
   try {
     const response = await callClaudeChatCompletion(
       apiKey,
+      baseUrl,
       modelName,
       promptText,
       generationConfig,

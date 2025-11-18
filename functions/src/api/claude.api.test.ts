@@ -59,6 +59,7 @@ describe('Claude API', () => {
 
     const response: ModelResponse = await getClaudeAPIChatCompletionResponse(
       'test-api-key',
+      null, // base-url set to default.
       MODEL_NAME,
       'This is a test prompt.',
       generationConfig,
@@ -69,5 +70,52 @@ describe('Claude API', () => {
     expect(response.text).toContain('test output');
     expect(response.text).toContain('"temperature":0.4');
     expect(response.text).toContain('"top_p":0.9');
+  });
+
+  it('handles a prompt with a system message', async () => {
+    nock(CLAUDE_API_HOST)
+      .post(CLAUDE_API_PATH)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      .reply(200, (uri, requestBody: any) => {
+        // Assert that the system prompt was correctly extracted
+        expect(requestBody.system).toEqual('You are a helpful assistant.');
+        // Assert that the messages array contains only the user turn
+        expect(requestBody.messages).toEqual([
+          {role: 'user', content: 'Hello, Claude!'},
+        ]);
+        return {
+          // ... mock response
+          content: [{type: 'text', text: 'Hello there!'}],
+          stop_reason: 'end_turn',
+          // ...
+        };
+      });
+
+    const generationConfig: ModelGenerationConfig = {
+      maxTokens: 100,
+      stopSequences: [],
+      temperature: 0.5,
+      topP: 1.0,
+      frequencyPenalty: 0,
+      presencePenalty: 0,
+      customRequestBodyFields: [],
+    };
+
+    // This is the key part: Pass an array of message objects
+    const promptWithSystemMessage = [
+      {role: 'system', content: 'You are a helpful assistant.'},
+      {role: 'user', content: 'Hello, Claude!'},
+    ];
+
+    const response: ModelResponse = await getClaudeAPIChatCompletionResponse(
+      'test-api-key',
+      null, // Using null for default baseUrl
+      MODEL_NAME,
+      promptWithSystemMessage,
+      generationConfig,
+    );
+
+    expect(response.status).toBe(ModelResponseStatus.OK);
+    expect(response.text).toBe('Hello there!');
   });
 });

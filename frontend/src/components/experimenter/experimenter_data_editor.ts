@@ -166,8 +166,12 @@ export class ExperimenterDataEditor extends MobxLitElement {
   }
 
   // ============ Claude ============
+
   private renderClaudeSettings() {
-    const updateClaudeSettings = (e: InputEvent) => {
+    const updateClaudeSettings = (
+      e: InputEvent,
+      field: 'apiKey' | 'baseUrl',
+    ) => {
       const oldData = this.authService.experimenterData;
       if (!oldData) return;
 
@@ -179,7 +183,7 @@ export class ExperimenterDataEditor extends MobxLitElement {
           ...oldData.apiKeys,
           claudeApiKey: {
             ...(oldData.apiKeys?.claudeApiKey ?? createClaudeServerConfig()),
-            apiKey: value,
+            [field]: value,
           },
         },
       });
@@ -195,13 +199,20 @@ export class ExperimenterDataEditor extends MobxLitElement {
           label="Claude API key"
           placeholder="Add Claude API key"
           .value=${data?.apiKeys.claudeApiKey?.apiKey ?? ''}
-          @input=${updateClaudeSettings}
+          @input=${(e: InputEvent) => updateClaudeSettings(e, 'apiKey')}
         ></md-filled-text-field>
+
+        <md-filled-text-field
+          label="Base URL (optional)"
+          placeholder="https://api.anthropic.com"
+          .value=${data?.apiKeys.claudeApiKey?.baseUrl ?? ''}
+          @input=${(e: InputEvent) => updateClaudeSettings(e, 'baseUrl')}
+        ></md-filled-text-field>
+
         ${this.renderCheckApiKey(ApiKeyType.CLAUDE_API_KEY)}
       </div>
     `;
   }
-
   // ============ OpenAI-compatible API ============
   private renderOpenAISettings() {
     const updateOpenAISettings = (
