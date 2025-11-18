@@ -444,7 +444,6 @@ export function getOOTBCharityDebateTemplate(
       ),
     );
 
-    const discussionStage: StageConfig;
     const isMediatedRound = true; // Every round is mediated in this new design
 
     let mediatorAgentId: string;
@@ -468,7 +467,7 @@ export function getOOTBCharityDebateTemplate(
       openaiRound = roundNum;
     }
 
-    discussionStage = createDiscussionStageWithMediator(
+    const discussionStage = createDiscussionStageWithMediator(
       discussionStageId,
       `${EMOJIS[roundNum - 1]} Round ${roundNum}: Discussion`,
       setting,
@@ -1172,8 +1171,8 @@ function createClaudeMediatorTemplate(
 ): AgentMediatorTemplate {
   const promptMap: {[key: string]: MediatorPromptConfig} = {};
   const modelSettings: AgentModelSettings = {
-    apiType: ApiKeyType.GEMINI_API_KEY, // This should be changed if you have a separate API key type for Claude
-    modelName: 'claude-3-5-haiku-latest', // Corrected model name
+    apiType: ApiKeyType.CLAUDE_API_KEY,
+    modelName: 'claude-3-5-haiku-latest',
   };
 
   for (const id of stageIds) {
