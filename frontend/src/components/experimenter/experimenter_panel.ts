@@ -11,6 +11,7 @@ import './log_dashboard';
 import '@material/web/checkbox/checkbox.js';
 
 import {MobxLitElement} from '@adobe/lit-mobx';
+import {reaction} from 'mobx';
 import {CSSResultGroup, html, nothing} from 'lit';
 import {customElement, state} from 'lit/decorators.js';
 import {classMap} from 'lit/directives/class-map.js';
@@ -59,6 +60,62 @@ export class Panel extends MobxLitElement {
   @state() isLoading = false;
   @state() isAckAlertLoading = false;
   @state() participantSearchQuery = '';
+  @state() showToast = false;
+
+  private titleInterval: number | undefined = undefined;
+  private originalTitle = document.title;
+  private disposeReaction: (() => void) | undefined;
+
+  override connectedCallback() {
+    super.connectedCallback();
+    this.originalTitle = document.title;
+
+    this.disposeReaction = reaction(
+      () => this.experimentManager.newAlerts.length,
+      (newCount, previousCount: number | undefined) => {
+        if (
+          newCount > 0 &&
+          (previousCount === undefined || newCount > previousCount)
+        ) {
+          this.startTitleFlash();
+          this.showToast = true;
+        } else if (newCount === 0) {
+          this.stopTitleFlash();
+          this.showToast = false;
+        }
+      },
+      {fireImmediately: true},
+    );
+  }
+
+  override disconnectedCallback() {
+    super.disconnectedCallback();
+    this.stopTitleFlash();
+    if (this.disposeReaction) {
+      this.disposeReaction();
+    }
+  }
+
+  get hasNewAlerts() {
+    return this.experimentManager.hasNewAlerts;
+  }
+
+  private startTitleFlash() {
+    if (this.titleInterval) return;
+    let isOriginal = true;
+    this.titleInterval = window.setInterval(() => {
+      document.title = isOriginal ? '⚠️ New Alert!' : this.originalTitle;
+      isOriginal = !isOriginal;
+    }, 1000);
+  }
+
+  private stopTitleFlash() {
+    if (this.titleInterval) {
+      clearInterval(this.titleInterval);
+      this.titleInterval = undefined;
+      document.title = this.originalTitle;
+    }
+  }
 
   override render() {
     if (!this.authService.isExperimenter) {
@@ -124,18 +181,21 @@ export class Panel extends MobxLitElement {
           </pr-tooltip>
           <pr-tooltip text="Alerts" position="RIGHT_END">
             <pr-icon-button
-              color=${this.experimentManager.hasNewAlerts &&
-              !isSelected(PanelView.ALERTS)
+              class=${this.hasNewAlerts && !isSelected(PanelView.ALERTS)
+                ? 'wiggle'
+                : ''}
+              color=${this.hasNewAlerts && !isSelected(PanelView.ALERTS)
                 ? 'error'
                 : 'secondary'}
-              icon=${this.experimentManager.hasNewAlerts &&
-              !isSelected(PanelView.ALERTS)
+              icon=${this.hasNewAlerts && !isSelected(PanelView.ALERTS)
                 ? 'notifications_active'
                 : 'notifications'}
               size="medium"
               variant=${isSelected(PanelView.ALERTS) ? 'tonal' : 'default'}
               @click=${() => {
                 this.panelView = PanelView.ALERTS;
+                this.showToast = false;
+                this.stopTitleFlash();
               }}
             >
             </pr-icon-button>
@@ -154,7 +214,7 @@ export class Panel extends MobxLitElement {
             </pr-icon-button>
           </pr-tooltip>
         </div>
-        ${this.renderPanelView()}
+        ${this.renderPanelView()} ${this.renderToast()}
       </div>
     `;
   }
@@ -436,6 +496,29 @@ export class Panel extends MobxLitElement {
           <div class="header">Log dashboard</div>
           <log-dashboard></log-dashboard>
         </div>
+      </div>
+    `;
+  }
+
+  private renderToast() {
+    if (!this.showToast || !this.hasNewAlerts) return nothing;
+
+    return html`
+      <div class="alert-toast">
+        <div class="content">
+          <pr-icon icon="warning" color="on-error-container"></pr-icon>
+          <div>You have new alerts!</div>
+        </div>
+        <pr-icon-button
+          icon="close"
+          color="on-error-container"
+          variant="default"
+          @click=${() => {
+            this.showToast = false;
+            this.stopTitleFlash();
+          }}
+        >
+        </pr-icon-button>
       </div>
     `;
   }
