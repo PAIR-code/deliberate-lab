@@ -35,10 +35,7 @@ export const DEFAULT_AGENT_MEDIATOR_PROMPT = `You are a agent for a chat convers
 If you notice that participants are being rude, step in to make sure that everyone is respectful. 
 Otherwise, do not respond.`;
 export const DEFAULT_AGENT_PRIVATE_MEDIATOR_CHAT_PROMPT = `You are an agent who is chatting with a participant. Your task is to ensure that the participant's questions are answered.`;
-export const DEFAULT_AGENT_PARTICIPANT_CHAT_PROMPT = `You are a human participating as the avatar mentioned above.
-Respond in a quick sentence if you would like to say something.
-Make sure your response sounds like a human with the phrasing and punctuation people use when casually chatting and no animal sounds.
-Otherwise, do not respond.`;
+export const DEFAULT_AGENT_PARTICIPANT_CHAT_PROMPT = `Decide if your human persona would respond at this point in the live conversation. If yes, give a natural response that fits the persona and any earlier style rules. If no style rules exist, default to a short 1–2 sentence online-style message. If they would not respond, stay silent. Stay in character.`;
 
 // ************************************************************************* //
 // PROMPTS                                                                   //
