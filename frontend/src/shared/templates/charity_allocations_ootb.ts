@@ -500,17 +500,17 @@ export function getOOTBCharityDebateTemplate(
     {
       round: geminiRound,
       id: GEMINI_MEDIATOR_ID,
-      name: `Round ${geminiRound} Mediator (Gemini)`,
+      name: `Round ${geminiRound} Mediator`,
     },
     {
       round: claudeRound,
       id: CLAUDE_MEDIATOR_ID,
-      name: `Round ${claudeRound} Mediator (Claude)`,
+      name: `Round ${claudeRound} Mediator`,
     },
     {
       round: openaiRound,
       id: OPENAI_MEDIATOR_ID,
-      name: `Round ${openaiRound} Mediator (OpenAI)`,
+      name: `Round ${openaiRound} Mediator`,
     },
   ].sort((a, b) => (a.round ?? 0) - (b.round ?? 0));
 
@@ -1118,7 +1118,7 @@ function createDefaultMediatorPromptConfig(
 
   const generationConfig = createModelGenerationConfig();
 
-  const defaultInstruction = `You are a neutral facilitator. Help the group explore how they want to split the donation across the three charities and move towards group consensus on an exact allocation spread (for example, 20/40/40. But the exact allocation values should be proposed by participants).`;
+  const defaultInstruction = `As the conversation facilitator, help the group explore how they want to split the donation across the three charities and move towards group consensus on an exact allocation spread (for example, 20/40/40. But the exact allocation values should be proposed by participants).`;
 
   return createChatPromptConfig(roundId, StageKind.CHAT, {
     prompt: [
@@ -1144,7 +1144,7 @@ function createGeminiMediatorTemplate(
   const promptMap: {[key: string]: MediatorPromptConfig} = {};
   const modelSettings: AgentModelSettings = {
     apiType: ApiKeyType.GEMINI_API_KEY,
-    modelName: 'gemini-2.5-flash-latest',
+    modelName: 'gemini-2.5-flash',
   };
 
   for (const id of stageIds) {
@@ -1172,7 +1172,7 @@ function createClaudeMediatorTemplate(
   const promptMap: {[key: string]: MediatorPromptConfig} = {};
   const modelSettings: AgentModelSettings = {
     apiType: ApiKeyType.CLAUDE_API_KEY,
-    modelName: 'claude-3-5-haiku-latest',
+    modelName: 'claude-4-5-haiku-latest',
   };
 
   for (const id of stageIds) {
