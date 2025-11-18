@@ -64,6 +64,7 @@ export class SurveyPerParticipantStageHandler extends BaseStageHandler {
   getStageDisplayForPrompt(
     participants: ParticipantProfileExtended[],
     stageContext: StageContextData,
+    includeScaffolding: boolean,
   ) {
     const stage = stageContext.stage as SurveyPerParticipantStageConfig;
 

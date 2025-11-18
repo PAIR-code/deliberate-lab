@@ -24,6 +24,7 @@ export class PrivateChatStageHandler extends BaseStageHandler {
   getStageDisplayForPrompt(
     participants: ParticipantProfileExtended[],
     stageContext: StageContextData,
+    includeScaffolding: boolean,
   ) {
     const conversations: string[] = [];
     const stage = stageContext.stage as PrivateChatStageConfig;

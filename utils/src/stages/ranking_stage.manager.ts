@@ -54,6 +54,7 @@ export class RankingStageHandler extends BaseStageHandler {
   getStageDisplayForPrompt(
     participants: ParticipantProfileExtended[],
     stageContext: StageContextData,
+    includeScaffolding: boolean,
   ) {
     const stage = stageContext.stage as RankingStageConfig;
     const getParticipantResponse = (

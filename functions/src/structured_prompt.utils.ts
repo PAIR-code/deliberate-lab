@@ -533,6 +533,7 @@ export async function getStageContextForPrompt(
     stage,
     item.includeParticipantAnswers ? participants : [],
     stageContext,
+    includeScaffolding,
   );
   textItems.push(stageDisplay);
 
