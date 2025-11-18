@@ -38,7 +38,7 @@
   justify-content: space-between;
   padding: 0 common.$main-content-padding;
   position: relative;
-    z-index: 2;
+  z-index: 10;
 
   .left,
   .right {
