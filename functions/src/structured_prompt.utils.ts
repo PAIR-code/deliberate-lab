@@ -410,7 +410,19 @@ async function processPromptItems(
         const stageContextIds = promptItem.stageId
           ? [promptItem.stageId]
           : getAllPrecedingStageIds(experiment.stageIds, stageId);
+        // For agent participants with scaffolding, annotate previous vs.
+        // current stages
+        const labelStages =
+          includeScaffolding && userProfile.type === UserType.PARTICIPANT;
+        if (labelStages) {
+          items.push(
+            `\n--- Previously completed stages chronologically (read only) ---`,
+          );
+        }
         for (const id of stageContextIds) {
+          if (id === stageId && labelStages) {
+            items.push(`\n--- Current stage ---`);
+          }
           items.push(
             await getStageContextForPrompt(
               promptData.participants,
