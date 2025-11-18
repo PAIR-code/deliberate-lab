@@ -61,7 +61,7 @@ export function getChatPromptMessageHistory(
   stage: ChatStageConfig | PrivateChatStageConfig,
 ) {
   if (messages.length === 0) {
-    return `No one in the discussion has spoken yet.`;
+    return `No messages yet.`;
   }
 
   const description = `
