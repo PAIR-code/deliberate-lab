@@ -237,20 +237,23 @@ export function computeKrippendorffsAlpha(
   }
   const numRaters = raters.length;
 
-  // Get the universe of all charities mentioned across all participants.
   const allUnits = [
     ...new Set(raters.flatMap((r) => Object.keys(r.allocationMap))),
   ];
   if (allUnits.length === 0) return 100;
 
-  // --- Calculate Observed Disagreement (Do) ---
-  let totalObservedDisagreement = 0;
+  const reliabilityMatrix: number[][] = [];
+  const allValues: number[] = [];
   for (const unit of allUnits) {
-    // CRITICAL RULE: Impute 0 for any missing allocation.
     const valuesForUnit = raters.map(
       (r) => r.allocationMap[unit]?.percentage ?? 0,
     );
+    reliabilityMatrix.push(valuesForUnit);
+    allValues.push(...valuesForUnit);
+  }
 
+  let totalObservedDisagreement = 0;
+  for (const valuesForUnit of reliabilityMatrix) {
     let sumOfSquaredDiffs = 0;
     for (let i = 0; i < numRaters; i++) {
       for (let j = i + 1; j < numRaters; j++) {
@@ -258,15 +261,11 @@ export function computeKrippendorffsAlpha(
       }
     }
     const numPairs = (numRaters * (numRaters - 1)) / 2;
-    totalObservedDisagreement += sumOfSquaredDiffs / numPairs;
+    if (numPairs > 0) {
+      totalObservedDisagreement += sumOfSquaredDiffs / numPairs;
+    }
   }
   const Do = totalObservedDisagreement / allUnits.length;
-
-  // --- Calculate Expected Disagreement (De) ---
-  // Create a single array of all values, including the imputed zeros.
-  const allValues = raters.flatMap((r) =>
-    allUnits.map((unit) => r.allocationMap[unit]?.percentage ?? 0),
-  );
 
   let deNumerator = 0;
   for (let i = 0; i < allValues.length; i++) {
@@ -281,7 +280,7 @@ export function computeKrippendorffsAlpha(
   const De = deNumerator / numTotalPairs;
 
   if (De === 0) {
-    return 100; // If all values submitted are identical, De is 0, so agreement is perfect.
+    return 100;
   }
 
   const alpha = 1 - Do / De;
