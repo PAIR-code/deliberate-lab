@@ -140,9 +140,8 @@ export class CohortSummary extends MobxLitElement {
           </div>
         </div>
         <div class="right">
-          ${this.renderSortDropdown()} ${this.renderAdd()}
-          ${this.renderLockButton()} ${this.renderCopyButton()}
-          ${this.renderEditButton()}
+          ${this.renderAdd()} ${this.renderLockButton()}
+          ${this.renderCopyButton()} ${this.renderEditButton()}
         </div>
       </div>
       ${this.renderDescription()}
@@ -301,44 +300,6 @@ export class CohortSummary extends MobxLitElement {
     `;
   }
 
-  @state() sortBy: 'waitTime' | 'name' = 'waitTime';
-
-  private renderSortDropdown() {
-    if (!this.isExpanded) return nothing;
-
-    return html`
-      <div class="sort-controls" @click=${(e: Event) => e.stopPropagation()}>
-        <pr-menu
-          name=${this.sortBy === 'waitTime' ? 'Wait time' : 'Name'}
-          icon=${this.sortBy === 'waitTime'
-            ? 'hourglass_empty'
-            : 'sort_by_alpha'}
-          color="neutral"
-          variant="outlined"
-        >
-          <div class="menu-wrapper">
-            <div
-              class="menu-item"
-              @click=${() => {
-                this.sortBy = 'waitTime';
-              }}
-            >
-              Sort by wait time
-            </div>
-            <div
-              class="menu-item"
-              @click=${() => {
-                this.sortBy = 'name';
-              }}
-            >
-              Sort by name
-            </div>
-          </div>
-        </pr-menu>
-      </div>
-    `;
-  }
-
   private renderBody() {
     if (!this.isExpanded || !this.cohort) {
       return nothing;
@@ -370,7 +331,7 @@ export class CohortSummary extends MobxLitElement {
     };
 
     const sortedParticipants = participants.slice().sort((a, b) => {
-      if (this.sortBy === 'name') {
+      if (this.experimentManager.participantSortBy === 'name') {
         const aName = a.name ? a.name : a.publicId;
         const bName = b.name ? b.name : b.publicId;
         return aName.localeCompare(bName, undefined, {

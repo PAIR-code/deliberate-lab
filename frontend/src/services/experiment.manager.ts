@@ -135,6 +135,7 @@ export class ExperimentManager extends Service {
   @observable hideLockedCohorts = false;
   @observable expandAllCohorts = true;
   @observable showMediatorsInCohortSummary = false;
+  @observable participantSortBy: 'waitTime' | 'name' = 'waitTime';
 
   // Copy of cohort being edited in settings dialog
   @observable cohortEditing: CohortConfig | undefined = undefined;
@@ -262,6 +263,10 @@ export class ExperimentManager extends Service {
 
   setShowMediatorsInCohortSummary(show: boolean) {
     this.showMediatorsInCohortSummary = show;
+  }
+
+  setParticipantSortBy(sortBy: 'waitTime' | 'name') {
+    this.participantSortBy = sortBy;
   }
 
   setCurrentParticipantId(id: string | undefined) {
