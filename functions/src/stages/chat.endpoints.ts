@@ -30,27 +30,31 @@ export const createChatMessage = onCall(async (request) => {
   const {data} = request;
 
   // Define document references
-  const privateChatDocument = app
-    .firestore()
-    .collection('experiments')
-    .doc(data.experimentId)
-    .collection('participants')
-    .doc(data.participantId)
-    .collection('stageData')
-    .doc(data.stageId)
-    .collection('privateChats')
-    .doc(data.chatMessage.id);
+  const privateChatDocument = data.participantId
+    ? app
+        .firestore()
+        .collection('experiments')
+        .doc(data.experimentId)
+        .collection('participants')
+        .doc(data.participantId)
+        .collection('stageData')
+        .doc(data.stageId)
+        .collection('privateChats')
+        .doc(data.chatMessage.id)
+    : null;
 
-  const groupChatDocument = app
-    .firestore()
-    .collection('experiments')
-    .doc(data.experimentId)
-    .collection('cohorts')
-    .doc(data.cohortId)
-    .collection('publicStageData')
-    .doc(data.stageId)
-    .collection('chats')
-    .doc(data.chatMessage.id);
+  const groupChatDocument = data.cohortId
+    ? app
+        .firestore()
+        .collection('experiments')
+        .doc(data.experimentId)
+        .collection('cohorts')
+        .doc(data.cohortId)
+        .collection('publicStageData')
+        .doc(data.stageId)
+        .collection('chats')
+        .doc(data.chatMessage.id)
+    : null;
 
   const chatMessage = {...data.chatMessage, timestamp: Timestamp.now()};
 
@@ -69,10 +73,22 @@ export const createChatMessage = onCall(async (request) => {
     // (see chat.triggers for auto-generated agent responses)
     switch (stage.kind) {
       case StageKind.PRIVATE_CHAT:
+        if (!privateChatDocument) {
+          throw new HttpsError(
+            'invalid-argument',
+            'Participant ID is required for private chat',
+          );
+        }
         transaction.set(privateChatDocument, chatMessage);
         return {id: privateChatDocument.id};
       default:
         // Otherwise, write to public data
+        if (!groupChatDocument) {
+          throw new HttpsError(
+            'invalid-argument',
+            'Cohort ID is required for group chat',
+          );
+        }
         transaction.set(groupChatDocument, chatMessage);
         return {id: groupChatDocument.id};
     }
