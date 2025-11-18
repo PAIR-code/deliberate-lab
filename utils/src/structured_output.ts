@@ -163,6 +163,7 @@ export function printSchema(
 
 export function makeStructuredOutputPrompt(
   config?: StructuredOutputConfig,
+  includeScaffolding = true,
 ): string {
   if (
     !structuredOutputEnabled(config) ||
@@ -171,7 +172,8 @@ export function makeStructuredOutputPrompt(
   ) {
     return '';
   }
-  return `Return only valid JSON, according to the following schema:
+  const scaffolding = includeScaffolding ? `\n--- Response format ---\n` : '';
+  return `${scaffolding}Return only valid JSON, according to the following schema:
 ${printSchema(config.schema)}
 `;
 }
