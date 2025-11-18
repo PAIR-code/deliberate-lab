@@ -54,7 +54,14 @@ export class GroupChatStageHandler extends BaseStageHandler {
         true,
       ),
     );
-    return `Participants in chat: ${participantNames.join(', ')}\n${getChatPromptMessageHistory(messages, stage)}`;
+
+    const users = `Participants in chat: ${participantNames.join(', ')}`;
+    const history = getChatPromptMessageHistory(messages, stage);
+    const transcript = includeScaffolding
+      ? `\n\n--- Start of chat transcript ---\n${history}\n--- End of chat transcript ---\n`
+      : history;
+
+    return `${users}\n${transcript}`;
   }
 
   getDefaultMediatorStructuredPrompt(
