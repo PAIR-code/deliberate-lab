@@ -6,6 +6,7 @@ import {MobxLitElement} from '@adobe/lit-mobx';
 import {CSSResultGroup, html, nothing} from 'lit';
 import {customElement, property} from 'lit/decorators.js';
 import {classMap} from 'lit/directives/class-map.js';
+import { unsafeHTML } from 'lit/directives/unsafe-html.js';
 
 import {Timestamp} from 'firebase/firestore';
 
@@ -16,6 +17,7 @@ import {ParticipantService} from '../../services/participant.service';
 
 import {ChatMessage, UserType} from '@deliberation-lab/utils';
 import {
+  convertMarkdownToHTML,
   convertUnifiedTimestampToDate,
   getHashBasedColor,
   getProfileBasedColor,
@@ -85,7 +87,9 @@ export class ChatMessageComponent extends MobxLitElement {
               )}</span
             >
           </div>
-          <div class="chat-bubble">${chatMessage.message}</div>
+          <div class="chat-bubble">
+            ${unsafeHTML(convertMarkdownToHTML(chatMessage.message))}
+          </div>
           ${this.renderDebuggingExplanation(chatMessage)}
         </div>
       </div>
@@ -112,7 +116,9 @@ export class ChatMessageComponent extends MobxLitElement {
               )}</span
             >
           </div>
-          <div class="chat-bubble">${chatMessage.message}</div>
+          <div class="chat-bubble">
+            ${unsafeHTML(convertMarkdownToHTML(chatMessage.message))}
+          </div>
           ${this.renderDebuggingExplanation(chatMessage)}
         </div>
       </div>
@@ -122,7 +128,9 @@ export class ChatMessageComponent extends MobxLitElement {
   renderSystemMessage(chatMessage: ChatMessage) {
     return html`
       <div class="system-message">
-        <div class="content">${chatMessage.message}</div>
+        <div class="content">
+          ${unsafeHTML(convertMarkdownToHTML(chatMessage.message))}
+        </div>
       </div>
     `;
   }
