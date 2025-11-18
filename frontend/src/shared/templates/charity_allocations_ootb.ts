@@ -1144,7 +1144,7 @@ function createGeminiMediatorTemplate(
   const promptMap: {[key: string]: MediatorPromptConfig} = {};
   const modelSettings: AgentModelSettings = {
     apiType: ApiKeyType.GEMINI_API_KEY,
-    modelName: 'gemini-2.5-flash-latest',
+    modelName: 'gemini-2.5-flash',
   };
 
   for (const id of stageIds) {
@@ -1172,7 +1172,7 @@ function createClaudeMediatorTemplate(
   const promptMap: {[key: string]: MediatorPromptConfig} = {};
   const modelSettings: AgentModelSettings = {
     apiType: ApiKeyType.CLAUDE_API_KEY,
-    modelName: 'claude-3-5-haiku-latest',
+    modelName: 'claude-4-5-haiku-latest',
   };
 
   for (const id of stageIds) {
