@@ -4,6 +4,10 @@
 export * from './alert';
 export * from './alert.validation';
 
+// Deliberate Lab API Key
+export * from './dl_api_key';
+export * from './dl_api_key.validation';
+
 // Experimenter
 export * from './experimenter';
 

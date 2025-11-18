@@ -1,6 +1,7 @@
 import '../../pair-components/button';
 
 import '../experimenter/experimenter_data_editor';
+import './dl_api_key_manager';
 
 import {MobxLitElement} from '@adobe/lit-mobx';
 import {CSSResultGroup, html, nothing} from 'lit';
@@ -30,6 +31,9 @@ export class Settings extends MobxLitElement {
         ${this.renderColorModeSection()}
         ${this.authService.isExperimenter
           ? this.renderExperimenterData()
+          : nothing}
+        ${this.authService.isExperimenter && this.authService.showAlphaFeatures
+          ? this.renderAPIKeySection()
           : nothing}
         ${this.authService.isExperimenter
           ? this.renderAppVersionSection()
@@ -138,6 +142,19 @@ export class Settings extends MobxLitElement {
       <div class="section">
         <h2>Experimenter Settings</h2>
         <experimenter-data-editor></experimenter-data-editor>
+      </div>
+    `;
+  }
+
+  private renderAPIKeySection() {
+    return html`
+      <div class="section">
+        <h2>Deliberate Lab API Access</h2>
+        <p>
+          Manage Deliberate Lab API keys for programmatic access to your
+          experiments via the REST API.
+        </p>
+        <dl-api-key-manager></dl-api-key-manager>
       </div>
     `;
   }
