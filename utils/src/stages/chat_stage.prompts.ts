@@ -41,20 +41,6 @@ export const DEFAULT_AGENT_PARTICIPANT_CHAT_PROMPT = `Decide if your human perso
 // PROMPTS                                                                   //
 // ************************************************************************* //
 
-/** Get chat stage context
- *  (e.g., to include in prompt for a current/future stage)
- */
-export function getChatStagePromptContext(
-  chatMessages: ChatMessage[],
-  stageConfig: ChatStageConfig,
-  includeStageInfo: boolean,
-) {
-  return [
-    getBaseStagePrompt(stageConfig, includeStageInfo),
-    getChatPromptMessageHistory(chatMessages, stageConfig),
-  ].join('\n');
-}
-
 /** Return prompt for processing chat history. */
 export function getChatPromptMessageHistory(
   messages: ChatMessage[],
