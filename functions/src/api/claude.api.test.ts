@@ -69,6 +69,59 @@ describe('Claude API', () => {
     expect(response.text).toBeDefined();
     expect(response.text).toContain('test output');
     expect(response.text).toContain('"temperature":0.4');
+    expect(response.text).not.toContain('"top_p"');
+  });
+
+  it('handles top_p precedence when temperature is 1.0', async () => {
+    nock(CLAUDE_API_HOST)
+      .post(CLAUDE_API_PATH)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      .reply(200, (uri, requestBody: any) => {
+        return {
+          id: 'msg_mock_12345',
+          type: 'message',
+          role: 'assistant',
+          model: MODEL_NAME,
+          content: [
+            {
+              type: 'text',
+              text: JSON.stringify({
+                output: 'test output',
+                temperature: requestBody.temperature,
+                top_p: requestBody.top_p,
+              }),
+            },
+          ],
+          stop_reason: 'end_turn',
+          usage: {
+            input_tokens: 10,
+            output_tokens: 25,
+          },
+        };
+      });
+
+    const generationConfig: ModelGenerationConfig = {
+      maxTokens: 300,
+      stopSequences: [],
+      temperature: 1.0,
+      topP: 0.9,
+      frequencyPenalty: 0,
+      presencePenalty: 0,
+      customRequestBodyFields: [],
+    };
+
+    const response: ModelResponse = await getClaudeAPIChatCompletionResponse(
+      'test-api-key',
+      null, // base-url set to default.
+      MODEL_NAME,
+      'This is a test prompt.',
+      generationConfig,
+    );
+
+    expect(response.status).toBe(ModelResponseStatus.OK);
+    expect(response.text).toBeDefined();
+    expect(response.text).toContain('test output');
+    expect(response.text).not.toContain('"temperature"');
     expect(response.text).toContain('"top_p":0.9');
   });
 
