@@ -38,3 +38,12 @@ profile-display {
   @include common.flex-row-align-center;
   gap: common.$spacing-small;
 }
+
+.display-name {
+  &.truncated {
+    max-width: 150px; // Approximate width for 20ish characters
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}

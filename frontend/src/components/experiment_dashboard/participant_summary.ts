@@ -72,7 +72,7 @@ export class ParticipantSummary extends MobxLitElement {
           <participant-profile-display .profile=${this.participant}>
           </participant-profile-display>
           ${this.renderStatus()} ${this.renderTimeElapsed()}
-          ${this.renderIsAgent()} ${this.renderPauseButton()}
+          ${this.renderIsAgent()}
         </div>
         <div class="buttons">
           <participant-progress-bar
@@ -80,8 +80,8 @@ export class ParticipantSummary extends MobxLitElement {
             .stageIds=${this.experimentService.experiment?.stageIds ?? []}
           >
           </participant-progress-bar>
-          ${this.renderCopyButton()} ${this.renderAttentionButton()}
-          ${this.renderBootButton()}
+          ${this.renderPauseButton()} ${this.renderCopyButton()}
+          ${this.renderAttentionButton()} ${this.renderBootButton()}
         </div>
       </div>
     `;
@@ -94,11 +94,7 @@ export class ParticipantSummary extends MobxLitElement {
     const statusText = getAgentStatusDisplayText(
       this.participant.currentStatus,
     );
-    return html`
-      <pr-tooltip text="Agent: ${statusText}" position="TOP_START">
-        <div class="chip secondary">🤖</div>
-      </pr-tooltip>
-    `;
+    return html` <div class="chip secondary">🤖 ${statusText}</div> `;
   }
 
   private renderTimeElapsed() {
@@ -129,14 +125,14 @@ export class ParticipantSummary extends MobxLitElement {
     const getTimeElapsedText = (numMinutes: number) => {
       const numHours = Math.floor(numMinutes / 60);
       const numDays = Math.floor(numHours / 24);
-      const maxDays = 3; // Show ">3d" after this threshold.
+      const maxDays = 3;
       return numMinutes < 120
         ? `${numMinutes}m`
         : numHours < 24
           ? `${numHours}h`
           : numDays < maxDays
             ? `${numDays}d`
-            : `>3d`;
+            : `>${maxDays}d`;
     };
 
     return html`
