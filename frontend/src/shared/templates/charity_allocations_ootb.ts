@@ -23,6 +23,7 @@ import {
   RevealAudience,
   createModelGenerationConfig,
   createChatPromptConfig,
+  createDefaultMediatorGroupChatPrompt,
   createTransferStage,
   createTutorialInfoStage,
   createTOSStage,
@@ -1121,15 +1122,7 @@ function createDefaultMediatorPromptConfig(
   const defaultInstruction = `As the conversation facilitator, help the group explore how they want to split the donation across the three charities and move towards group consensus on an exact allocation spread (for example, 20%/40%/40%).`;
 
   return createChatPromptConfig(roundId, StageKind.CHAT, {
-    prompt: [
-      createTextPromptItem(
-        'You are participating in an experiment with the following online profile:',
-      ),
-      {type: PromptItemType.PROFILE_INFO} as ProfileInfoPromptItem,
-      {type: PromptItemType.PROFILE_CONTEXT} as ProfileContextPromptItem,
-      createDefaultStageContextPromptItem(roundId),
-      createTextPromptItem(defaultInstruction),
-    ],
+    prompt: createDefaultMediatorGroupChatPrompt(roundId, defaultInstruction),
     structuredOutputConfig,
     chatSettings,
     generationConfig,

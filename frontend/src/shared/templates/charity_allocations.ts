@@ -1,6 +1,7 @@
 import {
   createTextPromptItem,
   createChatStage,
+  createDefaultMediatorGroupChatPrompt,
   createDefaultStageContextPromptItem,
   AgentMediatorTemplate,
   MediatorPromptConfig,
@@ -1257,15 +1258,7 @@ Avoid suggesting allocations, evaluating ideas, taking sides, or adding new argu
   `;
 
   return createChatPromptConfig(roundId, StageKind.CHAT, {
-    prompt: [
-      createTextPromptItem(
-        'You are participating in an experiment with the following online profile:',
-      ),
-      {type: PromptItemType.PROFILE_INFO} as ProfileInfoPromptItem,
-      {type: PromptItemType.PROFILE_CONTEXT} as ProfileContextPromptItem,
-      createDefaultStageContextPromptItem(roundId),
-      createTextPromptItem(habermasInstruction),
-    ],
+    prompt: createDefaultMediatorGroupChatPrompt(roundId, habermasInstruction),
     structuredOutputConfig,
     chatSettings,
     generationConfig,
@@ -1378,15 +1371,7 @@ function createDynamicMediatorPromptConfig(
     If shouldRespond is false, response = "".`;
 
   return createChatPromptConfig(roundId, StageKind.CHAT, {
-    prompt: [
-      createTextPromptItem(
-        'You are participating in an experiment with the following online profile:',
-      ),
-      {type: PromptItemType.PROFILE_INFO} as ProfileInfoPromptItem,
-      {type: PromptItemType.PROFILE_CONTEXT} as ProfileContextPromptItem,
-      createDefaultStageContextPromptItem(roundId),
-      createTextPromptItem(dynamicInstruction),
-    ],
+    prompt: createDefaultMediatorGroupChatPrompt(roundId, dynamicInstruction),
     structuredOutputConfig,
     chatSettings,
     generationConfig,
