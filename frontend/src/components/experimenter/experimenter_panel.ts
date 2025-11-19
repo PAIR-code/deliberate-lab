@@ -506,12 +506,12 @@ export class Panel extends MobxLitElement {
     return html`
       <div class="alert-toast">
         <div class="content">
-          <pr-icon icon="warning" color="on-error-container"></pr-icon>
+          <pr-icon icon="warning" color="error"></pr-icon>
           <div>You have new alerts!</div>
         </div>
         <pr-icon-button
           icon="close"
-          color="on-error-container"
+          color="error"
           variant="default"
           @click=${() => {
             this.showToast = false;
