@@ -2,6 +2,7 @@ import {generateId} from './shared';
 import {SeedStrategy, choices} from './utils/random.utils';
 import {
   RandomPermutationVariableConfig,
+  StaticVariableConfig,
   VariableConfig,
   VariableConfigType,
   VariableDefinition,
@@ -20,6 +21,7 @@ export function extractVariablesFromVariableConfigs(
 
   for (const config of configs) {
     switch (config.type) {
+      case VariableConfigType.STATIC:
       case VariableConfigType.RANDOM_PERMUTATION:
         variableMap[config.definition.name] = config.definition;
         break;
@@ -29,6 +31,21 @@ export function extractVariablesFromVariableConfigs(
   }
 
   return variableMap;
+}
+
+export function createStaticVariableConfig(
+  config: Partial<StaticVariableConfig> = {},
+): StaticVariableConfig {
+  return {
+    id: config.id ?? generateId(),
+    type: VariableConfigType.STATIC,
+    definition: config.definition ?? {
+      name: 'variable',
+      description: '',
+      schema: VariableType.STRING,
+    },
+    value: config.value ?? {id: 'default', value: ''},
+  };
 }
 
 export function createRandomPermutationVariableConfig(
@@ -52,6 +69,9 @@ export function createRandomPermutationVariableConfig(
  * Given variable configs, generate variable-to-value mappings
  * if the variable config seed strategy matches the given seed strategy.
  *
+ * For static:
+ * - Returns the value as-is for all seed strategies
+ *
  * For random permutation:
  * - Selects numToSelect instances (or all if not specified)
  * - Builds an array from the selected instance values
@@ -65,6 +85,10 @@ export function createVariableToValueMapForSeed(
 
   for (const config of variableConfigs) {
     switch (config.type) {
+      case VariableConfigType.STATIC:
+        // Static values apply to all seed strategies
+        variableToValueMap[config.definition.name] = config.value.value;
+        break;
       case VariableConfigType.RANDOM_PERMUTATION:
         if (config.seedStrategy === seedStrategy) {
           const numToSelect = config.numToSelect ?? config.values.length;

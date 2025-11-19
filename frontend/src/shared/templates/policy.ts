@@ -44,6 +44,8 @@ import {
   VariableConfigType,
   VariableType,
   RandomPermutationVariableConfig,
+  StaticVariableConfig,
+  createStaticVariableConfig,
 } from '@deliberation-lab/utils';
 
 type Policy = {
@@ -192,22 +194,19 @@ const PolicySchema = VariableType.object({
   ),
 });
 
-// Create a variable config with the complete policy object (including arrays)
-const POLICY_RANDOM_PERMUTATION_CONFIG: RandomPermutationVariableConfig = {
-  id: 'policy-permutation-config',
-  type: VariableConfigType.RANDOM_PERMUTATION,
+// Create a static variable config with the complete policy object
+const POLICY_STATIC_CONFIG: StaticVariableConfig = createStaticVariableConfig({
+  id: 'policy-static-config',
   definition: {
     name: 'policy',
     description: 'Policy debate topic',
     schema: PolicySchema,
   },
-  seedStrategy: SeedStrategy.COHORT,
-  values: [
-    {id: 'policy_a', value: JSON.stringify(EXAMPLE_POLICY_A)},
-    {id: 'policy_b', value: JSON.stringify(EXAMPLE_POLICY_B)},
-  ],
-  numToSelect: 1,
-};
+  value: {
+    id: 'policy_a',
+    value: JSON.stringify(EXAMPLE_POLICY_A),
+  },
+});
 
 const NO_SHUFFLE: ShuffleConfig = {
   shuffle: false,
@@ -225,9 +224,7 @@ const PARTICIPANT_SHUFFLE: ShuffleConfig = {
 // ****************************************************************************
 export function getPolicyExperimentTemplate(): ExperimentTemplate {
   const stageConfigs = getPolicyStageConfigs();
-  const variableTemplates: VariableConfig[] = [
-    POLICY_RANDOM_PERMUTATION_CONFIG,
-  ];
+  const variableTemplates: VariableConfig[] = [POLICY_STATIC_CONFIG];
   return createExperimentTemplate({
     experiment: createExperimentConfig(stageConfigs, {
       metadata: POLICY_METADATA,
@@ -356,7 +353,7 @@ const POLICY_INITIAL_SURVEY_STAGE = createSurveyStage({
 
 You will need to indicate your support or opposition to the following policy:
 
-# **{{policy.0.policy}}**
+# **{{policy.policy}}**
 
 Before you learn more about the opinions about this policy, we would like to understand your current position on this issue.
 
@@ -461,8 +458,8 @@ function getPolicyFlipCards(): FlipCard[] {
     cards.push(
       createFlipCard({
         title: '',
-        frontContent: `## {{policy.0.arguments_pro.${i}.title}}`,
-        backContent: `{{policy.0.arguments_pro.${i}.text}}`,
+        frontContent: `## {{policy.arguments_pro.${i}.title}}`,
+        backContent: `{{policy.arguments_pro.${i}.text}}`,
       }),
     );
   }
@@ -472,8 +469,8 @@ function getPolicyFlipCards(): FlipCard[] {
     cards.push(
       createFlipCard({
         title: '',
-        frontContent: `## {{policy.0.arguments_con.${i}.title}}`,
-        backContent: `{{policy.0.arguments_con.${i}.text}}`,
+        frontContent: `## {{policy.arguments_con.${i}.title}}`,
+        backContent: `{{policy.arguments_con.${i}.text}}`,
       }),
     );
   }
@@ -508,7 +505,7 @@ const POLICY_FINAL_SURVEY_STAGE = createSurveyStage({
 Now that you have learned more about the policy, please register your opposition or support for this policy.
 **As before, you can click and adjust the slider to indicate your willingness to support or oppose the policy.**
 
-# **{{policy.0.policy}}**
+# **{{policy.policy}}**
 `,
   }),
   questions: [
@@ -601,13 +598,13 @@ const petitionOptions = [
 
 const policySignatorySupportQuestion = createMultipleChoiceSurveyQuestion({
   id: 'policy_signatory_support',
-  questionTitle: `### {{policy.0.petition_pro}}\n### ${petition_text}`,
+  questionTitle: `### {{policy.petition_pro}}\n### ${petition_text}`,
   options: petitionOptions,
   condition: finalPreferenceSupportCondition,
 });
 const policySignatoryOpposeQuestion = createMultipleChoiceSurveyQuestion({
   id: 'policy_signatory_oppose',
-  questionTitle: `### {{policy.0.petition_con}}\n### ${petition_text}`,
+  questionTitle: `### {{policy.petition_con}}\n### ${petition_text}`,
   options: petitionOptions,
   condition: finalPreferenceOpposeCondition,
 });
@@ -697,14 +694,14 @@ const donateOptions = [
 
 const policyDonateChoiceSupportQuestion = createMultipleChoiceSurveyQuestion({
   id: 'policy_donate_choice_support',
-  questionTitle: `### {{policy.0.nonprofit_pro}}\n### ${donate_text}`,
+  questionTitle: `### {{policy.nonprofit_pro}}\n### ${donate_text}`,
   options: donateOptions,
   condition: finalPreferenceSupportCondition,
 });
 
 const policyDonateChoiceOpposeQuestion = createMultipleChoiceSurveyQuestion({
   id: 'policy_donate_choice_oppose',
-  questionTitle: `### {{policy.0.nonprofit_con}}\n### ${donate_text}`,
+  questionTitle: `### {{policy.nonprofit_con}}\n### ${donate_text}`,
   options: donateOptions,
   condition: finalPreferenceOpposeCondition,
 });
@@ -761,7 +758,7 @@ const POLICY_POST_EXPERIMENT_STAGE = createSurveyStage({
     primaryText: `
 Thank you for completing the debrief.
 
-For the last time, please indicate your opposition or support for the policy:\n # **{{policy.0.policy}}**
+For the last time, please indicate your opposition or support for the policy:\n # **{{policy.policy}}**
 
 As before, you can click and adjust the slider to indicate your willingness to support or oppose the policy.
 `,
@@ -1085,7 +1082,7 @@ function createPolicyAssistantAgent(): AgentMediatorTemplate {
   for (let i = 0; i < 6; i++) {
     argumentsPro.push({
       type: PromptItemType.TEXT,
-      text: `* {{policy.0.arguments_pro.${i}.text}}`,
+      text: `* {{policy.arguments_pro.${i}.text}}`,
     } as PromptItem);
   }
 
@@ -1093,7 +1090,7 @@ function createPolicyAssistantAgent(): AgentMediatorTemplate {
   for (let i = 0; i < 6; i++) {
     argumentsCon.push({
       type: PromptItemType.TEXT,
-      text: `* {{policy.0.arguments_con.${i}.text}}`,
+      text: `* {{policy.arguments_con.${i}.text}}`,
     } as PromptItem);
   }
 

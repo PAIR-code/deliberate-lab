@@ -2,7 +2,9 @@ import {Type, type TSchema} from '@sinclair/typebox';
 import {SeedStrategy} from './utils/random.utils';
 
 /** Variable config for defining variables. */
-export type VariableConfig = RandomPermutationVariableConfig;
+export type VariableConfig =
+  | StaticVariableConfig
+  | RandomPermutationVariableConfig;
 
 /**
  * Defines the structure and metadata for a variable.
@@ -30,6 +32,16 @@ export interface BaseVariableConfig {
 }
 
 /**
+ * Static variable config.
+ * Assigns a single fixed value to all participants/cohorts.
+ * Value is used as-is without array wrapping.
+ */
+export interface StaticVariableConfig extends BaseVariableConfig {
+  type: VariableConfigType.STATIC;
+  value: VariableInstance; // Instance with id and JSON value
+}
+
+/**
  * Random permutation variable config.
  * Randomly selects N instances from a pool and assigns them to a single variable.
  * If numToSelect is not provided, all instances are selected and shuffled.
@@ -42,6 +54,8 @@ export interface RandomPermutationVariableConfig extends BaseVariableConfig {
 }
 
 export enum VariableConfigType {
+  // Assigns a single static value to all participants/cohorts
+  STATIC = 'static',
   // Randomly selects N values from a pool and assigns to a single variable (often an array)
   // If numToSelect is omitted, all values are selected and shuffled
   RANDOM_PERMUTATION = 'random_permutation',

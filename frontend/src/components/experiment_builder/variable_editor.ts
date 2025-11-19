@@ -21,8 +21,12 @@ import {ExperimentEditor} from '../../services/experiment.editor';
 import {
   SeedStrategy,
   type RandomPermutationVariableConfig,
+  type StaticVariableConfig,
+  type VariableConfig,
   type VariableInstance,
+  VariableConfigType,
   createRandomPermutationVariableConfig,
+  createStaticVariableConfig,
 } from '@deliberation-lab/utils';
 
 import {
@@ -71,9 +75,8 @@ export class VariableEditor extends MobxLitElement {
             >See documentation</a
           >.
         </p>
-        ${variableConfigs.map(
-          (config: RandomPermutationVariableConfig, i: number) =>
-            this.renderVariableConfig(config, i),
+        ${variableConfigs.map((config: VariableConfig, i: number) =>
+          this.renderVariableConfig(config, i),
         )}
         <md-outlined-button
           @click=${() =>
@@ -90,10 +93,7 @@ export class VariableEditor extends MobxLitElement {
 
   // ===== Variable Config =====
 
-  private renderVariableConfig(
-    config: RandomPermutationVariableConfig,
-    index: number,
-  ) {
+  private renderVariableConfig(config: VariableConfig, index: number) {
     return html`
       <div class="variable-config">
         <div class="config-header">
@@ -107,14 +107,31 @@ export class VariableEditor extends MobxLitElement {
           ${this.renderSection(
             'Configuration type',
             html`
-              <pr-tooltip text="Other variable config options coming soon">
-                <select disabled>
-                  <option>Random permutation</option>
-                </select>
-              </pr-tooltip>
+              <select
+                @change=${(e: Event) => {
+                  const newType = (e.target as HTMLSelectElement)
+                    .value as VariableConfigType;
+                  this.changeConfigType(config, index, newType);
+                }}
+              >
+                <option
+                  value="${VariableConfigType.STATIC}"
+                  ?selected=${config.type === VariableConfigType.STATIC}
+                >
+                  Static
+                </option>
+                <option
+                  value="${VariableConfigType.RANDOM_PERMUTATION}"
+                  ?selected=${config.type ===
+                  VariableConfigType.RANDOM_PERMUTATION}
+                >
+                  Random permutation
+                </option>
+              </select>
               <div class="description">
-                Randomly selects N instances from the pool and assigns to a
-                single variable
+                ${config.type === VariableConfigType.STATIC
+                  ? 'Assigns a single fixed value to all participants/cohorts'
+                  : 'Randomly selects N instances from the pool and assigns to a single variable'}
               </div>
             `,
           )}
@@ -155,83 +172,163 @@ export class VariableEditor extends MobxLitElement {
               </div>
             `,
           )}
-          ${this.renderDivider()}
-          ${this.renderSection(
-            'Seed strategy',
-            html`
-              <div class="description">Assignment level</div>
-              <select
-                .value=${config.seedStrategy}
-                @change=${(e: Event) =>
-                  this.updateConfig(config, index, {
-                    seedStrategy: (e.target as HTMLSelectElement)
-                      .value as SeedStrategy,
-                  })}
-              >
-                <option value="${SeedStrategy.COHORT}">cohort</option>
-                <option value="${SeedStrategy.PARTICIPANT}">participant</option>
-              </select>
-            `,
-          )}
-          ${this.renderDivider()}
-          ${this.renderSection(
-            'Selection Size',
-            html`
-              <div class="description">
-                Number of instances to select (leave empty to select all and
-                shuffle)
-              </div>
-              <pr-textarea
-                placeholder="e.g., 9 (or leave empty for all)"
-                .value=${config.numToSelect?.toString() ?? ''}
-                variant="outlined"
-                @input=${(e: Event) => {
-                  const val = (e.target as HTMLTextAreaElement).value.trim();
-                  this.updateConfig(config, index, {
-                    numToSelect: val === '' ? undefined : Number(val),
-                  });
-                }}
-              ></pr-textarea>
-            `,
-          )}
-          ${this.renderDivider()}
-          ${this.renderSection(
-            'Instance Pool',
-            html`
-              <div class="description">
-                Define the pool of instances to select from
-              </div>
-              <div class="items-list">
-                ${config.values.map((instance, i: number) =>
-                  this.renderInstanceEditor(config, index, instance, i),
+          ${config.type === VariableConfigType.STATIC
+            ? html`
+                ${this.renderDivider()}
+                ${this.renderSection(
+                  'Static Value',
+                  html`
+                    <div class="description">
+                      Define the single value assigned to all
+                      participants/cohorts
+                    </div>
+                    ${this.renderStaticValueEditor(config, index)}
+                  `,
                 )}
-              </div>
-              <md-text-button
-                @click=${() =>
-                  this.updateConfig(config, index, {
-                    values: [...config.values, {id: '', value: ''}],
-                  })}
-              >
-                <md-icon slot="icon">add</md-icon>
-                Add instance
-              </md-text-button>
-            `,
-          )}
+              `
+            : html`
+                ${this.renderDivider()}
+                ${this.renderSection(
+                  'Seed strategy',
+                  html`
+                    <div class="description">Assignment level</div>
+                    <select
+                      .value=${config.seedStrategy}
+                      @change=${(e: Event) =>
+                        this.updateConfig(config, index, {
+                          seedStrategy: (e.target as HTMLSelectElement)
+                            .value as SeedStrategy,
+                        })}
+                    >
+                      <option value="${SeedStrategy.COHORT}">cohort</option>
+                      <option value="${SeedStrategy.PARTICIPANT}">
+                        participant
+                      </option>
+                    </select>
+                  `,
+                )}
+                ${this.renderDivider()}
+                ${this.renderSection(
+                  'Selection Size',
+                  html`
+                    <div class="description">
+                      Number of instances to select (leave empty to select all
+                      and shuffle)
+                    </div>
+                    <pr-textarea
+                      placeholder="e.g., 9 (or leave empty for all)"
+                      .value=${config.numToSelect?.toString() ?? ''}
+                      variant="outlined"
+                      @input=${(e: Event) => {
+                        const val = (
+                          e.target as HTMLTextAreaElement
+                        ).value.trim();
+                        this.updateConfig(config, index, {
+                          numToSelect: val === '' ? undefined : Number(val),
+                        });
+                      }}
+                    ></pr-textarea>
+                  `,
+                )}
+                ${this.renderDivider()}
+                ${this.renderSection(
+                  'Instance Pool',
+                  html`
+                    <div class="description">
+                      Define the pool of instances to select from
+                    </div>
+                    <div class="items-list">
+                      ${config.values.map((instance, i: number) =>
+                        this.renderInstanceEditor(config, index, instance, i),
+                      )}
+                    </div>
+                    <md-text-button
+                      @click=${() =>
+                        this.updateConfig(config, index, {
+                          values: [...config.values, {id: '', value: ''}],
+                        })}
+                    >
+                      <md-icon slot="icon">add</md-icon>
+                      Add instance
+                    </md-text-button>
+                  `,
+                )}
+              `}
         </div>
       </div>
     `;
   }
 
-  private updateConfig(
-    config: RandomPermutationVariableConfig,
+  private changeConfigType(
+    config: VariableConfig,
     index: number,
-    updates: Partial<RandomPermutationVariableConfig>,
+    newType: VariableConfigType,
   ) {
-    this.experimentEditor.updateVariableConfig({...config, ...updates}, index);
+    if (newType === config.type) return;
+
+    // Determine if current config has single or multiple values
+    const currentHasMultipleValues =
+      'values' in config && Array.isArray(config.values);
+    const currentHasSingleValue = 'value' in config;
+
+    if (newType === VariableConfigType.STATIC) {
+      // Converting to a single-value config
+      // Preserve first value from multi-value configs, or existing single value
+      const value = currentHasMultipleValues
+        ? config.values.length > 0
+          ? config.values[0]
+          : {id: 'default', value: ''}
+        : currentHasSingleValue
+          ? config.value
+          : {id: 'default', value: ''};
+
+      const staticConfig = createStaticVariableConfig({
+        id: config.id,
+        definition: config.definition,
+        value,
+      });
+      this.experimentEditor.updateVariableConfig(staticConfig, index);
+    } else {
+      // Converting to a multi-value config (RANDOM_PERMUTATION)
+      // Preserve values from multi-value configs, or wrap single value in array
+      const values = currentHasSingleValue
+        ? [config.value]
+        : currentHasMultipleValues
+          ? config.values
+          : [];
+
+      const randomConfig = createRandomPermutationVariableConfig({
+        id: config.id,
+        definition: config.definition,
+        seedStrategy: SeedStrategy.COHORT,
+        values,
+      });
+      this.experimentEditor.updateVariableConfig(randomConfig, index);
+    }
+  }
+
+  private updateConfig(
+    config: VariableConfig,
+    index: number,
+    updates:
+      | Partial<StaticVariableConfig>
+      | Partial<RandomPermutationVariableConfig>,
+  ) {
+    if (config.type === VariableConfigType.STATIC) {
+      this.experimentEditor.updateVariableConfig(
+        {...config, ...updates} as StaticVariableConfig,
+        index,
+      );
+    } else {
+      this.experimentEditor.updateVariableConfig(
+        {...config, ...updates} as RandomPermutationVariableConfig,
+        index,
+      );
+    }
   }
 
   private updateDefinition(
-    config: RandomPermutationVariableConfig,
+    config: VariableConfig,
     index: number,
     updates: Partial<typeof config.definition>,
   ) {
@@ -252,10 +349,7 @@ export class VariableEditor extends MobxLitElement {
 
   // ===== Schema Editor =====
 
-  private renderSchemaEditor(
-    config: RandomPermutationVariableConfig,
-    configIndex: number,
-  ) {
+  private renderSchemaEditor(config: VariableConfig, configIndex: number) {
     // IMPORTANT: Use toJS to strip MobX observability from TypeBox schemas.
     // TypeBox schemas have circular references. When MobX makes them observable,
     // TypeBox's traversal hits infinite recursion through the MobX proxies → stack overflow.
@@ -477,6 +571,47 @@ export class VariableEditor extends MobxLitElement {
       return;
     }
     onUpdate(newSchema);
+  }
+
+  // ===== Static Value Editor =====
+
+  private renderStaticValueEditor(
+    config: StaticVariableConfig,
+    configIndex: number,
+  ) {
+    // Strip MobX observability to prevent stack overflow (see renderSchemaEditor for details)
+    const schema = toJS(config.definition.schema) as unknown as TSchema;
+    const error = validateValue(schema, config.value.value);
+
+    return html`
+      <div class="config-section">
+        <label class="property-label">Instance ID</label>
+        <pr-textarea
+          placeholder="e.g., default"
+          .value=${config.value.id}
+          variant="outlined"
+          @input=${(e: Event) => {
+            this.updateConfig(config, configIndex, {
+              value: {
+                ...config.value,
+                id: (e.target as HTMLTextAreaElement).value,
+              },
+            });
+          }}
+        ></pr-textarea>
+      </div>
+      <div class="config-section">
+        <label class="property-label">Value</label>
+        ${this.renderValueInput(schema, config.value.value, (v) => {
+          this.updateConfig(config, configIndex, {
+            value: {...config.value, value: v},
+          });
+        })}
+        ${error
+          ? html`<div class="validation-error">⚠️ ${error}</div>`
+          : nothing}
+      </div>
+    `;
   }
 
   // ===== Instance Editor =====
