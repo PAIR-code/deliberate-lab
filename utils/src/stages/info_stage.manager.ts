@@ -1,5 +1,5 @@
 import {ParticipantProfileExtended} from '../participant';
-import {VariableItem} from '../variables';
+import {VariableDefinition} from '../variables';
 import {resolveTemplateVariables} from '../variables.template';
 import {InfoStageConfig} from './info_stage';
 import {StageConfig, StageContextData, StageKind} from './stage';
@@ -8,7 +8,7 @@ import {BaseStageHandler} from './stage.handler';
 export class InfoStageHandler extends BaseStageHandler {
   resolveTemplateVariablesInStage(
     stage: InfoStageConfig,
-    variableMap: Record<string, VariableItem>,
+    variableMap: Record<string, VariableDefinition>,
     valueMap: Record<string, string>,
   ) {
     const updatedStage = super.resolveTemplateVariablesInStage(

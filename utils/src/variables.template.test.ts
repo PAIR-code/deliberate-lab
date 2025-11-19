@@ -1,4 +1,4 @@
-import {VariableItem, VariableType} from './variables';
+import {VariableDefinition, VariableType} from './variables';
 import {
   extractVariableReferences,
   resolveTemplateVariables,
@@ -6,7 +6,7 @@ import {
 } from './variables.template';
 
 describe('Mustache Template Resolution', () => {
-  const variableMap: Record<string, VariableItem> = {
+  const variableMap: Record<string, VariableDefinition> = {
     name: {
       name: 'name',
       description: '',
@@ -132,7 +132,7 @@ describe('Mustache Template Resolution', () => {
   });
 
   describe('validateTemplateVariables', () => {
-    const variableMap: Record<string, VariableItem> = {
+    const variableMap: Record<string, VariableDefinition> = {
       name: {
         name: 'name',
         description: '',

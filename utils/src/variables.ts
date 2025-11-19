@@ -4,26 +4,46 @@ import {SeedStrategy} from './utils/random.utils';
 /** Variable config for defining variables. */
 export type VariableConfig = RandomPermutationVariableConfig;
 
+/**
+ * Defines the structure and metadata for a variable.
+ * This describes what the variable is and how it's used in templates.
+ */
+export interface VariableDefinition {
+  name: string; // Variable name used in templates (e.g., "charities")
+  description: string;
+  schema: TSchema; // JSON Schema (TypeBox) describing the structure
+}
+
+/**
+ * A concrete value instance with a stable identifier.
+ * Used in the pool of values that configs can select from.
+ */
+export interface VariableInstance {
+  id: string; // Stable identifier for tracking (e.g., "donors_choose")
+  value: string; // JSON string of actual data
+}
+
 export interface BaseVariableConfig {
   id: string;
   type: VariableConfigType;
+  definition: VariableDefinition;
 }
 
+/**
+ * Random permutation variable config.
+ * Randomly selects N instances from a pool and assigns them to a single variable.
+ * If numToSelect is not provided, all instances are selected and shuffled.
+ */
 export interface RandomPermutationVariableConfig extends BaseVariableConfig {
   type: VariableConfigType.RANDOM_PERMUTATION;
   seedStrategy: SeedStrategy;
-  variableNames: string[];
-  // JSON Schema (TypeBox) describing the structure of variable values
-  schema: TSchema;
-  // List of values to choose from (this can be any type in string form)
-  values: string[];
+  values: VariableInstance[]; // Pool of instances to select from
+  numToSelect?: number; // How many to select (if omitted, selects all and shuffles)
 }
 
 export enum VariableConfigType {
-  // For each participant, populate all variables (can be more than one) by
-  // randomly selecting one permutation from a set of potential values
-  // TODO: Consider cycling through the permutations in order to ensure
-  // even distribution?
+  // Randomly selects N values from a pool and assigns to a single variable (often an array)
+  // If numToSelect is omitted, all values are selected and shuffled
   RANDOM_PERMUTATION = 'random_permutation',
   // Other eventual config types might include:
   // - MANUAL_COHORT_ASSIGNMENT: Manually specify values for each cohort
@@ -44,11 +64,4 @@ export namespace VariableType {
     Type.Object(properties);
 
   export const array = (items: TSchema) => Type.Array(items);
-}
-
-export interface VariableItem {
-  name: string;
-  description: string;
-  // JSON Schema (TypeBox) describing the structure
-  schema: TSchema;
 }

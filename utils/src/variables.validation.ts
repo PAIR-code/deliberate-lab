@@ -33,31 +33,8 @@ const JSONSchemaData: TSchema = Type.Recursive((Self) =>
   ]),
 );
 
-/** RandomPermutationVariableConfig. */
-export const RandomPermutationVariableConfigData = Type.Object(
-  {
-    id: Type.String({minLength: 1}),
-    type: Type.Literal(VariableConfigType.RANDOM_PERMUTATION),
-    seedStrategy: Type.Union([
-      Type.Literal(SeedStrategy.EXPERIMENT),
-      Type.Literal(SeedStrategy.COHORT),
-      Type.Literal(SeedStrategy.PARTICIPANT),
-      Type.Literal(SeedStrategy.CUSTOM),
-    ]),
-    variableNames: Type.Array(Type.String()),
-    schema: JSONSchemaData,
-    values: Type.Array(Type.String()),
-  },
-  strict,
-);
-
-/** VariableConfig. */
-export const VariableConfigData = Type.Union([
-  RandomPermutationVariableConfigData,
-]);
-
-/** VariableItem. */
-export const VariableItemData = Type.Object(
+/** VariableDefinition. */
+export const VariableDefinitionData = Type.Object(
   {
     name: Type.String({minLength: 1}),
     description: Type.String(),
@@ -65,3 +42,43 @@ export const VariableItemData = Type.Object(
   },
   strict,
 );
+
+/** VariableInstance. */
+export const VariableInstanceData = Type.Object(
+  {
+    id: Type.String({minLength: 1}),
+    value: Type.String(),
+  },
+  strict,
+);
+
+/** BaseVariableConfig. */
+export const BaseVariableConfigData = Type.Object({
+  id: Type.String({minLength: 1}),
+  type: Type.Union([Type.Literal(VariableConfigType.RANDOM_PERMUTATION)]),
+  definition: VariableDefinitionData,
+});
+
+/** RandomPermutationVariableConfig. */
+export const RandomPermutationVariableConfigData = Type.Composite([
+  BaseVariableConfigData,
+  Type.Object(
+    {
+      type: Type.Literal(VariableConfigType.RANDOM_PERMUTATION),
+      seedStrategy: Type.Union([
+        Type.Literal(SeedStrategy.EXPERIMENT),
+        Type.Literal(SeedStrategy.COHORT),
+        Type.Literal(SeedStrategy.PARTICIPANT),
+        Type.Literal(SeedStrategy.CUSTOM),
+      ]),
+      values: Type.Array(VariableInstanceData),
+      numToSelect: Type.Optional(Type.Number({minimum: 1})),
+    },
+    strict,
+  ),
+]);
+
+/** VariableConfig. */
+export const VariableConfigData = Type.Union([
+  RandomPermutationVariableConfigData,
+]);
