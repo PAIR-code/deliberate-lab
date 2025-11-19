@@ -1,7 +1,7 @@
 import {createModelGenerationConfig} from '../agent';
 import {ParticipantProfileExtended} from '../participant';
 import {StructuredOutputType} from '../structured_output';
-import {createDefaultPromptFromText} from '../structured_prompt';
+import {createDefaultParticipantPrompt} from '../structured_prompt';
 import {
   SurveyPerParticipantStageConfig,
   SurveyPerParticipantStageParticipantAnswer,
@@ -47,7 +47,7 @@ export class SurveyPerParticipantStageHandler extends BaseStageHandler {
     return {
       id: stage.id,
       type: stage.kind,
-      prompt: createDefaultPromptFromText(promptText),
+      prompt: createDefaultParticipantPrompt(promptText),
       includeScaffoldingInPrompt: true,
       generationConfig: createModelGenerationConfig(),
       structuredOutputConfig: {

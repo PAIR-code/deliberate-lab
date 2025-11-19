@@ -1,6 +1,6 @@
 import {createModelGenerationConfig} from '../agent';
 import {ParticipantProfileExtended} from '../participant';
-import {createDefaultPromptFromText} from '../structured_prompt';
+import {createDefaultParticipantPrompt} from '../structured_prompt';
 import {
   RankingItem,
   RankingStageConfig,
@@ -43,7 +43,7 @@ export class RankingStageHandler extends BaseStageHandler {
     return {
       id: stage.id,
       type: stage.kind,
-      prompt: createDefaultPromptFromText(promptText),
+      prompt: createDefaultParticipantPrompt(promptText),
       includeScaffoldingInPrompt: true,
       generationConfig: createModelGenerationConfig(),
       structuredOutputConfig: RANKING_STRUCTURED_OUTPUT_CONFIG,

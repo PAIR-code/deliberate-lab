@@ -15,8 +15,11 @@ import {
 } from '../structured_output';
 import {
   ChatPromptConfig,
+  PromptItem,
   PromptItemType,
   createDefaultPromptFromText,
+  createDefaultStageContextPromptItem,
+  createTextPromptItem,
 } from '../structured_prompt';
 import {ChatMessage} from '../chat_message';
 import {
@@ -31,12 +34,16 @@ import {getBaseStagePrompt} from './stage.prompts';
 // ************************************************************************* //
 // CONSTANTS                                                                 //
 // ************************************************************************* //
-export const DEFAULT_AGENT_MEDIATOR_PROMPT = `You are a agent for a chat conversation. Your task is to ensure that the conversation is polite.
-If you notice that participants are being rude, step in to make sure that everyone is respectful. 
-Otherwise, do not respond.`;
+/** Default group chat stage instructions to provide to mediator in prompts. */
+export const DEFAULT_MEDIATOR_GROUP_CHAT_PROMPT_INSTRUCTIONS = `Follow any persona context or instructions carefully. If none are given, respond in short, natural sentences (1–2 per turn). Adjust your response frequency based on group size: respond less often in groups with multiple participants so that all have a chance to speak.`;
+
+/** Mediator prompt text for private chat.*/
 export const DEFAULT_AGENT_PRIVATE_MEDIATOR_CHAT_PROMPT = `You are an agent who is chatting with a participant. Your task is to ensure that the participant's questions are answered.`;
+
+/** Participant prompt text for group chat. */
 export const DEFAULT_AGENT_PARTICIPANT_CHAT_PROMPT = `Decide if your human persona would respond at this point in the live conversation. If yes, give a natural response that fits the persona and any earlier style rules. If no style rules exist, default to a short 1–2 sentence online-style message. If they would not respond, stay silent. Stay in character.`;
 
+/** Hardcoded text used in stage display of chat transcript. */
 export const CHAT_PROMPT_TRANSCRIPT_EXPLANATION = `Below is the transcript of your discussion. Messages are shown in chronological order; new messages appear at the bottom. Each message / turn follows the format: (HH:MM) Name: message.`;
 
 // ************************************************************************* //
@@ -120,4 +127,20 @@ export function createChatPromptConfig(
       config.structuredOutputConfig ?? createStructuredOutputConfig(),
     chatSettings: config.chatSettings ?? createAgentChatSettings(),
   };
+}
+
+export function createDefaultMediatorGroupChatPrompt(
+  stageId: string = '', // defaults to context from past + current stages
+  text = 'Your instructions are to facilitate this group chat. Make sure all participants have a chance to speak and that everyone is polite to one another.',
+): PromptItem[] {
+  return [
+    createTextPromptItem(
+      'You are participating in a live conversation as the following online alias:',
+    ),
+    {type: PromptItemType.PROFILE_INFO},
+    {type: PromptItemType.PROFILE_CONTEXT},
+    createTextPromptItem(DEFAULT_MEDIATOR_GROUP_CHAT_PROMPT_INSTRUCTIONS),
+    createDefaultStageContextPromptItem(stageId),
+    createTextPromptItem(text),
+  ];
 }

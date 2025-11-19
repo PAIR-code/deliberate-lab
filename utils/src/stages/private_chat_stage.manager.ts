@@ -3,6 +3,7 @@ import {
   MediatorPromptConfig,
   ParticipantPromptConfig,
   createDefaultPromptFromText,
+  createDefaultParticipantPrompt,
 } from '../structured_prompt';
 import {PrivateChatStageConfig} from './private_chat_stage';
 import {
@@ -56,7 +57,7 @@ export class PrivateChatStageHandler extends BaseStageHandler {
     stage: PrivateChatStageConfig,
   ): ParticipantPromptConfig | undefined {
     return createChatPromptConfig(stage.id, StageKind.CHAT, {
-      prompt: createDefaultPromptFromText(
+      prompt: createDefaultParticipantPrompt(
         DEFAULT_AGENT_PARTICIPANT_CHAT_PROMPT,
       ),
     });

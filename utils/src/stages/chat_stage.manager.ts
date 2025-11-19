@@ -8,13 +8,14 @@ import {
 import {
   MediatorPromptConfig,
   ParticipantPromptConfig,
-  createDefaultPromptFromText,
+  createDefaultParticipantPrompt,
 } from '../structured_prompt';
 import {ChatStageConfig} from './chat_stage';
 import {
-  DEFAULT_AGENT_MEDIATOR_PROMPT,
+  DEFAULT_MEDIATOR_GROUP_CHAT_PROMPT_INSTRUCTIONS,
   DEFAULT_AGENT_PARTICIPANT_CHAT_PROMPT,
   createChatPromptConfig,
+  createDefaultMediatorGroupChatPrompt,
   getChatPromptMessageHistory,
 } from './chat_stage.prompts';
 import {
@@ -68,7 +69,7 @@ export class GroupChatStageHandler extends BaseStageHandler {
     stage: ChatStageConfig,
   ): MediatorPromptConfig | undefined {
     return createChatPromptConfig(stage.id, StageKind.CHAT, {
-      prompt: createDefaultPromptFromText(DEFAULT_AGENT_MEDIATOR_PROMPT),
+      prompt: createDefaultMediatorGroupChatPrompt(stage.id),
     });
   }
 
@@ -76,7 +77,7 @@ export class GroupChatStageHandler extends BaseStageHandler {
     stage: ChatStageConfig,
   ): ParticipantPromptConfig | undefined {
     return createChatPromptConfig(stage.id, StageKind.CHAT, {
-      prompt: createDefaultPromptFromText(
+      prompt: createDefaultParticipantPrompt(
         DEFAULT_AGENT_PARTICIPANT_CHAT_PROMPT,
       ),
     });
