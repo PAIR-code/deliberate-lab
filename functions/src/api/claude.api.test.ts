@@ -10,7 +10,7 @@ import {
 } from '@deliberation-lab/utils';
 import {getClaudeAPIChatCompletionResponse} from './claude.api';
 
-const MODEL_NAME = 'claude-3-5-haiku-latest';
+const MODEL_NAME = 'claude-haiku-4-5';
 const CLAUDE_API_HOST = 'https://api.anthropic.com';
 const CLAUDE_API_PATH = '/v1/messages';
 

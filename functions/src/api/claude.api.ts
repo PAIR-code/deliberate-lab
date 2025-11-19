@@ -120,10 +120,10 @@ export async function callClaudeChatCompletion(
       messages: filteredMessages, // The array containing only user/assistant turns
       max_tokens: generationConfig.maxTokens,
       ...(generationConfig.temperature !== 1.0
-        ? { temperature: generationConfig.temperature }
+        ? {temperature: generationConfig.temperature}
         : generationConfig.topP !== 1.0
-          ? { top_p: generationConfig.topP }
-          : { temperature: generationConfig.temperature }),
+          ? {top_p: generationConfig.topP}
+          : {temperature: generationConfig.temperature}),
     });
   } catch (error) {
     if (error instanceof Anthropic.APIError) {
