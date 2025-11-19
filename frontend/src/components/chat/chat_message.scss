@@ -47,6 +47,46 @@ $bubble-width: 400px;
   color: var(--md-sys-color-on-secondary-container);
   max-width: $bubble-width;
   overflow-wrap: anywhere;
+p {
+    margin-top: 0;
+    margin-bottom: common.$spacing-small;
+  }
+
+  p:last-child {
+    margin-bottom: 0;
+  }
+
+  ul,
+  ol {
+    margin-top: 0;
+    margin-bottom: common.$spacing-small;
+    padding-left: common.$spacing-large;
+  }
+
+  li {
+    margin-bottom: common.$spacing-xs;
+  }
+
+  code {
+    background: var(--md-sys-color-surface-variant);
+    border-radius: 4px;
+    padding: 2px 4px;
+    font-family: monospace;
+  }
+
+  pre {
+    background: var(--md-sys-color-surface-variant);
+    border-radius: 4px;
+    padding: common.$spacing-small;
+    overflow-x: auto;
+    margin-top: 0;
+    margin-bottom: common.$spacing-small;
+
+    code {
+      background: none;
+      padding: 0;
+    }
+  }
 }
 
 .current-user {
@@ -145,5 +185,8 @@ $bubble-width: 400px;
     font-style: italic;
     color: var(--md-sys-color-outline);
     text-align: center;
+p {
+    margin: 0;
+  }
   }
 }

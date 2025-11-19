@@ -1,9 +1,37 @@
-import {Type, type Static} from '@sinclair/typebox';
+import {Type, type TSchema} from '@sinclair/typebox';
 import {SeedStrategy} from './utils/random.utils';
-import {VariableConfigType, VariableType} from './variables';
+import {VariableConfigType} from './variables';
 
 /** Shorthand for strict TypeBox object validation */
 const strict = {additionalProperties: false} as const;
+
+/** JSON Schema validation - recursive schema for validating TypeBox schemas */
+const JSONSchemaData: TSchema = Type.Recursive((Self) =>
+  Type.Union([
+    // Primitive types
+    Type.Object({type: Type.Literal('string')}, {additionalProperties: true}),
+    Type.Object({type: Type.Literal('number')}, {additionalProperties: true}),
+    Type.Object({type: Type.Literal('integer')}, {additionalProperties: true}),
+    Type.Object({type: Type.Literal('boolean')}, {additionalProperties: true}),
+
+    // Complex types
+    Type.Object(
+      {
+        type: Type.Literal('object'),
+        properties: Type.Optional(Type.Record(Type.String(), Self)),
+      },
+      {additionalProperties: true},
+    ),
+
+    Type.Object(
+      {
+        type: Type.Literal('array'),
+        items: Type.Optional(Self),
+      },
+      {additionalProperties: true},
+    ),
+  ]),
+);
 
 /** RandomPermutationVariableConfig. */
 export const RandomPermutationVariableConfigData = Type.Object(
@@ -17,22 +45,7 @@ export const RandomPermutationVariableConfigData = Type.Object(
       Type.Literal(SeedStrategy.CUSTOM),
     ]),
     variableNames: Type.Array(Type.String()),
-    variableType: Type.Union([
-      Type.Literal(VariableType.STRING),
-      Type.Literal(VariableType.NUMBER),
-      Type.Literal(VariableType.BOOLEAN),
-      Type.Literal(VariableType.OBJECT),
-    ]),
-    schema: Type.Optional(
-      Type.Record(
-        Type.String(),
-        Type.Union([
-          Type.Literal(VariableType.STRING),
-          Type.Literal(VariableType.NUMBER),
-          Type.Literal(VariableType.BOOLEAN),
-        ]),
-      ),
-    ),
+    schema: JSONSchemaData,
     values: Type.Array(Type.String()),
   },
   strict,
@@ -48,22 +61,7 @@ export const VariableItemData = Type.Object(
   {
     name: Type.String({minLength: 1}),
     description: Type.String(),
-    type: Type.Union([
-      Type.Literal(VariableType.STRING),
-      Type.Literal(VariableType.NUMBER),
-      Type.Literal(VariableType.BOOLEAN),
-      Type.Literal(VariableType.OBJECT),
-    ]),
-    schema: Type.Optional(
-      Type.Record(
-        Type.String(),
-        Type.Union([
-          Type.Literal(VariableType.STRING),
-          Type.Literal(VariableType.NUMBER),
-          Type.Literal(VariableType.BOOLEAN),
-        ]),
-      ),
-    ),
+    schema: JSONSchemaData,
   },
   strict,
 );

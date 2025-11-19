@@ -31,6 +31,7 @@ export interface CustomRequestBodyField {
 export enum ApiKeyType {
   GEMINI_API_KEY = 'GEMINI',
   OPENAI_API_KEY = 'OPENAI',
+  CLAUDE_API_KEY = 'CLAUDE',
   OLLAMA_CUSTOM_URL = 'OLLAMA',
 }
 

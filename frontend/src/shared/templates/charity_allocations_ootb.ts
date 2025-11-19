@@ -1,4 +1,6 @@
 import {
+  ApiKeyType,
+  AgentModelSettings,
   createTextPromptItem,
   createChatStage,
   createDefaultStageContextPromptItem,
@@ -54,15 +56,16 @@ import {
 
 const EMOJIS = ['1️⃣', '2️⃣', '3️⃣'];
 
-export enum MediatorType {
-  NONE = 'None',
-  HABERMAS = 'Habermas',
-  DYNAMIC = 'Dynamic',
+export enum MediatorModelType {
+  GEMINI = 'Gemini',
+  CLAUDE = 'Claude',
+  OPENAI = 'OpenAI',
 }
 
-// Agent configuration for the template.
-const HABERMAS_MEDIATOR_ID = 'habermas-mediator-agent';
-const DYNAMIC_MEDIATOR_ID = 'dynamic-mediator-agent';
+// Agent configuration for the template, using model-specific IDs.
+const GEMINI_MEDIATOR_ID = 'gemini-mediator-agent';
+const CLAUDE_MEDIATOR_ID = 'claude-mediator-agent';
+const OPENAI_MEDIATOR_ID = 'openai-mediator-agent';
 
 const FAILURE_MODE_ENUMS = [
   'NoFailureModeDetected',
@@ -90,33 +93,8 @@ const SOLUTION_STRATEGY_ENUMS = [
   'PromptEngagementWithOthers',
 ];
 
-export interface CharityDebateConfig {
-  includeTos: boolean;
-  includeMediator: boolean;
-  includeInitialParticipantSurvey: boolean;
-  includeDiscussionEvaluation: boolean;
-  includeDebriefingAndFeedback: boolean;
-  includeMetaFeedback: boolean;
-  facilitatorConfigId: number;
-}
-
-export function createCharityDebateConfig(
-  config: Partial<CharityDebateConfig> = {},
-): CharityDebateConfig {
-  return {
-    includeTos: true,
-    includeMediator: true,
-    includeInitialParticipantSurvey: true,
-    includeDiscussionEvaluation: false,
-    includeDebriefingAndFeedback: true,
-    includeMetaFeedback: true,
-    facilitatorConfigId: 0,
-    ...config,
-  };
-}
-
-export const CHARITY_DEBATE_METADATA = createMetadataConfig({
-  name: 'Mediated Charity Debate (3 Rounds)',
+export const OOTB_CHARITY_DEBATE_METADATA = createMetadataConfig({
+  name: 'Out-of-the-box Mediated Charity Debate (3 Rounds)',
   publicName: 'Charity Allocation Debate',
   description:
     'A multi-round debate where participants discuss and vote on how to allocate a budget among several real-world charities, with different AI facilitators in each round.',
@@ -259,9 +237,9 @@ const CONSENSUS_TOS_STAGE = createTOSStage({
 const TEXT_MEDIATED_INFO = [
   'To help facilitate your discussion, an AI-based facilitator will join your conversation for one or more rounds.',
   'The conversational style of the AI-based facilitator will be different in each round it appears.',
-  '![AI facilitator](https://raw.githubusercontent.com/PAIR-code/deliberate-lab/refs/heads/main/frontend/assets/consensus/instructions2.png)',
+  '![AI facilitator](https://i.imgur.com/lnQVk8W.png)',
   'Here is an example of how this facilitation may look:',
-  '![AI transcript](https://raw.githubusercontent.com/PAIR-code/deliberate-lab/refs/heads/main/frontend/assets/consensus/instructions5.png)',
+  '![AI transcript](https://i.imgur.com/tFd4lxY.png)',
 ];
 
 const TEXT_INSTRUCTIONS = [
@@ -270,13 +248,13 @@ const TEXT_INSTRUCTIONS = [
   '2. *Discuss your choices with the group*. Share your reasoning with 2 other participants and try to reach a consensus. You will have **exactly 5 minutes** to discuss per round.',
   '3. *Privately update your allocation*. After the discussion, you can revise your initial allocation based on what you heard.',
   'Your goal is to work together to find the best way to split the funds.',
-  '![Instructions](https://raw.githubusercontent.com/PAIR-code/deliberate-lab/refs/heads/main/frontend/assets/consensus/instructions1.png)',
+  '![Instructions](https://i.imgur.com/YOTgSAi.png)',
 ];
 
 const TEXT_INSTRUCTIONS_2 = [
   'The charities in each round are real. After your final decision, we will donate a **fixed total amount** to these charities based on your group’s choices.',
   'If you were the only participant, your final allocation would directly determine how the donation is split.',
-  '![Donation example](https://raw.githubusercontent.com/PAIR-code/deliberate-lab/refs/heads/main/frontend/assets/consensus/instructions4.png)',
+  '![Donation example](https://i.imgur.com/6kHhHTg.png)',
   "However, you are part of a group of 3 participants. Your **group's allocation** is the **average** of everyone's final allocation in that round.",
 ];
 
@@ -285,7 +263,7 @@ const TEXT_INSTRUCTIONS_3 = [
   'For example, if everyone agrees on 🐶 50% / 🐱 30% / 🐹 20%, the consensus score is high (100). If your allocations are very different, the score will be lower.',
   'At the end of the study, all groups will be ranked by their consensus scores. **Groups with higher consensus will have more influence** over how the donation is split.',
   'In the example image, Group 1 had high consensus and favored 🐹 Hamsters. Group 3 had low consensus and favored 🐶 Dogs. Because Group 1 had a higher consensus score, their decisions will be prioritized: more money will go to 🐹 Hamsters than to 🐶 Dogs.',
-  '![Consensus example](https://raw.githubusercontent.com/PAIR-code/deliberate-lab/refs/heads/main/frontend/assets/consensus/instructions3.png)',
+  '![Consensus example](https://i.imgur.com/aPi5CkV.png)',
 ];
 
 const TEXT_INSTRUCTIONS_4 = [
@@ -343,42 +321,72 @@ export const TRANSFER_STAGE = createTransferStage({
   }),
 });
 
-export function getMediatorOrder(id: number): MediatorType[] {
-  const NONE = MediatorType.NONE;
-  const HABERMAS = MediatorType.HABERMAS;
-  const DYNAMIC = MediatorType.DYNAMIC;
+export function getOOTBMediatorOrder(id: number): MediatorModelType[] {
+  const GEMINI = MediatorModelType.GEMINI;
+  const CLAUDE = MediatorModelType.CLAUDE;
+  const OPENAI = MediatorModelType.OPENAI;
 
-  switch (id) {
+  switch (
+    id % 6 // Use modulo 6 for 3! = 6 permutations
+  ) {
     case 0:
-      return [NONE, HABERMAS, DYNAMIC];
+      return [GEMINI, CLAUDE, OPENAI];
     case 1:
-      return [NONE, DYNAMIC, HABERMAS];
+      return [GEMINI, OPENAI, CLAUDE];
     case 2:
-      return [HABERMAS, NONE, DYNAMIC];
+      return [CLAUDE, GEMINI, OPENAI];
     case 3:
-      return [HABERMAS, DYNAMIC, NONE];
+      return [CLAUDE, OPENAI, GEMINI];
     case 4:
-      return [DYNAMIC, NONE, HABERMAS];
+      return [OPENAI, GEMINI, CLAUDE];
     case 5:
-      return [DYNAMIC, HABERMAS, NONE];
+      return [OPENAI, CLAUDE, GEMINI];
     default:
-      return [NONE, HABERMAS, DYNAMIC];
+      return [GEMINI, CLAUDE, OPENAI];
   }
 }
 
-export function getCharityDebateTemplate(
+export interface CharityDebateConfig {
+  includeTos: boolean;
+  includeMediator: boolean;
+  includeInitialParticipantSurvey: boolean;
+  includeDiscussionEvaluation: boolean;
+  includeDebriefingAndFeedback: boolean;
+  includeMetaFeedback: boolean;
+  facilitatorConfigId: number;
+}
+
+export function createCharityDebateConfig(
+  config: Partial<CharityDebateConfig> = {},
+): CharityDebateConfig {
+  return {
+    includeTos: true,
+    includeMediator: true,
+    includeInitialParticipantSurvey: true,
+    includeDiscussionEvaluation: false,
+    includeDebriefingAndFeedback: true,
+    includeMetaFeedback: true,
+    facilitatorConfigId: 0,
+    ...config,
+  };
+}
+
+// Generates CharityDebate with "out of the box" mediators.
+export function getOOTBCharityDebateTemplate(
   config: CharityDebateConfig,
 ): ExperimentTemplate {
   const stages: StageConfig[] = [];
   const variableTemplates: VariableConfig[] = [
     CHARITY_RANDOM_PERMUTATION_CONFIG,
   ];
-  const habermasStageIds: string[] = [];
-  const dynamicStageIds: string[] = [];
+  const geminiStageIds: string[] = [];
+  const claudeStageIds: string[] = [];
+  const openaiStageIds: string[] = [];
   const agentMediators: AgentMediatorTemplate[] = [];
 
-  let habermasRound: number | undefined;
-  let dynamicRound: number | undefined;
+  let geminiRound: number | undefined;
+  let claudeRound: number | undefined;
+  let openaiRound: number | undefined;
 
   // Tutorial stage.
   stages.push(createTutorialInfoStage());
@@ -408,7 +416,7 @@ export function getCharityDebateTemplate(
     ['charity_7', 'charity_8', 'charity_9'],
   ];
 
-  const roundMediatorTypes = getMediatorOrder(
+  const roundMediatorTypes = getOOTBMediatorOrder(
     Number(config.facilitatorConfigId),
   );
   const numRounds = Math.min(
@@ -435,42 +443,37 @@ export function getCharityDebateTemplate(
       ),
     );
 
-    let discussionStage: StageConfig;
-    let isMediatedRound = false;
+    const isMediatedRound = true; // Every round is mediated in this new design
 
-    if (config.includeMediator && mediatorType !== MediatorType.NONE) {
-      isMediatedRound = true;
-      let mediatorAgentId: string;
-      let mediatorFriendlyName: string;
+    let mediatorAgentId: string;
+    let mediatorFriendlyName: string;
 
-      if (mediatorType === MediatorType.HABERMAS) {
-        mediatorAgentId = HABERMAS_MEDIATOR_ID;
-        mediatorFriendlyName = 'Habermas Mediator';
-        habermasStageIds.push(discussionStageId);
-        habermasRound = roundNum;
-      } else {
-        mediatorAgentId = DYNAMIC_MEDIATOR_ID;
-        mediatorFriendlyName = 'Dynamic Mediator';
-        dynamicStageIds.push(discussionStageId);
-        dynamicRound = roundNum;
-      }
-
-      discussionStage = createDiscussionStageWithMediator(
-        discussionStageId,
-        `${EMOJIS[roundNum - 1]} Round ${roundNum}: Discussion`,
-        setting,
-        {
-          persona: {id: mediatorAgentId, name: mediatorFriendlyName},
-        } as AgentMediatorTemplate,
-      );
+    if (mediatorType === MediatorModelType.GEMINI) {
+      mediatorAgentId = GEMINI_MEDIATOR_ID;
+      mediatorFriendlyName = 'Gemini Mediator';
+      geminiStageIds.push(discussionStageId);
+      geminiRound = roundNum;
+    } else if (mediatorType === MediatorModelType.CLAUDE) {
+      mediatorAgentId = CLAUDE_MEDIATOR_ID;
+      mediatorFriendlyName = 'Claude Mediator';
+      claudeStageIds.push(discussionStageId);
+      claudeRound = roundNum;
     } else {
-      discussionStage = createAllocationDiscussionStage(
-        discussionStageId,
-        `${EMOJIS[roundNum - 1]} Round ${roundNum}: Discussion`,
-        setting,
-        undefined,
-      );
+      // OpenAI
+      mediatorAgentId = OPENAI_MEDIATOR_ID;
+      mediatorFriendlyName = 'OpenAI Mediator';
+      openaiStageIds.push(discussionStageId);
+      openaiRound = roundNum;
     }
+
+    const discussionStage = createDiscussionStageWithMediator(
+      discussionStageId,
+      `${EMOJIS[roundNum - 1]} Round ${roundNum}: Discussion`,
+      setting,
+      {
+        persona: {id: mediatorAgentId, name: mediatorFriendlyName},
+      } as AgentMediatorTemplate,
+    );
 
     stages.push(discussionStage);
 
@@ -485,43 +488,38 @@ export function getCharityDebateTemplate(
     );
 
     stages.push(createRoundOutcomeSurveyStage(roundNum, isMediatedRound));
-
-    if (isMediatedRound) {
-      stages.push(createPerMediatorEvaluationStage(roundNum));
-    }
+    stages.push(createPerMediatorEvaluationStage(roundNum));
   }
 
   stages.push(createAllocationRevealStage());
   if (config.includeDiscussionEvaluation)
     stages.push(createDiscussionEvaluationStage());
 
-  if (config.includeMediator) {
-    let habermasOption: {id: string; name: string} | undefined;
-    let dynamicOption: {id: string; name: string} | undefined;
+  const mediatorOptions = [
+    {
+      round: geminiRound,
+      id: GEMINI_MEDIATOR_ID,
+      name: `Round ${geminiRound} Mediator`,
+    },
+    {
+      round: claudeRound,
+      id: CLAUDE_MEDIATOR_ID,
+      name: `Round ${claudeRound} Mediator`,
+    },
+    {
+      round: openaiRound,
+      id: OPENAI_MEDIATOR_ID,
+      name: `Round ${openaiRound} Mediator`,
+    },
+  ].sort((a, b) => (a.round ?? 0) - (b.round ?? 0));
 
-    if (habermasRound) {
-      habermasOption = {
-        id: HABERMAS_MEDIATOR_ID,
-        name: `Round ${habermasRound} Mediator`,
-      };
-    }
-    if (dynamicRound) {
-      dynamicOption = {
-        id: DYNAMIC_MEDIATOR_ID,
-        name: `Round ${dynamicRound} Mediator`,
-      };
-    }
-
-    if (habermasRound! < dynamicRound!) {
-      stages.push(
-        createFinalMediatorPreferenceStage(habermasOption, dynamicOption),
-      );
-    } else {
-      stages.push(
-        createFinalMediatorPreferenceStage(dynamicOption, habermasOption),
-      );
-    }
-  }
+  stages.push(
+    createFinalMediatorPreferenceStage(
+      mediatorOptions[0],
+      mediatorOptions[1],
+      mediatorOptions[2],
+    ),
+  );
 
   if (config.includeDebriefingAndFeedback) {
     stages.push(createDebriefingStage());
@@ -530,16 +528,19 @@ export function getCharityDebateTemplate(
 
   stages.push(createExperimentEndInfoStage());
 
-  if (habermasStageIds.length > 0) {
-    agentMediators.push(createHabermasMediatorTemplate(habermasStageIds));
+  if (geminiStageIds.length > 0) {
+    agentMediators.push(createGeminiMediatorTemplate(geminiStageIds));
   }
-  if (dynamicStageIds.length > 0) {
-    agentMediators.push(createDynamicMediatorTemplate(dynamicStageIds));
+  if (claudeStageIds.length > 0) {
+    agentMediators.push(createClaudeMediatorTemplate(claudeStageIds));
+  }
+  if (openaiStageIds.length > 0) {
+    agentMediators.push(createOpenAIMediatorTemplate(openaiStageIds));
   }
 
   return createExperimentTemplate({
     experiment: createExperimentConfig(stages, {
-      metadata: CHARITY_DEBATE_METADATA,
+      metadata: OOTB_CHARITY_DEBATE_METADATA,
       variableConfigs: variableTemplates,
     }),
     stageConfigs: stages,
@@ -573,7 +574,7 @@ export function createAllocationRevealStage(): StageConfig {
     name: '📊 Final allocation results',
     descriptions: createStageTextConfig({
       primaryText:
-        'Here are the final results of your group’s allocations across all three rounds. The higher the score, the more influence your group will have in directing the donations.\n\n‼️ Click `Next Stage` after viewing the final results to continue with the experiment.',
+        'Here are the final results of your group’s allocations across all three rounds. The higher the score, the more influence your group will have in directing the donations.',
     }),
     items: [
       createMultiAssetAllocationRevealItem({
@@ -630,7 +631,7 @@ function createCharityComprehensionStage(): StageConfig {
     name: '💯 Comprehension check',
     descriptions: createStageTextConfig({
       primaryText:
-        'Please answer the following questions to ensure the instructions are clear. You can click back to previous stages to review the instructions if needed.',
+        'Please answer the following questions to ensure the instructions are clear.',
     }),
     questions: [
       createMultipleChoiceComprehensionQuestion(
@@ -989,57 +990,6 @@ function createDiscussionEvaluationStage(): StageConfig {
   });
 }
 
-function createFinalMediatorPreferenceStage(
-  mediatorOption1?: {id: string; name: string},
-  mediatorOption2?: {id: string; name: string},
-): StageConfig {
-  const preferenceOptions = [];
-
-  if (mediatorOption1) {
-    preferenceOptions.push({
-      id: mediatorOption1.id,
-      text: mediatorOption1.name,
-      imageId: '',
-    });
-  }
-
-  if (mediatorOption2) {
-    preferenceOptions.push({
-      id: mediatorOption2.id,
-      text: mediatorOption2.name,
-      imageId: '',
-    });
-  }
-  const allOptions = [
-    {id: 'none', text: 'None', imageId: ''},
-    ...preferenceOptions,
-  ];
-
-  return createSurveyStage({
-    name: '❓ Survey on AI facilitators',
-    descriptions: createStageTextConfig({
-      primaryText:
-        'Think back to the three conversations you engaged in today: in the first, second, and third rounds, there were different AI facilitators or none at all. Please answer the following questions about your preferences regarding these facilitators.',
-    }),
-    questions: [
-      createMultipleChoiceSurveyQuestion({
-        questionTitle:
-          'If you were to have another similar group discussion, which facilitator style would you prefer?',
-        options: allOptions,
-      }),
-      createTextSurveyQuestion({
-        questionTitle:
-          'Please explain your preference and experiences with the AI facilitators.',
-      }),
-      createScaleSurveyQuestion({
-        questionTitle:
-          'Please rate how likely you would be to include an AI facilitator in future discussions.',
-        ...LIKERT_SCALE_PROPS,
-      }),
-    ],
-  });
-}
-
 function createDebriefingStage(): StageConfig {
   return createInfoStage({
     name: '📃 Debriefing',
@@ -1111,7 +1061,7 @@ function createMetaFeedbackStage(): StageConfig {
   });
 }
 
-function createStandardMediatorSchema(): StructuredOutputSchema {
+export function createDefaultMediatorSchema(): StructuredOutputSchema {
   return {
     type: StructuredOutputDataType.OBJECT,
     properties: [
@@ -1127,7 +1077,7 @@ function createStandardMediatorSchema(): StructuredOutputSchema {
         name: DEFAULT_SHOULD_RESPOND_FIELD,
         schema: {
           type: StructuredOutputDataType.BOOLEAN,
-          description: `Whether you should respond in the chat. Respond FALSE if no new participant messages have been posted since your last intervention, or if the group is making progress on its own. Respond TRUE only if the facilitation guide indicates this is an appropriate point for you to intervene. If unsure, respond FALSE. Speak rarely; wait for at least a few participant messages (~3-5 turnsSinceLastIntervention) before speaking again, unless there is clear confusion or misunderstanding. Minimize your responses; prioritize fewer but high-leverage interventions.`,
+          description: `Whether you should respond in the chat. Respond FALSE if no new participant messages have been posted since your last intervention, or if the group is making progress on its own. Speak rarely; wait for at least a few participant messages (~3-5 turns) before speaking again.`,
         },
       },
       {
@@ -1145,66 +1095,17 @@ function createStandardMediatorSchema(): StructuredOutputSchema {
             'Whether or not you have completed your goals and are ready to end the conversation.',
         },
       },
-      {
-        name: 'turnsSinceLastIntervention',
-        schema: {
-          type: StructuredOutputDataType.INTEGER,
-          description:
-            'The number of participant messages that have occurred since your last facilitator message. Count only participant utterances, not your own.',
-        },
-      },
-      {
-        name: 'consensusLevel',
-        schema: {
-          type: StructuredOutputDataType.STRING,
-          description:
-            'How aligned the group’s proposed allocations are across the three charities. LOW = allocations differ significantly or preferences are unclear. MEDIUM = participants show partial alignment (e.g., similar charity priorities or narrowing ranges) but numbers are not yet aligned. HIGH = participants propose similar or converging allocations, with only small % differences.',
-        },
-      },
     ],
   };
 }
 
-function createDynamicMediatorSchema(): StructuredOutputSchema {
-  const standardSchema = createStandardMediatorSchema();
-
-  const failureModeField = {
-    name: 'observedFailureMode',
-    schema: {
-      type: StructuredOutputDataType.ENUM,
-      description:
-        'Analyze the conversation and select the single most prominent failure mode. If none are present, you MUST choose "NoFailureModeDetected".',
-      enumItems: FAILURE_MODE_ENUMS,
-    },
-  };
-
-  const solutionStrategyField = {
-    name: 'proposedSolution',
-    schema: {
-      type: StructuredOutputDataType.ENUM,
-      description: `Based on your 'observedFailureMode' diagnosis, select the most appropriate solution strategy. If you detected no failure mode, you MUST choose "NoSolutionNeeded".`,
-      enumItems: SOLUTION_STRATEGY_ENUMS,
-    },
-  };
-
-  standardSchema.properties!.push(failureModeField, solutionStrategyField);
-  const shouldRespondProperty = standardSchema.properties!.find(
-    (prop) => prop.name === DEFAULT_SHOULD_RESPOND_FIELD,
-  );
-
-  if (shouldRespondProperty) {
-    shouldRespondProperty.schema.description = `Whether or not to respond. Should be FALSE if nothing has been said by participants, or if we have responded within the last 2 messages. If >2 messages have passed, AND if failureMode detects some failure mode, should be TRUE.`;
-  }
-
-  return standardSchema;
-}
-
-function createHabermasMediatorPromptConfig(
+function createDefaultMediatorPromptConfig(
   roundId: string,
+  modelSettings: AgentModelSettings,
 ): MediatorPromptConfig {
   const structuredOutputConfig = createStructuredOutputConfig({
     enabled: true,
-    schema: createStandardMediatorSchema(),
+    schema: createDefaultMediatorSchema(),
     appendToPrompt: true,
   });
 
@@ -1216,44 +1117,7 @@ function createHabermasMediatorPromptConfig(
 
   const generationConfig = createModelGenerationConfig();
 
-  const habermasInstruction = `
-You are a neutral facilitator supporting a group discussion about how to allocate donations: you accomplish this through summarization-style facilitation, summarizing, surfacing conversation structure, and lightly proposing process steps.
-You do not suggest allocation values or introduce ideas of your own.
-
-Your job is to support clarity and movement toward a shared, specific proportional split across the three charities (e.g., 40/30/30). Consensus means one of the following:
-* The group converges on one concrete allocation split, or
-* The group clearly articulates a very narrow range/structure that can be finalized easily (e.g., “Something like 40/35/25 vs 35/40/25 is fine”), or
-* The group explicitly recognizes stable disagreement, understands each other's views, and chooses not to converge further.
-
-## 📝 How to speak:
-
-Here are some core behaviors and examples of how to respond.
-
-* Summarize viewpoints when the group needs shared clarity — not after every comment. Use summaries to reset, bridge, or mark progress, not to repeat obvious statements. Do not summarize if only 1-2 short opinions have been shared, it was obvious what was said, the group is already responding to each other, it would interrupt momentum, or your summary would add no new clarity.
-  * Example response: "We seem to have two priorities emerging: urgent humanitarian support and long-term environmental protection."
-* Surface shared themes or contrasts
-  * Example response: “Seems like fairness and effectiveness matter to everyone"
-* Name contrasts / tension neutrally and simply
-  * Example response: “From the two proposed allocations, we have a pull between concentrating resources vs spreading them for balance." 
-* Reflect where alignment may exist (light touch:
-  * Example response: “There’s some overlap in your viewpoints: it seems like everyone wants to help people over planet." (Subtle — invites bridging without prescribing.)
-* Highlight key decision points and pivots
-  * Example response: "Deciding whether to prioritize A or B seems to hinge on whether urgency or long-term benefit should carry more weight."
-* Invite clarification after summarization
-  * Example response: "Does this summare feel right to folks?" 
-* Name possible next step **process options**, not content
-  * Example response: "Would it help to see if there’s agreement on the main priority first — urgency, fairness, or long-term impact?" (This is also summarizing priorities that have been mentioned by users)
-* Gently guide toward structure and convergence through summarizaiton
-  * Example response: "If helpful, we could test whether there’s a midpoint or blended approach that reflects your shared values of A, B and C."
-  
-Avoid suggesting allocations, evaluating ideas, taking sides, or adding new arguments or criteria.
-
-
-* Be concise: 1–3 short sentences max.
-* Be neutral: do not introduce new ideas or preferences.
-* Summarize fairly: include all major viewpoints without evaluation.
-* Use summaries to support and steer clarity and movement, not to steer content
-  `;
+  const defaultInstruction = `As the conversation facilitator, help the group explore how they want to split the donation across the three charities and move towards group consensus on an exact allocation spread (for example, 20%/40%/40%).`;
 
   return createChatPromptConfig(roundId, StageKind.CHAT, {
     prompt: [
@@ -1263,150 +1127,35 @@ Avoid suggesting allocations, evaluating ideas, taking sides, or adding new argu
       {type: PromptItemType.PROFILE_INFO} as ProfileInfoPromptItem,
       {type: PromptItemType.PROFILE_CONTEXT} as ProfileContextPromptItem,
       createDefaultStageContextPromptItem(roundId),
-      createTextPromptItem(habermasInstruction),
+      createTextPromptItem(defaultInstruction),
     ],
     structuredOutputConfig,
     chatSettings,
     generationConfig,
+    // Note: modelSettings will be applied at the persona level, not here.
   });
 }
 
-function createDynamicMediatorPromptConfig(
-  roundId: string,
-): MediatorPromptConfig {
-  const structuredOutputConfig = createStructuredOutputConfig({
-    enabled: true,
-    schema: createDynamicMediatorSchema(),
-    appendToPrompt: true,
-  });
-
-  const chatSettings = createAgentChatSettings({
-    initialMessage: '',
-    minMessagesBeforeResponding: 0,
-    maxResponses: 100,
-  });
-
-  const generationConfig = createModelGenerationConfig();
-
-  const dynamicInstruction = `You are a neutral facilitator supporting a group discussion about how to allocate donations. Participants are anonymous animal avatars. Your job is to help them achieve conesnsus on through addressing failure modes in the discussion. You do not lead, persuade, or introduce ideas.
-
-  You are a neutral facilitator supporting a group discussion about how to allocate donations: you accomplish this through targeted facilitation, addressing failure modes as they arise in the conversation. You do not suggest allocation values or introduce ideas of your own.
-
-  Your job is to support clarity and movement toward a shared, specific proportional split across the three charities (e.g., 40/30/30). Consensus means one of the following:
-  * The group converges on one concrete allocation split, or
-  * The group clearly articulates a very narrow range/structure that can be finalized easily (e.g., “Something like 40/35/25 vs 35/40/25 is fine”), or
-  * The group explicitly recognizes stable disagreement, understands each other's views, and chooses not to converge further.
-  
-
-  ## When to speak
-
-  Intervene only when observing one of the failure modes below:
-
-  ### LowEffortOrLowEngagement
-  * Symptons: minimal participation, one-word answers, low / apathetic group energy
-  * Examples: "50% to Charity B." "Sure." "IDK." (Standalone.)
-  * Intervention strategy and examples: spark brief reasoning or values without pressure
-    * “What’s one thing that made you lean that way?"
-  
-  ### OffTopicDrift
-  * Symptoms: drifting into side chat or into adjacent topics that do not move the group towards consensus, forgetting the goal of choosing an allocation across the three charities. Light social comments or brief tangents are fine, but if the group stays off-task for too long, or the tangent takes over, it's drift.
-  * Examples:
-    * “lol what's your fav animal?"
-    * Deep dive into philosophy of giving / personal ethics without allocation discussion: “Is charity even effective as a system?" “I saw a podcast saying international aid is inefficient."
-  * Intervention strategy and examples: let small tangents breathe for a couple turns, then gently anchor back to decision-making if they continue.
-    * “Interesting point — how would you reflect that in the allocation?"
-    * “We can return to that idea, but for now, what mix are you leaning toward?"
-
-  ### UnevenParticipation
-  * Symptoms: one or two people dominate while the third stays quiet; the same two rotate turns; someone stays silent through a mini-exchange. Early back-and-forth is normal — give a few turns at the start. Only nudge if the imbalance persists.
-  * Examples:
-    * Two participants go back-and-forth for 3–5 turns
-    * One participant posts multiple turns in a row
-    * The third participant hasn’t spoken since the start or fell out after an early comment
-  * Intervention strategy and examples: wait a bit; if the pattern continues and the group isn't rotating naturally, gently open space
-    * “Curious to hear Z’s take too — anything stand out to you?"
-    * “Let’s pause to make sure everyone has room to weigh in here."
-
-  ### NoJustificationOrPrematureConsensus
-  * Symptoms: the group appears to agree quickly without explaining why; decisions settle fast to avoid friction; polite alignment but no shared reasoning. Brief agreement is fine — only step in if they “agree" without grounding or checking understanding.
-  * Examples:
-    * “Yeah that works."
-    * “Okay 50/50 then."
-    * “Sure, let’s just do that." (with no explanation or reflection)
-  * Intervention strategy and examples: gently surface one reason, confirm real alignment, or invite a light alternative check
-    * “Anyone see a trade-off or want to add a different angle?"
-    * "If we looked at this through ‘most urgent need,’ would the split change?" (Alternative framing)
-    * “If we had to give just a little more to one charity, which one and why?"
-
-  ### BinaryStuck
-  * Symptoms: the group locks into two preferred splits or priorities (e.g., 40/30 vs. 30/40), treats it as an either-or choice, or each person insists one charity “should get the most." Some back-and-forth is normal — only intervene if they stay stuck in these two positions and don’t explore middle ground, hybrids, or tiny adjustments.
-  * Examples:
-    * “Charity A clearly deserves the biggest share."
-    * “No, B should definitely get the most."
-    * “We already covered that — A needs more." (no exploration beyond two fixed stances)
-  * Intervention strategy and examples: highlight the spectrum, invite small-step thinking, and connect to shared goals / compromise
-    * “Sounds like both A and B matter a lot here — what’s a way to reflect both priorities?"
-    * “If you had to land somewhere between the two options, what would feel fair?"
-  
-  ### SelfContainedReasoningOnly
-  * Symptoms: participants share reasoning but do not engage with each other; three parallel monologues; ideas sit side-by-side without acknowledgement. Initial independent thinking is expected — intervene only after a few turns if no one references others.
-  * Examples:
-    * "I pick A because local impact."
-    * "I went with 30 / 40 / 40." (no response to each other)
-  * Intervention strategy and examples: invite building on or reacting to each other’s ideas; help surface connections if they exist.
-    * “A, did anything someone else said shape your thinking?"
-    “Anyone want to respond to or build on another idea here?"
-    “It sounds like B and C share a focus on fairness/impact — worth exploring that overlap?"
-
-  ## Step rules
-  1. Identify the most likely observedFailureMode:
-    * LowEffortOrLowEngagement
-    * OffTopicDrift
-    * UnevenParticipation
-    * NoJustificationOrPrematureConsensus
-    * BinaryStuck
-    * SelfContainedReasoningOnly
-    
-    If none of these are appropriate or it is too early in the conversation, the failure mode is NoFailureModeDetected.
-  2. Decide shouldRespond. This is true only if a failure mode is active and there is a high-leverage response or nudge that can address the failure mode.  If unsure, stay silent and respond false.
-
-  3. Update the response with your intervention, stemming from the guide above.
-    * Be concise: 1–3 short sentences max.
-    * Be neutral: do not introduce new ideas or preferences.
-    
-    If shouldRespond is false, response = "".`;
-
-  return createChatPromptConfig(roundId, StageKind.CHAT, {
-    prompt: [
-      createTextPromptItem(
-        'You are participating in an experiment with the following online profile:',
-      ),
-      {type: PromptItemType.PROFILE_INFO} as ProfileInfoPromptItem,
-      {type: PromptItemType.PROFILE_CONTEXT} as ProfileContextPromptItem,
-      createDefaultStageContextPromptItem(roundId),
-      createTextPromptItem(dynamicInstruction),
-    ],
-    structuredOutputConfig,
-    chatSettings,
-    generationConfig,
-  });
-}
-
-function createHabermasMediatorTemplate(
+// New mediator template for Gemini
+function createGeminiMediatorTemplate(
   stageIds: string[],
 ): AgentMediatorTemplate {
   const promptMap: {[key: string]: MediatorPromptConfig} = {};
+  const modelSettings: AgentModelSettings = {
+    apiType: ApiKeyType.GEMINI_API_KEY,
+    modelName: 'gemini-2.5-flash',
+  };
+
   for (const id of stageIds) {
-    promptMap[id] = createHabermasMediatorPromptConfig(id);
+    promptMap[id] = createDefaultMediatorPromptConfig(id, modelSettings);
   }
 
   return {
     persona: createAgentMediatorPersonaConfig({
-      id: HABERMAS_MEDIATOR_ID,
-      name: 'Habermas Faciliator',
-      description:
-        'An AI facilitator focused on promoting consensus and summarization.',
-      defaultModelSettings: DEFAULT_AGENT_MODEL_SETTINGS,
+      id: GEMINI_MEDIATOR_ID,
+      name: 'Gemini Facilitator',
+      description: 'An AI facilitator powered by Google Gemini.',
+      defaultModelSettings: modelSettings,
       defaultProfile: createParticipantProfileBase({
         name: 'Facilitator',
         avatar: '🤖',
@@ -1416,21 +1165,25 @@ function createHabermasMediatorTemplate(
   };
 }
 
-function createDynamicMediatorTemplate(
+function createClaudeMediatorTemplate(
   stageIds: string[],
 ): AgentMediatorTemplate {
   const promptMap: {[key: string]: MediatorPromptConfig} = {};
+  const modelSettings: AgentModelSettings = {
+    apiType: ApiKeyType.CLAUDE_API_KEY,
+    modelName: 'claude-4-5-haiku-latest',
+  };
+
   for (const id of stageIds) {
-    promptMap[id] = createDynamicMediatorPromptConfig(id);
+    promptMap[id] = createDefaultMediatorPromptConfig(id, modelSettings);
   }
 
   return {
     persona: createAgentMediatorPersonaConfig({
-      id: DYNAMIC_MEDIATOR_ID,
-      name: 'Dynamic Faciliator',
-      description:
-        'An AI facilitator focused on counteracting specific negative group dynamics.',
-      defaultModelSettings: DEFAULT_AGENT_MODEL_SETTINGS,
+      id: CLAUDE_MEDIATOR_ID,
+      name: 'Claude Facilitator',
+      description: 'An AI facilitator powered by Anthropic Claude.',
+      defaultModelSettings: modelSettings,
       defaultProfile: createParticipantProfileBase({
         name: 'Facilitator',
         avatar: '🤖',
@@ -1438,4 +1191,88 @@ function createDynamicMediatorTemplate(
     }),
     promptMap: promptMap,
   };
+}
+
+function createOpenAIMediatorTemplate(
+  stageIds: string[],
+): AgentMediatorTemplate {
+  const promptMap: {[key: string]: MediatorPromptConfig} = {};
+  const modelSettings: AgentModelSettings = {
+    apiType: ApiKeyType.OPENAI_API_KEY,
+    modelName: 'gpt-5-mini',
+  };
+
+  for (const id of stageIds) {
+    promptMap[id] = createDefaultMediatorPromptConfig(id, modelSettings);
+  }
+
+  return {
+    persona: createAgentMediatorPersonaConfig({
+      id: OPENAI_MEDIATOR_ID,
+      name: 'OpenAI Facilitator',
+      description: 'An AI facilitator powered by OpenAI GPT.',
+      defaultModelSettings: modelSettings,
+      defaultProfile: createParticipantProfileBase({
+        name: 'Facilitator',
+        avatar: '🤖',
+      }),
+    }),
+    promptMap: promptMap,
+  };
+}
+
+function createFinalMediatorPreferenceStage(
+  mediatorOption1?: {id: string; name: string},
+  mediatorOption2?: {id: string; name: string},
+  mediatorOption3?: {id: string; name: string},
+): StageConfig {
+  const preferenceOptions = [];
+
+  if (mediatorOption1) {
+    preferenceOptions.push({
+      id: mediatorOption1.id,
+      text: mediatorOption1.name,
+      imageId: '',
+    });
+  }
+
+  if (mediatorOption2) {
+    preferenceOptions.push({
+      id: mediatorOption2.id,
+      text: mediatorOption2.name,
+      imageId: '',
+    });
+  }
+
+  if (mediatorOption3) {
+    preferenceOptions.push({
+      id: mediatorOption3.id,
+      text: mediatorOption3.name,
+      imageId: '',
+    });
+  }
+
+  return createSurveyStage({
+    name: '❓ Survey on AI facilitators',
+    descriptions: createStageTextConfig({
+      primaryText:
+        'Think back to the three conversations you engaged in today. Each round featured a different AI facilitator. Please answer the following questions about your preferences regarding these facilitators.',
+    }),
+    questions: [
+      createMultipleChoiceSurveyQuestion({
+        questionTitle:
+          'If you were to have another similar group discussion, which facilitator style would you prefer?',
+        options: preferenceOptions,
+      }),
+      createTextSurveyQuestion({
+        questionTitle:
+          'Please explain your preference and experiences with the AI facilitators.',
+      }),
+      createScaleSurveyQuestion({
+        questionTitle:
+          'Please rate how likely you would be to include an AI facilitator in future discussions.',
+        ...LIKERT_SCALE_PROPS,
+      }),
+    ],
+  });
 }

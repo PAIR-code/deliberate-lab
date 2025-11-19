@@ -51,6 +51,10 @@ import {
   CHARITY_DEBATE_METADATA,
 } from '../../shared/templates/charity_allocations';
 import {
+  getOOTBCharityDebateTemplate,
+  OOTB_CHARITY_DEBATE_METADATA,
+} from '../../shared/templates/charity_allocations_ootb';
+import {
   CONSENSUS_METADATA,
   getConsensusTopicTemplate,
 } from '../../shared/templates/debate_topics';
@@ -183,6 +187,7 @@ export class StageBuilderDialog extends MobxLitElement {
         ${this.renderConditionalSurveyTemplateCard()}
         ${this.renderPolicyTemplateCard()} ${this.renderConsensusDebateCard()}
         ${this.renderCharityDebateTemplateCard()}
+        ${this.renderOOTBCharityDebateTemplateCard()}
         ${this.renderAgentIntegrationCard()}
       </div>
     `;
@@ -724,6 +729,57 @@ export class StageBuilderDialog extends MobxLitElement {
       <div class="card large-card">
         <div class="title">${CHARITY_DEBATE_METADATA.name}</div>
         <div>${CHARITY_DEBATE_METADATA.description}</div>
+        <div class="template-controls">
+          <div class="subtitle">Configure Experiment Stages</div>
+
+          ${this.renderCharityCheckbox(
+            'includeTos',
+            'Include Terms of Service',
+          )}
+          ${this.renderCharityCheckbox(
+            'includeMediator',
+            '[Conditional] Include AI Mediator & Surveys',
+          )}
+          ${this.renderCharityCheckbox(
+            'includeInitialParticipantSurvey',
+            'Include Initial Participant Survey',
+          )}
+          ${this.renderCharityCheckbox(
+            'includeDiscussionEvaluation',
+            '[Optional] Include Discussion Evaluation',
+          )}
+          ${this.renderCharityCheckbox(
+            'includeDebriefingAndFeedback',
+            '[Optional] Include Debriefing & Experiment Feedback',
+          )}
+          ${this.renderCharityCheckbox(
+            'includeMetaFeedback',
+            '[Optional] Include Meta-Feedback Survey',
+          )}
+          ${this.renderFacilitatorTextbox(
+            'facilitatorConfigId',
+            '[Optional] Choose from a preset faciliator order (default is None, Habermas, Dynamic mediators). ',
+          )}
+        </div>
+
+        <pr-button @click=${loadTemplate}> Load Template </pr-button>
+      </div>
+    `;
+  }
+
+  private renderOOTBCharityDebateTemplateCard() {
+    const loadTemplate = () => {
+      this.addTemplate(getOOTBCharityDebateTemplate(this.charityDebateConfig));
+    };
+
+    const onFacilitatorConfigInput = (e: Event) => {
+      this.consensusTopics = (e.target as HTMLInputElement).value;
+    };
+
+    return html`
+      <div class="card large-card">
+        <div class="title">${OOTB_CHARITY_DEBATE_METADATA.name}</div>
+        <div>${OOTB_CHARITY_DEBATE_METADATA.description}</div>
         <div class="template-controls">
           <div class="subtitle">Configure Experiment Stages</div>
 
