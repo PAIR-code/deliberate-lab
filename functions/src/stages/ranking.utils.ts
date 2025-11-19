@@ -59,7 +59,12 @@ export async function addParticipantAnswerToRankingStagePublicData(
     if (isLRRankingStagePublicData(publicStageData)) {
       // We only trigger the leader lottery when reaching the special
       // ranking "instruction" stages for each round.
-      if (stage.id === 'r1_instructions' || stage.id === 'r2_instructions') {
+      //if (stage.id === 'r1_instructions' || stage.id === 'r2_instructions') {
+      if (
+        (stage.id === 'r1_instructions' || stage.id === 'r2_instructions') &&
+        Object.keys(publicStageData.participantAnswerMap || {}).length === 0 &&
+        !publicStageData.winnerId // ensure lottery not run yet
+      ) {
         console.log(`[LR] Triggering leader lottery at ${stage.id}`);
 
         // Determine which "apply" stage we are in (Round 1 or Round 2)
