@@ -22,7 +22,6 @@ export const COMPONENT_COLORS = [
   'neutral',
   'error',
   'success',
-  'on-error-container',
 ] as const;
 
 /** Color of component. */
