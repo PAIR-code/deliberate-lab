@@ -37,6 +37,8 @@ Otherwise, do not respond.`;
 export const DEFAULT_AGENT_PRIVATE_MEDIATOR_CHAT_PROMPT = `You are an agent who is chatting with a participant. Your task is to ensure that the participant's questions are answered.`;
 export const DEFAULT_AGENT_PARTICIPANT_CHAT_PROMPT = `Decide if your human persona would respond at this point in the live conversation. If yes, give a natural response that fits the persona and any earlier style rules. If no style rules exist, default to a short 1–2 sentence online-style message. If they would not respond, stay silent. Stay in character.`;
 
+export const CHAT_PROMPT_TRANSCRIPT_EXPLANATION = `Below is the transcript of your discussion. Messages are shown in chronological order; new messages appear at the bottom. Each message / turn follows the format: (HH:MM) Name: message.`;
+
 // ************************************************************************* //
 // PROMPTS                                                                   //
 // ************************************************************************* //
@@ -49,15 +51,7 @@ export function getChatPromptMessageHistory(
   if (messages.length === 0) {
     return `No messages yet.`;
   }
-
-  const description = `
-Below is the transcript of your discussion.
-Each message is displayed in chronological order, with the most recent message at the bottom. Each entry follows this format:
-
-(HH:MM) ParticipantName: Message content
-  `;
-
-  return `${description.trim()}\n\n${buildChatHistoryForPrompt(messages, stage)}`;
+  return `${CHAT_PROMPT_TRANSCRIPT_EXPLANATION}\n\n${buildChatHistoryForPrompt(messages, stage)}`;
 }
 
 /** Convert chat message to prompt format. */
