@@ -2,8 +2,8 @@ import '../../pair-components/textarea';
 import '../../pair-components/tooltip';
 
 import {MobxLitElement} from '@adobe/lit-mobx';
-import {CSSResultGroup, html, nothing} from 'lit';
-import {customElement, property, state} from 'lit/decorators.js';
+import {CSSResultGroup, html} from 'lit';
+import {customElement} from 'lit/decorators.js';
 
 import {core} from '../../core/core';
 import {ExperimentEditor} from '../../services/experiment.editor';
@@ -11,8 +11,6 @@ import {ExperimentEditor} from '../../services/experiment.editor';
 import {
   SeedStrategy,
   VariableConfig,
-  VariableConfigType,
-  VariableType,
   createRandomPermutationVariableConfig,
 } from '@deliberation-lab/utils';
 
@@ -117,16 +115,16 @@ export class VariableEditor extends MobxLitElement {
           </div>
           <div class="divider"></div>
           <div class="title">Type</div>
-          <select .value=${variableConfig.variableType}>
+          <select .value=${variableConfig.schema?.type}>
             <option
-              value="${VariableType.STRING}"
-              ?selected=${VariableType.STRING === variableConfig.variableType}
+              value="string"
+              ?selected=${'string' === variableConfig.schema?.type}
             >
               string
             </option>
             <option
-              value="${VariableType.STRING}"
-              ?selected=${VariableType.OBJECT === variableConfig.variableType}
+              value="object"
+              ?selected=${'object' === variableConfig.schema?.type}
             >
               object
             </option>

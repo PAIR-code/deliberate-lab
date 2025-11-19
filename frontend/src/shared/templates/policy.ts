@@ -40,6 +40,10 @@ import {
   MultipleChoiceItem,
   StageContextPromptItem,
   ApiKeyType,
+  VariableConfig,
+  VariableConfigType,
+  VariableType,
+  RandomPermutationVariableConfig,
 } from '@deliberation-lab/utils';
 
 type Policy = {
@@ -58,7 +62,7 @@ type Argument = {
   text: string;
 };
 
-const EXAMPLE_POLICY: Policy = {
+const EXAMPLE_POLICY_A: Policy = {
   name: 'Lamps',
   policy:
     'The government should switch all the street lamps back to sodium-vapor.',
@@ -106,6 +110,95 @@ const EXAMPLE_POLICY: Policy = {
   ],
 };
 
+const EXAMPLE_POLICY_B: Policy = {
+  name: 'Parks',
+  policy:
+    'The government should convert all public parks into community gardens.',
+  petition_pro:
+    'We, the undersigned, support converting public parks into community gardens to promote local food production.',
+  petition_con:
+    'We, the undersigned, oppose converting public parks into community gardens.',
+  nonprofit_pro:
+    'The Community Food Alliance is dedicated to promoting local food production and sustainable agriculture.',
+  nonprofit_con:
+    'The Parks Preservation Society is dedicated to maintaining public green spaces for recreation.',
+  arguments_pro: [
+    {title: 'Food security', text: 'Community gardens improve food security.'},
+    {
+      title: 'Education',
+      text: 'Community gardens provide educational opportunities.',
+    },
+    {
+      title: 'Community building',
+      text: 'Community gardens bring neighbors together.',
+    },
+    {title: 'Health benefits', text: 'Growing food promotes healthy eating.'},
+    {
+      title: 'Environmental impact',
+      text: 'Community gardens reduce food miles.',
+    },
+    {
+      title: 'Self-sufficiency',
+      text: 'Community gardens promote self-sufficiency.',
+    },
+  ],
+  arguments_con: [
+    {
+      title: 'Recreation loss',
+      text: 'Parks provide essential space for recreation and sports.',
+    },
+    {
+      title: 'Accessibility',
+      text: 'Not everyone can participate in gardening activities.',
+    },
+    {
+      title: 'Maintenance burden',
+      text: 'Community gardens require significant ongoing maintenance.',
+    },
+    {
+      title: 'Wildlife habitat',
+      text: 'Parks provide important habitat for urban wildlife.',
+    },
+    {
+      title: 'Public access',
+      text: 'Parks are freely accessible to all, gardens may have restrictions.',
+    },
+    {
+      title: 'Aesthetics',
+      text: 'Traditional parks are more aesthetically pleasing.',
+    },
+  ],
+};
+
+// Create a variable config with the complete policy object (including arrays)
+const POLICY_RANDOM_PERMUTATION_CONFIG: RandomPermutationVariableConfig = {
+  id: 'policy-permutation-config',
+  type: VariableConfigType.RANDOM_PERMUTATION,
+  seedStrategy: SeedStrategy.COHORT,
+  variableNames: ['policy'],
+  schema: VariableType.object({
+    name: VariableType.STRING,
+    policy: VariableType.STRING,
+    petition_pro: VariableType.STRING,
+    petition_con: VariableType.STRING,
+    nonprofit_pro: VariableType.STRING,
+    nonprofit_con: VariableType.STRING,
+    arguments_pro: VariableType.array(
+      VariableType.object({
+        title: VariableType.STRING,
+        text: VariableType.STRING,
+      }),
+    ),
+    arguments_con: VariableType.array(
+      VariableType.object({
+        title: VariableType.STRING,
+        text: VariableType.STRING,
+      }),
+    ),
+  }),
+  values: [JSON.stringify(EXAMPLE_POLICY_A), JSON.stringify(EXAMPLE_POLICY_B)],
+};
+
 const NO_SHUFFLE: ShuffleConfig = {
   shuffle: false,
   seed: SeedStrategy.PARTICIPANT,
@@ -122,9 +215,13 @@ const PARTICIPANT_SHUFFLE: ShuffleConfig = {
 // ****************************************************************************
 export function getPolicyExperimentTemplate(): ExperimentTemplate {
   const stageConfigs = getPolicyStageConfigs();
+  const variableTemplates: VariableConfig[] = [
+    POLICY_RANDOM_PERMUTATION_CONFIG,
+  ];
   return createExperimentTemplate({
     experiment: createExperimentConfig(stageConfigs, {
       metadata: POLICY_METADATA,
+      variableConfigs: variableTemplates,
     }),
     stageConfigs,
     agentMediators: POLICY_MEDIATOR_AGENTS,
@@ -249,13 +346,13 @@ const POLICY_INITIAL_SURVEY_STAGE = createSurveyStage({
 
 You will need to indicate your support or opposition to the following policy:
 
-# **${EXAMPLE_POLICY.policy}**
+# **{{policy.policy}}**
 
-Before you learn more about the opinions about this policy, we would like to understand your current position on this issue. 
+Before you learn more about the opinions about this policy, we would like to understand your current position on this issue.
 
 Please use the slider below to express your support or opposition for this policy.
 
-If you place the slider at 50, this indicates that you are equally as willing to support the policy as you are to oppose the policy. 
+If you place the slider at 50, this indicates that you are equally as willing to support the policy as you are to oppose the policy.
 `,
   }),
   questions: [
@@ -345,12 +442,33 @@ Once you have completed these seven exchanges, the "Continue" button will become
   }),
 });
 
-function argumentToFlipcard(title: string, argument: Argument): FlipCard {
-  return createFlipCard({
-    title: title,
-    frontContent: `## ${argument.title}`,
-    backContent: argument.text,
-  });
+// Create flipcards using template variables for the assigned policy's arguments
+function getPolicyFlipCards(): FlipCard[] {
+  const cards: FlipCard[] = [];
+
+  // Create pro argument cards (currently both policies have 6 pro arguments)
+  for (let i = 0; i < 6; i++) {
+    cards.push(
+      createFlipCard({
+        title: '',
+        frontContent: `## {{policy.arguments_pro.${i}.title}}`,
+        backContent: `{{policy.arguments_pro.${i}.text}}`,
+      }),
+    );
+  }
+
+  // Create con argument cards (currently both policies have 6 con arguments)
+  for (let i = 0; i < 6; i++) {
+    cards.push(
+      createFlipCard({
+        title: '',
+        frontContent: `## {{policy.arguments_con.${i}.title}}`,
+        backContent: `{{policy.arguments_con.${i}.text}}`,
+      }),
+    );
+  }
+
+  return cards;
 }
 
 const POLICY_FLIPCARD_STAGE = createFlipCardStage({
@@ -363,14 +481,7 @@ const POLICY_FLIPCARD_STAGE = createFlipCardStage({
     infoText:
       'You must flip over all flashcards in order to move to the next step.',
   }),
-  cards: [
-    ...EXAMPLE_POLICY.arguments_pro.map((argument) =>
-      argumentToFlipcard('', argument),
-    ),
-    ...EXAMPLE_POLICY.arguments_con.map((argument) =>
-      argumentToFlipcard('', argument),
-    ),
-  ],
+  cards: getPolicyFlipCards(),
   enableSelection: false,
   allowMultipleSelections: false,
   requireConfirmation: false,
@@ -387,7 +498,7 @@ const POLICY_FINAL_SURVEY_STAGE = createSurveyStage({
 Now that you have learned more about the policy, please register your opposition or support for this policy.
 **As before, you can click and adjust the slider to indicate your willingness to support or oppose the policy.**
 
-# **${EXAMPLE_POLICY.policy}**
+# **{{policy.policy}}**
 `,
   }),
   questions: [
@@ -480,13 +591,13 @@ const petitionOptions = [
 
 const policySignatorySupportQuestion = createMultipleChoiceSurveyQuestion({
   id: 'policy_signatory_support',
-  questionTitle: `### ${EXAMPLE_POLICY.petition_pro}\n### ${petition_text}`,
+  questionTitle: `### {{policy.petition_pro}}\n### ${petition_text}`,
   options: petitionOptions,
   condition: finalPreferenceSupportCondition,
 });
 const policySignatoryOpposeQuestion = createMultipleChoiceSurveyQuestion({
   id: 'policy_signatory_oppose',
-  questionTitle: `### ${EXAMPLE_POLICY.petition_con}\n### ${petition_text}`,
+  questionTitle: `### {{policy.petition_con}}\n### ${petition_text}`,
   options: petitionOptions,
   condition: finalPreferenceOpposeCondition,
 });
@@ -576,14 +687,14 @@ const donateOptions = [
 
 const policyDonateChoiceSupportQuestion = createMultipleChoiceSurveyQuestion({
   id: 'policy_donate_choice_support',
-  questionTitle: `### ${EXAMPLE_POLICY.nonprofit_pro}\n### ${donate_text}`,
+  questionTitle: `### {{policy.nonprofit_pro}}\n### ${donate_text}`,
   options: donateOptions,
   condition: finalPreferenceSupportCondition,
 });
 
 const policyDonateChoiceOpposeQuestion = createMultipleChoiceSurveyQuestion({
   id: 'policy_donate_choice_oppose',
-  questionTitle: `### ${EXAMPLE_POLICY.nonprofit_con}\n### ${donate_text}`,
+  questionTitle: `### {{policy.nonprofit_con}}\n### ${donate_text}`,
   options: donateOptions,
   condition: finalPreferenceOpposeCondition,
 });
@@ -640,7 +751,7 @@ const POLICY_POST_EXPERIMENT_STAGE = createSurveyStage({
     primaryText: `
 Thank you for completing the debrief.
 
-For the last time, please indicate your opposition or support for the policy:\n # **${EXAMPLE_POLICY.policy}**
+For the last time, please indicate your opposition or support for the policy:\n # **{{policy.policy}}**
 
 As before, you can click and adjust the slider to indicate your willingness to support or oppose the policy.
 `,
@@ -908,7 +1019,7 @@ Please indicate your level of agreement with the following statements on a scale
 // ****************************************************************************
 
 const PROMPT_INTRO = `# Public Interest Task
-You are an AI-powered public interest advisor ("Chatbot"). You are interacting with a User ("Participant") who needs help deciding on whether to support or oppose the following policy: ${EXAMPLE_POLICY.policy}
+You are an AI-powered public interest advisor ("Chatbot"). You are interacting with a User ("Participant") who needs help deciding on whether to support or oppose the following policy: {{policy.policy}}
 Your role is to help them analyze the policy and make a decision.`;
 
 function createPolicyAssistantAgent(): AgentMediatorTemplate {
@@ -958,12 +1069,23 @@ function createPolicyAssistantAgent(): AgentMediatorTemplate {
     includeStageDisplay: false,
   };
 
-  const arguments_pro: PromptItem[] = EXAMPLE_POLICY.arguments_pro.map(
-    (argument) => ({type: PromptItemType.TEXT, text: `* ${argument.text}`}),
-  );
-  const arguments_con: PromptItem[] = EXAMPLE_POLICY.arguments_con.map(
-    (argument) => ({type: PromptItemType.TEXT, text: `* ${argument.text}`}),
-  );
+  // Create arguments using template variables for the assigned policy
+  // Using array indexing to access nested arguments in the policy object
+  const argumentsPro: PromptItem[] = [];
+  for (let i = 0; i < 6; i++) {
+    argumentsPro.push({
+      type: PromptItemType.TEXT,
+      text: `* {{policy.arguments_pro.${i}.text}}`,
+    } as PromptItem);
+  }
+
+  const argumentsCon: PromptItem[] = [];
+  for (let i = 0; i < 6; i++) {
+    argumentsCon.push({
+      type: PromptItemType.TEXT,
+      text: `* {{policy.arguments_con.${i}.text}}`,
+    } as PromptItem);
+  }
 
   const ARGUMENTS_PRO_INTRO =
     '\nYou may highlight the pros of the policy by discussing these arguments:';
@@ -975,7 +1097,7 @@ function createPolicyAssistantAgent(): AgentMediatorTemplate {
     title: 'Arguments Pro',
     items: [
       {type: PromptItemType.TEXT, text: ARGUMENTS_PRO_INTRO},
-      ...arguments_pro,
+      ...argumentsPro,
     ],
     shuffleConfig: NO_SHUFFLE,
   };
@@ -984,7 +1106,7 @@ function createPolicyAssistantAgent(): AgentMediatorTemplate {
     title: 'Arguments Con',
     items: [
       {type: PromptItemType.TEXT, text: ARGUMENTS_CON_INTRO},
-      ...arguments_con,
+      ...argumentsCon,
     ],
     shuffleConfig: NO_SHUFFLE,
   };
@@ -1019,7 +1141,7 @@ function createPolicyAssistantAgent(): AgentMediatorTemplate {
     {type: PromptItemType.TEXT, text: outputFormatPrompt},
   ];
 
-  const INITIAL_AGENT_MESSAGE = `Hello! I am an AI Chatbot here to help you learn more about the following policy proposal: ${EXAMPLE_POLICY.policy} You can ask me about the arguments for or against this policy, or any other questions you may have. What would you like to know?`;
+  const INITIAL_AGENT_MESSAGE = `Hello! I am an AI Chatbot here to help you learn more about the following policy proposal: {{policy.policy}} You can ask me about the arguments for or against this policy, or any other questions you may have. What would you like to know?`;
   const promptMap: Record<string, MediatorPromptConfig> = {};
   promptMap[POLICY_CHAT_STAGE_ID] = createChatPromptConfig(
     POLICY_CHAT_STAGE_ID,

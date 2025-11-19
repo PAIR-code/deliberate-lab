@@ -199,14 +199,13 @@ const CHARITY_RANDOM_PERMUTATION_CONFIG: RandomPermutationVariableConfig = {
     'charity_9',
   ],
 
-  variableType: VariableType.OBJECT,
-  variableSchema: {
+  schema: VariableType.object({
     key: VariableType.STRING,
     name: VariableType.STRING,
     link: VariableType.STRING,
     score: VariableType.STRING,
     mission: VariableType.STRING,
-  },
+  }),
 
   values: CHARITY_DATA.map((charity) => JSON.stringify(charity)),
 };

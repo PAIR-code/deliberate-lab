@@ -20,8 +20,7 @@ export function extractVariablesFromVariableConfigs(
           variableMap[name] = {
             name,
             description: '',
-            type: config.variableType,
-            schema: config.variableSchema,
+            schema: config.schema,
           };
         });
         break;
@@ -41,8 +40,7 @@ export function createRandomPermutationVariableConfig(
     type: VariableConfigType.RANDOM_PERMUTATION,
     seedStrategy: config.seedStrategy ?? SeedStrategy.COHORT,
     variableNames: config.variableNames ?? [],
-    variableType: config.variableType ?? VariableType.STRING,
-    variableSchema: config.variableSchema ?? undefined,
+    schema: config.schema ?? VariableType.STRING,
     values: config.values ?? [],
   };
 }

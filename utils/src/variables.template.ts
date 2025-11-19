@@ -1,5 +1,6 @@
 import Mustache from 'mustache';
-import {VariableItem, VariableType} from './variables';
+import type {TSchema} from '@sinclair/typebox';
+import {VariableItem} from './variables';
 
 /**
  * Resolve Mustache template variables in a given string.
@@ -10,20 +11,28 @@ export function resolveTemplateVariables(
   variableMap: Record<string, VariableItem>,
   valueMap: Record<string, string>,
 ) {
-  const typedValueMap: Record<string, string | boolean | number | object> = {};
+  const typedValueMap: Record<
+    string,
+    string | boolean | number | object | unknown[]
+  > = {};
   Object.keys(valueMap).forEach((variableName) => {
     const variable = variableMap[variableName];
-    switch (variable?.type) {
-      case VariableType.STRING:
+    const schemaType = variable?.schema?.type;
+
+    switch (schemaType) {
+      case 'string':
         typedValueMap[variableName] = valueMap[variableName] ?? '';
         break;
-      case VariableType.BOOLEAN:
+      case 'boolean':
         typedValueMap[variableName] = valueMap[variableName] === 'true';
         break;
-      case VariableType.NUMBER:
+      case 'number':
+      case 'integer':
         typedValueMap[variableName] = Number(valueMap[variableName]);
         break;
-      case VariableType.OBJECT:
+      case 'object':
+      case 'array':
+        // Parse JSON for complex types
         typedValueMap[variableName] = JSON.parse(valueMap[variableName]);
         break;
       default:
@@ -44,6 +53,10 @@ export function resolveTemplateVariables(
 /**
  * Validate that a template's variable references are defined.
  * Also validates that the template is valid Mustache syntax.
+ *
+ * This validates dotted path access (e.g., {{policy.arguments_pro.0.title}})
+ * by checking each level exists in the schema. Numeric array indices are
+ * skipped since we can't validate them statically.
  */
 export function validateTemplateVariables(
   template: string,
@@ -53,24 +66,56 @@ export function validateTemplateVariables(
     // First, check if template is valid Mustache syntax
     Mustache.parse(template);
 
-    // Extract variable references
+    // Extract all variable references from the template
     const references = extractVariableReferences(template);
     const missingVariables: string[] = [];
 
     for (const ref of references) {
-      const refParts = ref.split('.');
-      const baseName = refParts[0];
-      const variable = variableMap[baseName];
-      if (!variable) {
+      const parts = ref.split('.');
+      const baseName = parts[0];
+
+      // Check if base variable exists
+      const baseVariable = variableMap[baseName];
+      if (!baseVariable) {
         missingVariables.push(baseName);
-      } else if (refParts.length > 1) {
-        // If variable is an object, check if field exists
-        const field = refParts[1];
-        if (
-          variable.type !== VariableType.OBJECT ||
-          (variable.schema && !variable.schema[field])
-        ) {
-          missingVariables.push(ref);
+        continue;
+      }
+
+      // Validate nested path access using JSON Schema (TypeBox)
+      let currentSchema: TSchema = baseVariable.schema;
+
+      for (let i = 1; i < parts.length; i++) {
+        const part = parts[i];
+
+        // Skip numeric array indices (e.g., 0, 1, 2...)
+        // After a numeric index, we're accessing array item properties
+        if (/^\d+$/.test(part)) {
+          // For arrays, navigate to the items schema
+          if (
+            currentSchema.type === 'array' &&
+            'items' in currentSchema &&
+            currentSchema.items
+          ) {
+            currentSchema = currentSchema.items as TSchema;
+          }
+          continue;
+        }
+
+        // For objects, check if the property exists
+        if (currentSchema.type === 'object') {
+          const properties =
+            'properties' in currentSchema
+              ? currentSchema.properties
+              : undefined;
+          if (!properties || !properties[part]) {
+            missingVariables.push(parts.slice(0, i + 1).join('.'));
+            break;
+          }
+          currentSchema = properties[part] as TSchema;
+        } else {
+          // Not an object, can't access properties
+          missingVariables.push(parts.slice(0, i + 1).join('.'));
+          break;
         }
       }
     }
@@ -80,7 +125,6 @@ export function validateTemplateVariables(
       missingVariables: [...new Set(missingVariables)],
     };
   } catch (error) {
-    // Template has syntax errors
     return {
       valid: false,
       missingVariables: [],
