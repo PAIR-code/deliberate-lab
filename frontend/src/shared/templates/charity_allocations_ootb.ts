@@ -1117,7 +1117,7 @@ function createDefaultMediatorPromptConfig(
 
   const generationConfig = createModelGenerationConfig();
 
-  const defaultInstruction = `As the conversation facilitator, help the group explore how they want to split the donation across the three charities and move towards group consensus on an exact allocation spread (for example, 20/40/40. But the exact allocation values should be proposed by participants).`;
+  const defaultInstruction = `As the conversation facilitator, help the group explore how they want to split the donation across the three charities and move towards group consensus on an exact allocation spread (for example, 20%/40%/40%).`;
 
   return createChatPromptConfig(roundId, StageKind.CHAT, {
     prompt: [
