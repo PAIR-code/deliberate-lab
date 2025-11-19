@@ -356,9 +356,10 @@ function getProfileInfoForPrompt(
   };
 
   const scaffoldingPrefix = includeScaffolding ? `Alias: ` : '';
-  const scaffoldingSuffix = includeScaffolding
-    ? `\n${PROMPT_ITEM_PROFILE_INFO_PARTICIPANT_SCAFFOLDING}`
-    : '';
+  const scaffoldingSuffix =
+    includeScaffolding && userProfile.type === UserType.PARTICIPANT
+      ? `\n${PROMPT_ITEM_PROFILE_INFO_PARTICIPANT_SCAFFOLDING}`
+      : '';
 
   if (userProfile.type === UserType.PARTICIPANT) {
     return userProfile.name
