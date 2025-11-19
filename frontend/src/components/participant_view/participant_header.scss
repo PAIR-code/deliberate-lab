@@ -43,7 +43,7 @@ participant-profile-display {
   @include typescale.label-large;
   gap: common.$spacing-xs;
   color: var(--md-sys-color-on-surface-variant);
-  margin-left: common.$spacing-medium; // Add some separation from the title
+  margin-left: common.$spacing-medium;
 
   pr-icon {
     font-size: 18px;
