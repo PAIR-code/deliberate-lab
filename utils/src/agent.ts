@@ -5,10 +5,6 @@ import {
 import {generateId} from './shared';
 import {StageKind} from './stages/stage';
 import {
-  DEFAULT_AGENT_MEDIATOR_PROMPT,
-  DEFAULT_AGENT_PARTICIPANT_CHAT_PROMPT,
-} from './stages/chat_stage.prompts';
-import {
   ChatMediatorStructuredOutputConfig,
   StructuredOutputConfig,
   createStructuredOutputConfig,
@@ -235,28 +231,6 @@ export function createAgentPromptSettings(
     numRetries: config.numRetries ?? 0,
     includeStageHistory: config.includeStageHistory ?? true,
     includeStageInfo: config.includeStageInfo ?? true,
-  };
-}
-
-export function createAgentChatPromptConfig(
-  id: string, // stage ID
-  type: StageKind, // stage kind
-  personaType: AgentPersonaType, // mediator or participant
-  config: Partial<AgentChatPromptConfig> = {},
-): AgentChatPromptConfig {
-  return {
-    id,
-    type,
-    promptContext:
-      config.promptContext ??
-      (personaType === AgentPersonaType.MEDIATOR
-        ? DEFAULT_AGENT_MEDIATOR_PROMPT
-        : DEFAULT_AGENT_PARTICIPANT_CHAT_PROMPT),
-    promptSettings: config.promptSettings ?? createAgentPromptSettings(),
-    generationConfig: config.generationConfig ?? createModelGenerationConfig(),
-    chatSettings: config.chatSettings ?? createAgentChatSettings(),
-    structuredOutputConfig:
-      config.structuredOutputConfig ?? createStructuredOutputConfig(),
   };
 }
 
