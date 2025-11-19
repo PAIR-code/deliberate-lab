@@ -99,10 +99,10 @@ export class Component extends MobxLitElement {
           </div>
           <div class="sort-controls">
             <pr-menu
-              name=${this.experimentManager.participantSortBy === 'waitTime'
-                ? 'Wait time'
+              name=${this.experimentManager.participantSortBy === 'lastActive'
+                ? 'Last Active'
                 : 'Name'}
-              icon=${this.experimentManager.participantSortBy === 'waitTime'
+              icon=${this.experimentManager.participantSortBy === 'lastActive'
                 ? 'hourglass_empty'
                 : 'sort_by_alpha'}
               color="secondary"
@@ -112,10 +112,10 @@ export class Component extends MobxLitElement {
                 <div
                   class="menu-item"
                   @click=${() => {
-                    this.experimentManager.setParticipantSortBy('waitTime');
+                    this.experimentManager.setParticipantSortBy('lastActive');
                   }}
                 >
-                  Sort by wait time
+                  Sort by Last Active
                 </div>
                 <div
                   class="menu-item"

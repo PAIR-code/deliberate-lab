@@ -353,7 +353,7 @@ export class CohortSummary extends MobxLitElement {
         return aTimeout ? 1 : -1; // Timeouts go to the bottom
       }
 
-      // Sort by wait time
+      // Sort by last active
       const aStartTime = getCurrentStageStartTime(a, stageIds);
       const bStartTime = getCurrentStageStartTime(b, stageIds);
 
