@@ -266,7 +266,14 @@ export class ExperimentManager extends Service {
 
   setCurrentParticipantId(id: string | undefined) {
     this.currentParticipantId = id;
-    // TODO: Update current cohort to match current participant's cohort?
+
+    // Update current cohort to match current participant's cohort
+    if (id && this.participantMap[id]) {
+      const participant = this.participantMap[id];
+      const cohortId =
+        participant.transferCohortId ?? participant.currentCohortId;
+      this.setCurrentCohortId(cohortId);
+    }
 
     // Update participant service in order to load correct participant answers
     // (Note: This also updates participant answer service accordingly)
