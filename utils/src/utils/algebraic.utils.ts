@@ -204,6 +204,40 @@ export function filterRankingsByCandidates(
   return participantRankings;
 }
 
+export function getApplicationsFromLRApplyStage(
+  applyData: SurveyStagePublicData,
+): Record<string, boolean> {
+  const applications: Record<string, boolean> = {};
+  const answerMap = applyData.participantAnswerMap || {};
+
+  for (const publicId of Object.keys(answerMap)) {
+    const participantAnswer = answerMap[publicId];
+    if (!participantAnswer || typeof participantAnswer !== 'object') {
+      applications[publicId] = false;
+      continue;
+    }
+
+    const applyAnswer =
+      participantAnswer['apply_r1'] ?? participantAnswer['apply_r2'];
+
+    if (!applyAnswer) {
+      applications[publicId] = false;
+      continue;
+    }
+
+    // DL multiple choice stores answers in various ways depending on template
+    const answerValue =
+      applyAnswer.choiceId ??
+      applyAnswer.selected ??
+      applyAnswer.answerId ??
+      applyAnswer.answer;
+
+    applications[publicId] = answerValue === 'yes';
+  }
+
+  return applications;
+}
+
 export function getTimeElapsed(
   timestamp: {seconds: number; nanoseconds: number},
   unit: 's' | 'm' | 'h' | 'd' = 'm',

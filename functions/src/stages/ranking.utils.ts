@@ -9,6 +9,7 @@ import {
   filterRankingsByCandidates,
   getCondorcetElectionWinner,
   getRankingCandidatesFromWTL,
+  getApplicationsFromLRApplyStage,
   isLRRankingStagePublicData,
   LAS_WTL_STAGE_ID,
 } from '@deliberation-lab/utils';
@@ -16,7 +17,6 @@ import {
 import {
   runLeaderLottery,
   LeaderSelectionInput,
-  LeaderSelectionResult,
 } from './leadership_rejection.utils';
 
 import {
@@ -54,17 +54,63 @@ export async function addParticipantAnswerToRankingStagePublicData(
       publicStageData,
     );
 
-    // 🧩 Leadership Rejection logic
+    // ─────────────────────────────────────────────────────────────
+    // 🧩 Leadership Rejection logic (LR template)
+    // ─────────────────────────────────────────────────────────────
     if (isLRRankingStagePublicData(publicStageData)) {
+      // We only trigger the leader lottery when reaching the special
+      // ranking "instruction" stages for each round.
       if (stage.id === 'r1_instructions' || stage.id === 'r2_instructions') {
         console.log(`[LR] Triggering leader lottery at ${stage.id}`);
 
-        // Determine which apply stage to check
-
+        // Determine which "apply" stage we are in (Round 1 or Round 2)
         const applyStageId = stage.id.startsWith('r1_')
           ? 'r1_apply'
           : 'r2_apply';
 
+        // -------------------------------------------------------------------
+        // 1. Read applications from the cohort's publicStageData for applyStageId
+        //    (this is analogous to how WTL is handled in the LAS template)
+        // -------------------------------------------------------------------
+        const applyDoc = await app
+          .firestore()
+          .collection('experiments')
+          .doc(experimentId)
+          .collection('cohorts')
+          .doc(participant.currentCohortId)
+          .collection('publicStageData')
+          .doc(applyStageId)
+          .get();
+
+        let applications: Record<string, boolean> = {};
+
+        if (applyDoc.exists) {
+          const applyData = applyDoc.data() as SurveyStagePublicData;
+          console.log(
+            `[LR] Found applyStage public data for ${applyStageId}:`,
+            JSON.stringify(applyData),
+          );
+
+          if (applyData.kind === StageKind.SURVEY) {
+            applications = getApplicationsFromLRApplyStage(applyData);
+            console.log(
+              '[LR] Applications map from apply stage:',
+              applications,
+            );
+          } else {
+            console.warn(
+              `[LR] applyStageId=${applyStageId} has kind=${applyData.kind}, expected SURVEY`,
+            );
+          }
+        } else {
+          console.warn(
+            `[LR] No applyStage public data found for ${applyStageId}. All applied=false.`,
+          );
+        }
+
+        // -------------------------------------------------------------------
+        // 2. Fetch all participants in this cohort
+        // -------------------------------------------------------------------
         const cohortParticipantsSnap = await app
           .firestore()
           .collection('experiments')
@@ -73,12 +119,14 @@ export async function addParticipantAnswerToRankingStagePublicData(
           .where('currentCohortId', '==', participant.currentCohortId)
           .get();
 
-        // --- Helper functions -----------------------------------------------------
+        // -------------------------------------------------------------------
+        // 3. Helper: compute performance score (baseline1 + baseline2 correct)
+        // -------------------------------------------------------------------
         async function getPerformanceScore(pPublicId: string): Promise<number> {
           let totalCorrect = 0;
           const baselineStages = [
-            {id: 'baseline1', type: 'LAS'},
-            {id: 'baseline2', type: 'SD'},
+            {id: 'baseline1', type: 'LAS' as const},
+            {id: 'baseline2', type: 'SD' as const},
           ];
 
           for (const {id: baselineId, type} of baselineStages) {
@@ -102,16 +150,18 @@ export async function addParticipantAnswerToRankingStagePublicData(
               const answerId = q.answerId ?? q.selected ?? q.answer;
               if (!qid || !answerId) continue;
 
-              const parts = qid.split('-');
+              const parts = String(qid).split('-');
               if (parts.length < 3) continue;
 
               const id1 = parts[1];
               const id2 = parts[2];
               let correctAnswer = '';
 
-              if (type === 'LAS') correctAnswer = getCorrectLASAnswer(id1, id2);
-              else if (type === 'SD')
+              if (type === 'LAS') {
+                correctAnswer = getCorrectLASAnswer(id1, id2);
+              } else if (type === 'SD') {
                 correctAnswer = getCorrectSDAnswer(id1, id2);
+              }
 
               if (answerId === correctAnswer) totalCorrect++;
             }
@@ -120,82 +170,59 @@ export async function addParticipantAnswerToRankingStagePublicData(
           return totalCorrect;
         }
 
-        async function didApplyThisRound(pPublicId: string): Promise<boolean> {
-          const stageRef = app
-            .firestore()
-            .collection('experiments')
-            .doc(experimentId)
-            .collection('participants')
-            .doc(pPublicId)
-            .collection('stageData')
-            .doc(applyStageId);
-
-          const docSnap = await stageRef.get();
-          console.log(
-            `[LR][applyCheck] Checking apply stage for ${pPublicId} at ${applyStageId}`,
-          );
-          console.log(`[LR][applyCheck] exists = ${docSnap.exists}`);
-          if (!docSnap.exists) return false;
-
-          const data = docSnap.data() || {};
-          console.log(`[LR][applyCheck] data =`, JSON.stringify(data));
-
-          const answers = data.answers || data.surveyAnswers || [];
-          console.log(`[LR][applyCheck] answers =`, JSON.stringify(answers));
-
-          for (const q of answers) {
-            const qid = q.questionId ?? q.id;
-            const answerId = q.answerId ?? q.selected ?? q.answer;
-            console.log(`[LR][applyCheck] qid=${qid}, answerId=${answerId}`);
-            if (
-              (qid === 'apply_r1' || qid === 'apply_r2') &&
-              answerId === 'yes'
-            ) {
-              console.log(`[LR][applyCheck] ${pPublicId} APPLIED`);
-              return true;
-            }
-          }
-          console.log(`[LR][applyCheck] ${pPublicId} did NOT apply`);
-          return false;
-        }
-
-        // --- Compute inputs and run lottery --------------------------------------
+        // -------------------------------------------------------------------
+        // 4. Build lottery inputs: one entry per participant in cohort
+        // -------------------------------------------------------------------
         const leaderInputs: LeaderSelectionInput[] = [];
+
         for (const doc of cohortParticipantsSnap.docs) {
           const pData = doc.data() as ParticipantProfileExtended;
+          const pId = pData.publicId;
+
+          const applied = !!applications[pId];
+          const performanceScore = await getPerformanceScore(pId);
+
           leaderInputs.push({
-            publicId: pData.publicId,
-            performanceScore: await getPerformanceScore(pData.publicId),
-            applied: await didApplyThisRound(pData.publicId),
+            publicId: pId,
+            performanceScore,
+            applied,
           });
         }
-        console.log(`[LR] Inputs passed into lottery:`);
+
+        console.log('[LR] Inputs passed into lottery:');
         for (const inp of leaderInputs) {
           console.log(
             `[LR][input] publicId=${inp.publicId} applied=${inp.applied} score=${inp.performanceScore}`,
           );
         }
 
-        const lotteryResult: LeaderSelectionResult =
-          runLeaderLottery(leaderInputs);
+        // -------------------------------------------------------------------
+        // 5. Run lottery and store results in LRRankingStagePublicData
+        // -------------------------------------------------------------------
+        const lotteryResult = runLeaderLottery(leaderInputs);
 
         publicStageData.winnerId = lotteryResult.winnerId;
         publicStageData.leaderStatusMap = lotteryResult.participantStatusMap;
+        // Optionally:
         // publicStageData.debugLeaderSelection = lotteryResult.debug;
 
         console.log(
           `[LR] 🎲 Winner selected at ${stage.id}: ${lotteryResult.winnerId}`,
         );
       }
-    } else {
-      // -----------------------------------------
-      // 🧩 Default Condorcet (e.g. LAS)
-      // -----------------------------------------
 
-      // Do NOT re-declare publicStageData
+      // Note: In LR, we do NOT use Condorcet rankings here, so we do not
+      // touch publicStageData.participantAnswerMap in this branch.
+    } else {
+      // ─────────────────────────────────────────────────────────────
+      // 🧩 Default Condorcet logic (e.g. Lost at Sea template)
+      // ─────────────────────────────────────────────────────────────
+
+      // Store participant's ranking answer
       publicStageData.participantAnswerMap[participant.publicId] =
         answer.rankingList;
 
+      // LAS-style: filter candidate set using WTL survey stage
       const wtlDoc = app
         .firestore()
         .collection('experiments')
@@ -220,10 +247,12 @@ export async function addParticipantAnswerToRankingStagePublicData(
         }
       }
 
+      // Compute Condorcet winner among remaining candidates
       publicStageData.winnerId =
         getCondorcetElectionWinner(participantAnswerMap);
     }
 
+    // Finally, write back updated public stage data
     transaction.set(publicDocument, publicStageData);
   });
 }

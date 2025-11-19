@@ -44,6 +44,7 @@ import {
   RevealAudience,
   LRRankingStagePublicData,
   LAS_WTL_QUESTION_ID,
+  r1_apply,
   createRankingStage,
 } from '@deliberation-lab/utils';
 import {mustWaitForAllParticipants} from '../experiment.utils';
