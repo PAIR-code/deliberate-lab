@@ -215,7 +215,15 @@ pr-button pr-icon {
 
   .left {
     @include common.flex-row-align-center;
-    gap: common.$spacing-small;
+    gap: common.$spacing-medium;
+    
+      participant-profile-display.clickable {
+        cursor: pointer;
+    
+        &:hover {
+          opacity: 0.8;
+        }
+      }
   }
 }
 
