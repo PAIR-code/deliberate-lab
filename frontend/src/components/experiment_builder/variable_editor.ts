@@ -33,13 +33,15 @@ import {
   addPropertyToSchema,
   createSchemaForType,
   getDefaultValue,
-  parseValue,
   removePropertyFromSchema,
+  renamePropertyInObject,
   safeParseJson,
   serializeForInput,
+  setValueAtPath,
   updateArrayItem,
   updateObjectProperty,
   updatePropertyInSchema,
+  updateSchemaAtPath,
   validateValue,
 } from './variable_editor.utils';
 
@@ -310,21 +312,12 @@ export class VariableEditor extends MobxLitElement {
   private updateConfig(
     config: VariableConfig,
     index: number,
-    updates:
-      | Partial<StaticVariableConfig>
-      | Partial<RandomPermutationVariableConfig>,
+    updates: Partial<VariableConfig>,
   ) {
-    if (config.type === VariableConfigType.STATIC) {
-      this.experimentEditor.updateVariableConfig(
-        {...config, ...updates} as StaticVariableConfig,
-        index,
-      );
-    } else {
-      this.experimentEditor.updateVariableConfig(
-        {...config, ...updates} as RandomPermutationVariableConfig,
-        index,
-      );
-    }
+    this.experimentEditor.updateVariableConfig(
+      {...config, ...updates} as VariableConfig,
+      index,
+    );
   }
 
   private updateDefinition(
@@ -360,22 +353,16 @@ export class VariableEditor extends MobxLitElement {
     const schema = toJS(config.definition.schema) as unknown as TSchema;
     return html`
       <div class="schema-editor">
-        ${this.renderSchemaType(
-          schema,
-          (s) =>
-            this.updateDefinition(config, configIndex, {
-              schema: s as unknown as typeof config.definition.schema,
-            }),
-          '',
-        )}
+        ${this.renderSchemaType(schema, '', config, configIndex)}
       </div>
     `;
   }
 
   private renderSchemaType(
     schema: TSchema,
-    onUpdate: (schema: TSchema) => void,
     path: string,
+    config: VariableConfig,
+    configIndex: number,
   ): TemplateResult {
     const type = schema.type as string;
 
@@ -386,8 +373,20 @@ export class VariableEditor extends MobxLitElement {
           <select
             .value=${type}
             @change=${(e: Event) => {
-              onUpdate(
-                createSchemaForType((e.target as HTMLSelectElement).value),
+              const newLocalSchema = createSchemaForType(
+                (e.target as HTMLSelectElement).value,
+              );
+              const newFullSchema = updateSchemaAtPath(
+                toJS(config.definition.schema) as unknown as TSchema,
+                path,
+                newLocalSchema,
+              );
+              this.updateSchemaAndResetValues(
+                config,
+                configIndex,
+                newFullSchema,
+                path,
+                getDefaultValue(newLocalSchema),
               );
             }}
           >
@@ -399,10 +398,10 @@ export class VariableEditor extends MobxLitElement {
           </select>
         </div>
         ${type === 'object'
-          ? this.renderObjectSchema(schema, onUpdate, path)
+          ? this.renderObjectSchema(schema, path, config, configIndex)
           : nothing}
         ${type === 'array'
-          ? this.renderArraySchema(schema, onUpdate, path)
+          ? this.renderArraySchema(schema, path, config, configIndex)
           : nothing}
       </div>
     `;
@@ -410,8 +409,9 @@ export class VariableEditor extends MobxLitElement {
 
   private renderObjectSchema(
     schema: TSchema,
-    onUpdate: (schema: TSchema) => void,
     path: string,
+    config: VariableConfig,
+    configIndex: number,
   ): TemplateResult {
     const props = ('properties' in schema ? schema.properties : {}) as Record<
       string,
@@ -423,7 +423,10 @@ export class VariableEditor extends MobxLitElement {
       <div class="nested-editor">
         <div class="nested-header">
           <strong>Properties:</strong>
-          <md-text-button @click=${() => this.addProperty(props, onUpdate)}>
+          <md-text-button
+            @click=${() =>
+              this.handleAddProperty(props, path, config, configIndex)}
+          >
             <md-icon slot="icon">add</md-icon>
             Add property
           </md-text-button>
@@ -431,7 +434,14 @@ export class VariableEditor extends MobxLitElement {
         ${propNames.length === 0
           ? html`<div class="empty-message">No properties</div>`
           : propNames.map((name) =>
-              this.renderPropertyItem(name, props[name], props, onUpdate, path),
+              this.renderPropertyItem(
+                name,
+                props[name],
+                props,
+                path,
+                config,
+                configIndex,
+              ),
             )}
       </div>
     `;
@@ -439,8 +449,9 @@ export class VariableEditor extends MobxLitElement {
 
   private renderArraySchema(
     schema: TSchema,
-    onUpdate: (schema: TSchema) => void,
     path: string,
+    config: VariableConfig,
+    configIndex: number,
   ): TemplateResult {
     const items = (
       'items' in schema && schema.items ? schema.items : Type.String()
@@ -451,46 +462,258 @@ export class VariableEditor extends MobxLitElement {
       <div class="nested-editor">
         <div class="nested-header">
           <strong>Array items:</strong>
-          ${this.renderTypeSelector(itemType, (newType) => {
-            const newSchema = createSchemaForType(newType);
-            onUpdate(Type.Array(newSchema));
-          })}
+          <select
+            .value=${itemType}
+            @change=${(e: Event) => {
+              const newItemSchema = createSchemaForType(
+                (e.target as HTMLSelectElement).value,
+              );
+              const newArraySchema = Type.Array(newItemSchema);
+              const newFullSchema = updateSchemaAtPath(
+                toJS(config.definition.schema) as unknown as TSchema,
+                path,
+                newArraySchema,
+              );
+              this.updateSchemaAndResetValues(
+                config,
+                configIndex,
+                newFullSchema,
+                path,
+                getDefaultValue(newArraySchema),
+              );
+            }}
+          >
+            <option value="string">String</option>
+            <option value="number">Number</option>
+            <option value="boolean">Boolean</option>
+            <option value="object">Object</option>
+            <option value="array">Array</option>
+          </select>
         </div>
         ${itemType === 'object'
-          ? this.renderObjectSchema(
-              items,
-              (s) => onUpdate(Type.Array(s)),
-              `${path}[]`,
-            )
+          ? this.renderObjectSchema(items, path, config, configIndex)
           : nothing}
         ${itemType === 'array'
-          ? this.renderArraySchema(
-              items,
-              (s) => onUpdate(Type.Array(s)),
-              `${path}[]`,
-            )
+          ? this.renderArraySchema(items, path, config, configIndex)
           : nothing}
       </div>
     `;
+  }
+
+  private resetValuesAtPath(
+    config: VariableConfig,
+    newFullSchema: TSchema,
+    path: string,
+    defaultValue: unknown,
+  ): Partial<VariableConfig> {
+    // Handle single value configs
+    if ('value' in config) {
+      const parsed = safeParseJson(config.value.value, {});
+      const updatedValue = path
+        ? setValueAtPath(parsed, newFullSchema, path, defaultValue)
+        : defaultValue;
+      return {
+        value: {...config.value, value: JSON.stringify(updatedValue)},
+      };
+    }
+
+    // Handle multi-value configs
+    if ('values' in config && Array.isArray(config.values)) {
+      const updatedValues = config.values.map((instance) => {
+        const parsed = safeParseJson(instance.value, {});
+        const updatedValue = path
+          ? setValueAtPath(parsed, newFullSchema, path, defaultValue)
+          : defaultValue;
+        return {...instance, value: JSON.stringify(updatedValue)};
+      });
+      return {values: updatedValues};
+    }
+
+    return {};
+  }
+
+  private updateSchemaAndResetValues(
+    config: VariableConfig,
+    configIndex: number,
+    newFullSchema: TSchema,
+    path: string,
+    defaultValue: unknown,
+  ) {
+    const valueUpdates = this.resetValuesAtPath(
+      config,
+      newFullSchema,
+      path,
+      defaultValue,
+    );
+    this.updateConfig(config, configIndex, {
+      definition: {
+        ...config.definition,
+        schema: newFullSchema as unknown as typeof config.definition.schema,
+      },
+      ...valueUpdates,
+    });
+  }
+
+  private handlePropertyRename(
+    input: HTMLInputElement,
+    oldName: string,
+    newName: string,
+    propSchema: TSchema,
+    props: Record<string, TSchema>,
+    path: string,
+    config: VariableConfig,
+    configIndex: number,
+  ) {
+    if (!newName) {
+      // Reset to original name if empty
+      input.value = oldName;
+      return;
+    }
+
+    if (newName === oldName) {
+      // No change
+      return;
+    }
+
+    // Check for duplicate property names
+    if (newName in props) {
+      alert(
+        `Property "${newName}" already exists. Please choose a different name.`,
+      );
+      input.value = oldName;
+      return;
+    }
+
+    // We need to update both schema AND values atomically
+    // Don't use onUpdate - it only updates the schema
+    // Instead, manually construct the full new schema and update everything at once
+
+    // First, build the new object schema with renamed property (preserving order)
+    const newProps: Record<string, TSchema> = {};
+    for (const key of Object.keys(props)) {
+      if (key === oldName) {
+        newProps[newName] = propSchema;
+      } else {
+        newProps[key] = props[key];
+      }
+    }
+    const newObjSchema = Type.Object(newProps);
+
+    // Update schema at the right path
+    const updatedFullSchema = updateSchemaAtPath(
+      toJS(config.definition.schema) as unknown as TSchema,
+      path,
+      newObjSchema,
+    );
+
+    // Rename property in values
+    const oldPropPath = path ? `${path}.${oldName}` : oldName;
+
+    // Update both schema and values in a single call
+    if (config.type === VariableConfigType.STATIC) {
+      const parsed = safeParseJson(config.value.value, {});
+      const updated = renamePropertyInObject(
+        parsed,
+        toJS(config.definition.schema) as unknown as TSchema,
+        oldPropPath,
+        newName,
+      );
+      this.updateConfig(config, configIndex, {
+        definition: {
+          ...config.definition,
+          schema:
+            updatedFullSchema as unknown as typeof config.definition.schema,
+        },
+        value: {...config.value, value: JSON.stringify(updated)},
+      });
+    } else if (config.type === VariableConfigType.RANDOM_PERMUTATION) {
+      const updatedValues = config.values.map((instance) => {
+        const parsed = safeParseJson(instance.value, {});
+        const updated = renamePropertyInObject(
+          parsed,
+          toJS(config.definition.schema) as unknown as TSchema,
+          oldPropPath,
+          newName,
+        );
+        return {...instance, value: JSON.stringify(updated)};
+      });
+      this.updateConfig(config, configIndex, {
+        definition: {
+          ...config.definition,
+          schema:
+            updatedFullSchema as unknown as typeof config.definition.schema,
+        },
+        values: updatedValues,
+      });
+    }
   }
 
   private renderPropertyItem(
     name: string,
     propSchema: TSchema,
     props: Record<string, TSchema>,
-    onUpdate: (schema: TSchema) => void,
     path: string,
+    config: VariableConfig,
+    configIndex: number,
   ) {
     const propType = propSchema.type as string;
     const isComplex = propType === 'object' || propType === 'array';
 
     const header = html`
       <div class="property-header-content">
-        <span class="property-name">${name}</span>
-        ${this.renderTypeSelector(propType, (newType) => {
-          const newSchema = createSchemaForType(newType);
-          onUpdate(updatePropertyInSchema(props, name, newSchema));
-        })}
+        <input
+          class="property-name-input"
+          type="text"
+          .value=${name}
+          @blur=${(e: Event) => {
+            const input = e.target as HTMLInputElement;
+            const newName = input.value.trim();
+            this.handlePropertyRename(
+              input,
+              name,
+              newName,
+              propSchema,
+              props,
+              path,
+              config,
+              configIndex,
+            );
+          }}
+          placeholder="property name"
+        />
+        <select
+          .value=${propType}
+          @change=${(e: Event) => {
+            const newPropSchema = createSchemaForType(
+              (e.target as HTMLSelectElement).value,
+            );
+            const newObjSchema = updatePropertyInSchema(
+              props,
+              name,
+              newPropSchema,
+            );
+            const newFullSchema = updateSchemaAtPath(
+              toJS(config.definition.schema) as unknown as TSchema,
+              path,
+              newObjSchema,
+            );
+            const propPath = path ? `${path}.${name}` : name;
+            this.updateSchemaAndResetValues(
+              config,
+              configIndex,
+              newFullSchema,
+              propPath,
+              getDefaultValue(newPropSchema),
+            );
+          }}
+          @click=${(e: Event) => e.stopPropagation()}
+        >
+          <option value="string">String</option>
+          <option value="number">Number</option>
+          <option value="boolean">Boolean</option>
+          <option value="object">Object</option>
+          <option value="array">Array</option>
+        </select>
       </div>
     `;
 
@@ -502,7 +725,16 @@ export class VariableEditor extends MobxLitElement {
             <md-icon-button
               @click=${() => {
                 if (!confirm(`Remove property "${name}"?`)) return;
-                onUpdate(removePropertyFromSchema(props, name));
+                const newObjSchema = removePropertyFromSchema(props, name);
+                const newFullSchema = updateSchemaAtPath(
+                  toJS(config.definition.schema) as unknown as TSchema,
+                  path,
+                  newObjSchema,
+                );
+                this.updateDefinition(config, configIndex, {
+                  schema:
+                    newFullSchema as unknown as typeof config.definition.schema,
+                });
               }}
             >
               <md-icon>delete</md-icon>
@@ -516,15 +748,17 @@ export class VariableEditor extends MobxLitElement {
       ${propType === 'object'
         ? this.renderObjectSchema(
             propSchema,
-            (s) => onUpdate(updatePropertyInSchema(props, name, s)),
             `${path}.${name}`,
+            config,
+            configIndex,
           )
         : nothing}
       ${propType === 'array'
         ? this.renderArraySchema(
             propSchema,
-            (s) => onUpdate(updatePropertyInSchema(props, name, s)),
             `${path}.${name}`,
+            config,
+            configIndex,
           )
         : nothing}
     `;
@@ -533,44 +767,41 @@ export class VariableEditor extends MobxLitElement {
       header,
       () => {
         if (!confirm(`Remove property "${name}"?`)) return;
-        onUpdate(removePropertyFromSchema(props, name));
+        const newObjSchema = removePropertyFromSchema(props, name);
+        const newFullSchema = updateSchemaAtPath(
+          toJS(config.definition.schema) as unknown as TSchema,
+          path,
+          newObjSchema,
+        );
+        this.updateDefinition(config, configIndex, {
+          schema: newFullSchema as unknown as typeof config.definition.schema,
+        });
       },
       content,
     );
   }
 
-  private renderTypeSelector(
-    currentType: string,
-    onTypeChange: (newType: string) => void,
-  ) {
-    return html`
-      <select
-        .value=${currentType}
-        @change=${(e: Event) =>
-          onTypeChange((e.target as HTMLSelectElement).value)}
-        @click=${(e: Event) => e.stopPropagation()}
-      >
-        <option value="string">String</option>
-        <option value="number">Number</option>
-        <option value="boolean">Boolean</option>
-        <option value="object">Object</option>
-        <option value="array">Array</option>
-      </select>
-    `;
-  }
-
-  private addProperty(
+  private handleAddProperty(
     props: Record<string, TSchema>,
-    onUpdate: (schema: TSchema) => void,
+    path: string,
+    config: VariableConfig,
+    configIndex: number,
   ) {
     const name = prompt('Property name:');
     if (!name) return;
-    const newSchema = addPropertyToSchema(props, name);
-    if (!newSchema) {
+    const newObjSchema = addPropertyToSchema(props, name);
+    if (!newObjSchema) {
       alert('Property already exists');
       return;
     }
-    onUpdate(newSchema);
+    const newFullSchema = updateSchemaAtPath(
+      toJS(config.definition.schema) as unknown as TSchema,
+      path,
+      newObjSchema,
+    );
+    this.updateDefinition(config, configIndex, {
+      schema: newFullSchema as unknown as typeof config.definition.schema,
+    });
   }
 
   // ===== Static Value Editor =====
