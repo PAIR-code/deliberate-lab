@@ -1171,7 +1171,7 @@ function createClaudeMediatorTemplate(
   const promptMap: {[key: string]: MediatorPromptConfig} = {};
   const modelSettings: AgentModelSettings = {
     apiType: ApiKeyType.CLAUDE_API_KEY,
-    modelName: 'claude-4-5-haiku-latest',
+    modelName: 'claude-haiku-4-5',
   };
 
   for (const id of stageIds) {
