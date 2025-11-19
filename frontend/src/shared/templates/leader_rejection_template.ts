@@ -44,6 +44,8 @@ import {
   RevealAudience,
   LRRankingStagePublicData,
   LAS_WTL_QUESTION_ID,
+  LR_BASELINE_TASK1_ID,
+  LR_BASELINE_TASK2_ID,
   r1_apply,
   createRankingStage,
 } from '@deliberation-lab/utils';
@@ -489,7 +491,7 @@ const LR_P1_TASK1_INSTRUCTIONS_STAGE = createInfoStage({
 // *******************
 // Task 1a
 
-export const LR_BASELINE_TASK1_ID = 'baseline1';
+//export const LR_BASELINE_TASK1_ID = 'baseline1';
 
 const LR_BASELINE_TASK_1 = createSurveyStage({
   id: LR_BASELINE_TASK1_ID,
@@ -534,7 +536,7 @@ const LR_P1_TASK2_INSTRUCTIONS_STAGE = createInfoStage({
 // *******************
 // Task 1b
 
-export const LR_BASELINE_TASK2_ID = 'baseline2';
+// export const LR_BASELINE_TASK2_ID = 'baseline2';
 
 const LR_BASELINE_TASK_2 = createSurveyStage({
   id: LR_BASELINE_TASK2_ID,

@@ -81,6 +81,9 @@ export const LAS_WTL_QUESTION_ID = 'wtl';
 export const r1_apply = 'r1_apply';
 export const apply_r1 = 'apply_r1';
 
+export const LR_BASELINE_TASK1_ID = 'baseline1';
+
+export const LR_BASELINE_TASK2_ID = 'baseline2';
 // ************************************************************************* //
 // FUNCTIONS                                                                 //
 // ************************************************************************* //

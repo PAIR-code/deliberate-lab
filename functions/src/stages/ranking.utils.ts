@@ -12,17 +12,16 @@ import {
   getApplicationsFromLRApplyStage,
   isLRRankingStagePublicData,
   LAS_WTL_STAGE_ID,
+  // NEW imports from utils
+  getBaselineScoresFromStage,
+  //getCorrectLASAnswer_mini,
+  //getCorrectSDAnswer_mini,
 } from '@deliberation-lab/utils';
 
 import {
   runLeaderLottery,
   LeaderSelectionInput,
 } from './leadership_rejection.utils';
-
-import {
-  getCorrectLASAnswer,
-  getCorrectSDAnswer,
-} from '../../../frontend/src/shared/templates/leader_rejection_template';
 
 import {app} from '../app';
 
@@ -121,50 +120,43 @@ export async function addParticipantAnswerToRankingStagePublicData(
 
         // -------------------------------------------------------------------
         // 3. Helper: compute performance score (baseline1 + baseline2 correct)
+        // ****
         // -------------------------------------------------------------------
         async function getPerformanceScore(pPublicId: string): Promise<number> {
           let totalCorrect = 0;
-          const baselineStages = [
-            {id: 'baseline1', type: 'LAS' as const},
-            {id: 'baseline2', type: 'SD' as const},
-          ];
 
-          for (const {id: baselineId, type} of baselineStages) {
-            const stageRef = app
-              .firestore()
-              .collection('experiments')
-              .doc(experimentId)
-              .collection('participants')
-              .doc(pPublicId)
-              .collection('stageData')
-              .doc(baselineId);
+          // Load baseline1 publicStageData (LAS)
+          const baseline1Doc = await app
+            .firestore()
+            .collection('experiments')
+            .doc(experimentId)
+            .collection('cohorts')
+            .doc(participant.currentCohortId)
+            .collection('publicStageData')
+            .doc('baseline1')
+            .get();
 
-            const docSnap = await stageRef.get();
-            if (!docSnap.exists) continue;
+          if (baseline1Doc.exists) {
+            const baseline1Data = baseline1Doc.data() as SurveyStagePublicData;
+            const scores1 = getBaselineScoresFromStage(baseline1Data, 'LAS');
+            totalCorrect += scores1[pPublicId] ?? 0;
+          }
 
-            const data = docSnap.data() || {};
-            const answers = data.answers || data.surveyAnswers || [];
+          // Load baseline2 publicStageData (SD)
+          const baseline2Doc = await app
+            .firestore()
+            .collection('experiments')
+            .doc(experimentId)
+            .collection('cohorts')
+            .doc(participant.currentCohortId)
+            .collection('publicStageData')
+            .doc('baseline2')
+            .get();
 
-            for (const q of answers) {
-              const qid = q.questionId ?? q.id;
-              const answerId = q.answerId ?? q.selected ?? q.answer;
-              if (!qid || !answerId) continue;
-
-              const parts = String(qid).split('-');
-              if (parts.length < 3) continue;
-
-              const id1 = parts[1];
-              const id2 = parts[2];
-              let correctAnswer = '';
-
-              if (type === 'LAS') {
-                correctAnswer = getCorrectLASAnswer(id1, id2);
-              } else if (type === 'SD') {
-                correctAnswer = getCorrectSDAnswer(id1, id2);
-              }
-
-              if (answerId === correctAnswer) totalCorrect++;
-            }
+          if (baseline2Doc.exists) {
+            const baseline2Data = baseline2Doc.data() as SurveyStagePublicData;
+            const scores2 = getBaselineScoresFromStage(baseline2Data, 'SD');
+            totalCorrect += scores2[pPublicId] ?? 0;
           }
 
           return totalCorrect;
@@ -203,16 +195,13 @@ export async function addParticipantAnswerToRankingStagePublicData(
 
         publicStageData.winnerId = lotteryResult.winnerId;
         publicStageData.leaderStatusMap = lotteryResult.participantStatusMap;
-        // Optionally:
-        // publicStageData.debugLeaderSelection = lotteryResult.debug;
 
         console.log(
           `[LR] 🎲 Winner selected at ${stage.id}: ${lotteryResult.winnerId}`,
         );
       }
 
-      // Note: In LR, we do NOT use Condorcet rankings here, so we do not
-      // touch publicStageData.participantAnswerMap in this branch.
+      // Note: In LR, we do NOT use Condorcet rankings here
     } else {
       // ─────────────────────────────────────────────────────────────
       // 🧩 Default Condorcet logic (e.g. Lost at Sea template)
