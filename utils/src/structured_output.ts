@@ -57,6 +57,9 @@ export const DEFAULT_READY_TO_END_FIELD = 'readyToEndChat';
 // FUNCTIONS
 // ****************************************************************************
 
+/** Defaults to chat structured output with should respond, ready to end,
+ * etc. fields.
+ */
 export function createStructuredOutputConfig(
   config: Partial<ChatMediatorStructuredOutputConfig> = {},
 ): ChatMediatorStructuredOutputConfig {
@@ -67,21 +70,24 @@ export function createStructuredOutputConfig(
         name: DEFAULT_EXPLANATION_FIELD,
         schema: {
           type: StructuredOutputDataType.STRING,
-          description: 'Your reasoning for your response.',
+          description:
+            '1–2 sentences explaining why you are sending this message, or why you are staying silent, based on your persona and the chat context.',
         },
       },
       {
         name: DEFAULT_SHOULD_RESPOND_FIELD,
         schema: {
           type: StructuredOutputDataType.BOOLEAN,
-          description: 'Whether or not to respond.',
+          description:
+            'True if you will send a message, False if you prefer to stay silent.',
         },
       },
       {
         name: DEFAULT_RESPONSE_FIELD,
         schema: {
           type: StructuredOutputDataType.STRING,
-          description: 'Your response.',
+          description:
+            'Your chat message (empty if you prefer to stay silent).',
         },
       },
       {
@@ -157,6 +163,7 @@ export function printSchema(
 
 export function makeStructuredOutputPrompt(
   config?: StructuredOutputConfig,
+  includeScaffolding = true,
 ): string {
   if (
     !structuredOutputEnabled(config) ||
@@ -165,7 +172,8 @@ export function makeStructuredOutputPrompt(
   ) {
     return '';
   }
-  return `Return only valid JSON, according to the following schema:
+  const scaffolding = includeScaffolding ? `\n--- Response format ---\n` : '';
+  return `${scaffolding}Return only valid JSON, according to the following schema:
 ${printSchema(config.schema)}
 `;
 }

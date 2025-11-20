@@ -14,6 +14,7 @@ export class AssetAllocationStageHandler extends BaseStageHandler {
   getStageDisplayForPrompt(
     participants: ParticipantProfileExtended[],
     stageContext: StageContextData,
+    includeScaffolding: boolean,
   ) {
     const stage = stageContext.stage as AssetAllocationStageConfig;
     const assetAllocationDisplay = getAssetAllocationSummaryText(stage);
