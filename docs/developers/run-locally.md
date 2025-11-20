@@ -62,8 +62,6 @@ instead of a Firebase project for the backend):
 
 ### 1. Install dependencies
 
-Deliberate Lab uses NPM Workspaces to manage dependencies and requires Node.js v22+.
-
 **Prerequisites:**
 - Install [Node.js v22](https://nodejs.org/). We recommend using a version manager like [nvm](https://github.com/nvm-sh/nvm).
   ```bash
