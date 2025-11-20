@@ -406,7 +406,15 @@ export class Panel extends MobxLitElement {
 
       return html`
         <div class="alert ${alert.status === AlertStatus.NEW ? 'new' : ''}">
-          <div class="alert-top">
+          <div
+            class="alert-top clickable"
+            @click=${() => {
+              this.experimentManager.setCurrentParticipantId(
+                participant.privateId,
+              );
+              this.experimentManager.setShowParticipantPreview(true, true);
+            }}
+          >
             <div class="alert-header">
               <div class="left">
                 <participant-profile-display .profile=${participant}>
@@ -506,12 +514,12 @@ export class Panel extends MobxLitElement {
     return html`
       <div class="alert-toast">
         <div class="content">
-          <pr-icon icon="warning" color="on-error-container"></pr-icon>
+          <pr-icon icon="warning" color="error"></pr-icon>
           <div>You have new alerts!</div>
         </div>
         <pr-icon-button
           icon="close"
-          color="on-error-container"
+          color="error"
           variant="default"
           @click=${() => {
             this.showToast = false;

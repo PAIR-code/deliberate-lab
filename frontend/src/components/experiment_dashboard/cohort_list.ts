@@ -1,6 +1,7 @@
 import '../../pair-components/button';
 import '../../pair-components/icon';
 import '../../pair-components/icon_button';
+import '../../pair-components/menu';
 import '../../pair-components/tooltip';
 
 import './cohort_summary';
@@ -95,6 +96,37 @@ export class Component extends MobxLitElement {
             >
             </pr-icon>
             <div>${showMediators ? 'Hide' : 'Show'} mediators</div>
+          </div>
+          <div class="sort-controls">
+            <pr-menu
+              name=${this.experimentManager.participantSortBy === 'lastActive'
+                ? 'Last Active'
+                : 'Name'}
+              icon=${this.experimentManager.participantSortBy === 'lastActive'
+                ? 'hourglass_empty'
+                : 'sort_by_alpha'}
+              color="secondary"
+              variant="default"
+            >
+              <div class="menu-wrapper">
+                <div
+                  class="menu-item"
+                  @click=${() => {
+                    this.experimentManager.setParticipantSortBy('lastActive');
+                  }}
+                >
+                  Sort by Last Active
+                </div>
+                <div
+                  class="menu-item"
+                  @click=${() => {
+                    this.experimentManager.setParticipantSortBy('name');
+                  }}
+                >
+                  Sort by name
+                </div>
+              </div>
+            </pr-menu>
           </div>
         </div>
       </div>

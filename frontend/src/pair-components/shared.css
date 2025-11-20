@@ -188,10 +188,3 @@
   --pr-padding: calc(var(--md-sys-typescale-body-large-font-size, 24px) * 0.5)
     calc(var(--md-sys-typescale-body-large-font-size, 24px) * 0.75);
 }
-
-.palette-on-error-container {
-  --pr-palette: var(--md-sys-color-on-error-container, #410002);
-  --pr-palette-container: var(--md-sys-color-error-container, #ffdad6);
-  --pr-on-palette: var(--md-sys-color-error-container, #ffdad6);
-  --pr-on-palette-container: var(--md-sys-color-on-error-container, #410002);
-}

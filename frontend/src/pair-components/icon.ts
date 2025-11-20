@@ -34,7 +34,6 @@ export class Icon extends LitElement {
       'palette-neutral': this.color === 'neutral',
       'palette-error': this.color === 'error',
       'palette-success': this.color === 'success',
-      'palette-on-error-container': this.color === 'on-error-container',
       'state-filled': this.filled,
     });
 
