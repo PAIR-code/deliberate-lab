@@ -22,6 +22,7 @@
   },
   "main": "lib/index.js",
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.70.1",
     "@deliberation-lab/utils": "file:../utils",
     "@google/genai": "^1.30.0",
     "@sinclair/typebox": "^0.34.41",
@@ -39,7 +40,6 @@
     "testTimeout": 15000
   },
   "devDependencies": {
-    "@anthropic-ai/sdk": "^0.70.1",
     "@babel/preset-env": "^7.28.5",
     "@babel/preset-typescript": "^7.28.5",
     "@firebase/rules-unit-testing": "^5.0.0",
