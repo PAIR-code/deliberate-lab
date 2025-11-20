@@ -6,13 +6,13 @@ import '../../pair-components/icon';
 
 import '../participant_profile/profile_display';
 
-import { MobxLitElement } from '@adobe/lit-mobx';
-import { CSSResultGroup, html, nothing } from 'lit';
-import { customElement, property, state } from 'lit/decorators.js';
+import {MobxLitElement} from '@adobe/lit-mobx';
+import {CSSResultGroup, html, nothing} from 'lit';
+import {customElement, property, state} from 'lit/decorators.js';
 
-import { core } from '../../core/core';
-import { CohortService } from '../../services/cohort.service';
-import { ParticipantService } from '../../services/participant.service';
+import {core} from '../../core/core';
+import {CohortService} from '../../services/cohort.service';
+import {ParticipantService} from '../../services/participant.service';
 
 import {
   ChatStageConfig,
@@ -21,8 +21,8 @@ import {
   StageConfig,
   StageKind,
 } from '@deliberation-lab/utils';
-import { getChatTimeRemainingInSeconds } from '../../shared/stage.utils';
-import { styles } from './participant_header.scss';
+import {getChatTimeRemainingInSeconds} from '../../shared/stage.utils';
+import {styles} from './participant_header.scss';
 
 /** Header component for participant preview */
 @customElement('participant-header')
@@ -72,8 +72,8 @@ export class Header extends MobxLitElement {
         const startTimestamp =
           this.stage.kind === StageKind.PRIVATE_CHAT
             ? this.participantService.profile?.timestamps.readyStages[
-            this.stage.id
-            ]
+                this.stage.id
+              ]
             : publicStageData?.discussionStartTimestamp;
 
         this.timeRemaining = getChatTimeRemainingInSeconds(
@@ -115,9 +115,9 @@ export class Header extends MobxLitElement {
         color="neutral"
         variant="default"
         @click=${() =>
-        this.participantService.setShowParticipantSidenav(
-          !this.participantService.showParticipantSidenav,
-        )}
+          this.participantService.setShowParticipantSidenav(
+            !this.participantService.showParticipantSidenav,
+          )}
       >
       </pr-icon-button>
     `;
@@ -160,9 +160,9 @@ export class Header extends MobxLitElement {
           size="large"
           variant="default"
           @click=${() => {
-        const current = this.participantService.getShowHelpPanel();
-        this.participantService.setShowHelpPanel(!current);
-      }}
+            const current = this.participantService.getShowHelpPanel();
+            this.participantService.setShowHelpPanel(!current);
+          }}
         >
         </pr-icon-button>
       </pr-tooltip>
