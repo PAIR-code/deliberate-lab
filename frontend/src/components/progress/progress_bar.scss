@@ -7,7 +7,7 @@
 
 .progress-bar {
   @include common.progress-bar;
-  width: 100px;
+  width: 60px;
 
   &.large {
     width: 200px;

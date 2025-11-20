@@ -37,6 +37,8 @@
   height: common.$header-height;
   justify-content: space-between;
   padding: 0 common.$main-content-padding;
+  position: relative;
+  z-index: 10;
 
   .left,
   .right {
@@ -61,4 +63,29 @@ small {
   color: var(--md-sys-color-outline);
   gap: common.$spacing-medium;
   padding: common.$main-content-padding;
+}
+
+.menu-wrapper {
+  @include typescale.label-medium;
+  @include common.flex-column;
+  gap: common.$spacing-medium;
+  overflow: auto;
+}
+
+.menu-item {
+  @include common.nav-item;
+  @include common.flex-column;
+  align-items: start;
+  border-radius: common.$spacing-medium;
+  gap: common.$spacing-small;
+  padding: common.$spacing-medium;
+}
+
+.sort-controls {
+  transform: scale(0.8);
+  transform-origin: right center;
+
+  pr-menu {
+    --pr-menu-icon-color: var(--md-sys-color-on-surface-variant);
+  }
 }

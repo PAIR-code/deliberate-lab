@@ -234,9 +234,9 @@ const CONSENSUS_TOS_STAGE = createTOSStage({
 const TEXT_MEDIATED_INFO = [
   'To help facilitate your discussion, an AI-based facilitator will join your conversation for one or more rounds.',
   'The conversational style of the AI-based facilitator will be different in each round it appears.',
-  '![AI facilitator](https://i.imgur.com/lnQVk8W.png)',
+  '![AI facilitator](https://raw.githubusercontent.com/PAIR-code/deliberate-lab/refs/heads/main/frontend/assets/consensus/instructions2.png)',
   'Here is an example of how this facilitation may look:',
-  '![AI transcript](https://i.imgur.com/tFd4lxY.png)',
+  '![AI transcript](https://raw.githubusercontent.com/PAIR-code/deliberate-lab/refs/heads/main/frontend/assets/consensus/instructions5.png)',
 ];
 
 const TEXT_INSTRUCTIONS = [
@@ -245,13 +245,13 @@ const TEXT_INSTRUCTIONS = [
   '2. *Discuss your choices with the group*. Share your reasoning with 2 other participants and try to reach a consensus. You will have **exactly 5 minutes** to discuss per round.',
   '3. *Privately update your allocation*. After the discussion, you can revise your initial allocation based on what you heard.',
   'Your goal is to work together to find the best way to split the funds.',
-  '![Instructions](https://i.imgur.com/YOTgSAi.png)',
+  '![Instructions](https://raw.githubusercontent.com/PAIR-code/deliberate-lab/refs/heads/main/frontend/assets/consensus/instructions1.png)',
 ];
 
 const TEXT_INSTRUCTIONS_2 = [
   'The charities in each round are real. After your final decision, we will donate a **fixed total amount** to these charities based on your group’s choices.',
   'If you were the only participant, your final allocation would directly determine how the donation is split.',
-  '![Donation example](https://i.imgur.com/6kHhHTg.png)',
+  '![Donation example](https://raw.githubusercontent.com/PAIR-code/deliberate-lab/refs/heads/main/frontend/assets/consensus/instructions4.png)',
   "However, you are part of a group of 3 participants. Your **group's allocation** is the **average** of everyone's final allocation in that round.",
 ];
 
@@ -260,7 +260,7 @@ const TEXT_INSTRUCTIONS_3 = [
   'For example, if everyone agrees on 🐶 50% / 🐱 30% / 🐹 20%, the consensus score is high (100). If your allocations are very different, the score will be lower.',
   'At the end of the study, all groups will be ranked by their consensus scores. **Groups with higher consensus will have more influence** over how the donation is split.',
   'In the example image, Group 1 had high consensus and favored 🐹 Hamsters. Group 3 had low consensus and favored 🐶 Dogs. Because Group 1 had a higher consensus score, their decisions will be prioritized: more money will go to 🐹 Hamsters than to 🐶 Dogs.',
-  '![Consensus example](https://i.imgur.com/aPi5CkV.png)',
+  '![Consensus example](https://raw.githubusercontent.com/PAIR-code/deliberate-lab/refs/heads/main/frontend/assets/consensus/instructions3.png)',
 ];
 
 const TEXT_INSTRUCTIONS_4 = [
@@ -572,7 +572,7 @@ export function createAllocationRevealStage(): StageConfig {
     name: '📊 Final allocation results',
     descriptions: createStageTextConfig({
       primaryText:
-        'Here are the final results of your group’s allocations across all three rounds. The higher the score, the more influence your group will have in directing the donations.',
+        'Here are the final results of your group’s allocations across all three rounds. The higher the score, the more influence your group will have in directing the donations.\n\n‼️ Click `Next Stage` after viewing the final results to continue with the experiment.',
     }),
     items: [
       createMultiAssetAllocationRevealItem({
@@ -629,7 +629,7 @@ function createCharityComprehensionStage(): StageConfig {
     name: '💯 Comprehension check',
     descriptions: createStageTextConfig({
       primaryText:
-        'Please answer the following questions to ensure the instructions are clear.',
+        'Please answer the following questions to ensure the instructions are clear. You can click back to previous stages to review the instructions if needed.',
     }),
     questions: [
       createMultipleChoiceComprehensionQuestion(
@@ -1169,7 +1169,7 @@ function createClaudeMediatorTemplate(
   const promptMap: {[key: string]: MediatorPromptConfig} = {};
   const modelSettings: AgentModelSettings = {
     apiType: ApiKeyType.CLAUDE_API_KEY,
-    modelName: 'claude-4-5-haiku-latest',
+    modelName: 'claude-haiku-4-5',
   };
 
   for (const id of stageIds) {
