@@ -51,7 +51,9 @@ import {
 } from '@deliberation-lab/utils';
 import {mustWaitForAllParticipants} from '../experiment.utils';
 import {
+  LAS_PART_1_SURVIVAL_SURVEY_STAGE_ID,
   LAS_PART_2_ELECTION_STAGE_ID,
+  LAS_PART_2_UPDATED_TASK_SURVEY_STAGE_ID,
   LAS_PART_3_LEADER_TASK_SURVEY_ID,
   LAS_PART_3_REVEAL_DESCRIPTION_INFO,
   LAS_PART_3_REVEAL_DESCRIPTION_PRIMARY,
@@ -110,7 +112,6 @@ export function getLeadershipRejectionStageConfigs(): StageConfig[] {
   stages.push(LR_R1_BELIEF_CANDIDATES);
   stages.push(LR_R1_INSTRUCTIONS_GROUP);
   stages.push(LR_R1_GROUP_TASK_STAGE);
-  // stages.push(LR_R1_SELECTION_STAGE);
   stages.push(LR_R1_STATUS_FEEDBACK_STAGE);
   stages.push(LR_R1_BELIEF_STAGE);
 
@@ -120,7 +121,7 @@ export function getLeadershipRejectionStageConfigs(): StageConfig[] {
   stages.push(LR_R2_BELIEF_CANDIDATES);
   stages.push(LR_R2_INSTRUCTIONS_GROUP);
   stages.push(LR_R2_GROUP_TASK_STAGE);
-  //stages.push(LR_R2_STATUS_FEEDBACK_STAGE);
+  stages.push(LR_R2_STATUS_FEEDBACK_STAGE);
   stages.push(LR_R2_BELIEF_STAGE);
 
   // Group Stage - Hypothetical Round 3
@@ -128,9 +129,11 @@ export function getLeadershipRejectionStageConfigs(): StageConfig[] {
   stages.push(LR_R3_APPLY_STAGE);
 
   // Final feedback, survey, payout
-  // stages.push(LR_FEEDBACK_STAGE);
-  // stages.push(LR_FINAL_SURVEY_STAGE);
-  // stages.push(LR_PAYOUT_STAGE);
+  stages.push(LR_FEEDBACK_STAGE);
+  stages.push(LR_FEEDBACK_STAGE_BIS);
+  stages.push(LR_FINAL_SURVEY_STAGE);
+  stages.push(LR_PAYOUT_INFO_STAGE);
+  stages.push(LR_PAYOUT_STAGE);
 
   return stages;
 }
@@ -719,7 +722,16 @@ export const LR_R1_INSTRUCTIONS_GROUP_INFO = [
 export const LR_R1_INSTRUCTIONS_GROUP = createRankingStage({
   id: 'r1_instructions',
   name: 'Round 1 - Task Instructions',
-  // infoLines: LR_R1_INSTRUCTIONS_GROUP_INFO,
+  descriptions: createStageTextConfig({
+    primaryText:
+      'You are invited to complete the group task, while the computer gathers information to determine who the selected leader is. ' +
+      "In this part, everyone will complete the same task as in Part 1, but with a new set of questions. However, only the leader's answers will determine the payoff for this task. " +
+      "Since you could potentially be the leader without knowing it yet, keep in mind that your performance might determine everyone's payoff for this part. For each question, the leader's " +
+      'answers will be evaluated in the same manner as in Part 1 and will determine the payoff for all group members. Thus, if a question from next part is selected to determine your final payoff, ' +
+      "it will be the leader's answer that counts. After the task ends, you will be informed of whether or not you were the leader for this round. " +
+      "Remember also that in the extreme case where no one applied, you could be selected as the leader. As a result, try to perform to the best of your ability in the following task, regardless of your application status.'",
+  }),
+  progress: createStageProgressConfig({waitForAllParticipants: true}),
 });
 
 //Task
@@ -747,7 +759,7 @@ export const LR_R1_STATUS_FEEDBACK_STAGE = createRevealStage({
   }),
   progress: createStageProgressConfig({
     showParticipantProgress: false,
-    waitForAllParticipants: true,
+    waitForAllParticipants: false,
   }),
   items: [
     createRankingRevealItem({
@@ -757,78 +769,6 @@ export const LR_R1_STATUS_FEEDBACK_STAGE = createRevealStage({
     }),
   ],
 });
-/*
-function createLeaderStatusRevealStage(
-  id: string,
-  name: string,
-  renderMessage: CustomRevealItem['renderMessage'],
-  selectionId: string, // add this argument
-) {
-  return createRevealStage({
-    id,
-    name,
-    descriptions: createStageTextConfig({
-      primaryText: 'Results of leader selection for this round.',
-      infoText:
-        'Please wait until everyone in your group has reached this page.',
-    }),
-    progress: createStageProgressConfig({
-      showParticipantProgress: false,
-    }),
-    items: [
-      {
-        id: selectionId,
-        kind: StageKind.Ranking,
-        revealAudience: RevealAudience.CURRENT_PARTICIPANT,
-        revealScorableOnly: false,
-        customRender: 'Chris', // we’ll handle display logic in your frontend UI
-      }, // this bypasses TS restriction only here, safely
-    ],
-  });
-}
-*/
-// ---------------------------------------------------------------------------
-// Use it for your reveal stages
-// ---------------------------------------------------------------------------
-/*
-export const LR_R1_STATUS_FEEDBACK_STAGE = createLeaderStatusRevealStage(
-  'r1_status_feedback',
-  'Round 1 — Leader Selection Result',
-  (participant, publicStageData) => {
-    const status = publicStageData.leaderStatusMap?.[participant.publicId];
-    switch (status) {
-      case 'candidate_accepted':
-        return '✅ Your application to be the leader in this round was accepted.';
-      case 'candidate_rejected':
-        return '❌ Your application to be the leader in this round was rejected.';
-      case 'non_candidate_accepted':
-        return '✅ You did not apply to be the leader, but since no one applied, you were selected.';
-      case 'non_candidate_rejected':
-        return '❌ You did not apply to be the leader. Since no one applied, everyone was considered, but you were not selected.';
-      case 'non_candidate_hypo_selected':
-        return '💡 You did not apply to be the leader, and someone else was selected. Had you applied, you would have been selected.';
-      case 'non_candidate_hypo_rejected':
-        return 'ℹ️ You did not apply to be the leader, and someone else was selected. Had you applied, you would have been rejected.';
-      default:
-        return '⏳ Waiting for results...';
-    }
-  },
-  'r1_selection', // 👈 this is the Firestore doc id containing LRRankingStagePublicData
-);
-*/
-/* Here we need everyone synchronized !!!
-
-Reveal to participants their status, conditional on
-- candidate_accepted
-- candidate_rejected
-- non_candidate_accepted
-- non_candidate_hypo_accepted
-- non_candidate_hypo_rejected
-
-The messages should be:
-"
-
- */
 
 //==========================================================
 // Attribution beliefs Stage
@@ -846,6 +786,7 @@ const LR_R1_BELIEF_STAGE = createSurveyStage({
       upperText: 'Purely performance-based',
       lowerValue: 0,
       upperValue: 100,
+      useSlider: true,
     }),
   ],
 });
@@ -870,7 +811,9 @@ export const LR_R2_INSTRUCTIONS_INFO = [
 ];
 
 export const LR_R2_INSTRUCTIONS = createInfoStage({
+  id: 'r2_firts_instructions',
   name: 'Round 2 - Instructions',
+  progress: createStageProgressConfig({waitForAllParticipants: false}),
   infoLines: LR_R2_INSTRUCTIONS_INFO,
 });
 
@@ -918,24 +861,26 @@ const LR_R2_BELIEF_CANDIDATES = createSurveyStage({
   ],
 });
 
+export const LR_R2_INSTRUCTIONS_GROUP = createRankingStage({
+  id: 'r2_instructions',
+  name: 'Round 2 - Task Instructions',
+  descriptions: createStageTextConfig({
+    primaryText:
+      'You are invited to complete the group task, while the computer gathers information to determine who the selected leader is. ' +
+      "In this part, everyone will complete the same task as in Part 1, but with a new set of questions. However, only the leader's answers will determine the payoff for this task. " +
+      "Since you could potentially be the leader without knowing it yet, keep in mind that your performance might determine everyone's payoff for this part. For each question, the leader's " +
+      'answers will be evaluated in the same manner as in Part 1 and will determine the payoff for all group members. Thus, if a question from next part is selected to determine your final payoff, ' +
+      "it will be the leader's answer that counts. After the task ends, you will be informed of whether or not you were the leader for this round. " +
+      "Remember also that in the extreme case where no one applied, you could be selected as the leader. As a result, try to perform to the best of your ability in the following task, regardless of your application status.'",
+  }),
+  progress: createStageProgressConfig({waitForAllParticipants: true}),
+});
+
+// Instructions
+
 //==========================================================
 // Group Task
 //==========================================================
-
-// Instructions
-export const LR_R2_INSTRUCTIONS_GROUP_INFO = [
-  "You are invited to complete the group task, while the computer gathers information to determine who the selected leader is. In this part, everyone will complete the same task as in Part 1, but with a new set of questions. However, only the leader's answers will determine the payoff for this task.",
-  "\n\nSince you could potentially be the leader without knowing it yet, keep in mind that your performance might determine everyone's payoff for this part.",
-  "\n\nFor each question, the leader's answers will be evaluated in the same manner as in Part 1 and will determine the payoff for all group members. Thus, if a question from Part 3 is selected to determine your final payoff, it will be the leader's answer that counts.",
-  '\n\nAfter the task ends, you will be informed of whether or not you were the leader for this round.',
-  'Remember also that in the extreme case where no one applied, you could be selected as the leader. As a result, try to perform to the best of your ability in the following task, regardless of your application status.',
-];
-
-export const LR_R2_INSTRUCTIONS_GROUP = createInfoStage({
-  id: 'r2_instructions',
-  name: 'Round 2 - Task Instructions',
-  infoLines: LR_R2_INSTRUCTIONS_GROUP_INFO,
-});
 
 //Task
 export const LR_R2_GROUP_TASK_ID = 'grouptask2';
@@ -951,7 +896,7 @@ export const LR_R2_GROUP_TASK_STAGE = createSurveyStage({
 // Feedback Stage
 //==========================================================
 
-/* export const LR_R2_STATUS_FEEDBACK_STAGE = createRevealStage({
+export const LR_R2_STATUS_FEEDBACK_STAGE = createRevealStage({
   id: 'r2_status_feedback',
   name: 'Round 2 — Leader Selection Result',
   descriptions: createStageTextConfig({
@@ -960,58 +905,17 @@ export const LR_R2_GROUP_TASK_STAGE = createSurveyStage({
   }),
   progress: createStageProgressConfig({
     showParticipantProgress: false,
-    waitForAllParticipants: true,
+    waitForAllParticipants: false,
   }),
   items: [
-    createLRRankingRevealItem({
+    createRankingRevealItem({
       id: 'r2_instructions',
+      customRender: 'leaderStatus', // 🧩 triggers your custom reveal
       revealAudience: RevealAudience.CURRENT_PARTICIPANT,
-      customRender: 'leaderStatus', // 👈 triggers LR-specific rendering
     }),
   ],
 });
-/*
-export const LR_R2_SELECTION_STAGE = createRevealStage({
-  id: 'r2_selection',
-  name: 'Leader selection (backend only)',
-  descriptions: createStageTextConfig({
-    infoText: 'Determining leader...',
-    primaryText: 'Determining leader...',
-  }),
-  items: [],
-  progress: createStageProgressConfig({
-    showParticipantProgress: false,
-    waitForAllParticipants: true, // ⏳ ensures all are present
-  }),
-});
-/*
 
-export const LR_R2_STATUS_FEEDBACK_STAGE = createLeaderStatusRevealStage(
-  'r2_status_feedback',
-  'Round 2 — Leader Selection Result',
-  (participant, publicStageData) => {
-    const status = publicStageData.leaderStatusMap?.[participant.publicId];
-    switch (status) {
-      case 'candidate_accepted':
-        return '✅ Your application to be the leader in this round was accepted.';
-      case 'candidate_rejected':
-        return '❌ Your application to be the leader in this round was rejected.';
-      case 'non_candidate_accepted':
-        return '✅ You did not apply to be the leader, but since no one applied, you were selected.';
-      case 'non_candidate_rejected':
-        return '❌ You did not apply to be the leader. Since no one applied, everyone was considered, but you were not selected.';
-      case 'non_candidate_hypo_selected':
-        return '💡 You did not apply to be the leader, and someone else was selected. Had you applied, you would have been selected.';
-      case 'non_candidate_hypo_rejected':
-        return 'ℹ️ You did not apply to be the leader, and someone else was selected. Had you applied, you would have been rejected.';
-      default:
-        return '⏳ Waiting for results...';
-    }
-  },
-  'r2_selection',
-);
-
- */
 //==========================================================
 // Attribution beliefs Stage
 //==========================================================
@@ -1028,6 +932,7 @@ const LR_R2_BELIEF_STAGE = createSurveyStage({
       upperText: 'Purely performance-based',
       lowerValue: 0,
       upperValue: 100,
+      useSlider: true,
     }),
   ],
 });
@@ -1091,11 +996,12 @@ const LR_R3_APPLY_STAGE = createSurveyStage({
 //==========================================================
 //==========================================================
 //==========================================================
-// export const LR_FEEDBACK_STAGE_PRIMARY = 'Here are the results from the task.';
+export const LR_FEEDBACK_STAGE_PRIMARY = 'Here are the results from the task.';
+export const LR_FEEDBACK_STAGE_INFO = `An explanation of the results can be found [here](https://raw.githubusercontent.com/PAIR-code/deliberate-lab/main/frontend/src/assets/lost_at_sea/task_answers.pdf).`;
 
-// export const LR_FEEDBACK_STAGE_INFO = `An explanation of the results can be found [here](https://raw.githubusercontent.com/PAIR-code/deliberate-lab/main/frontend/src/assets/lost_at_sea/task_answers.pdf).`;
+export const r1_instructions = 'r1_instructions';
+export const r2_instructions = 'r2_instructions';
 
-/*
 export const LR_FEEDBACK_STAGE = createRevealStage({
   name: 'Results reveal',
   descriptions: createStageTextConfig({
@@ -1104,16 +1010,34 @@ export const LR_FEEDBACK_STAGE = createRevealStage({
   }),
   items: [
     createRankingRevealItem({
-      id: LAS_PART_2_ELECTION_STAGE_ID,
+      id: r1_instructions,
     }),
     createSurveyRevealItem({
-      id: LAS_PART_3_LEADER_TASK_SURVEY_ID,
+      id: LR_R2_GROUP_TASK_ID,
       revealAudience: RevealAudience.ALL_PARTICIPANTS,
       revealScorableOnly: true,
     }),
   ],
 });
-*/
+
+export const LR_FEEDBACK_STAGE_BIS = createRevealStage({
+  name: 'Results reveal',
+  descriptions: createStageTextConfig({
+    infoText: LR_FEEDBACK_STAGE_INFO,
+    primaryText: LR_FEEDBACK_STAGE_PRIMARY,
+  }),
+  items: [
+    createRankingRevealItem({
+      id: r2_instructions,
+    }),
+    createSurveyRevealItem({
+      id: LR_R1_GROUP_TASK_ID,
+      revealAudience: RevealAudience.ALL_PARTICIPANTS,
+      revealScorableOnly: true,
+    }),
+  ],
+});
+
 //FUNCTION ABOVE NEEDS TO BE ADJUSTED TO JUST REVEAL ANSWERS OF THE LEADER IN THE TWO GROUP TASKS
 // AND WHETHER CORRECT OR NOT
 
@@ -1125,8 +1049,8 @@ export const LR_FEEDBACK_STAGE = createRevealStage({
 //==========================================================
 //==========================================================
 
-// const LR_FINAL_SURVEY_PRIMARY = `Thank you for participating in this experiment. After completing the final survey, clicking 'End experiment' will redirect you to Prolific.`;
-/* export const LR_FINAL_SURVEY_QUESTION: SurveyQuestion[] = [
+const LR_FINAL_SURVEY_PRIMARY = `Thank you for participating in this experiment. After completing the final survey, clicking 'End experiment' will redirect you to Prolific.`;
+export const LR_FINAL_SURVEY_QUESTION: SurveyQuestion[] = [
   createTextSurveyQuestion({
     id: '0',
     questionTitle:
@@ -1222,3 +1146,107 @@ e) add a £50 bonus for each time one was leader (so up to 1£)
 
 
  */
+
+// ****************************************************************************
+// Payout Breakdown info stage
+// ****************************************************************************
+export const LR_PAYMENT_PART_1_DESCRIPTION = `Your payment for Part 1 includes a fixed fee of £3 and a bonus. The bonus is determined by randomly selecting one question from Part 1. If your answer to this question is correct, you earn £2; otherwise, you earn £0.`;
+
+export const LR_PAYMENT_PARTS_2_AND_3_DESCRIPTION = `Your payment for Parts 2 and 3 includes a fixed fee of £6 and a bonus. The bonus is determined by randomly selecting either Part 2 or Part 3.`;
+
+export const LR_PAYMENT_PART_2_DESCRIPTION = `One question is randomly chosen from Part 2. You earn £2 if your answer is correct, and £0 otherwise.`;
+
+export const LR_PAYMENT_PART_3_DESCRIPTION = `One question is randomly chosen from Part 3, with only the leader's answer counting. You earn £2 if the leader's answer is correct, and £0 otherwise.`;
+
+export const LR_PAYMENT_INSTRUCTIONS = [
+  '## Part 1 Payment:',
+  LR_PAYMENT_PART_1_DESCRIPTION,
+  '\n\n## Payment for Parts 2 and 3:',
+  LR_PAYMENT_PARTS_2_AND_3_DESCRIPTION,
+  `* If Part 2 is selected: ${LR_PAYMENT_PART_2_DESCRIPTION}`,
+  `* If Part 3 is selected: ${LR_PAYMENT_PART_3_DESCRIPTION}`,
+  '**Note: These payments will be translated into the currency of your specification when they are paid out to you on the Prolific platform. Please allow us 24-48 hours to process the payments.**',
+];
+
+export const LR_PAYMENT_INSTRUCTIONS_ALL = [
+  ...LR_PAYMENT_INSTRUCTIONS,
+  'On the next page, you can see which part and question were selected and whether you received the bonus.',
+];
+
+const LR_PAYOUT_INFO_STAGE = createInfoStage({
+  name: 'Payment breakdown',
+  infoLines: LR_PAYMENT_INSTRUCTIONS_ALL,
+});
+
+// ****************************************************************************
+// Payout stage
+// ****************************************************************************
+
+export function createLRPayoutItems() {
+  const RANDOM_SELECTION_ID = 'lr-part';
+
+  const part1 = createSurveyPayoutItem({
+    id: 'payout-part-1',
+    randomSelectionId: RANDOM_SELECTION_ID,
+    name: 'Part 1 payoff',
+    description: LR_PAYMENT_PART_1_DESCRIPTION,
+    stageId: LR_BASELINE_TASK1_ID,
+    baseCurrencyAmount: 6,
+  });
+  const part1Question = choice(LAS_INDIVIDUAL_ITEMS_MULTIPLE_CHOICE_QUESTIONS);
+  part1.questionMap[part1Question.id] = 2;
+
+  // Only one payout item with this ID will be selected (at random)
+  // for each participant
+
+  const part2 = createSurveyPayoutItem({
+    id: 'payout-part-2',
+    randomSelectionId: RANDOM_SELECTION_ID,
+    name: 'Parts 2 and 3 payoff - Part 2 selected',
+    description: LR_PAYMENT_PART_1_DESCRIPTION,
+    stageId: LR_BASELINE_TASK2_ID,
+    baseCurrencyAmount: 6,
+  });
+  const part2Question = choice(SD_INDIVIDUAL_ITEMS_MULTIPLE_CHOICE_QUESTIONS);
+  part2.questionMap[part2Question.id] = 2;
+
+  const part3 = createSurveyPayoutItem({
+    id: 'payout-part-3',
+    randomSelectionId: RANDOM_SELECTION_ID,
+    name: 'Parts 2 and 3 payoff - Part 2 selected',
+    description: [
+      LR_PAYMENT_PARTS_2_AND_3_DESCRIPTION,
+      LR_PAYMENT_PART_2_DESCRIPTION,
+    ].join('\n\n'),
+    stageId: LR_R1_GROUP_TASK_ID,
+    baseCurrencyAmount: 6,
+    rankingStageId: LAS_PART_2_ELECTION_STAGE_ID,
+  });
+  const part3Question = choice(LAS_LEADER_ITEMS_MULTIPLE_CHOICE_QUESTIONS);
+  part3.questionMap[part3Question.id] = 2;
+
+  const part4 = createSurveyPayoutItem({
+    id: 'payout-part-4',
+    randomSelectionId: RANDOM_SELECTION_ID,
+    name: 'Parts 2 and 3 payoff - Part 3 selected',
+    description: [
+      LR_PAYMENT_PARTS_2_AND_3_DESCRIPTION,
+      LR_PAYMENT_PART_3_DESCRIPTION,
+    ].join('\n\n'),
+    stageId: LR_R2_GROUP_TASK_ID,
+    baseCurrencyAmount: 6,
+  });
+  const part4Question = choice(SD_LEADER_ITEMS_MULTIPLE_CHOICE_QUESTIONS);
+  part4.questionMap[part4Question.id] = 2;
+
+  return [part1, part2, part3, part4];
+}
+
+const LR_PAYOUT_STAGE = createPayoutStage({
+  id: 'payout',
+  currency: PayoutCurrency.GBP,
+  descriptions: createStageTextConfig({
+    infoText: LR_PAYMENT_INSTRUCTIONS.join('\n'),
+  }),
+  payoutItems: createLRPayoutItems(),
+});
