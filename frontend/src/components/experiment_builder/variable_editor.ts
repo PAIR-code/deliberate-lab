@@ -146,38 +146,50 @@ export class VariableEditor extends MobxLitElement {
             'Scope',
             html`
               <div class="description">When is this variable assigned?</div>
-              <select
-                .value=${config.scope}
-                @change=${(e: Event) => {
-                  const scope = (e.target as HTMLSelectElement)
-                    .value as VariableScope;
+              ${config.type === VariableConfigType.STATIC
+                ? html`
+                    <div class="static-scope">
+                      <md-icon>lock</md-icon>
+                      <span>Experiment (Global)</span>
+                    </div>
+                  `
+                : html`
+                    <select
+                      .value=${config.scope}
+                      @change=${(e: Event) => {
+                        const scope = (e.target as HTMLSelectElement)
+                          .value as VariableScope;
 
-                  let updates: Partial<VariableConfig> = {scope};
+                        let updates: Partial<VariableConfig> = {scope};
 
-                  // Automatically update seed strategy based on scope for Random Permutation variables
-                  if (
-                    config.type === VariableConfigType.RANDOM_PERMUTATION &&
-                    'shuffleConfig' in config
-                  ) {
-                    const seed = mapScopeToSeedStrategy(scope);
-                    updates = {
-                      ...updates,
-                      shuffleConfig: createShuffleConfig({
-                        ...config.shuffleConfig,
-                        seed,
-                      }),
-                    };
-                  }
+                        // Automatically update seed strategy based on scope for Random Permutation variables
+                        if (
+                          config.type ===
+                            VariableConfigType.RANDOM_PERMUTATION &&
+                          'shuffleConfig' in config
+                        ) {
+                          const seed = mapScopeToSeedStrategy(scope);
+                          updates = {
+                            ...updates,
+                            shuffleConfig: createShuffleConfig({
+                              ...config.shuffleConfig,
+                              seed,
+                            }),
+                          };
+                        }
 
-                  this.updateConfig(config, index, updates);
-                }}
-              >
-                <option value="${VariableScope.EXPERIMENT}">Experiment</option>
-                <option value="${VariableScope.COHORT}">Cohort</option>
-                <option value="${VariableScope.PARTICIPANT}">
-                  Participant
-                </option>
-              </select>
+                        this.updateConfig(config, index, updates);
+                      }}
+                    >
+                      <option value="${VariableScope.EXPERIMENT}">
+                        Experiment
+                      </option>
+                      <option value="${VariableScope.COHORT}">Cohort</option>
+                      <option value="${VariableScope.PARTICIPANT}">
+                        Participant
+                      </option>
+                    </select>
+                  `}
             `,
           )}
           ${this.renderDivider()}
