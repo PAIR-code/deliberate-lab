@@ -8,6 +8,7 @@ import {classMap} from 'lit/directives/class-map.js';
 
 import {core} from '../../core/core';
 import {AnalyticsService, ButtonClick} from '../../services/analytics.service';
+import {AuthService} from '../../services/auth.service';
 import {ExperimentEditor} from '../../services/experiment.editor';
 
 import {
@@ -95,6 +96,7 @@ export class StageBuilderDialog extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
 
   private readonly analyticsService = core.getService(AnalyticsService);
+  private readonly authService = core.getService(AuthService);
   private readonly experimentEditor = core.getService(ExperimentEditor);
 
   @property({type: Boolean})
@@ -171,15 +173,44 @@ export class StageBuilderDialog extends MobxLitElement {
         configuration!
       </div>
       <div class="card-gallery-wrapper">
-        ${this.renderLASCard()} ${this.renderLASCard(true)}
-        ${this.renderChipNegotiationCard()} ${this.renderFlipCardTemplateCard()}
-        ${this.renderFruitTestTemplateCard()} ${this.renderStockInfoGameCard()}
-        ${this.renderAssetAllocationTemplateCard()}
+        ${this.renderFlipCardTemplateCard()}
+        ${this.renderFruitTestTemplateCard()}
         ${this.renderConditionalSurveyTemplateCard()}
-        ${this.renderPolicyTemplateCard()} ${this.renderConsensusDebateCard()}
-        ${this.renderCharityDebateTemplateCard()}
-        ${this.renderOOTBCharityDebateTemplateCard()}
-        ${this.renderAgentIntegrationCard()}
+        ${this.renderStockInfoGameCard()}
+        ${this.renderAssetAllocationTemplateCard()}
+        ${this.renderPolicyTemplateCard()} ${this.renderAgentIntegrationCard()}
+      </div>
+      ${this.authService.hasResearchTemplateAccess
+        ? this.renderResearchTemplateGallery()
+        : nothing}
+    `;
+  }
+
+  // This is a temporary set of hardcoded templates defined in the frontend
+  // visible to experimenters who are marked for "research template" access.
+  // Eventually, all these templates should be migrated such that they
+  // are completely created in the UI and stored in the backend.
+  private renderResearchTemplateGallery() {
+    return html`
+      <div class="gallery-section">
+        <div class="gallery-title">Lost at Sea experiments</div>
+        <div class="card-gallery-wrapper">
+          ${this.renderLASCard()} ${this.renderLASCard(true)}
+        </div>
+      </div>
+      <div class="gallery-section">
+        <div class="gallery-title">Negotiation games</div>
+        <div class="card-gallery-wrapper">
+          ${this.renderChipNegotiationCard()}
+        </div>
+      </div>
+      <div class="gallery-section">
+        <div class="gallery-title">Debate experiments</div>
+        <div class="card-gallery-wrapper">
+          ${this.renderConsensusDebateCard()}
+          ${this.renderCharityDebateTemplateCard()}
+          ${this.renderOOTBCharityDebateTemplateCard()}
+        </div>
       </div>
     `;
   }
