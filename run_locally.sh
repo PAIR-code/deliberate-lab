@@ -4,7 +4,7 @@
 # Script to run Deliberate Lab locally following the developer guide.
 # https://pair-code.github.io/deliberate-lab/developers/run-locally
 #
-# Assumes 'npm install' has been run in root, utils, functions, and frontend,
+# Assumes 'npm install' has been run in the root directory,
 # and that 'firebase-tools' is installed globally or available in the path.
 # 
 # This script will kill any processes running on the ports used by the emulators.
