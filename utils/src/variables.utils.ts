@@ -1,13 +1,21 @@
 import {generateId} from './shared';
-import {SeedStrategy, choices} from './utils/random.utils';
-import {type TSchema} from '@sinclair/typebox';
+import {
+  SeedStrategy,
+  ShuffleConfig,
+  choices,
+  createShuffleConfig,
+} from './utils/random.utils';
+import {Type, type TSchema} from '@sinclair/typebox';
+import {Value} from '@sinclair/typebox/value';
 import {
   RandomPermutationVariableConfig,
+  ScopeContext,
   StaticVariableConfig,
   VariableConfig,
   VariableConfigType,
   VariableDefinition,
   VariableInstance,
+  VariableScope,
   VariableType,
 } from './variables';
 
@@ -54,6 +62,7 @@ export function createStaticVariableConfig(
   return {
     id: config.id ?? generateId(),
     type: VariableConfigType.STATIC,
+    scope: config.scope ?? VariableScope.EXPERIMENT,
     definition: config.definition ?? {
       name: 'variable',
       description: '',
@@ -63,66 +72,132 @@ export function createStaticVariableConfig(
   };
 }
 
+export function mapScopeToSeedStrategy(scope: VariableScope): SeedStrategy {
+  switch (scope) {
+    case VariableScope.EXPERIMENT:
+      return SeedStrategy.EXPERIMENT;
+    case VariableScope.COHORT:
+      return SeedStrategy.COHORT;
+    case VariableScope.PARTICIPANT:
+      return SeedStrategy.PARTICIPANT;
+    default:
+      return SeedStrategy.PARTICIPANT;
+  }
+}
+
 export function createRandomPermutationVariableConfig(
   config: Partial<RandomPermutationVariableConfig> = {},
 ): RandomPermutationVariableConfig {
+  const scope = config.scope ?? VariableScope.COHORT;
+
   return {
     id: config.id ?? generateId(),
     type: VariableConfigType.RANDOM_PERMUTATION,
+    scope,
     definition: config.definition ?? {
       name: 'variable',
       description: '',
       schema: VariableType.array(VariableType.STRING),
     },
-    seedStrategy: config.seedStrategy ?? SeedStrategy.COHORT,
+    shuffleConfig: createShuffleConfig({
+      shuffle: true,
+      seed: mapScopeToSeedStrategy(scope),
+      ...config.shuffleConfig,
+    }),
     values: config.values ?? [],
     numToSelect: config.numToSelect,
   };
 }
 
 /**
- * Given variable configs, generate variable-to-value mappings
- * if the variable config seed strategy matches the given seed strategy.
- *
- * For static:
- * - Returns the value as-is for all seed strategies
- *
- * For random permutation:
- * - Selects numToSelect instances (or all if not specified)
- * - Builds an array from the selected instance values
- * - Returns map of variable name → JSON array string
+ * Helper to generate value for RandomPermutationVariableConfig
  */
-export function createVariableToValueMapForSeed(
+function generateRandomPermutationValue(
+  config: RandomPermutationVariableConfig,
+  context: ScopeContext,
+): unknown {
+  const {shuffle, seed: seedStrategy, customSeed} = config.shuffleConfig;
+  const numToSelect = config.numToSelect ?? config.values.length;
+
+  let selectedInstances: VariableInstance[];
+
+  if (shuffle) {
+    let seedValue = '';
+    switch (seedStrategy) {
+      case SeedStrategy.EXPERIMENT:
+        seedValue = context.experimentId;
+        break;
+      case SeedStrategy.COHORT:
+        if ('cohortId' in context) {
+          seedValue = context.cohortId;
+        }
+        break;
+      case SeedStrategy.PARTICIPANT:
+        if ('participantId' in context) {
+          seedValue = context.participantId;
+        }
+        break;
+      case SeedStrategy.CUSTOM:
+        seedValue = customSeed;
+        break;
+    }
+
+    // seed() is called inside choices() if a seed value is provided
+    selectedInstances = choices(config.values, numToSelect, seedValue);
+  } else {
+    selectedInstances = config.values.slice(0, numToSelect);
+  }
+
+  // Parse instance values and build array
+  return selectedInstances.map((instance: VariableInstance) =>
+    getVariableInstanceValue(instance),
+  );
+}
+
+/**
+ * Given variable configs, generate variable-to-value mappings
+ * for a specific scope (Experiment, Cohort, or Participant).
+ *
+ * - Static variables: Included if their scope matches the requested scope.
+ * - Random permutation: Included if their scope matches the requested scope.
+ *
+ * @param variableConfigs List of configs to process
+ * @param context The scope context (scope + IDs)
+ */
+export function generateVariablesForScope(
   variableConfigs: VariableConfig[],
-  seedStrategy: SeedStrategy,
+  context: ScopeContext,
 ): Record<string, string> {
   const variableToValueMap: Record<string, string> = {};
 
-  for (const config of variableConfigs) {
+  // Filter configs by scope first
+  const scopedConfigs = variableConfigs.filter(
+    (c) => c.scope === context.scope,
+  );
+
+  for (const config of scopedConfigs) {
+    let value: unknown | undefined;
+
     switch (config.type) {
       case VariableConfigType.STATIC:
-        // Static values apply to all seed strategies
-        variableToValueMap[config.definition.name] = config.value.value;
+        value = getVariableInstanceValue(config.value);
         break;
       case VariableConfigType.RANDOM_PERMUTATION:
-        if (config.seedStrategy === seedStrategy) {
-          const numToSelect = config.numToSelect ?? config.values.length;
-
-          // TODO: Use seed to ensure consistent results?
-          const selectedInstances = choices(config.values, numToSelect);
-
-          // Parse instance values and build array
-          const selectedValues = selectedInstances.map(
-            (instance: VariableInstance) => getVariableInstanceValue(instance),
-          );
-
-          // Store as JSON array string
-          variableToValueMap[config.definition.name] =
-            JSON.stringify(selectedValues);
-        }
+        value = generateRandomPermutationValue(config, context);
         break;
       default:
         break;
+    }
+
+    if (value !== undefined) {
+      // Validate against schema (logs warning if invalid)
+      validateParsedVariableValue(
+        config.definition.schema,
+        value,
+        config.definition.name,
+      );
+
+      variableToValueMap[config.definition.name] = JSON.stringify(value);
     }
   }
 
@@ -184,4 +259,57 @@ export function getSchemaAtPath(
   }
 
   return currentSchema;
+}
+
+/**
+ * Parse a string value based on the expected schema type.
+ * Handles primitives and complex JSON types.
+ */
+export function parseVariableValue(schema: TSchema, value: string): unknown {
+  const type = schema.type as string;
+  if (type === 'string') return value;
+  if (type === 'number') return value === '' ? 0 : Number(value);
+  if (type === 'boolean') return value === 'true';
+  return value === '' ? null : JSON.parse(value);
+}
+
+/**
+ * Validate a parsed value against a schema.
+ * Returns error message string if invalid, or null if valid.
+ * Always logs a warning on validation failure.
+ */
+export function validateParsedVariableValue(
+  schema: TSchema,
+  value: unknown,
+  variableName?: string,
+): string | null {
+  if (value !== null && !Value.Check(schema, value)) {
+    const errors = [...Value.Errors(schema, value)];
+    const errorMsg = errors.map((e) => `${e.path}: ${e.message}`).join(', ');
+
+    const nameLog = variableName ? `Variable "${variableName}"` : 'Variable';
+    console.warn(`${nameLog} value does not match its schema definition.`, {
+      error: errorMsg,
+      value,
+      schema,
+    });
+    return errorMsg;
+  }
+  return null;
+}
+
+/**
+ * Validate a string value against a schema.
+ * Returns error message string if invalid, or null if valid.
+ */
+export function validateVariableValue(
+  schema: TSchema,
+  value: string,
+): string | null {
+  try {
+    const parsed = parseVariableValue(schema, value);
+    return validateParsedVariableValue(schema, parsed);
+  } catch (e) {
+    return `Invalid: ${e}`;
+  }
 }

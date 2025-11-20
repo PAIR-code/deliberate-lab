@@ -1,10 +1,26 @@
 import {Type, type TSchema} from '@sinclair/typebox';
-import {SeedStrategy} from './utils/random.utils';
+import {SeedStrategy, ShuffleConfig} from './utils/random.utils';
 
 /** Variable config for defining variables. */
 export type VariableConfig =
   | StaticVariableConfig
   | RandomPermutationVariableConfig;
+
+export enum VariableScope {
+  EXPERIMENT = 'experiment',
+  COHORT = 'cohort',
+  PARTICIPANT = 'participant',
+}
+
+export type ScopeContext =
+  | {scope: VariableScope.EXPERIMENT; experimentId: string}
+  | {scope: VariableScope.COHORT; experimentId: string; cohortId: string}
+  | {
+      scope: VariableScope.PARTICIPANT;
+      experimentId: string;
+      cohortId: string;
+      participantId: string;
+    };
 
 /**
  * Defines the structure and metadata for a variable.
@@ -28,6 +44,7 @@ export interface VariableInstance {
 export interface BaseVariableConfig {
   id: string;
   type: VariableConfigType;
+  scope: VariableScope;
   definition: VariableDefinition;
 }
 
@@ -48,7 +65,7 @@ export interface StaticVariableConfig extends BaseVariableConfig {
  */
 export interface RandomPermutationVariableConfig extends BaseVariableConfig {
   type: VariableConfigType.RANDOM_PERMUTATION;
-  seedStrategy: SeedStrategy;
+  shuffleConfig: ShuffleConfig;
   values: VariableInstance[]; // Pool of instances to select from
   numToSelect?: number; // How many to select (if omitted, selects all and shuffles)
 }

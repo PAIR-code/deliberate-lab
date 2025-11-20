@@ -1,6 +1,6 @@
 import {Type, type TSchema} from '@sinclair/typebox';
 import {SeedStrategy} from './utils/random.utils';
-import {VariableConfigType} from './variables';
+import {VariableConfigType, VariableScope} from './variables';
 
 /** Shorthand for strict TypeBox object validation */
 const strict = {additionalProperties: false} as const;
@@ -59,8 +59,28 @@ export const BaseVariableConfigData = Type.Object({
     Type.Literal(VariableConfigType.STATIC),
     Type.Literal(VariableConfigType.RANDOM_PERMUTATION),
   ]),
+  scope: Type.Union([
+    Type.Literal(VariableScope.EXPERIMENT),
+    Type.Literal(VariableScope.COHORT),
+    Type.Literal(VariableScope.PARTICIPANT),
+  ]),
   definition: VariableDefinitionData,
 });
+
+/** ShuffleConfig. */
+export const ShuffleConfigData = Type.Object(
+  {
+    shuffle: Type.Boolean(),
+    seed: Type.Union([
+      Type.Literal(SeedStrategy.EXPERIMENT),
+      Type.Literal(SeedStrategy.COHORT),
+      Type.Literal(SeedStrategy.PARTICIPANT),
+      Type.Literal(SeedStrategy.CUSTOM),
+    ]),
+    customSeed: Type.String(),
+  },
+  strict,
+);
 
 /** StaticVariableConfig. */
 export const StaticVariableConfigData = Type.Composite([
@@ -80,12 +100,7 @@ export const RandomPermutationVariableConfigData = Type.Composite([
   Type.Object(
     {
       type: Type.Literal(VariableConfigType.RANDOM_PERMUTATION),
-      seedStrategy: Type.Union([
-        Type.Literal(SeedStrategy.EXPERIMENT),
-        Type.Literal(SeedStrategy.COHORT),
-        Type.Literal(SeedStrategy.PARTICIPANT),
-        Type.Literal(SeedStrategy.CUSTOM),
-      ]),
+      shuffleConfig: ShuffleConfigData,
       values: Type.Array(VariableInstanceData),
       numToSelect: Type.Optional(Type.Number({minimum: 1})),
     },
