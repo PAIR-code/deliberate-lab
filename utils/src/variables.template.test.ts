@@ -1,6 +1,5 @@
 import {VariableDefinition, VariableType} from './variables';
 import {
-  extractVariableReferences,
   resolveTemplateVariables,
   validateTemplateVariables,
 } from './variables.template';
@@ -99,38 +98,6 @@ describe('Mustache Template Resolution', () => {
     });
   });
 
-  describe('extractVariableReferences', () => {
-    it('should extract simple variable names', () => {
-      const template = 'Hello {{name}}, you are {{age}} years old';
-      const refs = extractVariableReferences(template);
-      expect(refs).toEqual(['name', 'age']);
-    });
-
-    it('should extract nested properties', () => {
-      const template = '{{user.name}} lives in {{user.address.city}}';
-      const refs = extractVariableReferences(template);
-      expect(refs).toEqual(['user.name', 'user.address.city']);
-    });
-
-    it('should extract from sections', () => {
-      const template = '{{#section}}{{variable}}{{/section}}';
-      const refs = extractVariableReferences(template);
-      expect(refs).toEqual(['section', 'variable']);
-    });
-
-    it('should extract from triple mustache', () => {
-      const template = '{{{unescapedHtml}}} and {{normalVar}}';
-      const refs = extractVariableReferences(template);
-      expect(refs).toEqual(['unescapedHtml', 'normalVar']);
-    });
-
-    it('should remove duplicates', () => {
-      const template = '{{name}} and {{name}} again, plus {{age}}';
-      const refs = extractVariableReferences(template);
-      expect(refs).toEqual(['name', 'age']);
-    });
-  });
-
   describe('validateTemplateVariables', () => {
     const variableMap: Record<string, VariableDefinition> = {
       name: {
@@ -224,6 +191,71 @@ describe('Mustache Template Resolution', () => {
       const result = validateTemplateVariables(template, variableMap);
       expect(result.valid).toBe(false);
       expect(result.missingVariables).toEqual(['department.building']);
+    });
+
+    it('should validate section iteration (array)', () => {
+      const template =
+        'Tasks: {{#tasks}} - {{title}} (Priority: {{priority}}) {{/tasks}}';
+      const result = validateTemplateVariables(template, variableMap);
+      expect(result.valid).toBe(true);
+      expect(result.missingVariables).toEqual([]);
+    });
+
+    it('should validate section context (object)', () => {
+      const template =
+        'Dept: {{#department}} {{name}} - Floor {{floor}} {{/department}}';
+      const result = validateTemplateVariables(template, variableMap);
+      expect(result.valid).toBe(true);
+      expect(result.missingVariables).toEqual([]);
+    });
+
+    it('should detect missing variables inside sections', () => {
+      const template = 'Tasks: {{#tasks}} - {{description}} {{/tasks}}';
+      const result = validateTemplateVariables(template, variableMap);
+      expect(result.valid).toBe(false);
+      expect(result.missingVariables).toEqual(['description']);
+    });
+
+    it('should fallback to outer context if variable not found in section', () => {
+      const template = '{{#tasks}} Task for {{name}}: {{title}} {{/tasks}}';
+      const result = validateTemplateVariables(template, variableMap);
+      expect(result.valid).toBe(true);
+      expect(result.missingVariables).toEqual([]);
+    });
+
+    it('should validate deeply nested sections', () => {
+      const complexMap: Record<string, VariableDefinition> = {
+        ...variableMap,
+        company: {
+          name: 'company',
+          description: '',
+          schema: VariableType.object({
+            teams: VariableType.array(
+              VariableType.object({
+                lead: VariableType.STRING,
+                members: VariableType.array(
+                  VariableType.object({
+                    name: VariableType.STRING,
+                  }),
+                ),
+              }),
+            ),
+          }),
+        },
+      };
+
+      const template =
+        '{{#company.teams}} Lead: {{lead}}, Members: {{#members}} {{name}} {{/members}} {{/company.teams}}';
+      const result = validateTemplateVariables(template, complexMap);
+      expect(result.valid).toBe(true);
+      expect(result.missingVariables).toEqual([]);
+    });
+
+    it('should validate triple mustache and ampersand tags', () => {
+      const template = '{{{name}}} is &{{name}}';
+      const result = validateTemplateVariables(template, variableMap);
+      expect(result.valid).toBe(true);
+      expect(result.missingVariables).toEqual([]);
     });
   });
 });
