@@ -46,12 +46,10 @@ participant-profile-display {
   margin-left: common.$spacing-medium;
 
   pr-icon {
-    font-size: 18px;
-    width: 18px;
-    height: 18px;
     color: var(--md-sys-color-primary);
   }
 }
+
 @include common.viewport-small {
   .menu-button {
     display: none;

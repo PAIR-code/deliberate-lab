@@ -165,7 +165,7 @@ export class Header extends MobxLitElement {
 
     return html`
       <div class="timer">
-        <pr-icon icon="timer" variant="default"></pr-icon>
+        <pr-icon icon="timer" size="large" variant="default"></pr-icon>
         ${timeString}
       </div>
     `;
