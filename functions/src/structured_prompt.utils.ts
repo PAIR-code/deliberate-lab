@@ -346,6 +346,12 @@ function getProfileInfoForPrompt(
   includeScaffolding: boolean,
   stageId: string, // Used for temporary stage ID hack that sets profiles
 ): string {
+  // This is a temporary check to see if the profile names should be
+  // overrided for this stage only, e.g., if the profile is typically
+  // of the "Animals 1" set but in this stage only uses "Animals 2" name/avatar
+  // NOTE: It actually may be useful to define all profile identities here
+  // as prior stages' context will not make sense if it references "Animals 1"
+  // profile and the current stage uses "Animals 2".
   const getProfileSetId = () => {
     if (stageId.includes(SECONDARY_PROFILE_SET_ID)) {
       return PROFILE_SET_ANIMALS_2_ID;
@@ -356,6 +362,13 @@ function getProfileInfoForPrompt(
   };
 
   const scaffoldingPrefix = includeScaffolding ? `Alias: ` : '';
+  // TODO: Instead of using general participant scaffolding in the suffix,
+  // use either "assigned profile" scaffolding or "seleted profile" scaffolding
+  // based on which profile type is being set during the profile stage
+  // (or which hardcoded profile type—see comment above—is being used
+  // for this stage only). This will require passing in the profile type
+  // from the experiment's profile stage (consider storing in promptData?).
+  // NOTE: Consider slightly different scaffolding to handle hardcoded cases.
   const scaffoldingSuffix =
     includeScaffolding && userProfile.type === UserType.PARTICIPANT
       ? `\n${PROMPT_ITEM_PROFILE_INFO_PARTICIPANT_SCAFFOLDING}`
