@@ -20,13 +20,18 @@ import {ExperimentEditor} from '../../services/experiment.editor';
 
 import {
   SeedStrategy,
+  ShuffleConfig,
   type RandomPermutationVariableConfig,
   type StaticVariableConfig,
   type VariableConfig,
   type VariableInstance,
   VariableConfigType,
+  VariableScope,
   createRandomPermutationVariableConfig,
   createStaticVariableConfig,
+  validateVariableValue,
+  createShuffleConfig,
+  mapScopeToSeedStrategy,
 } from '@deliberation-lab/utils';
 
 import {
@@ -42,7 +47,6 @@ import {
   updateObjectProperty,
   updatePropertyInSchema,
   updateSchemaAtPath,
-  validateValue,
 } from './variable_editor.utils';
 
 import {styles} from './variable_editor.scss';
@@ -139,6 +143,45 @@ export class VariableEditor extends MobxLitElement {
           )}
           ${this.renderDivider()}
           ${this.renderSection(
+            'Scope',
+            html`
+              <div class="description">When is this variable assigned?</div>
+              <select
+                .value=${config.scope}
+                @change=${(e: Event) => {
+                  const scope = (e.target as HTMLSelectElement)
+                    .value as VariableScope;
+
+                  let updates: Partial<VariableConfig> = {scope};
+
+                  // Automatically update seed strategy based on scope for Random Permutation variables
+                  if (
+                    config.type === VariableConfigType.RANDOM_PERMUTATION &&
+                    'shuffleConfig' in config
+                  ) {
+                    const seed = mapScopeToSeedStrategy(scope);
+                    updates = {
+                      ...updates,
+                      shuffleConfig: createShuffleConfig({
+                        ...config.shuffleConfig,
+                        seed,
+                      }),
+                    };
+                  }
+
+                  this.updateConfig(config, index, updates);
+                }}
+              >
+                <option value="${VariableScope.EXPERIMENT}">Experiment</option>
+                <option value="${VariableScope.COHORT}">Cohort</option>
+                <option value="${VariableScope.PARTICIPANT}">
+                  Participant
+                </option>
+              </select>
+            `,
+          )}
+          ${this.renderDivider()}
+          ${this.renderSection(
             'Variable Definition',
             html`
               <div class="description">
@@ -189,26 +232,6 @@ export class VariableEditor extends MobxLitElement {
                 )}
               `
             : html`
-                ${this.renderDivider()}
-                ${this.renderSection(
-                  'Seed strategy',
-                  html`
-                    <div class="description">Assignment level</div>
-                    <select
-                      .value=${config.seedStrategy}
-                      @change=${(e: Event) =>
-                        this.updateConfig(config, index, {
-                          seedStrategy: (e.target as HTMLSelectElement)
-                            .value as SeedStrategy,
-                        })}
-                    >
-                      <option value="${SeedStrategy.COHORT}">cohort</option>
-                      <option value="${SeedStrategy.PARTICIPANT}">
-                        participant
-                      </option>
-                    </select>
-                  `,
-                )}
                 ${this.renderDivider()}
                 ${this.renderSection(
                   'Selection Size',
@@ -286,6 +309,7 @@ export class VariableEditor extends MobxLitElement {
 
       const staticConfig = createStaticVariableConfig({
         id: config.id,
+        scope: config.scope,
         definition: config.definition,
         value,
       });
@@ -301,8 +325,8 @@ export class VariableEditor extends MobxLitElement {
 
       const randomConfig = createRandomPermutationVariableConfig({
         id: config.id,
+        scope: config.scope,
         definition: config.definition,
-        seedStrategy: SeedStrategy.COHORT,
         values,
       });
       this.experimentEditor.updateVariableConfig(randomConfig, index);
@@ -812,7 +836,7 @@ export class VariableEditor extends MobxLitElement {
   ) {
     // Strip MobX observability to prevent stack overflow (see renderSchemaEditor for details)
     const schema = toJS(config.definition.schema) as unknown as TSchema;
-    const error = validateValue(schema, config.value.value);
+    const error = validateVariableValue(schema, config.value.value);
 
     return html`
       <div class="config-section">
@@ -855,7 +879,7 @@ export class VariableEditor extends MobxLitElement {
   ) {
     // Strip MobX observability to prevent stack overflow (see renderSchemaEditor for details)
     const schema = toJS(config.definition.schema) as unknown as TSchema;
-    const error = validateValue(schema, instance.value);
+    const error = validateVariableValue(schema, instance.value);
 
     return this.renderCollapsibleItem(
       html`<strong>Instance ${instanceIndex + 1}</strong> ${instance.id

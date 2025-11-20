@@ -53,6 +53,8 @@ import {
   VariableType,
   RandomPermutationVariableConfig,
   SeedStrategy,
+  VariableScope,
+  createShuffleConfig,
 } from '@deliberation-lab/utils';
 
 const EMOJIS = ['1️⃣', '2️⃣', '3️⃣'];
@@ -195,12 +197,16 @@ const CharitySchema = VariableType.object({
 const CHARITY_RANDOM_PERMUTATION_CONFIG: RandomPermutationVariableConfig = {
   id: 'charity-permutation-config',
   type: VariableConfigType.RANDOM_PERMUTATION,
+  scope: VariableScope.COHORT,
   definition: {
     name: 'charities',
     description: 'List of charities for allocation rounds',
     schema: VariableType.array(CharitySchema),
   },
-  seedStrategy: SeedStrategy.COHORT,
+  shuffleConfig: createShuffleConfig({
+    shuffle: true,
+    seed: SeedStrategy.COHORT,
+  }),
   values: CHARITY_DATA.map((charity) => ({
     id: charity.key,
     value: JSON.stringify(charity),

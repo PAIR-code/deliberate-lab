@@ -1,5 +1,8 @@
+import {
+  validateVariableValue,
+  parseVariableValue,
+} from '@deliberation-lab/utils';
 import {Type, type TSchema, type TObject, type TArray} from '@sinclair/typebox';
-import {Value} from '@sinclair/typebox/value';
 
 type TProperties = Record<string, TSchema>;
 
@@ -127,14 +130,6 @@ export function updateSchemaAtPath(
 
 // ===== Value Parsing and Serialization =====
 
-export function parseValue(schema: TSchema, value: string): unknown {
-  const type = schema.type as string;
-  if (type === 'string') return value;
-  if (type === 'number') return value === '' ? 0 : Number(value);
-  if (type === 'boolean') return value === 'true';
-  return value === '' ? null : JSON.parse(value);
-}
-
 export function serializeForInput(schema: TSchema, value: unknown): string {
   const type = schema.type as string;
   if (type === 'string') return String(value ?? '');
@@ -151,21 +146,6 @@ export function safeParseJson<T>(value: string, fallback: T): T {
   }
 }
 
-// ===== Validation =====
-
-export function validateValue(schema: TSchema, value: string): string | null {
-  try {
-    const parsed = parseValue(schema, value);
-    if (parsed !== null && !Value.Check(schema, parsed)) {
-      const errors = [...Value.Errors(schema, parsed)];
-      return errors.map((e) => `${e.path}: ${e.message}`).join(', ');
-    }
-  } catch (e) {
-    return `Invalid: ${e}`;
-  }
-  return null;
-}
-
 // ===== Value Manipulation =====
 
 export function updateObjectProperty(
@@ -174,7 +154,7 @@ export function updateObjectProperty(
   newValue: string,
   propSchema: TSchema,
 ): string {
-  const parsed = parseValue(propSchema, newValue);
+  const parsed = parseVariableValue(propSchema, newValue);
   return JSON.stringify({...obj, [propName]: parsed});
 }
 
@@ -184,7 +164,7 @@ export function updateArrayItem(
   newValue: string,
   itemSchema: TSchema,
 ): string {
-  const parsed = parseValue(itemSchema, newValue);
+  const parsed = parseVariableValue(itemSchema, newValue);
   const updated = [...arr];
   updated[index] = parsed;
   return JSON.stringify(updated);

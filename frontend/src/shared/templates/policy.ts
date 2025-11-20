@@ -46,6 +46,8 @@ import {
   RandomPermutationVariableConfig,
   StaticVariableConfig,
   createStaticVariableConfig,
+  VariableScope,
+  createShuffleConfig,
 } from '@deliberation-lab/utils';
 
 type Policy = {
@@ -197,6 +199,7 @@ const PolicySchema = VariableType.object({
 // Create a static variable config with the complete policy object
 const POLICY_STATIC_CONFIG: StaticVariableConfig = createStaticVariableConfig({
   id: 'policy-static-config',
+  scope: VariableScope.EXPERIMENT,
   definition: {
     name: 'policy',
     description: 'Policy debate topic',
@@ -208,16 +211,14 @@ const POLICY_STATIC_CONFIG: StaticVariableConfig = createStaticVariableConfig({
   },
 });
 
-const NO_SHUFFLE: ShuffleConfig = {
+const NO_SHUFFLE: ShuffleConfig = createShuffleConfig({
   shuffle: false,
   seed: SeedStrategy.PARTICIPANT,
-  customSeed: '',
-};
-const PARTICIPANT_SHUFFLE: ShuffleConfig = {
+});
+const PARTICIPANT_SHUFFLE: ShuffleConfig = createShuffleConfig({
   shuffle: true,
   seed: SeedStrategy.PARTICIPANT,
-  customSeed: '',
-};
+});
 
 // ****************************************************************************
 // Experiment config
