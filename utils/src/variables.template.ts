@@ -69,11 +69,13 @@ export function validateTemplateVariables(
     const missingVariables = new Set<string>();
 
     // Initial schema context is the variable map itself
+    // We manually construct a schema-like object to avoid TypeBox runtime overhead/recursion
     const rootSchema: TSchema = {
       type: 'object',
       properties: {},
       additionalProperties: false,
-    };
+    } as unknown as TSchema;
+
     if (rootSchema.properties) {
       for (const [name, def] of Object.entries(variableMap)) {
         rootSchema.properties[name] = def.schema;
