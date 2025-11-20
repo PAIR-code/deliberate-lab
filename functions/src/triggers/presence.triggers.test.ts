@@ -64,7 +64,8 @@ describe('mirrorPresenceToFirestore', () => {
       data: jest.fn(() => ({connected: true})),
     });
 
-    await wrapped(change, {
+    await wrapped({
+      data: change,
       params: {
         experimentId: 'exp123',
         participantPrivateId: 'user456',
@@ -89,7 +90,8 @@ describe('mirrorPresenceToFirestore', () => {
       data: jest.fn(() => mockFirestoreProfile),
     });
 
-    await wrapped(change, {
+    await wrapped({
+      data: change,
       params: {
         experimentId: 'exp123',
         participantPrivateId: 'user456',
