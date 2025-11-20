@@ -210,6 +210,11 @@ export class VariableEditor extends MobxLitElement {
                       name: (e.target as HTMLTextAreaElement).value,
                     })}
                 ></pr-textarea>
+                ${this.hasDuplicateName(config, index)
+                  ? html`<div class="validation-error">
+                      ⚠️ Warning: A variable with this name already exists.
+                    </div>`
+                  : nothing}
               </div>
               <div class="config-section">
                 <label class="property-label">Description</label>
@@ -374,6 +379,16 @@ export class VariableEditor extends MobxLitElement {
       ...exp.variableConfigs.slice(0, index),
       ...exp.variableConfigs.slice(index + 1),
     ];
+  }
+
+  private hasDuplicateName(config: VariableConfig, index: number): boolean {
+    const configs = this.experimentEditor.experiment?.variableConfigs ?? [];
+    return configs.some(
+      (other, i) =>
+        i !== index &&
+        other.definition.name.trim() === config.definition.name.trim() &&
+        config.definition.name.trim() !== '',
+    );
   }
 
   // ===== Schema Editor =====
