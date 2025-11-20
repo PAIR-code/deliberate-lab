@@ -2,7 +2,7 @@ import '../../pair-components/button';
 import '../../pair-components/icon_button';
 import '../../pair-components/info_popup';
 import '../../pair-components/tooltip';
-import '../../pair-components/icon'; // Added icon import
+import '../../pair-components/icon';
 
 import '../participant_profile/profile_display';
 
