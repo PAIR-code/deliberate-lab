@@ -25,6 +25,7 @@ export class InfoStageHandler extends BaseStageHandler {
   getStageDisplayForPrompt(
     participants: ParticipantProfileExtended[],
     stageContext: StageContextData,
+    includeScaffolding: boolean,
   ) {
     const stage = stageContext.stage as InfoStageConfig;
     return stage.infoLines.join('\n');

@@ -1,4 +1,4 @@
-import {database} from 'firebase-functions';
+import {onValueWritten} from 'firebase-functions/v2/database';
 import {app} from '../app';
 
 /**
@@ -9,15 +9,17 @@ import {app} from '../app';
  *
  * Currently, rtdb is only used in Deliberate Lab for presence tracking (using the rtdb websocket).
  */
-export const mirrorPresenceToFirestore = database
-  .instance(`${process.env.GCLOUD_PROJECT}-default-rtdb`) // other parts of firebase use the -default-rtdb suffix, so stay consistent
-  .ref('/status/{experimentId}/{participantPrivateId}') // rtdb path, not firestore path
-  .onWrite(async (change, context) => {
-    const {experimentId, participantPrivateId} = context.params;
+export const mirrorPresenceToFirestore = onValueWritten(
+  {
+    ref: '/status/{experimentId}/{participantPrivateId}',
+    instance: `${process.env.GCLOUD_PROJECT}-default-rtdb`,
+  },
+  async (event) => {
+    const {experimentId, participantPrivateId} = event.params;
     console.log(
       `mirrorPresenceToFirestore triggered for experimentId=${experimentId} participantPrivateId=${participantPrivateId}`,
     );
-    const status = change.after.val();
+    const status = event.data.after.val();
 
     if (!status) return null; // status was deleted
 
@@ -47,4 +49,5 @@ export const mirrorPresenceToFirestore = database
     }
 
     return participantRef.set({connected: status.connected}, {merge: true});
-  });
+  },
+);

@@ -1155,6 +1155,7 @@ function createPolicyAssistantAgent(): AgentMediatorTemplate {
     StageKind.PRIVATE_CHAT,
     {
       prompt: assistantPrompt,
+      includeScaffoldingInPrompt: false,
       structuredOutputConfig: createStructuredOutputConfig({
         enabled: false,
         appendToPrompt: false,

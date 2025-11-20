@@ -15,6 +15,27 @@ import {
 import {ShuffleConfig, SeedStrategy} from './utils/random.utils';
 
 // ****************************************************************************
+// CONSTANTS
+// ****************************************************************************
+
+/** Scaffolding for ProfileContext prompt item (for participants). */
+export const PROMPT_ITEM_PROFILE_CONTEXT_PARTICIPANT_SCAFFOLDING = `This information is private to you. Use it to guide your behavior in this task. Other participants do not know these attributes unless you choose to share it.`;
+
+/** Temporary, general scaffolding for ProfileInfo prompt item (for participants). */
+export const PROMPT_ITEM_PROFILE_INFO_PARTICIPANT_SCAFFOLDING = `This is the display name that others will use to refer to you. It may be a label such as an animal or object, but you are still a human using this alias.`;
+
+/** Scaffolding for ProfileInfo prompt item (for participants when profile is assigned, e.g., pseudononymous animal set). */
+// TODO: Use this instead of temporary profile info scaffolding above.
+export const PROMPT_ITEM_PROFILE_INFO_ASSIGNED_PROFILE_PARTICIPANT_SCAFFOLDING = `This is your randomly assigned pseudonymous alias. Others will use it to refer to you. It’s only a label (such as an animal or object). You are still a human using this alias.`;
+
+/** Scaffolding for ProfileInfo prompt item (for participants when profile is self-set). */
+// TODO: Use this instead of temporary profile info scaffolding above.
+export const PROMPT_ITEM_PROFILE_INFO_SELECTED_PROFILE_PARTICIPANT_SCAFFOLDING = `This is the display name you chose for others to see you as.`;
+
+/** Default agent participant instructions to provide in prompt. */
+export const DEFAULT_AGENT_PARTICIPANT_PROMPT_INSTRUCTIONS = `You are a human participant interacting in an online task with multiple stages. In this query, you will provide an action for the current stage - for example, participating in a live chat, answering survey questions, or acknowledging information. Respond as this participant in order to move the task forward.\n`;
+
+// ****************************************************************************
 // TYPES
 // ****************************************************************************
 export interface BasePromptConfig {
@@ -22,6 +43,11 @@ export interface BasePromptConfig {
   type: StageKind; // stage type
   // Structured prompt
   prompt: PromptItem[];
+  // Whether or not prompt should include scaffolding when built.
+  // TODO: Consider making this an enum if we expect different types of
+  // scaffolding in the future. This will require backwards compatibility
+  // though.
+  includeScaffoldingInPrompt: boolean;
   // Number of times to retry prompt call if it fails
   numRetries: number;
   generationConfig: ModelGenerationConfig;
@@ -172,6 +198,8 @@ export function createDefaultPromptItemGroup(
 }
 
 // Default prompt includes current stage context
+// TODO: Deprecate this in favor of more specific (e.g., mediator/participant)
+// default prompts.
 export function createDefaultPromptFromText(
   text: string,
   stageId: string = '', // defaults to context from past + current stages
@@ -193,4 +221,17 @@ export function createTextPromptItem(text: string): TextPromptItem {
     type: PromptItemType.TEXT,
     text: text,
   } as TextPromptItem;
+}
+
+export function createDefaultParticipantPrompt(
+  text: string, // custom instructions to append to end of prompt
+): PromptItem[] {
+  return [
+    createTextPromptItem(DEFAULT_AGENT_PARTICIPANT_PROMPT_INSTRUCTIONS),
+    createTextPromptItem(`--- Participant description ---`),
+    {type: PromptItemType.PROFILE_INFO},
+    {type: PromptItemType.PROFILE_CONTEXT},
+    createDefaultStageContextPromptItem(''), // include all stages' context
+    createTextPromptItem(text),
+  ];
 }

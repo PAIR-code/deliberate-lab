@@ -109,11 +109,16 @@ export class StageManager {
     stage: StageConfig,
     participants: ParticipantProfileExtended[],
     stageContext: StageContextData,
+    includeScaffolding: boolean,
   ) {
     return (
       this.handlerMap
         .get(stage.kind)
-        ?.getStageDisplayForPrompt(participants, stageContext) ?? ''
+        ?.getStageDisplayForPrompt(
+          participants,
+          stageContext,
+          includeScaffolding,
+        ) ?? ''
     );
   }
 
