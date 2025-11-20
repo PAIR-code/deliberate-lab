@@ -44,6 +44,7 @@ export interface DefaultAutoTransferConfig extends BaseAutoTransferConfig {
   maxParticipants: number;
 }
 
+// NOTE: This currently only works with multiple choice questions
 export interface SurveyAutoTransferConfig extends BaseAutoTransferConfig {
   // ID of the survey stage to reference
   surveyStageId: string;

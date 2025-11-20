@@ -133,6 +133,7 @@ export * from './stages/tos_stage.validation';
 
 export * from './stages/transfer_stage';
 export * from './stages/transfer_stage.manager';
+export * from './stages/transfer_stage.utils';
 export * from './stages/transfer_stage.validation';
 
 // Utils
