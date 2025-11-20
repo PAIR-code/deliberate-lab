@@ -2,8 +2,8 @@
   "name": "functions",
   "scripts": {
     "lint": "eslint",
-    "build": "esbuild src/index.ts --bundle --outdir=lib --platform=node --target=node18 --external:farmhash",
-    "build:watch": "esbuild src/index.ts --bundle --outdir=lib --platform=node --target=node18 --external:farmhash --watch",
+    "build": "node build.js",
+    "build:watch": "node build.js --watch",
     "serve": "npm run build && firebase emulators:start --only functions",
     "shell": "npm run build && firebase functions:shell",
     "start": "npm run shell",
