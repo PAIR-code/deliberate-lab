@@ -24,6 +24,11 @@
   "scripts": {
     "prepare": "husky"
   },
+  "workspaces": [
+    "frontend",
+    "utils",
+    "functions"
+  ],
   "dependencies": {
     "@anthropic-ai/sdk": "^0.68.0"
   }
