@@ -60,7 +60,10 @@ export class TransferEditorComponent extends MobxLitElement {
             @click=${updateSurveyMatching}
           >
           </md-checkbox>
-          <div>Automatically match participants based on survey answers</div>
+          <div>
+            Automatically match participants based on survey multiple choice
+            answers
+          </div>
         </div>
       </div>
       ${this.stage.autoTransferConfig ? this.renderSurveyConfig() : nothing}
@@ -208,7 +211,7 @@ export class TransferEditorComponent extends MobxLitElement {
           @input=${updateSurveyStageId}
         />
 
-        <label for="surveyQuestionId">Survey Question ID</label>
+        <label for="surveyQuestionId">Multiple-Choice Question ID</label>
         <input
           type="text"
           id="surveyQuestionId"
@@ -220,7 +223,7 @@ export class TransferEditorComponent extends MobxLitElement {
         />
 
         <label for="participantCounts">
-          Provide a JSON object mapping survey answer ids to required
+          Provide a JSON object mapping multiple choice answer ids to required
           participant counts.
         </label>
         <input
