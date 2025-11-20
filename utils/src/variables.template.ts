@@ -1,5 +1,6 @@
 import Mustache from 'mustache';
 import type {TSchema} from '@sinclair/typebox';
+import {getSchemaAtPath} from './variables.utils';
 import {VariableDefinition} from './variables';
 
 /**
@@ -55,8 +56,7 @@ export function resolveTemplateVariables(
  * Also validates that the template is valid Mustache syntax.
  *
  * This validates dotted path access (e.g., {{policy.arguments_pro.0.title}})
- * by checking each level exists in the schema. Numeric array indices are
- * skipped since we can't validate them statically.
+ * by checking each level exists in the schema.
  */
 export function validateTemplateVariables(
   template: string,
@@ -73,6 +73,7 @@ export function validateTemplateVariables(
     for (const ref of references) {
       const parts = ref.split('.');
       const baseName = parts[0];
+      const remainingPath = parts.slice(1).join('.');
 
       // Check if base variable exists
       const baseVariable = variableMap[baseName];
@@ -82,40 +83,13 @@ export function validateTemplateVariables(
       }
 
       // Validate nested path access using JSON Schema (TypeBox)
-      let currentSchema: TSchema = baseVariable.schema;
-
-      for (let i = 1; i < parts.length; i++) {
-        const part = parts[i];
-
-        // Skip numeric array indices (e.g., 0, 1, 2...)
-        // After a numeric index, we're accessing array item properties
-        if (/^\d+$/.test(part)) {
-          // For arrays, navigate to the items schema
-          if (
-            currentSchema.type === 'array' &&
-            'items' in currentSchema &&
-            currentSchema.items
-          ) {
-            currentSchema = currentSchema.items as TSchema;
-          }
-          continue;
-        }
-
-        // For objects, check if the property exists
-        if (currentSchema.type === 'object') {
-          const properties =
-            'properties' in currentSchema
-              ? currentSchema.properties
-              : undefined;
-          if (!properties || !properties[part]) {
-            missingVariables.push(parts.slice(0, i + 1).join('.'));
-            break;
-          }
-          currentSchema = properties[part] as TSchema;
-        } else {
-          // Not an object, can't access properties
-          missingVariables.push(parts.slice(0, i + 1).join('.'));
-          break;
+      if (remainingPath) {
+        const schemaAtPath = getSchemaAtPath(
+          baseVariable.schema,
+          remainingPath,
+        );
+        if (!schemaAtPath) {
+          missingVariables.push(ref);
         }
       }
     }

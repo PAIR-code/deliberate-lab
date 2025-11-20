@@ -1,5 +1,6 @@
 import {generateId} from './shared';
 import {SeedStrategy, choices} from './utils/random.utils';
+import {type TSchema} from '@sinclair/typebox';
 import {
   RandomPermutationVariableConfig,
   StaticVariableConfig,
@@ -31,6 +32,20 @@ export function extractVariablesFromVariableConfigs(
   }
 
   return variableMap;
+}
+
+/**
+ * Helper to safely get the value of a VariableInstance.
+ * Since values are stored as JSON strings, this parses them.
+ */
+export function getVariableInstanceValue<T = unknown>(
+  instance: VariableInstance,
+): T {
+  try {
+    return JSON.parse(instance.value);
+  } catch {
+    return instance.value as unknown as T;
+  }
 }
 
 export function createStaticVariableConfig(
@@ -98,7 +113,7 @@ export function createVariableToValueMapForSeed(
 
           // Parse instance values and build array
           const selectedValues = selectedInstances.map(
-            (instance: VariableInstance) => JSON.parse(instance.value),
+            (instance: VariableInstance) => getVariableInstanceValue(instance),
           );
 
           // Store as JSON array string
@@ -112,4 +127,61 @@ export function createVariableToValueMapForSeed(
   }
 
   return variableToValueMap;
+}
+
+/**
+ * Navigate a TypeBox schema using a dot-separated path.
+ * Handles object properties and array items (via numeric indices).
+ *
+ * Example paths:
+ * - "user.name" (Object property)
+ * - "users.0.name" (Array item property)
+ *
+ * @param rootSchema The starting TypeBox schema
+ * @param path Dot-separated path string
+ * @returns The schema at the path, or undefined if not found/invalid
+ */
+export function getSchemaAtPath(
+  rootSchema: TSchema,
+  path: string,
+): TSchema | undefined {
+  if (!path) return rootSchema;
+
+  const parts = path.split('.');
+  let currentSchema = rootSchema;
+
+  for (const part of parts) {
+    // 1. Handle Array Items (Numeric Index)
+    // If the path part is a number, we expect to traverse into an array's 'items' schema.
+    if (/^\d+$/.test(part)) {
+      if (
+        currentSchema.type === 'array' &&
+        'items' in currentSchema &&
+        currentSchema.items
+      ) {
+        currentSchema = currentSchema.items as TSchema;
+        continue;
+      }
+      // Numeric index provided but schema is not an array or has no items
+      return undefined;
+    }
+
+    // 2. Handle Object Properties
+    if (currentSchema.type === 'object') {
+      const properties =
+        'properties' in currentSchema
+          ? (currentSchema.properties as Record<string, TSchema>)
+          : undefined;
+
+      if (properties && part in properties) {
+        currentSchema = properties[part];
+        continue;
+      }
+    }
+
+    // Path part did not match array index or object property
+    return undefined;
+  }
+
+  return currentSchema;
 }
