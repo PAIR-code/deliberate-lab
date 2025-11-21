@@ -192,6 +192,10 @@ export class StageBuilderDialog extends MobxLitElement {
   // are completely created in the UI and stored in the backend.
   private renderResearchTemplateGallery() {
     return html`
+      <div class="banner">
+        Note: Only specific experimenters have access to the following research
+        templates! This list is controlled by the deployment owners.
+      </div>
       <div class="gallery-section">
         <div class="gallery-title">Lost at Sea experiments</div>
         <div class="card-gallery-wrapper">
