@@ -131,7 +131,10 @@ export class AdminDashboard extends MobxLitElement {
             <div class="subtitle">(${experimenter.email})</div>
           </div>
           ${experimenter.isAdmin
-            ? html`<div class="chip">admin</div>`
+            ? html`<div class="chip primary">admin</div>`
+            : nothing}
+          ${experimenter.hasResearchTemplateAccess
+            ? html`<div class="chip tertiary">research template access</div>`
             : nothing}
         </div>
         <div class="right">

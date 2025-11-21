@@ -42,14 +42,25 @@ export async function updateParticipantNextStage(
   const currentStageId = participant.currentStageId;
   const currentStageIndex = stageIds.indexOf(currentStageId);
 
-  // Check if current stage is a chat stage and send system message if so
+  // Check if current stage is a group chat stage and send system message if so
+  // NOTE: Only do this if the chat has not already been completed
   const currentStage = await getFirestoreStage(experimentId, currentStageId);
-  if (currentStage?.kind === StageKind.CHAT) {
+  if (
+    currentStage?.kind === StageKind.CHAT &&
+    !participant.timestamps.completedStages[currentStageId]
+  ) {
     await sendSystemChatMessage(
       experimentId,
       participant.currentCohortId,
       currentStageId,
+      // TODO(#867): Check to see if the participant's name should be overridden
+      // by a different profile (e.g., "Animals 2" instead of "Animals 1")
+      // based on any alternate profile information hardcoded into the stage ID
       `${participant.name ?? 'A participant'} has left the chat.`,
+      // Include sender ID if the system message is related to an agent
+      // participant moving on. This allows us to prevent the system message
+      // from triggering an API query from that same participant.
+      participant.publicId,
     );
   }
 
