@@ -58,8 +58,7 @@ export class Header extends MobxLitElement {
       this.stage.kind === StageKind.CHAT ||
       this.stage.kind === StageKind.PRIVATE_CHAT
     ) {
-      const stage = this.stage as ChatStageConfig; // Cast to access timeLimitInMinutes
-      if (stage.timeLimitInMinutes) {
+      if (this.stage.timeLimitInMinutes) {
         const publicStageData = this.cohortService.stagePublicDataMap[
           this.stage.id
         ] as ChatStagePublicData;
@@ -77,7 +76,7 @@ export class Header extends MobxLitElement {
             : publicStageData?.discussionStartTimestamp;
 
         this.timeRemaining = getChatTimeRemainingInSeconds(
-          stage,
+          this.stage,
           chatMap,
           startTimestamp,
         );
