@@ -132,10 +132,17 @@ export async function sendSystemChatMessage(
   cohortId: string,
   stageId: string,
   message: string,
+  // Temporary: Include sender ID if the system message is related to an
+  // agent participant moving on. This allows us to prevent the system message
+  // from triggering an API query from that same participant.
+  // TODO: Eventually adjust system message to always record any
+  // participants (even human participants) linked to a 'left the chat' message
+  senderId = '',
 ) {
   const chatMessage = createSystemChatMessage({
     message,
     timestamp: Timestamp.now(),
+    senderId,
   });
 
   const systemDocument = app

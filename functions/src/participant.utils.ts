@@ -53,7 +53,14 @@ export async function updateParticipantNextStage(
       experimentId,
       participant.currentCohortId,
       currentStageId,
+      // TODO: Check to see if the participant's name should be overridden
+      // by a different profile (e.g., "Animals 2" instead of "Animals 1")
+      // based on any alternate profile information hardcoded into the stage ID
       `${participant.name ?? 'A participant'} has left the chat.`,
+      // Include sender ID if the system message is related to an agent
+      // participant moving on. This allows us to prevent the system message
+      // from triggering an API query from that same participant.
+      participant.publicId,
     );
   }
 

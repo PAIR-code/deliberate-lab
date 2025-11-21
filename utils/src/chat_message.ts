@@ -51,8 +51,9 @@ export interface AgentChatResponse {
 
 // Sender ID for chat messages manually sent by experimenter
 // This should be consistent to ensure same background color for each message
+// TODO: Consider setting the sender ID to the experimenter's email
+// so we can track (but NOT display in the chat UI) who sent what.
 export const EXPERIMENTER_MANUAL_CHAT_SENDER_ID = 'experimenter';
-export const SYSTEM_CHAT_SENDER_ID = 'system';
 
 // ************************************************************************* //
 // FUNCTIONS                                                                 //
@@ -141,9 +142,9 @@ export function createSystemChatMessage(
     message: config.message ?? '',
     timestamp: config.timestamp ?? Timestamp.now(),
     profile: config.profile ?? {name: 'System', avatar: '⚙️', pronouns: null},
-    senderId: SYSTEM_CHAT_SENDER_ID,
-    agentId: '',
-    explanation: '',
+    senderId: config.senderId ?? '',
+    agentId: config.agentId ?? '',
+    explanation: config.explanation ?? '',
     isError: false,
   };
 }
