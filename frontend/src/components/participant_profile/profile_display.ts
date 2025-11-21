@@ -159,6 +159,18 @@ export class ProfileDisplay extends MobxLitElement {
       return this.profile?.name ?? this.nameFallback;
     };
 
+    const renderName = () => {
+      const name = getName();
+      if (name.length > 20) {
+        return html`
+          <pr-tooltip text=${name} position="TOP_START">
+            <div class="display-name truncated">${name}</div>
+          </pr-tooltip>
+        `;
+      }
+      return html`<div class="display-name">${name}</div>`;
+    };
+
     const renderPronouns = () => {
       if (this.profile?.pronouns) {
         return html`<div class="pronouns">(${this.profile.pronouns})</div>`;
@@ -177,7 +189,8 @@ export class ProfileDisplay extends MobxLitElement {
           >
           </avatar-icon>
           <div class="display-name-wrapper">
-            ${getName()} ${this.showIsSelf ? html`<div>(you)</div>` : nothing}
+            ${renderName()}
+            ${this.showIsSelf ? html`<div>(you)</div>` : nothing}
           </div>
         </div>
       `;
@@ -246,8 +259,7 @@ export class ProfileDisplay extends MobxLitElement {
         >
         </avatar-icon>
         <div class="display-name-wrapper">
-          <div class="name">${getName()}</div>
-          ${renderPronouns()}
+          ${renderName()} ${renderPronouns()}
           ${this.showIsSelf ? html`<div>(you)</div>` : nothing}
         </div>
       </div>
