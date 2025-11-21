@@ -76,23 +76,7 @@ export const writeExperiment = onCall(async (request) => {
       SeedStrategy.EXPERIMENT,
     );
 
-    // Add agent configs and prompts
-    // TODO: Remove old collection once new paths are fully connected
-    for (const agent of [
-      ...template.agentMediators,
-      ...template.agentParticipants,
-    ]) {
-      const agentDoc = document.collection('agents').doc(agent.persona.id);
-      transaction.set(agentDoc, agent.persona);
-      for (const prompt of Object.values(agent.promptMap)) {
-        transaction.set(
-          agentDoc.collection('chatPrompts').doc(prompt.id),
-          prompt,
-        );
-      }
-    }
-
-    // Add agent mediators under `agentParticipants` collection
+    // Add agent mediators under `agentMediators` collection
     template.agentMediators.forEach((agent) => {
       const doc = document.collection('agentMediators').doc(agent.persona.id);
       transaction.set(doc, agent.persona);
@@ -101,7 +85,10 @@ export const writeExperiment = onCall(async (request) => {
       }
     });
 
-    // Add agent particiapnts under `agentMediators` collection
+    // Add agent participants under `agentParticipants` collection
+    // NOTE: We don't currently allow agent participant persona setup
+    // in the experiment editor, so the list of agentParticipants
+    // is expected to be length 0.
     template.agentParticipants.forEach((agent) => {
       const doc = document
         .collection('agentParticipants')

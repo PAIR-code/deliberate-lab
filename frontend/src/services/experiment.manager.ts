@@ -573,7 +573,9 @@ export class ExperimentManager extends Service {
       ),
     );
 
-    // Subscribe to agent personas
+    // Subscribe to agent mediator personas
+    // NOTE: We don't currently subscribe to agent participant personas
+    // because we don't currently allow setting them in the experiment editor.
     this.unsubscribe.push(
       onSnapshot(
         query(
@@ -581,7 +583,7 @@ export class ExperimentManager extends Service {
             this.sp.firebaseService.firestore,
             'experiments',
             id,
-            'agents',
+            'agentMediators',
           ),
         ),
         (snapshot) => {
