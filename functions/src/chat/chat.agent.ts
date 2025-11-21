@@ -735,6 +735,18 @@ export function canSendAgentChatMessage(
   if (!chatSettings.canSelfTriggerCalls && latestMessage?.senderId === id) {
     return false;
   }
+  // Return null if latest message is a system message about the agent leaving
+  // TODO(#867):
+  // Right now, these message are always sent from a matching public ID.
+  // In the future, we should set up a system message that specifically records
+  // "the given agent ID is ready to move on" rather than assuming any
+  // system message with a matching ID message means the agent has left
+  if (
+    latestMessage?.type === UserType.SYSTEM &&
+    latestMessage?.senderId === id
+  ) {
+    return false;
+  }
 
   return true;
 }
