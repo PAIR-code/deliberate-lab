@@ -291,6 +291,8 @@ export class ExperimentManager extends Service {
     return Object.values(this.agentPersonaMap);
   }
 
+  // WARNING: We are not currently allowing experimenters to edit
+  // agent participant personas in the editor.
   @computed get agentParticipantPersonas() {
     return this.agentPersonas.filter(
       (persona) => persona.type === AgentPersonaType.PARTICIPANT,

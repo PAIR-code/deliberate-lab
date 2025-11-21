@@ -53,7 +53,6 @@ import {styles} from './experiment_builder.scss';
 
 enum PanelView {
   AGENT_MEDIATORS = 'agent_mediators',
-  AGENT_PARTICIPANTS = 'agent_participants',
   API_KEY = 'api_key',
   COHORT = 'cohort',
   METADATA = 'metadata',
@@ -212,18 +211,6 @@ export class ExperimentBuilder extends MobxLitElement {
         <div>Variables <span class="alpha">alpha</span></div>
         <div class="subtitle">Set up variables to use in stage text</div>
       </div>
-      <div
-        class="general-item ${this.panelView === PanelView.AGENT_PARTICIPANTS
-          ? 'current'
-          : ''}"
-        @click=${() => {
-          this.panelView = PanelView.AGENT_PARTICIPANTS;
-          this.experimentEditor.setAgentIdToLatest(false);
-        }}
-      >
-        <div>Agent participants<span class="alpha">alpha</span></div>
-        <div class="subtitle">Add and configure agent participants</div>
-      </div>
     `;
   }
 
@@ -357,14 +344,16 @@ export class ExperimentBuilder extends MobxLitElement {
       `;
     } else if (this.panelView === PanelView.AGENT_MEDIATORS) {
       return this.renderAgentMediatorsBuilder();
-    } else if (this.panelView === PanelView.AGENT_PARTICIPANTS) {
-      return this.renderAgentParticipantsBuilder();
     } else if (this.panelView === PanelView.STAGES) {
       return this.renderStageBuilder();
     }
     return nothing;
   }
 
+  // WARNING: Do not use this as we are not currently permitting agent
+  // participant personas to be set in the editor. Rather, agent participants
+  // are defined on the spot in the experiment dashboard and will use
+  // a default set of prompts (see PR #864)
   private renderAgentParticipantsBuilder() {
     const agent = this.experimentEditor.currentAgent;
     const name = agent?.persona.name;

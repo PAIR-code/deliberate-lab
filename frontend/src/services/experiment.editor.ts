@@ -62,6 +62,11 @@ export class ExperimentEditor extends Service {
   @observable experiment: Experiment = createExperimentConfig();
   @observable stages: StageConfig[] = [];
   @observable agentMediators: AgentMediatorTemplate[] = [];
+
+  // WARNING: We are not currently permitting agent participant peraons to be
+  // set in the editor (so this list is expected to be empty).
+  // Rather, agent participants are defined on the spot in the experiment
+  // dashboard and will use a default set of prompts (see PR #864)
   @observable agentParticipants: AgentParticipantTemplate[] = [];
 
   // Loading
@@ -337,6 +342,8 @@ export class ExperimentEditor extends Service {
     this.agentMediators = templates;
   }
 
+  // WARNING: We are not currently allowing experimenters to edit
+  // agent participant personas in the editor.
   setAgentParticipants(templates: AgentParticipantTemplate[]) {
     this.agentParticipants = templates;
   }
@@ -352,6 +359,8 @@ export class ExperimentEditor extends Service {
     }
   }
 
+  // WARNING: We are not currently allowing experimenters to edit
+  // agent participant personas in the editor.
   addAgentParticipant(setAsCurrent = true) {
     const persona = createAgentParticipantPersonaConfig();
     this.agentParticipants.push({
@@ -374,6 +383,8 @@ export class ExperimentEditor extends Service {
     ];
   }
 
+  // WARNING: We are not currently allowing experimenters to edit
+  // agent participant personas in the editor.
   deleteAgentParticipant(id: string) {
     const agentIndex = this.agentParticipants.findIndex(
       (agent) => agent.persona.id === id,
@@ -394,6 +405,8 @@ export class ExperimentEditor extends Service {
     return this.agentMediators.find((agent) => agent.persona.id === id);
   }
 
+  // WARNING: We are not currently allowing experimenters to edit
+  // agent participant personas in the editor.
   getAgentParticipant(id: string) {
     return this.agentParticipants.find((agent) => agent.persona.id === id);
   }
@@ -417,6 +430,8 @@ export class ExperimentEditor extends Service {
     }
   }
 
+  // WARNING: We are not currently allowing experimenters to edit
+  // agent participant personas in the editor.
   addAgentParticipantPrompt(agentId: string, stageId: string) {
     const agent = this.getAgentParticipant(agentId);
     const stage = this.getStage(stageId);
