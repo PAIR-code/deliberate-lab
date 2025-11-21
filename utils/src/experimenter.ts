@@ -19,6 +19,7 @@ export interface ExperimenterProfile {
 export interface ExperimenterProfileExtended extends ExperimenterProfile {
   id: string;
   isAdmin: boolean;
+  hasResearchTemplateAccess: boolean;
 }
 
 /** Experimenter data (written to Firestore under experimenterData/{id}). */
@@ -73,6 +74,7 @@ export function getFullExperimenterConfig(
     name: experimenter.name ?? '',
     email: experimenter.email ?? '',
     isAdmin: experimenter.isAdmin ?? false,
+    hasResearchTemplateAccess: experimenter.hasResearchTemplateAccess ?? false,
     lastLogin: experimenter.lastLogin ?? null,
   };
 }
