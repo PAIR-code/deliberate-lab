@@ -8,13 +8,17 @@ agent mediators or agent participants
 
 ## Experimenter setup
 Deliberate Lab offers variable support within experiments.
-Variable configs can be defined in the experiment builder; for the currently
-available config type ("random permutation"),
-experimenters can specify:
+Variable configs can be defined in the experiment builder; experimenters can
+specify:
 - A **schema** defining the variable structure (primitives, objects, or arrays)
-- Whether values are assigned at the **cohort level** (every participant in the cohort sees the same value) or **participant level**
+- A **scope** defining when the variable is assigned:
+  - **Experiment (Global):** Value is constant for the entire experiment.
+  - **Cohort:** Value is assigned when a cohort is created (shared by all participants in that cohort).
+  - **Participant:** Value is assigned when a participant joins (unique to that participant, or independently shuffled).
 - A set of **variable names** to be populated
 - A set of **values** to choose from (as JSON strings)
+
+For **Random Permutation** variables, values are randomly selected from the pool based on the scope (e.g., a Cohort-scoped variable is randomized once per cohort).
 
 > Support for other config types, such as populating variables based on a
 weight distribution of values or manually assigning values when creating
@@ -140,10 +144,10 @@ export namespace VariableType {
 }
 ```
 
-Each `VariableItem` contains:
-- `name`: Variable identifier
-- `description`: Human-readable description
-- `schema`: TypeBox schema (TSchema) defining the structure
+Each `VariableConfig` contains:
+- `definition`: The `VariableDefinition` (name, description, schema).
+- `type`: The type of config (e.g., `STATIC`, `RANDOM_PERMUTATION`).
+- `scope`: The scope of assignment (`EXPERIMENT`, `COHORT`, `PARTICIPANT`).
 
 ### Schema Validation (`utils/src/variables.validation.ts`)
 
@@ -173,14 +177,12 @@ This ensures malformed schemas are rejected before being stored.
 
 When experiments, cohorts, and participants are created (in `functions/`),
 the variable configs (from the experiment config) are used to assign relevant
-values to a `variableMap`.
+values to a `variableMap` on the respective object (Experiment, Cohort, or Participant).
 
-For instance, when setting up a cohort, the variable configs are passed into
-variable utility functions (`utils/src/variables.utils.ts`) that extract
-variable items (as each variable config may contain multiple variables)
-that are to be assigned at the cohort level. Values are then generated via
-the specified means (e.g., random permutation) and a `variableMap` matching
-variable names to values is updated for the cohort config.
+The backend utility `generateVariablesForScope` (`utils/src/variables.utils.ts`)
+filters the configs based on the current scope being created (e.g., only processing
+`COHORT` scoped variables when creating a cohort). Values are then generated
+(e.g., selecting a random permutation) and stored as JSON strings.
 
 Values are type-coerced based on the schema:
 - `string`: Used directly
@@ -216,3 +218,12 @@ text) fields are resolved (extended classes are encouraged to extend this
 functionality).
 
 > NOTE: Not all stages have been migrated to the stage manager/handler setup.
+
+## Roadmap / Future Work
+
+The following areas are planned for future integration with Variables:
+
+- [ ] **Prompts:** Support variable interpolation in LLM prompts (e.g., `{{policy.title}}` in a mediator's system instructions).
+- [ ] **Flipcards:** Support variables in flipcard content (e.g., shuffling arguments onto cards).
+- [ ] **Surveys:** Support variables in survey question text and choices (e.g., "How did you feel about {{charity_name}}?").
+- [ ] **Agent Mediators:** Ensure mediators have full visibility into participant-specific variables (context awareness).
