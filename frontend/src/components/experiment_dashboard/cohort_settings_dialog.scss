@@ -14,14 +14,14 @@
 
 .selections {
   @include common.flex-row;
-  gap: 8px;
+  gap: common.$spacing-medium;
   align-items: center;
   justify-content: space-between;
 }
 
 .model-selector {
   @include common.flex-row;
-  gap: 8px;
+  gap: common.$spacing-medium;
 }
 
 .header {

@@ -86,8 +86,7 @@ export class AgentParticipantDialog extends MobxLitElement {
             );
             if (this.cohort && this.model) {
               this.experimentEditor.addAgentParticipant();
-              this.agentId =
-                this.experimentEditor.currentAgent?.persona.id ?? '';
+              this.agentId = ''; //Make agent ID blank for agents added from cohort panel that use default prompts
               const modelSettings = createAgentModelSettings({
                 apiType: ApiKeyType.GEMINI_API_KEY,
                 modelName: this.model,
@@ -96,7 +95,7 @@ export class AgentParticipantDialog extends MobxLitElement {
               this.experimentManager.createAgentParticipant(this.cohort.id, {
                 agentId: this.agentId,
                 promptContext: this.promptContext,
-                modelSettings: modelSettings,
+                modelSettings,
               });
             }
             this.resetFields();
