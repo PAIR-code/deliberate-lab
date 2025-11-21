@@ -92,6 +92,7 @@ export class EditorComponent extends MobxLitElement {
           </div>
           ${promptConfig ? this.renderDialogButton() : nothing}
         </div>
+        ${this.renderFlashImageWarning(stageConfig, this.agent)}
         ${promptConfig?.type === StageKind.CHAT ||
         promptConfig?.type === StageKind.PRIVATE_CHAT
           ? html`
@@ -101,6 +102,24 @@ export class EditorComponent extends MobxLitElement {
           : this.renderAddButton()}
       </div>
     `;
+  }
+
+  private renderFlashImageWarning(
+    stageConfig: StageConfig,
+    agent: AgentPersonaConfig,
+  ) {
+    const modelName = agent.defaultModelSettings.modelName;
+    if (
+      stageConfig.kind === StageKind.PRIVATE_CHAT &&
+      modelName?.includes('gemini-2.5-flash-image')
+    ) {
+      return html`
+        <div class="warning">
+          Warning: This model is not compatible with structured output.
+        </div>
+      `;
+    }
+    return nothing;
   }
 
   private renderAddButton() {
