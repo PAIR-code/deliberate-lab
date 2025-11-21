@@ -4,8 +4,7 @@ import {
   UpdateSurveyStageParticipantAnswerData,
 } from '@deliberation-lab/utils';
 
-import * as functions from 'firebase-functions';
-import {onCall} from 'firebase-functions/v2/https';
+import {onCall, HttpsError} from 'firebase-functions/v2/https';
 
 import {app} from '../app';
 import {
@@ -80,7 +79,7 @@ function handleUpdateSurveyStageParticipantAnswerValidationErrors(data: any) {
     }
   }
 
-  throw new functions.https.HttpsError('invalid-argument', 'Invalid data');
+  throw new HttpsError('invalid-argument', 'Invalid data');
 }
 
 // ************************************************************************* //
@@ -144,5 +143,5 @@ function handleUpdateSurveyPerParticipantStageParticipantAnswerValidationErrors(
     }
   }
 
-  throw new functions.https.HttpsError('invalid-argument', 'Invalid data');
+  throw new HttpsError('invalid-argument', 'Invalid data');
 }

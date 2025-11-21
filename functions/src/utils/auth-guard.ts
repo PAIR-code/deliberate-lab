@@ -1,16 +1,11 @@
-import {CallableRequest} from 'firebase-functions/v2/https';
+import {CallableRequest, HttpsError} from 'firebase-functions/v2/https';
 import {app} from '../app';
-
-import * as functions from 'firebase-functions';
 
 /** Extract claims for the user who made the request. */
 const getClaims = async (request: CallableRequest) => {
   const uid = request.auth?.uid;
   if (!uid || !request.auth?.token.email)
-    throw new functions.https.HttpsError(
-      'unauthenticated',
-      'User is not authenticated',
-    );
+    throw new HttpsError('unauthenticated', 'User is not authenticated');
 
   const allowlistDoc = await app
     .firestore()
@@ -23,7 +18,7 @@ const getClaims = async (request: CallableRequest) => {
 
 const throwUnauthIfNot = (condition: boolean) => {
   if (!condition)
-    throw new functions.https.HttpsError(
+    throw new HttpsError(
       'permission-denied',
       'User does not have permission to access this resource',
     );
@@ -40,10 +35,7 @@ export class AuthGuard {
   public static async isAdmin(request: CallableRequest) {
     const uid = request.auth?.uid;
     if (!uid || !request.auth?.token.email)
-      throw new functions.https.HttpsError(
-        'unauthenticated',
-        'User is not authenticated',
-      );
+      throw new HttpsError('unauthenticated', 'User is not authenticated');
 
     const allowlistDoc = await app
       .firestore()

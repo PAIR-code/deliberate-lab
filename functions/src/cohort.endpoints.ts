@@ -7,8 +7,7 @@ import {
   ParticipantStatus,
 } from '@deliberation-lab/utils';
 
-import * as functions from 'firebase-functions';
-import {onCall} from 'firebase-functions/v2/https';
+import {onCall, HttpsError} from 'firebase-functions/v2/https';
 
 import {app} from './app';
 import {AuthGuard} from './utils/auth-guard';
@@ -66,7 +65,7 @@ function handleCohortCreationValidationErrors(data: any) {
     }
   }
 
-  throw new functions.https.HttpsError('invalid-argument', 'Invalid data');
+  throw new HttpsError('invalid-argument', 'Invalid data');
 }
 
 // ************************************************************************* //
@@ -125,7 +124,7 @@ export const deleteCohort = onCall(async (request) => {
   // Validate input
   const validInput = Value.Check(CohortDeletionData, data);
   if (!validInput) {
-    throw new functions.https.HttpsError('invalid-argument', 'Invalid data');
+    throw new HttpsError('invalid-argument', 'Invalid data');
     return {success: false};
   }
 
@@ -134,7 +133,7 @@ export const deleteCohort = onCall(async (request) => {
     await app.firestore().collection('experiments').doc(data.experimentId).get()
   ).data();
   if (!experiment) {
-    throw new functions.https.HttpsError(
+    throw new HttpsError(
       'not-found',
       `Experiment ${data.experimentId} not found`,
     );
