@@ -736,7 +736,8 @@ export function canSendAgentChatMessage(
     return false;
   }
   // Return null if latest message is a system message about the agent leaving
-  // TODO: Right now, these message are always sent from a matching public ID.
+  // TODO(#867):
+  // Right now, these message are always sent from a matching public ID.
   // In the future, we should set up a system message that specifically records
   // "the given agent ID is ready to move on" rather than assuming any
   // system message with a matching ID message means the agent has left

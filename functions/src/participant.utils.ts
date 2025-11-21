@@ -53,7 +53,7 @@ export async function updateParticipantNextStage(
       experimentId,
       participant.currentCohortId,
       currentStageId,
-      // TODO: Check to see if the participant's name should be overridden
+      // TODO(#867): Check to see if the participant's name should be overridden
       // by a different profile (e.g., "Animals 2" instead of "Animals 1")
       // based on any alternate profile information hardcoded into the stage ID
       `${participant.name ?? 'A participant'} has left the chat.`,

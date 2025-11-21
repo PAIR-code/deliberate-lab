@@ -51,8 +51,6 @@ export interface AgentChatResponse {
 
 // Sender ID for chat messages manually sent by experimenter
 // This should be consistent to ensure same background color for each message
-// TODO: Consider setting the sender ID to the experimenter's email
-// so we can track (but NOT display in the chat UI) who sent what.
 export const EXPERIMENTER_MANUAL_CHAT_SENDER_ID = 'experimenter';
 
 // ************************************************************************* //
