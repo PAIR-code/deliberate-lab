@@ -42,9 +42,13 @@ export async function updateParticipantNextStage(
   const currentStageId = participant.currentStageId;
   const currentStageIndex = stageIds.indexOf(currentStageId);
 
-  // Check if current stage is a chat stage and send system message if so
+  // Check if current stage is a group chat stage and send system message if so
+  // NOTE: Only do this if the chat has not already been completed
   const currentStage = await getFirestoreStage(experimentId, currentStageId);
-  if (currentStage?.kind === StageKind.CHAT) {
+  if (
+    currentStage?.kind === StageKind.CHAT &&
+    !participant.timestamps.completedStages[currentStageId]
+  ) {
     await sendSystemChatMessage(
       experimentId,
       participant.currentCohortId,
