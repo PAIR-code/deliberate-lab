@@ -55,6 +55,7 @@
   border-bottom: 1px solid var(--md-sys-color-outline-variant);
   flex-wrap: wrap;
   justify-content: space-between;
+  max-width: common.$login-content-max-width;
   padding: common.$main-content-padding;
   position: sticky;
   top: 0;
@@ -78,6 +79,7 @@
   @include common.flex-column;
   border-radius: common.$spacing-medium var(--md-sys-color-surface);
   gap: common.$spacing-large;
+  max-width: common.$login-content-max-width;
   padding: common.$main-content-padding;
   width: 100%;
 }
@@ -132,6 +134,7 @@ footer {
   background: var(--md-sys-color-surface);
   bottom: 0;
   margin-top: auto;
+  max-width: common.$login-content-max-width;
   position: sticky;
   z-index: 1;
 }
