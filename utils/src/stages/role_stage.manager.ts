@@ -7,6 +7,7 @@ export class RoleStageHandler extends BaseStageHandler {
   getStageDisplayForPrompt(
     participants: ParticipantProfileExtended[],
     stageContext: StageContextData,
+    includeScaffolding: boolean,
   ) {
     const stage = stageContext.stage as RoleStageConfig;
     const rolePublicData = stageContext.publicData as RoleStagePublicData;
