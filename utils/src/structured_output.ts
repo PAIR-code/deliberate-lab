@@ -17,6 +17,7 @@ export enum StructuredOutputDataType {
   ARRAY = 'ARRAY',
   OBJECT = 'OBJECT',
   ENUM = 'ENUM',
+  IMAGE = 'IMAGE',
 }
 
 export interface StructuredOutputSchema {

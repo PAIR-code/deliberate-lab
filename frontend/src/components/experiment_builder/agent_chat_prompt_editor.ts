@@ -92,6 +92,7 @@ export class EditorComponent extends MobxLitElement {
           </div>
           ${promptConfig ? this.renderDialogButton() : nothing}
         </div>
+        ${this.renderFlashImageWarning(stageConfig, this.agent)}
         ${promptConfig?.type === StageKind.CHAT ||
         promptConfig?.type === StageKind.PRIVATE_CHAT
           ? html`
@@ -101,6 +102,24 @@ export class EditorComponent extends MobxLitElement {
           : this.renderAddButton()}
       </div>
     `;
+  }
+
+  private renderFlashImageWarning(
+    stageConfig: StageConfig,
+    agent: AgentPersonaConfig,
+  ) {
+    const modelName = agent.defaultModelSettings.modelName;
+    if (
+      stageConfig.kind === StageKind.PRIVATE_CHAT &&
+      modelName?.includes('gemini-2.5-flash-image')
+    ) {
+      return html`
+        <div class="warning">
+          Warning: This model is not compatible with structured output.
+        </div>
+      `;
+    }
+    return nothing;
   }
 
   private renderAddButton() {
@@ -248,7 +267,7 @@ export class EditorComponent extends MobxLitElement {
         case PromptItemType.GROUP:
           const group = item as PromptItemGroup;
           // prettier-ignore
-          return html`<details class="prompt-group-preview" open><summary class="chip tertiary">GROUP: ${group.title} ${renderShuffleIndicator(group.shuffleConfig)}</summary><div class="chip-collapsible">${group.items.map((subItem) => renderPromptItem(subItem))}</div></details>`;
+          return html`<details class="prompt-group-preview" open><summary class="chip tertiary">GROUP: ${group.title} ${renderShuffleIndicator(group.shuffleConfig)}</summary><div class="chip-collapsible">${group.items.map((subItem: PromptItem) => renderPromptItem(subItem))}</div></details>`;
         default:
           return html`<div class="chip tertiary">${item.type}</div>`;
       }
@@ -493,7 +512,7 @@ export class EditorComponent extends MobxLitElement {
         <div class="checkbox-wrapper">
           <md-checkbox
             touch-target="wrapper"
-            ?checked=${modelGenerationConfig.includeReasoning}
+            ?checked=${modelGenerationConfig.includeReasoning ?? false}
             ?disabled=${!this.experimentEditor.isCreator}
             @click=${updateIncludeReasoning}
           >

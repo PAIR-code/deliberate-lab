@@ -32,6 +32,8 @@ export interface ModelLogEntry extends BaseLogEntry {
   queryTimestamp: UnifiedTimestamp | null;
   // Time API response was received
   responseTimestamp: UnifiedTimestamp | null;
+  // URLs of uploaded images (if any)
+  imageUrls?: string[];
 }
 
 export function createModelLogEntry(

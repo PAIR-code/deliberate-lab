@@ -34,7 +34,7 @@ export async function processModelResponse(
   generationConfig: ModelGenerationConfig,
   structuredOutputConfig?: StructuredOutputConfig,
   numRetries: number = 0,
-): Promise<ModelResponse> {
+): Promise<{response: ModelResponse; logId: string}> {
   // Convert prompt to string for logging
   const promptText =
     typeof prompt === 'string'
@@ -50,6 +50,7 @@ export async function processModelResponse(
   let lastError: Error | undefined;
   const maxRetries = numRetries;
   const initialDelay = 1000; // 1 second initial delay
+  let logId = '';
 
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
     // Create a new log entry for each attempt
@@ -66,6 +67,9 @@ export async function processModelResponse(
       prompt: promptText,
       createdTimestamp: Timestamp.now(),
     });
+
+    logId = log.id;
+
     try {
       const queryTimestamp = Timestamp.now();
       response = (await getAgentResponse(
@@ -120,7 +124,7 @@ export async function processModelResponse(
     console.error(`Failed after ${numRetries} retries:`, lastError);
   }
 
-  return response;
+  return {response, logId};
 }
 
 // TODO: Rename to getAPIResponse?

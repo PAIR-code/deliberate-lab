@@ -628,7 +628,7 @@ export async function getChipOfferAssistance(
 
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
-        const response = await processModelResponse(
+        const {response} = await processModelResponse(
           experimentId,
           participant.currentCohortId,
           participant.privateId || '',
@@ -836,7 +836,7 @@ export async function getChipResponseAssistance(
 
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
-        const response = await processModelResponse(
+        const {response} = await processModelResponse(
           experimentId,
           participant.currentCohortId,
           participant.privateId || '',
