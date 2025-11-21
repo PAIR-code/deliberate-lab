@@ -150,23 +150,6 @@ service cloud.firestore {
         }
       }
 
-      match /agents/{agentId} {
-        allow get: if isExperimenter();
-        allow list: if isExperimenter();
-        // Experimenters can use cloud function endpoints
-        allow write: if false;
-
-        match /chatPrompts/{promptId} {
-          allow read: if isExperimenter();
-          allow write: if false; // Write using cloud functions
-        }
-
-        match /participantPrompts/{promptId} {
-          allow read: if isExperimenter();
-          allow write: if false; // Write using cloud functions
-        }
-      }
-
       match /cohorts/{cohortId} {
         allow get: if true; // Public read
         allow list: if canEditExperiment(experimentId);
