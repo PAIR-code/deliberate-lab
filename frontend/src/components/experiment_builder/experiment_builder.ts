@@ -281,7 +281,25 @@ export class ExperimentBuilder extends MobxLitElement {
           }}
         >
         </pr-icon-button>
-      </pr-tootipt>
+      </pr-tooltip>
+    `;
+  }
+
+  private renderSaveTemplateButton() {
+    return html`
+      <pr-tooltip text="Save as template" position="BOTTOM_END">
+        <pr-icon-button
+          icon="save"
+          color="neutral"
+          variant="default"
+          ?disabled=${!this.experimentEditor.canEditStages}
+          @click=${async () => {
+        await this.experimentEditor.saveTemplate();
+        alert('Template saved successfully!');
+      }}
+        >
+        </pr-icon-button>
+      </pr-tooltip>
     `;
   }
 
@@ -492,7 +510,12 @@ export class ExperimentBuilder extends MobxLitElement {
     return html`
       <experiment-builder-nav></experiment-builder-nav>
       <div class="experiment-builder">
-        <div class="header">${this.renderTitle()} ${this.renderActions()}</div>
+        <div class="header">
+          ${this.renderTitle()}
+          <div class="actions">
+            ${this.renderSaveTemplateButton()} ${this.renderActions()}
+          </div>
+        </div>
         ${this.renderVariableCheck()}
         <div class="content">${this.renderContent()}</div>
       </div>

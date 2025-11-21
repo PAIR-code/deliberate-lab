@@ -50,6 +50,21 @@ export const ExperimentDeletionData = Type.Object(
 export type ExperimentDeletionData = Static<typeof ExperimentDeletionData>;
 
 // ************************************************************************* //
+// deleteExperimentTemplate endpoint                                         //
+// ************************************************************************* //
+export const ExperimentTemplateDeletionData = Type.Object(
+  {
+    collectionName: FirestoreCollectionData,
+    templateId: Type.String({ minLength: 1 }),
+  },
+  strict,
+);
+
+export type ExperimentTemplateDeletionData = Static<
+  typeof ExperimentTemplateDeletionData
+>;
+
+// ************************************************************************* //
 // writeExperiment endpoint                                                  //
 // ************************************************************************* //
 export const CohortParticipantConfigSchema = Type.Object({

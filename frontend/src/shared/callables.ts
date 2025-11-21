@@ -13,6 +13,7 @@ import {
   ExperimentDeletionData,
   ExperimentDownloadResponse,
   ExperimentTemplate,
+  ExperimentTemplateDeletionData,
   InitiateParticipantTransferData,
   ParticipantNextStageResponse,
   ParticipantProfile,
@@ -95,6 +96,51 @@ export const getExperimentTemplateCallable = async (
   >(
     functions,
     'getExperimentTemplate',
+  )(config);
+  return data;
+};
+
+/** Generic endpoint to save experiment template. */
+export const saveExperimentTemplateCallable = async (
+  functions: Functions,
+  config: { collectionName: string; experimentTemplate: ExperimentTemplate },
+) => {
+  const { data } = await httpsCallable<
+    { collectionName: string; experimentTemplate: ExperimentTemplate },
+    CreationResponse
+  >(
+    functions,
+    'saveExperimentTemplate',
+  )(config);
+  return data;
+};
+
+/** Generic endpoint to get all experiment templates. */
+export const getExperimentTemplatesCallable = async (
+  functions: Functions,
+  config: { collectionName: string },
+) => {
+  const { data } = await httpsCallable<
+    { collectionName: string },
+    { templates: ExperimentTemplate[] }
+  >(
+    functions,
+    'getExperimentTemplates',
+  )(config);
+  return data;
+};
+
+/** Generic endpoint to delete experiment template. */
+export const deleteExperimentTemplateCallable = async (
+  functions: Functions,
+  config: ExperimentTemplateDeletionData,
+) => {
+  const { data } = await httpsCallable<
+    ExperimentTemplateDeletionData,
+    SuccessResponse
+  >(
+    functions,
+    'deleteExperimentTemplate',
   )(config);
   return data;
 };

@@ -9,6 +9,7 @@ export * from './alert.endpoints';
 export * from './agent.endpoints';
 export * from './cohort.endpoints';
 export * from './experiment.endpoints';
+export * from './experiment_template.endpoints';
 export * from './mediator.endpoints';
 export * from './participant.endpoints';
 

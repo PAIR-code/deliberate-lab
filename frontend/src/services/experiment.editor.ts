@@ -32,6 +32,9 @@ import {computed, makeObservable, observable} from 'mobx';
 import {
   writeExperimentCallable,
   updateExperimentCallable,
+  saveExperimentTemplateCallable,
+  getExperimentTemplatesCallable,
+  deleteExperimentTemplateCallable,
 } from '../shared/callables';
 
 import {AuthService} from './auth.service';
@@ -63,6 +66,9 @@ export class ExperimentEditor extends Service {
   @observable stages: StageConfig[] = [];
   @observable agentMediators: AgentMediatorTemplate[] = [];
   @observable agentParticipants: AgentParticipantTemplate[] = [];
+
+  // Templates
+  @observable savedTemplates: ExperimentTemplate[] = [];
 
   // Loading
   @observable isWritingExperiment = false;
@@ -156,6 +162,41 @@ export class ExperimentEditor extends Service {
     this.setStages(template.stageConfigs);
     this.setAgentMediators(template.agentMediators);
     this.setAgentParticipants(template.agentParticipants);
+  }
+
+  async saveTemplate() {
+    this.isWritingExperiment = true;
+    const response = await saveExperimentTemplateCallable(
+      this.sp.firebaseService.functions,
+      {
+        collectionName: 'experimentTemplates',
+        experimentTemplate: {
+          id: generateId(),
+          experiment: this.experiment,
+          stageConfigs: this.stages,
+          agentMediators: this.agentMediators,
+          agentParticipants: this.agentParticipants,
+        },
+      },
+    );
+    this.isWritingExperiment = false;
+    return response;
+  }
+
+  async loadTemplates() {
+    const response = await getExperimentTemplatesCallable(
+      this.sp.firebaseService.functions,
+      { collectionName: 'experimentTemplates' },
+    );
+    this.savedTemplates = response.templates;
+  }
+
+  async deleteTemplate(templateId: string) {
+    await deleteExperimentTemplateCallable(this.sp.firebaseService.functions, {
+      collectionName: 'experimentTemplates',
+      templateId,
+    });
+    await this.loadTemplates();
   }
 
   resetExperiment() {
