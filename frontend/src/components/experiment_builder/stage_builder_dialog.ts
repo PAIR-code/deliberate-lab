@@ -8,6 +8,7 @@ import {classMap} from 'lit/directives/class-map.js';
 
 import {core} from '../../core/core';
 import {AnalyticsService, ButtonClick} from '../../services/analytics.service';
+import {AuthService} from '../../services/auth.service';
 import {ExperimentEditor} from '../../services/experiment.editor';
 
 import {
@@ -59,14 +60,6 @@ import {
   getConsensusTopicTemplate,
 } from '../../shared/templates/debate_topics';
 import {
-  RTV_METADATA,
-  getRealityTVExperimentTemplate,
-} from '../../shared/templates/reality_tv_chat';
-import {
-  SALESPERSON_GAME_METADATA,
-  getSalespersonStageConfigs,
-} from '../../shared/templates/salesperson';
-import {
   FRUIT_TEST_METADATA,
   getFruitTestExperimentTemplate,
 } from '../../shared/templates/fruit_test';
@@ -103,6 +96,7 @@ export class StageBuilderDialog extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
 
   private readonly analyticsService = core.getService(AnalyticsService);
+  private readonly authService = core.getService(AuthService);
   private readonly experimentEditor = core.getService(ExperimentEditor);
 
   @property({type: Boolean})
@@ -179,16 +173,48 @@ export class StageBuilderDialog extends MobxLitElement {
         configuration!
       </div>
       <div class="card-gallery-wrapper">
-        ${this.renderLASCard()} ${this.renderLASCard(true)}
-        ${this.renderRealityTVCard()} ${this.renderChipNegotiationCard()}
-        ${this.renderSalespersonGameCard()} ${this.renderFlipCardTemplateCard()}
-        ${this.renderFruitTestTemplateCard()} ${this.renderStockInfoGameCard()}
-        ${this.renderAssetAllocationTemplateCard()}
+        ${this.renderFlipCardTemplateCard()}
+        ${this.renderFruitTestTemplateCard()}
         ${this.renderConditionalSurveyTemplateCard()}
-        ${this.renderPolicyTemplateCard()} ${this.renderConsensusDebateCard()}
-        ${this.renderCharityDebateTemplateCard()}
-        ${this.renderOOTBCharityDebateTemplateCard()}
-        ${this.renderAgentIntegrationCard()}
+        ${this.renderStockInfoGameCard()}
+        ${this.renderAssetAllocationTemplateCard()}
+        ${this.renderPolicyTemplateCard()} ${this.renderAgentIntegrationCard()}
+      </div>
+      ${this.authService.hasResearchTemplateAccess
+        ? this.renderResearchTemplateGallery()
+        : nothing}
+    `;
+  }
+
+  // This is a temporary set of hardcoded templates defined in the frontend
+  // visible to experimenters who are marked for "research template" access.
+  // Eventually, all these templates should be migrated such that they
+  // are completely created in the UI and stored in the backend.
+  private renderResearchTemplateGallery() {
+    return html`
+      <div class="banner">
+        Note: Only specific experimenters have access to the following research
+        templates! This list is controlled by the deployment owners.
+      </div>
+      <div class="gallery-section">
+        <div class="gallery-title">Lost at Sea experiments</div>
+        <div class="card-gallery-wrapper">
+          ${this.renderLASCard()} ${this.renderLASCard(true)}
+        </div>
+      </div>
+      <div class="gallery-section">
+        <div class="gallery-title">Negotiation games</div>
+        <div class="card-gallery-wrapper">
+          ${this.renderChipNegotiationCard()}
+        </div>
+      </div>
+      <div class="gallery-section">
+        <div class="gallery-title">Debate experiments</div>
+        <div class="card-gallery-wrapper">
+          ${this.renderConsensusDebateCard()}
+          ${this.renderCharityDebateTemplateCard()}
+          ${this.renderOOTBCharityDebateTemplateCard()}
+        </div>
       </div>
     `;
   }
@@ -287,18 +313,6 @@ export class StageBuilderDialog extends MobxLitElement {
     `;
   }
 
-  private renderRealityTVCard() {
-    const addTemplate = () => {
-      this.addTemplate(getRealityTVExperimentTemplate());
-    };
-    return html`
-      <div class="card" @click=${addTemplate}>
-        <div class="title">${RTV_METADATA.name}</div>
-        <div>${RTV_METADATA.description}</div>
-      </div>
-    `;
-  }
-
   private renderChipNegotiationCard() {
     const addGame = (numChips: number) => {
       this.addGame(
@@ -319,19 +333,6 @@ export class StageBuilderDialog extends MobxLitElement {
       <div class="card" @click=${() => addGame(4)}>
         <div class="title">${getChipMetadata(4).name}</div>
         <div>${getChipMetadata(4).description}</div>
-      </div>
-    `;
-  }
-
-  private renderSalespersonGameCard() {
-    const addGame = () => {
-      this.addGame(SALESPERSON_GAME_METADATA, getSalespersonStageConfigs());
-    };
-
-    return html`
-      <div class="card" @click=${addGame}>
-        <div class="title">${SALESPERSON_GAME_METADATA.name}</div>
-        <div>${SALESPERSON_GAME_METADATA.description}</div>
       </div>
     `;
   }
