@@ -17,8 +17,7 @@ import {
 } from '@deliberation-lab/utils';
 import {getExperimentDownload} from './data';
 
-import * as functions from 'firebase-functions';
-import {onCall} from 'firebase-functions/v2/https';
+import {onCall, HttpsError} from 'firebase-functions/v2/https';
 
 import {app} from './app';
 import {AuthGuard} from './utils/auth-guard';
@@ -194,7 +193,7 @@ export const deleteExperiment = onCall(async (request) => {
   // Validate input
   const validInput = Value.Check(ExperimentDeletionData, data);
   if (!validInput) {
-    throw new functions.https.HttpsError('invalid-argument', 'Invalid data');
+    throw new HttpsError('invalid-argument', 'Invalid data');
   }
 
   // Verify that experimenter is the creator before enabling delete
@@ -207,7 +206,7 @@ export const deleteExperiment = onCall(async (request) => {
       .get()
   ).data();
   if (!experiment) {
-    throw new functions.https.HttpsError(
+    throw new HttpsError(
       'not-found',
       `Experiment ${data.experimentId} not found in collection ${data.collectionName}`,
     );
@@ -242,7 +241,7 @@ export const getExperimentTemplate = onCall(async (request) => {
   ).data();
 
   if (!experiment) {
-    throw new functions.https.HttpsError(
+    throw new HttpsError(
       'not-found',
       `Experiment ${data.experimentId} not found in collection ${data.collectionName}`,
     );
