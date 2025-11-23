@@ -1265,27 +1265,35 @@ export function getRankingStageCSVColumns(
   );
 
   // 🧩 Leadership Rejection (LR) extension
-  if (
-    publicData &&
-    publicData.kind === StageKind.RANKING &&
-    'leaderStatusMap' in publicData
-  ) {
-    const lrData = publicData as LRRankingStagePublicData;
-    const participantPublicId = participant?.profile.publicId ?? '';
-
+  if (participant) {
+    // Column data
+    let leaderStatus = '';
+    let winnerId = '';
+    if (publicData && 'leaderStatusMap' in publicData) {
+      const lrData = publicData as LRRankingStagePublicData;
+      const participantPublicId = participant.profile.publicId ?? '';
+      leaderStatus = lrData.leaderStatusMap?.[participantPublicId] ?? '';
+      winnerId = lrData.winnerId ?? '';
+    }
+    console.log(
+      '[LR][getRankingStageCSVColumns] [Leadership Rejection (LR) extension] columns data: leaderStatus=',
+      leaderStatus,
+      ', winnerId=',
+      winnerId,
+    );
     // Column for participant’s leader status
-    columns.push(
-      !participant
-        ? `Leader status - ${rankingStage.id}`
-        : (lrData.leaderStatusMap?.[participantPublicId] ?? ''),
-    );
-
+    columns.push(leaderStatus);
     // Optional: export winner ID again for clarity
-    columns.push(
-      !participant
-        ? `Leader winner ID - ${rankingStage.id}`
-        : (lrData.winnerId ?? ''),
+    columns.push(winnerId);
+  } else {
+    // Column header. Note: if participant is null (case of headers to return), publicData is null too.
+    // Column for participant’s leader status
+    console.log(
+      '[LR][getRankingStageCSVColumns] [Leadership Rejection (LR) extension] header title',
     );
+    columns.push(`Leader status - ${rankingStage.id}`);
+    // Optional: export winner ID again for clarity
+    columns.push(`Leader winner ID - ${rankingStage.id}`);
   }
 
   return columns;
