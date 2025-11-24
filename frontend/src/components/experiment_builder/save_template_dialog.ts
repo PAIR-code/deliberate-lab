@@ -1,0 +1,142 @@
+import '../../pair-components/button';
+import '../../pair-components/icon';
+import '../../pair-components/icon_button';
+import '../../pair-components/textarea';
+
+import {MobxLitElement} from '@adobe/lit-mobx';
+import {CSSResultGroup, html, css} from 'lit';
+import {customElement, state} from 'lit/decorators.js';
+
+import {core} from '../../core/core';
+import {ExperimentEditor} from '../../services/experiment.editor';
+
+@customElement('save-template-dialog')
+export class SaveTemplateDialog extends MobxLitElement {
+  static override styles: CSSResultGroup = css`
+    :host {
+      display: block;
+    }
+
+    .dialog-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+
+    .dialog {
+      background: white;
+      border-radius: 8px;
+      width: 500px;
+      max-width: 90%;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .header {
+      padding: 16px;
+      border-bottom: 1px solid #eee;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .title {
+      font-size: 18px;
+      font-weight: 500;
+    }
+
+    .body {
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .footer {
+      padding: 16px;
+      border-top: 1px solid #eee;
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+
+    pr-textarea {
+      width: 100%;
+    }
+  `;
+
+  private readonly experimentEditor = core.getService(ExperimentEditor);
+
+  @state() private name: string = '';
+  @state() private description: string = '';
+
+  override connectedCallback() {
+    super.connectedCallback();
+    this.name = this.experimentEditor.experiment.metadata.name;
+    this.description = this.experimentEditor.experiment.metadata.description;
+  }
+
+  override render() {
+    return html`
+      <div class="dialog-overlay">
+        <div class="dialog">
+          <div class="header">
+            <div class="title">Save as Template</div>
+            <pr-icon-button
+              icon="close"
+              color="neutral"
+              variant="default"
+              @click=${this.close}
+            ></pr-icon-button>
+          </div>
+          <div class="body">
+            <pr-textarea
+              label="Template Name"
+              .value=${this.name}
+              @input=${(e: InputEvent) => {
+                this.name = (e.target as HTMLTextAreaElement).value;
+              }}
+            ></pr-textarea>
+            <pr-textarea
+              label="Template Description"
+              .value=${this.description}
+              @input=${(e: InputEvent) => {
+                this.description = (e.target as HTMLTextAreaElement).value;
+              }}
+            ></pr-textarea>
+          </div>
+          <div class="footer">
+            <pr-button color="neutral" variant="outlined" @click=${this.close}
+              >Cancel</pr-button
+            >
+            <pr-button color="primary" @click=${this.save}>Save</pr-button>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  private close() {
+    this.experimentEditor.setShowSaveTemplateDialog(false);
+  }
+
+  private async save() {
+    await this.experimentEditor.saveTemplate(this.name, this.description);
+    this.close();
+    alert('Template saved successfully!');
+  }
+}
+
+declare global {
+  interface HTMLElementTagNameMap {
+    'save-template-dialog': SaveTemplateDialog;
+  }
+}

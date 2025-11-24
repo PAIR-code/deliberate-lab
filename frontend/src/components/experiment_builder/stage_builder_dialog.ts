@@ -114,6 +114,11 @@ export class StageBuilderDialog extends MobxLitElement {
   // Used to populate resource allocation template
   @state() private consensusTopics: string = 'Climate Change';
 
+  override connectedCallback() {
+    super.connectedCallback();
+    this.experimentEditor.loadTemplates();
+  }
+
   override render() {
     return html`
       <div class="dialog">
@@ -179,17 +184,33 @@ export class StageBuilderDialog extends MobxLitElement {
         configuration!
       </div>
       <div class="card-gallery-wrapper">
-        ${this.renderSavedTemplates()}
-        ${this.renderLASCard()} ${this.renderLASCard(true)}
-        ${this.renderRealityTVCard()} ${this.renderChipNegotiationCard()}
-        ${this.renderSalespersonGameCard()} ${this.renderFlipCardTemplateCard()}
-        ${this.renderFruitTestTemplateCard()} ${this.renderStockInfoGameCard()}
-        ${this.renderAssetAllocationTemplateCard()}
-        ${this.renderConditionalSurveyTemplateCard()}
-        ${this.renderPolicyTemplateCard()} ${this.renderConsensusDebateCard()}
-        ${this.renderCharityDebateTemplateCard()}
-        ${this.renderOOTBCharityDebateTemplateCard()}
-        ${this.renderAgentIntegrationCard()}
+        ${this.experimentEditor.savedTemplates.length > 0
+        ? html`
+              <div class="gallery-section">
+                <div class="gallery-title">Saved Templates</div>
+                <div class="card-gallery-wrapper">
+                  ${this.renderSavedTemplates()}
+                </div>
+              </div>
+            `
+      : nothing}
+        <div class="gallery-section">
+          <div class="gallery-title">Pre-defined Templates</div>
+          <div class="card-gallery-wrapper">
+            ${this.renderLASCard()} ${this.renderLASCard(true)}
+            ${this.renderRealityTVCard()} ${this.renderChipNegotiationCard()}
+            ${this.renderSalespersonGameCard()}
+            ${this.renderFlipCardTemplateCard()}
+            ${this.renderFruitTestTemplateCard()}
+            ${this.renderStockInfoGameCard()}
+            ${this.renderAssetAllocationTemplateCard()}
+            ${this.renderConditionalSurveyTemplateCard()}
+            ${this.renderPolicyTemplateCard()} ${this.renderConsensusDebateCard()}
+            ${this.renderCharityDebateTemplateCard()}
+            ${this.renderOOTBCharityDebateTemplateCard()}
+            ${this.renderAgentIntegrationCard()}
+          </div>
+        </div>
       </div>
     `;
   }

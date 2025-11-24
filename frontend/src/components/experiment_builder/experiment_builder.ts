@@ -25,6 +25,7 @@ import './agent_persona_editor';
 import './experiment_builder_nav';
 import './experiment_settings_editor';
 import './stage_builder_dialog';
+import './save_template_dialog';
 import './variable_editor';
 
 import {MobxLitElement} from '@adobe/lit-mobx';
@@ -80,7 +81,15 @@ export class ExperimentBuilder extends MobxLitElement {
     return html`
       ${this.renderPanelView()} ${this.renderExperimentConfigBuilder()}
       ${this.renderExperimenterSettings()} ${this.renderStageBuilderDialog()}
+      ${this.renderSaveTemplateDialog()}
     `;
+  }
+
+  private renderSaveTemplateDialog() {
+    if (this.experimentEditor.showSaveTemplateDialog) {
+      return html`<save-template-dialog></save-template-dialog>`;
+    }
+    return nothing;
   }
 
   private renderStageBuilderDialog() {
@@ -293,9 +302,8 @@ export class ExperimentBuilder extends MobxLitElement {
           color="neutral"
           variant="default"
           ?disabled=${!this.experimentEditor.canEditStages}
-          @click=${async () => {
-        await this.experimentEditor.saveTemplate();
-        alert('Template saved successfully!');
+          @click=${() => {
+        this.experimentEditor.setShowSaveTemplateDialog(true);
       }}
         >
         </pr-icon-button>

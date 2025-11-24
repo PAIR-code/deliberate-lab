@@ -78,6 +78,7 @@ export class ExperimentEditor extends Service {
   @observable currentStageId: string | undefined = undefined;
   @observable showStageBuilderDialog = false;
   @observable showTemplatesTab = false;
+  @observable showSaveTemplateDialog = false;
 
   // **************************************************************************
   // EXPERIMENT LOADING
@@ -164,15 +165,23 @@ export class ExperimentEditor extends Service {
     this.setAgentParticipants(template.agentParticipants);
   }
 
-  async saveTemplate() {
+  async saveTemplate(name?: string, description?: string) {
     this.isWritingExperiment = true;
+    const experiment = {
+      ...this.experiment,
+      metadata: {
+        ...this.experiment.metadata,
+        name: name ?? this.experiment.metadata.name,
+        description: description ?? this.experiment.metadata.description,
+      },
+    };
     const response = await saveExperimentTemplateCallable(
       this.sp.firebaseService.functions,
       {
         collectionName: 'experimentTemplates',
         experimentTemplate: {
           id: generateId(),
-          experiment: this.experiment,
+          experiment,
           stageConfigs: this.stages,
           agentMediators: this.agentMediators,
           agentParticipants: this.agentParticipants,
@@ -350,6 +359,10 @@ export class ExperimentEditor extends Service {
   toggleStageBuilderDialog(showTemplates: boolean = false) {
     this.showStageBuilderDialog = !this.showStageBuilderDialog;
     this.showTemplatesTab = showTemplates;
+  }
+
+  setShowSaveTemplateDialog(show: boolean) {
+    this.showSaveTemplateDialog = show;
   }
 
   // **************************************************************************
