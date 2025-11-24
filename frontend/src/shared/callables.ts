@@ -103,10 +103,10 @@ export const getExperimentTemplateCallable = async (
 /** Generic endpoint to save experiment template. */
 export const saveExperimentTemplateCallable = async (
   functions: Functions,
-  config: { collectionName: string; experimentTemplate: ExperimentTemplate },
+  config: {collectionName: string; experimentTemplate: ExperimentTemplate},
 ) => {
-  const { data } = await httpsCallable<
-    { collectionName: string; experimentTemplate: ExperimentTemplate },
+  const {data} = await httpsCallable<
+    {collectionName: string; experimentTemplate: ExperimentTemplate},
     CreationResponse
   >(
     functions,
@@ -118,11 +118,11 @@ export const saveExperimentTemplateCallable = async (
 /** Generic endpoint to get all experiment templates. */
 export const getExperimentTemplatesCallable = async (
   functions: Functions,
-  config: { collectionName: string },
+  config: {collectionName: string},
 ) => {
-  const { data } = await httpsCallable<
-    { collectionName: string },
-    { templates: ExperimentTemplate[] }
+  const {data} = await httpsCallable<
+    {collectionName: string},
+    {templates: ExperimentTemplate[]}
   >(
     functions,
     'getExperimentTemplates',
@@ -135,7 +135,7 @@ export const deleteExperimentTemplateCallable = async (
   functions: Functions,
   config: ExperimentTemplateDeletionData,
 ) => {
-  const { data } = await httpsCallable<
+  const {data} = await httpsCallable<
     ExperimentTemplateDeletionData,
     SuccessResponse
   >(

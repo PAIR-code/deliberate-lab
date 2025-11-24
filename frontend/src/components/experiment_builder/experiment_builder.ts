@@ -28,18 +28,18 @@ import './stage_builder_dialog';
 import './save_template_dialog';
 import './variable_editor';
 
-import { MobxLitElement } from '@adobe/lit-mobx';
-import { CSSResultGroup, html, nothing } from 'lit';
-import { customElement, property, state } from 'lit/decorators.js';
+import {MobxLitElement} from '@adobe/lit-mobx';
+import {CSSResultGroup, html, nothing} from 'lit';
+import {customElement, property, state} from 'lit/decorators.js';
 
 import '@material/web/checkbox/checkbox.js';
 
-import { core } from '../../core/core';
-import { AuthService } from '../../services/auth.service';
-import { AnalyticsService, ButtonClick } from '../../services/analytics.service';
-import { ExperimentEditor } from '../../services/experiment.editor';
-import { ExperimentManager } from '../../services/experiment.manager';
-import { Pages, RouterService } from '../../services/router.service';
+import {core} from '../../core/core';
+import {AuthService} from '../../services/auth.service';
+import {AnalyticsService, ButtonClick} from '../../services/analytics.service';
+import {ExperimentEditor} from '../../services/experiment.editor';
+import {ExperimentManager} from '../../services/experiment.manager';
+import {Pages, RouterService} from '../../services/router.service';
 
 import {
   StageConfig,
@@ -50,7 +50,7 @@ import {
   validateTemplateVariables,
 } from '@deliberation-lab/utils';
 
-import { styles } from './experiment_builder.scss';
+import {styles} from './experiment_builder.scss';
 
 enum PanelView {
   AGENT_MEDIATORS = 'agent_mediators',
@@ -110,21 +110,23 @@ export class ExperimentBuilder extends MobxLitElement {
               <div class="header-title">General settings</div>
             </div>
             <div
-              class="general-item ${this.panelView === PanelView.METADATA ? 'current' : ''
-      }"
+              class="general-item ${
+                this.panelView === PanelView.METADATA ? 'current' : ''
+              }"
               @click=${() => {
-        this.panelView = PanelView.METADATA;
-      }}
+                this.panelView = PanelView.METADATA;
+              }}
             >
               <div>Metadata</div>
               <div class="subtitle">Experiment name and description</div>
             </div>
             <div
-              class="general-item ${this.panelView === PanelView.STAGES ? 'current' : ''
-      }"
+              class="general-item ${
+                this.panelView === PanelView.STAGES ? 'current' : ''
+              }"
               @click=${() => {
-        this.panelView = PanelView.STAGES;
-      }}
+                this.panelView = PanelView.STAGES;
+              }}
             >
               <div>Experiment stages</div>
               <div class="subtitle">Add and configure experiment stages</div>
@@ -133,31 +135,34 @@ export class ExperimentBuilder extends MobxLitElement {
               <div class="header-title">Additional settings</div>
             </div>
             <div
-              class="general-item ${this.panelView === PanelView.PERMISSIONS ? 'current' : ''
-      }"
+              class="general-item ${
+                this.panelView === PanelView.PERMISSIONS ? 'current' : ''
+              }"
               @click=${() => {
-        this.panelView = PanelView.PERMISSIONS;
-      }}
+                this.panelView = PanelView.PERMISSIONS;
+              }}
             >
               <div>Permissions</div>
               <div class="subtitle">Set visibility of experiment dashboard</div>
             </div>
             <div
-              class="general-item ${this.panelView === PanelView.PROLIFIC ? 'current' : ''
-      }"
+              class="general-item ${
+                this.panelView === PanelView.PROLIFIC ? 'current' : ''
+              }"
               @click=${() => {
-        this.panelView = PanelView.PROLIFIC;
-      }}
+                this.panelView = PanelView.PROLIFIC;
+              }}
             >
               <div>Prolific integration</div>
               <div class="subtitle">Set up Prolific codes</div>
             </div>
             <div
-              class="general-item ${this.panelView === PanelView.COHORT ? 'current' : ''
-      }"
+              class="general-item ${
+                this.panelView === PanelView.COHORT ? 'current' : ''
+              }"
               @click=${() => {
-        this.panelView = PanelView.COHORT;
-      }}
+                this.panelView = PanelView.COHORT;
+              }}
             >
               <div>Cohort setup</div>
               <div class="subtitle">Specify default cohort settings</div>
@@ -166,22 +171,24 @@ export class ExperimentBuilder extends MobxLitElement {
               <div class="header-title">LLM settings</div>
             </div>
             <div
-              class="general-item ${this.panelView === PanelView.API_KEY ? 'current' : ''
-      }"
+              class="general-item ${
+                this.panelView === PanelView.API_KEY ? 'current' : ''
+              }"
               @click=${() => {
-        this.panelView = PanelView.API_KEY;
-      }}
+                this.panelView = PanelView.API_KEY;
+              }}
             >
               <div>API key</div>
               <div class="subtitle">Configure API key used for agent calls</div>
             </div>
             <div
-              class="general-item ${this.panelView === PanelView.AGENT_MEDIATORS ? 'current' : ''
-      }"
+              class="general-item ${
+                this.panelView === PanelView.AGENT_MEDIATORS ? 'current' : ''
+              }"
               @click=${() => {
-        this.panelView = PanelView.AGENT_MEDIATORS;
-        this.experimentEditor.setAgentIdToLatest(true);
-      }}
+                this.panelView = PanelView.AGENT_MEDIATORS;
+                this.experimentEditor.setAgentIdToLatest(true);
+              }}
             >
               <div>Agent mediators</div>
               <div class="subtitle">Add and configure agent mediators</div>
@@ -205,23 +212,23 @@ export class ExperimentBuilder extends MobxLitElement {
       </div>
       <div
         class="general-item ${this.panelView === PanelView.VARIABLES
-        ? 'current'
-        : ''}"
+          ? 'current'
+          : ''}"
         @click=${() => {
-        this.panelView = PanelView.VARIABLES;
-      }}
+          this.panelView = PanelView.VARIABLES;
+        }}
       >
         <div>Variables <span class="alpha">alpha</span></div>
         <div class="subtitle">Set up variables to use in stage text</div>
       </div>
       <div
         class="general-item ${this.panelView === PanelView.AGENT_PARTICIPANTS
-        ? 'current'
-        : ''}"
+          ? 'current'
+          : ''}"
         @click=${() => {
-        this.panelView = PanelView.AGENT_PARTICIPANTS;
-        this.experimentEditor.setAgentIdToLatest(false);
-      }}
+          this.panelView = PanelView.AGENT_PARTICIPANTS;
+          this.experimentEditor.setAgentIdToLatest(false);
+        }}
       >
         <div>Agent participants<span class="alpha">alpha</span></div>
         <div class="subtitle">Add and configure agent participants</div>
@@ -245,9 +252,9 @@ export class ExperimentBuilder extends MobxLitElement {
           ?disabled=${disabled}
           aria-disabled=${disabled ? 'true' : 'false'}
           @click=${() => {
-        if (disabled) return;
-        this.experimentEditor.addAgentMediator();
-      }}
+            if (disabled) return;
+            this.experimentEditor.addAgentMediator();
+          }}
         >
           + Add agent mediator persona
         </pr-button>
@@ -262,8 +269,8 @@ export class ExperimentBuilder extends MobxLitElement {
         color="tertiary"
         variant="tonal"
         @click=${() => {
-        this.experimentEditor.addAgentParticipant();
-      }}
+          this.experimentEditor.addAgentParticipant();
+        }}
       >
         + Add agent participant persona
       </pr-button>
@@ -279,8 +286,8 @@ export class ExperimentBuilder extends MobxLitElement {
           variant="default"
           ?disabled=${!this.experimentEditor.canEditStages}
           @click=${() => {
-        this.experimentEditor.toggleStageBuilderDialog(false);
-      }}
+            this.experimentEditor.toggleStageBuilderDialog(false);
+          }}
         >
         </pr-icon-button>
       </pr-tooltip>
@@ -297,8 +304,8 @@ export class ExperimentBuilder extends MobxLitElement {
               variant="outlined"
               ?disabled=${!this.experimentEditor.canEditStages}
               @click=${() => {
-            this.experimentEditor.setShowSaveTemplateDialog(true, 'update');
-          }}
+                this.experimentEditor.setShowSaveTemplateDialog(true, 'update');
+              }}
             >
               Update template
             </pr-button>
@@ -310,8 +317,8 @@ export class ExperimentBuilder extends MobxLitElement {
         variant="outlined"
         ?disabled=${!this.experimentEditor.canEditStages}
         @click=${() => {
-      this.experimentEditor.setShowSaveTemplateDialog(true, 'new');
-    }}
+          this.experimentEditor.setShowSaveTemplateDialog(true, 'new');
+        }}
       >
         Save as template
       </pr-button>
@@ -329,14 +336,14 @@ export class ExperimentBuilder extends MobxLitElement {
         variant="outlined"
         ?disabled=${!this.experimentManager.isCreator}
         @click=${() => {
-        const isConfirmed = window.confirm(
-          `Are you sure you want to delete this experiment?`,
-        );
-        if (!isConfirmed) return;
+          const isConfirmed = window.confirm(
+            `Are you sure you want to delete this experiment?`,
+          );
+          if (!isConfirmed) return;
 
-        this.analyticsService.trackButtonClick(ButtonClick.EXPERIMENT_DELETE);
-        this.experimentManager.deleteExperiment();
-      }}
+          this.analyticsService.trackButtonClick(ButtonClick.EXPERIMENT_DELETE);
+          this.experimentManager.deleteExperiment();
+        }}
       >
         <pr-icon color="error" icon="delete"></pr-icon>
         Delete experiment
@@ -409,20 +416,20 @@ export class ExperimentBuilder extends MobxLitElement {
             ⚠️ Agent participant are in alpha mode and may not work as expected.
           </div>
           ${this.experimentEditor.agentParticipants.map(
-      (agent) => html`
+            (agent) => html`
               <div
                 class="agent-item ${this.experimentEditor.currentAgentId ===
-          agent.persona.id
-          ? 'current'
-          : ''}"
+                agent.persona.id
+                  ? 'current'
+                  : ''}"
                 @click=${() => {
-          this.experimentEditor.setCurrentAgentId(agent.persona.id);
-        }}
+                  this.experimentEditor.setCurrentAgentId(agent.persona.id);
+                }}
               >
                 <div>
                   ${agent.persona.name.length > 0
-          ? agent.persona.name
-          : agent.persona.defaultProfile.name}
+                    ? agent.persona.name
+                    : agent.persona.defaultProfile.name}
                 </div>
                 <div class="subtitle">
                   ${agent.persona.defaultModelSettings.modelName}
@@ -430,7 +437,7 @@ export class ExperimentBuilder extends MobxLitElement {
                 <div class="subtitle">${agent.persona.id}</div>
               </div>
             `,
-    )}
+          )}
         </div>
       </div>
       <div class="experiment-builder">
@@ -445,7 +452,7 @@ export class ExperimentBuilder extends MobxLitElement {
           ${this.experimentEditor.stages.length === 0 ? '' : html`<div class="header">Stage-specific prompts</div>`}
 
             ${this.experimentEditor.stages.map(
-      (stage, index) => html`
+              (stage, index) => html`
                 <agent-chat-prompt-editor
                   .agent=${agent?.persona}
                   .stageId=${stage.id}
@@ -453,7 +460,7 @@ export class ExperimentBuilder extends MobxLitElement {
                 >
                 </agent-chat-prompt-editor>
               `,
-    )}
+            )}
           </agent-persona-editor>
         </div>
       </div>
@@ -468,20 +475,20 @@ export class ExperimentBuilder extends MobxLitElement {
         <div class="sidenav-header">${this.renderAddMediatorButton()}</div>
         <div class="sidenav-items">
           ${this.experimentEditor.agentMediators.map(
-      (mediator) => html`
+            (mediator) => html`
               <div
                 class="agent-item ${this.experimentEditor.currentAgentId ===
-          mediator.persona.id
-          ? 'current'
-          : ''}"
+                mediator.persona.id
+                  ? 'current'
+                  : ''}"
                 @click=${() => {
-          this.experimentEditor.setCurrentAgentId(mediator.persona.id);
-        }}
+                  this.experimentEditor.setCurrentAgentId(mediator.persona.id);
+                }}
               >
                 <div>
                   ${mediator.persona.name.length > 0
-          ? mediator.persona.name
-          : mediator.persona.defaultProfile.name}
+                    ? mediator.persona.name
+                    : mediator.persona.defaultProfile.name}
                 </div>
                 <div class="subtitle">
                   ${mediator.persona.defaultModelSettings.modelName}
@@ -489,7 +496,7 @@ export class ExperimentBuilder extends MobxLitElement {
                 <div class="subtitle">${mediator.persona.id}</div>
               </div>
             `,
-    )}
+          )}
         </div>
       </div>
       <div class="experiment-builder">
@@ -499,10 +506,10 @@ export class ExperimentBuilder extends MobxLitElement {
         <div class="content">
           <agent-persona-editor .agent=${agent?.persona}>
             ${this.experimentEditor.stages.length === 0
-        ? ''
-        : html`<div class="header">Stage-specific prompts</div>`}
+              ? ''
+              : html`<div class="header">Stage-specific prompts</div>`}
             ${this.experimentEditor.stages.map(
-          (stage, index) => html`
+              (stage, index) => html`
                 <agent-chat-prompt-editor
                   .agent=${agent?.persona}
                   .stageId=${stage.id}
@@ -510,7 +517,7 @@ export class ExperimentBuilder extends MobxLitElement {
                 >
                 </agent-chat-prompt-editor>
               `,
-        )}
+            )}
           </agent-persona-editor>
         </div>
       </div>
@@ -543,7 +550,7 @@ export class ExperimentBuilder extends MobxLitElement {
     const updateTitle = (e: InputEvent) => {
       const name = (e.target as HTMLTextAreaElement).value;
       if (stage) {
-        this.experimentEditor.updateStage({ ...stage, name });
+        this.experimentEditor.updateStage({...stage, name});
       }
     };
 
@@ -592,10 +599,10 @@ export class ExperimentBuilder extends MobxLitElement {
         variant="default"
         ?disabled=${forkDisabled}
         @click=${() => {
-        const { id, ...stageWithoutId } = stage;
-        this.experimentEditor.addStage({ id: generateId(), ...stageWithoutId });
-        this.experimentEditor.jumpToLastStage();
-      }}
+          const {id, ...stageWithoutId} = stage;
+          this.experimentEditor.addStage({id: generateId(), ...stageWithoutId});
+          this.experimentEditor.jumpToLastStage();
+        }}
       >
       </pr-icon-button>
     </pr-tooltip>`;
@@ -605,7 +612,7 @@ export class ExperimentBuilder extends MobxLitElement {
     const stage = this.experimentEditor.currentStage;
     const variableConfigs =
       this.experimentEditor.experiment?.variableConfigs ?? [];
-    const { valid, missingVariables, syntaxError } = validateTemplateVariables(
+    const {valid, missingVariables, syntaxError} = validateTemplateVariables(
       JSON.stringify(stage),
       extractVariablesFromVariableConfigs(variableConfigs),
     );
@@ -769,16 +776,16 @@ export class AlphaToggle extends MobxLitElement {
         <label
           class="switch"
           title=${this.authService.showAlphaFeatures
-        ? 'Alpha features enabled'
-        : 'Alpha features disabled'}
+            ? 'Alpha features enabled'
+            : 'Alpha features disabled'}
         >
           <input
             type="checkbox"
             ?checked=${this.authService.showAlphaFeatures}
             @change=${(e: Event) => {
-        const checked = (e.target as HTMLInputElement).checked;
-        this.authService.updateAlphaToggle(checked);
-      }}
+              const checked = (e.target as HTMLInputElement).checked;
+              this.authService.updateAlphaToggle(checked);
+            }}
           />
           <span class="slider"></span>
         </label>

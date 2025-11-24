@@ -1,12 +1,12 @@
-import { Value } from '@sinclair/typebox/value';
+import {Value} from '@sinclair/typebox/value';
 import {
   ExperimentTemplate,
   ExperimentTemplateDeletionData,
 } from '@deliberation-lab/utils';
 import * as functions from 'firebase-functions';
-import { onCall } from 'firebase-functions/v2/https';
-import { app } from './app';
-import { AuthGuard } from './utils/auth-guard';
+import {onCall} from 'firebase-functions/v2/https';
+import {app} from './app';
+import {AuthGuard} from './utils/auth-guard';
 
 /** Create, update, and delete experiment templates. */
 
@@ -18,7 +18,7 @@ import { AuthGuard } from './utils/auth-guard';
 // ************************************************************************* //
 export const saveExperimentTemplate = onCall(async (request) => {
   await AuthGuard.isExperimenter(request);
-  const { data } = request;
+  const {data} = request;
   const template = data.experimentTemplate as ExperimentTemplate;
 
   // Define document reference
@@ -41,7 +41,9 @@ export const saveExperimentTemplate = onCall(async (request) => {
     .where('experiment.metadata.name', '==', template.experiment.metadata.name)
     .get();
 
-  const duplicate = existingTemplates.docs.find((doc) => doc.id !== template.id);
+  const duplicate = existingTemplates.docs.find(
+    (doc) => doc.id !== template.id,
+  );
   if (duplicate) {
     throw new functions.https.HttpsError(
       'already-exists',
@@ -54,7 +56,7 @@ export const saveExperimentTemplate = onCall(async (request) => {
     transaction.set(document, template);
   });
 
-  return { id: document.id };
+  return {id: document.id};
 });
 
 // ************************************************************************* //
@@ -65,13 +67,13 @@ export const saveExperimentTemplate = onCall(async (request) => {
 // ************************************************************************* //
 export const getExperimentTemplates = onCall(async (request) => {
   await AuthGuard.isExperimenter(request);
-  const { data } = request;
+  const {data} = request;
 
   const templates = (
     await app.firestore().collection(data.collectionName).get()
   ).docs.map((doc) => doc.data() as ExperimentTemplate);
 
-  return { templates };
+  return {templates};
 });
 
 // ************************************************************************* //
@@ -82,7 +84,7 @@ export const getExperimentTemplates = onCall(async (request) => {
 // ************************************************************************* //
 export const deleteExperimentTemplate = onCall(async (request) => {
   await AuthGuard.isExperimenter(request);
-  const { data } = request;
+  const {data} = request;
 
   // Validate input
   const validInput = Value.Check(ExperimentTemplateDeletionData, data);
@@ -91,9 +93,7 @@ export const deleteExperimentTemplate = onCall(async (request) => {
   }
 
   // Delete document
-  const doc = app
-    .firestore()
-    .doc(`${data.collectionName}/${data.templateId}`);
+  const doc = app.firestore().doc(`${data.collectionName}/${data.templateId}`);
   await doc.delete();
-  return { success: true };
+  return {success: true};
 });

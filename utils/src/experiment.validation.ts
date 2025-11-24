@@ -55,7 +55,7 @@ export type ExperimentDeletionData = Static<typeof ExperimentDeletionData>;
 export const ExperimentTemplateDeletionData = Type.Object(
   {
     collectionName: FirestoreCollectionData,
-    templateId: Type.String({ minLength: 1 }),
+    templateId: Type.String({minLength: 1}),
   },
   strict,
 );

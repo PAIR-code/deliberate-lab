@@ -168,11 +168,7 @@ export class ExperimentEditor extends Service {
     this.loadedTemplateId = template.id;
   }
 
-  async saveTemplate(
-    name?: string,
-    description?: string,
-    templateId?: string,
-  ) {
+  async saveTemplate(name?: string, description?: string, templateId?: string) {
     this.isWritingExperiment = true;
     const experiment = {
       ...this.experiment,
@@ -203,7 +199,7 @@ export class ExperimentEditor extends Service {
   async loadTemplates() {
     const response = await getExperimentTemplatesCallable(
       this.sp.firebaseService.functions,
-      { collectionName: 'experimentTemplates' },
+      {collectionName: 'experimentTemplates'},
     );
     this.savedTemplates = response.templates;
   }

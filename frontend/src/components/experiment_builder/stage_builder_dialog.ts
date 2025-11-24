@@ -185,7 +185,7 @@ export class StageBuilderDialog extends MobxLitElement {
       </div>
       <div class="card-gallery-wrapper">
         ${this.experimentEditor.savedTemplates.length > 0
-        ? html`
+          ? html`
               <div class="gallery-section">
                 <div class="gallery-title">Saved Templates</div>
                 <div class="card-gallery-wrapper">
@@ -193,7 +193,7 @@ export class StageBuilderDialog extends MobxLitElement {
                 </div>
               </div>
             `
-      : nothing}
+          : nothing}
         <div class="gallery-section">
           <div class="gallery-title">Pre-defined Templates</div>
           <div class="card-gallery-wrapper">
@@ -205,7 +205,8 @@ export class StageBuilderDialog extends MobxLitElement {
             ${this.renderStockInfoGameCard()}
             ${this.renderAssetAllocationTemplateCard()}
             ${this.renderConditionalSurveyTemplateCard()}
-            ${this.renderPolicyTemplateCard()} ${this.renderConsensusDebateCard()}
+            ${this.renderPolicyTemplateCard()}
+            ${this.renderConsensusDebateCard()}
             ${this.renderCharityDebateTemplateCard()}
             ${this.renderOOTBCharityDebateTemplateCard()}
             ${this.renderAgentIntegrationCard()}
@@ -218,9 +219,12 @@ export class StageBuilderDialog extends MobxLitElement {
   private renderSavedTemplates() {
     return html`
       ${this.experimentEditor.savedTemplates.map(
-      (template) => html`
+        (template) => html`
           <div class="card saved-template">
-            <div class="card-content" @click=${() => this.addTemplate(template)}>
+            <div
+              class="card-content"
+              @click=${() => this.addTemplate(template)}
+            >
               <div class="title">${template.experiment.metadata.name}</div>
               <div>${template.experiment.metadata.description}</div>
               <div class="template-footer">
@@ -235,19 +239,19 @@ export class StageBuilderDialog extends MobxLitElement {
                 color="error"
                 variant="default"
                 @click=${(e: Event) => {
-          e.stopPropagation();
-          if (
-            confirm('Are you sure you want to delete this template?')
-          ) {
-            this.experimentEditor.deleteTemplate(template.id);
-          }
-        }}
+                  e.stopPropagation();
+                  if (
+                    confirm('Are you sure you want to delete this template?')
+                  ) {
+                    this.experimentEditor.deleteTemplate(template.id);
+                  }
+                }}
               >
               </pr-icon-button>
             </div>
           </div>
         `,
-    )}
+      )}
     `;
   }
 

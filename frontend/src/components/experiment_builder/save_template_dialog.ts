@@ -4,7 +4,7 @@ import '../../pair-components/icon_button';
 import '../../pair-components/textarea';
 
 import {MobxLitElement} from '@adobe/lit-mobx';
-import { CSSResultGroup, html, css, nothing } from 'lit';
+import {CSSResultGroup, html, css, nothing} from 'lit';
 import {customElement, state} from 'lit/decorators.js';
 
 import {core} from '../../core/core';
@@ -147,17 +147,17 @@ export class SaveTemplateDialog extends MobxLitElement {
           </div>
           <div class="body">
             ${this.saveMode === 'update'
-        ? html`
+              ? html`
                   <div class="label">
                     Updating template:
                     <b>
                       ${this.experimentEditor.savedTemplates.find(
-          (t) => t.id === this.selectedTemplateId,
-        )?.experiment.metadata.name}
+                        (t) => t.id === this.selectedTemplateId,
+                      )?.experiment.metadata.name}
                     </b>
                   </div>
                 `
-        : nothing}
+              : nothing}
 
             <pr-textarea
               label="Template Name"
@@ -168,10 +168,10 @@ export class SaveTemplateDialog extends MobxLitElement {
               }}
             ></pr-textarea>
             ${this.isDuplicateName
-        ? html`<div class="error-message">
+              ? html`<div class="error-message">
                   A template with this name already exists.
                 </div>`
-        : nothing}
+              : nothing}
             <pr-textarea
               label="Template Description"
               variant="outlined"
