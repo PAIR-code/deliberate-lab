@@ -47,7 +47,7 @@ import {
   LR_BASELINE_TASK1_ID,
   LR_BASELINE_TASK2_ID,
   r1_apply,
-  createRankingStage,
+  createLRRankingStage,
 } from '@deliberation-lab/utils';
 import {mustWaitForAllParticipants} from '../experiment.utils';
 import {
@@ -719,7 +719,7 @@ export const LR_R1_INSTRUCTIONS_GROUP_INFO = [
   'Remember also that in the extreme case where no one applied, you could be selected as the leader. As a result, try to perform to the best of your ability in the following task, regardless of your application status.',
 ];
 
-export const LR_R1_INSTRUCTIONS_GROUP = createRankingStage({
+export const LR_R1_INSTRUCTIONS_GROUP = createLRRankingStage({
   id: 'r1_instructions',
   name: 'Round 1 - Task Instructions',
   descriptions: createStageTextConfig({
@@ -861,7 +861,7 @@ const LR_R2_BELIEF_CANDIDATES = createSurveyStage({
   ],
 });
 
-export const LR_R2_INSTRUCTIONS_GROUP = createRankingStage({
+export const LR_R2_INSTRUCTIONS_GROUP = createLRRankingStage({
   id: 'r2_instructions',
   name: 'Round 2 - Task Instructions',
   descriptions: createStageTextConfig({

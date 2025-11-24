@@ -28,6 +28,7 @@ export enum ElectionStrategy {
 export enum RankingType {
   ITEMS = 'items', // Item ranking.
   PARTICIPANTS = 'participants', // Participant ranking.
+  LR = 'LR', // Leader Rejection
 }
 
 export interface BaseRankingStage extends BaseStageConfig {
@@ -41,6 +42,12 @@ export interface ParticipantRankingStage extends BaseRankingStage {
   enableSelfVoting: boolean; // Whether to allow voting for oneself.
 }
 
+export interface LRRankingStage extends BaseRankingStage {
+  rankingType: RankingType.LR;
+  enableSelfVoting: boolean; // Whether to allow voting for oneself. ==> TODO: [LR]: remove this property (or set it to false)
+  strategy: ElectionStrategy.NONE;
+}
+
 export interface RankingItem {
   id: string;
   imageId: string; // image URL, or empty if no image provided
@@ -52,7 +59,10 @@ export interface ItemRankingStage extends BaseRankingStage {
   rankingItems: RankingItem[];
 }
 
-export type RankingStageConfig = ParticipantRankingStage | ItemRankingStage;
+export type RankingStageConfig =
+  | ParticipantRankingStage
+  | ItemRankingStage
+  | LRRankingStage;
 
 /**
  * RankingStageParticipantAnswer.
@@ -124,6 +134,31 @@ export function createRankingStage(
   } else {
     throw new Error('Invalid rankingType specified in the configuration.');
   }
+}
+
+export function createLRRankingStage(
+  config: Partial<RankingStageConfig> = {},
+): RankingStageConfig {
+  console.log('[LR] createLRRankingStage');
+  const baseStageConfig = {
+    id: config.id ?? generateId(),
+    kind: StageKind.RANKING,
+    name: config.name ?? 'Ranking', // TODO: [LR] [CLEM]: lui donner un autre nom ? (voir si pas d'effets de bord))
+    descriptions:
+      config.descriptions ??
+      createStageTextConfig({
+        helpText: `TODO: [LR] [CLEM]: trouver le bon helpText dans createLRRankingStage`,
+      }),
+    progress:
+      config.progress ??
+      createStageProgressConfig({waitForAllParticipants: true}),
+    strategy: config.strategy ?? ElectionStrategy.NONE,
+  };
+
+  return {
+    ...baseStageConfig,
+    rankingType: RankingType.LR,
+  } as LRRankingStage; // Assert as LRRankingStage
 }
 
 /** Create item for ranking. */

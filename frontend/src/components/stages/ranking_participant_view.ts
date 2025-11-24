@@ -62,6 +62,12 @@ export class RankingView extends MobxLitElement {
       return nothing;
     }
 
+    const isLRRanking = this.stage.rankingType === RankingType.LR;
+    console.log(
+      '[LR] ranking-participant-view, this.stage.rankingType=',
+      this.stage.rankingType,
+    );
+
     const items = this.getItems();
     const disabled =
       this.participantAnswerService.getNumRankings(this.stage.id) <
@@ -79,9 +85,13 @@ export class RankingView extends MobxLitElement {
 
     return html`
       <stage-description .stage=${this.stage}></stage-description>
-      <div class="ranking-wrapper">
-        ${this.renderStartZone()} ${this.renderEndZone()}
-      </div>
+      ${!isLRRanking
+        ? html`
+            <div class="ranking-wrapper">
+              ${this.renderStartZone()} ${this.renderEndZone()}
+            </div>
+          `
+        : ''}
       <stage-footer .disabled=${disabled} .onNextClick=${saveRankings}>
         ${this.stage.progress.showParticipantProgress
           ? html`<progress-stage-completed></progress-stage-completed>`

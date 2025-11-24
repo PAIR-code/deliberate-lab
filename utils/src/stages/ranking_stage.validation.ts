@@ -58,9 +58,24 @@ export const ParticipantRankingStageConfigData = Type.Object(
   strict,
 );
 
+export const LRRankingStageConfigData = Type.Object(
+  {
+    id: Type.String({minLength: 1}),
+    kind: Type.Literal(StageKind.RANKING),
+    name: Type.String({minLength: 1}),
+    descriptions: StageTextConfigSchema,
+    progress: StageProgressConfigSchema,
+    rankingType: Type.Literal(RankingType.LR),
+    strategy: Type.Literal(ElectionStrategy.NONE),
+    enableSelfVoting: Type.Boolean(),
+  },
+  strict,
+);
+
 export const RankingStageConfigData = Type.Union([
   ItemRankingStageConfigData,
   ParticipantRankingStageConfigData,
+  LRRankingStageConfigData,
 ]);
 
 // ************************************************************************* //

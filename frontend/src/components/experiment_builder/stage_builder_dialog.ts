@@ -19,6 +19,7 @@ import {
   createAssetAllocationStage,
   createChatStage,
   createRankingStage,
+  createLRRankingStage,
   createInfoStage,
   createFlipCardStage,
   createMultiAssetAllocationStage,
@@ -176,9 +177,9 @@ export class StageBuilderDialog extends MobxLitElement {
       </div>
       <div class="card-gallery-wrapper">
         ${this.renderLASCard()} ${this.renderLASCard(true)}
-        ${this.renderLRCard()}
-        ${this.renderRealityTVCard()} ${this.renderChipNegotiationCard()}
-        ${this.renderSalespersonGameCard()} ${this.renderFlipCardTemplateCard()}
+        ${this.renderLRCard()} ${this.renderRealityTVCard()}
+        ${this.renderChipNegotiationCard()} ${this.renderSalespersonGameCard()}
+        ${this.renderFlipCardTemplateCard()}
         ${this.renderFruitTestTemplateCard()} ${this.renderStockInfoGameCard()}
         ${this.renderAssetAllocationTemplateCard()}
         ${this.renderConditionalSurveyTemplateCard()}
@@ -211,9 +212,10 @@ export class StageBuilderDialog extends MobxLitElement {
           ${this.renderTransferCard()} ${this.renderSurveyCard()}
           ${this.renderSurveyPerParticipantCard()}
           ${this.renderComprehensionCard()} ${this.renderFlipCardCard()}
-          ${this.renderRankingCard()} ${this.renderRevealCard()}
-          ${this.renderPayoutCard()} ${this.renderRoleCard()}
-          ${this.renderStockInfoCard()} ${this.renderAssetAllocationCard()}
+          ${this.renderRankingCard()} ${this.renderLRRankingCard()}
+          ${this.renderRevealCard()} ${this.renderPayoutCard()}
+          ${this.renderRoleCard()} ${this.renderStockInfoCard()}
+          ${this.renderAssetAllocationCard()}
           ${this.renderMultiAssetAllocationCard()}
         </div>
       </div>
@@ -260,7 +262,6 @@ export class StageBuilderDialog extends MobxLitElement {
       </div>
     `;
   }
-
 
   private renderLRCard() {
     const metadata = LR_METADATA;
@@ -497,6 +498,19 @@ export class StageBuilderDialog extends MobxLitElement {
           Have participants rank each other or items, and optionally hold an
           election.
         </div>
+      </div>
+    `;
+  }
+
+  private renderLRRankingCard() {
+    const addStage = () => {
+      this.addStage(createLRRankingStage());
+    };
+
+    return html`
+      <div class="card" @click=${addStage}>
+        <div class="title">🗳️ Ranking / Leadership Rejection</div>
+        <div>TODO: [LR] [CLEM] Blabla dans renderLRRankingCard ...</div>
       </div>
     `;
   }
