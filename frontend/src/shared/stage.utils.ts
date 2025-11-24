@@ -27,10 +27,15 @@ export function getChatTimeElapsedInSeconds(
 export function getChatTimeRemainingInSeconds(
   chatStage: {id: string; timeLimitInMinutes: number | null} | null | undefined,
   chatMap: Record<string, ChatMessage[]>,
+  discussionStartTimestamp?: UnifiedTimestamp | null,
 ): number | null {
   if (!chatStage || !chatStage.timeLimitInMinutes) return null;
-  const elapsed = getChatTimeElapsedInSeconds(chatStage.id, chatMap);
-  if (elapsed == null) return null;
+
+  const startTimestamp =
+    discussionStartTimestamp ?? getChatStartTimestamp(chatStage.id, chatMap);
+  if (!startTimestamp) return null;
+
+  const elapsed = Timestamp.now().seconds - startTimestamp.seconds;
   const remaining = chatStage.timeLimitInMinutes * 60 - elapsed;
   return remaining > 0 ? Math.floor(remaining) : 0;
 }

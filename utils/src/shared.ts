@@ -1,6 +1,5 @@
 import {Timestamp} from 'firebase/firestore';
 import {ExperimentDownload} from './data';
-import {v4 as uuidv4} from 'uuid';
 import {MediatorStatus} from './mediator';
 import {ParticipantStatus} from './participant';
 
@@ -92,7 +91,7 @@ export function generateId(isSequential: boolean = false): string {
     return `${timestamp}-${randomPart}`;
   }
 
-  return uuidv4();
+  return crypto.randomUUID();
 }
 
 /** Convert UnifiedTimestamp to (hh:mm) format. */

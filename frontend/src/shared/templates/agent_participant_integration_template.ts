@@ -57,10 +57,10 @@ export function getAgentParticipantIntegrationTemplate(): ExperimentTemplate {
 }
 
 export const INTEGRATION_METADATA = createMetadataConfig({
-  name: 'Agent Participant Integration Experiment',
+  name: 'Agent Participant Test',
   publicName: 'Agent Participant Integration Experiment',
   description:
-    'An integration test to ensure all agent participants are working as expected.',
+    'Add agent participants to this experiment. If they are working as expected, they should successfully complete all stages.',
 });
 
 const CHAT_STAGE_ID = 'chat';

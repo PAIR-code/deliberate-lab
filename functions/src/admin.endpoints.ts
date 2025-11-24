@@ -2,8 +2,7 @@
  * Admin endpoints for administrative tasks.
  */
 
-import {onCall} from 'firebase-functions/v2/https';
-import * as functions from 'firebase-functions';
+import {onCall, HttpsError} from 'firebase-functions/v2/https';
 import {app} from './app';
 import {AuthGuard} from './utils/auth-guard';
 
@@ -91,9 +90,6 @@ export const normalizeAllowlistEmails = onCall(async (request) => {
     return result;
   } catch (error) {
     console.error('Error normalizing allowlist emails:', error);
-    throw new functions.https.HttpsError(
-      'internal',
-      'Failed to normalize allowlist emails',
-    );
+    throw new HttpsError('internal', 'Failed to normalize allowlist emails');
   }
 });
