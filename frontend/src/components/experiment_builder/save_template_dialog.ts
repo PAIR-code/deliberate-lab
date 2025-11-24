@@ -100,6 +100,7 @@ export class SaveTemplateDialog extends MobxLitElement {
           <div class="body">
             <pr-textarea
               label="Template Name"
+              variant="outlined"
               .value=${this.name}
               @input=${(e: InputEvent) => {
                 this.name = (e.target as HTMLTextAreaElement).value;
@@ -107,6 +108,7 @@ export class SaveTemplateDialog extends MobxLitElement {
             ></pr-textarea>
             <pr-textarea
               label="Template Description"
+              variant="outlined"
               .value=${this.description}
               @input=${(e: InputEvent) => {
                 this.description = (e.target as HTMLTextAreaElement).value;
