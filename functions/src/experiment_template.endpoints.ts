@@ -34,6 +34,21 @@ export const saveExperimentTemplate = onCall(async (request) => {
       template.experiment.metadata.creator.toLowerCase();
   }
 
+  // Check for existing template with same name
+  const existingTemplates = await app
+    .firestore()
+    .collection(data.collectionName)
+    .where('experiment.metadata.name', '==', template.experiment.metadata.name)
+    .get();
+
+  const duplicate = existingTemplates.docs.find((doc) => doc.id !== template.id);
+  if (duplicate) {
+    throw new functions.https.HttpsError(
+      'already-exists',
+      'A template with this name already exists.',
+    );
+  }
+
   // Run document write as transaction to ensure consistency
   await app.firestore().runTransaction(async (transaction) => {
     transaction.set(document, template);

@@ -71,6 +71,11 @@ export class SaveTemplateDialog extends MobxLitElement {
     pr-textarea {
       width: 100%;
     }
+    .error-message {
+      color: var(--md-sys-color-error);
+      font-size: 12px;
+      margin-top: 4px;
+    }
 
     .radio-group {
       display: flex;
@@ -119,6 +124,14 @@ export class SaveTemplateDialog extends MobxLitElement {
     }
   }
 
+  private get isDuplicateName(): boolean {
+    return this.experimentEditor.savedTemplates.some(
+      (t) =>
+        t.experiment.metadata.name.toLowerCase() === this.name.toLowerCase() &&
+        t.id !== this.selectedTemplateId,
+    );
+  }
+
   override render() {
     return html`
       <div class="dialog-overlay">
@@ -154,6 +167,11 @@ export class SaveTemplateDialog extends MobxLitElement {
                 this.name = (e.target as HTMLTextAreaElement).value;
               }}
             ></pr-textarea>
+            ${this.isDuplicateName
+        ? html`<div class="error-message">
+                  A template with this name already exists.
+                </div>`
+        : nothing}
             <pr-textarea
               label="Template Description"
               variant="outlined"
@@ -167,7 +185,12 @@ export class SaveTemplateDialog extends MobxLitElement {
             <pr-button color="neutral" variant="outlined" @click=${this.close}
               >Cancel</pr-button
             >
-            <pr-button color="primary" @click=${this.save}>Save</pr-button>
+            <pr-button
+              color="primary"
+              ?disabled=${this.isDuplicateName || !this.name.trim()}
+              @click=${this.save}
+              >Save</pr-button
+            >
           </div>
         </div>
       </div>
