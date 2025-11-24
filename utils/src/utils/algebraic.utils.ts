@@ -226,11 +226,16 @@ export function getApplicationsFromLRApplyStage(
     }
 
     // DL multiple choice stores answers in various ways depending on template
-    const answerValue =
-      applyAnswer.choiceId ??
-      applyAnswer.selected ??
-      applyAnswer.answerId ??
-      applyAnswer.answer;
+    let answerValue = undefined;
+    if (applyAnswer.kind === SurveyQuestionKind.MULTIPLE_CHOICE) {
+      answerValue = applyAnswer.choiceId;
+    } else if (applyAnswer.kind === SurveyQuestionKind.CHECK) {
+      answerValue = applyAnswer.isChecked;
+    } else if (applyAnswer.kind === SurveyQuestionKind.SCALE) {
+      answerValue = applyAnswer.value;
+    } else if (applyAnswer.kind === SurveyQuestionKind.TEXT) {
+      answerValue = applyAnswer.answer;
+    }
 
     applications[publicId] = answerValue === 'yes';
   }
@@ -314,10 +319,11 @@ export function getBaselineScoresFromStage(
     let score = 0;
 
     for (const qid of Object.keys(participantAnswers)) {
+      // Look at MultipleChoiceSurveyAnswer answers
       const ans = participantAnswers[qid];
-      if (!ans || ans.kind !== 'mc') continue;
+      if (!ans || ans.kind !== SurveyQuestionKind.MULTIPLE_CHOICE) continue;
 
-      const chosen = ans.choiceId ?? ans.selected ?? ans.answerId ?? ans.answer;
+      const chosen = ans.choiceId ?? false;
 
       if (!chosen) continue;
 
