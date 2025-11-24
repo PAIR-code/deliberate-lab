@@ -25,9 +25,16 @@ import {
   StageParticipantAnswer,
   StagePublicData,
 } from './stage';
-import {BaseStageHandler} from './stage.handler';
+import {AgentParticipantStageActions, BaseStageHandler} from './stage.handler';
 
 export class GroupChatStageHandler extends BaseStageHandler {
+  getAgentParticipantActionsForStage(
+    participant: ParticipantProfileExtended,
+    stage: StageConfig,
+  ): AgentParticipantStageActions {
+    return {callApi: false, moveToNextStage: false};
+  }
+
   getStageDisplayForPrompt(
     participants: ParticipantProfileExtended[],
     stageContext: StageContextData,

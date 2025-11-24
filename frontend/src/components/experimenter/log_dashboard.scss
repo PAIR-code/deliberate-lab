@@ -4,7 +4,6 @@
 :host {
   @include common.flex-column;
   flex-grow: 1;
-  height: calc(100vh - common.$header-height);
   overflow: hidden;
   width: 100%;
 }
@@ -77,9 +76,9 @@ code {
 
 /* Modal */
 .modal {
-  display: none;
+  display: block;
   position: fixed;
-  z-index: 1;
+  z-index: 2;
   top: 0;
   left: 0;
   width: 100%;

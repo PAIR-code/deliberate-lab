@@ -12,10 +12,16 @@
   width: 800px;
 }
 
-.persona-selector {
+.selections {
   @include common.flex-row;
-  justify-content: space-between;
+  gap: common.$spacing-medium;
   align-items: center;
+  justify-content: space-between;
+}
+
+.model-selector {
+  @include common.flex-row;
+  gap: common.$spacing-medium;
 }
 
 .header {

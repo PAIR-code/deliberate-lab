@@ -38,6 +38,14 @@ participant-profile-display {
   padding: 0 common.$spacing-medium;
 }
 
+.timer {
+  @include common.flex-row-align-center;
+  @include typescale.label-large;
+  gap: common.$spacing-xs;
+  color: var(--md-sys-color-on-surface-variant);
+  margin-left: common.$spacing-medium;
+}
+
 @include common.viewport-small {
   .menu-button {
     display: none;

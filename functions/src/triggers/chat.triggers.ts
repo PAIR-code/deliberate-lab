@@ -1,9 +1,10 @@
 import {onDocumentCreated} from 'firebase-functions/v2/firestore';
 import {
   ChatMessage,
+  ParticipantStatus,
   StageKind,
-  createParticipantProfileBase,
   UserType,
+  createParticipantProfileBase,
 } from '@deliberation-lab/utils';
 import {
   getFirestoreActiveMediators,
@@ -85,8 +86,11 @@ export const onPublicChatMessageCreated = onDocumentCreated(
       ),
     );
 
-    // Send agent participant messages
-    const agentParticipants = allParticipants.filter((p) => p.agentConfig);
+    // Send agent participant messages for agents who are still completing
+    // the experiment
+    const agentParticipants = allParticipants.filter(
+      (p) => p.agentConfig && p.currentStatus === ParticipantStatus.IN_PROGRESS,
+    );
     await Promise.all(
       agentParticipants.map((participant) =>
         createAgentChatMessageFromPrompt(

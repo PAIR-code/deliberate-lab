@@ -25,8 +25,7 @@ import {
   handleAutomaticTransfer,
 } from './participant.utils';
 
-import * as functions from 'firebase-functions';
-import {onCall} from 'firebase-functions/v2/https';
+import {onCall, HttpsError} from 'firebase-functions/v2/https';
 
 import {app} from './app';
 import {AuthGuard} from './utils/auth-guard';
@@ -158,7 +157,7 @@ function handleCreateParticipantValidationErrors(data: any) {
     }
   }
 
-  throw new functions.https.HttpsError('invalid-argument', 'Invalid data');
+  throw new HttpsError('invalid-argument', 'Invalid data');
 }
 
 // ************************************************************************* //
