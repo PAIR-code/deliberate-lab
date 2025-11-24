@@ -1,10 +1,9 @@
 import '../../pair-components/textarea';
 import '../../pair-components/tooltip';
+import '../../pair-components/icon';
+import '../../pair-components/icon_button';
 
 import '@material/web/button/outlined-button.js';
-import '@material/web/button/text-button.js';
-import '@material/web/icon/icon.js';
-import '@material/web/iconbutton/icon-button.js';
 import '@material/web/textfield/outlined-text-field.js';
 import '@material/web/select/outlined-select.js';
 import '@material/web/select/select-option.js';
@@ -19,8 +18,6 @@ import {core} from '../../core/core';
 import {ExperimentEditor} from '../../services/experiment.editor';
 
 import {
-  SeedStrategy,
-  ShuffleConfig,
   type RandomPermutationVariableConfig,
   type StaticVariableConfig,
   type VariableConfig,
@@ -90,7 +87,7 @@ export class VariableEditor extends MobxLitElement {
               createRandomPermutationVariableConfig(),
             )}
         >
-          <md-icon slot="icon">add</md-icon>
+          <pr-icon icon="add" slot="icon"></pr-icon>
           Add new variable config
         </md-outlined-button>
       </div>
@@ -104,10 +101,13 @@ export class VariableEditor extends MobxLitElement {
       <div class="variable-config">
         <div class="config-header">
           <span class="config-title">Variable Config ${index + 1}</span>
-          <md-text-button @click=${() => this.deleteVariableConfig(index)}>
-            <md-icon slot="icon">delete</md-icon>
-            Delete
-          </md-text-button>
+          <pr-icon-button
+            icon="delete"
+            color="error"
+            variant="default"
+            @click=${() => this.deleteVariableConfig(index)}
+          >
+          </pr-icon-button>
         </div>
         <div class="config-content">
           ${this.renderSection(
@@ -149,13 +149,12 @@ export class VariableEditor extends MobxLitElement {
               ${config.type === VariableConfigType.STATIC
                 ? html`
                     <div class="static-scope">
-                      <md-icon>lock</md-icon>
+                      <pr-icon icon="lock"></pr-icon>
                       <span>Experiment (Global)</span>
                     </div>
                   `
                 : html`
                     <select
-                      .value=${config.scope}
                       @change=${(e: Event) => {
                         const scope = (e.target as HTMLSelectElement)
                           .value as VariableScope;
@@ -181,11 +180,22 @@ export class VariableEditor extends MobxLitElement {
                         this.updateConfig(config, index, updates);
                       }}
                     >
-                      <option value="${VariableScope.EXPERIMENT}">
+                      <option
+                        value="${VariableScope.EXPERIMENT}"
+                        ?selected=${config.scope === VariableScope.EXPERIMENT}
+                      >
                         Experiment
                       </option>
-                      <option value="${VariableScope.COHORT}">Cohort</option>
-                      <option value="${VariableScope.PARTICIPANT}">
+                      <option
+                        value="${VariableScope.COHORT}"
+                        ?selected=${config.scope === VariableScope.COHORT}
+                      >
+                        Cohort
+                      </option>
+                      <option
+                        value="${VariableScope.PARTICIPANT}"
+                        ?selected=${config.scope === VariableScope.PARTICIPANT}
+                      >
                         Participant
                       </option>
                     </select>
@@ -284,15 +294,16 @@ export class VariableEditor extends MobxLitElement {
                         this.renderInstanceEditor(config, index, instance, i),
                       )}
                     </div>
-                    <md-text-button
+                    <button
+                      class="add-button"
                       @click=${() =>
                         this.updateConfig(config, index, {
                           values: [...config.values, {id: '', value: ''}],
                         })}
                     >
-                      <md-icon slot="icon">add</md-icon>
-                      Add instance
-                    </md-text-button>
+                      <pr-icon icon="add"></pr-icon>
+                      <span>Add instance</span>
+                    </button>
                   `,
                 )}
               `}
@@ -416,6 +427,13 @@ export class VariableEditor extends MobxLitElement {
     configIndex: number,
   ): TemplateResult {
     const type = schema.type as string;
+    const isRandomPermutationRoot =
+      config.type === VariableConfigType.RANDOM_PERMUTATION && path === '';
+
+    // For RandomPermutation at root, skip showing the array type and go straight to items
+    if (isRandomPermutationRoot && type === 'array') {
+      return this.renderArraySchema(schema, path, config, configIndex);
+    }
 
     return html`
       <div class="schema-type-editor ${path ? 'nested' : ''}">
@@ -474,13 +492,14 @@ export class VariableEditor extends MobxLitElement {
       <div class="nested-editor">
         <div class="nested-header">
           <strong>Properties:</strong>
-          <md-text-button
+          <button
+            class="add-button"
             @click=${() =>
               this.handleAddProperty(props, path, config, configIndex)}
           >
-            <md-icon slot="icon">add</md-icon>
-            Add property
-          </md-text-button>
+            <pr-icon icon="add"></pr-icon>
+            <span>Add property</span>
+          </button>
         </div>
         ${propNames.length === 0
           ? html`<div class="empty-message">No properties</div>`
@@ -773,7 +792,10 @@ export class VariableEditor extends MobxLitElement {
         <div class="property-item">
           <div class="property-header">
             ${header}
-            <md-icon-button
+            <pr-icon-button
+              icon="delete"
+              color="error"
+              variant="default"
               @click=${() => {
                 if (!confirm(`Remove property "${name}"?`)) return;
                 const newObjSchema = removePropertyFromSchema(props, name);
@@ -788,8 +810,7 @@ export class VariableEditor extends MobxLitElement {
                 });
               }}
             >
-              <md-icon>delete</md-icon>
-            </md-icon-button>
+            </pr-icon-button>
           </div>
         </div>
       `;
@@ -905,8 +926,11 @@ export class VariableEditor extends MobxLitElement {
     instanceIndex: number,
   ) {
     // Strip MobX observability to prevent stack overflow (see renderSchemaEditor for details)
-    const schema = toJS(config.definition.schema) as unknown as TSchema;
-    const error = validateVariableValue(schema, instance.value);
+    const arraySchema = toJS(config.definition.schema) as unknown as TSchema;
+    // For RandomPermutation, the schema is Array(ItemType), so extract the item schema
+    const itemSchema =
+      'items' in arraySchema ? (arraySchema.items as TSchema) : arraySchema;
+    const error = validateVariableValue(itemSchema, instance.value);
 
     return this.renderCollapsibleItem(
       html`<strong>Instance ${instanceIndex + 1}</strong> ${instance.id
@@ -937,7 +961,7 @@ export class VariableEditor extends MobxLitElement {
         </div>
         <div class="config-section">
           <label class="property-label">Value</label>
-          ${this.renderValueInput(schema, instance.value, (v) => {
+          ${this.renderValueInput(itemSchema, instance.value, (v) => {
             const values = [...config.values];
             values[instanceIndex] = {...instance, value: v};
             this.updateConfig(config, configIndex, {values});
@@ -1096,14 +1120,16 @@ export class VariableEditor extends MobxLitElement {
       <details class="collapsible-item" open>
         <summary class="collapsible-summary">
           ${summary}
-          <md-icon-button
+          <pr-icon-button
+            icon="delete"
+            color="error"
+            variant="default"
             @click=${(e: Event) => {
               e.preventDefault();
               onDelete();
             }}
           >
-            <md-icon>delete</md-icon>
-          </md-icon-button>
+          </pr-icon-button>
         </summary>
         <div class="collapsible-content">${content}</div>
       </details>

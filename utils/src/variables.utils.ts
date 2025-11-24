@@ -1,10 +1,5 @@
 import {generateId} from './shared';
-import {
-  SeedStrategy,
-  ShuffleConfig,
-  choices,
-  createShuffleConfig,
-} from './utils/random.utils';
+import {SeedStrategy, choices, createShuffleConfig} from './utils/random.utils';
 import {Type, type TSchema} from '@sinclair/typebox';
 import {Value} from '@sinclair/typebox/value';
 import {
@@ -97,6 +92,7 @@ export function createRandomPermutationVariableConfig(
     definition: config.definition ?? {
       name: 'variable',
       description: '',
+      // Schema describes the OUTPUT type (array of items)
       schema: VariableType.array(VariableType.STRING),
     },
     shuffleConfig: createShuffleConfig({
@@ -191,6 +187,7 @@ export function generateVariablesForScope(
 
     if (value !== undefined) {
       // Validate against schema (logs warning if invalid)
+      // Reconstruct schema if it was deserialized from Firestore (adds [Kind] symbol)
       validateParsedVariableValue(
         config.definition.schema,
         value,
@@ -274,6 +271,49 @@ export function parseVariableValue(schema: TSchema, value: string): unknown {
 }
 
 /**
+ * Reconstructs a TypeBox schema from a plain JSON schema object.
+ *
+ * TypeBox schemas have internal metadata that is lost during JSON serialization to Firestore.
+ * This function reconstructs proper TypeBox schemas using the official Type.* API.
+ */
+function reconstructSchema(schema: TSchema): TSchema {
+  // If already a proper TypeBox schema (has metadata), return as-is
+  if (Symbol.for('TypeBox.Kind') in schema) {
+    return schema;
+  }
+
+  // Otherwise, reconstruct from plain object
+
+  // 1. Handle Objects
+  if (schema.type === 'object' && schema.properties) {
+    const properties: Record<string, TSchema> = {};
+
+    for (const [key, value] of Object.entries(
+      schema.properties as Record<string, TSchema>,
+    )) {
+      properties[key] = reconstructSchema(value);
+    }
+    // Pass original schema to preserve options like 'additionalProperties'
+    return Type.Object(properties, schema);
+  }
+
+  // 2. Handle Arrays
+  if (schema.type === 'array' && schema.items) {
+    return Type.Array(reconstructSchema(schema.items as TSchema), schema);
+  }
+
+  // 3. Handle Primitives
+  if (schema.type === 'string') return Type.String(schema);
+  if (schema.type === 'number') return Type.Number(schema);
+  if (schema.type === 'integer') return Type.Integer(schema);
+  if (schema.type === 'boolean') return Type.Boolean(schema);
+  if (schema.type === 'null') return Type.Null(schema);
+
+  // Fallback: return as-is for unknown types
+  return schema;
+}
+
+/**
  * Validate a parsed value against a schema.
  * Returns error message string if invalid, or null if valid.
  * Always logs a warning on validation failure.
@@ -283,8 +323,11 @@ export function validateParsedVariableValue(
   value: unknown,
   variableName?: string,
 ): string | null {
-  if (value !== null && !Value.Check(schema, value)) {
-    const errors = [...Value.Errors(schema, value)];
+  // Reconstruct schema if it was deserialized from Firestore
+  const validSchema = reconstructSchema(schema);
+
+  if (value !== null && !Value.Check(validSchema, value)) {
+    const errors = [...Value.Errors(validSchema, value)];
     const errorMsg = errors.map((e) => `${e.path}: ${e.message}`).join(', ');
 
     const nameLog = variableName ? `Variable "${variableName}"` : 'Variable';

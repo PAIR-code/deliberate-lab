@@ -22,7 +22,7 @@ describe('generateVariablesForScope', () => {
       definition: {
         name: 'test_var',
         description: '',
-        // Schema expects array of NUMBERS
+        // Schema describes output type (array of numbers)
         schema: Type.Array(Type.Number()),
       },
       shuffleConfig: createShuffleConfig({
@@ -83,6 +83,7 @@ describe('generateVariablesForScope', () => {
       definition: {
         name: 'valid_var',
         description: '',
+        // Schema describes output type (array of strings)
         schema: Type.Array(Type.String()),
       },
       values: [{id: '1', value: JSON.stringify('hello')}],

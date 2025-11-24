@@ -128,6 +128,61 @@ p {
     flex: 1;
     max-width: 200px;
   }
+
+  .locked-type {
+    @include common.flex-row-align-center;
+    gap: common.$spacing-small;
+    color: var(--md-sys-color-outline);
+    background: var(--md-sys-color-surface-variant);
+    padding: common.$spacing-small common.$spacing-medium;
+    border-radius: common.$spacing-xs;
+
+    pr-icon {
+      --pr-icon-size: 18px;
+    }
+  }
+}
+
+.static-scope {
+  @include common.flex-row-align-center;
+  gap: common.$spacing-small;
+  color: var(--md-sys-color-outline);
+  background: var(--md-sys-color-surface-variant);
+  padding: common.$spacing-small common.$spacing-medium;
+  border-radius: common.$spacing-xs;
+
+  pr-icon {
+    --pr-icon-size: 18px;
+  }
+}
+
+.add-button {
+  @include common.flex-row-align-center;
+  gap: common.$spacing-small;
+  padding: common.$spacing-small common.$spacing-medium;
+  border: 1px solid var(--md-sys-color-outline);
+  border-radius: common.$spacing-xs;
+  background-color: var(--md-sys-color-surface);
+  color: var(--md-sys-color-on-surface);
+  font-family: inherit;
+  font-size: inherit;
+  cursor: pointer;
+
+  &:hover {
+    background-color: var(--md-sys-color-surface-container-high);
+  }
+
+  &:active {
+    background-color: var(--md-sys-color-surface-container-highest);
+  }
+
+  pr-icon {
+    --pr-icon-size: 18px;
+  }
+
+  span {
+    @include typescale.body-small;
+  }
 }
 
 // Nested Editor (for object properties and arrays)
