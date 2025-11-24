@@ -8,6 +8,9 @@ import {LRRankingStagePublicData} from '@deliberation-lab/utils';
 import {core} from '../../core/core';
 import {ParticipantService} from '../../services/participant.service';
 import {styles} from './ranking_reveal_view.scss';
+import {getParticipantInlineDisplay} from '../../shared/participant.utils';
+
+import {CohortService} from '../../services/cohort.service';
 
 /** Leader selection reveal view */
 @customElement('leader-reveal-view')
@@ -15,6 +18,7 @@ export class LeaderRevealView extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
 
   private readonly participantService = core.getService(ParticipantService);
+  private readonly cohortService = core.getService(CohortService);
 
   @property() publicData: LRRankingStagePublicData | undefined = undefined;
 
@@ -22,6 +26,7 @@ export class LeaderRevealView extends MobxLitElement {
     if (!this.publicData) return html`<p><em>Waiting for results...</em></p>`;
 
     const leaderStatusMap = this.publicData.leaderStatusMap || {};
+    const winnerId = this.publicData.winnerId || '';
     const participantId = this.participantService.profile?.publicId ?? ''; // ✅ FIXED
     const status = leaderStatusMap[participantId] ?? 'waiting';
 
@@ -38,6 +43,21 @@ export class LeaderRevealView extends MobxLitElement {
       waiting: '⏳ Waiting for results...',
     };
 
+    // 🔍 Determine whether to show who the leader is
+    const showWinner =
+      winnerId && participantId !== winnerId && status !== 'waiting';
+
+    // 🔍 Convert winnerId → "Participant 7506"
+    let winnerPretty: string | null = null;
+    if (showWinner) {
+      const winnerProfile = this.cohortService.participantMap?.[winnerId];
+      if (winnerProfile) {
+        winnerPretty = getParticipantInlineDisplay(winnerProfile); // 👈 magic happens here
+      } else {
+        winnerPretty = winnerId; // fallback (should rarely happen)
+      }
+    }
+
     console.log('[LeaderRevealView] my ID:', participantId);
     console.log('[LeaderRevealView] all keys:', Object.keys(leaderStatusMap));
     console.log(
@@ -49,6 +69,13 @@ export class LeaderRevealView extends MobxLitElement {
       <div class="leader-status-block">
         <h3>Leader Selection Result</h3>
         <p>${messages[status] ?? messages.waiting}</p>
+        ${showWinner && winnerPretty
+          ? html`
+              <p style="margin-top: 12px; font-size: 0.95em; opacity: 0.8;">
+                ⭐ <strong>${winnerPretty}</strong> was selected as the leader.
+              </p>
+            `
+          : nothing}
       </div>
     `;
   }
