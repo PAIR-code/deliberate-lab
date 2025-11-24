@@ -4,7 +4,7 @@ import '../../pair-components/icon_button';
 import '../../pair-components/textarea';
 
 import {MobxLitElement} from '@adobe/lit-mobx';
-import {CSSResultGroup, html, css} from 'lit';
+import { CSSResultGroup, html, css, nothing } from 'lit';
 import {customElement, state} from 'lit/decorators.js';
 
 import {core} from '../../core/core';
@@ -71,17 +71,52 @@ export class SaveTemplateDialog extends MobxLitElement {
     pr-textarea {
       width: 100%;
     }
+
+    .radio-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+
+    .radio-option {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+    }
+
+    select {
+      width: 100%;
+      padding: 8px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      font-size: 14px;
+      margin-top: 8px;
+    }
   `;
 
   private readonly experimentEditor = core.getService(ExperimentEditor);
 
   @state() private name: string = '';
   @state() private description: string = '';
+  @state() private saveMode: 'new' | 'update' = 'new';
+  @state() private selectedTemplateId: string = '';
 
   override connectedCallback() {
     super.connectedCallback();
+    this.experimentEditor.loadTemplates();
     this.name = this.experimentEditor.experiment.metadata.name;
     this.description = this.experimentEditor.experiment.metadata.description;
+
+    this.saveMode = this.experimentEditor.saveTemplateMode;
+    if (this.saveMode === 'update' && this.experimentEditor.loadedTemplateId) {
+      this.selectedTemplateId = this.experimentEditor.loadedTemplateId;
+      this.updateFieldsFromSelectedTemplate();
+    } else {
+      this.name = this.experimentEditor.experiment.metadata.name;
+      this.description = this.experimentEditor.experiment.metadata.description;
+    }
   }
 
   override render() {
@@ -98,6 +133,19 @@ export class SaveTemplateDialog extends MobxLitElement {
             ></pr-icon-button>
           </div>
           <div class="body">
+            ${this.saveMode === 'update'
+        ? html`
+                  <div class="label">
+                    Updating template:
+                    <b>
+                      ${this.experimentEditor.savedTemplates.find(
+          (t) => t.id === this.selectedTemplateId,
+        )?.experiment.metadata.name}
+                    </b>
+                  </div>
+                `
+        : nothing}
+
             <pr-textarea
               label="Template Name"
               variant="outlined"
@@ -131,9 +179,23 @@ export class SaveTemplateDialog extends MobxLitElement {
   }
 
   private async save() {
-    await this.experimentEditor.saveTemplate(this.name, this.description);
+    await this.experimentEditor.saveTemplate(
+      this.name,
+      this.description,
+      this.saveMode === 'update' ? this.selectedTemplateId : undefined,
+    );
     this.close();
     alert('Template saved successfully!');
+  }
+
+  private updateFieldsFromSelectedTemplate() {
+    const template = this.experimentEditor.savedTemplates.find(
+      (t) => t.id === this.selectedTemplateId,
+    );
+    if (template) {
+      this.name = template.experiment.metadata.name;
+      this.description = template.experiment.metadata.description;
+    }
   }
 }
 

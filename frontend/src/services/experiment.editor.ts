@@ -69,6 +69,8 @@ export class ExperimentEditor extends Service {
 
   // Templates
   @observable savedTemplates: ExperimentTemplate[] = [];
+  @observable loadedTemplateId: string | undefined = undefined;
+  @observable saveTemplateMode: 'new' | 'update' = 'new';
 
   // Loading
   @observable isWritingExperiment = false;
@@ -163,9 +165,14 @@ export class ExperimentEditor extends Service {
     this.setStages(template.stageConfigs);
     this.setAgentMediators(template.agentMediators);
     this.setAgentParticipants(template.agentParticipants);
+    this.loadedTemplateId = template.id;
   }
 
-  async saveTemplate(name?: string, description?: string) {
+  async saveTemplate(
+    name?: string,
+    description?: string,
+    templateId?: string,
+  ) {
     this.isWritingExperiment = true;
     const experiment = {
       ...this.experiment,
@@ -180,7 +187,7 @@ export class ExperimentEditor extends Service {
       {
         collectionName: 'experimentTemplates',
         experimentTemplate: {
-          id: generateId(),
+          id: templateId ?? generateId(),
           experiment,
           stageConfigs: this.stages,
           agentMediators: this.agentMediators,
@@ -188,6 +195,7 @@ export class ExperimentEditor extends Service {
         },
       },
     );
+    await this.loadTemplates();
     this.isWritingExperiment = false;
     return response;
   }
@@ -361,8 +369,9 @@ export class ExperimentEditor extends Service {
     this.showTemplatesTab = showTemplates;
   }
 
-  setShowSaveTemplateDialog(show: boolean) {
+  setShowSaveTemplateDialog(show: boolean, mode: 'new' | 'update' = 'new') {
     this.showSaveTemplateDialog = show;
+    this.saveTemplateMode = mode;
   }
 
   // **************************************************************************

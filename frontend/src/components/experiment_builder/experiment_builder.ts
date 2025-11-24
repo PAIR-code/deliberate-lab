@@ -289,14 +289,29 @@ export class ExperimentBuilder extends MobxLitElement {
 
   private renderSaveTemplateButton() {
     return html`
+      ${this.experimentEditor.loadedTemplateId
+        ? html`
+            <pr-button
+              icon="update"
+              color="neutral"
+              variant="outlined"
+              ?disabled=${!this.experimentEditor.canEditStages}
+              @click=${() => {
+            this.experimentEditor.setShowSaveTemplateDialog(true, 'update');
+          }}
+            >
+              Update template
+            </pr-button>
+          `
+        : nothing}
       <pr-button
         icon="save"
         color="neutral"
         variant="outlined"
         ?disabled=${!this.experimentEditor.canEditStages}
         @click=${() => {
-        this.experimentEditor.setShowSaveTemplateDialog(true);
-      }}
+      this.experimentEditor.setShowSaveTemplateDialog(true, 'new');
+    }}
       >
         Save as template
       </pr-button>
