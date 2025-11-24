@@ -992,58 +992,6 @@ const LR_R3_APPLY_STAGE = createSurveyStage({
 //==========================================================
 //==========================================================
 //==========================================================
-//  FINAL FEEDBACK + SURVEY + PAYOUT
-//==========================================================
-//==========================================================
-//==========================================================
-export const LR_FEEDBACK_STAGE_PRIMARY = 'Here are the results from the task.';
-export const LR_FEEDBACK_STAGE_INFO = `An explanation of the results can be found [here](https://raw.githubusercontent.com/PAIR-code/deliberate-lab/main/frontend/src/assets/lost_at_sea/task_answers.pdf).`;
-
-export const r1_instructions = 'r1_instructions';
-export const r2_instructions = 'r2_instructions';
-
-export const LR_FEEDBACK_STAGE = createRevealStage({
-  name: 'Results reveal',
-  descriptions: createStageTextConfig({
-    infoText: LR_FEEDBACK_STAGE_INFO,
-    primaryText: LR_FEEDBACK_STAGE_PRIMARY,
-  }),
-  items: [
-    createRankingRevealItem({
-      id: r1_instructions,
-    }),
-    createSurveyRevealItem({
-      id: LR_R2_GROUP_TASK_ID,
-      revealAudience: RevealAudience.ALL_PARTICIPANTS,
-      revealScorableOnly: true,
-    }),
-  ],
-});
-
-export const LR_FEEDBACK_STAGE_BIS = createRevealStage({
-  name: 'Results reveal',
-  descriptions: createStageTextConfig({
-    infoText: LR_FEEDBACK_STAGE_INFO,
-    primaryText: LR_FEEDBACK_STAGE_PRIMARY,
-  }),
-  items: [
-    createRankingRevealItem({
-      id: r2_instructions,
-    }),
-    createSurveyRevealItem({
-      id: LR_R1_GROUP_TASK_ID,
-      revealAudience: RevealAudience.ALL_PARTICIPANTS,
-      revealScorableOnly: true,
-    }),
-  ],
-});
-
-//FUNCTION ABOVE NEEDS TO BE ADJUSTED TO JUST REVEAL ANSWERS OF THE LEADER IN THE TWO GROUP TASKS
-// AND WHETHER CORRECT OR NOT
-
-//==========================================================
-//==========================================================
-//==========================================================
 // Final survey stage
 //==========================================================
 //==========================================================
@@ -1135,36 +1083,77 @@ const LR_FINAL_SURVEY_STAGE = createSurveyStage({
 // * PAYOUT STAGE
 //==========================================================
 
-/*Need to create payout function that
-a) randomly select one of the four tasks (1a, 1b, 2 or 3)
-b) pick one question in this task
-c) pay a bonus if answer is correct (if 1a, 1b individual answer, if 2 or 3 leader's answer)
-d) randomly select one belief question
-(confidence in individual stage, number of candidates in Round 1 pre or post, Round2 pre or post, attribution in Round 1 or in Round 2)
-=> reveal which question chosen, and I'll compute the bonus myself with a code to pay it afterwards on Prolific (no need to code it on theplatform)
-e) add a £50 bonus for each time one was leader (so up to 1£)
+//==========================================================
+//==========================================================
+//==========================================================
+//  FINAL FEEDBACK + SURVEY + PAYOUT
+//==========================================================
+//==========================================================
+//==========================================================
+export const LR_FEEDBACK_STAGE_PRIMARY = 'Here are the results from the task.';
+export const LR_FEEDBACK_STAGE_INFO = `An explanation of the results can be found [here](https://raw.githubusercontent.com/PAIR-code/deliberate-lab/main/frontend/src/assets/lost_at_sea/task_answers.pdf).`;
 
+export const r1_instructions = 'r1_instructions';
+export const r2_instructions = 'r2_instructions';
 
- */
+export const LR_FEEDBACK_STAGE = createRevealStage({
+  name: 'Results reveal - Part 2 (Group Stage)',
+  descriptions: createStageTextConfig({
+    infoText: LR_FEEDBACK_STAGE_INFO,
+    primaryText: LR_FEEDBACK_STAGE_PRIMARY,
+  }),
+  items: [
+    createRankingRevealItem({
+      id: r1_instructions,
+    }),
+    createSurveyRevealItem({
+      id: LR_R1_GROUP_TASK_ID,
+      revealAudience: RevealAudience.ALL_PARTICIPANTS,
+      revealScorableOnly: true,
+    }),
+  ],
+});
+
+export const LR_FEEDBACK_STAGE_BIS = createRevealStage({
+  name: 'Results reveal - Part 3 (Group Stage)',
+  descriptions: createStageTextConfig({
+    infoText: LR_FEEDBACK_STAGE_INFO,
+    primaryText: LR_FEEDBACK_STAGE_PRIMARY,
+  }),
+  items: [
+    createRankingRevealItem({
+      id: r2_instructions,
+    }),
+    createSurveyRevealItem({
+      id: LR_R2_GROUP_TASK_ID,
+      revealAudience: RevealAudience.ALL_PARTICIPANTS,
+      revealScorableOnly: true,
+    }),
+  ],
+});
 
 // ****************************************************************************
 // Payout Breakdown info stage
 // ****************************************************************************
-export const LR_PAYMENT_PART_1_DESCRIPTION = `Your payment for Part 1 includes a fixed fee of £3 and a bonus. The bonus is determined by randomly selecting one question from Part 1. If your answer to this question is correct, you earn £2; otherwise, you earn £0.`;
+export const LR_PAYMENT_PART_1_DESCRIPTION = `If Part 1a or Part 1b is selected, the bonus is determined by randomly selecting one question from this part. If your answer to this question is correct, you earn £2; otherwise, you earn £0.`;
+export const LR_PAYMENT_PART_1A_DESCRIPTION = `Your payment includes a fixed fee of £3 and a bonus from one randomly selected Part of the experiment. Part 1a was selected to determine your bonus. The bonus is determined by randomly selecting one question from this part. If your answer to this question is correct, you earn £2; otherwise, you earn £0.`;
 
-export const LR_PAYMENT_PARTS_2_AND_3_DESCRIPTION = `Your payment for Parts 2 and 3 includes a fixed fee of £6 and a bonus. The bonus is determined by randomly selecting either Part 2 or Part 3.`;
+export const LR_PAYMENT_PART_1B_DESCRIPTION = `Your payment includes a fixed fee of £3 and a bonus from one randomly selected Part of the experiment. Part 1b was selected to determine your bonus. The bonus is determined by randomly selecting one question from this part. If your answer to this question is correct, you earn £2; otherwise, you earn £0.`;
 
-export const LR_PAYMENT_PART_2_DESCRIPTION = `One question is randomly chosen from Part 2. You earn £2 if your answer is correct, and £0 otherwise.`;
+export const LR_PAYMENT_PARTS_2_AND_3_DESCRIPTION = `If Part 2 or Part 3 is selected to determine your bonus, one question is randomly chosen, with only the leader's answer counting. You earn £2 if the leader's answer is correct, and £0 otherwise.`;
 
-export const LR_PAYMENT_PART_3_DESCRIPTION = `One question is randomly chosen from Part 3, with only the leader's answer counting. You earn £2 if the leader's answer is correct, and £0 otherwise.`;
+export const LR_PAYMENT_PART_2_DESCRIPTION = `Your payment includes a fixed fee of £3 and a bonus from one randomly selected Part of the experiment. Part 2 was selected to determine your bonus. One question is randomly chosen from this part, with only the leader's answer counting. You earn £2 if the leader's answer is correct, and £0 otherwise.`;
+
+export const LR_PAYMENT_PART_3_DESCRIPTION = `Your payment includes a fixed fee of £3 and a bonus from one randomly selected Part of the experiment. Part 3 was selected to determine your bonus. One question is randomly chosen from this part with only the leader's answer counting. You earn £2 if the leader's answer is correct, and £0 otherwise.`;
 
 export const LR_PAYMENT_INSTRUCTIONS = [
-  '## Part 1 Payment:',
+  'Your payment includes a fixed fee of £3 and a bonus from one randomly selected Part of the experiment.',
+  '## If Part 1a or 1b is selected:',
   LR_PAYMENT_PART_1_DESCRIPTION,
-  '\n\n## Payment for Parts 2 and 3:',
+  '\n ## If Parts 2 or 3 is selected:',
   LR_PAYMENT_PARTS_2_AND_3_DESCRIPTION,
-  `* If Part 2 is selected: ${LR_PAYMENT_PART_2_DESCRIPTION}`,
-  `* If Part 3 is selected: ${LR_PAYMENT_PART_3_DESCRIPTION}`,
+  //`* If Part 2 is selected: ${LR_PAYMENT_PART_2_DESCRIPTION}`,
+  //`* If Part 3 is selected: ${LR_PAYMENT_PART_3_DESCRIPTION}`,
   '**Note: These payments will be translated into the currency of your specification when they are paid out to you on the Prolific platform. Please allow us 24-48 hours to process the payments.**',
 ];
 
@@ -1185,68 +1174,62 @@ const LR_PAYOUT_INFO_STAGE = createInfoStage({
 export function createLRPayoutItems() {
   const RANDOM_SELECTION_ID = 'lr-part';
 
-  const part1 = createSurveyPayoutItem({
-    id: 'payout-part-1',
+  const part1a = createSurveyPayoutItem({
+    id: 'payout-part-1a',
     randomSelectionId: RANDOM_SELECTION_ID,
-    name: 'Part 1 payoff',
-    description: LR_PAYMENT_PART_1_DESCRIPTION,
+    name: 'Part 1a selected',
+    description: LR_PAYMENT_PART_1A_DESCRIPTION,
     stageId: LR_BASELINE_TASK1_ID,
     baseCurrencyAmount: 6,
   });
-  const part1Question = choice(LAS_INDIVIDUAL_ITEMS_MULTIPLE_CHOICE_QUESTIONS);
-  part1.questionMap[part1Question.id] = 2;
+  const part1aQuestion = choice(LAS_INDIVIDUAL_ITEMS_MULTIPLE_CHOICE_QUESTIONS);
+  part1a.questionMap[part1aQuestion.id] = 2;
 
   // Only one payout item with this ID will be selected (at random)
   // for each participant
 
-  const part2 = createSurveyPayoutItem({
-    id: 'payout-part-2',
+  const part1b = createSurveyPayoutItem({
+    id: 'payout-part-1b',
     randomSelectionId: RANDOM_SELECTION_ID,
-    name: 'Parts 2 and 3 payoff - Part 2 selected',
-    description: LR_PAYMENT_PART_1_DESCRIPTION,
+    name: 'Parts 1b selected',
+    description: LR_PAYMENT_PART_1B_DESCRIPTION,
     stageId: LR_BASELINE_TASK2_ID,
     baseCurrencyAmount: 6,
   });
-  const part2Question = choice(SD_INDIVIDUAL_ITEMS_MULTIPLE_CHOICE_QUESTIONS);
+  const part1bQuestion = choice(SD_INDIVIDUAL_ITEMS_MULTIPLE_CHOICE_QUESTIONS);
+  part1b.questionMap[part1bQuestion.id] = 2;
+
+  const part2 = createSurveyPayoutItem({
+    id: 'payout-part-2',
+    randomSelectionId: RANDOM_SELECTION_ID,
+    name: 'Parts 2 selected',
+    description: [LR_PAYMENT_PART_2_DESCRIPTION].join('\n\n'),
+    stageId: LR_R1_GROUP_TASK_ID,
+    baseCurrencyAmount: 6,
+    rankingStageId: LAS_PART_2_ELECTION_STAGE_ID,
+  });
+  const part2Question = choice(LAS_LEADER_ITEMS_MULTIPLE_CHOICE_QUESTIONS);
   part2.questionMap[part2Question.id] = 2;
 
   const part3 = createSurveyPayoutItem({
     id: 'payout-part-3',
     randomSelectionId: RANDOM_SELECTION_ID,
-    name: 'Parts 2 and 3 payoff - Part 2 selected',
-    description: [
-      LR_PAYMENT_PARTS_2_AND_3_DESCRIPTION,
-      LR_PAYMENT_PART_2_DESCRIPTION,
-    ].join('\n\n'),
-    stageId: LR_R1_GROUP_TASK_ID,
-    baseCurrencyAmount: 6,
-    rankingStageId: LAS_PART_2_ELECTION_STAGE_ID,
-  });
-  const part3Question = choice(LAS_LEADER_ITEMS_MULTIPLE_CHOICE_QUESTIONS);
-  part3.questionMap[part3Question.id] = 2;
-
-  const part4 = createSurveyPayoutItem({
-    id: 'payout-part-4',
-    randomSelectionId: RANDOM_SELECTION_ID,
-    name: 'Parts 2 and 3 payoff - Part 3 selected',
-    description: [
-      LR_PAYMENT_PARTS_2_AND_3_DESCRIPTION,
-      LR_PAYMENT_PART_3_DESCRIPTION,
-    ].join('\n\n'),
+    name: 'Parts 3 selected',
+    description: [LR_PAYMENT_PART_3_DESCRIPTION].join('\n\n'),
     stageId: LR_R2_GROUP_TASK_ID,
     baseCurrencyAmount: 6,
   });
-  const part4Question = choice(SD_LEADER_ITEMS_MULTIPLE_CHOICE_QUESTIONS);
-  part4.questionMap[part4Question.id] = 2;
+  const part3Question = choice(SD_LEADER_ITEMS_MULTIPLE_CHOICE_QUESTIONS);
+  part3.questionMap[part3Question.id] = 2;
 
-  return [part1, part2, part3, part4];
+  return [part1a, part1b, part2, part3];
 }
 
 const LR_PAYOUT_STAGE = createPayoutStage({
   id: 'payout',
   currency: PayoutCurrency.GBP,
-  descriptions: createStageTextConfig({
-    infoText: LR_PAYMENT_INSTRUCTIONS.join('\n'),
-  }),
+  //descriptions: createStageTextConfig({
+  // infoText: LR_PAYMENT_INSTRUCTIONS.join('\n'),
+  //}),
   payoutItems: createLRPayoutItems(),
 });
