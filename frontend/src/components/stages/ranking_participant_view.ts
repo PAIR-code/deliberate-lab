@@ -40,6 +40,11 @@ export class RankingView extends MobxLitElement {
   @property() stage: RankingStageConfig | undefined = undefined;
 
   private getItems() {
+    // LR info-only ranking: return zero items
+    if (this.stage?.rankingType === RankingType.LR) {
+      return [];
+    }
+
     return this.stage
       ? getCohortRankingItems(
           this.cohortService.activeParticipants,
@@ -70,8 +75,9 @@ export class RankingView extends MobxLitElement {
 
     const items = this.getItems();
     const disabled =
+      this.stage.rankingType !== RankingType.LR &&
       this.participantAnswerService.getNumRankings(this.stage.id) <
-      items.length;
+        items.length;
 
     const saveRankings = async () => {
       if (!this.stage) return;
@@ -251,7 +257,7 @@ export class RankingView extends MobxLitElement {
             ...rankings.slice(existingIndex + 1),
           ];
           if (existingIndex <= newIndex) {
-            newIndex -= 1; // Adjust index because participant was removed
+            newIndex -= 1; // Adjust
           }
         }
         rankings = [
@@ -259,6 +265,7 @@ export class RankingView extends MobxLitElement {
           itemId,
           ...rankings.slice(newIndex),
         ];
+
         // Update ranking list
         this.participantAnswerService.updateRankingAnswer(
           this.stage.id,
@@ -290,6 +297,7 @@ export class RankingView extends MobxLitElement {
     const rankings = this.participantAnswerService.getRankingList(
       this.stage.id,
     );
+
     const onCancel = () => {
       if (index === -1 || !this.stage) {
         return;

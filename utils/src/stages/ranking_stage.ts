@@ -44,7 +44,7 @@ export interface ParticipantRankingStage extends BaseRankingStage {
 
 export interface LRRankingStage extends BaseRankingStage {
   rankingType: RankingType.LR;
-  enableSelfVoting: boolean; // Whether to allow voting for oneself. ==> TODO: [LR]: remove this property (or set it to false)
+  enableSelfVoting: false; // Whether to allow voting for oneself. ==> TODO: [LR]: remove this property (or set it to false)
   strategy: ElectionStrategy.NONE;
 }
 
