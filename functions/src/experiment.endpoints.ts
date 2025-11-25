@@ -22,6 +22,8 @@ import {onCall, HttpsError} from 'firebase-functions/v2/https';
 import {app} from './app';
 import {AuthGuard} from './utils/auth-guard';
 
+const EXPERIMENTS_COLLECTION = 'experiments';
+
 /** Create, update, and delete experiments and experiment templates. */
 
 // ************************************************************************* //
@@ -45,7 +47,7 @@ export const writeExperiment = onCall(async (request) => {
   // Define document reference
   const document = app
     .firestore()
-    .collection(data.collectionName)
+    .collection(EXPERIMENTS_COLLECTION)
     .doc(experimentConfig.id);
 
   // If experiment exists, do not allow creation.
@@ -123,7 +125,7 @@ export const updateExperiment = onCall(async (request) => {
   // Define document reference
   const document = app
     .firestore()
-    .collection(data.collectionName)
+    .collection(EXPERIMENTS_COLLECTION)
     .doc(experimentConfig.id);
 
   // If experiment does not exist, return false
@@ -208,7 +210,7 @@ export const deleteExperiment = onCall(async (request) => {
   if (!experiment) {
     throw new HttpsError(
       'not-found',
-      `Experiment ${data.experimentId} not found in collection ${data.collectionName}`,
+      `Experiment ${data.experimentId} not found in collection ${EXPERIMENTS_COLLECTION}`,
     );
   }
   if (request.auth?.token.email?.toLowerCase() !== experiment.metadata.creator)
@@ -217,7 +219,7 @@ export const deleteExperiment = onCall(async (request) => {
   // Delete document
   const doc = app
     .firestore()
-    .doc(`${data.collectionName}/${data.experimentId}`);
+    .doc(`${EXPERIMENTS_COLLECTION}/${data.experimentId}`);
   app.firestore().recursiveDelete(doc);
   return {success: true};
 });
@@ -235,7 +237,7 @@ export const getExperimentTemplate = onCall(async (request) => {
   const experiment = (
     await app
       .firestore()
-      .collection(data.collectionName)
+      .collection(EXPERIMENTS_COLLECTION)
       .doc(data.experimentId)
       .get()
   ).data();
@@ -243,7 +245,7 @@ export const getExperimentTemplate = onCall(async (request) => {
   if (!experiment) {
     throw new HttpsError(
       'not-found',
-      `Experiment ${data.experimentId} not found in collection ${data.collectionName}`,
+      `Experiment ${data.experimentId} not found in collection ${EXPERIMENTS_COLLECTION}`,
     );
   }
 
@@ -256,7 +258,7 @@ export const getExperimentTemplate = onCall(async (request) => {
   const stageConfigs = (
     await app
       .firestore()
-      .collection(data.collectionName)
+      .collection(EXPERIMENTS_COLLECTION)
       .doc(data.experimentId)
       .collection('stages')
       .get()
@@ -273,7 +275,7 @@ export const getExperimentTemplate = onCall(async (request) => {
   // For each agent mediator, add template
   const agentMediatorCollection = app
     .firestore()
-    .collection(data.collectionName)
+    .collection(EXPERIMENTS_COLLECTION)
     .doc(data.experimentId)
     .collection('agentMediators');
 
@@ -284,7 +286,7 @@ export const getExperimentTemplate = onCall(async (request) => {
     const mediatorPrompts = (
       await app
         .firestore()
-        .collection(data.collectionName)
+        .collection(EXPERIMENTS_COLLECTION)
         .doc(data.experimentId)
         .collection('agentMediators')
         .doc(persona.id)
@@ -304,7 +306,7 @@ export const getExperimentTemplate = onCall(async (request) => {
   // For each agent participant, add template
   const agentParticipantCollection = app
     .firestore()
-    .collection(data.collectionName)
+    .collection(EXPERIMENTS_COLLECTION)
     .doc(data.experimentId)
     .collection('agentParticipants');
   const participantAgents = (await agentParticipantCollection.get()).docs.map(
@@ -314,7 +316,7 @@ export const getExperimentTemplate = onCall(async (request) => {
     const participantPrompts = (
       await app
         .firestore()
-        .collection(data.collectionName)
+        .collection(EXPERIMENTS_COLLECTION)
         .doc(data.experimentId)
         .collection('agentParticipants')
         .doc(persona.id)
@@ -349,7 +351,7 @@ export const setExperimentCohortLock = onCall(async (request) => {
   // Define document reference
   const document = app
     .firestore()
-    .collection('experiments')
+    .collection(EXPERIMENTS_COLLECTION)
     .doc(data.experimentId);
 
   // Run document write as transaction to ensure consistency

@@ -39,9 +39,6 @@ export type ExperimentCohortLockData = Static<typeof ExperimentCohortLockData>;
 // ************************************************************************* //
 export const ExperimentDeletionData = Type.Object(
   {
-    // Firestore collection name to save experiment under
-    // (e.g., 'experimentTemplates' if the experiment is a template)
-    collectionName: FirestoreCollectionData,
     experimentId: Type.String({minLength: 1}),
   },
   strict,
@@ -88,9 +85,6 @@ export const ProlificConfigSchema = Type.Object({
 
 export const ExperimentCreationData = Type.Object(
   {
-    // Firestore collection name to save experiment under
-    // (e.g., 'experimentTemplates' if the experiment is a template)
-    collectionName: FirestoreCollectionData,
     experimentTemplate: Type.Object({
       id: Type.String(),
       // Experiment config (excluding ordered stage IDs)

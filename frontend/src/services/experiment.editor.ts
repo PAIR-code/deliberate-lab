@@ -592,7 +592,6 @@ export class ExperimentEditor extends Service {
     const response = await writeExperimentCallable(
       this.sp.firebaseService.functions,
       {
-        collectionName: 'experiments',
         experimentTemplate: {
           id: '',
           experiment: this.experiment,
@@ -619,7 +618,6 @@ export class ExperimentEditor extends Service {
     const response = await updateExperimentCallable(
       this.sp.firebaseService.functions,
       {
-        collectionName: 'experiments',
         experimentTemplate: {
           id: '',
           experiment: this.experiment,

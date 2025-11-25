@@ -1,15 +1,15 @@
 import '../../pair-components/icon_button';
 import '../../pair-components/textarea';
 
-import { MobxLitElement } from '@adobe/lit-mobx';
-import { CSSResultGroup, html, nothing } from 'lit';
-import { customElement, property, state } from 'lit/decorators.js';
-import { classMap } from 'lit/directives/class-map.js';
+import {MobxLitElement} from '@adobe/lit-mobx';
+import {CSSResultGroup, html, nothing} from 'lit';
+import {customElement, property, state} from 'lit/decorators.js';
+import {classMap} from 'lit/directives/class-map.js';
 
-import { core } from '../../core/core';
-import { AnalyticsService, ButtonClick } from '../../services/analytics.service';
-import { AuthService } from '../../services/auth.service';
-import { ExperimentEditor } from '../../services/experiment.editor';
+import {core} from '../../core/core';
+import {AnalyticsService, ButtonClick} from '../../services/analytics.service';
+import {AuthService} from '../../services/auth.service';
+import {ExperimentEditor} from '../../services/experiment.editor';
 
 import {
   AgentPersonaType,
@@ -88,7 +88,7 @@ import {
   getAgentParticipantIntegrationTemplate,
 } from '../../shared/templates/agent_participant_integration_template';
 
-import { styles } from './stage_builder_dialog.scss';
+import {styles} from './stage_builder_dialog.scss';
 
 /** Stage builder dialog */
 @customElement('stage-builder-dialog')
@@ -99,7 +99,7 @@ export class StageBuilderDialog extends MobxLitElement {
   private readonly authService = core.getService(AuthService);
   private readonly experimentEditor = core.getService(ExperimentEditor);
 
-  @property({ type: Boolean })
+  @property({type: Boolean})
   showTemplates: boolean = false;
 
   // Used to populate charity allocation template
@@ -123,15 +123,15 @@ export class StageBuilderDialog extends MobxLitElement {
             icon="close"
             variant="default"
             @click=${() => {
-        this.experimentEditor.toggleStageBuilderDialog();
-      }}
+              this.experimentEditor.toggleStageBuilderDialog();
+            }}
           >
           </pr-icon-button>
         </div>
         <div class="body">
           ${this.showTemplates
-        ? this.renderTemplateCards()
-        : this.renderStageCards()}
+            ? this.renderTemplateCards()
+            : this.renderStageCards()}
         </div>
       </div>
     `;
@@ -154,16 +154,16 @@ export class StageBuilderDialog extends MobxLitElement {
         <div
           class=${getClasses(!this.showTemplates)}
           @click=${() => {
-        toggleView(false);
-      }}
+            toggleView(false);
+          }}
         >
           Add stages
         </div>
         <div
           class=${getClasses(this.showTemplates)}
           @click=${() => {
-        toggleView(true);
-      }}
+            toggleView(true);
+          }}
         >
           Load template
         </div>
@@ -179,7 +179,7 @@ export class StageBuilderDialog extends MobxLitElement {
       </div>
       <div class="card-gallery-wrapper">
         ${this.experimentEditor.savedTemplates.length > 0
-        ? html`
+          ? html`
               <div class="gallery-section">
                 <div class="gallery-title">Saved Templates</div>
                 <div class="card-gallery-wrapper">
@@ -187,7 +187,7 @@ export class StageBuilderDialog extends MobxLitElement {
                 </div>
               </div>
             `
-        : nothing}
+          : nothing}
         <div class="gallery-section">
           <div class="gallery-title">Pre-defined Templates</div>
           <div class="card-gallery-wrapper">
@@ -243,7 +243,7 @@ export class StageBuilderDialog extends MobxLitElement {
   private renderSavedTemplates() {
     return html`
       ${this.experimentEditor.savedTemplates.map(
-      (template) => html`
+        (template) => html`
           <div class="card saved-template">
             <div
               class="card-content"
@@ -263,19 +263,19 @@ export class StageBuilderDialog extends MobxLitElement {
                 color="error"
                 variant="default"
                 @click=${(e: Event) => {
-          e.stopPropagation();
-          if (
-            confirm('Are you sure you want to delete this template?')
-          ) {
-            this.experimentEditor.deleteTemplate(template.id);
-          }
-        }}
+                  e.stopPropagation();
+                  if (
+                    confirm('Are you sure you want to delete this template?')
+                  ) {
+                    this.experimentEditor.deleteTemplate(template.id);
+                  }
+                }}
               >
               </pr-icon-button>
             </div>
           </div>
         `,
-    )}
+      )}
     `;
   }
 
@@ -739,12 +739,12 @@ export class StageBuilderDialog extends MobxLitElement {
           type="checkbox"
           .checked=${this.charityDebateConfig[field]}
           @change=${(e: Event) => {
-        // Use a new object to trigger a Lit update
-        this.charityDebateConfig = {
-          ...this.charityDebateConfig,
-          [field]: (e.target as HTMLInputElement).checked,
-        };
-      }}
+            // Use a new object to trigger a Lit update
+            this.charityDebateConfig = {
+              ...this.charityDebateConfig,
+              [field]: (e.target as HTMLInputElement).checked,
+            };
+          }}
         />
         <span class="checkmark"></span>
         <span class="label-text">${labelText}</span>
@@ -764,13 +764,13 @@ export class StageBuilderDialog extends MobxLitElement {
           type="number"
           .value=${currentValue}
           @input=${(e: Event) => {
-        const inputValue = (e.target as HTMLInputElement).value;
-        const newNumberValue = Number(inputValue);
-        this.charityDebateConfig = {
-          ...this.charityDebateConfig,
-          [field]: newNumberValue,
-        };
-      }}
+            const inputValue = (e.target as HTMLInputElement).value;
+            const newNumberValue = Number(inputValue);
+            this.charityDebateConfig = {
+              ...this.charityDebateConfig,
+              [field]: newNumberValue,
+            };
+          }}
         />
         <span class="label-text">${labelText}</span>
       </label>
@@ -794,33 +794,33 @@ export class StageBuilderDialog extends MobxLitElement {
           <div class="subtitle">Configure Experiment Stages</div>
 
           ${this.renderCharityCheckbox(
-      'includeTos',
-      'Include Terms of Service',
-    )}
+            'includeTos',
+            'Include Terms of Service',
+          )}
           ${this.renderCharityCheckbox(
-      'includeMediator',
-      '[Conditional] Include AI Mediator & Surveys',
-    )}
+            'includeMediator',
+            '[Conditional] Include AI Mediator & Surveys',
+          )}
           ${this.renderCharityCheckbox(
-      'includeInitialParticipantSurvey',
-      'Include Initial Participant Survey',
-    )}
+            'includeInitialParticipantSurvey',
+            'Include Initial Participant Survey',
+          )}
           ${this.renderCharityCheckbox(
-      'includeDiscussionEvaluation',
-      '[Optional] Include Discussion Evaluation',
-    )}
+            'includeDiscussionEvaluation',
+            '[Optional] Include Discussion Evaluation',
+          )}
           ${this.renderCharityCheckbox(
-      'includeDebriefingAndFeedback',
-      '[Optional] Include Debriefing & Experiment Feedback',
-    )}
+            'includeDebriefingAndFeedback',
+            '[Optional] Include Debriefing & Experiment Feedback',
+          )}
           ${this.renderCharityCheckbox(
-      'includeMetaFeedback',
-      '[Optional] Include Meta-Feedback Survey',
-    )}
+            'includeMetaFeedback',
+            '[Optional] Include Meta-Feedback Survey',
+          )}
           ${this.renderFacilitatorTextbox(
-      'facilitatorConfigId',
-      '[Optional] Choose from a preset faciliator order (default is None, Habermas, Dynamic mediators). ',
-    )}
+            'facilitatorConfigId',
+            '[Optional] Choose from a preset faciliator order (default is None, Habermas, Dynamic mediators). ',
+          )}
         </div>
 
         <pr-button @click=${loadTemplate}> Load Template </pr-button>
@@ -845,33 +845,33 @@ export class StageBuilderDialog extends MobxLitElement {
           <div class="subtitle">Configure Experiment Stages</div>
 
           ${this.renderCharityCheckbox(
-      'includeTos',
-      'Include Terms of Service',
-    )}
+            'includeTos',
+            'Include Terms of Service',
+          )}
           ${this.renderCharityCheckbox(
-      'includeMediator',
-      '[Conditional] Include AI Mediator & Surveys',
-    )}
+            'includeMediator',
+            '[Conditional] Include AI Mediator & Surveys',
+          )}
           ${this.renderCharityCheckbox(
-      'includeInitialParticipantSurvey',
-      'Include Initial Participant Survey',
-    )}
+            'includeInitialParticipantSurvey',
+            'Include Initial Participant Survey',
+          )}
           ${this.renderCharityCheckbox(
-      'includeDiscussionEvaluation',
-      '[Optional] Include Discussion Evaluation',
-    )}
+            'includeDiscussionEvaluation',
+            '[Optional] Include Discussion Evaluation',
+          )}
           ${this.renderCharityCheckbox(
-      'includeDebriefingAndFeedback',
-      '[Optional] Include Debriefing & Experiment Feedback',
-    )}
+            'includeDebriefingAndFeedback',
+            '[Optional] Include Debriefing & Experiment Feedback',
+          )}
           ${this.renderCharityCheckbox(
-      'includeMetaFeedback',
-      '[Optional] Include Meta-Feedback Survey',
-    )}
+            'includeMetaFeedback',
+            '[Optional] Include Meta-Feedback Survey',
+          )}
           ${this.renderFacilitatorTextbox(
-      'facilitatorConfigId',
-      '[Optional] Choose from a preset faciliator order (default is None, Habermas, Dynamic mediators). ',
-    )}
+            'facilitatorConfigId',
+            '[Optional] Choose from a preset faciliator order (default is None, Habermas, Dynamic mediators). ',
+          )}
         </div>
 
         <pr-button @click=${loadTemplate}> Load Template </pr-button>
