@@ -15,6 +15,7 @@ import {ProfileStageHandler} from './profile_stage.manager';
 import {StageConfig, StageContextData, StageKind} from './stage';
 import {StockInfoStageHandler} from './stockinfo_stage.manager';
 import {TOSStageHandler} from './tos_stage.manager';
+import {FlipCardStageHandler} from './flipcard_stage.manager';
 
 /** Manages stage handlers for different stage types. */
 export class StageManager {
@@ -43,6 +44,7 @@ export class StageManager {
       new SurveyPerParticipantStageHandler(),
     );
     this.handlerMap.set(StageKind.TOS, new TOSStageHandler());
+    this.handlerMap.set(StageKind.FLIPCARD, new FlipCardStageHandler());
   }
 
   /** Returns an updated stage config that has template variables
