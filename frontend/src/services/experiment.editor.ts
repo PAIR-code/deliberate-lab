@@ -49,6 +49,11 @@ interface ServiceProvider {
   firebaseService: FirebaseService;
 }
 
+export interface ExperimentError {
+  message: string;
+  isApiError: boolean;
+}
+
 /**
  * Create/edit and save experiment.
  */
@@ -91,15 +96,21 @@ export class ExperimentEditor extends Service {
   // EXPERIMENT LOADING
   // **************************************************************************
 
-  getExperimentConfigErrors() {
-    const errors: string[] = [];
+  getExperimentConfigErrors(): ExperimentError[] {
+    const errors: ExperimentError[] = [];
 
     if (this.experiment.metadata.name.length === 0) {
-      errors.push('Experiment does not have a name');
+      errors.push({
+        message: 'Experiment does not have a name',
+        isApiError: false,
+      });
     }
 
     if (this.stages.length === 0) {
-      errors.push('You must add at least one stage to your experiment');
+      errors.push({
+        message: 'You must add at least one stage to your experiment',
+        isApiError: false,
+      });
     }
 
     // Check if relevant API key is set up for agents
@@ -115,9 +126,10 @@ export class ExperimentEditor extends Service {
 
     const renderApiErrorMessage = (apiType: ApiKeyType) => {
       if (hasAgentsWithApiType(apiType)) {
-        errors.push(
-          `Your experiment includes agents that use the ${apiType} API, but you have not set your API key yet`,
-        );
+        errors.push({
+          message: `Your experiment includes agents that use the ${apiType} API, but you have not set your API key yet`,
+          isApiError: true,
+        });
       }
     };
     renderApiErrorMessage(ApiKeyType.GEMINI_API_KEY);
@@ -130,9 +142,10 @@ export class ExperimentEditor extends Service {
           // Ensure all questions have a non-empty title
           stage.questions.forEach((question, index) => {
             if (question.questionTitle === '') {
-              errors.push(
-                `${stage.name} question ${index + 1} is missing a title`,
-              );
+              errors.push({
+                message: `${stage.name} question ${index + 1} is missing a title`,
+                isApiError: false,
+              });
             }
           });
           break;
@@ -150,6 +163,11 @@ export class ExperimentEditor extends Service {
 
   @computed get canEditStages() {
     return this.sp.experimentManager.canEditExperimentStages;
+  }
+
+  @computed get isLoadedTemplateEditable() {
+    if (!this.loadedTemplateId) return false;
+    return this.savedTemplates.some((t) => t.id === this.loadedTemplateId);
   }
 
   loadExperiment(experiment: Experiment, stages: StageConfig[]) {
@@ -186,7 +204,6 @@ export class ExperimentEditor extends Service {
     const response = await saveExperimentTemplateCallable(
       this.sp.firebaseService.functions,
       {
-        collectionName: 'experimentTemplates',
         experimentTemplate: {
           id: templateId ?? generateId(),
           experiment,
@@ -204,14 +221,13 @@ export class ExperimentEditor extends Service {
   async loadTemplates() {
     const response = await getExperimentTemplatesCallable(
       this.sp.firebaseService.functions,
-      {collectionName: 'experimentTemplates'},
+      {},
     );
     this.savedTemplates = response.templates;
   }
 
   async deleteTemplate(templateId: string) {
     await deleteExperimentTemplateCallable(this.sp.firebaseService.functions, {
-      collectionName: 'experimentTemplates',
       templateId,
     });
     await this.loadTemplates();

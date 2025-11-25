@@ -7,7 +7,7 @@
   position: sticky;
   top: 0;
   width: 100%;
-  z-index: 1;
+  z-index: 100;
 }
 
 .banner {
@@ -99,6 +99,27 @@ h1 {
 .error {
   @include typescale.label-small;
   color: var(--md-sys-color-error);
+}
+
+.split-button {
+  display: flex;
+  align-items: center;
+
+  pr-button {
+    --pr-button-border-radius: 8px 0 0 8px;
+    border-right: none;
+    --pr-button-line-height: 20px;
+    --pr-button-padding: 6px 12px;
+  }
+
+  pr-menu {
+    --pr-button-border-radius: 0 8px 8px 0;
+
+    &.split-dropdown {
+      --pr-button-padding: 6px 4px;
+      --pr-button-line-height: 20px;
+    }
+  }
 }
 
 pr-button {

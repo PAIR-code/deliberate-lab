@@ -523,9 +523,7 @@ export class ExperimentBuilder extends MobxLitElement {
       <div class="experiment-builder">
         <div class="header">
           ${this.renderTitle()}
-          <div class="actions">
-            ${this.renderActions()} ${this.renderSaveTemplateButton()}
-          </div>
+          <div class="actions">${this.renderActions()}</div>
         </div>
         ${this.renderVariableCheck()}
         <div class="content">${this.renderContent()}</div>
