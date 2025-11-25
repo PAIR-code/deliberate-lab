@@ -13,7 +13,7 @@ export async function uploadBase64ImageToGCS(
   mimeType: string,
   prefix = 'generated-images',
 ): Promise<string> {
-  const BUCKET_NAME = 'msgraham-deliberate-labs';
+  const BUCKET_NAME = 'deliberate-labs';
   const bucket = app.storage().bucket(BUCKET_NAME);
   const fileName = `${prefix}/${uuidv4()}.${mimeType.split('/')[1]}`;
   const file = bucket.file(fileName);
