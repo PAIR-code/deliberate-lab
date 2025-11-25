@@ -5,29 +5,18 @@ import {
   PROFILE_SET_NATURE_ID,
   PROMPT_ITEM_PROFILE_CONTEXT_PARTICIPANT_SCAFFOLDING,
   PROMPT_ITEM_PROFILE_INFO_PARTICIPANT_SCAFFOLDING,
-  AssetAllocationStageParticipantAnswer,
   BasePromptConfig,
-  ChatStageConfig,
   CohortConfig,
   Experiment,
   MediatorProfileExtended,
   ParticipantProfileExtended,
-  PrivateChatStageConfig,
-  ProfileAgentConfig,
   PromptItem,
   PromptItemGroup,
   PromptItemType,
-  RoleStagePublicData,
   StageConfig,
   StageContextData,
   StageContextPromptItem,
   StageKind,
-  StageParticipantAnswer,
-  SurveyStageConfig,
-  SurveyPerParticipantStageConfig,
-  SurveyStageParticipantAnswer,
-  SurveyPerParticipantStageParticipantAnswer,
-  UserProfile,
   UserType,
   VariableDefinition,
   extractVariablesFromVariableConfigs,
@@ -83,7 +72,7 @@ export async function getStructuredPromptConfig(
         user.agentConfig?.agentId,
       );
       // If prompt not stored under experiment, then return undefined
-      return mediatorPrompt;
+      return mediatorPrompt ?? undefined;
     default:
       return undefined;
   }
@@ -109,10 +98,10 @@ export async function getFirestoreDataForStructuredPrompt(
   const data: Record<string, StageContextData> = {};
 
   // Fetch experiment config, which is used to grab preceding stages
-  const experiment = await getFirestoreExperiment(experimentId);
+  const experiment = (await getFirestoreExperiment(experimentId))!;
 
   // Fetch cohort config, which may be needed to populate variables
-  const cohort = await getFirestoreCohort(experimentId, cohortId);
+  const cohort = (await getFirestoreCohort(experimentId, cohortId))!;
 
   // Fetch all active participants in cohort
   const activeParticipants = await getFirestoreActiveParticipants(
@@ -123,19 +112,18 @@ export async function getFirestoreDataForStructuredPrompt(
   // Fetch participants whose answers should be included in prompt
   let answerParticipants: ParticipantProfileExtended[] = [];
 
-  if (contextParticipantIds && contextParticipantIds.length > 0) {
-    // If specific participant IDs provided, use those
-    // (e.g., for private chats where mediator needs context about one participant)
-    answerParticipants = await Promise.all(
+  if (contextParticipantIds?.length) {
+    // Specific participant IDs (e.g., private chats)
+    answerParticipants = (await Promise.all(
       contextParticipantIds.map((id) =>
         getFirestoreParticipant(experimentId, id),
       ),
-    );
+    )) as ParticipantProfileExtended[];
   } else if (userProfile.type === UserType.PARTICIPANT) {
     // Participant only needs their own context
-    answerParticipants.push(
-      await getFirestoreParticipant(experimentId, userProfile.privateId),
-    );
+    answerParticipants = [
+      (await getFirestoreParticipant(experimentId, userProfile.privateId))!,
+    ];
   } else if (userProfile.type === UserType.MEDIATOR) {
     // Mediator in group context needs all participants
     answerParticipants = activeParticipants;
