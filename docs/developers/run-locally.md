@@ -60,15 +60,32 @@ If you prefer to run each service individually or need to debug a specific compo
 In order to run the platform locally (using the Firebase emulators
 instead of a Firebase project for the backend):
 
-### 1. Build utils (needed for backend and frontend)
+### 1. Install dependencies
+
+**Prerequisites:**
+- Install [Node.js v22](https://nodejs.org/). We recommend using a version manager like [nvm](https://github.com/nvm-sh/nvm).
+  ```bash
+  nvm install 22
+  nvm use 22
+  ```
+- Install [Firebase CLI](https://firebase.google.com/docs/cli/) globally:
+  ```bash
+  npm install -g firebase-tools
+  ```
+
+Then, install project dependencies once at the root directory:
+
+```bash
+npm install
+```
+
+### 2. Build utils (needed for backend and frontend)
 
 NOTE: The `utils` directory builds as the package `@deliberation-lab/utils`,
 which can then be used in `/functions` and `/frontend`.
 
 ```bash
 cd utils  # If navigating from top level
-npm install  # Run this command only once
-
 npm run build:watch  # Build and listen to changes
 ```
 
@@ -79,16 +96,14 @@ produce both esm and cjs (for the cloud functions) code.
 to generate `deliberation-lab-utils-1.0.0.tgz`. Then, copy this into
 the directory that requires the utils (e.g., `frontend` or `functions`).
 
-### 2. Build functions (needed for backend)
+### 3. Build functions (needed for backend)
 
 ```bash
 cd functions  # If navigating from top level
-npm install  # Run this command only once
-
 npm run build:watch  # Build and listen to changes
 ```
 
-### 3. Start Firebase emulators (used as backend)
+### 4. Start Firebase emulators (used as backend)
 
 If you haven't already, copy examples to create local configuration files:
 ```bash
@@ -103,9 +118,8 @@ cp frontend/firebase_config.example.ts frontend/firebase_config.ts
 
 > [Use this manual for creating and using a Firebase API key](https://firebase.google.com/docs/projects/api-keys#test-vs-prod-keys). Once the key is created, there should be a generated JSON configuration object in your Firebase project's settings page under the "General" tab. Then copy paste the contents of the JSON object to `frontend/firebase_config.ts`.
 
-Next, make sure you have [Firebase CLI](https://firebase.google.com/docs/cli/) set up:
+Next, log in to Firebase:
 ```bash
-npm install -g firebase-tools
 firebase login
 ```
 
@@ -123,11 +137,10 @@ create, view, etc. experiments).
 Then, access the emulator suite (e.g., auth, Firestore) at
 http://localhost:4000.
 
-### 4. Start frontend web app
+### 5. Start frontend web app
 
 ```bash
 cd frontend  # If navigating from top level
-npm install  # Only run once
 
 # Create an index.html file and (optionally) replace the placeholder
 # analytics ID (see TODOs in example file) with your Google Analytics ID

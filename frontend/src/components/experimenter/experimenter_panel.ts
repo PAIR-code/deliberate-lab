@@ -500,10 +500,7 @@ export class Panel extends MobxLitElement {
   private renderLogsPanel() {
     return html`
       <div class="main">
-        <div class="top">
-          <div class="header">Log dashboard</div>
-          <log-dashboard></log-dashboard>
-        </div>
+        <log-dashboard></log-dashboard>
       </div>
     `;
   }

@@ -5,8 +5,7 @@ import {
 } from '@deliberation-lab/utils';
 
 import * as admin from 'firebase-admin';
-import * as functions from 'firebase-functions';
-import {onCall} from 'firebase-functions/v2/https';
+import {onCall, HttpsError} from 'firebase-functions/v2/https';
 
 import {app} from '../app';
 import {
@@ -85,7 +84,7 @@ function handleUpdateAssetAllocationStageParticipantAnswerValidationErrors(
     }
   }
 
-  throw new functions.https.HttpsError('invalid-argument', 'Invalid data');
+  throw new HttpsError('invalid-argument', 'Invalid data');
 }
 /* eslint-enable @typescript-eslint/no-explicit-any */
 

@@ -24,7 +24,7 @@ export function getFlipCardExperimentTemplate(): ExperimentTemplate {
 }
 
 export const FLIPCARD_TEMPLATE_METADATA = createMetadataConfig({
-  name: '🔄 FlipCard Template',
+  name: '🔄 FlipCard Demo',
   publicName: 'Card Selection Game',
   description: 'An example experiment using the FlipCard stage functionality',
 });

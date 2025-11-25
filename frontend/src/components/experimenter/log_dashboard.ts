@@ -92,7 +92,7 @@ export class Component extends MobxLitElement {
     `;
 
     return this.fullscreen
-      ? html` <div class="modal" style="display: block;">${content}</div> `
+      ? html` <div class="modal">${content}</div> `
       : content;
   }
 

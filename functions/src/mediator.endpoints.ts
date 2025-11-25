@@ -1,11 +1,10 @@
-import * as functions from 'firebase-functions';
 import {Value} from '@sinclair/typebox/value';
 import {
   CreateMediatorData,
   MediatorProfileExtended,
   UpdateMediatorStatusData,
 } from '@deliberation-lab/utils';
-import {onCall} from 'firebase-functions/v2/https';
+import {onCall, HttpsError} from 'firebase-functions/v2/https';
 
 import {app} from './app';
 import {AuthGuard} from './utils/auth-guard';
@@ -23,7 +22,7 @@ export const updateMediatorStatus = onCall(async (request) => {
   await AuthGuard.isExperimenter(request);
 
   if (!Value.Check(UpdateMediatorStatusData, data)) {
-    throw new functions.https.HttpsError('invalid-argument', 'Invalid data');
+    throw new HttpsError('invalid-argument', 'Invalid data');
   }
 
   const mediatorDoc = app
@@ -36,7 +35,7 @@ export const updateMediatorStatus = onCall(async (request) => {
   await app.firestore().runTransaction(async (transaction) => {
     const snapshot = await mediatorDoc.get();
     if (!snapshot.exists) {
-      throw new functions.https.HttpsError('not-found', 'Mediator not found');
+      throw new HttpsError('not-found', 'Mediator not found');
     }
 
     const mediator = snapshot.data() as MediatorProfileExtended;
@@ -59,7 +58,7 @@ export const createMediator = onCall(async (request) => {
   await AuthGuard.isExperimenter(request);
 
   if (!Value.Check(CreateMediatorData, data)) {
-    throw new functions.https.HttpsError('invalid-argument', 'Invalid data');
+    throw new HttpsError('invalid-argument', 'Invalid data');
   }
 
   const mediatorsInCohort = (
@@ -77,7 +76,7 @@ export const createMediator = onCall(async (request) => {
   );
 
   if (existingMediator) {
-    throw new functions.https.HttpsError(
+    throw new HttpsError(
       'already-exists',
       'Mediator already assigned to cohort',
     );
@@ -90,10 +89,7 @@ export const createMediator = onCall(async (request) => {
   );
 
   if (!mediator) {
-    throw new functions.https.HttpsError(
-      'not-found',
-      'Agent mediator persona not found',
-    );
+    throw new HttpsError('not-found', 'Agent mediator persona not found');
   }
 
   const mediatorDoc = app
