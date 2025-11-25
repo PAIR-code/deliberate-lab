@@ -175,3 +175,18 @@ pr-icon {
   padding: common.$spacing-small;
   border-radius: common.$spacing-xs;
 }
+
+.image-gallery {
+  @include common.flex-row;
+  flex-wrap: wrap;
+  gap: common.$spacing-medium;
+  padding: common.$spacing-medium 0;
+}
+
+.log-image {
+  max-width: 400px;
+  width: 100%;
+  height: auto;
+  border-radius: common.$spacing-small;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
