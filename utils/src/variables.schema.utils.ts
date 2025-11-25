@@ -1,8 +1,5 @@
-import {
-  validateVariableValue,
-  parseVariableValue,
-} from '@deliberation-lab/utils';
 import {Type, type TSchema, type TObject, type TArray} from '@sinclair/typebox';
+import {parseVariableValue} from './variables.utils';
 
 type TProperties = Record<string, TSchema>;
 

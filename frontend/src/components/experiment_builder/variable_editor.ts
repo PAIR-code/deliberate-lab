@@ -29,9 +29,6 @@ import {
   validateVariableValue,
   createShuffleConfig,
   mapScopeToSeedStrategy,
-} from '@deliberation-lab/utils';
-
-import {
   addPropertyToSchema,
   createSchemaForType,
   getDefaultValue,
@@ -44,7 +41,7 @@ import {
   updateObjectProperty,
   updatePropertyInSchema,
   updateSchemaAtPath,
-} from './variable_editor.utils';
+} from '@deliberation-lab/utils';
 
 import {styles} from './variable_editor.scss';
 
