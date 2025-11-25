@@ -28,6 +28,15 @@ a cohort, to be added eventually.
   alt="Screenshot of defining a new variable config that uses random permutation"
 />
 
+### Variable Naming Rules
+
+Variable and property names can only contain:
+- Letters (a-z, A-Z)
+- Numbers (0-9)
+- Underscores (_)
+
+Names cannot start with a number. This prevents conflicts with Mustache template syntax where dots (`.`) are used for path access (e.g., `{{obj.field}}`).
+
 The variables use
 [Mustache templating](https://mustache.github.io/mustache.5.html)
 and are supported in the
@@ -95,7 +104,22 @@ schema: VariableType.array(
 
 Template usage: `{{arguments.0.title}}`, `{{arguments.1.text}}`
 
-#### Nested Structures
+### Expanding Arrays to Separate Variables
+
+For **Random Permutation** variables, you can choose to expand an array into individual indexed variables. This is controlled by the **"Expand to separate variables"** option (enabled by default).
+
+**When enabled (`expandListToSeparateVariables: true`):**
+- Creates separate variables: `charity_1`, `charity_2`, `charity_3`, etc.
+- Each variable holds a single value from the array
+- Template usage: `{{charity_1}}`, `{{charity_2}}`
+
+**When disabled (`expandListToSeparateVariables: false`):**
+- Creates a single array variable: `charity`
+- Template usage: `{{charity.0}}`, `{{charity.1}}` or iteration with `{{#charity}}...{{/charity}}`
+
+This is useful when you want predictable variable names for a fixed number of items (e.g., always showing exactly 3 charities) rather than working with array indices.
+
+### Nested Structures
 
 Schemas can be nested arbitrarily:
 
@@ -117,14 +141,14 @@ schema: VariableType.object({
 })
 ```
 
-#### Runtime Validation
+### Validation
 
-All schemas are validated at runtime when:
-- Creating or updating variable configs via the API
-- Assigning values to variables
-- Resolving templates
+Variables are validated at multiple points:
+- **In the variable editor:** Values are validated against schemas as you type, with errors shown inline.
+- **In the experiment builder:** Template references are checked for missing variables (referenced but not defined) and unused variables (defined but never referenced).
+- **When creating cohorts/participants:** Values are validated when `generateVariablesForScope()` assigns them. Validation errors are logged as warnings.
 
-Invalid schemas or values will be rejected with detailed error messages.
+See the [Implementation](#schema-validation) section for details.
 
 ## Implementation
 
@@ -149,29 +173,15 @@ Each `VariableConfig` contains:
 - `type`: The type of config (e.g., `STATIC`, `RANDOM_PERMUTATION`).
 - `scope`: The scope of assignment (`EXPERIMENT`, `COHORT`, `PARTICIPANT`).
 
-### Schema Validation (`utils/src/variables.validation.ts`)
+### Schema Validation
 
-Runtime validation uses recursive TypeBox schemas to validate incoming JSON Schema objects from API requests:
+Validation uses TypeBox schemas with [Ajv](https://ajv.js.org/) as the underlying validator. Validation occurs at these points:
 
-```typescript
-const JSONSchemaData: any = Type.Recursive((Self) =>
-  Type.Union([
-    Type.Object({type: Type.Literal('string')}, {additionalProperties: true}),
-    Type.Object({type: Type.Literal('number')}, {additionalProperties: true}),
-    Type.Object({type: Type.Literal('boolean')}, {additionalProperties: true}),
-    Type.Object({
-      type: Type.Literal('object'),
-      properties: Type.Optional(Type.Record(Type.String(), Self)),
-    }, {additionalProperties: true}),
-    Type.Object({
-      type: Type.Literal('array'),
-      items: Type.Optional(Self),
-    }, {additionalProperties: true}),
-  ])
-);
-```
+1. **In the variable editor** (design-time): As you edit variable values, the UI validates them against the schema and shows errors inline (`validateVariableValue()` in `variables.utils.ts`).
 
-This ensures malformed schemas are rejected before being stored.
+2. **When cohorts/participants are created** (runtime): Values are validated when `generateVariablesForScope()` assigns values. Validation errors are logged as warnings but don't block creation (`validateParsedVariableValue()` in `variables.utils.ts`).
+
+> Note: TypeBox schemas in `variables.validation.ts` are used for TypeScript type checking but not for runtime API validation of experiment saves.
 
 ### Value Assignments
 
@@ -183,6 +193,11 @@ The backend utility `generateVariablesForScope` (`utils/src/variables.utils.ts`)
 filters the configs based on the current scope being created (e.g., only processing
 `COHORT` scoped variables when creating a cohort). Values are then generated
 (e.g., selecting a random permutation) and stored as JSON strings.
+
+For **Random Permutation** variables with `expandListToSeparateVariables` enabled:
+- Multiple variables are created: `name_1`, `name_2`, etc.
+- Each variable holds a single item from the selected array
+- The `numToSelect` option controls how many items are selected (validated to be within `[1, values.length]`)
 
 Values are type-coerced based on the schema:
 - `string`: Used directly
@@ -207,6 +222,11 @@ runs specified fields through template resolution.
   - Navigates through array `items` schemas
   - Skips numeric array indices
   - Validates field existence at each level
+
+**Editor validation:**
+The experiment builder validates templates and shows warnings for:
+- Missing variables (referenced in templates but not defined)
+- Unused variables (defined but never referenced in any stage)
 
 **Template rendering:**
 - Type-coerces values based on schema type
