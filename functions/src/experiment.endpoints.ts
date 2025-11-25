@@ -1,4 +1,5 @@
 import {Value} from '@sinclair/typebox/value';
+import {TSchema} from '@sinclair/typebox';
 import {
   AgentMediatorPersonaConfig,
   AgentMediatorTemplate,
@@ -78,7 +79,7 @@ export const writeExperiment = onCall(async (request) => {
     );
 
     // Add agent mediators under `agentMediators` collection
-    template.agentMediators.forEach((agent) => {
+    template.agentMediators.forEach((agent: AgentMediatorTemplate) => {
       const doc = document.collection('agentMediators').doc(agent.persona.id);
       transaction.set(doc, agent.persona);
       for (const prompt of Object.values(agent.promptMap)) {
@@ -90,7 +91,7 @@ export const writeExperiment = onCall(async (request) => {
     // NOTE: We don't currently allow agent participant persona setup
     // in the experiment editor, so the list of agentParticipants
     // is expected to be length 0.
-    template.agentParticipants.forEach((agent) => {
+    template.agentParticipants.forEach((agent: AgentParticipantTemplate) => {
       const doc = document
         .collection('agentParticipants')
         .doc(agent.persona.id);
@@ -158,7 +159,7 @@ export const updateExperiment = onCall(async (request) => {
     }
 
     // Add agent mediators under `agentMediators` collection
-    template.agentMediators.forEach((agent) => {
+    template.agentMediators.forEach((agent: AgentMediatorTemplate) => {
       const doc = document.collection('agentMediators').doc(agent.persona.id);
       transaction.set(doc, agent.persona);
       for (const prompt of Object.values(agent.promptMap)) {
@@ -167,7 +168,7 @@ export const updateExperiment = onCall(async (request) => {
     });
 
     // Add agent participants under `agentParticipants` collection
-    template.agentParticipants.forEach((agent) => {
+    template.agentParticipants.forEach((agent: AgentParticipantTemplate) => {
       const doc = document
         .collection('agentParticipants')
         .doc(agent.persona.id);
@@ -193,7 +194,10 @@ export const deleteExperiment = onCall(async (request) => {
   const {data} = request;
 
   // Validate input
-  const validInput = Value.Check(ExperimentDeletionData, data);
+  const validInput = Value.Check(
+    ExperimentDeletionData as unknown as TSchema,
+    data,
+  );
   if (!validInput) {
     throw new HttpsError('invalid-argument', 'Invalid data');
   }
@@ -251,7 +255,7 @@ export const getExperimentTemplate = onCall(async (request) => {
 
   const template = createExperimentTemplate({
     id: '',
-    experiment,
+    experiment: experiment as Experiment,
   });
 
   // Add stage configs

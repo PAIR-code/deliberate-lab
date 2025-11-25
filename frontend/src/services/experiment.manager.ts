@@ -989,7 +989,7 @@ export class ExperimentManager extends Service {
         );
 
         // Generate zip and trigger download
-        zip.generateAsync({type: 'blob'}).then((blob) => {
+        zip.generateAsync({type: 'blob'}).then((blob: Blob) => {
           const link = document.createElement('a');
           link.href = URL.createObjectURL(blob);
           link.download = `${experimentName}_data.zip`;
