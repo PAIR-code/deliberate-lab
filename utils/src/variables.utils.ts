@@ -17,6 +17,10 @@ import {
 /**
  * Extract variable definitions from variable configs.
  * Returns a map of variable name to definition.
+ *
+ * For RandomPermutation configs with flattenToIndexedVariables:
+ * Creates definitions for indexed variables (name_1, name_2, etc.)
+ * based on the number of values that will be selected.
  */
 export function extractVariablesFromVariableConfigs(
   configs: VariableConfig[],
@@ -26,8 +30,33 @@ export function extractVariablesFromVariableConfigs(
   for (const config of configs) {
     switch (config.type) {
       case VariableConfigType.STATIC:
-      case VariableConfigType.RANDOM_PERMUTATION:
         variableMap[config.definition.name] = config.definition;
+        break;
+      case VariableConfigType.RANDOM_PERMUTATION:
+        // Check if this config will be flattened into indexed variables
+        if (config.flattenToIndexedVariables) {
+          // Determine how many indexed variables will be created
+          const numToSelect = config.numToSelect ?? config.values.length;
+
+          // Extract item schema (the schema for each individual item)
+          const itemSchema =
+            'items' in config.definition.schema
+              ? (config.definition.schema.items as TSchema)
+              : config.definition.schema;
+
+          // Create definitions for indexed variables: name_1, name_2, etc.
+          for (let i = 1; i <= numToSelect; i++) {
+            const indexedName = `${config.definition.name}_${i}`;
+            variableMap[indexedName] = {
+              name: indexedName,
+              description: config.definition.description,
+              schema: itemSchema,
+            };
+          }
+        } else {
+          // Standard array variable
+          variableMap[config.definition.name] = config.definition;
+        }
         break;
       default:
         break;
@@ -102,6 +131,7 @@ export function createRandomPermutationVariableConfig(
     }),
     values: config.values ?? [],
     numToSelect: config.numToSelect,
+    flattenToIndexedVariables: config.flattenToIndexedVariables ?? false,
   };
 }
 
@@ -151,6 +181,66 @@ function generateRandomPermutationValue(
 }
 
 /**
+ * Generate variables for a Static config.
+ * Returns a map of variable name to JSON string value.
+ */
+function generateStaticVariables(
+  config: StaticVariableConfig,
+): Record<string, string> {
+  const value = getVariableInstanceValue(config.value);
+
+  // Validate against schema
+  validateParsedVariableValue(
+    config.definition.schema,
+    value,
+    config.definition.name,
+  );
+
+  return {
+    [config.definition.name]: JSON.stringify(value),
+  };
+}
+
+/**
+ * Generate variables for a Random Permutation config.
+ * Returns a map of variable name(s) to JSON string value(s).
+ * May return multiple variables if flattenToIndexedVariables is true.
+ */
+function generateRandomPermutationVariables(
+  config: RandomPermutationVariableConfig,
+  context: ScopeContext,
+): Record<string, string> {
+  const value = generateRandomPermutationValue(config, context);
+  const variables: Record<string, string> = {};
+
+  // Check if we should flatten the array into indexed variables
+  if (config.flattenToIndexedVariables && Array.isArray(value)) {
+    // Extract item schema for validation
+    const itemSchema =
+      'items' in config.definition.schema
+        ? (config.definition.schema.items as TSchema)
+        : config.definition.schema;
+
+    // Create indexed variables: name_1, name_2, etc.
+    value.forEach((item, index) => {
+      const indexedName = `${config.definition.name}_${index + 1}`;
+      validateParsedVariableValue(itemSchema, item, indexedName);
+      variables[indexedName] = JSON.stringify(item);
+    });
+  } else {
+    // Standard single array variable
+    validateParsedVariableValue(
+      config.definition.schema,
+      value,
+      config.definition.name,
+    );
+    variables[config.definition.name] = JSON.stringify(value);
+  }
+
+  return variables;
+}
+
+/**
  * Given variable configs, generate variable-to-value mappings
  * for a specific scope (Experiment, Cohort, or Participant).
  *
@@ -172,30 +262,25 @@ export function generateVariablesForScope(
   );
 
   for (const config of scopedConfigs) {
-    let value: unknown | undefined;
+    let generatedVariables: Record<string, string> = {};
 
     switch (config.type) {
       case VariableConfigType.STATIC:
-        value = getVariableInstanceValue(config.value);
+        generatedVariables = generateStaticVariables(config);
         break;
       case VariableConfigType.RANDOM_PERMUTATION:
-        value = generateRandomPermutationValue(config, context);
+        generatedVariables = generateRandomPermutationVariables(
+          config,
+          context,
+        );
         break;
       default:
+        // Unknown config type - skip
         break;
     }
 
-    if (value !== undefined) {
-      // Validate against schema (logs warning if invalid)
-      // Reconstruct schema if it was deserialized from Firestore (adds [Kind] symbol)
-      validateParsedVariableValue(
-        config.definition.schema,
-        value,
-        config.definition.name,
-      );
-
-      variableToValueMap[config.definition.name] = JSON.stringify(value);
-    }
+    // Merge generated variables into the result map
+    Object.assign(variableToValueMap, generatedVariables);
   }
 
   return variableToValueMap;

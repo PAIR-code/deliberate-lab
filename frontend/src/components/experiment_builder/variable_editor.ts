@@ -261,6 +261,34 @@ export class VariableEditor extends MobxLitElement {
             : html`
                 ${this.renderDivider()}
                 ${this.renderSection(
+                  'Output Format',
+                  html`
+                    <div class="description">
+                      Choose whether to output as a single array variable or
+                      multiple indexed variables
+                    </div>
+                    <label class="checkbox-label">
+                      <input
+                        type="checkbox"
+                        .checked=${config.flattenToIndexedVariables ?? false}
+                        @change=${(e: Event) => {
+                          this.updateConfig(config, index, {
+                            flattenToIndexedVariables: (
+                              e.target as HTMLInputElement
+                            ).checked,
+                          });
+                        }}
+                      />
+                      <span>
+                        Flatten to indexed variables (e.g.,
+                        <code>${config.definition.name}_1</code>,
+                        <code>${config.definition.name}_2</code>, etc.)
+                      </span>
+                    </label>
+                  `,
+                )}
+                ${this.renderDivider()}
+                ${this.renderSection(
                   'Selection Size',
                   html`
                     <div class="description">

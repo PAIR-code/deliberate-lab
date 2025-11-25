@@ -68,6 +68,7 @@ export interface RandomPermutationVariableConfig extends BaseVariableConfig {
   shuffleConfig: ShuffleConfig;
   values: VariableInstance[]; // Pool of instances to select from
   numToSelect?: number; // How many to select (if omitted, selects all and shuffles)
+  flattenToIndexedVariables?: boolean; // If true, creates name_1, name_2, etc. instead of single array
 }
 
 export enum VariableConfigType {
