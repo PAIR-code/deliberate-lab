@@ -4,6 +4,32 @@ import {getSchemaAtPath} from './variables.utils';
 import {VariableDefinition} from './variables';
 
 /**
+ * Find defined variables that are never used in a template.
+ * Uses validateTemplateVariables with an empty map to extract all variable references.
+ *
+ * @param template The template string to check (e.g., JSON.stringify of all stages)
+ * @param variableDefinitions Map of variable names to their definitions
+ * @returns Array of variable names that are defined but never referenced
+ */
+export function findUnusedVariables(
+  template: string,
+  variableDefinitions: Record<string, VariableDefinition>,
+): string[] {
+  // With empty definitions, all variables are reported as "missing"
+  const {missingVariables} = validateTemplateVariables(template, {});
+
+  // Extract root variable names from full paths (e.g., "charity" from "charity.name")
+  const usedRootNames = new Set<string>();
+  for (const path of missingVariables) {
+    const rootName = path.split('.')[0];
+    usedRootNames.add(rootName);
+  }
+
+  const definedNames = Object.keys(variableDefinitions);
+  return definedNames.filter((name) => !usedRootNames.has(name));
+}
+
+/**
  * Resolve Mustache template variables in a given string.
  * https://mustache.github.io/mustache.5.html
  */

@@ -41,6 +41,8 @@ import {
   updateObjectProperty,
   updatePropertyInSchema,
   updateSchemaAtPath,
+  extractVariablesFromVariableConfigs,
+  findUnusedVariables,
 } from '@deliberation-lab/utils';
 
 import {styles} from './variable_editor.scss';
@@ -75,6 +77,7 @@ export class VariableEditor extends MobxLitElement {
             >See documentation</a
           >.
         </p>
+        ${this.renderUnusedVariablesWarning()}
         ${variableConfigs.map((config: VariableConfig, i: number) =>
           this.renderVariableConfig(config, i),
         )}
@@ -87,6 +90,34 @@ export class VariableEditor extends MobxLitElement {
           <pr-icon icon="add" slot="icon"></pr-icon>
           Add new variable config
         </md-outlined-button>
+      </div>
+    `;
+  }
+
+  private renderUnusedVariablesWarning() {
+    const variableConfigs =
+      this.experimentEditor.experiment?.variableConfigs ?? [];
+    const stages = this.experimentEditor.stages ?? [];
+
+    if (variableConfigs.length === 0) {
+      return nothing;
+    }
+
+    const variableDefinitions =
+      extractVariablesFromVariableConfigs(variableConfigs);
+    const allStagesJson = JSON.stringify(stages);
+    const unusedVariables = findUnusedVariables(
+      allStagesJson,
+      variableDefinitions,
+    );
+
+    if (unusedVariables.length === 0) {
+      return nothing;
+    }
+
+    return html`
+      <div class="validation-error">
+        ⚠️ Unused variables: ${unusedVariables.join(', ')}
       </div>
     `;
   }

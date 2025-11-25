@@ -1,5 +1,6 @@
 import {VariableDefinition, VariableType} from './variables';
 import {
+  findUnusedVariables,
   resolveTemplateVariables,
   validateTemplateVariables,
 } from './variables.template';
@@ -256,6 +257,68 @@ describe('Mustache Template Resolution', () => {
       const result = validateTemplateVariables(template, variableDefinitions);
       expect(result.valid).toBe(true);
       expect(result.missingVariables).toEqual([]);
+    });
+  });
+
+  describe('findUnusedVariables', () => {
+    const variableDefinitions: Record<string, VariableDefinition> = {
+      name: {
+        name: 'name',
+        description: '',
+        schema: VariableType.STRING,
+      },
+      city: {
+        name: 'city',
+        description: '',
+        schema: VariableType.STRING,
+      },
+      department: {
+        name: 'department',
+        description: '',
+        schema: VariableType.object({
+          name: VariableType.STRING,
+          floor: VariableType.NUMBER,
+        }),
+      },
+    };
+
+    it('should find unused variables', () => {
+      const template = 'Hello, {{name}}!';
+      const result = findUnusedVariables(template, variableDefinitions);
+      expect(result).toEqual(['city', 'department']);
+    });
+
+    it('should return empty array when all variables are used', () => {
+      const template = '{{name}} from {{city}} works in {{department.name}}';
+      const result = findUnusedVariables(template, variableDefinitions);
+      expect(result).toEqual([]);
+    });
+
+    it('should consider a variable used if any of its fields are accessed', () => {
+      const template = 'Floor: {{department.floor}}';
+      const result = findUnusedVariables(template, variableDefinitions);
+      expect(result).toEqual(['name', 'city']);
+    });
+
+    it('should return all variables for templates without variable references', () => {
+      const template = 'Just plain text';
+      const result = findUnusedVariables(template, variableDefinitions);
+      expect(result).toEqual(['name', 'city', 'department']);
+    });
+
+    it('should return empty array when no variables are defined', () => {
+      const template = '{{name}} {{city}}';
+      const result = findUnusedVariables(template, {});
+      expect(result).toEqual([]);
+    });
+
+    it('should handle JSON stringified content (typical use case)', () => {
+      const stages = JSON.stringify({
+        stage1: {description: 'Welcome {{name}}'},
+        stage2: {description: 'You are in {{department.name}}'},
+      });
+      const result = findUnusedVariables(stages, variableDefinitions);
+      expect(result).toEqual(['city']);
     });
   });
 });
