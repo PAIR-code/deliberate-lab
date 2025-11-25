@@ -331,20 +331,23 @@ export class VariableEditor extends MobxLitElement {
                       Number of instances to select (leave empty to select all
                       and shuffle)
                     </div>
-                    <pr-textarea
-                      placeholder="e.g., 9 (or leave empty for all)"
-                      .value=${config.numToSelect?.toString() ?? ''}
-                      variant="outlined"
-                      @input=${(e: Event) => {
-                        const val = (
-                          e.target as HTMLTextAreaElement
-                        ).value.trim();
-                        this.updateConfig(config, index, {
-                          numToSelect: val === '' ? undefined : Number(val),
-                        });
-                      }}
-                    ></pr-textarea>
-                    ${config.numToSelect !== undefined &&
+                    <div class="number-input">
+                      <input
+                        type="number"
+                        min="1"
+                        .max=${config.values.length || ''}
+                        placeholder="Leave empty for all"
+                        .value=${config.numToSelect ?? ''}
+                        @input=${(e: Event) => {
+                          const val = (e.target as HTMLInputElement).value;
+                          this.updateConfig(config, index, {
+                            numToSelect: val === '' ? undefined : Number(val),
+                          });
+                        }}
+                      />
+                    </div>
+                    ${config.numToSelect != null &&
+                    config.values.length > 0 &&
                     (config.numToSelect < 1 ||
                       config.numToSelect > config.values.length)
                       ? html`<div class="validation-error">
