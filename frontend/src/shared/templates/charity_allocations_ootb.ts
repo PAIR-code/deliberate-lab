@@ -186,14 +186,6 @@ const CHARITY_DATA: CharityInfo[] = [
   },
 ];
 
-const CharitySchema = VariableType.object({
-  key: VariableType.STRING,
-  name: VariableType.STRING,
-  link: VariableType.STRING,
-  score: VariableType.STRING,
-  mission: VariableType.STRING,
-});
-
 const CHARITY_RANDOM_PERMUTATION_CONFIG: RandomPermutationVariableConfig = {
   id: 'charity-permutation-config',
   type: VariableConfigType.RANDOM_PERMUTATION,
@@ -201,7 +193,15 @@ const CHARITY_RANDOM_PERMUTATION_CONFIG: RandomPermutationVariableConfig = {
   definition: {
     name: 'charity',
     description: 'List of charities for allocation rounds',
-    schema: VariableType.array(CharitySchema),
+    schema: VariableType.array(
+      VariableType.object({
+        key: VariableType.STRING,
+        name: VariableType.STRING,
+        link: VariableType.STRING,
+        score: VariableType.STRING,
+        mission: VariableType.STRING,
+      }),
+    ),
   },
   shuffleConfig: createShuffleConfig({
     shuffle: true,
@@ -415,7 +415,6 @@ export function getOOTBCharityDebateTemplate(
 
   stages.push(TRANSFER_STAGE);
 
-  // Variable names for each round of charities
   const debateRoundsCharities = [
     ['charity_1', 'charity_2', 'charity_3'],
     ['charity_4', 'charity_5', 'charity_6'],
@@ -782,7 +781,7 @@ function createRoundOutcomeSurveyStage(
 function createAllocationStage(
   id: string,
   name: string,
-  charityVariables: string[],
+  charityVariableNames: string[],
   roundNum: number,
   isInitial: boolean = true,
 ): StageConfig {
@@ -793,13 +792,13 @@ function createAllocationStage(
 
   let primaryText = `${scope}\nPlease use the sliders to allocate 100% of the funds among the following charities:\n`;
 
-  charityVariables.forEach((variableName) => {
+  charityVariableNames.forEach((variableName) => {
     primaryText += `\n
 [{{${variableName}.name}}]({{${variableName}.link}}) (Charity Navigator score: {{${variableName}.score}})
 *{{${variableName}.mission}}*\n`;
   });
 
-  const charityStocks = charityVariables.map((variableName) => {
+  const charityStocks = charityVariableNames.map((variableName) => {
     return createStock({
       name: `{{${variableName}.name}}`,
       description: `Details for {{${variableName}.name}}.`,
