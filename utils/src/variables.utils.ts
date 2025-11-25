@@ -1,7 +1,7 @@
+import Ajv from 'ajv';
 import {generateId} from './shared';
 import {SeedStrategy, choices, createShuffleConfig} from './utils/random.utils';
-import {Type, type TSchema} from '@sinclair/typebox';
-import {Value} from '@sinclair/typebox/value';
+import {type TSchema} from '@sinclair/typebox';
 import {
   RandomPermutationVariableConfig,
   ScopeContext,
@@ -364,48 +364,9 @@ export function parseVariableValue(schema: TSchema, value: string): unknown {
   return value === '' ? null : JSON.parse(value);
 }
 
-/**
- * Reconstructs a TypeBox schema from a plain JSON schema object.
- *
- * TypeBox schemas have internal metadata that is lost during JSON serialization to Firestore.
- * This function reconstructs proper TypeBox schemas using the official Type.* API.
- */
-function reconstructSchema(schema: TSchema): TSchema {
-  // If already a proper TypeBox schema (has metadata), return as-is
-  if (Symbol.for('TypeBox.Kind') in schema) {
-    return schema;
-  }
-
-  // Otherwise, reconstruct from plain object
-
-  // 1. Handle Objects
-  if (schema.type === 'object' && schema.properties) {
-    const properties: Record<string, TSchema> = {};
-
-    for (const [key, value] of Object.entries(
-      schema.properties as Record<string, TSchema>,
-    )) {
-      properties[key] = reconstructSchema(value);
-    }
-    // Pass original schema to preserve options like 'additionalProperties'
-    return Type.Object(properties, schema);
-  }
-
-  // 2. Handle Arrays
-  if (schema.type === 'array' && schema.items) {
-    return Type.Array(reconstructSchema(schema.items as TSchema), schema);
-  }
-
-  // 3. Handle Primitives
-  if (schema.type === 'string') return Type.String(schema);
-  if (schema.type === 'number') return Type.Number(schema);
-  if (schema.type === 'integer') return Type.Integer(schema);
-  if (schema.type === 'boolean') return Type.Boolean(schema);
-  if (schema.type === 'null') return Type.Null(schema);
-
-  // Fallback: return as-is for unknown types
-  return schema;
-}
+// Ajv instance for JSON Schema validation
+// Works directly with plain JSON Schema objects (no TypeBox symbol reconstruction needed)
+const ajv = new Ajv();
 
 /**
  * Validate a parsed value against a schema.
@@ -417,12 +378,15 @@ export function validateParsedVariableValue(
   value: unknown,
   variableName?: string,
 ): string | null {
-  // Reconstruct schema if it was deserialized from Firestore
-  const validSchema = reconstructSchema(schema);
+  if (value === null) {
+    return null;
+  }
 
-  if (value !== null && !Value.Check(validSchema, value)) {
-    const errors = [...Value.Errors(validSchema, value)];
-    const errorMsg = errors.map((e) => `${e.path}: ${e.message}`).join(', ');
+  const valid = ajv.validate(schema, value);
+  if (!valid && ajv.errors) {
+    const errorMsg = ajv.errors
+      .map((e) => `${e.instancePath || '/'}: ${e.message}`)
+      .join(', ');
 
     const nameLog = variableName ? `Variable "${variableName}"` : 'Variable';
     console.warn(`${nameLog} value does not match its schema definition.`, {
