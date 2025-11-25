@@ -27,6 +27,7 @@ import {
   createRandomPermutationVariableConfig,
   createStaticVariableConfig,
   validateVariableValue,
+  sanitizeVariableName,
   createShuffleConfig,
   mapScopeToSeedStrategy,
   addPropertyToSchema,
@@ -249,14 +250,18 @@ export class VariableEditor extends MobxLitElement {
                   placeholder="e.g., charities"
                   .value=${config.definition.name}
                   variant="outlined"
-                  @input=${(e: Event) =>
-                    this.updateDefinition(config, index, {
-                      name: (e.target as HTMLTextAreaElement).value,
-                    })}
+                  @input=${(e: Event) => {
+                    const input = e.target as HTMLTextAreaElement;
+                    const name = sanitizeVariableName(input.value);
+                    if (input.value !== name) {
+                      input.value = name;
+                    }
+                    this.updateDefinition(config, index, {name});
+                  }}
                 ></pr-textarea>
                 ${this.hasDuplicateName(config, index)
                   ? html`<div class="validation-error">
-                      ⚠️ Warning: A variable with this name already exists.
+                      ⚠️ A variable with this name already exists.
                     </div>`
                   : nothing}
               </div>
@@ -709,14 +714,12 @@ export class VariableEditor extends MobxLitElement {
     config: VariableConfig,
     configIndex: number,
   ) {
-    if (!newName) {
-      // Reset to original name if empty
-      input.value = oldName;
-      return;
-    }
+    // Sanitize the new name
+    newName = sanitizeVariableName(newName);
 
-    if (newName === oldName) {
-      // No change
+    if (!newName || newName === oldName) {
+      // Reset to original name if empty or no change after sanitization
+      input.value = oldName;
       return;
     }
 
@@ -728,6 +731,9 @@ export class VariableEditor extends MobxLitElement {
       input.value = oldName;
       return;
     }
+
+    // Update input to show sanitized value
+    input.value = newName;
 
     // We need to update both schema AND values atomically
     // Don't use onUpdate - it only updates the schema
@@ -934,7 +940,11 @@ export class VariableEditor extends MobxLitElement {
     config: VariableConfig,
     configIndex: number,
   ) {
-    const name = prompt('Property name:');
+    const rawName = prompt('Property name:');
+    if (!rawName) return;
+
+    // Sanitize the property name
+    const name = sanitizeVariableName(rawName);
     if (!name) return;
     const newObjSchema = addPropertyToSchema(props, name);
     if (!newObjSchema) {

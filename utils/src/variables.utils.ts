@@ -414,3 +414,30 @@ export function validateVariableValue(
     return `Invalid: ${e}`;
   }
 }
+
+/**
+ * Sanitize a variable or property name by removing invalid characters.
+ *
+ * Valid names can only contain:
+ * - Letters (a-z, A-Z)
+ * - Numbers (0-9)
+ * - Underscores (_)
+ *
+ * This prevents conflicts with Mustache template syntax where:
+ * - Dots (.) are used for path access: {{obj.field}}
+ * - Dashes (-) can cause parsing issues
+ * - Spaces and special characters break template parsing
+ *
+ * If the result starts with a number, prepends an underscore.
+ */
+export function sanitizeVariableName(name: string): string {
+  // Remove all characters except letters, numbers, and underscores
+  let sanitized = name.replace(/[^a-zA-Z0-9_]/g, '');
+
+  // If it starts with a number, prepend an underscore
+  if (/^\d/.test(sanitized)) {
+    sanitized = '_' + sanitized;
+  }
+
+  return sanitized;
+}

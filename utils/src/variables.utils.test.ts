@@ -5,6 +5,7 @@ import {
   createRandomPermutationVariableConfig,
   createStaticVariableConfig,
   extractVariablesFromVariableConfigs,
+  sanitizeVariableName,
 } from './variables.utils';
 import {VariableConfigType, VariableScope} from './variables';
 
@@ -295,5 +296,53 @@ describe('extractVariablesFromVariableConfigs', () => {
     // Should NOT create indexed variables
     expect(result['charity_1']).toBeUndefined();
     expect(result['charity_2']).toBeUndefined();
+  });
+});
+
+describe('sanitizeVariableName', () => {
+  it('should preserve valid names', () => {
+    expect(sanitizeVariableName('charity')).toBe('charity');
+    expect(sanitizeVariableName('Charity')).toBe('Charity');
+    expect(sanitizeVariableName('myVariable')).toBe('myVariable');
+    expect(sanitizeVariableName('charity_1')).toBe('charity_1');
+    expect(sanitizeVariableName('_private')).toBe('_private');
+    expect(sanitizeVariableName('var123')).toBe('var123');
+  });
+
+  it('should return empty string for empty input', () => {
+    expect(sanitizeVariableName('')).toBe('');
+    expect(sanitizeVariableName('   ')).toBe('');
+  });
+
+  it('should prepend underscore for names starting with a number', () => {
+    expect(sanitizeVariableName('1charity')).toBe('_1charity');
+    expect(sanitizeVariableName('123')).toBe('_123');
+  });
+
+  it('should strip dots', () => {
+    expect(sanitizeVariableName('my.var')).toBe('myvar');
+    expect(sanitizeVariableName('obj.field')).toBe('objfield');
+  });
+
+  it('should strip dashes', () => {
+    expect(sanitizeVariableName('my-var')).toBe('myvar');
+  });
+
+  it('should strip spaces', () => {
+    expect(sanitizeVariableName('my var')).toBe('myvar');
+  });
+
+  it('should strip special characters', () => {
+    expect(sanitizeVariableName('my@var')).toBe('myvar');
+    expect(sanitizeVariableName('var#1')).toBe('var1');
+    expect(sanitizeVariableName('{{var}}')).toBe('var');
+  });
+
+  it('should handle edge cases', () => {
+    // All special chars results in empty
+    expect(sanitizeVariableName('...')).toBe('');
+    expect(sanitizeVariableName('@#$')).toBe('');
+    // Only numbers at start gets underscore
+    expect(sanitizeVariableName('123abc')).toBe('_123abc');
   });
 });
