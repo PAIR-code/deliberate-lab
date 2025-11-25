@@ -239,11 +239,16 @@ export class StageBuilderDialog extends MobxLitElement {
       </div>
     `;
   }
+        </div>
+  </div>
+    `;
+  }
 
   private renderSavedTemplates() {
     return html`
-      ${this.experimentEditor.savedTemplates.map(
-      (template) => html`
+      ${
+  this.experimentEditor.savedTemplates.map(
+    (template) => html`
           <div class="card saved-template">
             <div
               class="card-content"
@@ -263,60 +268,61 @@ export class StageBuilderDialog extends MobxLitElement {
                 color="error"
                 variant="default"
                 @click=${(e: Event) => {
-          e.stopPropagation();
-          if (
-            confirm('Are you sure you want to delete this template?')
-          ) {
-            this.experimentEditor.deleteTemplate(template.id);
-          }
-        }}
+        e.stopPropagation();
+        if (
+          confirm('Are you sure you want to delete this template?')
+        ) {
+          this.experimentEditor.deleteTemplate(template.id);
+        }
+      }}
               >
               </pr-icon-button>
             </div>
           </div>
         `,
-    )}
-    `;
+  )
+}
+`;
   }
 
   private renderStageCards() {
     return html`
-      <div class="gallery-section">
-        <div class="gallery-title">Basic stages</div>
-        <div class="card-gallery-wrapper">
-          ${this.renderTOSCard()} ${this.renderInfoCard()}
-          ${this.renderProfileCard()}
-        </div>
-      </div>
+  < div class="gallery-section" >
+    <div class="gallery-title" > Basic stages </div>
+      < div class="card-gallery-wrapper" >
+        ${ this.renderTOSCard() } ${ this.renderInfoCard() }
+          ${ this.renderProfileCard() }
+</div>
+  </div>
 
-      <div class="gallery-section">
-        <div class="gallery-title">Chat stages</div>
-        <div class="card-gallery-wrapper">
-          ${this.renderGroupChatCard()} ${this.renderPrivateChatCard()}
-        </div>
-      </div>
+  < div class="gallery-section" >
+    <div class="gallery-title" > Chat stages </div>
+      < div class="card-gallery-wrapper" >
+        ${ this.renderGroupChatCard() } ${ this.renderPrivateChatCard() }
+</div>
+  </div>
 
-      <div class="gallery-section">
-        <div class="gallery-title">Other stages</div>
-        <div class="card-gallery-wrapper">
-          ${this.renderTransferCard()} ${this.renderSurveyCard()}
-          ${this.renderSurveyPerParticipantCard()}
-          ${this.renderComprehensionCard()} ${this.renderRankingCard()}
-          ${this.renderRevealCard()} ${this.renderPayoutCard()}
-          ${this.renderRoleCard()}
-        </div>
-      </div>
+  < div class="gallery-section" >
+    <div class="gallery-title" > Other stages </div>
+      < div class="card-gallery-wrapper" >
+        ${ this.renderTransferCard() } ${ this.renderSurveyCard() }
+          ${ this.renderSurveyPerParticipantCard() }
+          ${ this.renderComprehensionCard() } ${ this.renderRankingCard() }
+          ${ this.renderRevealCard() } ${ this.renderPayoutCard() }
+          ${ this.renderRoleCard() }
+</div>
+  </div>
 
-      <div class="gallery-section">
-        <div class="gallery-title">
-          Experimental stages: ⚠️ use with caution
-        </div>
-        <div class="card-gallery-wrapper">
-          ${this.renderFlipCardCard()} ${this.renderStockInfoCard()}
-          ${this.renderAssetAllocationCard()}
-          ${this.renderMultiAssetAllocationCard()}
-        </div>
+  < div class="gallery-section" >
+    <div class="gallery-title" >
+      Experimental stages: ⚠️ use with caution
       </div>
+      < div class="card-gallery-wrapper" >
+        ${ this.renderFlipCardCard() } ${ this.renderStockInfoCard() }
+          ${ this.renderAssetAllocationCard() }
+          ${ this.renderMultiAssetAllocationCard() }
+</div>
+  </div>
     `;
   }
 
@@ -351,13 +357,13 @@ export class StageBuilderDialog extends MobxLitElement {
     };
 
     return html`
-      <div class="card" @click=${addGame}>
-        <div class="title">${metadata.name}</div>
-        <div>
-          ${metadata.description}
-          <div></div>
-        </div>
-      </div>
+  < div class="card" @click=${ addGame }>
+    <div class="title" > ${ metadata.name } </div>
+      <div>
+          ${ metadata.description }
+<div></div>
+  </div>
+  </div>
     `;
   }
 
@@ -366,11 +372,11 @@ export class StageBuilderDialog extends MobxLitElement {
       this.addTemplate(getAgentParticipantIntegrationTemplate());
     };
     return html`
-      <div class="card" @click=${addTemplate}>
-        <div class="title">${INTEGRATION_METADATA.name}</div>
-        <div>${INTEGRATION_METADATA.description}</div>
-      </div>
-    `;
+  < div class="card" @click=${ addTemplate }>
+    <div class="title" > ${ INTEGRATION_METADATA.name } </div>
+      < div > ${ INTEGRATION_METADATA.description } </div>
+        </div>
+          `;
   }
 
   private renderChipNegotiationCard() {
@@ -382,19 +388,19 @@ export class StageBuilderDialog extends MobxLitElement {
     };
 
     return html`
-      <div class="card" @click=${() => addGame(2)}>
-        <div class="title">${getChipMetadata(2).name}</div>
-        <div>${getChipMetadata(2).description}</div>
-      </div>
-      <div class="card" @click=${() => addGame(3)}>
-        <div class="title">${getChipMetadata(3).name}</div>
-        <div>${getChipMetadata(3).description}</div>
-      </div>
-      <div class="card" @click=${() => addGame(4)}>
-        <div class="title">${getChipMetadata(4).name}</div>
-        <div>${getChipMetadata(4).description}</div>
-      </div>
-    `;
+        < div class="card" @click=${ () => addGame(2) }>
+          <div class="title" > ${ getChipMetadata(2).name } </div>
+            < div > ${ getChipMetadata(2).description } </div>
+              </div>
+              < div class="card" @click=${ () => addGame(3) }>
+                <div class="title" > ${ getChipMetadata(3).name } </div>
+                  < div > ${ getChipMetadata(3).description } </div>
+                    </div>
+                    < div class="card" @click=${ () => addGame(4) }>
+                      <div class="title" > ${ getChipMetadata(4).name } </div>
+                        < div > ${ getChipMetadata(4).description } </div>
+                          </div>
+                            `;
   }
 
   private renderFruitTestTemplateCard() {
@@ -403,11 +409,11 @@ export class StageBuilderDialog extends MobxLitElement {
     };
 
     return html`
-      <div class="card" @click=${addTemplate}>
-        <div class="title">${FRUIT_TEST_METADATA.name}</div>
-        <div>${FRUIT_TEST_METADATA.description}</div>
-      </div>
-    `;
+                          < div class="card" @click=${ addTemplate }>
+                            <div class="title" > ${ FRUIT_TEST_METADATA.name } </div>
+                              < div > ${ FRUIT_TEST_METADATA.description } </div>
+                                </div>
+                                  `;
   }
 
   private renderInfoCard() {
@@ -416,11 +422,11 @@ export class StageBuilderDialog extends MobxLitElement {
     };
 
     return html`
-      <div class="card" @click=${addStage}>
-        <div class="title">ℹ️ Info</div>
-        <div>Display Markdown-rendered information.</div>
-      </div>
-    `;
+                                < div class="card" @click=${ addStage }>
+                                  <div class="title" > ℹ️ Info </div>
+                                    < div > Display Markdown - rendered information.</div>
+                                      </div>
+                                        `;
   }
 
   private renderTOSCard() {
@@ -433,11 +439,11 @@ export class StageBuilderDialog extends MobxLitElement {
     };
 
     return html`
-      <div class="card ${isDisabled ? 'disabled' : ''}" @click=${addStage}>
-        <div class="title">📜 Terms of Service</div>
-        <div>Display Markdown-rendered terms of service.</div>
-      </div>
-    `;
+                                      < div class="card ${isDisabled ? 'disabled' : ''}" @click=${ addStage }>
+                                        <div class="title" >📜 Terms of Service </div>
+                                          < div > Display Markdown - rendered terms of service.</div>
+                                            </div>
+                                              `;
   }
 
   private renderRoleCard() {
@@ -446,13 +452,13 @@ export class StageBuilderDialog extends MobxLitElement {
     };
 
     return html`
-      <div class="card" @click=${addStage}>
-        <div class="title">🎭 Role assignment</div>
-        <div>
+                                            < div class="card" @click=${ addStage }>
+                                              <div class="title" >🎭 Role assignment </div>
+                                                <div>
           Randomly assign roles to participants and show different
-          Markdown-rendered info for each role
-        </div>
-      </div>
+Markdown - rendered info for each role
+  </div>
+  </div>
     `;
   }
 
@@ -462,13 +468,13 @@ export class StageBuilderDialog extends MobxLitElement {
     };
 
     return html`
-      <div class="card" @click=${addStage}>
-        <div class="title">👥 Group chat</div>
-        <div>
-          Host a conversation among <i>all</i> participants in a cohort and
+  < div class= "card" @click=${ addStage }>
+    <div class="title" >👥 Group chat </div>
+      <div>
+          Host a conversation among < i > all </i> participants in a cohort and
           optional mediator(s).
         </div>
-      </div>
+  </div>
     `;
   }
 
@@ -478,13 +484,13 @@ export class StageBuilderDialog extends MobxLitElement {
     };
 
     return html`
-      <div class="card" @click=${addStage}>
-        <div class="title">💬 Private chat</div>
-        <div>
-          Enable each participant to privately chat <i>only</i> with added
-          mediator(s).
+  < div class="card" @click=${ addStage }>
+    <div class="title" >💬 Private chat </div>
+      <div>
+          Enable each participant to privately chat < i > only </i> with added
+mediator(s).
         </div>
-      </div>
+  </div>
     `;
   }
 
@@ -494,13 +500,13 @@ export class StageBuilderDialog extends MobxLitElement {
     };
 
     return html`
-      <div class="card" @click=${addStage}>
-        <div class="title">🔄 FlipCard</div>
-        <div>
+  < div class="card" @click=${ addStage }>
+    <div class="title" >🔄 FlipCard </div>
+      <div>
           Present cards that participants can flip to reveal additional
           information and make selections.
         </div>
-      </div>
+  </div>
     `;
   }
 
@@ -510,13 +516,13 @@ export class StageBuilderDialog extends MobxLitElement {
     };
 
     return html`
-      <div class="card" @click=${addStage}>
-        <div class="title">📈 Stock Info</div>
-        <div>
+  < div class="card" @click=${ addStage }>
+    <div class="title" >📈 Stock Info </div>
+      <div>
           Display stock information with charts, performance metrics, and
           configurable data cards.
         </div>
-      </div>
+  </div>
     `;
   }
 
@@ -526,13 +532,13 @@ export class StageBuilderDialog extends MobxLitElement {
     };
 
     return html`
-      <div class="card" @click=${addStage}>
-        <div class="title">🧮 2-Stock Asset Allocation</div>
-        <div>
+  < div class="card" @click=${ addStage }>
+    <div class="title" >🧮 2 - Stock Asset Allocation </div>
+      <div>
           Allow participants to allocate investment portfolios between two
           stocks using interactive sliders.
-        </div>
-      </div>
+</div>
+  </div>
     `;
   }
 
@@ -542,13 +548,13 @@ export class StageBuilderDialog extends MobxLitElement {
     };
 
     return html`
-      <div class="card" @click=${addStage}>
-        <div class="title">💰 Multi-Asset Allocation</div>
-        <div>
+  < div class="card" @click=${ addStage }>
+    <div class="title" >💰 Multi - Asset Allocation </div>
+      <div>
           Allow participants to allocate investment portfolios between multiple
           stocks using interactive sliders.
-        </div>
-      </div>
+</div>
+  </div>
     `;
   }
 
@@ -558,13 +564,13 @@ export class StageBuilderDialog extends MobxLitElement {
     };
 
     return html`
-      <div class="card" @click=${addStage}>
-        <div class="title">🗳️ Ranking / Election</div>
-        <div>
+  < div class="card" @click=${ addStage }>
+    <div class="title" >🗳️ Ranking / Election </div>
+      <div>
           Have participants rank each other or items, and optionally hold an
-          election.
+election.
         </div>
-      </div>
+  </div>
     `;
   }
 
@@ -574,12 +580,12 @@ export class StageBuilderDialog extends MobxLitElement {
     };
 
     return html`
-      <div class="card" @click=${addStage}>
-        <div class="title">👁️‍🗨️ Reveal</div>
-        <div>
+  < div class="card" @click=${ addStage }>
+    <div class="title" >👁️‍🗨️ Reveal </div>
+      <div>
           Reveal the results of rankings, elections, and survey stage responses.
         </div>
-      </div>
+  </div>
     `;
   }
 
@@ -589,13 +595,13 @@ export class StageBuilderDialog extends MobxLitElement {
     };
 
     return html`
-      <div class="card" @click=${addStage}>
-        <div class="title">📋 Survey</div>
-        <div>
+  < div class="card" @click=${ addStage }>
+    <div class="title" >📋 Survey </div>
+      <div>
           Conduct a survey with freeform, multiple choice, checkbox, and scale
-          questions.
+questions.
         </div>
-      </div>
+  </div>
     `;
   }
 
@@ -605,12 +611,12 @@ export class StageBuilderDialog extends MobxLitElement {
     };
 
     return html`
-      <div class="card" @click=${addStage}>
-        <div class="title">🧑‍🤝‍🧑 Survey per participant</div>
-        <div>
+  < div class="card" @click=${ addStage }>
+    <div class="title" >🧑‍🤝‍🧑 Survey per participant </div>
+      <div>
           Ask each survey question about each participant in the current cohort.
         </div>
-      </div>
+  </div>
     `;
   }
 
@@ -620,11 +626,11 @@ export class StageBuilderDialog extends MobxLitElement {
     };
 
     return html`
-      <div class="card" @click=${addStage}>
-        <div class="title">💰 Payout</div>
-        <div>Display calculated experiment payouts.</div>
-      </div>
-    `;
+  < div class="card" @click=${ addStage }>
+    <div class="title" >💰 Payout </div>
+      < div > Display calculated experiment payouts.</div>
+        </div>
+          `;
   }
 
   private renderComprehensionCard() {
@@ -633,12 +639,12 @@ export class StageBuilderDialog extends MobxLitElement {
     };
 
     return html`
-      <div class="card" @click=${addStage}>
-        <div class="title">✅ Comprehension</div>
-        <div>
+        < div class="card" @click=${ addStage }>
+          <div class="title" >✅ Comprehension </div>
+            <div>
           Test participant understanding with questions and correct answers.
         </div>
-      </div>
+  </div>
     `;
   }
 
@@ -652,11 +658,11 @@ export class StageBuilderDialog extends MobxLitElement {
     };
 
     return html`
-      <div class="card ${isDisabled ? 'disabled' : ''}" @click=${addStage}>
-        <div class="title">👤 Profile</div>
-        <div>Allow participants to set their profiles.</div>
-      </div>
-    `;
+  < div class="card ${isDisabled ? 'disabled' : ''}" @click=${ addStage }>
+    <div class="title" >👤 Profile </div>
+      < div > Allow participants to set their profiles.</div>
+        </div>
+          `;
   }
 
   private renderTransferCard() {
@@ -665,13 +671,13 @@ export class StageBuilderDialog extends MobxLitElement {
     };
 
     return html`
-      <div class="card" @click=${addStage}>
-        <div class="title">🚪 Transfer</div>
-        <div>
+        < div class="card" @click=${ addStage }>
+          <div class="title" >🚪 Transfer </div>
+            <div>
           Assign participants to different cohorts while they wait in this
-          stage.
+stage.
         </div>
-      </div>
+  </div>
     `;
   }
 
@@ -685,20 +691,20 @@ export class StageBuilderDialog extends MobxLitElement {
     };
 
     return html`
-      <div class="card">
-        <div class="title">${CONSENSUS_METADATA.name}</div>
-        <div>${CONSENSUS_METADATA.description}</div>
-        <div class="template-controls">
+  < div class="card" >
+    <div class="title" > ${ CONSENSUS_METADATA.name } </div>
+      < div > ${ CONSENSUS_METADATA.description } </div>
+        < div class="template-controls" >
           <pr-textarea
-            variant="outlined"
-            placeholder="Debate topic (e.g., 'Climate Change,Vaccinations,AI Ethics')"
-            .value=${this.consensusTopics}
-            @input=${onTopicsInput}
-          ></pr-textarea>
-        </div>
-        <pr-button @click=${loadTemplate}> Load Template </pr-button>
-      </div>
-    `;
+variant = "outlined"
+placeholder = "Debate topic (e.g., 'Climate Change,Vaccinations,AI Ethics')"
+  .value = ${ this.consensusTopics }
+@input=${ onTopicsInput }
+          > </pr-textarea>
+  </div>
+  < pr - button @click=${ loadTemplate }> Load Template </pr-button>
+    </div>
+      `;
   }
 
   private renderFlipCardTemplateCard() {
@@ -707,11 +713,11 @@ export class StageBuilderDialog extends MobxLitElement {
     };
 
     return html`
-      <div class="card" @click=${addTemplate}>
-        <div class="title">${FLIPCARD_TEMPLATE_METADATA.name}</div>
-        <div>${FLIPCARD_TEMPLATE_METADATA.description}</div>
-      </div>
-    `;
+    < div class="card" @click=${ addTemplate }>
+      <div class="title" > ${ FLIPCARD_TEMPLATE_METADATA.name } </div>
+        < div > ${ FLIPCARD_TEMPLATE_METADATA.description } </div>
+          </div>
+            `;
   }
 
   private renderStockInfoGameCard() {
@@ -720,12 +726,12 @@ export class StageBuilderDialog extends MobxLitElement {
     };
 
     return html`
-      <div class="card" @click=${addGame}>
-        <div class="title">📈 Stock Analysis Game</div>
-        <div>
+          < div class="card" @click=${ addGame }>
+            <div class="title" >📈 Stock Analysis Game </div>
+              <div>
           A demonstration of the StockInfo stage with financial data analysis.
         </div>
-      </div>
+  </div>
     `;
   }
 
@@ -734,22 +740,24 @@ export class StageBuilderDialog extends MobxLitElement {
     labelText: string,
   ) {
     return html`
-      <label class="custom-checkbox">
-        <input
+  < label class="custom-checkbox" >
+    <input
           type="checkbox"
-          .checked=${this.charityDebateConfig[field]}
-          @change=${(e: Event) => {
-        // Use a new object to trigger a Lit update
-        this.charityDebateConfig = {
-          ...this.charityDebateConfig,
-          [field]: (e.target as HTMLInputElement).checked,
-        };
-      }}
+  .checked = ${ this.charityDebateConfig[field] }
+@change=${
+  (e: Event) => {
+    // Use a new object to trigger a Lit update
+    this.charityDebateConfig = {
+      ...this.charityDebateConfig,
+      [field]: (e.target as HTMLInputElement).checked,
+    };
+  }
+}
         />
-        <span class="checkmark"></span>
-        <span class="label-text">${labelText}</span>
+  < span class="checkmark" > </span>
+    < span class="label-text" > ${ labelText } </span>
       </label>
-    `;
+        `;
   }
 
   private renderFacilitatorTextbox(
@@ -759,22 +767,24 @@ export class StageBuilderDialog extends MobxLitElement {
     const currentValue = String(this.charityDebateConfig[field] ?? '');
 
     return html`
-      <label class="custom-textbox">
+      < label class="custom-textbox" >
         <input
           type="number"
-          .value=${currentValue}
-          @input=${(e: Event) => {
-        const inputValue = (e.target as HTMLInputElement).value;
-        const newNumberValue = Number(inputValue);
-        this.charityDebateConfig = {
-          ...this.charityDebateConfig,
-          [field]: newNumberValue,
-        };
-      }}
+  .value = ${ currentValue }
+@input=${
+  (e: Event) => {
+    const inputValue = (e.target as HTMLInputElement).value;
+    const newNumberValue = Number(inputValue);
+    this.charityDebateConfig = {
+      ...this.charityDebateConfig,
+      [field]: newNumberValue,
+    };
+  }
+}
         />
-        <span class="label-text">${labelText}</span>
-      </label>
-    `;
+  < span class="label-text" > ${ labelText } </span>
+    </label>
+      `;
   }
 
   private renderCharityDebateTemplateCard() {
@@ -787,45 +797,59 @@ export class StageBuilderDialog extends MobxLitElement {
     };
 
     return html`
-      <div class="card large-card">
-        <div class="title">${CHARITY_DEBATE_METADATA.name}</div>
-        <div>${CHARITY_DEBATE_METADATA.description}</div>
-        <div class="template-controls">
-          <div class="subtitle">Configure Experiment Stages</div>
+    < div class="card large-card" >
+      <div class="title" > ${ CHARITY_DEBATE_METADATA.name } </div>
+        < div > ${ CHARITY_DEBATE_METADATA.description } </div>
+          < div class="template-controls" >
+            <div class="subtitle" > Configure Experiment Stages </div>
 
-          ${this.renderCharityCheckbox(
-      'includeTos',
-      'Include Terms of Service',
-    )}
-          ${this.renderCharityCheckbox(
-      'includeMediator',
-      '[Conditional] Include AI Mediator & Surveys',
-    )}
-          ${this.renderCharityCheckbox(
-      'includeInitialParticipantSurvey',
-      'Include Initial Participant Survey',
-    )}
-          ${this.renderCharityCheckbox(
-      'includeDiscussionEvaluation',
-      '[Optional] Include Discussion Evaluation',
-    )}
-          ${this.renderCharityCheckbox(
-      'includeDebriefingAndFeedback',
-      '[Optional] Include Debriefing & Experiment Feedback',
-    )}
-          ${this.renderCharityCheckbox(
-      'includeMetaFeedback',
-      '[Optional] Include Meta-Feedback Survey',
-    )}
-          ${this.renderFacilitatorTextbox(
-      'facilitatorConfigId',
-      '[Optional] Choose from a preset faciliator order (default is None, Habermas, Dynamic mediators). ',
-    )}
-        </div>
+          ${
+  this.renderCharityCheckbox(
+    'includeTos',
+    'Include Terms of Service',
+  )
+}
+          ${
+  this.renderCharityCheckbox(
+    'includeMediator',
+    '[Conditional] Include AI Mediator & Surveys',
+  )
+}
+          ${
+  this.renderCharityCheckbox(
+    'includeInitialParticipantSurvey',
+    'Include Initial Participant Survey',
+  )
+}
+          ${
+  this.renderCharityCheckbox(
+    'includeDiscussionEvaluation',
+    '[Optional] Include Discussion Evaluation',
+  )
+}
+          ${
+  this.renderCharityCheckbox(
+    'includeDebriefingAndFeedback',
+    '[Optional] Include Debriefing & Experiment Feedback',
+  )
+}
+          ${
+  this.renderCharityCheckbox(
+    'includeMetaFeedback',
+    '[Optional] Include Meta-Feedback Survey',
+  )
+}
+          ${
+  this.renderFacilitatorTextbox(
+    'facilitatorConfigId',
+    '[Optional] Choose from a preset faciliator order (default is None, Habermas, Dynamic mediators). ',
+  )
+}
+</div>
 
-        <pr-button @click=${loadTemplate}> Load Template </pr-button>
-      </div>
-    `;
+  < pr - button @click=${ loadTemplate }> Load Template </pr-button>
+    </div>
+      `;
   }
 
   private renderOOTBCharityDebateTemplateCard() {
@@ -838,45 +862,59 @@ export class StageBuilderDialog extends MobxLitElement {
     };
 
     return html`
-      <div class="card large-card">
-        <div class="title">${OOTB_CHARITY_DEBATE_METADATA.name}</div>
-        <div>${OOTB_CHARITY_DEBATE_METADATA.description}</div>
-        <div class="template-controls">
-          <div class="subtitle">Configure Experiment Stages</div>
+    < div class="card large-card" >
+      <div class="title" > ${ OOTB_CHARITY_DEBATE_METADATA.name } </div>
+        < div > ${ OOTB_CHARITY_DEBATE_METADATA.description } </div>
+          < div class="template-controls" >
+            <div class="subtitle" > Configure Experiment Stages </div>
 
-          ${this.renderCharityCheckbox(
-      'includeTos',
-      'Include Terms of Service',
-    )}
-          ${this.renderCharityCheckbox(
-      'includeMediator',
-      '[Conditional] Include AI Mediator & Surveys',
-    )}
-          ${this.renderCharityCheckbox(
-      'includeInitialParticipantSurvey',
-      'Include Initial Participant Survey',
-    )}
-          ${this.renderCharityCheckbox(
-      'includeDiscussionEvaluation',
-      '[Optional] Include Discussion Evaluation',
-    )}
-          ${this.renderCharityCheckbox(
-      'includeDebriefingAndFeedback',
-      '[Optional] Include Debriefing & Experiment Feedback',
-    )}
-          ${this.renderCharityCheckbox(
-      'includeMetaFeedback',
-      '[Optional] Include Meta-Feedback Survey',
-    )}
-          ${this.renderFacilitatorTextbox(
-      'facilitatorConfigId',
-      '[Optional] Choose from a preset faciliator order (default is None, Habermas, Dynamic mediators). ',
-    )}
-        </div>
+          ${
+  this.renderCharityCheckbox(
+    'includeTos',
+    'Include Terms of Service',
+  )
+}
+          ${
+  this.renderCharityCheckbox(
+    'includeMediator',
+    '[Conditional] Include AI Mediator & Surveys',
+  )
+}
+          ${
+  this.renderCharityCheckbox(
+    'includeInitialParticipantSurvey',
+    'Include Initial Participant Survey',
+  )
+}
+          ${
+  this.renderCharityCheckbox(
+    'includeDiscussionEvaluation',
+    '[Optional] Include Discussion Evaluation',
+  )
+}
+          ${
+  this.renderCharityCheckbox(
+    'includeDebriefingAndFeedback',
+    '[Optional] Include Debriefing & Experiment Feedback',
+  )
+}
+          ${
+  this.renderCharityCheckbox(
+    'includeMetaFeedback',
+    '[Optional] Include Meta-Feedback Survey',
+  )
+}
+          ${
+  this.renderFacilitatorTextbox(
+    'facilitatorConfigId',
+    '[Optional] Choose from a preset faciliator order (default is None, Habermas, Dynamic mediators). ',
+  )
+}
+</div>
 
-        <pr-button @click=${loadTemplate}> Load Template </pr-button>
-      </div>
-    `;
+  < pr - button @click=${ loadTemplate }> Load Template </pr-button>
+    </div>
+      `;
   }
 
   private renderAssetAllocationTemplateCard() {
@@ -888,13 +926,13 @@ export class StageBuilderDialog extends MobxLitElement {
     };
 
     return html`
-      <div class="card" @click=${addGame}>
-        <div class="title">💰 Investment Portfolio Game</div>
+    < div class="card" @click=${ addGame }>
+      <div class="title" >💰 Investment Portfolio Game </div>
         <div>
           A complete investment study with stock analysis and portfolio
           allocation decisions.
         </div>
-      </div>
+  </div>
     `;
   }
 
@@ -907,13 +945,13 @@ export class StageBuilderDialog extends MobxLitElement {
     };
 
     return html`
-      <div class="card" @click=${addGame}>
-        <div class="title">🔀 Conditional Survey Demo</div>
-        <div>
-          Advanced survey with complex conditional logic, demonstrating AND/OR
+  < div class="card" @click=${ addGame }>
+    <div class="title" >🔀 Conditional Survey Demo </div>
+      <div>
+          Advanced survey with complex conditional logic, demonstrating AND / OR
           operators and nested conditions.
         </div>
-      </div>
+  </div>
     `;
   }
 
@@ -923,11 +961,11 @@ export class StageBuilderDialog extends MobxLitElement {
     };
 
     return html`
-      <div class="card" @click=${addTemplate}>
-        <div class="title">${POLICY_METADATA.name}</div>
-        <div>${POLICY_METADATA.description}</div>
-      </div>
-    `;
+  < div class="card" @click=${ addTemplate }>
+    <div class="title" > ${ POLICY_METADATA.name } </div>
+      < div > ${ POLICY_METADATA.description } </div>
+        </div>
+          `;
   }
 }
 
