@@ -143,7 +143,16 @@ function generateRandomPermutationValue(
   context: ScopeContext,
 ): unknown {
   const {shuffle, seed: seedStrategy, customSeed} = config.shuffleConfig;
-  const numToSelect = config.numToSelect ?? config.values.length;
+  const maxAvailable = config.values.length;
+  const requestedNum = config.numToSelect ?? maxAvailable;
+
+  // Clamp numToSelect to valid range [1, maxAvailable]
+  const numToSelect = Math.max(1, Math.min(requestedNum, maxAvailable));
+  if (numToSelect !== requestedNum) {
+    console.warn(
+      `Variable "${config.definition.name}": numToSelect (${requestedNum}) out of range [1, ${maxAvailable}], using ${numToSelect}`,
+    );
+  }
 
   let selectedInstances: VariableInstance[];
 

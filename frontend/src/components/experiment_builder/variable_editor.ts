@@ -313,6 +313,14 @@ export class VariableEditor extends MobxLitElement {
                         });
                       }}
                     ></pr-textarea>
+                    ${config.numToSelect !== undefined &&
+                    (config.numToSelect < 1 ||
+                      config.numToSelect > config.values.length)
+                      ? html`<div class="validation-error">
+                          ⚠️ Selection size must be between 1 and
+                          ${config.values.length}
+                        </div>`
+                      : nothing}
                   `,
                 )}
                 ${this.renderDivider()}
