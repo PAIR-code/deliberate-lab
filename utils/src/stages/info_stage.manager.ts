@@ -8,16 +8,16 @@ import {BaseStageHandler} from './stage.handler';
 export class InfoStageHandler extends BaseStageHandler {
   resolveTemplateVariablesInStage(
     stage: InfoStageConfig,
-    variableMap: Record<string, VariableDefinition>,
+    variableDefinitions: Record<string, VariableDefinition>,
     valueMap: Record<string, string>,
   ) {
     const updatedStage = super.resolveTemplateVariablesInStage(
       stage,
-      variableMap,
+      variableDefinitions,
       valueMap,
     ) as InfoStageConfig;
     const infoLines = updatedStage.infoLines.map((line) =>
-      resolveTemplateVariables(line, variableMap, valueMap),
+      resolveTemplateVariables(line, variableDefinitions, valueMap),
     );
     return {...updatedStage, infoLines};
   }

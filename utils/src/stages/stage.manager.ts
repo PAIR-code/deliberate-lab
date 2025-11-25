@@ -50,13 +50,17 @@ export class StageManager {
    */
   resolveTemplateVariablesInStage(
     stage: StageConfig,
-    variableMap: Record<string, VariableDefinition>,
+    variableDefinitions: Record<string, VariableDefinition>,
     valueMap: Record<string, string>,
   ) {
     return (
       this.handlerMap
         .get(stage.kind)
-        ?.resolveTemplateVariablesInStage(stage, variableMap, valueMap) ?? stage
+        ?.resolveTemplateVariablesInStage(
+          stage,
+          variableDefinitions,
+          valueMap,
+        ) ?? stage
     );
   }
 

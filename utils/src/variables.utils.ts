@@ -25,12 +25,12 @@ import {
 export function extractVariablesFromVariableConfigs(
   configs: VariableConfig[],
 ): Record<string, VariableDefinition> {
-  const variableMap: Record<string, VariableDefinition> = {};
+  const variableDefinitions: Record<string, VariableDefinition> = {};
 
   for (const config of configs) {
     switch (config.type) {
       case VariableConfigType.STATIC:
-        variableMap[config.definition.name] = config.definition;
+        variableDefinitions[config.definition.name] = config.definition;
         break;
       case VariableConfigType.RANDOM_PERMUTATION:
         // Check if this config will be flattened into indexed variables
@@ -47,7 +47,7 @@ export function extractVariablesFromVariableConfigs(
           // Create definitions for indexed variables: name_1, name_2, etc.
           for (let i = 1; i <= numToSelect; i++) {
             const indexedName = `${config.definition.name}_${i}`;
-            variableMap[indexedName] = {
+            variableDefinitions[indexedName] = {
               name: indexedName,
               description: config.definition.description,
               schema: itemSchema,
@@ -55,7 +55,7 @@ export function extractVariablesFromVariableConfigs(
           }
         } else {
           // Standard array variable
-          variableMap[config.definition.name] = config.definition;
+          variableDefinitions[config.definition.name] = config.definition;
         }
         break;
       default:
@@ -63,7 +63,7 @@ export function extractVariablesFromVariableConfigs(
     }
   }
 
-  return variableMap;
+  return variableDefinitions;
 }
 
 /**

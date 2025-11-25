@@ -9,7 +9,7 @@ import {VariableDefinition} from './variables';
  */
 export function resolveTemplateVariables(
   template: string,
-  variableMap: Record<string, VariableDefinition>,
+  variableDefinitions: Record<string, VariableDefinition>,
   valueMap: Record<string, string>,
 ) {
   const typedValueMap: Record<
@@ -17,7 +17,7 @@ export function resolveTemplateVariables(
     string | boolean | number | object | unknown[]
   > = {};
   Object.keys(valueMap).forEach((variableName) => {
-    const variable = variableMap[variableName];
+    const variable = variableDefinitions[variableName];
     const schemaType = variable?.schema?.type;
 
     switch (schemaType) {
@@ -62,13 +62,13 @@ export function resolveTemplateVariables(
  */
 export function validateTemplateVariables(
   template: string,
-  variableMap: Record<string, VariableDefinition> = {},
+  variableDefinitions: Record<string, VariableDefinition> = {},
 ): {valid: boolean; missingVariables: string[]; syntaxError?: string} {
   try {
     const tokens = Mustache.parse(template);
     const missingVariables = new Set<string>();
 
-    // Initial schema context is the variable map itself
+    // Initial schema context is the variable definitions
     // We manually construct a schema-like object to avoid TypeBox runtime overhead/recursion
     const rootSchema: TSchema = {
       type: 'object',
@@ -77,7 +77,7 @@ export function validateTemplateVariables(
     } as unknown as TSchema;
 
     if (rootSchema.properties) {
-      for (const [name, def] of Object.entries(variableMap)) {
+      for (const [name, def] of Object.entries(variableDefinitions)) {
         rootSchema.properties[name] = def.schema;
       }
     }

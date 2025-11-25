@@ -21,18 +21,18 @@ export interface AgentParticipantStageActions {
 export class BaseStageHandler {
   resolveTemplateVariablesInStage(
     stage: StageConfig,
-    variableMap: Record<string, VariableDefinition>,
+    variableDefinitions: Record<string, VariableDefinition>,
     valueMap: Record<string, string>,
   ) {
     // By default, resolve variables in stage descriptions
     const primaryText = resolveTemplateVariables(
       stage.descriptions.primaryText,
-      variableMap,
+      variableDefinitions,
       valueMap,
     );
     const infoText = resolveTemplateVariables(
       stage.descriptions.infoText,
-      variableMap,
+      variableDefinitions,
       valueMap,
     );
     const descriptions = {...stage.descriptions, primaryText};
