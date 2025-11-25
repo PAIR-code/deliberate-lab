@@ -18,7 +18,7 @@ import {
  * Extract variable definitions from variable configs.
  * Returns a map of variable name to definition.
  *
- * For RandomPermutation configs with flattenToIndexedVariables:
+ * For RandomPermutation configs with expandListToSeparateVariables:
  * Creates definitions for indexed variables (name_1, name_2, etc.)
  * based on the number of values that will be selected.
  */
@@ -34,7 +34,7 @@ export function extractVariablesFromVariableConfigs(
         break;
       case VariableConfigType.RANDOM_PERMUTATION:
         // Check if this config will be flattened into indexed variables
-        if (config.flattenToIndexedVariables) {
+        if (config.expandListToSeparateVariables) {
           // Determine how many indexed variables will be created
           const numToSelect = config.numToSelect ?? config.values.length;
 
@@ -131,7 +131,7 @@ export function createRandomPermutationVariableConfig(
     }),
     values: config.values ?? [],
     numToSelect: config.numToSelect,
-    flattenToIndexedVariables: config.flattenToIndexedVariables ?? false,
+    expandListToSeparateVariables: config.expandListToSeparateVariables ?? true,
   };
 }
 
@@ -204,7 +204,7 @@ function generateStaticVariables(
 /**
  * Generate variables for a Random Permutation config.
  * Returns a map of variable name(s) to JSON string value(s).
- * May return multiple variables if flattenToIndexedVariables is true.
+ * May return multiple variables if expandListToSeparateVariables is true.
  */
 function generateRandomPermutationVariables(
   config: RandomPermutationVariableConfig,
@@ -214,7 +214,7 @@ function generateRandomPermutationVariables(
   const variables: Record<string, string> = {};
 
   // Check if we should flatten the array into indexed variables
-  if (config.flattenToIndexedVariables && Array.isArray(value)) {
+  if (config.expandListToSeparateVariables && Array.isArray(value)) {
     // Extract item schema for validation
     const itemSchema =
       'items' in config.definition.schema

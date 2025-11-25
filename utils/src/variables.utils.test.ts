@@ -35,6 +35,7 @@ describe('generateVariablesForScope', () => {
         {id: '2', value: JSON.stringify(123)}, // VALID
       ],
       numToSelect: 2,
+      expandListToSeparateVariables: false, // Use array mode to test array validation
     });
 
     const result = generateVariablesForScope([config], {
@@ -98,7 +99,7 @@ describe('generateVariablesForScope', () => {
     expect(consoleSpy).not.toHaveBeenCalled();
   });
 
-  it('should flatten array to indexed variables when flattenToIndexedVariables is true', () => {
+  it('should flatten array to indexed variables when expandListToSeparateVariables is true', () => {
     const config = createRandomPermutationVariableConfig({
       id: 'test',
       scope: VariableScope.COHORT,
@@ -112,7 +113,7 @@ describe('generateVariablesForScope', () => {
         {id: '2', value: JSON.stringify('Charity B')},
         {id: '3', value: JSON.stringify('Charity C')},
       ],
-      flattenToIndexedVariables: true,
+      expandListToSeparateVariables: true,
       shuffleConfig: createShuffleConfig({
         shuffle: false, // Disable shuffle for predictable test
         seed: SeedStrategy.COHORT,
@@ -133,7 +134,7 @@ describe('generateVariablesForScope', () => {
     expect(result['charity']).toBeUndefined();
   });
 
-  it('should create single array variable when flattenToIndexedVariables is false', () => {
+  it('should create single array variable when expandListToSeparateVariables is false', () => {
     const config = createRandomPermutationVariableConfig({
       id: 'test',
       scope: VariableScope.COHORT,
@@ -147,7 +148,7 @@ describe('generateVariablesForScope', () => {
         {id: '2', value: JSON.stringify('Charity B')},
         {id: '3', value: JSON.stringify('Charity C')},
       ],
-      flattenToIndexedVariables: false,
+      expandListToSeparateVariables: false,
       shuffleConfig: createShuffleConfig({
         shuffle: false,
         seed: SeedStrategy.COHORT,
@@ -167,7 +168,7 @@ describe('generateVariablesForScope', () => {
     expect(result['charity_1']).toBeUndefined();
   });
 
-  it('should flatten complex objects when flattenToIndexedVariables is true', () => {
+  it('should flatten complex objects when expandListToSeparateVariables is true', () => {
     const config = createRandomPermutationVariableConfig({
       id: 'test',
       scope: VariableScope.COHORT,
@@ -182,7 +183,7 @@ describe('generateVariablesForScope', () => {
         {id: '1', value: JSON.stringify({name: 'Item A', value: 100})},
         {id: '2', value: JSON.stringify({name: 'Item B', value: 200})},
       ],
-      flattenToIndexedVariables: true,
+      expandListToSeparateVariables: true,
       shuffleConfig: createShuffleConfig({
         shuffle: false,
         seed: SeedStrategy.COHORT,
@@ -203,7 +204,7 @@ describe('generateVariablesForScope', () => {
 });
 
 describe('extractVariablesFromVariableConfigs', () => {
-  it('should extract indexed variable definitions when flattenToIndexedVariables is true', () => {
+  it('should extract indexed variable definitions when expandListToSeparateVariables is true', () => {
     const config = createRandomPermutationVariableConfig({
       scope: VariableScope.COHORT,
       definition: {
@@ -216,7 +217,7 @@ describe('extractVariablesFromVariableConfigs', () => {
         {id: '2', value: JSON.stringify('Charity B')},
         {id: '3', value: JSON.stringify('Charity C')},
       ],
-      flattenToIndexedVariables: true,
+      expandListToSeparateVariables: true,
     });
 
     const result = extractVariablesFromVariableConfigs([config]);
@@ -256,7 +257,7 @@ describe('extractVariablesFromVariableConfigs', () => {
         {id: '4', value: JSON.stringify(400)},
       ],
       numToSelect: 2, // Only select 2 items
-      flattenToIndexedVariables: true,
+      expandListToSeparateVariables: true,
     });
 
     const result = extractVariablesFromVariableConfigs([config]);
@@ -268,7 +269,7 @@ describe('extractVariablesFromVariableConfigs', () => {
     expect(result['item_4']).toBeUndefined();
   });
 
-  it('should extract array variable definition when flattenToIndexedVariables is false', () => {
+  it('should extract array variable definition when expandListToSeparateVariables is false', () => {
     const config = createRandomPermutationVariableConfig({
       scope: VariableScope.COHORT,
       definition: {
@@ -280,7 +281,7 @@ describe('extractVariablesFromVariableConfigs', () => {
         {id: '1', value: JSON.stringify('Charity A')},
         {id: '2', value: JSON.stringify('Charity B')},
       ],
-      flattenToIndexedVariables: false,
+      expandListToSeparateVariables: false,
     });
 
     const result = extractVariablesFromVariableConfigs([config]);

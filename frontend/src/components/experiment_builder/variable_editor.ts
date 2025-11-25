@@ -143,9 +143,15 @@ export class VariableEditor extends MobxLitElement {
           )}
           ${this.renderDivider()}
           ${this.renderSection(
-            'Scope',
+            'Assignment scope',
             html`
-              <div class="description">When is this variable assigned?</div>
+              <div class="description">
+                ${config.scope === VariableScope.EXPERIMENT
+                  ? 'All participants in the experiment see the same values.'
+                  : config.scope === VariableScope.COHORT
+                    ? 'Participants in the same cohort see the same values.'
+                    : 'Each participant sees different values.'}
+              </div>
               ${config.type === VariableConfigType.STATIC
                 ? html`
                     <div class="static-scope">
@@ -264,26 +270,28 @@ export class VariableEditor extends MobxLitElement {
                   'Output Format',
                   html`
                     <div class="description">
-                      Choose whether to output as a single array variable or
-                      multiple indexed variables
+                      ${(config.expandListToSeparateVariables ?? true)
+                        ? html`Creates separate variables. Access via
+                            <code>{{${config.definition.name}_1}}</code>,
+                            <code>{{${config.definition.name}_2}}</code>, etc.`
+                        : html`Creates a single array variable. Access
+                            individual values via
+                            <code>{{${config.definition.name}.0}}</code>,
+                            <code>{{${config.definition.name}.1}}</code>, etc.`}
                     </div>
                     <label class="checkbox-label">
                       <input
                         type="checkbox"
-                        .checked=${config.flattenToIndexedVariables ?? false}
+                        .checked=${config.expandListToSeparateVariables ?? true}
                         @change=${(e: Event) => {
                           this.updateConfig(config, index, {
-                            flattenToIndexedVariables: (
+                            expandListToSeparateVariables: (
                               e.target as HTMLInputElement
                             ).checked,
                           });
                         }}
                       />
-                      <span>
-                        Flatten to indexed variables (e.g.,
-                        <code>${config.definition.name}_1</code>,
-                        <code>${config.definition.name}_2</code>, etc.)
-                      </span>
+                      <span>Expand to separate variables</span>
                     </label>
                   `,
                 )}
@@ -312,7 +320,7 @@ export class VariableEditor extends MobxLitElement {
                 )}
                 ${this.renderDivider()}
                 ${this.renderSection(
-                  'Instance Pool',
+                  'Values to choose from',
                   html`
                     <div class="description">
                       Define the pool of instances to select from

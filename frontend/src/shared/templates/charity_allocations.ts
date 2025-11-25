@@ -221,7 +221,7 @@ const CHARITY_RANDOM_PERMUTATION_CONFIG: RandomPermutationVariableConfig = {
   type: VariableConfigType.RANDOM_PERMUTATION,
   scope: VariableScope.COHORT,
   definition: {
-    name: 'charities',
+    name: 'charity',
     description: 'List of charities for allocation rounds',
     schema: VariableType.array(CharitySchema),
   },
@@ -234,6 +234,7 @@ const CHARITY_RANDOM_PERMUTATION_CONFIG: RandomPermutationVariableConfig = {
     value: JSON.stringify(charity),
   })),
   numToSelect: 9,
+  expandListToSeparateVariables: true, // Creates charity_1, charity_2, etc.
 };
 
 const LIKERT_SCALE_PROPS = {
@@ -406,11 +407,11 @@ export function getCharityDebateTemplate(
 
   stages.push(TRANSFER_STAGE);
 
-  // Array indices for each round of charities
+  // Variable names for each round of charities
   const debateRoundsCharities = [
-    [0, 1, 2], // Round 1: charities[0], charities[1], charities[2]
-    [3, 4, 5], // Round 2: charities[3], charities[4], charities[5]
-    [6, 7, 8], // Round 3: charities[6], charities[7], charities[8]
+    ['charity_1', 'charity_2', 'charity_3'],
+    ['charity_4', 'charity_5', 'charity_6'],
+    ['charity_7', 'charity_8', 'charity_9'],
   ];
 
   const roundMediatorTypes = getMediatorOrder(
@@ -428,7 +429,7 @@ export function getCharityDebateTemplate(
     const discussionStageId = `discussion-round-${roundNum}`;
 
     const setting = `donations to:\n *${charityGroup
-      .map((charityIndex) => `{{charities.${charityIndex}.name}}`)
+      .map((variableName) => `{{${variableName}.name}}`)
       .join(', ')}*`;
 
     stages.push(
@@ -780,7 +781,7 @@ function createRoundOutcomeSurveyStage(
 function createAllocationStage(
   id: string,
   name: string,
-  charityIndices: number[],
+  charityVariables: string[],
   roundNum: number,
   isInitial: boolean = true,
 ): StageConfig {
@@ -791,16 +792,16 @@ function createAllocationStage(
 
   let primaryText = `${scope}\nPlease use the sliders to allocate 100% of the funds among the following charities:\n`;
 
-  charityIndices.forEach((index) => {
+  charityVariables.forEach((variableName) => {
     primaryText += `\n
-[{{charities.${index}.name}}]({{charities.${index}.link}}) (Charity Navigator score: {{charities.${index}.score}})
-*{{charities.${index}.mission}}*\n`;
+[{{${variableName}.name}}]({{${variableName}.link}}) (Charity Navigator score: {{${variableName}.score}})
+*{{${variableName}.mission}}*\n`;
   });
 
-  const charityStocks = charityIndices.map((index) => {
+  const charityStocks = charityVariables.map((variableName) => {
     return createStock({
-      name: `{{charities.${index}.name}}`,
-      description: `Details for {{charities.${index}.name}}.`,
+      name: `{{${variableName}.name}}`,
+      description: `Details for {{${variableName}.name}}.`,
     });
   });
 
