@@ -45,6 +45,9 @@ following locations:
 - Stage descriptions (primary text, info text)
 - Info stages (info lines)
 - Multi asset allocation stages (stock name and description)
+- FlipCard stages (card title, front content, back content)
+- Survey stages (question title, multiple choice option text, scale labels)
+- Survey per participant stages (same as Survey stages)
 
 ### Variable Schemas
 
@@ -241,11 +244,26 @@ functionality).
 
 > NOTE: Not all stages have been migrated to the stage manager/handler setup.
 
+### Survey Per Participant Behavior
+
+In **Survey per participant** stages, where questions are asked about each participant in the cohort, variables are resolved using the **answering participant's** variable values, not the target participant being rated.
+
+For example, if you have a question "Rate this person's contribution to {{project.name}}":
+- The `{{project.name}}` is resolved once based on the answering participant's variable context
+- The same resolved question is displayed for each target participant being rated
+
+This is consistent with how variable scopes work:
+- **Experiment scope:** Same value for everyone
+- **Cohort scope:** Same value for everyone in the cohort
+- **Participant scope:** Unique to the person taking the survey (the answerer)
+
+If you need to display information specific to the target participant being rated (e.g., their name or role), use the built-in participant display features rather than experiment variables.
+
 ## Roadmap / Future Work
 
 The following areas are planned for future integration with Variables:
 
 - [ ] **Prompts:** Support variable interpolation in LLM prompts (e.g., `{{policy.title}}` in a mediator's system instructions).
-- [ ] **Flipcards:** Support variables in flipcard content (e.g., shuffling arguments onto cards).
-- [ ] **Surveys:** Support variables in survey question text and choices (e.g., "How did you feel about {{charity_name}}?").
+- [x] **Flipcards:** Support variables in flipcard content (card title, front content, back content).
+- [x] **Surveys:** Support variables in survey question text and choices (question title, option text, scale labels).
 - [ ] **Agent Mediators:** Ensure mediators have full visibility into participant-specific variables (context awareness).

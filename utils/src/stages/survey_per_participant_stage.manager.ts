@@ -2,6 +2,7 @@ import {createModelGenerationConfig} from '../agent';
 import {ParticipantProfileExtended} from '../participant';
 import {StructuredOutputType} from '../structured_output';
 import {createDefaultParticipantPrompt} from '../structured_prompt';
+import {VariableDefinition} from '../variables';
 import {
   SurveyPerParticipantStageConfig,
   SurveyPerParticipantStageParticipantAnswer,
@@ -11,10 +12,31 @@ import {
   getSurveyPerParticipantStageDisplayPromptString,
   parseSurveyPerParticipantResponse,
 } from './survey_stage.prompts';
-import {StageConfig, StageContextData, StageKind} from './stage';
+import {StageContextData} from './stage';
 import {AgentParticipantStageActions, BaseStageHandler} from './stage.handler';
+import {resolveSurveyQuestionVariables} from './survey_stage.manager';
 
 export class SurveyPerParticipantStageHandler extends BaseStageHandler {
+  resolveTemplateVariablesInStage(
+    stage: SurveyPerParticipantStageConfig,
+    variableDefinitions: Record<string, VariableDefinition>,
+    valueMap: Record<string, string>,
+  ) {
+    const updatedStage = super.resolveTemplateVariablesInStage(
+      stage,
+      variableDefinitions,
+      valueMap,
+    ) as SurveyPerParticipantStageConfig;
+
+    const questions = resolveSurveyQuestionVariables(
+      updatedStage.questions,
+      variableDefinitions,
+      valueMap,
+    );
+
+    return {...updatedStage, questions};
+  }
+
   getAgentParticipantActionsForStage(): AgentParticipantStageActions {
     return {callApi: true, moveToNextStage: true};
   }
