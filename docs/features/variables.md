@@ -48,6 +48,7 @@ following locations:
 - FlipCard stages (card title, front content, back content)
 - Survey stages (question title, multiple choice option text, scale labels)
 - Survey per participant stages (same as Survey stages)
+- Agent prompts (TEXT prompt items)
 
 ### Variable Schemas
 
@@ -259,11 +260,26 @@ This is consistent with how variable scopes work:
 
 If you need to display information specific to the target participant being rated (e.g., their name or role), use the built-in participant display features rather than experiment variables.
 
+### Agent Prompt Variable Behavior
+
+Variables in agent prompts are resolved based on who is generating the prompt:
+
+| Scenario | Variables Available |
+|----------|---------------------|
+| **Participant agent** | Experiment + Cohort + Their own participant variables |
+| **Mediator in private chat** | Experiment + Cohort + Target participant's variables |
+| **Mediator in group chat** | Experiment + Cohort only |
+
+For **private chats**, when a mediator is talking to a single participant, the mediator's prompt will have access to that participant's variables. This allows prompts like "Help {{participant_topic}} discussion" to resolve correctly based on the participant being chatted with.
+
+For **group chats** with multiple participants, mediators only have access to experiment and cohort-scoped variables since different participants may have different values for participant-scoped variables.
+
 ## Roadmap / Future Work
 
 The following areas are planned for future integration with Variables:
 
-- [ ] **Prompts:** Support variable interpolation in LLM prompts (e.g., `{{policy.title}}` in a mediator's system instructions).
+- [x] **Prompts:** Support variable interpolation in LLM prompts (TEXT prompt items resolve `{{variables}}`).
 - [x] **Flipcards:** Support variables in flipcard content (card title, front content, back content).
 - [x] **Surveys:** Support variables in survey question text and choices (question title, option text, scale labels).
-- [ ] **Agent Mediators:** Ensure mediators have full visibility into participant-specific variables (context awareness).
+- [x] **Agent Mediators (Private Chat):** Mediators in private chats have access to the target participant's variables.
+- [ ] **Agent Mediators (Group Chat):** Determine approach for handling multiple participants with different variable values.
