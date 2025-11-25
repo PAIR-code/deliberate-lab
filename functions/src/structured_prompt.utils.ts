@@ -113,7 +113,8 @@ export async function getFirestoreDataForStructuredPrompt(
   let answerParticipants: ParticipantProfileExtended[] = [];
 
   if (contextParticipantIds?.length) {
-    // Specific participant IDs (e.g., private chats)
+    // If specific participant IDs provided, use those
+    // (e.g., for private chats where mediator needs context about one participant)
     answerParticipants = (await Promise.all(
       contextParticipantIds.map((id) =>
         getFirestoreParticipant(experimentId, id),
