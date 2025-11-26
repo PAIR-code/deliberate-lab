@@ -189,7 +189,12 @@ paths:
       tags:
         - experiments
       summary: Update experiment
-      description: Update an existing experiment's configuration
+      description: |
+        Update an existing experiment's configuration.
+
+        **Partial updates:** Only provided fields are updated. Omit fields you don't want to change.
+
+        **Stages replacement:** If `stages` is provided, it completely replaces all existing stages. To modify a single stage, first GET the experiment, modify the stages array, then PUT the full array back.
       operationId: updateExperiment
       parameters:
         - $ref: '#/components/parameters/ExperimentId'
@@ -211,7 +216,9 @@ paths:
                   description: Updated Prolific completion redirect code
                 stages:
                   type: array
-                  description: Updated array of stage configurations (optional)
+                  description: |
+                    Complete array of stage configurations. If provided, **replaces all existing stages**.
+                    Omit this field to leave stages unchanged.
                   items:
                     $ref: '#/components/schemas/Stage'
             examples:

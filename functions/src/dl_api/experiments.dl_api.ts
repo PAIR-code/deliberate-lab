@@ -4,6 +4,7 @@
 
 import * as admin from 'firebase-admin';
 import {Response} from 'express';
+import createHttpError from 'http-errors';
 import {
   DeliberateLabAPIRequest,
   hasDeliberateLabAPIPermission,
@@ -11,6 +12,7 @@ import {
 } from './dl_api.utils';
 import {
   createExperimentConfig,
+  Experiment,
   StageConfig,
   MetadataConfig,
   UnifiedTimestamp,
@@ -249,77 +251,72 @@ export async function updateExperiment(
     return;
   }
 
-  try {
-    const body = req.body as UpdateExperimentRequest;
+  const body = req.body as UpdateExperimentRequest;
 
-    // Use existing utility to get experiment
-    const experiment = await getFirestoreExperiment(experimentId);
-    if (!experiment) {
-      res.status(404).json({error: 'Experiment not found'});
-      return;
+  // Build update object for metadata fields
+  const updates: Record<string, unknown> = {};
+  if (body.name !== undefined) updates['metadata.name'] = body.name;
+  if (body.description !== undefined)
+    updates['metadata.description'] = body.description;
+  if (body.prolificRedirectCode !== undefined) {
+    updates['metadata.prolificRedirectCode'] = body.prolificRedirectCode;
+  }
+
+  // Update timestamp
+  updates['metadata.dateModified'] = admin.firestore.Timestamp.now();
+
+  // Run all checks and updates in a transaction for consistency
+  await firestore.runTransaction(async (transaction) => {
+    const experimentRef = getFirestoreExperimentRef(experimentId);
+
+    // Check existence and ownership inside transaction
+    const experimentDoc = await transaction.get(experimentRef);
+    if (!experimentDoc.exists) {
+      throw createHttpError(404, 'Experiment not found');
     }
 
-    // Check ownership
+    const experiment = experimentDoc.data() as Experiment;
     if (experiment.metadata.creator !== experimenterId) {
-      res
-        .status(403)
-        .json({error: 'Only the creator can update the experiment'});
-      return;
+      throw createHttpError(403, 'Only the creator can update the experiment');
     }
-
-    // Build update object for metadata fields
-    const updates: Record<string, unknown> = {};
-    if (body.name !== undefined) updates['metadata.name'] = body.name;
-    if (body.description !== undefined)
-      updates['metadata.description'] = body.description;
-    if (body.prolificRedirectCode !== undefined) {
-      updates['metadata.prolificRedirectCode'] = body.prolificRedirectCode;
-    }
-
-    // Update timestamp
-    updates['metadata.dateModified'] = admin.firestore.Timestamp.now();
 
     // Validate stages if provided
-    if (!validateOrRespond(body.stages, validateStages, res)) return;
-
-    // Use transaction if stages need updating
     if (body.stages !== undefined) {
-      await firestore.runTransaction(async (transaction) => {
-        const experimentRef = getFirestoreExperimentRef(experimentId);
-
-        // Update experiment metadata
-        transaction.update(experimentRef, updates);
-
-        // Clean up old stages
-        const oldStageCollection = experimentRef.collection('stages');
-        const oldStages = await oldStageCollection.get();
-        oldStages.forEach((doc) => transaction.delete(doc.ref));
-
-        // Add new stages and update stageIds
-        const stageIds: string[] = [];
-        for (const stage of body.stages || []) {
-          const stageRef = experimentRef
-            .collection('stages')
-            .doc(stage.id || experimentRef.collection('stages').doc().id);
-          transaction.set(stageRef, stage);
-          stageIds.push(stageRef.id);
-        }
-
-        transaction.update(experimentRef, {stageIds});
-      });
-    } else {
-      // Simple update without stages
-      await getFirestoreExperimentRef(experimentId).update(updates);
+      const validationError = validateStages(body.stages);
+      if (validationError) {
+        throw createHttpError(400, validationError);
+      }
     }
 
-    res.status(200).json({
-      updated: true,
-      id: experimentId,
-    });
-  } catch (error) {
-    console.error('Error updating experiment:', error);
-    res.status(500).json({error: 'Failed to update experiment'});
-  }
+    // Update experiment metadata
+    transaction.update(experimentRef, updates);
+
+    // Update stages if provided
+    if (body.stages !== undefined) {
+      // Delete old stages
+      const oldStagesSnapshot = await transaction.get(
+        experimentRef.collection('stages'),
+      );
+      oldStagesSnapshot.forEach((doc) => transaction.delete(doc.ref));
+
+      // Add new stages and update stageIds
+      const stageIds: string[] = [];
+      for (const stage of body.stages) {
+        const stageRef = experimentRef
+          .collection('stages')
+          .doc(stage.id || experimentRef.collection('stages').doc().id);
+        transaction.set(stageRef, stage);
+        stageIds.push(stageRef.id);
+      }
+
+      transaction.update(experimentRef, {stageIds});
+    }
+  });
+
+  res.status(200).json({
+    updated: true,
+    id: experimentId,
+  });
 }
 
 /**

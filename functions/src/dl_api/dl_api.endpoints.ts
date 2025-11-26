@@ -84,13 +84,17 @@ app.use((req, res) => {
 // Error handler
 app.use(
   (
-    err: Error & {status?: number},
+    err: Error & {status?: number; statusCode?: number},
     _req: express.Request,
     res: express.Response,
     _next: express.NextFunction,
   ) => {
-    console.error('API Error:', err);
-    res.status(err.status || 500).json({
+    const status = err.status || err.statusCode || 500;
+    // Only log unexpected errors (5xx), not client errors (4xx)
+    if (status >= 500) {
+      console.error('API Error:', err);
+    }
+    res.status(status).json({
       error: err.message || 'Internal server error',
     });
   },
