@@ -92,7 +92,7 @@ export class Component extends MobxLitElement {
     `;
 
     return this.fullscreen
-      ? html` <div class="modal" style="display: block;">${content}</div> `
+      ? html` <div class="modal">${content}</div> `
       : content;
   }
 
@@ -151,6 +151,23 @@ export class Component extends MobxLitElement {
             <details>
               <summary>Model reasoning</summary>
               <div>${log.response.reasoning}</div>
+            </details>
+          `
+        : nothing}
+      ${log.imageUrls && log.imageUrls.length > 0
+        ? html`
+            <details>
+              <summary>Generated images (${log.imageUrls.length})</summary>
+              <div class="image-gallery">
+                ${log.imageUrls.map(
+                  (url) =>
+                    html`<img
+                      src="${url}"
+                      alt="Generated image"
+                      class="log-image"
+                    />`,
+                )}
+              </div>
             </details>
           `
         : nothing}

@@ -1,13 +1,11 @@
 import '../participant_profile/avatar_icon';
 
-import {observable} from 'mobx';
 import {MobxLitElement} from '@adobe/lit-mobx';
 
 import {CSSResultGroup, html, nothing} from 'lit';
 import {customElement, property} from 'lit/decorators.js';
 import {classMap} from 'lit/directives/class-map.js';
-
-import {Timestamp} from 'firebase/firestore';
+import {unsafeHTML} from 'lit/directives/unsafe-html.js';
 
 import {core} from '../../core/core';
 import {AuthService} from '../../services/auth.service';
@@ -16,6 +14,7 @@ import {ParticipantService} from '../../services/participant.service';
 
 import {ChatMessage, UserType} from '@deliberation-lab/utils';
 import {
+  convertMarkdownToHTML,
   convertUnifiedTimestampToDate,
   getHashBasedColor,
   getProfileBasedColor,
@@ -85,8 +84,20 @@ export class ChatMessageComponent extends MobxLitElement {
               )}</span
             >
           </div>
-          <div class="chat-bubble">${chatMessage.message}</div>
+          <div class="chat-bubble">
+            ${unsafeHTML(convertMarkdownToHTML(chatMessage.message))}
+          </div>
           ${this.renderDebuggingExplanation(chatMessage)}
+          ${chatMessage.imageUrls && chatMessage.imageUrls.length > 0
+            ? chatMessage.imageUrls.map(
+                (imageUrl) =>
+                  html`<img
+                    src="${imageUrl}"
+                    alt="Generated Image"
+                    class="generated-image"
+                  />`,
+              )
+            : nothing}
         </div>
       </div>
     `;
@@ -112,8 +123,20 @@ export class ChatMessageComponent extends MobxLitElement {
               )}</span
             >
           </div>
-          <div class="chat-bubble">${chatMessage.message}</div>
+          <div class="chat-bubble">
+            ${unsafeHTML(convertMarkdownToHTML(chatMessage.message))}
+          </div>
           ${this.renderDebuggingExplanation(chatMessage)}
+          ${chatMessage.imageUrls && chatMessage.imageUrls.length > 0
+            ? chatMessage.imageUrls.map(
+                (imageUrl) =>
+                  html`<img
+                    src="${imageUrl}"
+                    alt="Generated Image"
+                    class="generated-image"
+                  />`,
+              )
+            : nothing}
         </div>
       </div>
     `;
@@ -122,7 +145,9 @@ export class ChatMessageComponent extends MobxLitElement {
   renderSystemMessage(chatMessage: ChatMessage) {
     return html`
       <div class="system-message">
-        <div class="content">${chatMessage.message}</div>
+        <div class="content">
+          ${unsafeHTML(convertMarkdownToHTML(chatMessage.message))}
+        </div>
       </div>
     `;
   }

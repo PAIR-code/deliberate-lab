@@ -74,6 +74,12 @@ export class AuthService extends Service {
             } else {
               this.isAdmin = false;
             }
+            // Check if user has access to research templates
+            if (allowlistDoc.data().hasResearchTemplateAccess) {
+              this.hasResearchTemplateAccess = true;
+            } else {
+              this.hasResearchTemplateAccess = false;
+            }
           } else {
             this.isExperimenter = false;
             this.isAdmin = false;
@@ -89,10 +95,11 @@ export class AuthService extends Service {
 
   @observable user: User | null | undefined = undefined;
   @observable isAdmin: boolean | null = null;
+  @observable hasResearchTemplateAccess: boolean | null = null;
   @observable isExperimenter: boolean | null = null;
   @observable canEdit = false;
 
-  @observable private debugMode = true;
+  @observable private debugMode = false;
 
   @observable unsubscribe: Unsubscribe[] = [];
   @observable experimenterData: ExperimenterData | null = null;

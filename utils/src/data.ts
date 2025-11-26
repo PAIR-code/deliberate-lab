@@ -39,8 +39,8 @@ export interface ExperimentDownload {
   agentMediatorMap: Record<string, AgentMediatorTemplate>;
   // Maps from agent participant ID to agent template
   agentParticipantMap: Record<string, AgentParticipantTemplate>;
-  // List of alerts sent during this experiment
-  alerts: AlertMessage[];
+  // Map from participant private ID to alerts.
+  alerts: Record<string, AlertMessage[]>;
 }
 
 export interface ParticipantDownload {
@@ -68,7 +68,7 @@ export function createExperimentDownload(
     cohortMap: {},
     agentMediatorMap: {},
     agentParticipantMap: {},
-    alerts: [],
+    alerts: {},
   };
 }
 

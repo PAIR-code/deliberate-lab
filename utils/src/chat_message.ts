@@ -32,6 +32,7 @@ export interface ChatMessage {
   agentId: string; // agent persona used (or blank if none)
   explanation: string; // agent reasoning (or blank if none)
   isError: boolean; // is error message (used for private chats)
+  imageUrls?: string[]; // multiple images
 }
 
 /** Format for LLM API chat message output. */
@@ -52,7 +53,6 @@ export interface AgentChatResponse {
 // Sender ID for chat messages manually sent by experimenter
 // This should be consistent to ensure same background color for each message
 export const EXPERIMENTER_MANUAL_CHAT_SENDER_ID = 'experimenter';
-export const SYSTEM_CHAT_SENDER_ID = 'system';
 
 // ************************************************************************* //
 // FUNCTIONS                                                                 //
@@ -73,6 +73,7 @@ export function createChatMessage(
     agentId: config.agentId ?? '',
     explanation: config.explanation ?? '',
     isError: config.isError ?? false,
+    imageUrls: config.imageUrls ?? undefined,
   };
 }
 
@@ -91,6 +92,7 @@ export function createParticipantChatMessage(
     agentId: config.agentId ?? '',
     explanation: config.explanation ?? '',
     isError: config.isError ?? false,
+    imageUrls: config.imageUrls ?? undefined,
   };
 }
 
@@ -109,6 +111,7 @@ export function createMediatorChatMessage(
     agentId: config.agentId ?? '',
     explanation: config.explanation ?? '',
     isError: config.isError ?? false,
+    imageUrls: config.imageUrls ?? undefined,
   };
 }
 
@@ -127,6 +130,7 @@ export function createExperimenterChatMessage(
     agentId: config.agentId ?? '',
     explanation: config.explanation ?? '',
     isError: config.isError ?? false,
+    imageUrls: config.imageUrls ?? undefined,
   };
 }
 
@@ -141,9 +145,9 @@ export function createSystemChatMessage(
     message: config.message ?? '',
     timestamp: config.timestamp ?? Timestamp.now(),
     profile: config.profile ?? {name: 'System', avatar: '⚙️', pronouns: null},
-    senderId: SYSTEM_CHAT_SENDER_ID,
-    agentId: '',
-    explanation: '',
+    senderId: config.senderId ?? '',
+    agentId: config.agentId ?? '',
+    explanation: config.explanation ?? '',
     isError: false,
   };
 }

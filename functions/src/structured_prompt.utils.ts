@@ -3,6 +3,8 @@ import {
   TERTIARY_PROFILE_SET_ID,
   PROFILE_SET_ANIMALS_2_ID,
   PROFILE_SET_NATURE_ID,
+  PROMPT_ITEM_PROFILE_CONTEXT_PARTICIPANT_SCAFFOLDING,
+  PROMPT_ITEM_PROFILE_INFO_PARTICIPANT_SCAFFOLDING,
   AssetAllocationStageParticipantAnswer,
   BasePromptConfig,
   ChatStageConfig,
@@ -94,6 +96,7 @@ export async function getFirestoreDataForStructuredPrompt(
   currentStageId: string,
   userProfile: ParticipantProfileExtended | MediatorProfileExtended,
   promptConfig: BasePromptConfig,
+  contextParticipantIds?: string[], // Optional: specific participant IDs for context (e.g., for private chats)
 ): Promise<{
   experiment: Experiment;
   cohort: CohortConfig;
@@ -116,14 +119,23 @@ export async function getFirestoreDataForStructuredPrompt(
   );
 
   // Fetch participants whose answers should be included in prompt
-  // (if participant, this is just the current participant;
-  // if mediator, it's all active cohort participants)
   let answerParticipants: ParticipantProfileExtended[] = [];
-  if (userProfile.type === UserType.PARTICIPANT) {
+
+  if (contextParticipantIds && contextParticipantIds.length > 0) {
+    // If specific participant IDs provided, use those
+    // (e.g., for private chats where mediator needs context about one participant)
+    answerParticipants = await Promise.all(
+      contextParticipantIds.map((id) =>
+        getFirestoreParticipant(experimentId, id),
+      ),
+    );
+  } else if (userProfile.type === UserType.PARTICIPANT) {
+    // Participant only needs their own context
     answerParticipants.push(
       await getFirestoreParticipant(experimentId, userProfile.privateId),
     );
   } else if (userProfile.type === UserType.MEDIATOR) {
+    // Mediator in group context needs all participants
     answerParticipants = activeParticipants;
   }
 
@@ -282,6 +294,7 @@ export async function getPromptFromConfig(
   stageId: string, // current stage ID
   userProfile: ParticipantProfileExtended | MediatorProfileExtended,
   promptConfig: BasePromptConfig,
+  contextParticipantIds?: string[], // Optional: specific participant IDs for context (e.g., for private chats)
 ): Promise<string> {
   // Get Firestore data used to construct prompt
   const promptData = await getFirestoreDataForStructuredPrompt(
@@ -290,6 +303,7 @@ export async function getPromptFromConfig(
     stageId,
     userProfile,
     promptConfig,
+    contextParticipantIds,
   );
 
   const promptText = await processPromptItems(
@@ -298,6 +312,7 @@ export async function getPromptFromConfig(
     stageId,
     promptData,
     userProfile,
+    promptConfig.includeScaffoldingInPrompt,
   );
 
   // Add structured output if relevant
@@ -306,6 +321,67 @@ export async function getPromptFromConfig(
   );
 
   return structuredOutput ? `${promptText}\n${structuredOutput}` : promptText;
+}
+
+/** Returns string representing ProfileContext prompt item. */
+function getProfileContextForPrompt(
+  userProfile: ParticipantProfileExtended | MediatorProfileExtended,
+  includeScaffolding: boolean,
+): string {
+  const profileContext = userProfile.agentConfig?.promptContext;
+  if (profileContext) {
+    if (userProfile.type === UserType.PARTICIPANT && includeScaffolding) {
+      const instructions = PROMPT_ITEM_PROFILE_CONTEXT_PARTICIPANT_SCAFFOLDING;
+      return `Private persona context: ${profileContext}\n${instructions}`;
+    } else {
+      return profileContext;
+    }
+  }
+  return '';
+}
+
+/** Returns string representing ProfileInfo prompt item. */
+function getProfileInfoForPrompt(
+  userProfile: ParticipantProfileExtended | MediatorProfileExtended,
+  includeScaffolding: boolean,
+  stageId: string, // Used for temporary stage ID hack that sets profiles
+): string {
+  // This is a temporary check to see if the profile names should be
+  // overrided for this stage only, e.g., if the profile is typically
+  // of the "Animals 1" set but in this stage only uses "Animals 2" name/avatar
+  // NOTE: It actually may be useful to define all profile identities here
+  // as prior stages' context will not make sense if it references "Animals 1"
+  // profile and the current stage uses "Animals 2".
+  const getProfileSetId = () => {
+    if (stageId.includes(SECONDARY_PROFILE_SET_ID)) {
+      return PROFILE_SET_ANIMALS_2_ID;
+    } else if (stageId.includes(TERTIARY_PROFILE_SET_ID)) {
+      return PROFILE_SET_NATURE_ID;
+    }
+    return '';
+  };
+
+  const scaffoldingPrefix = includeScaffolding ? `Alias: ` : '';
+  // TODO: Instead of using general participant scaffolding in the suffix,
+  // use either "assigned profile" scaffolding or "seleted profile" scaffolding
+  // based on which profile type is being set during the profile stage
+  // (or which hardcoded profile type—see comment above—is being used
+  // for this stage only). This will require passing in the profile type
+  // from the experiment's profile stage (consider storing in promptData?).
+  // NOTE: Consider slightly different scaffolding to handle hardcoded cases.
+  const scaffoldingSuffix =
+    includeScaffolding && userProfile.type === UserType.PARTICIPANT
+      ? `\n${PROMPT_ITEM_PROFILE_INFO_PARTICIPANT_SCAFFOLDING}`
+      : '';
+
+  if (userProfile.type === UserType.PARTICIPANT) {
+    return userProfile.name
+      ? `${scaffoldingPrefix}${getNameFromPublicId([userProfile], userProfile.publicId, getProfileSetId())}${scaffoldingSuffix}`
+      : 'Profile not yet set';
+  } else {
+    // TODO: Adjust display for mediator profiles
+    return `${scaffoldingPrefix}${userProfile.avatar} ${userProfile.name}${scaffoldingSuffix}`;
+  }
 }
 
 /** Process prompt items recursively. */
@@ -320,6 +396,7 @@ async function processPromptItems(
     data: Record<string, StageContextData>;
   },
   userProfile: ParticipantProfileExtended | MediatorProfileExtended,
+  includeScaffolding: boolean,
 ): Promise<string> {
   const experiment = promptData.experiment;
   const items: string[] = [];
@@ -330,37 +407,36 @@ async function processPromptItems(
         items.push(promptItem.text);
         break;
       case PromptItemType.PROFILE_CONTEXT:
-        items.push(userProfile.agentConfig.promptContext);
+        const profileContext = getProfileContextForPrompt(
+          userProfile,
+          includeScaffolding,
+        );
+        if (profileContext) {
+          items.push(profileContext);
+        }
         break;
       case PromptItemType.PROFILE_INFO:
-        const getProfileSetId = () => {
-          if (stageId.includes(SECONDARY_PROFILE_SET_ID)) {
-            return PROFILE_SET_ANIMALS_2_ID;
-          } else if (stageId.includes(TERTIARY_PROFILE_SET_ID)) {
-            return PROFILE_SET_NATURE_ID;
-          }
-          return '';
-        };
-        if (userProfile.type === UserType.PARTICIPANT) {
-          items.push(
-            userProfile.name
-              ? getNameFromPublicId(
-                  [userProfile],
-                  userProfile.publicId,
-                  getProfileSetId(),
-                )
-              : 'Profile not yet set',
-          );
-        } else {
-          // TODO: Adjust display for mediator profiles
-          items.push(`${userProfile.avatar} ${userProfile.name}`);
-        }
+        items.push(
+          getProfileInfoForPrompt(userProfile, includeScaffolding, stageId),
+        );
         break;
       case PromptItemType.STAGE_CONTEXT:
         const stageContextIds = promptItem.stageId
           ? [promptItem.stageId]
           : getAllPrecedingStageIds(experiment.stageIds, stageId);
+        // For agent participants with scaffolding, annotate previous vs.
+        // current stages
+        const labelStages =
+          includeScaffolding && userProfile.type === UserType.PARTICIPANT;
+        if (labelStages) {
+          items.push(
+            `\n--- Previously completed stages chronologically (read only) ---`,
+          );
+        }
         for (const id of stageContextIds) {
+          if (id === stageId && labelStages) {
+            items.push(`\n--- Current stage ---`);
+          }
           items.push(
             await getStageContextForPrompt(
               promptData.participants,
@@ -370,6 +446,7 @@ async function processPromptItems(
               promptData.experiment,
               promptData.cohort,
               userProfile,
+              includeScaffolding,
             ),
           );
         }
@@ -406,6 +483,7 @@ async function processPromptItems(
           stageId,
           promptData,
           userProfile,
+          includeScaffolding,
         );
         if (groupText) items.push(groupText);
         break;
@@ -431,6 +509,7 @@ export async function getStageContextForPrompt(
   experiment: Experiment,
   cohort: CohortConfig,
   userProfile: ParticipantProfileExtended | MediatorProfileExtended,
+  includeScaffolding: boolean,
 ) {
   // Resolve template variables in the stage context before
   // using it to assemble context for prompt.
@@ -462,14 +541,16 @@ export async function getStageContextForPrompt(
 
   const textItems: string[] = [];
 
-  // Include name of stage
-  textItems.push(`----- STAGE: ${stage.name ?? stage.id} -----`);
+  // Include name of stage if scaffolding
+  if (includeScaffolding) {
+    textItems.push(`[Stage: ${stage.name ?? stage.id}]`);
+  }
 
   if (item.includePrimaryText && stage.descriptions.primaryText.trim() !== '') {
-    textItems.push(`- Stage description: ${stage.descriptions.primaryText}`);
+    textItems.push(`* Stage description: ${stage.descriptions.primaryText}`);
   }
   if (item.includeInfoText) {
-    textItems.push(`- Additional info: ${stage.descriptions.infoText}`);
+    textItems.push(`* Additional info: ${stage.descriptions.infoText}`);
   }
   // Note: Help text not included since the field has been deprecated
 
@@ -478,6 +559,7 @@ export async function getStageContextForPrompt(
     stage,
     item.includeParticipantAnswers ? participants : [],
     stageContext,
+    includeScaffolding,
   );
   textItems.push(stageDisplay);
 

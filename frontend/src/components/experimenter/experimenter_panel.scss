@@ -197,8 +197,17 @@ pr-button pr-icon {
   .alert-top {
     @include common.flex-column;
     border-bottom: 2px solid var(--md-sys-color-outline-variant);
-    gap: common.$spacing-small;
+    gap: common.$spacing-medium;
     padding: common.$spacing-medium;
+
+    &.clickable {
+      cursor: pointer;
+      transition: background-color 0.2s;
+
+      &:hover {
+        background-color: var(--md-sys-color-surface-container-high);
+      }
+    }
   }
 
   .alert-bottom {
@@ -215,7 +224,7 @@ pr-button pr-icon {
 
   .left {
     @include common.flex-row-align-center;
-    gap: common.$spacing-small;
+    gap: common.$spacing-medium;
   }
 }
 
@@ -238,4 +247,68 @@ pr-button pr-icon {
 
 .alert-content {
   @include typescale.body-medium;
+}
+
+@keyframes wiggle {
+  0% {
+    transform: rotate(0deg);
+  }
+
+  7% {
+    transform: rotate(-15deg);
+  }
+
+  14% {
+    transform: rotate(12deg);
+  }
+
+  21% {
+    transform: rotate(-10deg);
+  }
+
+  28% {
+    transform: rotate(7deg);
+  }
+
+  35% {
+    transform: rotate(-4deg);
+  }
+
+  42% {
+    transform: rotate(1deg);
+  }
+
+  50% {
+    transform: rotate(0deg);
+  }
+
+  100% {
+    transform: rotate(0deg);
+  }
+}
+
+.wiggle {
+  animation: wiggle 2.5s ease-in-out infinite;
+  display: inline-block;
+  transform-origin: 50% 17%;
+}
+
+.alert-toast {
+  @include common.flex-row-align-center;
+  background: var(--md-sys-color-error-container);
+  border-radius: common.$spacing-medium;
+  bottom: common.$spacing-large;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  color: var(--md-sys-color-on-error-container);
+  gap: common.$spacing-medium;
+  padding: common.$spacing-medium;
+  position: fixed;
+  right: common.$spacing-large;
+  z-index: 1000;
+
+  .content {
+    @include common.flex-row-align-center;
+    font-weight: 500;
+    gap: common.$spacing-small;
+  }
 }

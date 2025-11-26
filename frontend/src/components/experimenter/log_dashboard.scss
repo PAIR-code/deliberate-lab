@@ -4,7 +4,6 @@
 :host {
   @include common.flex-column;
   flex-grow: 1;
-  height: calc(100vh - common.$header-height);
   overflow: hidden;
   width: 100%;
 }
@@ -77,9 +76,9 @@ code {
 
 /* Modal */
 .modal {
-  display: none;
+  display: block;
   position: fixed;
-  z-index: 1;
+  z-index: 2;
   top: 0;
   left: 0;
   width: 100%;
@@ -175,4 +174,19 @@ pr-icon {
   max-width: 100%;
   padding: common.$spacing-small;
   border-radius: common.$spacing-xs;
+}
+
+.image-gallery {
+  @include common.flex-row;
+  flex-wrap: wrap;
+  gap: common.$spacing-medium;
+  padding: common.$spacing-medium 0;
+}
+
+.log-image {
+  max-width: 400px;
+  width: 100%;
+  height: auto;
+  border-radius: common.$spacing-small;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }

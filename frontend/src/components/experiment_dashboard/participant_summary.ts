@@ -71,9 +71,8 @@ export class ParticipantSummary extends MobxLitElement {
         <div class="left">
           <participant-profile-display .profile=${this.participant}>
           </participant-profile-display>
-          ${this.renderStatus()} ${this.renderAttentionStatus()}
-          ${this.renderTimeElapsed()} ${this.renderIsAgent()}
-          ${this.renderPauseButton()}
+          ${this.renderStatus()} ${this.renderTimeElapsed()}
+          ${this.renderIsAgent()}
         </div>
         <div class="buttons">
           <participant-progress-bar
@@ -81,8 +80,8 @@ export class ParticipantSummary extends MobxLitElement {
             .stageIds=${this.experimentService.experiment?.stageIds ?? []}
           >
           </participant-progress-bar>
-          ${this.renderCopyButton()} ${this.renderAttentionButton()}
-          ${this.renderBootButton()}
+          ${this.renderPauseButton()} ${this.renderCopyButton()}
+          ${this.renderAttentionButton()} ${this.renderBootButton()}
         </div>
       </div>
     `;
@@ -95,7 +94,7 @@ export class ParticipantSummary extends MobxLitElement {
     const statusText = getAgentStatusDisplayText(
       this.participant.currentStatus,
     );
-    return html`<div class="chip secondary">🤖 ${statusText}</div>`;
+    return html` <div class="chip secondary">🤖 ${statusText}</div> `;
   }
 
   private renderTimeElapsed() {
@@ -126,14 +125,14 @@ export class ParticipantSummary extends MobxLitElement {
     const getTimeElapsedText = (numMinutes: number) => {
       const numHours = Math.floor(numMinutes / 60);
       const numDays = Math.floor(numHours / 24);
-      const maxDays = 3; // Show "3+ days" after this threshold.
+      const maxDays = 3;
       return numMinutes < 120
         ? `${numMinutes}m`
         : numHours < 24
           ? `${numHours}h`
-          : numDays <= maxDays
+          : numDays < maxDays
             ? `${numDays}d`
-            : `${maxDays}+ days`;
+            : `>${maxDays}d`;
     };
 
     return html`
@@ -147,35 +146,58 @@ export class ParticipantSummary extends MobxLitElement {
     `;
   }
 
-  private renderAttentionStatus() {
-    if (this.participant?.currentStatus !== ParticipantStatus.ATTENTION_CHECK) {
-      return nothing;
-    }
-    return html`<div class="chip error">attention check sent</div>`;
-  }
-
   private renderStatus() {
     if (!this.participant) return nothing;
 
     const {connected} = this.participant;
 
+    // Priority 1: Disconnected
     if (!connected && !isParticipantEndedExperiment(this.participant)) {
-      return html`<div class="chip error">disconnected</div>`;
+      return html`
+        <pr-tooltip text="Disconnected" position="TOP_START">
+          <div class="chip error">
+            <pr-icon icon="wifi_off" variant="default"></pr-icon>
+          </div>
+        </pr-tooltip>
+      `;
     }
 
-    if (isPendingParticipant(this.participant)) {
-      return html`<div class="chip secondary">transfer pending</div>`;
-    } else if (isObsoleteParticipant(this.participant)) {
-      return html`<div class="chip">${this.participant.currentStatus}</div>`;
+    // Priority 2: Attention check sent
+    if (this.participant.currentStatus === ParticipantStatus.ATTENTION_CHECK) {
+      return html`
+        <pr-tooltip text="Attention check sent" position="TOP_START">
+          <div class="chip error">⚠️</div>
+        </pr-tooltip>
+      `;
     }
 
-    // If in transfer stage, return "ready for transfer" chip
+    // Priority 3: Ready for transfer
     const stage = this.experimentService.getStage(
       this.participant.currentStageId,
     );
-    if (!stage) return nothing;
-    if (stage.kind === StageKind.TRANSFER) {
-      return html`<div class="chip tertiary">ready for transfer!</div>`;
+    if (stage?.kind === StageKind.TRANSFER) {
+      return html`
+        <pr-tooltip text="Ready for transfer!" position="TOP_START">
+          <div class="chip tertiary">
+            <pr-icon icon="arrow_forward" variant="default"></pr-icon>
+          </div>
+        </pr-tooltip>
+      `;
+    }
+
+    // Priority 4: Transfer pending
+    if (isPendingParticipant(this.participant)) {
+      return html`
+        <pr-tooltip text="Transfer pending" position="TOP_START">
+          <div class="chip secondary">
+            <pr-icon icon="hourglass_empty" variant="default"></pr-icon>
+          </div>
+        </pr-tooltip>
+      `;
+    }
+
+    if (isObsoleteParticipant(this.participant)) {
+      return html`<div class="chip">${this.participant.currentStatus}</div>`;
     }
 
     return nothing;

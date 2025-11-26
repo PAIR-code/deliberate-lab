@@ -19,6 +19,7 @@ export interface ExperimenterProfile {
 export interface ExperimenterProfileExtended extends ExperimenterProfile {
   id: string;
   isAdmin: boolean;
+  hasResearchTemplateAccess: boolean;
 }
 
 /** Experimenter data (written to Firestore under experimenterData/{id}). */
@@ -34,10 +35,16 @@ export interface ExperimenterData {
 export interface APIKeyConfig {
   geminiApiKey: string; // distinct types since we don't want to lose information when switching between them
   openAIApiKey?: OpenAIServerConfig;
+  claudeApiKey?: ClaudeServerConfig;
   ollamaApiKey: OllamaServerConfig;
 }
 
 export interface OpenAIServerConfig {
+  apiKey: string;
+  baseUrl: string;
+}
+
+export interface ClaudeServerConfig {
   apiKey: string;
   baseUrl: string;
 }
@@ -67,11 +74,19 @@ export function getFullExperimenterConfig(
     name: experimenter.name ?? '',
     email: experimenter.email ?? '',
     isAdmin: experimenter.isAdmin ?? false,
+    hasResearchTemplateAccess: experimenter.hasResearchTemplateAccess ?? false,
     lastLogin: experimenter.lastLogin ?? null,
   };
 }
 
 export function createOpenAIServerConfig(): OpenAIServerConfig {
+  return {
+    apiKey: INVALID_API_KEY,
+    baseUrl: EMPTY_BASE_URL,
+  };
+}
+
+export function createClaudeServerConfig(): ClaudeServerConfig {
   return {
     apiKey: INVALID_API_KEY,
     baseUrl: EMPTY_BASE_URL,
@@ -117,6 +132,17 @@ export function checkApiKeyExists(
     return (
       experimenterData.apiKeys.openAIApiKey.apiKey !== INVALID_API_KEY ||
       experimenterData.apiKeys.openAIApiKey.baseUrl !== EMPTY_BASE_URL
+    );
+  }
+  if (apiKeyType === ApiKeyType.CLAUDE_API_KEY) {
+    if (!experimenterData.apiKeys.claudeApiKey) {
+      return false;
+    }
+    // A custom server could require no API key, and the default OpenAI server
+    // requires no base URL setting, but leaving both blank is invalid.
+    return (
+      experimenterData.apiKeys.claudeApiKey.apiKey !== INVALID_API_KEY ||
+      experimenterData.apiKeys.claudeApiKey.baseUrl !== EMPTY_BASE_URL
     );
   }
 

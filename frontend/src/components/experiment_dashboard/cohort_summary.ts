@@ -21,6 +21,7 @@ import {AnalyticsService, ButtonClick} from '../../services/analytics.service';
 import {ExperimentEditor} from '../../services/experiment.editor';
 import {ExperimentManager} from '../../services/experiment.manager';
 import {ExperimentService} from '../../services/experiment.service';
+import {CohortService} from '../../services/cohort.service';
 import {Pages, RouterService} from '../../services/router.service';
 
 import {
@@ -31,6 +32,7 @@ import {
   StageKind,
 } from '@deliberation-lab/utils';
 import {getCohortDescription, getCohortName} from '../../shared/cohort.utils';
+import {getCurrentStageStartTime} from '../../shared/participant.utils';
 
 import {styles} from './cohort_summary.scss';
 import {renderMediatorStatusChip} from './mediator_status';
@@ -42,6 +44,7 @@ export class CohortSummary extends MobxLitElement {
 
   private readonly analyticsService = core.getService(AnalyticsService);
   private readonly authService = core.getService(AuthService);
+  private readonly cohortService = core.getService(CohortService);
   private readonly experimentEditor = core.getService(ExperimentEditor);
   private readonly experimentManager = core.getService(ExperimentManager);
   private readonly experimentService = core.getService(ExperimentService);
@@ -320,28 +323,57 @@ export class CohortSummary extends MobxLitElement {
       return participant.currentStatus == ParticipantStatus.TRANSFER_TIMEOUT;
     };
 
-    const isOnTransferStage = (participant: ParticipantProfile) => {
+    const stageIds = this.experimentService.experiment?.stageIds ?? [];
+
+    const isReadyForTransfer = (participant: ParticipantProfile) => {
       const stage = this.experimentService.getStage(participant.currentStageId);
-      if (!stage) return false; // Return false instead of 'nothing' to ensure it's a boolean
-      return stage.kind === StageKind.TRANSFER;
+      return stage?.kind === StageKind.TRANSFER;
     };
 
     const sortedParticipants = participants.slice().sort((a, b) => {
-      if (isTransferTimeout(a)) {
+      if (this.experimentManager.participantSortBy === 'name') {
+        const aName = a.name ? a.name : a.publicId;
+        const bName = b.name ? b.name : b.publicId;
+        return aName.localeCompare(bName, undefined, {
+          sensitivity: 'base',
+        });
+      }
+
+      const aIsReadyForTransfer = isReadyForTransfer(a);
+      const bIsReadyForTransfer = isReadyForTransfer(b);
+
+      if (aIsReadyForTransfer !== bIsReadyForTransfer) {
+        return aIsReadyForTransfer ? -1 : 1; // Ready for transfer go to the top
+      }
+
+      const aTimeout = isTransferTimeout(a);
+      const bTimeout = isTransferTimeout(b);
+
+      if (aTimeout !== bTimeout) {
+        return aTimeout ? 1 : -1; // Timeouts go to the bottom
+      }
+
+      // Sort by last active
+      const aStartTime = getCurrentStageStartTime(a, stageIds);
+      const bStartTime = getCurrentStageStartTime(b, stageIds);
+
+      if (aStartTime && bStartTime) {
+        const diff = aStartTime.seconds - bStartTime.seconds;
+        if (diff !== 0) return diff;
+        return aStartTime.nanoseconds - bStartTime.nanoseconds;
+      } else if (aStartTime && !bStartTime) {
+        return -1;
+      } else if (!aStartTime && bStartTime) {
         return 1;
       }
 
-      if (isTransferTimeout(b)) {
-        return -1;
-      }
-
-      const aIsTransfer = isOnTransferStage(a) ? 0 : 1; // 0 if true, 1 if false
-      const bIsTransfer = isOnTransferStage(b) ? 0 : 1;
-      return aIsTransfer - bIsTransfer || a.publicId.localeCompare(b.publicId);
+      return a.publicId.localeCompare(b.publicId);
     });
 
+    const showMediators = this.experimentManager.showMediatorsInCohortSummary;
+
     const participantSection = this.renderListSection(
-      'Participants',
+      showMediators ? 'Participants' : '',
       sortedParticipants,
       'No participants yet.',
       (participant) => html`
@@ -364,7 +396,9 @@ export class CohortSummary extends MobxLitElement {
     );
 
     return html`
-      <div class="body">${participantSection} ${mediatorSection}</div>
+      <div class="body">
+        ${participantSection} ${showMediators ? mediatorSection : nothing}
+      </div>
     `;
   }
 
@@ -373,7 +407,7 @@ export class CohortSummary extends MobxLitElement {
     items: T[],
     emptyMessage: string,
     renderItem: (item: T, index: number) => TemplateResult | typeof nothing,
-    options: {listClass?: string} = {},
+    options: {listClass?: string; headerAction?: TemplateResult} = {},
   ) {
     const listClasses = ['section-list'];
     if (options.listClass) {
@@ -381,8 +415,13 @@ export class CohortSummary extends MobxLitElement {
     }
 
     return html`
-      <div class="section">
-        <div class="section-title">${title}</div>
+      <div class="section-list">
+        ${title || options.headerAction
+          ? html`<div class="section-title">
+              <span>${title}</span>
+              ${options.headerAction ?? nothing}
+            </div>`
+          : nothing}
         <div class=${listClasses.join(' ')}>
           ${items.length === 0
             ? html`<div class="empty-subsection">${emptyMessage}</div>`

@@ -19,15 +19,24 @@
   gap: common.$spacing-medium;
   justify-content: space-between;
   padding: common.$spacing-medium common.$spacing-large;
+  position: relative;
+  z-index: 2;
 
   &:focus,
   &:hover {
     background: var(--md-sys-color-surface-container-highest);
   }
 
-  .left,
+  .left {
+    @include common.flex-row-align-center;
+    flex: 1;
+    gap: common.$spacing-xs;
+    min-width: 0;
+  }
+
   .right {
     @include common.flex-row-align-center;
+    flex-shrink: 0;
     gap: common.$spacing-xs;
   }
 }
@@ -70,7 +79,11 @@
 
 .section-title {
   @include typescale.label-small;
+  @include common.flex-row-align-center;
+  border-top: 1px solid var(--md-sys-color-outline-variant-high);
   color: var(--md-sys-color-on-surface-variant);
+  justify-content: space-between;
+  padding: 0 common.$spacing-large;
 }
 
 .section-list {
@@ -136,4 +149,13 @@
 .menu-item-helper {
   @include typescale.body-small;
   color: var(--md-sys-color-outline);
+}
+
+.sort-controls {
+  transform: scale(0.8);
+  transform-origin: right center;
+
+  pr-menu {
+    --pr-menu-icon-color: var(--md-sys-color-on-surface-variant);
+  }
 }

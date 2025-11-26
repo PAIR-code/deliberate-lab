@@ -28,15 +28,18 @@
     opacity: 0.5;
   }
 
-  .left,
-  .right {
+  .left {
     @include common.flex-row-align-center;
+    flex: 1;
+    flex-wrap: wrap;
     gap: common.$spacing-medium;
+    min-width: 0;
   }
 }
 
 .buttons {
   @include common.flex-row-align-center;
+  flex-shrink: 0;
   gap: common.$spacing-small;
 }
 

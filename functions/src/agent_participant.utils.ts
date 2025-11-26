@@ -45,13 +45,8 @@ export async function completeStageAsAgentParticipant(
     return;
   }
 
-  // Only update if participant is active, etc.
-  // TODO: Handle transfer pending, attention check, etc.
   const status = participant.currentStatus;
   let updatedStatus = false;
-  if (status !== ParticipantStatus.IN_PROGRESS) {
-    return;
-  }
 
   // Ensure participants have start experiment, TOS, and current stage
   // ready marked appropriately
@@ -68,6 +63,31 @@ export async function completeStageAsAgentParticipant(
       Timestamp.now();
     updatedStatus = true;
   }
+
+  // Transfer logic: if pending, update timestamp, cohort ID, and status
+  if (status === ParticipantStatus.TRANSFER_PENDING) {
+    const timestamp = Timestamp.now();
+    participant.timestamps.cohortTransfers[participant.currentCohortId] =
+      timestamp;
+    participant.currentCohortId = participant.transferCohortId;
+    participant.transferCohortId = null;
+
+    participant.currentStatus = ParticipantStatus.IN_PROGRESS;
+    // If in a transfer stage, progress to next stage
+    if (stage.kind === StageKind.TRANSFER) {
+      await updateParticipantNextStage(
+        experimentId,
+        participant,
+        experiment.stageIds,
+      );
+    }
+    participantDoc.set(participant);
+    return;
+  } else if (status !== ParticipantStatus.IN_PROGRESS) {
+    // Only update if participant is active, etc.
+    return;
+  }
+  // NOTE: Attention checks are handled in agent participant trigger
 
   // Fetch experiment creator's API key.
   const creatorId = experiment.metadata.creator;
@@ -151,7 +171,7 @@ export async function getParsedAgentParticipantPromptResponse(
   );
 
   // Call API and write log to storage
-  const response = await processModelResponse(
+  const {response} = await processModelResponse(
     experimentId,
     cohortId,
     /*participantId=*/ participant.privateId,

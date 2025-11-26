@@ -5,12 +5,7 @@ import {
 import {generateId} from './shared';
 import {StageKind} from './stages/stage';
 import {
-  DEFAULT_AGENT_MEDIATOR_PROMPT,
-  DEFAULT_AGENT_PARTICIPANT_CHAT_PROMPT,
-} from './stages/chat_stage.prompts';
-import {
   ChatMediatorStructuredOutputConfig,
-  StructuredOutputConfig,
   createStructuredOutputConfig,
 } from './structured_output';
 import {
@@ -32,6 +27,7 @@ export interface CustomRequestBodyField {
 export enum ApiKeyType {
   GEMINI_API_KEY = 'GEMINI',
   OPENAI_API_KEY = 'OPENAI',
+  CLAUDE_API_KEY = 'CLAUDE',
   OLLAMA_CUSTOM_URL = 'OLLAMA',
 }
 
@@ -210,7 +206,7 @@ export function createModelGenerationConfig(
     presencePenalty: config.presencePenalty ?? 0.0,
     customRequestBodyFields: config.customRequestBodyFields ?? [],
     reasoningBudget: config.reasoningBudget,
-    includeReasoning: config.includeReasoning ?? true,
+    includeReasoning: config.includeReasoning ?? false,
     disableSafetyFilters: config.disableSafetyFilters ?? false,
   };
 }
@@ -237,32 +233,9 @@ export function createAgentPromptSettings(
   };
 }
 
-export function createAgentChatPromptConfig(
-  id: string, // stage ID
-  type: StageKind, // stage kind
-  personaType: AgentPersonaType, // mediator or participant
-  config: Partial<AgentChatPromptConfig> = {},
-): AgentChatPromptConfig {
-  return {
-    id,
-    type,
-    promptContext:
-      config.promptContext ??
-      (personaType === AgentPersonaType.MEDIATOR
-        ? DEFAULT_AGENT_MEDIATOR_PROMPT
-        : DEFAULT_AGENT_PARTICIPANT_CHAT_PROMPT),
-    promptSettings: config.promptSettings ?? createAgentPromptSettings(),
-    generationConfig: config.generationConfig ?? createModelGenerationConfig(),
-    chatSettings: config.chatSettings ?? createAgentChatSettings(),
-    structuredOutputConfig:
-      config.structuredOutputConfig ?? createStructuredOutputConfig(),
-  };
-}
-
 export function createAgentMediatorPersonaConfig(
   config: Partial<AgentPersonaConfig> = {},
 ): AgentMediatorPersonaConfig {
-  const type = AgentPersonaType.MEDIATOR;
   return {
     id: config.id ?? generateId(),
     name: config.name ?? 'Agent Mediator',

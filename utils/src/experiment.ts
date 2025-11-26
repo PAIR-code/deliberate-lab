@@ -35,8 +35,9 @@ import {VariableConfig} from './variables';
  * VERSION 16 - switch to new mediator workflow including updated ChatMessage
  * VERSION 17 - add structured output config to agent prompt configs
  * VERSION 18 - add agent participant config to ParticipantProfileExtended
+ * VERSION 19 - Support for Variables including objects and arrays
  */
-export const EXPERIMENT_VERSION_ID = 18;
+export const EXPERIMENT_VERSION_ID = 19;
 
 /** Experiment. */
 export interface Experiment {

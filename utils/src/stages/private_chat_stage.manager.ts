@@ -3,6 +3,7 @@ import {
   MediatorPromptConfig,
   ParticipantPromptConfig,
   createDefaultPromptFromText,
+  createDefaultParticipantPrompt,
 } from '../structured_prompt';
 import {PrivateChatStageConfig} from './private_chat_stage';
 import {
@@ -18,12 +19,20 @@ import {
   StageParticipantAnswer,
   StagePublicData,
 } from './stage';
-import {BaseStageHandler} from './stage.handler';
+import {AgentParticipantStageActions, BaseStageHandler} from './stage.handler';
 
 export class PrivateChatStageHandler extends BaseStageHandler {
+  getAgentParticipantActionsForStage(
+    participant: ParticipantProfileExtended,
+    stage: StageConfig,
+  ): AgentParticipantStageActions {
+    return {callApi: false, moveToNextStage: false};
+  }
+
   getStageDisplayForPrompt(
     participants: ParticipantProfileExtended[],
     stageContext: StageContextData,
+    includeScaffolding: boolean,
   ) {
     const conversations: string[] = [];
     const stage = stageContext.stage as PrivateChatStageConfig;
@@ -55,7 +64,7 @@ export class PrivateChatStageHandler extends BaseStageHandler {
     stage: PrivateChatStageConfig,
   ): ParticipantPromptConfig | undefined {
     return createChatPromptConfig(stage.id, StageKind.CHAT, {
-      prompt: createDefaultPromptFromText(
+      prompt: createDefaultParticipantPrompt(
         DEFAULT_AGENT_PARTICIPANT_CHAT_PROMPT,
       ),
     });

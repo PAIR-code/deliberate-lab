@@ -134,6 +134,8 @@ export class ExperimentManager extends Service {
   @observable showParticipantPreview = true;
   @observable hideLockedCohorts = false;
   @observable expandAllCohorts = true;
+  @observable showMediatorsInCohortSummary = false;
+  @observable participantSortBy: 'lastActive' | 'name' = 'lastActive';
 
   // Copy of cohort being edited in settings dialog
   @observable cohortEditing: CohortConfig | undefined = undefined;
@@ -259,9 +261,24 @@ export class ExperimentManager extends Service {
     this.currentCohortId = id;
   }
 
+  setShowMediatorsInCohortSummary(show: boolean) {
+    this.showMediatorsInCohortSummary = show;
+  }
+
+  setParticipantSortBy(sortBy: 'lastActive' | 'name') {
+    this.participantSortBy = sortBy;
+  }
+
   setCurrentParticipantId(id: string | undefined) {
     this.currentParticipantId = id;
-    // TODO: Update current cohort to match current participant's cohort?
+
+    // Update current cohort to match current participant's cohort
+    if (id && this.participantMap[id]) {
+      const participant = this.participantMap[id];
+      const cohortId =
+        participant.transferCohortId ?? participant.currentCohortId;
+      this.setCurrentCohortId(cohortId);
+    }
 
     // Update participant service in order to load correct participant answers
     // (Note: This also updates participant answer service accordingly)
@@ -274,6 +291,8 @@ export class ExperimentManager extends Service {
     return Object.values(this.agentPersonaMap);
   }
 
+  // WARNING: We are not currently allowing experimenters to edit
+  // agent participant personas in the editor.
   @computed get agentParticipantPersonas() {
     return this.agentPersonas.filter(
       (persona) => persona.type === AgentPersonaType.PARTICIPANT,
@@ -554,7 +573,9 @@ export class ExperimentManager extends Service {
       ),
     );
 
-    // Subscribe to agent personas
+    // Subscribe to agent mediator personas
+    // NOTE: We don't currently subscribe to agent participant personas
+    // because we don't currently allow setting them in the experiment editor.
     this.unsubscribe.push(
       onSnapshot(
         query(
@@ -562,7 +583,7 @@ export class ExperimentManager extends Service {
             this.sp.firebaseService.firestore,
             'experiments',
             id,
-            'agents',
+            'agentMediators',
           ),
         ),
         (snapshot) => {

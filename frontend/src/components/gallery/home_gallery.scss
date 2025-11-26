@@ -81,6 +81,11 @@ gallery-card {
   }
 }
 
+.gallery-link {
+  text-decoration: none;
+  color: inherit;
+}
+
 .banner {
   @include typescale.body-small;
   background: var(--md-sys-color-tertiary-container);
@@ -220,6 +225,19 @@ h1 {
   position: absolute;
   left: common.$spacing-medium;
   pointer-events: none;
+}
+
+.search-container pr-icon.clear-button {
+  right: common.$spacing-medium;
+  left: auto;
+  pointer-events: auto;
+  cursor: pointer;
+  color: var(--md-sys-color-outline);
+  transition: color 120ms ease;
+
+  &:hover {
+    color: var(--md-sys-color-secondary);
+  }
 }
 
 .search-container pr-textarea {
