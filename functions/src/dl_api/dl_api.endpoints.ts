@@ -255,6 +255,10 @@ export const revokeDeliberateLabAPIKey = onCall(
         message: 'API key revoked successfully',
       };
     } catch (error) {
+      // Re-throw HttpsErrors (like not-found) as-is
+      if (error instanceof functions.https.HttpsError) {
+        throw error;
+      }
       console.error('Error revoking API key:', error);
       throw new functions.https.HttpsError(
         'internal',
