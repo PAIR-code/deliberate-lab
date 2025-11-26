@@ -1,5 +1,5 @@
 import {app} from '../app';
-import {v4 as uuidv4} from 'uuid';
+import {generateId} from '@deliberation-lab/utils';
 
 /**
  * Uploads a base64 encoded image to Google Cloud Storage.
@@ -15,7 +15,7 @@ export async function uploadBase64ImageToGCS(
 ): Promise<string> {
   const BUCKET_NAME = 'deliberate-labs';
   const bucket = app.storage().bucket(BUCKET_NAME);
-  const fileName = `${prefix}/${uuidv4()}.${mimeType.split('/')[1]}`;
+  const fileName = `${prefix}/${generateId()}.${mimeType.split('/')[1]}`;
   const file = bucket.file(fileName);
 
   const buffer = Buffer.from(base64Data, 'base64');
