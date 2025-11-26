@@ -127,3 +127,9 @@ pr-button {
     margin-right: common.$spacing-small;
   }
 }
+
+.menu-item {
+  @include common.nav-item;
+  border-radius: common.$spacing-medium;
+  padding: common.$spacing-medium;
+}

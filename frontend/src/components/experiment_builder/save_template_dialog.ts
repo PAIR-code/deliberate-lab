@@ -187,6 +187,7 @@ export class SaveTemplateDialog extends MobxLitElement {
             >
             <pr-button
               color="primary"
+              ?loading=${this.experimentEditor.isWritingExperiment}
               ?disabled=${this.isDuplicateName || !this.name.trim()}
               @click=${this.save}
               >Save</pr-button

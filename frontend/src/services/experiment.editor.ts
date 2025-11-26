@@ -214,6 +214,10 @@ export class ExperimentEditor extends Service {
       },
     );
     await this.loadTemplates();
+    if (response && response.id) {
+      this.loadedTemplateId = response.id;
+      this.saveTemplateMode = 'update';
+    }
     this.isWritingExperiment = false;
     return response;
   }
@@ -238,6 +242,8 @@ export class ExperimentEditor extends Service {
     this.stages = [];
     this.agentMediators = [];
     this.agentParticipants = [];
+    this.loadedTemplateId = undefined;
+    this.saveTemplateMode = 'new';
   }
 
   // **************************************************************************
