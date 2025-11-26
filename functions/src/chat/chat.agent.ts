@@ -12,6 +12,7 @@ import {
   awaitTypingDelay,
   createChatMessage,
   createParticipantProfileBase,
+  sanitizeRawResponseForLogging,
 } from '@deliberation-lab/utils';
 import {Timestamp} from 'firebase-admin/firestore';
 import {processModelResponse} from '../agent.utils';
@@ -39,6 +40,8 @@ import {
   getFirestoreParticipantAnswerRef,
 } from '../utils/firestore';
 import {app} from '../app';
+import {uploadBase64ImageToGCS} from '../utils/storage';
+import {updateModelLogImageUrls} from '../log.utils';
 
 // ****************************************************************************
 // Functions for preparing, querying, and organizing agent chat responses.
@@ -256,7 +259,7 @@ export async function getAgentChatMessage(
     prompt = structuredPrompt;
   }
 
-  const response = await processModelResponse(
+  const {response, logId} = await processModelResponse(
     experimentId,
     cohortId,
     participantIds[0] || '', // Use first participant ID for logging/tracking
@@ -273,6 +276,24 @@ export async function getAgentChatMessage(
     promptConfig.numRetries ?? 0, // Pass numRetries from config
   );
 
+  // Log response with sanitized rawResponse and imageDataList to avoid overwhelming console with image data
+  const loggableResponse = {
+    ...response,
+    rawResponse: response.rawResponse
+      ? sanitizeRawResponseForLogging(response.rawResponse)
+      : undefined,
+    imageDataList: response.imageDataList
+      ? response.imageDataList.map((img) => ({
+          mimeType: img.mimeType,
+          data: '[IMAGE DATA]',
+        }))
+      : undefined,
+  };
+  console.log(
+    'getAgentChatMessage ModelResponse:',
+    JSON.stringify(loggableResponse, null, 2),
+  );
+
   // Process response
   if (response.status !== ModelResponseStatus.OK) {
     return {message: null, success: false};
@@ -280,41 +301,51 @@ export async function getAgentChatMessage(
 
   const structured = promptConfig.structuredOutputConfig;
 
-  let message: string;
-  let explanation: string | undefined;
+  let message = response.text || ''; // Use response.text as the default message
+  let explanation: string | undefined = response.reasoning || undefined;
   let shouldRespond = true;
   let readyToEndChat = false;
 
-  // Handle non-structured output case
-  if (!structured?.enabled) {
-    // When structured output is disabled, use the text field directly
-    if (!response.text) {
-      return {message: null, success: false};
-    }
-    message = response.text;
-    explanation = response.reasoning || undefined; // Use reasoning field if available
-  } else {
-    // Handle structured output case
-    if (!response.parsedResponse) {
-      return {message: null, success: false};
-    }
+  if (structured?.enabled && response.text) {
+    const jsonMatch = response.text.match(/```json\n(\{[\s\S]*\})\n```/);
+    if (jsonMatch && jsonMatch[1]) {
+      try {
+        const parsed = JSON.parse(jsonMatch[1]) as Record<string, unknown>;
 
-    // Get shouldRespond with fail-safe: default to true if field is missing or not defined
-    const shouldRespondValue = structured.shouldRespondField
-      ? response.parsedResponse[structured.shouldRespondField]
-      : undefined;
-    // If shouldRespond field exists and is explicitly false, don't respond. Otherwise, respond.
-    shouldRespond = shouldRespondValue === false ? false : true;
+        const shouldRespondValue = structured.shouldRespondField
+          ? parsed[structured.shouldRespondField]
+          : undefined;
+        shouldRespond = shouldRespondValue === false ? false : true;
 
-    message = structured.messageField
-      ? response.parsedResponse[structured.messageField]
-      : response.parsedResponse['response']; // fallback to default field name
-    explanation = structured.explanationField
-      ? response.parsedResponse[structured.explanationField]
-      : response.parsedResponse['explanation']; // fallback to default field name
-    readyToEndChat = structured.readyToEndField
-      ? response.parsedResponse[structured.readyToEndField]
-      : false; // default to not ready to end if field is missing
+        const messageField = structured.messageField || 'response';
+        if (typeof parsed[messageField] === 'string') {
+          message = parsed[messageField] as string;
+        }
+
+        const explanationField = structured.explanationField || 'explanation';
+        if (typeof parsed[explanationField] === 'string') {
+          explanation = parsed[explanationField] as string;
+        }
+
+        readyToEndChat = structured.readyToEndField
+          ? Boolean(parsed[structured.readyToEndField])
+          : false;
+      } catch (error) {
+        console.error('getAgentChatMessage JSON parse error in text:', error);
+        // message remains response.text
+      }
+    } else {
+      // JSON block not found, message remains response.text
+    }
+  } else if (
+    !response.text &&
+    (!response.imageDataList || response.imageDataList.length === 0)
+  ) {
+    return {message: null, success: false};
+  }
+
+  if (!shouldRespond) {
+    // Logic for not responding (handled below)
   }
 
   // Only if agent participant is ready to end chat
@@ -368,6 +399,7 @@ export async function getAgentChatMessage(
     }
   }
 
+  // Generate chat message ID first so we can use it in the image storage path
   const chatMessage = createChatMessage({
     type: user.type,
     discussionId,
@@ -378,6 +410,31 @@ export async function getAgentChatMessage(
     agentId: user.agentConfig.agentId,
     timestamp: Timestamp.now(),
   });
+
+  // Upload all images from imageDataList using the chat message ID in the path
+  let imageUrls: string[] | undefined = undefined;
+  if (response.imageDataList && response.imageDataList.length > 0) {
+    try {
+      // Upload all images in parallel with index numbers
+      const uploadPromises = response.imageDataList.map((imageData, index) =>
+        uploadBase64ImageToGCS(
+          imageData.data,
+          imageData.mimeType,
+          `experiments/${experimentId}/chats/${stage.id}/${chatMessage.id}/${index}`,
+        ),
+      );
+      imageUrls = await Promise.all(uploadPromises);
+      // Add the uploaded URLs to the chat message
+      chatMessage.imageUrls = imageUrls;
+
+      // Update the log with the image URLs for dashboard display
+      await updateModelLogImageUrls(experimentId, logId, imageUrls);
+    } catch (error) {
+      console.error('Error uploading images to GCS:', error);
+      // Optionally handle error, e.g., send an error message to chat
+    }
+  }
+
   return {message: chatMessage, success: true};
 }
 
