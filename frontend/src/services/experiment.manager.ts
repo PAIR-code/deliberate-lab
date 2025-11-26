@@ -158,7 +158,6 @@ export class ExperimentManager extends Service {
         const template = await getExperimentTemplateCallable(
           this.sp.firebaseService.functions,
           {
-            collectionName: 'experiments',
             experimentId: this.experimentId,
           },
         );
@@ -670,7 +669,6 @@ export class ExperimentManager extends Service {
     const experimentTemplate = await getExperimentTemplateCallable(
       this.sp.firebaseService.functions,
       {
-        collectionName: 'experiments',
         experimentId: this.experimentId,
       },
     );
@@ -683,7 +681,6 @@ export class ExperimentManager extends Service {
     response = await writeExperimentCallable(
       this.sp.firebaseService.functions,
       {
-        collectionName: 'experiments',
         experimentTemplate,
       },
     );
@@ -704,7 +701,6 @@ export class ExperimentManager extends Service {
     const response = await deleteExperimentCallable(
       this.sp.firebaseService.functions,
       {
-        collectionName: 'experiments',
         experimentId: this.experimentId,
       },
     );
@@ -993,7 +989,7 @@ export class ExperimentManager extends Service {
         );
 
         // Generate zip and trigger download
-        zip.generateAsync({type: 'blob'}).then((blob) => {
+        zip.generateAsync({type: 'blob'}).then((blob: Blob) => {
           const link = document.createElement('a');
           link.href = URL.createObjectURL(blob);
           link.download = `${experimentName}_data.zip`;

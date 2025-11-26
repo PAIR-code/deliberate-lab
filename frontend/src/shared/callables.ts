@@ -1,31 +1,32 @@
 import {
   AckAlertMessageData,
-  AgentConfigTestData,
+  type AgentConfigTestData,
   BaseParticipantData,
-  CreateChatMessageData,
+  type CreateChatMessageData,
   CohortCreationData,
   CohortDeletionData,
   CreateParticipantData,
-  CreateMediatorData,
+  type CreateMediatorData,
   CreationResponse,
   ExperimentCohortLockData,
   ExperimentCreationData,
   ExperimentDeletionData,
   ExperimentDownloadResponse,
   ExperimentTemplate,
+  ExperimentTemplateDeletionData,
   InitiateParticipantTransferData,
   ParticipantNextStageResponse,
   ParticipantProfile,
-  RequestChipAssistanceData,
+  type RequestChipAssistanceData,
   SendAlertMessageData,
-  SendChipOfferData,
-  SendChipResponseData,
+  type SendChipOfferData,
+  type SendChipResponseData,
   SendParticipantCheckData,
-  SetChipTurnData,
-  SetParticipantRolesData,
-  SetSalespersonControllerData,
-  SetSalespersonMoveData,
-  SetSalespersonResponseData,
+  type SetChipTurnData,
+  type SetParticipantRolesData,
+  type SetSalespersonControllerData,
+  type SetSalespersonMoveData,
+  type SetSalespersonResponseData,
   SimpleResponse,
   SuccessResponse,
   UpdateAssetAllocationStageParticipantAnswerData,
@@ -33,11 +34,11 @@ import {
   UpdateChatStageParticipantAnswerData,
   UpdateCohortMetadataData,
   UpdateFlipCardStageParticipantAnswerData,
-  UpdateMediatorStatusData,
+  type UpdateMediatorStatusData,
   UpdateParticipantAcceptedTOSData,
   UpdateParticipantFailureData,
   UpdateParticipantProfileData,
-  UpdateParticipantStatusData,
+  type UpdateParticipantStatusData,
   UpdateParticipantWaitingData,
   UpdateRankingStageParticipantAnswerData,
   UpdateSurveyPerParticipantStageParticipantAnswerData,
@@ -95,6 +96,48 @@ export const getExperimentTemplateCallable = async (
   >(
     functions,
     'getExperimentTemplate',
+  )(config);
+  return data;
+};
+
+/** Generic endpoint to save experiment template. */
+export const saveExperimentTemplateCallable = async (
+  functions: Functions,
+  config: {experimentTemplate: ExperimentTemplate},
+) => {
+  const {data} = await httpsCallable<
+    {experimentTemplate: ExperimentTemplate},
+    CreationResponse
+  >(
+    functions,
+    'saveExperimentTemplate',
+  )(config);
+  return data;
+};
+
+/** Generic endpoint to get all experiment templates. */
+export const getExperimentTemplatesCallable = async (
+  functions: Functions,
+  config: Record<string, never>,
+) => {
+  const {data} = await httpsCallable<
+    Record<string, never>,
+    {templates: ExperimentTemplate[]}
+  >(
+    functions,
+    'getExperimentTemplates',
+  )(config);
+  return data;
+};
+
+/** Generic endpoint to delete experiment template. */
+export const deleteExperimentTemplateCallable = async (
+  functions: Functions,
+  config: {templateId: string},
+) => {
+  const {data} = await httpsCallable<{templateId: string}, SuccessResponse>(
+    functions,
+    'deleteExperimentTemplate',
   )(config);
   return data;
 };

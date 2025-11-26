@@ -1,4 +1,5 @@
 import {Value} from '@sinclair/typebox/value';
+import {TSchema} from '@sinclair/typebox';
 import {
   AgentMediatorPersonaConfig,
   AgentMediatorTemplate,
@@ -21,6 +22,8 @@ import {onCall, HttpsError} from 'firebase-functions/v2/https';
 
 import {app} from './app';
 import {AuthGuard} from './utils/auth-guard';
+
+const EXPERIMENTS_COLLECTION = 'experiments';
 
 /** Create, update, and delete experiments and experiment templates. */
 
@@ -45,7 +48,7 @@ export const writeExperiment = onCall(async (request) => {
   // Define document reference
   const document = app
     .firestore()
-    .collection(data.collectionName)
+    .collection(EXPERIMENTS_COLLECTION)
     .doc(experimentConfig.id);
 
   // If experiment exists, do not allow creation.
@@ -76,7 +79,7 @@ export const writeExperiment = onCall(async (request) => {
     );
 
     // Add agent mediators under `agentMediators` collection
-    template.agentMediators.forEach((agent) => {
+    template.agentMediators.forEach((agent: AgentMediatorTemplate) => {
       const doc = document.collection('agentMediators').doc(agent.persona.id);
       transaction.set(doc, agent.persona);
       for (const prompt of Object.values(agent.promptMap)) {
@@ -88,7 +91,7 @@ export const writeExperiment = onCall(async (request) => {
     // NOTE: We don't currently allow agent participant persona setup
     // in the experiment editor, so the list of agentParticipants
     // is expected to be length 0.
-    template.agentParticipants.forEach((agent) => {
+    template.agentParticipants.forEach((agent: AgentParticipantTemplate) => {
       const doc = document
         .collection('agentParticipants')
         .doc(agent.persona.id);
@@ -123,7 +126,7 @@ export const updateExperiment = onCall(async (request) => {
   // Define document reference
   const document = app
     .firestore()
-    .collection(data.collectionName)
+    .collection(EXPERIMENTS_COLLECTION)
     .doc(experimentConfig.id);
 
   // If experiment does not exist, return false
@@ -156,7 +159,7 @@ export const updateExperiment = onCall(async (request) => {
     }
 
     // Add agent mediators under `agentMediators` collection
-    template.agentMediators.forEach((agent) => {
+    template.agentMediators.forEach((agent: AgentMediatorTemplate) => {
       const doc = document.collection('agentMediators').doc(agent.persona.id);
       transaction.set(doc, agent.persona);
       for (const prompt of Object.values(agent.promptMap)) {
@@ -165,7 +168,7 @@ export const updateExperiment = onCall(async (request) => {
     });
 
     // Add agent participants under `agentParticipants` collection
-    template.agentParticipants.forEach((agent) => {
+    template.agentParticipants.forEach((agent: AgentParticipantTemplate) => {
       const doc = document
         .collection('agentParticipants')
         .doc(agent.persona.id);
@@ -191,7 +194,10 @@ export const deleteExperiment = onCall(async (request) => {
   const {data} = request;
 
   // Validate input
-  const validInput = Value.Check(ExperimentDeletionData, data);
+  const validInput = Value.Check(
+    ExperimentDeletionData as unknown as TSchema,
+    data,
+  );
   if (!validInput) {
     throw new HttpsError('invalid-argument', 'Invalid data');
   }
@@ -208,7 +214,7 @@ export const deleteExperiment = onCall(async (request) => {
   if (!experiment) {
     throw new HttpsError(
       'not-found',
-      `Experiment ${data.experimentId} not found in collection ${data.collectionName}`,
+      `Experiment ${data.experimentId} not found in collection ${EXPERIMENTS_COLLECTION}`,
     );
   }
   if (request.auth?.token.email?.toLowerCase() !== experiment.metadata.creator)
@@ -217,7 +223,7 @@ export const deleteExperiment = onCall(async (request) => {
   // Delete document
   const doc = app
     .firestore()
-    .doc(`${data.collectionName}/${data.experimentId}`);
+    .doc(`${EXPERIMENTS_COLLECTION}/${data.experimentId}`);
   app.firestore().recursiveDelete(doc);
   return {success: true};
 });
@@ -235,7 +241,7 @@ export const getExperimentTemplate = onCall(async (request) => {
   const experiment = (
     await app
       .firestore()
-      .collection(data.collectionName)
+      .collection(EXPERIMENTS_COLLECTION)
       .doc(data.experimentId)
       .get()
   ).data();
@@ -243,20 +249,20 @@ export const getExperimentTemplate = onCall(async (request) => {
   if (!experiment) {
     throw new HttpsError(
       'not-found',
-      `Experiment ${data.experimentId} not found in collection ${data.collectionName}`,
+      `Experiment ${data.experimentId} not found in collection ${EXPERIMENTS_COLLECTION}`,
     );
   }
 
   const template = createExperimentTemplate({
     id: '',
-    experiment,
+    experiment: experiment as Experiment,
   });
 
   // Add stage configs
   const stageConfigs = (
     await app
       .firestore()
-      .collection(data.collectionName)
+      .collection(EXPERIMENTS_COLLECTION)
       .doc(data.experimentId)
       .collection('stages')
       .get()
@@ -273,7 +279,7 @@ export const getExperimentTemplate = onCall(async (request) => {
   // For each agent mediator, add template
   const agentMediatorCollection = app
     .firestore()
-    .collection(data.collectionName)
+    .collection(EXPERIMENTS_COLLECTION)
     .doc(data.experimentId)
     .collection('agentMediators');
 
@@ -284,7 +290,7 @@ export const getExperimentTemplate = onCall(async (request) => {
     const mediatorPrompts = (
       await app
         .firestore()
-        .collection(data.collectionName)
+        .collection(EXPERIMENTS_COLLECTION)
         .doc(data.experimentId)
         .collection('agentMediators')
         .doc(persona.id)
@@ -304,7 +310,7 @@ export const getExperimentTemplate = onCall(async (request) => {
   // For each agent participant, add template
   const agentParticipantCollection = app
     .firestore()
-    .collection(data.collectionName)
+    .collection(EXPERIMENTS_COLLECTION)
     .doc(data.experimentId)
     .collection('agentParticipants');
   const participantAgents = (await agentParticipantCollection.get()).docs.map(
@@ -314,7 +320,7 @@ export const getExperimentTemplate = onCall(async (request) => {
     const participantPrompts = (
       await app
         .firestore()
-        .collection(data.collectionName)
+        .collection(EXPERIMENTS_COLLECTION)
         .doc(data.experimentId)
         .collection('agentParticipants')
         .doc(persona.id)
@@ -349,7 +355,7 @@ export const setExperimentCohortLock = onCall(async (request) => {
   // Define document reference
   const document = app
     .firestore()
-    .collection('experiments')
+    .collection(EXPERIMENTS_COLLECTION)
     .doc(data.experimentId);
 
   // Run document write as transaction to ensure consistency

@@ -4,6 +4,8 @@
     url: /researchers/getting-started
   - title: Create an experiment
     url: /researchers/create-experiment
+  - title: Experiment templates
+    url: /researchers/templates
   - title: Run an experiment
     url: /researchers/run-experiment
   - title: Add LLM mediators to chat
