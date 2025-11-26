@@ -68,10 +68,11 @@ instead of a Firebase project for the backend):
   nvm install 22
   nvm use 22
   ```
-- Install [Firebase CLI](https://firebase.google.com/docs/cli/) globally:
+- (Optional) Install [Firebase CLI](https://firebase.google.com/docs/cli/) globally:
   ```bash
   npm install -g firebase-tools
   ```
+  *Note: The project uses `npx firebase` to avoid requiring global installation, but having it installed globally is also fine.*
 
 Then, install project dependencies once at the root directory:
 
@@ -120,13 +121,15 @@ cp frontend/firebase_config.example.ts frontend/firebase_config.ts
 
 Next, log in to Firebase:
 ```bash
-firebase login
+npx firebase login
 ```
 
 Finally, to run the emulators:
 ```bash
+```bash
 # Start the emulators and load the `emulator_test_config` settings
-firebase emulators:start --import ./emulator_test_config
+npx firebase emulators:start --import ./emulator_test_config
+```
 ```
 
 > Note: The emulator test config sets up two profiles (experimenter@

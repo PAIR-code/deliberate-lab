@@ -8,7 +8,7 @@
     "lib": ["es2021", "dom"],
     "outDir": "./dist/",
     "noImplicitAny": true,
-    "module": "es6",
+    "module": "esnext",
     "target": "es2021",
     "allowJs": true,
     "experimentalDecorators": true,
