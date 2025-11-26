@@ -92,7 +92,7 @@ export function createStaticVariableConfig(
       description: '',
       schema: VariableType.STRING,
     },
-    value: config.value ?? {id: 'default', value: ''},
+    value: config.value ?? {id: generateId(), value: ''},
   };
 }
 

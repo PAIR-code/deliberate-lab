@@ -119,6 +119,12 @@ For **Random Permutation** variables, you can choose to expand an array into ind
 
 This is useful when you want predictable variable names for a fixed number of items (e.g., always showing exactly 3 charities) rather than working with array indices.
 
+### Instance IDs
+
+Each variable value has an **Instance ID**—a unique identifier used to track which specific value was assigned. When you create a new variable config or add a value, a UUID is automatically generated as the default ID. You can replace the UUID with a meaningful identifier (e.g., `donors_choose`, `charity_a`) for easier analysis. Instance IDs are required and must be non-empty.
+
+Instance IDs appear in exported data, allowing you to identify exactly which values were assigned to each participant or cohort. This can be especially useful in a `RandomPermutationConfig`, for example, where otherwise you could only tell what was assigned by its value.
+
 ### Nested Structures
 
 Schemas can be nested arbitrarily:

@@ -44,6 +44,7 @@ import {
   updateSchemaAtPath,
   extractVariablesFromVariableConfigs,
   findUnusedVariables,
+  generateId,
 } from '@deliberation-lab/utils';
 
 import {styles} from './variable_editor.scss';
@@ -259,11 +260,15 @@ export class VariableEditor extends MobxLitElement {
                     this.updateDefinition(config, index, {name});
                   }}
                 ></pr-textarea>
-                ${this.hasDuplicateName(config, index)
+                ${!config.definition.name.trim()
                   ? html`<div class="validation-error">
-                      ⚠️ A variable with this name already exists.
+                      ⚠️ Variable name is required.
                     </div>`
-                  : nothing}
+                  : this.hasDuplicateName(config, index)
+                    ? html`<div class="validation-error">
+                        ⚠️ A variable with this name already exists.
+                      </div>`
+                    : nothing}
               </div>
               <div class="config-section">
                 <label class="property-label">Description</label>
@@ -378,12 +383,20 @@ export class VariableEditor extends MobxLitElement {
                       class="add-button"
                       @click=${() =>
                         this.updateConfig(config, index, {
-                          values: [...config.values, {id: '', value: ''}],
+                          values: [
+                            ...config.values,
+                            {id: generateId(), value: ''},
+                          ],
                         })}
                     >
                       <pr-icon icon="add"></pr-icon>
                       <span>Add instance</span>
                     </button>
+                    ${config.values.length === 0
+                      ? html`<div class="validation-error">
+                          ⚠️ At least one value is required.
+                        </div>`
+                      : nothing}
                   `,
                 )}
               `}
@@ -974,6 +987,9 @@ export class VariableEditor extends MobxLitElement {
     return html`
       <div class="config-section">
         <label class="property-label">Instance ID</label>
+        <div class="description">
+          Unique identifier for this value in exported data
+        </div>
         <pr-textarea
           placeholder="e.g., default"
           .value=${config.value.id}
@@ -987,6 +1003,11 @@ export class VariableEditor extends MobxLitElement {
             });
           }}
         ></pr-textarea>
+        ${!config.value.id.trim()
+          ? html`<div class="validation-error">
+              ⚠️ Instance ID is required.
+            </div>`
+          : nothing}
       </div>
       <div class="config-section">
         <label class="property-label">Value</label>
@@ -1030,6 +1051,9 @@ export class VariableEditor extends MobxLitElement {
       html`
         <div class="config-section">
           <label class="property-label">Instance ID</label>
+          <div class="description">
+            Unique identifier for this value in exported data
+          </div>
           <pr-textarea
             placeholder="e.g., donors_choose"
             .value=${instance.id}
@@ -1043,6 +1067,11 @@ export class VariableEditor extends MobxLitElement {
               this.updateConfig(config, configIndex, {values});
             }}
           ></pr-textarea>
+          ${!instance.id.trim()
+            ? html`<div class="validation-error">
+                ⚠️ Instance ID is required.
+              </div>`
+            : nothing}
         </div>
         <div class="config-section">
           <label class="property-label">Value</label>
