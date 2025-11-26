@@ -162,17 +162,20 @@ paths:
       tags:
         - experiments
       summary: Get experiment
-      description: Retrieve detailed information about a specific experiment
+      description: |
+        Retrieve detailed information about a specific experiment, including all stages and agent configurations.
+
+        This endpoint returns the experiment configuration without participant data. Use the `/experiments/{id}/export` endpoint to get participant responses and cohort data.
       operationId: getExperiment
       parameters:
         - $ref: '#/components/parameters/ExperimentId'
       responses:
         '200':
-          description: Successful operation
+          description: Successful operation. Returns experiment configuration without participant data.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Experiment'
+                $ref: '#/components/schemas/ExperimentConfig'
         '401':
           $ref: '#/components/responses/UnauthorizedError'
         '403':
@@ -628,9 +631,9 @@ components:
               type: object
               additionalProperties: true
 
-    ExperimentExport:
+    ExperimentConfig:
       type: object
-      description: Complete experiment data export
+      description: Experiment configuration without participant data
       properties:
         experiment:
           $ref: '#/components/schemas/Experiment'
@@ -639,16 +642,6 @@ components:
           description: Maps stage ID to stage config
           additionalProperties:
             $ref: '#/components/schemas/Stage'
-        participantMap:
-          type: object
-          description: Maps participant public ID to participant download
-          additionalProperties:
-            $ref: '#/components/schemas/ParticipantDownload'
-        cohortMap:
-          type: object
-          description: Maps cohort ID to cohort download
-          additionalProperties:
-            $ref: '#/components/schemas/CohortDownload'
         agentMediatorMap:
           type: object
           description: Maps agent mediator persona ID to agent template
@@ -661,12 +654,31 @@ components:
           additionalProperties:
             type: object
             additionalProperties: true
-        alerts:
-          type: array
-          description: List of alerts sent during experiment
-          items:
-            type: object
-            additionalProperties: true
+
+    ExperimentExport:
+      description: Complete experiment data export including participant data
+      allOf:
+        - $ref: '#/components/schemas/ExperimentConfig'
+        - type: object
+          properties:
+            participantMap:
+              type: object
+              description: Maps participant public ID to participant download
+              additionalProperties:
+                $ref: '#/components/schemas/ParticipantDownload'
+            cohortMap:
+              type: object
+              description: Maps cohort ID to cohort download
+              additionalProperties:
+                $ref: '#/components/schemas/CohortDownload'
+            alerts:
+              type: object
+              description: Maps participant private ID to list of alerts
+              additionalProperties:
+                type: array
+                items:
+                  type: object
+                  additionalProperties: true
 
     Error:
       type: object
