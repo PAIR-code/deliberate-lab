@@ -47,7 +47,7 @@ $bubble-width: 400px;
   color: var(--md-sys-color-on-secondary-container);
   max-width: $bubble-width;
   overflow-wrap: anywhere;
-p {
+  p {
     margin-top: 0;
     margin-bottom: common.$spacing-small;
   }
@@ -185,8 +185,8 @@ p {
     font-style: italic;
     color: var(--md-sys-color-outline);
     text-align: center;
-p {
-    margin: 0;
-  }
+    p {
+      margin: 0;
+    }
   }
 }

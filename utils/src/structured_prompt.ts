@@ -12,7 +12,11 @@ import {
   ChatMediatorStructuredOutputConfig,
   createStructuredOutputConfig,
 } from './structured_output';
-import {ShuffleConfig, SeedStrategy} from './utils/random.utils';
+import {
+  ShuffleConfig,
+  SeedStrategy,
+  createShuffleConfig,
+} from './utils/random.utils';
 
 // ****************************************************************************
 // CONSTANTS
@@ -189,11 +193,10 @@ export function createDefaultPromptItemGroup(
     type: PromptItemType.GROUP,
     title,
     items,
-    shuffleConfig: {
+    shuffleConfig: createShuffleConfig({
       shuffle: false,
       seed: SeedStrategy.PARTICIPANT,
-      customSeed: '',
-    },
+    }),
   };
 }
 

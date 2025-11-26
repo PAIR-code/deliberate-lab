@@ -1,4 +1,4 @@
-import {VariableItem} from '../variables';
+import {VariableDefinition} from '../variables';
 import {resolveTemplateVariables} from '../variables.template';
 import {MultiAssetAllocationStageConfig} from './asset_allocation_stage';
 import {BaseStageHandler} from './stage.handler';
@@ -6,21 +6,25 @@ import {BaseStageHandler} from './stage.handler';
 export class MultiAssetAllocationStageHandler extends BaseStageHandler {
   resolveTemplateVariablesInStage(
     stage: MultiAssetAllocationStageConfig,
-    variableMap: Record<string, VariableItem>,
+    variableDefinitions: Record<string, VariableDefinition>,
     valueMap: Record<string, string>,
   ) {
     const updatedStage = super.resolveTemplateVariablesInStage(
       stage,
-      variableMap,
+      variableDefinitions,
       valueMap,
     ) as MultiAssetAllocationStageConfig;
     const stockOptions = updatedStage.stockOptions.map((stock) => {
       return {
         ...stock,
-        name: resolveTemplateVariables(stock.name, variableMap, valueMap),
+        name: resolveTemplateVariables(
+          stock.name,
+          variableDefinitions,
+          valueMap,
+        ),
         description: resolveTemplateVariables(
           stock.description,
-          variableMap,
+          variableDefinitions,
           valueMap,
         ),
       };

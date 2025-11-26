@@ -43,7 +43,6 @@ import {Pages, RouterService} from '../../services/router.service';
 import {
   StageConfig,
   StageKind,
-  VariableItem,
   extractVariablesFromVariableConfigs,
   generateId,
   validateTemplateVariables,

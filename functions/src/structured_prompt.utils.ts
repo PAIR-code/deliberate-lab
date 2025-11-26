@@ -524,7 +524,7 @@ export async function getStageContextForPrompt(
   // participant-level variables will not work.
   const participantVariableMap =
     userProfile?.type === UserType.PARTICIPANT ? userProfile.variableMap : {};
-  const variableMap = extractVariablesFromVariableConfigs(
+  const variableDefinitions = extractVariablesFromVariableConfigs(
     experiment.variableConfigs ?? [],
   );
   const valueMap = {
@@ -534,7 +534,7 @@ export async function getStageContextForPrompt(
   };
   const stage = stageManager.resolveTemplateVariablesInStage(
     rawStageContext.stage,
-    variableMap,
+    variableDefinitions,
     valueMap,
   );
   const stageContext = {...rawStageContext, stage};

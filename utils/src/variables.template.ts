@@ -1,6 +1,33 @@
 import Mustache from 'mustache';
 import type {TSchema} from '@sinclair/typebox';
-import {VariableItem} from './variables';
+import {getSchemaAtPath} from './variables.utils';
+import {VariableDefinition} from './variables';
+
+/**
+ * Find defined variables that are never used in a template.
+ * Uses validateTemplateVariables with an empty map to extract all variable references.
+ *
+ * @param template The template string to check (e.g., JSON.stringify of all stages)
+ * @param variableDefinitions Map of variable names to their definitions
+ * @returns Array of variable names that are defined but never referenced
+ */
+export function findUnusedVariables(
+  template: string,
+  variableDefinitions: Record<string, VariableDefinition>,
+): string[] {
+  // With empty definitions, all variables are reported as "missing"
+  const {missingVariables} = validateTemplateVariables(template, {});
+
+  // Extract root variable names from full paths (e.g., "charity" from "charity.name")
+  const usedRootNames = new Set<string>();
+  for (const path of missingVariables) {
+    const rootName = path.split('.')[0];
+    usedRootNames.add(rootName);
+  }
+
+  const definedNames = Object.keys(variableDefinitions);
+  return definedNames.filter((name) => !usedRootNames.has(name));
+}
 
 /**
  * Resolve Mustache template variables in a given string.
@@ -8,7 +35,7 @@ import {VariableItem} from './variables';
  */
 export function resolveTemplateVariables(
   template: string,
-  variableMap: Record<string, VariableItem>,
+  variableDefinitions: Record<string, VariableDefinition>,
   valueMap: Record<string, string>,
 ) {
   const typedValueMap: Record<
@@ -16,7 +43,7 @@ export function resolveTemplateVariables(
     string | boolean | number | object | unknown[]
   > = {};
   Object.keys(valueMap).forEach((variableName) => {
-    const variable = variableMap[variableName];
+    const variable = variableDefinitions[variableName];
     const schemaType = variable?.schema?.type;
 
     switch (schemaType) {
@@ -54,75 +81,41 @@ export function resolveTemplateVariables(
  * Validate that a template's variable references are defined.
  * Also validates that the template is valid Mustache syntax.
  *
- * This validates dotted path access (e.g., {{policy.arguments_pro.0.title}})
- * by checking each level exists in the schema. Numeric array indices are
- * skipped since we can't validate them statically.
+ * Supports:
+ * - Dotted path access (e.g., {{policy.title}})
+ * - Array indices (e.g., {{items.0.name}})
+ * - Sections/Iteration (e.g., {{#items}}{{name}}{{/items}}) with context stacking
  */
 export function validateTemplateVariables(
   template: string,
-  variableMap: Record<string, VariableItem> = {},
+  variableDefinitions: Record<string, VariableDefinition> = {},
 ): {valid: boolean; missingVariables: string[]; syntaxError?: string} {
   try {
-    // First, check if template is valid Mustache syntax
-    Mustache.parse(template);
+    const tokens = Mustache.parse(template);
+    const missingVariables = new Set<string>();
 
-    // Extract all variable references from the template
-    const references = extractVariableReferences(template);
-    const missingVariables: string[] = [];
+    // Initial schema context is the variable definitions
+    // We manually construct a schema-like object to avoid TypeBox runtime overhead/recursion
+    const rootSchema: TSchema = {
+      type: 'object',
+      properties: {},
+      additionalProperties: false,
+    } as unknown as TSchema;
 
-    for (const ref of references) {
-      const parts = ref.split('.');
-      const baseName = parts[0];
-
-      // Check if base variable exists
-      const baseVariable = variableMap[baseName];
-      if (!baseVariable) {
-        missingVariables.push(baseName);
-        continue;
-      }
-
-      // Validate nested path access using JSON Schema (TypeBox)
-      let currentSchema: TSchema = baseVariable.schema;
-
-      for (let i = 1; i < parts.length; i++) {
-        const part = parts[i];
-
-        // Skip numeric array indices (e.g., 0, 1, 2...)
-        // After a numeric index, we're accessing array item properties
-        if (/^\d+$/.test(part)) {
-          // For arrays, navigate to the items schema
-          if (
-            currentSchema.type === 'array' &&
-            'items' in currentSchema &&
-            currentSchema.items
-          ) {
-            currentSchema = currentSchema.items as TSchema;
-          }
-          continue;
-        }
-
-        // For objects, check if the property exists
-        if (currentSchema.type === 'object') {
-          const properties =
-            'properties' in currentSchema
-              ? currentSchema.properties
-              : undefined;
-          if (!properties || !properties[part]) {
-            missingVariables.push(parts.slice(0, i + 1).join('.'));
-            break;
-          }
-          currentSchema = properties[part] as TSchema;
-        } else {
-          // Not an object, can't access properties
-          missingVariables.push(parts.slice(0, i + 1).join('.'));
-          break;
-        }
+    if (rootSchema.properties) {
+      for (const [name, def] of Object.entries(variableDefinitions)) {
+        rootSchema.properties[name] = def.schema;
       }
     }
 
+    // Context stack holds schemas for each scope level
+    const contextStack: TSchema[] = [rootSchema];
+
+    validateTokens(tokens, contextStack, missingVariables);
+
     return {
-      valid: missingVariables.length === 0,
-      missingVariables: [...new Set(missingVariables)],
+      valid: missingVariables.size === 0,
+      missingVariables: Array.from(missingVariables),
     };
   } catch (error) {
     return {
@@ -135,48 +128,87 @@ export function validateTemplateVariables(
 }
 
 /**
- * Extract all variable references from a Mustache template.
- * Uses Mustache's own parser to get accurate variable names.
+ * Recursively validate Mustache tokens against a context stack of schemas.
  */
-export function extractVariableReferences(template: string): string[] {
-  try {
-    const tokens = Mustache.parse(template);
-    const references = new Set<string>();
+function validateTokens(
+  tokens: unknown[],
+  contextStack: TSchema[],
+  missingVariables: Set<string>,
+) {
+  for (const token of tokens) {
+    // Mustache token format: [type, value, start, end, subTokens, index]
+    if (!Array.isArray(token)) continue;
+    const [type, value, , , subTokens] = token as [
+      string,
+      string,
+      number,
+      number,
+      unknown[]?,
+    ];
 
-    // Recursively extract variable names from parsed tokens
-    function extractFromTokens(tokens: unknown[]): void {
-      for (const token of tokens) {
-        // Mustache tokens are tuples with varying lengths depending on token type
-        // We only care about extracting the type and name fields
-        if (!Array.isArray(token)) continue;
-        const [type, name, , , subTokens] = token as [
-          string,
-          string,
-          number,
-          number,
-          unknown[]?,
-        ];
+    // Handle Variable tags (name, &, {) and Section tags (#, ^)
+    if (
+      type === 'name' ||
+      type === '#' ||
+      type === '^' ||
+      type === '&' ||
+      type === '{'
+    ) {
+      // Special case: '.' refers to the current context itself
+      if (value === '.') {
+        continue;
+      }
 
-        // Token types: 'name' for variables, '#' for sections, '^' for inverted sections
-        if (
-          (type === 'name' || type === '#' || type === '^' || type === '&') &&
-          name
-        ) {
-          references.add(name);
+      const schema = resolvePathInContextStack(value, contextStack);
+
+      if (!schema) {
+        missingVariables.add(value);
+      }
+
+      // If this is a section (# or ^), recurse into sub-tokens
+      if ((type === '#' || type === '^') && subTokens && schema) {
+        // Push new context onto stack
+        // If array, push items schema. If object, push object schema.
+        let newContext: TSchema | undefined;
+
+        if (schema.type === 'array' && 'items' in schema) {
+          newContext = schema.items as TSchema;
+        } else if (schema.type === 'object') {
+          newContext = schema;
         }
 
-        // Recursively process sub-tokens in sections
-        if (subTokens && Array.isArray(subTokens)) {
-          extractFromTokens(subTokens);
+        if (newContext) {
+          contextStack.push(newContext);
+          validateTokens(subTokens, contextStack, missingVariables);
+          contextStack.pop();
+        } else {
+          // If primitive or unknown, just validate sub-tokens with current stack
+          // (e.g. boolean toggle section doesn't change data context)
+          validateTokens(subTokens, contextStack, missingVariables);
         }
+      } else if ((type === '#' || type === '^') && subTokens && !schema) {
+        // If section variable was missing, we still validate children
+        // to find other potential errors, but using current stack.
+        validateTokens(subTokens, contextStack, missingVariables);
       }
     }
-
-    extractFromTokens(tokens);
-    return Array.from(references);
-  } catch (error) {
-    // If parsing fails, return empty array
-    console.warn('Failed to parse template for variable extraction:', error);
-    return [];
   }
+}
+
+/**
+ * Try to resolve a dotted path against schemas in the context stack,
+ * searching from top (most specific) to bottom (root).
+ */
+function resolvePathInContextStack(
+  path: string,
+  contextStack: TSchema[],
+): TSchema | undefined {
+  // Search stack from top to bottom
+  for (let i = contextStack.length - 1; i >= 0; i--) {
+    const schema = getSchemaAtPath(contextStack[i], path);
+    if (schema) {
+      return schema;
+    }
+  }
+  return undefined;
 }
