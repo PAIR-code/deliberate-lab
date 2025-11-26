@@ -78,12 +78,14 @@ export async function createDeliberateLabAPIKey(
   const {hash, salt} = await hashDeliberateLabAPIKey(apiKey);
 
   // Store in Firestore under experimenter's subcollection
+  // keyId is stored as a field to enable indexed collection group queries
   await firestore
     .collection('experimenters')
     .doc(experimenterId)
     .collection('apiKeys')
     .doc(keyId)
     .set({
+      keyId,
       hash,
       salt,
       experimenterId,
@@ -108,16 +110,18 @@ export async function verifyDeliberateLabAPIKey(
   // Get key ID to look up the document
   const keyId = getDeliberateLabKeyId(apiKey);
 
-  // Collection group query across all experimenters' apiKeys subcollections
-  const snapshot = await firestore.collectionGroup('apiKeys').get();
+  // Indexed collection group query for O(1) lookup
+  const snapshot = await firestore
+    .collectionGroup('apiKeys')
+    .where('keyId', '==', keyId)
+    .limit(1)
+    .get();
 
-  // Find the matching key document
-  // Can use a composite index here if number of API keys becomes very large.
-  const doc = snapshot.docs.find((doc) => doc.id === keyId);
-
-  if (!doc) {
+  if (snapshot.empty) {
     return {valid: false};
   }
+
+  const doc = snapshot.docs[0];
   const data = doc.data() as DeliberateLabAPIKeyData;
 
   // Check expiration

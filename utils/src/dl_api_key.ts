@@ -8,6 +8,7 @@ export enum DeliberateLabAPIKeyPermission {
 }
 
 export interface DeliberateLabAPIKeyData {
+  keyId: string;
   hash: string;
   salt: string;
   experimenterId: string;

@@ -12,6 +12,7 @@ export const DeliberateLabAPIKeyPermissionSchema = Type.Enum(
 
 /** Schema for DeliberateLabAPIKeyData */
 export const DeliberateLabAPIKeyDataSchema = Type.Object({
+  keyId: Type.String(),
   hash: Type.String(),
   salt: Type.String(),
   experimenterId: Type.String(),
