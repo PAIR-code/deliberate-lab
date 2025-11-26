@@ -42,6 +42,7 @@ export enum UserType {
   PARTICIPANT = 'participant',
   MEDIATOR = 'mediator',
   EXPERIMENTER = 'experimenter', // if experimenter needs to intervene
+  SYSTEM = 'system', // for automated messages (e.g., user left chat)
   UNKNOWN = 'unknown',
 }
 
@@ -57,6 +58,9 @@ export interface ParticipantProfile extends UserProfileBase {
   timestamps: ProgressTimestamps;
   anonymousProfiles: Record<string, AnonymousProfileMetadata>;
   connected: boolean | null;
+  // Maps variable name to value assigned specifically for this participant
+  // This overrides any variable values set at the cohort/experiment levels.
+  variableMap?: Record<string, string>;
 }
 
 /** Anonymous profile data generated from profile set. */
@@ -177,6 +181,7 @@ export function createParticipantProfileExtended(
     anonymousProfiles: {},
     connected: config.agentConfig ? true : false,
     agentConfig: config.agentConfig ?? null,
+    variableMap: config.variableMap ?? {},
   };
 }
 
@@ -304,7 +309,21 @@ export function getNameFromPublicId(
   includePronouns = false,
 ) {
   const profile = participants.find((p) => p.publicId === publicId);
+  if (!profile) return publicId;
+  return getParticipantDisplayName(
+    profile,
+    profileSetId,
+    includeAvatar,
+    includePronouns,
+  );
+}
 
+export function getParticipantDisplayName(
+  profile: ParticipantProfile,
+  profileSetId: string, // leave empty to use default profile
+  includeAvatar = true,
+  includePronouns = false,
+) {
   // If profile set ID specified, use the corresponding anonymous profile
   const profileName = profileSetId
     ? profile?.anonymousProfiles[profileSetId]?.name
@@ -320,5 +339,5 @@ export function getNameFromPublicId(
       includePronouns && profilePronouns ? ` (${profilePronouns})` : '';
     return `${avatar}${profileName}${pronouns}`;
   }
-  return publicId;
+  return profile.publicId;
 }

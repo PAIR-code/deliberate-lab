@@ -1,6 +1,5 @@
 import {Timestamp} from 'firebase/firestore';
 import {ExperimentDownload} from './data';
-import {v4 as uuidv4} from 'uuid';
 import {MediatorStatus} from './mediator';
 import {ParticipantStatus} from './participant';
 
@@ -98,7 +97,7 @@ export function generateId(isSequential: boolean = false): string {
     return `${timestamp}-${randomPart}`;
   }
 
-  return uuidv4();
+  return crypto.randomUUID();
 }
 
 /** Convert UnifiedTimestamp to (hh:mm) format. */
@@ -115,6 +114,29 @@ export function convertUnifiedTimestampToTime(
     return `(${time})`;
   }
   return time;
+}
+
+/** Returns the number of seconds between start time and end time. */
+export function getUnifiedDurationSeconds(
+  start?: UnifiedTimestamp | null,
+  end?: UnifiedTimestamp | null,
+): number | null {
+  if (!start || !end) return null;
+  return end.seconds - start.seconds;
+}
+
+/**
+ * Converts UnifiedTimestamp to %Y-%m-%d %H:%M
+ */
+export function convertUnifiedTimestampToDateTime(timestamp: UnifiedTimestamp) {
+  const date = new Date(timestamp.seconds * 1000);
+  const year = date.getFullYear();
+  const month = (date.getMonth() + 1).toString().padStart(2, '0');
+  const day = date.getDate().toString().padStart(2, '0');
+  const hours = date.getHours().toString().padStart(2, '0');
+  const minutes = date.getMinutes().toString().padStart(2, '0');
+
+  return `${year}-${month}-${day} ${hours}:${minutes}`;
 }
 
 /** Await typing delay (e.g., for chat messages). */
@@ -198,4 +220,9 @@ export function getAgentStatusDisplayText(
 
   // For other statuses, return as-is
   return status;
+}
+
+/** Return list of stage IDs preceding *and including* given stage ID. */
+export function getAllPrecedingStageIds(stageIds: string[], stageId: string) {
+  return stageIds.slice(0, stageIds.indexOf(stageId) + 1);
 }

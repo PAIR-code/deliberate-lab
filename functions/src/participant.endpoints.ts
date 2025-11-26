@@ -9,12 +9,14 @@ import {
   ProfileStageConfig,
   ProfileType,
   RoleStagePublicData,
+  SeedStrategy,
   StageKind,
   SurveyStagePublicData,
-  createParticipantProfileExtended,
-  setProfile,
   StageConfig,
   TransferStageConfig,
+  createParticipantProfileExtended,
+  createVariableToValueMapForSeed,
+  setProfile,
 } from '@deliberation-lab/utils';
 import {
   updateCohortStageUnlocked,
@@ -22,8 +24,7 @@ import {
   handleAutomaticTransfer,
 } from './participant.utils';
 
-import * as functions from 'firebase-functions';
-import {onCall} from 'firebase-functions/v2/https';
+import {onCall, HttpsError} from 'firebase-functions/v2/https';
 
 import {app} from './app';
 import {AuthGuard} from './utils/auth-guard';
@@ -126,6 +127,12 @@ export const createParticipant = onCall(async (request) => {
     // Set current stage ID in participant config
     participantConfig.currentStageId = experiment.stageIds[0];
 
+    // Add variable values at the participant level
+    participantConfig.variableMap = createVariableToValueMapForSeed(
+      experiment.variableConfigs ?? [],
+      SeedStrategy.PARTICIPANT,
+    );
+
     // Write new participant document
     transaction.set(document, participantConfig);
   });
@@ -144,7 +151,7 @@ function handleCreateParticipantValidationErrors(data: any) {
     }
   }
 
-  throw new functions.https.HttpsError('invalid-argument', 'Invalid data');
+  throw new HttpsError('invalid-argument', 'Invalid data');
 }
 
 // ************************************************************************* //

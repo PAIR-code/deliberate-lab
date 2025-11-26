@@ -81,7 +81,13 @@ gallery-card {
   }
 }
 
+.gallery-link {
+  text-decoration: none;
+  color: inherit;
+}
+
 .banner {
+  @include typescale.body-small;
   background: var(--md-sys-color-tertiary-container);
   border-radius: common.$spacing-medium;
   color: var(--md-sys-color-on-tertiary-container);
@@ -133,4 +139,108 @@ h1 {
   &:hover.blank {
     border-color: var(--md-sys-color-secondary);
   }
+}
+
+.gallery-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  max-width: $gallery-width;
+  padding: 0 common.$spacing-xxl;
+  box-sizing: border-box;
+}
+
+.controls {
+  margin-top: common.$spacing-large;
+  display: flex;
+  align-items: center;
+  gap: common.$spacing-medium;
+}
+
+/* Smooth fade when refreshing */
+.gallery-wrapper {
+  opacity: 1;
+  visibility: visible;
+  transition:
+    opacity 150ms ease,
+    visibility 150ms ease;
+}
+
+.gallery-wrapper.hidden {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+// Sort
+.menu-wrapper {
+  @include typescale.label-small;
+  @include common.flex-column;
+  gap: common.$spacing-small;
+  overflow: auto;
+}
+
+.menu-item {
+  @include common.nav-item;
+  display: flex;
+  min-width: 140px;
+  justify-content: space-between; /* pushes checkmark to right */
+  align-items: center;
+  gap: common.$spacing-small;
+}
+
+.menu-item .checkmark {
+  opacity: 0.9;
+}
+
+// Search
+.search-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+  height: 32px;
+  border: 1px solid var(--md-sys-color-outline-variant);
+  border-radius: common.$spacing-medium;
+  padding: 0 common.$spacing-medium 0 28px; /* space for icon */
+  background: var(--md-sys-color-surface);
+  cursor: text;
+  transition:
+    background 120ms ease,
+    border-color 120ms ease;
+
+  &:hover {
+    background: var(--md-sys-color-surface-variant);
+  }
+
+  &:focus-within {
+    border-color: var(--md-sys-color-secondary);
+    background: var(--md-sys-color-surface);
+  }
+}
+
+/* This is needed to render the search icon as part of the
+ * text area wrapper. */
+.search-container pr-icon {
+  position: absolute;
+  left: common.$spacing-medium;
+  pointer-events: none;
+}
+
+.search-container pr-icon.clear-button {
+  right: common.$spacing-medium;
+  left: auto;
+  pointer-events: auto;
+  cursor: pointer;
+  color: var(--md-sys-color-outline);
+  transition: color 120ms ease;
+
+  &:hover {
+    color: var(--md-sys-color-secondary);
+  }
+}
+
+.search-container pr-textarea {
+  width: 140px;
+  margin: 0;
 }

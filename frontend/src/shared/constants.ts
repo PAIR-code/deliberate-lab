@@ -1,4 +1,6 @@
-/** Documentation URL. */
+/** Documentation URLs. */
+export const BUG_REPORT_URL =
+  'https://github.com/PAIR-code/deliberate-lab/issues/';
 export const DOCUMENTATION_URL = 'https://pair-code.github.io/deliberate-lab/';
 
 /** Prolific URL prefix. */
@@ -16,15 +18,12 @@ export const FIREBASE_LOCAL_HOST_PORT_RTDB = 9000;
 export const APP_NAME = 'Deliberate Lab';
 
 /** Profile avatars. */
-export const MAN_EMOJIS = ['👨🏻', '👨🏼', '👨🏽', '👨🏾', '👨🏿'];
-export const WOMAN_EMOJIS = ['👩🏻', '👩🏼', '👩🏽', '👩🏾', '👩🏿'];
-export const PERSON_EMOJIS = ['🧑🏻', '🧑🏼', '🧑🏽', '🧑🏾', '🧑🏿'];
-
-export const PROFILE_AVATARS = [
-  ...WOMAN_EMOJIS,
-  ...MAN_EMOJIS,
-  ...PERSON_EMOJIS,
-];
+export {
+  MAN_EMOJIS,
+  WOMAN_EMOJIS,
+  PERSON_EMOJIS,
+  PROFILE_AVATARS,
+} from '@deliberation-lab/utils';
 
 /** LLM agent avatars. */
 export const LLM_AGENT_AVATARS = ['🤖', '🙋', '👋', '💡', '⭐'];

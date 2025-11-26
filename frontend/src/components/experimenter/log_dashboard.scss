@@ -1,0 +1,192 @@
+@use '../../sass/common';
+@use '../../sass/typescale';
+
+:host {
+  @include common.flex-column;
+  flex-grow: 1;
+  overflow: hidden;
+  width: 100%;
+}
+
+.header {
+  @include common.flex-row-align-center;
+  @include typescale.title-medium;
+  background: var(--md-sys-color-surface);
+  border-bottom: 1px solid var(--md-sys-color-outline-variant);
+  flex-shrink: 0;
+  gap: common.$spacing-medium;
+  height: common.$header-height;
+  justify-content: space-between;
+  padding: 0 common.$main-content-padding;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+
+  .left,
+  .right {
+    @include common.flex-row-align-center;
+    gap: common.$spacing-medium;
+  }
+}
+
+.main-wrapper {
+  @include common.flex-column;
+  flex-grow: 1;
+  overflow: auto;
+}
+
+.empty-message {
+  color: var(--md-sys-color-outline);
+  padding: common.$main-content-padding;
+}
+
+.log {
+  @include common.flex-column;
+  border-bottom: 2px solid var(--md-sys-color-outline-variant);
+  gap: common.$spacing-small;
+  padding: common.$spacing-xl;
+}
+
+.log-header {
+  @include common.flex-row;
+  flex-wrap: wrap;
+  gap: common.$spacing-small;
+}
+
+.chip {
+  @include common.chip;
+  width: max-content;
+}
+
+.model-call {
+  @include typescale.label-small;
+}
+
+pre {
+  background: var(--md-sys-color-surface-variant);
+  overflow: auto;
+  padding: common.$spacing-large;
+}
+
+code {
+  font-size: 90%;
+  word-break: break-all;
+  word-wrap: wrap;
+}
+
+/* Modal */
+.modal {
+  display: block;
+  position: fixed;
+  z-index: 2;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: var(--md-sys-color-surface);
+}
+
+.modal-content {
+  overflow: auto;
+  font-size: var(--md-sys-typescale-body-medium-font-size);
+  position: absolute;
+  right: 10%;
+  top: 20%;
+  transform: translateY(-20%);
+  border-radius: 10px;
+  background-color: var(--md-sys-color-surface);
+  color: var(--md-sys-color-on-surface);
+  padding: 20px;
+  border: 1px solid var(--md-sys-color-outline);
+  width: var(--pr-text-area-width, 80%);
+  max-height: 90vh;
+  height: auto;
+}
+
+pr-menu {
+  @include typescale.label-small;
+}
+.menu-item {
+  @include common.nav-item;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: common.$spacing-xs;
+}
+
+.menu-item .checkmark {
+  opacity: 0.9;
+}
+
+.filter-group {
+  position: relative;
+}
+
+.filter-popover {
+  @include typescale.label-small;
+
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  z-index: 2;
+  background: var(--md-sys-color-surface);
+  border: 1px solid var(--md-sys-color-outline);
+  border-radius: common.$spacing-small;
+  padding: common.$spacing-small 0;
+  min-width: 220px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+}
+
+.filter-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: common.$spacing-medium;
+  padding: common.$spacing-small common.$spacing-medium;
+}
+
+.filter-actions {
+  @include typescale.label-small;
+  display: flex;
+  justify-content: space-between;
+  padding: common.$spacing-medium;
+  border-top: 1px solid var(--md-sys-color-outline-variant);
+}
+
+.checkmark {
+  margin-left: 8px;
+}
+.menu-wrapper {
+  @include typescale.label-small;
+  @include common.flex-column;
+  gap: common.$spacing-small;
+  overflow: auto;
+}
+
+pr-icon {
+  padding-right: common.$spacing-small;
+}
+
+.log details pre {
+  white-space: pre-wrap;
+  word-break: break-word;
+  overflow-x: auto;
+  max-width: 100%;
+  padding: common.$spacing-small;
+  border-radius: common.$spacing-xs;
+}
+
+.image-gallery {
+  @include common.flex-row;
+  flex-wrap: wrap;
+  gap: common.$spacing-medium;
+  padding: common.$spacing-medium 0;
+}
+
+.log-image {
+  max-width: 400px;
+  width: 100%;
+  height: auto;
+  border-radius: common.$spacing-small;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}

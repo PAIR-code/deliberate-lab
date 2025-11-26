@@ -7,6 +7,7 @@ import {
   generateId,
 } from './shared';
 import {StageConfig} from './stages/stage';
+import {VariableConfig} from './variables';
 
 /** Experiment types and functions. */
 
@@ -34,8 +35,9 @@ import {StageConfig} from './stages/stage';
  * VERSION 16 - switch to new mediator workflow including updated ChatMessage
  * VERSION 17 - add structured output config to agent prompt configs
  * VERSION 18 - add agent participant config to ParticipantProfileExtended
+ * VERSION 19 - Support for Variables including objects and arrays
  */
-export const EXPERIMENT_VERSION_ID = 18;
+export const EXPERIMENT_VERSION_ID = 19;
 
 /** Experiment. */
 export interface Experiment {
@@ -48,6 +50,8 @@ export interface Experiment {
   prolificConfig: ProlificConfig;
   stageIds: string[]; // Ordered list of stage IDs
   cohortLockMap: Record<string, boolean>; // maps cohort ID to is locked
+  variableConfigs?: VariableConfig[]; // list of variable configs used in experiment
+  variableMap?: Record<string, string>; // variable to assigned value
 }
 
 /** Experiment template (used to load experiments). */
@@ -101,6 +105,8 @@ export function createExperimentConfig(
     prolificConfig: config.prolificConfig ?? createProlificConfig(),
     stageIds: stages.map((stage) => stage.id),
     cohortLockMap: config.cohortLockMap ?? {},
+    variableConfigs: config.variableConfigs ?? [],
+    variableMap: config.variableMap ?? {},
   };
 }
 

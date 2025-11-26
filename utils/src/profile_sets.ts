@@ -1,5 +1,16 @@
 /** Profile sets to use for anonymous profiles. */
 
+/** Profile avatar constants shared across packages. */
+export const WOMAN_EMOJIS = ['👩🏻', '👩🏼', '👩🏽', '👩🏾', '👩🏿'];
+export const MAN_EMOJIS = ['👨🏻', '👨🏼', '👨🏽', '👨🏾', '👨🏿'];
+export const PERSON_EMOJIS = ['🧑🏻', '🧑🏼', '🧑🏽', '🧑🏾', '🧑🏿'];
+
+export const PROFILE_AVATARS = [
+  ...WOMAN_EMOJIS,
+  ...MAN_EMOJIS,
+  ...PERSON_EMOJIS,
+];
+
 // Temporary hack: include this ID in stage ID in order to use
 // anonymous profile set for display
 export const SECONDARY_PROFILE_SET_ID = 'secondary_profile';

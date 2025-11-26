@@ -14,7 +14,7 @@ import {
 import {Timestamp} from 'firebase-admin/firestore';
 
 import {app} from '../app';
-import {updateParticipantNextStage} from '../participant.utils';
+import {updateParticipantReadyToEndChat} from '../chat/chat.utils';
 import {
   getFirestoreActiveParticipants,
   getFirestoreExperiment,
@@ -233,75 +233,4 @@ export async function updateCurrentChatDiscussionId(
 
     transaction.set(publicDocument, publicStageData);
   });
-}
-
-/** Update participant answer ready to end chat discussion. */
-export async function updateParticipantReadyToEndChat(
-  experimentId: string,
-  stageId: string,
-  participantId: string,
-) {
-  const participant = await getFirestoreParticipant(
-    experimentId,
-    participantId,
-  );
-
-  const stage = await getFirestoreStage(experimentId, stageId);
-
-  const publicStageData = await getFirestoreStagePublicData(
-    experimentId,
-    participant.currentCohortId,
-    stage.id,
-  );
-
-  const participantAnswerDoc = getFirestoreParticipantAnswerRef(
-    experimentId,
-    participantId,
-    stage.id,
-  );
-  const participantAnswer =
-    (await getFirestoreParticipantAnswer(
-      experimentId,
-      participant.privateId,
-      stage.id,
-    )) ?? createChatStageParticipantAnswer({id: stage.id});
-
-  // If threaded discussion (and not last thread), move to next thread
-  if (
-    stage.discussions.length > 0 &&
-    publicStageData.currentDiscussionId &&
-    publicStageData.currentDiscussionId !==
-      stage.discussions[stage.discussions.length - 1]
-  ) {
-    // Set ready to end timestamp if not already set
-    if (
-      !participantAnswer.discussionTimestampMap[
-        publicStageData.currentDiscussionId
-      ]
-    ) {
-      participantAnswer.discussionTimestampMap[
-        publicStageData.currentDiscussionId
-      ] = Timestamp.now();
-
-      await app.firestore().runTransaction(async (transaction) => {
-        await transaction.set(participantAnswerDoc, participantAnswer);
-      });
-    }
-  } else {
-    // Otherwise, move to next stage
-    const experiment = await getFirestoreExperiment(experimentId);
-    await updateParticipantNextStage(
-      experimentId,
-      participant,
-      experiment.stageIds,
-    );
-
-    const participantDoc = getFirestoreParticipantRef(
-      experimentId,
-      participant.privateId,
-    );
-    await app.firestore().runTransaction(async (transaction) => {
-      await transaction.set(participantDoc, participant);
-    });
-  }
 }

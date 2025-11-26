@@ -6,15 +6,18 @@ import {
   AgentParticipantTemplate,
   Experiment,
   ExperimentDeletionData,
+  ExperimentDownloadResponse,
   MediatorPromptConfig,
   ParticipantPromptConfig,
+  SeedStrategy,
   StageConfig,
   createExperimentConfig,
   createExperimentTemplate,
+  createVariableToValueMapForSeed,
 } from '@deliberation-lab/utils';
+import {getExperimentDownload} from './data';
 
-import * as functions from 'firebase-functions';
-import {onCall} from 'firebase-functions/v2/https';
+import {onCall, HttpsError} from 'firebase-functions/v2/https';
 
 import {app} from './app';
 import {AuthGuard} from './utils/auth-guard';
@@ -66,23 +69,13 @@ export const writeExperiment = onCall(async (request) => {
       transaction.set(document.collection('stages').doc(stage.id), stage);
     }
 
-    // Add agent configs and prompts
-    // TODO: Remove old collection once new paths are fully connected
-    for (const agent of [
-      ...template.agentMediators,
-      ...template.agentParticipants,
-    ]) {
-      const agentDoc = document.collection('agents').doc(agent.persona.id);
-      transaction.set(agentDoc, agent.persona);
-      for (const prompt of Object.values(agent.promptMap)) {
-        transaction.set(
-          agentDoc.collection('chatPrompts').doc(prompt.id),
-          prompt,
-        );
-      }
-    }
+    // Add variable values at the experiment level
+    experimentConfig.variableMap = createVariableToValueMapForSeed(
+      experimentConfig.variableConfigs ?? [],
+      SeedStrategy.EXPERIMENT,
+    );
 
-    // Add agent mediators under `agentParticipants` collection
+    // Add agent mediators under `agentMediators` collection
     template.agentMediators.forEach((agent) => {
       const doc = document.collection('agentMediators').doc(agent.persona.id);
       transaction.set(doc, agent.persona);
@@ -91,7 +84,10 @@ export const writeExperiment = onCall(async (request) => {
       }
     });
 
-    // Add agent particiapnts under `agentMediators` collection
+    // Add agent participants under `agentParticipants` collection
+    // NOTE: We don't currently allow agent participant persona setup
+    // in the experiment editor, so the list of agentParticipants
+    // is expected to be length 0.
     template.agentParticipants.forEach((agent) => {
       const doc = document
         .collection('agentParticipants')
@@ -197,7 +193,7 @@ export const deleteExperiment = onCall(async (request) => {
   // Validate input
   const validInput = Value.Check(ExperimentDeletionData, data);
   if (!validInput) {
-    throw new functions.https.HttpsError('invalid-argument', 'Invalid data');
+    throw new HttpsError('invalid-argument', 'Invalid data');
   }
 
   // Verify that experimenter is the creator before enabling delete
@@ -210,7 +206,7 @@ export const deleteExperiment = onCall(async (request) => {
       .get()
   ).data();
   if (!experiment) {
-    throw new functions.https.HttpsError(
+    throw new HttpsError(
       'not-found',
       `Experiment ${data.experimentId} not found in collection ${data.collectionName}`,
     );
@@ -245,7 +241,7 @@ export const getExperimentTemplate = onCall(async (request) => {
   ).data();
 
   if (!experiment) {
-    throw new functions.https.HttpsError(
+    throw new HttpsError(
       'not-found',
       `Experiment ${data.experimentId} not found in collection ${data.collectionName}`,
     );
@@ -364,4 +360,31 @@ export const setExperimentCohortLock = onCall(async (request) => {
   });
 
   return {success: true};
+});
+
+// ************************************************************************* //
+// downloadExperiment for experimenters                                      //
+//                                                                           //
+// Input structure: { experimentId }                                         //
+// Returns: ExperimentDownloadResponse                                       //
+// ************************************************************************* //
+export const downloadExperiment = onCall(async (request) => {
+  await AuthGuard.isExperimenter(request);
+  const {data} = request;
+
+  try {
+    const experimentDownload = await getExperimentDownload(
+      app.firestore(),
+      data.experimentId,
+    );
+
+    const response: ExperimentDownloadResponse = {
+      data: experimentDownload,
+    };
+
+    return response;
+  } catch (error) {
+    console.error('Error downloading experiment:', error);
+    return {data: null};
+  }
 });

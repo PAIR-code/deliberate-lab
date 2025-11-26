@@ -19,6 +19,7 @@ export const CohortCreationData = Type.Object(
         metadata: MetadataConfigSchema,
         participantConfig: CohortParticipantConfigSchema,
         stageUnlockMap: Type.Record(Type.String(), Type.Boolean()),
+        variableMap: Type.Optional(Type.Record(Type.String(), Type.String())),
       },
       strict,
     ),

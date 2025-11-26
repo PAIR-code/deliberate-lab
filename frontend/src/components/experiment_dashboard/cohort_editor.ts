@@ -7,6 +7,8 @@ import '../participant_profile/profile_display';
 import './cohort_summary';
 import './participant_summary';
 import './agent_participant_configuration_dialog';
+import './agent_mediator_add_dialog';
+import {renderMediatorStatusChip} from './mediator_status';
 
 import {MobxLitElement} from '@adobe/lit-mobx';
 import {CSSResultGroup, html, nothing, TemplateResult} from 'lit';
@@ -30,7 +32,6 @@ import {
   ParticipantProfileExtended,
   ParticipantStatus,
   StageKind,
-  getAgentStatusDisplayText,
 } from '@deliberation-lab/utils';
 
 import {styles} from './cohort_editor.scss';
@@ -41,12 +42,14 @@ export class Component extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
 
   private readonly analyticsService = core.getService(AnalyticsService);
+  private readonly authService = core.getService(AuthService);
   private readonly experimentEditor = core.getService(ExperimentEditor);
   private readonly experimentManager = core.getService(ExperimentManager);
   private readonly experimentService = core.getService(ExperimentService);
 
   @property() cohort: CohortConfig | undefined = undefined;
   @property() showAgentParticipantDialog = false;
+  @property() showAgentMediatorDialog = false;
 
   @state() isStatusLoading = false;
 
@@ -145,7 +148,11 @@ export class Component extends MobxLitElement {
           ${numCohorts > 0
             ? html`<div>Use the dropdown above to select a cohort.</div>`
             : html`
-                <div>To begin running your experiment, create a cohort:</div>
+                <div>
+                  Create a cohort to add participants to your experiment. Once
+                  you add a cohort, you will no longer be able to edit
+                  experiment stages.
+                </div>
                 <pr-button variant="tonal" @click=${this.addCohort}>
                   Create new cohort
                 </pr-button>
@@ -175,7 +182,7 @@ export class Component extends MobxLitElement {
           this.experimentManager.getCohortHumanParticipants(this.cohort.id),
           html`${this.renderAddHumanParticipant()}`,
         )}
-        ${this.experimentEditor.showAlphaFeatures
+        ${this.authService.showAlphaFeatures
           ? this.renderParticipantTable(
               'Agent participants',
               this.experimentManager.getCohortAgentParticipants(this.cohort.id),
@@ -185,7 +192,14 @@ export class Component extends MobxLitElement {
         ${this.renderMediatorTable(
           'Agent mediators',
           this.experimentManager.getCohortAgentMediators(this.cohort.id),
+          html`${this.renderAddMediator()}`,
         )}
+        <div class="table-wrapper table-header">
+          <details>
+            <summary>JSON Config</summary>
+            <pre><code>${JSON.stringify(this.cohort, null, 2)}</code></pre>
+          </details>
+        </div>
       </div>
     `;
   }
@@ -193,6 +207,7 @@ export class Component extends MobxLitElement {
   private renderMediatorTable(
     title: string,
     mediators: MediatorProfileExtended[],
+    actionBar: TemplateResult,
   ) {
     const renderEmptyMessage = () => {
       if (mediators.length === 0) {
@@ -203,14 +218,7 @@ export class Component extends MobxLitElement {
 
     const renderMediator = (mediator: MediatorProfileExtended) => {
       const renderStatus = () => {
-        if (!mediator.agentConfig) {
-          return nothing;
-        }
-        return html`
-          <div class="chip secondary">
-            🤖 ${getAgentStatusDisplayText(mediator.currentStatus)}
-          </div>
-        `;
+        return renderMediatorStatusChip(mediator);
       };
 
       const toggleStatus = async () => {
@@ -253,6 +261,7 @@ export class Component extends MobxLitElement {
       <div class="table-wrapper">
         <div class="table-header">
           <div>${title}</div>
+          <div>${actionBar}</div>
         </div>
         <div class="table-body">
           ${renderEmptyMessage()}
@@ -380,6 +389,53 @@ export class Component extends MobxLitElement {
               this.showAgentParticipantDialog = false;
             }}
           ></agent-participant-configuration-dialog>`
+        : nothing}
+    `;
+  }
+
+  private renderAddMediator() {
+    if (!this.cohort) {
+      return nothing;
+    }
+
+    const availableMediators =
+      this.experimentManager.getAvailableMediatorPersonas(this.cohort.id);
+    const isLocked = Boolean(
+      this.experimentService.experiment?.cohortLockMap[this.cohort.id],
+    );
+    const tooltipText = isLocked
+      ? 'Unlock cohort to add mediators'
+      : availableMediators.length === 0
+        ? 'No mediator personas available to add'
+        : 'Add agent mediator';
+
+    const isDisabled =
+      isLocked ||
+      availableMediators.length === 0 ||
+      this.experimentManager.isWritingMediator;
+
+    return html`
+      <pr-tooltip text=${tooltipText} position="BOTTOM_END">
+        <pr-icon-button
+          icon="person_add"
+          color="tertiary"
+          variant="default"
+          ?disabled=${isDisabled}
+          ?loading=${this.experimentManager.isWritingMediator}
+          @click=${() => {
+            if (isDisabled) return;
+            this.showAgentMediatorDialog = true;
+          }}
+        >
+        </pr-icon-button>
+      </pr-tooltip>
+      ${this.showAgentMediatorDialog
+        ? html`<agent-mediator-add-dialog
+            .cohort=${this.cohort}
+            @close=${() => {
+              this.showAgentMediatorDialog = false;
+            }}
+          ></agent-mediator-add-dialog>`
         : nothing}
     `;
   }

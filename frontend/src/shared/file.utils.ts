@@ -2,22 +2,8 @@
  * Functions for data downloads.
  */
 
+import {stringify as csvStringify} from 'csv-stringify/sync';
 import {
-  collection,
-  doc,
-  getDoc,
-  getDocs,
-  Firestore,
-  orderBy,
-  query,
-} from 'firebase/firestore';
-import {
-  AgentDataObject,
-  AgentMediatorPersonaConfig,
-  AgentMediatorTemplate,
-  AgentParticipantPersonaConfig,
-  AgentParticipantTemplate,
-  AgentPersonaConfig,
   AlertMessage,
   ChatMessage,
   ChipItem,
@@ -25,41 +11,33 @@ import {
   ChipStagePublicData,
   ChipTransaction,
   ChipTransactionStatus,
-  CohortConfig,
   CohortDownload,
-  Experiment,
   ExperimentDownload,
-  MediatorPromptConfig,
-  ParticipantPromptConfig,
   ParticipantDownload,
   ParticipantProfileExtended,
   PayoutItemType,
   PayoutStageConfig,
   PayoutStageParticipantAnswer,
   RankingStageConfig,
-  RankingStagePublicData,
   LRRankingStagePublicData,
-  StageConfig,
   StageKind,
-  StageParticipantAnswer,
-  StagePublicData,
-  SurveyAnswer,
   SurveyPerParticipantStageConfig,
-  SurveyStageConfig,
-  SurveyQuestion,
   SurveyQuestionKind,
+  SurveyStageConfig,
   UnifiedTimestamp,
   calculatePayoutResult,
   calculatePayoutTotal,
-  createCohortDownload,
-  createExperimentDownload,
-  createParticipantDownload,
 } from '@deliberation-lab/utils';
 import {convertUnifiedTimestampToISO} from './utils';
 
 // ****************************************************************************
 // FILE DOWNLOAD FUNCTIONS
 // ****************************************************************************
+
+const CSV_STRINGIFY_OPTIONS = {
+  header: true,
+  escape_formulas: true,
+};
 
 /** Download blob (helper function for file downloads) */
 export function downloadBlob(blob: Blob, filename: string) {
@@ -94,196 +72,13 @@ export function downloadJSON(data: object, filename: string) {
   downloadBlob(blob, filename);
 }
 
+// TODO(mkbehr): convert all remaining CSV generation to use csvStringify, and
+// remove toCsv().
 /** Make text CSV-compatibile. */
 export function toCSV(text: string | null) {
   if (!text) return '';
 
   return text.replaceAll(',', '').replaceAll('\n', '');
-}
-
-// ****************************************************************************
-// EXPERIMENT DOWNLOAD JSON
-// ****************************************************************************
-export async function getExperimentDownload(
-  firestore: Firestore,
-  experimentId: string,
-) {
-  // Get experiment config from experimentId
-  const experimentConfig = (
-    await getDoc(doc(firestore, 'experiments', experimentId))
-  ).data() as Experiment;
-
-  // Create experiment download using experiment config
-  const experimentDownload = createExperimentDownload(experimentConfig);
-
-  // For each experiment stage config, add to ExperimentDownload
-  const stageConfigs = (
-    await getDocs(collection(firestore, 'experiments', experimentId, 'stages'))
-  ).docs.map((doc) => doc.data() as StageConfig);
-  for (const stage of stageConfigs) {
-    experimentDownload.stageMap[stage.id] = stage;
-  }
-
-  // For each participant, add ParticipantDownload
-  const profiles = (
-    await getDocs(
-      collection(firestore, 'experiments', experimentId, 'participants'),
-    )
-  ).docs.map((doc) => doc.data() as ParticipantProfileExtended);
-  for (const profile of profiles) {
-    // Create new ParticipantDownload
-    const participantDownload = createParticipantDownload(profile);
-
-    // For each stage answer, add to ParticipantDownload map
-    const stageAnswers = (
-      await getDocs(
-        collection(
-          firestore,
-          'experiments',
-          experimentId,
-          'participants',
-          profile.privateId,
-          'stageData',
-        ),
-      )
-    ).docs.map((doc) => doc.data() as StageParticipantAnswer);
-    for (const stage of stageAnswers) {
-      participantDownload.answerMap[stage.id] = stage;
-    }
-    // Add ParticipantDownload to ExperimentDownload
-    experimentDownload.participantMap[profile.publicId] = participantDownload;
-  }
-
-  // For each agent mediator, add template
-  const agentMediatorCollection = collection(
-    firestore,
-    'experiments',
-    experimentId,
-    'agentMediators',
-  );
-  const mediatorAgents = (await getDocs(agentMediatorCollection)).docs.map(
-    (agent) => agent.data() as AgentMediatorPersonaConfig,
-  );
-  for (const persona of mediatorAgents) {
-    const mediatorPrompts = (
-      await getDocs(
-        collection(
-          firestore,
-          'experiments',
-          experimentId,
-          'agentMediators',
-          persona.id,
-          'prompts',
-        ),
-      )
-    ).docs.map((doc) => doc.data() as MediatorPromptConfig);
-    const mediatorTemplate: AgentMediatorTemplate = {
-      persona,
-      promptMap: {},
-    };
-    mediatorPrompts.forEach((prompt) => {
-      mediatorTemplate.promptMap[prompt.id] = prompt;
-    });
-    // Add to ExperimentDownload
-    experimentDownload.agentMediatorMap[persona.id] = mediatorTemplate;
-  }
-
-  // For each agent participant, add template
-  const agentParticipantCollection = collection(
-    firestore,
-    'experiments',
-    experimentId,
-    'agentParticipants',
-  );
-  const participantAgents = (
-    await getDocs(agentParticipantCollection)
-  ).docs.map((agent) => agent.data() as AgentParticipantPersonaConfig);
-  for (const persona of participantAgents) {
-    const participantPrompts = (
-      await getDocs(
-        collection(
-          firestore,
-          'experiments',
-          experimentId,
-          'agentParticipants',
-          persona.id,
-          'prompts',
-        ),
-      )
-    ).docs.map((doc) => doc.data() as ParticipantPromptConfig);
-    const participantTemplate: AgentParticipantTemplate = {
-      persona,
-      promptMap: {},
-    };
-    participantPrompts.forEach((prompt) => {
-      participantTemplate.promptMap[prompt.id] = prompt;
-    });
-    // Add to ExperimentDownload
-    experimentDownload.agentParticipantMap[persona.id] = participantTemplate;
-  }
-
-  // For each cohort, add CohortDownload
-  const cohorts = (
-    await getDocs(collection(firestore, 'experiments', experimentId, 'cohorts'))
-  ).docs.map((cohort) => cohort.data() as CohortConfig);
-  for (const cohort of cohorts) {
-    // Create new CohortDownload
-    const cohortDownload = createCohortDownload(cohort);
-
-    // For each public stage data, add to CohortDownload
-    const publicStageData = (
-      await getDocs(
-        collection(
-          firestore,
-          'experiments',
-          experimentId,
-          'cohorts',
-          cohort.id,
-          'publicStageData',
-        ),
-      )
-    ).docs.map((doc) => doc.data() as StagePublicData);
-    for (const data of publicStageData) {
-      cohortDownload.dataMap[data.id] = data;
-      // If chat stage, add list of chat messages to CohortDownload
-      if (data.kind === StageKind.CHAT) {
-        const chatList = (
-          await getDocs(
-            query(
-              collection(
-                firestore,
-                'experiments',
-                experimentId,
-                'cohorts',
-                cohort.id,
-                'publicStageData',
-                data.id,
-                'chats',
-              ),
-              orderBy('timestamp', 'asc'),
-            ),
-          )
-        ).docs.map((doc) => doc.data() as ChatMessage);
-        cohortDownload.chatMap[data.id] = chatList;
-      }
-    }
-
-    // Add CohortDownload to ExperimentDownload
-    experimentDownload.cohortMap[cohort.id] = cohortDownload;
-
-    // Add alerts to ExperimentDownload
-    const alertList = (
-      await getDocs(
-        query(
-          collection(firestore, 'experiments', experimentId, 'alerts'),
-          orderBy('timestamp', 'asc'),
-        ),
-      )
-    ).docs.map((doc) => doc.data() as AlertMessage);
-    experimentDownload.alerts = alertList;
-  }
-
-  return experimentDownload;
 }
 
 // ****************************************************************************
@@ -920,21 +715,26 @@ export interface ChatHistoryData {
 // ****************************************************************************
 
 /** Returns CSV data for all participants in experiment download. */
-export function getParticipantData(data: ExperimentDownload) {
-  const participantData: string[][] = [];
-
-  // Add headings
-  participantData.push(
-    getAllParticipantCSVColumns(data, null, data.participantMap),
+export function getParticipantDataCSV(data: ExperimentDownload): string {
+  const columns: string[] = getAllParticipantCSVColumns(
+    data,
+    null,
+    data.participantMap,
+  );
+  const records: string[][] = Object.values(data.participantMap).map(
+    (participant) => {
+      return getAllParticipantCSVColumns(
+        data,
+        participant,
+        data.participantMap,
+      );
+    },
   );
 
-  // Add participants
-  for (const participant of Object.values(data.participantMap)) {
-    participantData.push(
-      getAllParticipantCSVColumns(data, participant, data.participantMap),
-    );
-  }
-  return participantData;
+  return csvStringify(records, {
+    columns: columns,
+    ...CSV_STRINGIFY_OPTIONS,
+  });
 }
 
 /** Returns CSV data for all alerts in experiment download. */
@@ -943,9 +743,12 @@ export function getAlertData(data: ExperimentDownload) {
 
   // Add headings
   alertData.push(getAllAlertCSVColumns(null));
-  // Add alerts
-  for (const alert of data.alerts) {
-    alertData.push(getAllAlertCSVColumns(alert));
+  // Add alerts from all participants
+  for (const participantId of Object.keys(data.alerts)) {
+    const participantAlerts = data.alerts[participantId];
+    for (const alert of participantAlerts) {
+      alertData.push(getAllAlertCSVColumns(alert));
+    }
   }
 
   return alertData;

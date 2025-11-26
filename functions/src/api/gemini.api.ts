@@ -15,7 +15,6 @@ import {
   StructuredOutputSchema,
   ModelResponseStatus,
   ModelResponse,
-  addParsedModelResponse,
 } from '@deliberation-lab/utils';
 
 const GEMINI_DEFAULT_MODEL = 'gemini-2.5-flash';
@@ -165,7 +164,6 @@ export async function callGemini(
   prompt: string | Array<{role: string; content: string; name?: string}>,
   generationConfig: GenerationConfig,
   modelName = GEMINI_DEFAULT_MODEL,
-  parseResponse = false, // parse if structured output
   safetySettings?: SafetySetting[],
 ): Promise<ModelResponse> {
   const genAI = new GoogleGenAI({apiKey});
@@ -219,30 +217,42 @@ export async function callGemini(
     };
   }
 
-  let text: string | undefined = undefined;
-  let reasoning: string | undefined = undefined;
+  const textParts: string[] = [];
+  const reasoningParts: string[] = [];
+  const imageDataList: Array<{mimeType: string; data: string}> = [];
 
-  for (const part of response.candidates[0].content.parts) {
-    if (!part.text) {
-      continue;
-    }
-    if (part.thought) {
-      reasoning = part.text;
-    } else {
-      text = part.text;
+  // Safely iterate over parts if they exist
+  const parts = response.candidates[0].content?.parts ?? [];
+  for (const part of parts) {
+    if (part.text) {
+      if (part.thought) {
+        // Collect all thought/reasoning blocks
+        reasoningParts.push(part.text);
+      } else {
+        textParts.push(part.text);
+      }
+    } else if (part.inlineData && !part.thought) {
+      // Only collect images that are NOT in thought blocks
+      const imageData = {
+        mimeType: part.inlineData.mimeType ?? '',
+        data: part.inlineData.data ?? '',
+      };
+      if (imageData.mimeType && imageData.data) {
+        imageDataList.push(imageData);
+      }
     }
   }
 
-  const modelResponse = {
+  const modelResponse: ModelResponse = {
     status: ModelResponseStatus.OK,
-    text: text,
+
+    text: textParts.length > 0 ? textParts.join('') : undefined,
     rawResponse: JSON.stringify(response),
     generationConfig,
-    reasoning: reasoning,
+    reasoning: reasoningParts.length > 0 ? reasoningParts.join('') : undefined,
+    imageDataList: imageDataList.length > 0 ? imageDataList : undefined,
   };
-  if (parseResponse) {
-    return addParsedModelResponse(modelResponse);
-  }
+
   return modelResponse;
 }
 
@@ -280,6 +290,13 @@ export async function getGeminiAPIResponse(
     thinkingBudget: generationConfig.reasoningBudget,
     includeThoughts: generationConfig.includeReasoning,
   };
+
+  const substringsWithoutThinkingConfig = ['gemini-2.5-flash-image'];
+
+  const shouldExcludeThinkingConfig = substringsWithoutThinkingConfig.some(
+    (sub) => modelName.includes(sub),
+  );
+
   const geminiConfig: GenerationConfig = {
     stopSequences: generationConfig.stopSequences,
     maxOutputTokens: generationConfig.maxTokens,
@@ -288,7 +305,7 @@ export async function getGeminiAPIResponse(
     topK: 16,
     presencePenalty: generationConfig.presencePenalty,
     frequencyPenalty: generationConfig.frequencyPenalty,
-    thinkingConfig: thinkingConfig,
+    ...(!shouldExcludeThinkingConfig ? {thinkingConfig: thinkingConfig} : {}),
     ...structuredOutputGenerationConfig,
     ...customFields,
   };
@@ -301,7 +318,6 @@ export async function getGeminiAPIResponse(
       promptText,
       geminiConfig,
       modelName,
-      structuredOutputConfig?.enabled,
       safetySettings,
     );
     // eslint-disable-next-line @typescript-eslint/no-explicit-any

@@ -10,6 +10,7 @@ import {
 } from './condition_editor';
 
 import {core} from '../../core/core';
+import {AuthService} from '../../services/auth.service';
 import {ExperimentEditor} from '../../services/experiment.editor';
 
 import {
@@ -34,6 +35,7 @@ import {styles} from './survey_editor.scss';
 export class SurveyEditor extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
 
+  private readonly authService = core.getService(AuthService);
   private readonly experimentEditor = core.getService(ExperimentEditor);
 
   @property() stage:
@@ -192,7 +194,7 @@ export class SurveyEditor extends MobxLitElement {
 
   private renderConditionEditor(question: SurveyQuestion, index: number) {
     if (!this.stage) return nothing;
-    if (!this.experimentEditor.showAlphaFeatures) return nothing;
+    if (!this.authService.showAlphaFeatures) return nothing;
 
     const onConditionChange = (condition: Condition | undefined) => {
       this.updateQuestion(

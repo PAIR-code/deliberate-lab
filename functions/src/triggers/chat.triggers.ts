@@ -1,7 +1,9 @@
 import {onDocumentCreated} from 'firebase-functions/v2/firestore';
 import {
   ChatMessage,
+  ParticipantStatus,
   StageKind,
+  UserType,
   createParticipantProfileBase,
 } from '@deliberation-lab/utils';
 import {
@@ -84,8 +86,11 @@ export const onPublicChatMessageCreated = onDocumentCreated(
       ),
     );
 
-    // Send agent participant messages
-    const agentParticipants = allParticipants.filter((p) => p.agentConfig);
+    // Send agent participant messages for agents who are still completing
+    // the experiment
+    const agentParticipants = allParticipants.filter(
+      (p) => p.agentConfig && p.currentStatus === ParticipantStatus.IN_PROGRESS,
+    );
     await Promise.all(
       agentParticipants.map((participant) =>
         createAgentChatMessageFromPrompt(
@@ -134,6 +139,7 @@ export const onPrivateChatMessageCreated = onDocumentCreated(
       event.params.experimentId,
       event.params.participantId,
     );
+    if (!participant) return;
 
     const mediators = await getFirestoreActiveMediators(
       event.params.experimentId,
@@ -183,6 +189,21 @@ export const onPrivateChatMessageCreated = onDocumentCreated(
           message: 'No mediators found',
         },
       );
+    }
+
+    // Send agent participant messages (if participant is an agent)
+    if (participant.agentConfig) {
+      // Ensure agent only responds to mediator, not themselves
+      if (message.type === UserType.MEDIATOR) {
+        await createAgentChatMessageFromPrompt(
+          event.params.experimentId,
+          participant.currentCohortId,
+          [participant.privateId], // Pass agent's own ID as array
+          stage.id,
+          event.params.chatId,
+          participant,
+        );
+      }
     }
   },
 );

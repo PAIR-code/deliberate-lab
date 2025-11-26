@@ -6,6 +6,7 @@ import {
   CohortCreationData,
   CohortDeletionData,
   CreateParticipantData,
+  CreateMediatorData,
   CreationResponse,
   ExperimentCohortLockData,
   ExperimentCreationData,
@@ -95,6 +96,21 @@ export const getExperimentTemplateCallable = async (
     functions,
     'getExperimentTemplate',
   )(config);
+  return data;
+};
+
+/** Generic endpoint to download experiment data. */
+export const downloadExperimentCallable = async (
+  functions: Functions,
+  experimentId: string,
+) => {
+  const {data} = await httpsCallable<
+    {experimentId: string},
+    ExperimentDownloadResponse
+  >(
+    functions,
+    'downloadExperiment',
+  )({experimentId});
   return data;
 };
 
@@ -544,6 +560,18 @@ export const setSalespersonResponseCallable = async (
   >(
     functions,
     'setSalespersonResponse',
+  )(config);
+  return data;
+};
+
+/** Generic endpoint for creating MediatorProfile. */
+export const createMediatorCallable = async (
+  functions: Functions,
+  config: CreateMediatorData,
+) => {
+  const {data} = await httpsCallable<CreateMediatorData, CreationResponse>(
+    functions,
+    'createMediator',
   )(config);
   return data;
 };

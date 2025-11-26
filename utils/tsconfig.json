@@ -12,7 +12,8 @@
     "esModuleInterop": true,
     "skipLibCheck": true,
     "preserveConstEnums": true,
-    "lib": ["ESNext", "dom"]
+    "lib": ["ESNext", "dom"],
+    "typeRoots": ["./node_modules/@types", "../node_modules/@types"]
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist"]

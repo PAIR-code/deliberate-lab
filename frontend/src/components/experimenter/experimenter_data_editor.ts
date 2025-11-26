@@ -10,6 +10,7 @@ import '@material/web/textfield/filled-text-field.js';
 import {core} from '../../core/core';
 import {AuthService} from '../../services/auth.service';
 import {ExperimentManager} from '../../services/experiment.manager';
+import {ExperimentService} from '../../services/experiment.service';
 
 import {styles} from './experimenter_data_editor.scss';
 import {
@@ -22,6 +23,7 @@ import {
   createAgentPromptSettings,
   createModelGenerationConfig,
   checkApiKeyExists,
+  createClaudeServerConfig,
   createOpenAIServerConfig,
   createStructuredOutputConfig,
 } from '@deliberation-lab/utils';
@@ -33,19 +35,36 @@ export class ExperimenterDataEditor extends MobxLitElement {
 
   private readonly authService = core.getService(AuthService);
   private readonly experimentManager = core.getService(ExperimentManager);
+  private readonly experimentService = core.getService(ExperimentService);
 
   @state() geminiKeyResponse: null | boolean = null;
   @state() openAIKeyResponse: null | boolean = null;
+  @state() claudeKeyResponse: null | boolean = null;
   @state() ollamaKeyResponse: null | boolean = null;
 
   override render() {
+    const experiment = this.experimentService.experiment;
+    if (
+      experiment &&
+      experiment.metadata.creator !== this.authService.userEmail
+    ) {
+      return html`
+        <div>
+          This experiment uses API keys provided by the creator of the
+          experiment: ${experiment.metadata.creator}
+        </div>
+      `;
+    }
+
     return html`
       <div class="banner">
-        Note: API keys are shared across all experiments!
+        Note: API keys are shared across all of your experiments!
       </div>
       ${this.renderGeminiKey()}
       <div class="divider"></div>
       ${this.renderOpenAISettings()}
+      <div class="divider"></div>
+      ${this.renderClaudeSettings()}
       <div class="divider"></div>
       ${this.renderOllamaSettings()}
     `;
@@ -76,6 +95,8 @@ export class ExperimenterDataEditor extends MobxLitElement {
         this.geminiKeyResponse = result;
       } else if (apiType === ApiKeyType.OPENAI_API_KEY) {
         this.openAIKeyResponse = result;
+      } else if (apiType === ApiKeyType.CLAUDE_API_KEY) {
+        this.claudeKeyResponse = result;
       } else if (apiType === ApiKeyType.OLLAMA_CUSTOM_URL) {
         this.ollamaKeyResponse = result;
       }
@@ -86,6 +107,8 @@ export class ExperimenterDataEditor extends MobxLitElement {
         return this.geminiKeyResponse;
       } else if (apiType === ApiKeyType.OPENAI_API_KEY) {
         return this.openAIKeyResponse;
+      } else if (apiType === ApiKeyType.CLAUDE_API_KEY) {
+        return this.claudeKeyResponse;
       } else if (apiType === ApiKeyType.OLLAMA_CUSTOM_URL) {
         return this.ollamaKeyResponse;
       }
@@ -142,6 +165,54 @@ export class ExperimenterDataEditor extends MobxLitElement {
     `;
   }
 
+  // ============ Claude ============
+
+  private renderClaudeSettings() {
+    const updateClaudeSettings = (
+      e: InputEvent,
+      field: 'apiKey' | 'baseUrl',
+    ) => {
+      const oldData = this.authService.experimenterData;
+      if (!oldData) return;
+
+      const value = (e.target as HTMLInputElement).value;
+      this.claudeKeyResponse = null;
+
+      const newData = updateExperimenterData(oldData, {
+        apiKeys: {
+          ...oldData.apiKeys,
+          claudeApiKey: {
+            ...(oldData.apiKeys?.claudeApiKey ?? createClaudeServerConfig()),
+            [field]: value,
+          },
+        },
+      });
+
+      this.authService.writeExperimenterData(newData);
+    };
+
+    const data = this.authService.experimenterData;
+    return html`
+      <div class="section">
+        <h3>Claude API settings</h3>
+        <md-filled-text-field
+          label="Claude API key"
+          placeholder="Add Claude API key"
+          .value=${data?.apiKeys.claudeApiKey?.apiKey ?? ''}
+          @input=${(e: InputEvent) => updateClaudeSettings(e, 'apiKey')}
+        ></md-filled-text-field>
+
+        <md-filled-text-field
+          label="Base URL (optional)"
+          placeholder="https://api.anthropic.com"
+          .value=${data?.apiKeys.claudeApiKey?.baseUrl ?? ''}
+          @input=${(e: InputEvent) => updateClaudeSettings(e, 'baseUrl')}
+        ></md-filled-text-field>
+
+        ${this.renderCheckApiKey(ApiKeyType.CLAUDE_API_KEY)}
+      </div>
+    `;
+  }
   // ============ OpenAI-compatible API ============
   private renderOpenAISettings() {
     const updateOpenAISettings = (

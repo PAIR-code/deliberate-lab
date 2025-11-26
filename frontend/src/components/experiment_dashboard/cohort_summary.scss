@@ -19,15 +19,24 @@
   gap: common.$spacing-medium;
   justify-content: space-between;
   padding: common.$spacing-medium common.$spacing-large;
+  position: relative;
+  z-index: 2;
 
   &:focus,
   &:hover {
     background: var(--md-sys-color-surface-container-highest);
   }
 
-  .left,
+  .left {
+    @include common.flex-row-align-center;
+    flex: 1;
+    gap: common.$spacing-xs;
+    min-width: 0;
+  }
+
   .right {
     @include common.flex-row-align-center;
+    flex-shrink: 0;
     gap: common.$spacing-xs;
   }
 }
@@ -62,9 +71,58 @@
   max-height: 220px;
 }
 
+.section {
+  @include common.flex-column;
+  gap: common.$spacing-small;
+  padding: common.$spacing-medium common.$spacing-large;
+}
+
+.section-title {
+  @include typescale.label-small;
+  @include common.flex-row-align-center;
+  border-top: 1px solid var(--md-sys-color-outline-variant-high);
+  color: var(--md-sys-color-on-surface-variant);
+  justify-content: space-between;
+  padding: 0 common.$spacing-large;
+}
+
+.section-list {
+  @include common.flex-column;
+  gap: common.$spacing-small;
+}
+
 .empty-message {
   color: var(--md-sys-color-outline);
   padding: common.$spacing-large;
+}
+
+.empty-subsection {
+  color: var(--md-sys-color-outline);
+  font-style: italic;
+}
+
+.mediator-list {
+  gap: common.$spacing-small;
+}
+
+.mediator-row {
+  @include typescale.label-medium;
+  @include common.flex-row-align-center;
+  border-top: 1px solid var(--md-sys-color-outline-variant-high);
+  justify-content: space-between;
+  gap: common.$spacing-medium;
+  padding: common.$spacing-xs common.$spacing-large;
+
+  &:focus,
+  &:hover {
+    background: var(--md-sys-color-surface-container);
+  }
+}
+
+.status-chip {
+  @include common.chip;
+  background: var(--md-sys-color-secondary-container);
+  color: var(--md-sys-color-on-secondary-container);
 }
 
 .menu-wrapper {
@@ -81,4 +139,23 @@
   border-radius: common.$spacing-medium;
   gap: common.$spacing-small;
   padding: common.$spacing-medium;
+}
+
+.menu-item.disabled {
+  color: var(--md-sys-color-outline);
+  pointer-events: none;
+}
+
+.menu-item-helper {
+  @include typescale.body-small;
+  color: var(--md-sys-color-outline);
+}
+
+.sort-controls {
+  transform: scale(0.8);
+  transform-origin: right center;
+
+  pr-menu {
+    --pr-menu-icon-color: var(--md-sys-color-on-surface-variant);
+  }
 }

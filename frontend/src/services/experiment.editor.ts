@@ -15,10 +15,12 @@ import {
   ProlificConfig,
   StageConfig,
   StageKind,
+  StageManager,
+  VariableConfig,
+  STAGE_MANAGER,
   checkApiKeyExists,
   createAgentMediatorPersonaConfig,
   createAgentParticipantPersonaConfig,
-  createChatPromptConfig,
   createExperimentConfig,
   createMetadataConfig,
   createPermissionsConfig,
@@ -60,6 +62,11 @@ export class ExperimentEditor extends Service {
   @observable experiment: Experiment = createExperimentConfig();
   @observable stages: StageConfig[] = [];
   @observable agentMediators: AgentMediatorTemplate[] = [];
+
+  // WARNING: We are not currently permitting agent participant peraons to be
+  // set in the editor (so this list is expected to be empty).
+  // Rather, agent participants are defined on the spot in the experiment
+  // dashboard and will use a default set of prompts (see PR #864)
   @observable agentParticipants: AgentParticipantTemplate[] = [];
 
   // Loading
@@ -70,7 +77,6 @@ export class ExperimentEditor extends Service {
   @observable currentStageId: string | undefined = undefined;
   @observable showStageBuilderDialog = false;
   @observable showTemplatesTab = false;
-  @observable showAlphaFeatures = false;
 
   // **************************************************************************
   // EXPERIMENT LOADING
@@ -150,6 +156,7 @@ export class ExperimentEditor extends Service {
       permissions: template.experiment.permissions,
       defaultCohortConfig: template.experiment.defaultCohortConfig,
       prolificConfig: template.experiment.prolificConfig,
+      variableConfigs: template.experiment.variableConfigs,
     });
     this.setStages(template.stageConfigs);
     this.setAgentMediators(template.agentMediators);
@@ -180,8 +187,25 @@ export class ExperimentEditor extends Service {
     return this.experiment.id.length > 0;
   }
 
-  setShowAlphaFeatures(show: boolean) {
-    this.showAlphaFeatures = show;
+  addVariableConfig(variable: VariableConfig) {
+    this.experiment.variableConfigs = [
+      ...(this.experiment.variableConfigs ?? []),
+      variable,
+    ];
+  }
+
+  // TODO: Ensure that variable names are unique
+  updateVariableConfig(newVariable: VariableConfig, index: number) {
+    if (!this.experiment.variableConfigs) {
+      return false;
+    }
+    if (index >= 0) {
+      this.experiment.variableConfigs = [
+        ...this.experiment.variableConfigs.slice(0, index),
+        newVariable,
+        ...this.experiment.variableConfigs.slice(index + 1),
+      ];
+    }
   }
 
   updateMetadata(metadata: Partial<MetadataConfig>) {
@@ -318,6 +342,8 @@ export class ExperimentEditor extends Service {
     this.agentMediators = templates;
   }
 
+  // WARNING: We are not currently allowing experimenters to edit
+  // agent participant personas in the editor.
   setAgentParticipants(templates: AgentParticipantTemplate[]) {
     this.agentParticipants = templates;
   }
@@ -333,6 +359,8 @@ export class ExperimentEditor extends Service {
     }
   }
 
+  // WARNING: We are not currently allowing experimenters to edit
+  // agent participant personas in the editor.
   addAgentParticipant(setAsCurrent = true) {
     const persona = createAgentParticipantPersonaConfig();
     this.agentParticipants.push({
@@ -355,6 +383,8 @@ export class ExperimentEditor extends Service {
     ];
   }
 
+  // WARNING: We are not currently allowing experimenters to edit
+  // agent participant personas in the editor.
   deleteAgentParticipant(id: string) {
     const agentIndex = this.agentParticipants.findIndex(
       (agent) => agent.persona.id === id,
@@ -375,20 +405,42 @@ export class ExperimentEditor extends Service {
     return this.agentMediators.find((agent) => agent.persona.id === id);
   }
 
+  // WARNING: We are not currently allowing experimenters to edit
+  // agent participant personas in the editor.
   getAgentParticipant(id: string) {
     return this.agentParticipants.find((agent) => agent.persona.id === id);
   }
 
   addAgentMediatorPrompt(agentId: string, stageId: string) {
     const agent = this.getAgentMediator(agentId);
-    if (!agent) return;
-    agent.promptMap[stageId] = createChatPromptConfig(stageId);
+    const stage = this.getStage(stageId);
+    if (!agent || !stage) return;
+    // Can only add mediator to chat prompts for now
+    if (
+      stage.kind !== StageKind.CHAT &&
+      stage.kind !== StageKind.PRIVATE_CHAT
+    ) {
+      return;
+    }
+
+    const prompt = STAGE_MANAGER.getDefaultMediatorStructuredPrompt(stage);
+
+    if (prompt) {
+      agent.promptMap[stageId] = prompt;
+    }
   }
 
+  // WARNING: We are not currently allowing experimenters to edit
+  // agent participant personas in the editor.
   addAgentParticipantPrompt(agentId: string, stageId: string) {
     const agent = this.getAgentParticipant(agentId);
-    if (!agent) return;
-    agent.promptMap[stageId] = createChatPromptConfig(stageId);
+    const stage = this.getStage(stageId);
+    if (!agent || !stage) return;
+
+    const prompt = STAGE_MANAGER.getDefaultParticipantStructuredPrompt(stage);
+    if (prompt) {
+      agent.promptMap[stageId] = prompt;
+    }
   }
 
   updateAgentMediatorPersona(
@@ -427,6 +479,13 @@ export class ExperimentEditor extends Service {
     id: string,
     updatedPrompt: ParticipantPromptConfig,
   ) {
+    // TODO: Permit non-chat prompt edits
+    if (
+      updatedPrompt.type !== StageKind.CHAT &&
+      updatedPrompt.type !== StageKind.PRIVATE_CHAT
+    ) {
+      return;
+    }
     const agent = this.getAgentParticipant(id);
     if (!agent) return;
     agent.promptMap[updatedPrompt.id] = updatedPrompt;

@@ -54,7 +54,6 @@ export class App extends MobxLitElement {
         return html`
           <page-header></page-header>
           <quick-start-gallery></quick-start-gallery>
-          <home-gallery-tabs></home-gallery-tabs>
           <home-gallery></home-gallery>
         `;
       case Pages.ADMIN:
@@ -161,7 +160,7 @@ export class App extends MobxLitElement {
       // Render login screen if relevant after initial auth check
       return html`
         <div class="app-wrapper mode--${this.settingsService.colorMode}">
-          <div class="content">
+          <div class="content login">
             ${this.authService.initialAuthCheck
               ? html`<login-page></login-page>`
               : nothing}

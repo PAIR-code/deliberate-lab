@@ -12,6 +12,18 @@
   width: 800px;
 }
 
+.selections {
+  @include common.flex-row;
+  gap: common.$spacing-medium;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.model-selector {
+  @include common.flex-row;
+  gap: common.$spacing-medium;
+}
+
 .header {
   @include typescale.title-medium;
   @include common.flex-row-align-center;

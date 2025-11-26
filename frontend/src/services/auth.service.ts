@@ -20,6 +20,7 @@ import {AdminService} from './admin.service';
 import {FirebaseService} from './firebase.service';
 import {HomeService} from './home.service';
 import {ExperimentManager} from './experiment.manager';
+import {Pages, RouterService} from './router.service';
 
 import {
   ExperimenterProfile,
@@ -32,6 +33,7 @@ interface ServiceProvider {
   experimentManager: ExperimentManager;
   firebaseService: FirebaseService;
   homeService: HomeService;
+  routerService: RouterService;
 }
 
 export class AuthService extends Service {
@@ -72,6 +74,12 @@ export class AuthService extends Service {
             } else {
               this.isAdmin = false;
             }
+            // Check if user has access to research templates
+            if (allowlistDoc.data().hasResearchTemplateAccess) {
+              this.hasResearchTemplateAccess = true;
+            } else {
+              this.hasResearchTemplateAccess = false;
+            }
           } else {
             this.isExperimenter = false;
             this.isAdmin = false;
@@ -87,10 +95,11 @@ export class AuthService extends Service {
 
   @observable user: User | null | undefined = undefined;
   @observable isAdmin: boolean | null = null;
+  @observable hasResearchTemplateAccess: boolean | null = null;
   @observable isExperimenter: boolean | null = null;
   @observable canEdit = false;
 
-  @observable private debugMode = true;
+  @observable private debugMode = false;
 
   @observable unsubscribe: Unsubscribe[] = [];
   @observable experimenterData: ExperimenterData | null = null;
@@ -110,6 +119,10 @@ export class AuthService extends Service {
 
   @computed get authenticated() {
     return this.initialAuthCheck && this.user !== null;
+  }
+
+  @computed get showAlphaFeatures() {
+    return this.experimenterData?.showAlphaFeatures;
   }
 
   // If true and is experimenter, show debugging components
@@ -173,6 +186,7 @@ export class AuthService extends Service {
   signOut() {
     signOut(this.sp.firebaseService.auth);
     this.sp.homeService.unsubscribeAll();
+    this.sp.routerService.navigate(Pages.HOME);
   }
 
   /** Experimenter has viewed this experiment before. */
@@ -196,6 +210,18 @@ export class AuthService extends Service {
     this.writeExperimenterData({
       ...this.experimenterData,
       viewedExperiments: [...viewedExperiments, experimentId],
+    });
+  }
+
+  /** Update whether or not to show alpha features. */
+  updateAlphaToggle(showAlphaFeatures: boolean) {
+    if (!this.experimenterData) {
+      return;
+    }
+
+    this.writeExperimenterData({
+      ...this.experimenterData,
+      showAlphaFeatures,
     });
   }
 

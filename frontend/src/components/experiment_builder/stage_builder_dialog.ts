@@ -8,6 +8,7 @@ import {classMap} from 'lit/directives/class-map.js';
 
 import {core} from '../../core/core';
 import {AnalyticsService, ButtonClick} from '../../services/analytics.service';
+import {AuthService} from '../../services/auth.service';
 import {ExperimentEditor} from '../../services/experiment.editor';
 
 import {
@@ -56,17 +57,13 @@ import {
   CHARITY_DEBATE_METADATA,
 } from '../../shared/templates/charity_allocations';
 import {
+  getOOTBCharityDebateTemplate,
+  OOTB_CHARITY_DEBATE_METADATA,
+} from '../../shared/templates/charity_allocations_ootb';
+import {
   CONSENSUS_METADATA,
   getConsensusTopicTemplate,
 } from '../../shared/templates/debate_topics';
-import {
-  RTV_METADATA,
-  getRealityTVExperimentTemplate,
-} from '../../shared/templates/reality_tv_chat';
-import {
-  SALESPERSON_GAME_METADATA,
-  getSalespersonStageConfigs,
-} from '../../shared/templates/salesperson';
 import {
   FRUIT_TEST_METADATA,
   getFruitTestExperimentTemplate,
@@ -91,6 +88,10 @@ import {
   POLICY_METADATA,
   getPolicyExperimentTemplate,
 } from '../../shared/templates/policy';
+import {
+  INTEGRATION_METADATA,
+  getAgentParticipantIntegrationTemplate,
+} from '../../shared/templates/agent_participant_integration_template';
 
 import {styles} from './stage_builder_dialog.scss';
 
@@ -100,6 +101,7 @@ export class StageBuilderDialog extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
 
   private readonly analyticsService = core.getService(AnalyticsService);
+  private readonly authService = core.getService(AuthService);
   private readonly experimentEditor = core.getService(ExperimentEditor);
 
   @property({type: Boolean})
@@ -173,18 +175,51 @@ export class StageBuilderDialog extends MobxLitElement {
     return html`
       <div class="banner error">
         ⚠️ Loading a template will override all existing stages in your
-        configuration
+        configuration!
       </div>
       <div class="card-gallery-wrapper">
-        ${this.renderLASCard()} ${this.renderLASCard(true)}
-        ${this.renderLRCard()} ${this.renderRealityTVCard()}
-        ${this.renderChipNegotiationCard()} ${this.renderSalespersonGameCard()}
-        ${this.renderFlipCardTemplateCard()}
-        ${this.renderFruitTestTemplateCard()} ${this.renderStockInfoGameCard()}
-        ${this.renderAssetAllocationTemplateCard()}
+        ${this.renderLRCard()} ${this.renderFlipCardTemplateCard()}
+        ${this.renderFruitTestTemplateCard()}
         ${this.renderConditionalSurveyTemplateCard()}
-        ${this.renderPolicyTemplateCard()} ${this.renderConsensusDebateCard()}
-        ${this.renderCharityDebateTemplateCard()}
+        ${this.renderStockInfoGameCard()}
+        ${this.renderAssetAllocationTemplateCard()}
+        ${this.renderPolicyTemplateCard()} ${this.renderAgentIntegrationCard()}
+      </div>
+      ${this.authService.hasResearchTemplateAccess
+        ? this.renderResearchTemplateGallery()
+        : nothing}
+    `;
+  }
+
+  // This is a temporary set of hardcoded templates defined in the frontend
+  // visible to experimenters who are marked for "research template" access.
+  // Eventually, all these templates should be migrated such that they
+  // are completely created in the UI and stored in the backend.
+  private renderResearchTemplateGallery() {
+    return html`
+      <div class="banner">
+        Note: Only specific experimenters have access to the following research
+        templates! This list is controlled by the deployment owners.
+      </div>
+      <div class="gallery-section">
+        <div class="gallery-title">Lost at Sea experiments</div>
+        <div class="card-gallery-wrapper">
+          ${this.renderLASCard()} ${this.renderLASCard(true)}
+        </div>
+      </div>
+      <div class="gallery-section">
+        <div class="gallery-title">Negotiation games</div>
+        <div class="card-gallery-wrapper">
+          ${this.renderChipNegotiationCard()}
+        </div>
+      </div>
+      <div class="gallery-section">
+        <div class="gallery-title">Debate experiments</div>
+        <div class="card-gallery-wrapper">
+          ${this.renderConsensusDebateCard()}
+          ${this.renderCharityDebateTemplateCard()}
+          ${this.renderOOTBCharityDebateTemplateCard()}
+        </div>
       </div>
     `;
   }
@@ -211,10 +246,18 @@ export class StageBuilderDialog extends MobxLitElement {
         <div class="card-gallery-wrapper">
           ${this.renderTransferCard()} ${this.renderSurveyCard()}
           ${this.renderSurveyPerParticipantCard()}
-          ${this.renderComprehensionCard()} ${this.renderFlipCardCard()}
-          ${this.renderRankingCard()} ${this.renderLRRankingCard()}
-          ${this.renderRevealCard()} ${this.renderPayoutCard()}
-          ${this.renderRoleCard()} ${this.renderStockInfoCard()}
+          ${this.renderComprehensionCard()} ${this.renderRankingCard()}
+          ${this.renderLRRankingCard()} ${this.renderRevealCard()}
+          ${this.renderPayoutCard()} ${this.renderRoleCard()}
+        </div>
+      </div>
+
+      <div class="gallery-section">
+        <div class="gallery-title">
+          Experimental stages: ⚠️ use with caution
+        </div>
+        <div class="card-gallery-wrapper">
+          ${this.renderFlipCardCard()} ${this.renderStockInfoCard()}
           ${this.renderAssetAllocationCard()}
           ${this.renderMultiAssetAllocationCard()}
         </div>
@@ -282,14 +325,14 @@ export class StageBuilderDialog extends MobxLitElement {
     `;
   }
 
-  private renderRealityTVCard() {
+  private renderAgentIntegrationCard() {
     const addTemplate = () => {
-      this.addTemplate(getRealityTVExperimentTemplate());
+      this.addTemplate(getAgentParticipantIntegrationTemplate());
     };
     return html`
       <div class="card" @click=${addTemplate}>
-        <div class="title">${RTV_METADATA.name}</div>
-        <div>${RTV_METADATA.description}</div>
+        <div class="title">${INTEGRATION_METADATA.name}</div>
+        <div>${INTEGRATION_METADATA.description}</div>
       </div>
     `;
   }
@@ -314,19 +357,6 @@ export class StageBuilderDialog extends MobxLitElement {
       <div class="card" @click=${() => addGame(4)}>
         <div class="title">${getChipMetadata(4).name}</div>
         <div>${getChipMetadata(4).description}</div>
-      </div>
-    `;
-  }
-
-  private renderSalespersonGameCard() {
-    const addGame = () => {
-      this.addGame(SALESPERSON_GAME_METADATA, getSalespersonStageConfigs());
-    };
-
-    return html`
-      <div class="card" @click=${addGame}>
-        <div class="title">${SALESPERSON_GAME_METADATA.name}</div>
-        <div>${SALESPERSON_GAME_METADATA.description}</div>
       </div>
     `;
   }
@@ -381,7 +411,7 @@ export class StageBuilderDialog extends MobxLitElement {
 
     return html`
       <div class="card" @click=${addStage}>
-        <div class="title">Role assignment</div>
+        <div class="title">🎭 Role assignment</div>
         <div>
           Randomly assign roles to participants and show different
           Markdown-rendered info for each role
@@ -397,7 +427,7 @@ export class StageBuilderDialog extends MobxLitElement {
 
     return html`
       <div class="card" @click=${addStage}>
-        <div class="title">Group chat</div>
+        <div class="title">👥 Group chat</div>
         <div>
           Host a conversation among <i>all</i> participants in a cohort and
           optional mediator(s).
@@ -413,7 +443,7 @@ export class StageBuilderDialog extends MobxLitElement {
 
     return html`
       <div class="card" @click=${addStage}>
-        <div class="title">Private chat</div>
+        <div class="title">💬 Private chat</div>
         <div>
           Enable each participant to privately chat <i>only</i> with added
           mediator(s).
@@ -461,7 +491,7 @@ export class StageBuilderDialog extends MobxLitElement {
 
     return html`
       <div class="card" @click=${addStage}>
-        <div class="title">2-Stock Asset Allocation</div>
+        <div class="title">🧮 2-Stock Asset Allocation</div>
         <div>
           Allow participants to allocate investment portfolios between two
           stocks using interactive sliders.
@@ -553,7 +583,7 @@ export class StageBuilderDialog extends MobxLitElement {
 
     return html`
       <div class="card" @click=${addStage}>
-        <div class="title">📋🧑‍🤝‍🧑 Survey per participant</div>
+        <div class="title">🧑‍🤝‍🧑 Survey per participant</div>
         <div>
           Ask each survey question about each participant in the current cohort.
         </div>
@@ -699,9 +729,38 @@ export class StageBuilderDialog extends MobxLitElement {
     `;
   }
 
+  private renderFacilitatorTextbox(
+    field: keyof CharityDebateConfig,
+    labelText: string,
+  ) {
+    const currentValue = String(this.charityDebateConfig[field] ?? '');
+
+    return html`
+      <label class="custom-textbox">
+        <input
+          type="number"
+          .value=${currentValue}
+          @input=${(e: Event) => {
+            const inputValue = (e.target as HTMLInputElement).value;
+            const newNumberValue = Number(inputValue);
+            this.charityDebateConfig = {
+              ...this.charityDebateConfig,
+              [field]: newNumberValue,
+            };
+          }}
+        />
+        <span class="label-text">${labelText}</span>
+      </label>
+    `;
+  }
+
   private renderCharityDebateTemplateCard() {
     const loadTemplate = () => {
       this.addTemplate(getCharityDebateTemplate(this.charityDebateConfig));
+    };
+
+    const onFacilitatorConfigInput = (e: Event) => {
+      this.consensusTopics = (e.target as HTMLInputElement).value;
     };
 
     return html`
@@ -734,6 +793,61 @@ export class StageBuilderDialog extends MobxLitElement {
           ${this.renderCharityCheckbox(
             'includeMetaFeedback',
             '[Optional] Include Meta-Feedback Survey',
+          )}
+          ${this.renderFacilitatorTextbox(
+            'facilitatorConfigId',
+            '[Optional] Choose from a preset faciliator order (default is None, Habermas, Dynamic mediators). ',
+          )}
+        </div>
+
+        <pr-button @click=${loadTemplate}> Load Template </pr-button>
+      </div>
+    `;
+  }
+
+  private renderOOTBCharityDebateTemplateCard() {
+    const loadTemplate = () => {
+      this.addTemplate(getOOTBCharityDebateTemplate(this.charityDebateConfig));
+    };
+
+    const onFacilitatorConfigInput = (e: Event) => {
+      this.consensusTopics = (e.target as HTMLInputElement).value;
+    };
+
+    return html`
+      <div class="card large-card">
+        <div class="title">${OOTB_CHARITY_DEBATE_METADATA.name}</div>
+        <div>${OOTB_CHARITY_DEBATE_METADATA.description}</div>
+        <div class="template-controls">
+          <div class="subtitle">Configure Experiment Stages</div>
+
+          ${this.renderCharityCheckbox(
+            'includeTos',
+            'Include Terms of Service',
+          )}
+          ${this.renderCharityCheckbox(
+            'includeMediator',
+            '[Conditional] Include AI Mediator & Surveys',
+          )}
+          ${this.renderCharityCheckbox(
+            'includeInitialParticipantSurvey',
+            'Include Initial Participant Survey',
+          )}
+          ${this.renderCharityCheckbox(
+            'includeDiscussionEvaluation',
+            '[Optional] Include Discussion Evaluation',
+          )}
+          ${this.renderCharityCheckbox(
+            'includeDebriefingAndFeedback',
+            '[Optional] Include Debriefing & Experiment Feedback',
+          )}
+          ${this.renderCharityCheckbox(
+            'includeMetaFeedback',
+            '[Optional] Include Meta-Feedback Survey',
+          )}
+          ${this.renderFacilitatorTextbox(
+            'facilitatorConfigId',
+            '[Optional] Choose from a preset faciliator order (default is None, Habermas, Dynamic mediators). ',
           )}
         </div>
 

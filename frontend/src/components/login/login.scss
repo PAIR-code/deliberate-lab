@@ -1,5 +1,6 @@
-@use "../../sass/common";
-@use "../../sass/typescale";
+@use '../../sass/colors';
+@use '../../sass/common';
+@use '../../sass/typescale';
 
 :host {
   @include common.default;
@@ -8,24 +9,84 @@
   justify-content: center;
 }
 
-.login {
-  @include common.flex-column;
+.content {
+  overflow-y: auto;
+}
+
+.hero-title {
+  @include typescale.title-large;
+  font-size: clamp(28px, 4vw, 44px);
+  margin: 0 0 0.75rem 0;
+  line-height: 1.1;
+}
+
+.hero-subhead {
+  @include typescale.body-large;
+}
+
+.rotating-wrapper {
+  display: inline-block;
+  position: relative;
+}
+
+.rotating-term {
+  font-weight: 600;
+  color: var(--md-sys-color-primary);
+  display: inline-block;
+  line-height: 1.1;
+  transition:
+    opacity 0.4s ease,
+    transform 0.4s ease;
+}
+
+.fade-in {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.fade-out {
+  opacity: 0;
+  transform: translateY(6px);
+}
+
+.header {
+  @include common.flex-row-align-center;
   background: var(--md-sys-color-surface);
-  border-radius: common.$spacing-medium;
-  gap: common.$spacing-xxl;
-  max-width: 500px;
-  padding: common.$spacing-xxl;
+  border-bottom: 1px solid var(--md-sys-color-outline-variant);
+  flex-wrap: wrap;
+  justify-content: space-between;
+  max-width: common.$login-content-max-width;
+  padding: common.$main-content-padding;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.logo {
+  @include typescale.label-large;
+  color: var(--md-sys-color-on-surface);
+}
+
+.header-actions {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-end;
+  gap: common.$spacing-medium;
+}
+
+.login-content {
+  @include common.flex-column;
+  border-radius: common.$spacing-medium var(--md-sys-color-surface);
+  gap: common.$spacing-large;
+  max-width: common.$login-content-max-width;
+  padding: common.$main-content-padding;
   width: 100%;
 }
 
-.action-buttons {
-  @include common.flex-row;
-  justify-content: end;
-}
-
 h1 {
-  @include typescale.title-large;
-  margin: 0;
+  @include typescale.title-medium;
+  margin: 0 0 0.5rem 0;
 }
 
 h2 {
@@ -33,28 +94,78 @@ h2 {
   margin: 0;
 }
 
-.info {
+.login {
   @include common.flex-column;
-  background: var(--md-sys-color-surface-variant);
-  border-radius: common.$spacing-medium;
-  gap: common.$spacing-medium;
-  max-height: calc(100vh - 300px);
-  overflow: auto;
-  padding: common.$spacing-large;
+  flex-grow: 1;
+  gap: common.$spacing-xxl;
 
-  &.primary {
-    background: var(--md-sys-color-primary-container);
-    color: var(--md-sys-color-on-primary-container);
-  }
-
-  &.secondary {
-    background: var(--md-sys-color-secondary-container);
-    color: var(--md-sys-color-on-secondary-container);
+  img {
+    border: 1px solid var(--md-sys-color-outline-variant);
+    border-radius: 12px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+    max-width: 100%;
+    margin-top: 1.5rem;
   }
 }
 
+.info {
+  @include common.flex-column;
+  @include typescale.body-medium;
+  color: var(--md-sys-color-on-tertiary-container);
+  background: var(--md-sys-color-tertiary-container);
+  border-radius: 8px;
+  gap: common.$spacing-medium;
+  padding: common.$spacing-large;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  max-height: calc(100vh - 300px);
+  overflow: auto;
+}
+
+.info a {
+  text-decoration: underline;
+}
+
+.info a:hover {
+  text-decoration: none;
+}
+
+footer {
+  background: var(--md-sys-color-surface);
+  bottom: 0;
+  margin-top: auto;
+  max-width: common.$login-content-max-width;
+  position: sticky;
+  z-index: 1;
+}
+
+.footer-container {
+  @include common.flex-column-align-center;
+  border-top: 1px solid var(--md-sys-color-outline-variant);
+  justify-content: center;
+  gap: common.$spacing-medium;
+  padding: common.$main-content-padding;
+}
+
+.footer-links {
+  @include common.flex-row-align-center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: common.$spacing-xxl;
+}
+
+.footer-links a {
+  @include typescale.body-small;
+  color: var(--md-sys-color-on-surface-variant);
+}
+
 .version {
-  float: right;
-  font-size: 8px;
+  @include typescale.label-small;
   color: var(--md-sys-color-outline);
+  text-align: center;
+}
+
+.version a {
+  color: var(--md-sys-color-outline);
+  text-align: center;
 }

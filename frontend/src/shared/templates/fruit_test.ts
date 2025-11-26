@@ -48,10 +48,9 @@ export function getFruitTestExperimentTemplate(): ExperimentTemplate {
 }
 
 export const FRUIT_TEST_METADATA = createMetadataConfig({
-  name: 'Fruit Test',
+  name: 'Auto-Transfer (via Survey) Demo',
   publicName: 'Fruit Chat',
-  description:
-    'Includes auto-transfer into groups for a discussion about fruit',
+  description: 'Includes auto-transfer into groups based on fruit preferences',
 });
 
 const TG_CHAT_STAGE_ID = 'fruit_test_chat';
@@ -161,6 +160,7 @@ const createBbotAgent = () => {
   const promptMap: Record<string, MediatorPromptConfig> = {};
   promptMap[TG_CHAT_STAGE_ID] = createChatPromptConfig(
     TG_CHAT_STAGE_ID, // stage ID
+    StageKind.CHAT,
     {
       prompt: createDefaultPromptFromText(TG_AGENT_PROMPT, TG_CHAT_STAGE_ID),
       chatSettings: createAgentChatSettings({

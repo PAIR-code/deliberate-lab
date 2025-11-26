@@ -18,6 +18,8 @@ Once a cohort is created, use the buttons to:
 dynamically join the cohort)
 - Lock/unlock the cohort (preventing/enabling participants from joining)
 - Edit cohort settings (including giving the cohort a custom name and description in the dashboard)
+- Add an agent mediator persona to the cohort if you did not enable automatic
+  mediator enrollment when configuring the persona
 
 <img
   src="../assets/images/deliberate-lab-cohort-panel-empty.png"

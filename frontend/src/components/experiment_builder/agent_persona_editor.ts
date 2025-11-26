@@ -55,6 +55,7 @@ export class AgentPersonaEditorComponent extends MobxLitElement {
         ${this.renderAgentName(agentConfig)} ${this.renderAvatars(agentConfig)}
         ${this.renderAgentApiType(agentConfig)}
         ${this.renderAgentModel(agentConfig)}
+        ${this.renderMediatorCohortPreference(agentConfig)}
       </div>
       <div class="divider main">
         <slot></slot>
@@ -181,6 +182,11 @@ export class AgentPersonaEditorComponent extends MobxLitElement {
           )}
           ${this.renderApiTypeButton(
             agentConfig,
+            'Claude or compatible API',
+            ApiKeyType.CLAUDE_API_KEY,
+          )}
+          ${this.renderApiTypeButton(
+            agentConfig,
             'Ollama Server',
             ApiKeyType.OLLAMA_CUSTOM_URL,
           )}
@@ -230,6 +236,30 @@ export class AgentPersonaEditorComponent extends MobxLitElement {
         @input=${updateModel}
       >
       </md-filled-text-field>
+    `;
+  }
+
+  private renderMediatorCohortPreference(agent: AgentPersonaConfig) {
+    if (agent.type !== AgentPersonaType.MEDIATOR) {
+      return nothing;
+    }
+
+    const togglePreference = (event: Event) => {
+      const checked = (event.target as HTMLInputElement).checked;
+      this.updatePersona({isDefaultAddToCohort: checked});
+    };
+
+    return html`
+      <div class="checkbox-wrapper">
+        <md-checkbox
+          touch-target="wrapper"
+          ?checked=${agent.isDefaultAddToCohort}
+          ?disabled=${!this.experimentEditor.canEditStages}
+          @change=${togglePreference}
+        >
+        </md-checkbox>
+        <div>Automatically add this mediator to every cohort</div>
+      </div>
     `;
   }
 

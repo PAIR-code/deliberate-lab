@@ -20,10 +20,14 @@
     url: /developers/platform-design
   - title: Agent design
     url: /developers/agent-design
+  - title: Adding a new stage
+    url: /developers/add-stage
   - title: Deploying
     url: /developers/deploy
 - title: Feature Docs
   pages:
+  - title: Variables
+    url: /features/variables
   - title: Help/alert panel
     url: /features/help
 - title: Other

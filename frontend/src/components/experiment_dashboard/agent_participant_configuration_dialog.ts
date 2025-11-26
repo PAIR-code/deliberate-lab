@@ -8,9 +8,16 @@ import {customElement, property} from 'lit/decorators.js';
 
 import {core} from '../../core/core';
 import {AnalyticsService, ButtonClick} from '../../services/analytics.service';
+import {ExperimentEditor} from '../../services/experiment.editor';
 import {ExperimentManager} from '../../services/experiment.manager';
 
-import {AgentPersonaConfig, CohortConfig} from '@deliberation-lab/utils';
+import {
+  AgentPersonaConfig,
+  CohortConfig,
+  ApiKeyType,
+  AgentPersonaType,
+  createAgentModelSettings,
+} from '@deliberation-lab/utils';
 
 import {styles} from './cohort_settings_dialog.scss';
 
@@ -21,6 +28,7 @@ export class AgentParticipantDialog extends MobxLitElement {
 
   private readonly analyticsService = core.getService(AnalyticsService);
   private readonly experimentManager = core.getService(ExperimentManager);
+  private readonly experimentEditor = core.getService(ExperimentEditor);
 
   @property() isLoading = false;
   @property() isSuccess = false;
@@ -28,6 +36,8 @@ export class AgentParticipantDialog extends MobxLitElement {
   @property() cohort: CohortConfig | undefined = undefined;
   @property() agentId = '';
   @property() promptContext = '';
+  @property() agent: AgentPersonaConfig | undefined = undefined;
+  @property() model: string = '';
 
   private close() {
     this.dispatchEvent(new CustomEvent('close'));
@@ -64,23 +74,28 @@ export class AgentParticipantDialog extends MobxLitElement {
 
   private renderEdit() {
     return html`
-      ${this.renderAgentPersona()} ${this.renderPromptContext()}
+      ${this.renderAgentModel()} ${this.renderPromptContext()}
       <div class="buttons-wrapper">
         <pr-button
-          ?disabled=${this.agentId === ''}
+          ?disabled=${this.model === ''}
           ?loading=${this.isLoading}
           @click=${() => {
             this.isLoading = true;
             this.analyticsService.trackButtonClick(
               ButtonClick.AGENT_PARTICIPANT_ADD,
             );
-            if (this.cohort && this.agentId) {
-              const agent =
-                this.experimentManager.agentPersonaMap[this.agentId];
+            if (this.cohort && this.model) {
+              this.experimentEditor.addAgentParticipant();
+              this.agentId = ''; //Make agent ID blank for agents added from cohort panel that use default prompts
+              const modelSettings = createAgentModelSettings({
+                apiType: ApiKeyType.GEMINI_API_KEY,
+                modelName: this.model,
+              });
+
               this.experimentManager.createAgentParticipant(this.cohort.id, {
                 agentId: this.agentId,
                 promptContext: this.promptContext,
-                modelSettings: agent.defaultModelSettings,
+                modelSettings,
               });
             }
             this.resetFields();
@@ -109,46 +124,44 @@ export class AgentParticipantDialog extends MobxLitElement {
     `;
   }
 
-  private renderAgentPersona() {
-    const renderAgentPersona = (persona: AgentPersonaConfig) => {
-      const isCurrent = this.agentId === persona.id;
-      return html`
-        <div
-          class="agent-persona ${isCurrent ? 'selected' : ''}"
-          @click=${() => {
-            if (this.isLoading) return;
-            this.agentId = persona.id;
-          }}
-        >
-          <div>${persona.name ?? 'Untitled'}</div>
-          <div class="subtitle">${persona.id}</div>
-        </div>
-      `;
-    };
-
-    const renderEmptyMessage = () => {
-      if (this.experimentManager.agentParticipantPersonas.length > 0) {
-        return nothing;
-      }
-      return html`
-        <div class="error">
-          No agent personas have been configured. Use the edit button at the top
-          of the experiment dashboard to add a persona.
-        </div>
-      `;
-    };
-
+  private renderAgentModel() {
     return html`
-      <div>
-        <div>Persona to use for this specific agent participant</div>
-        <div class="agent-persona-wrapper">
-          ${renderEmptyMessage()}
-          ${this.experimentManager.agentParticipantPersonas.map((persona) =>
-            renderAgentPersona(persona),
+      <div class="selections">
+        <div>Model to use for this specific agent participant:</div>
+        <div class="model-selector">
+          ${this.renderModelButton(
+            'gemini-2.5-flash',
+            'Gemini 2.5 Flash',
+            ApiKeyType.GEMINI_API_KEY,
+          )}
+          ${this.renderModelButton(
+            'gemini-2.5-pro',
+            'Gemini 2.5 Pro',
+            ApiKeyType.GEMINI_API_KEY,
           )}
         </div>
-        <div></div>
       </div>
+    `;
+  }
+
+  private renderModelButton(
+    modelId: string,
+    modelName: string,
+    apiType: ApiKeyType,
+  ) {
+    const updateModel = () => {
+      this.model = modelId;
+    };
+
+    const isActive = modelId == this.model;
+    return html`
+      <pr-button
+        color="${isActive ? 'primary' : 'neutral'}"
+        variant=${isActive ? 'tonal' : 'default'}
+        @click=${updateModel}
+      >
+        ${modelName}
+      </pr-button>
     `;
   }
 

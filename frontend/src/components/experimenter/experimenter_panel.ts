@@ -6,10 +6,12 @@ import '../../pair-components/tooltip';
 import '../participant_profile/profile_display';
 import './experimenter_data_editor';
 import './experimenter_manual_chat';
+import './log_dashboard';
 
 import '@material/web/checkbox/checkbox.js';
 
 import {MobxLitElement} from '@adobe/lit-mobx';
+import {reaction} from 'mobx';
 import {CSSResultGroup, html, nothing} from 'lit';
 import {customElement, state} from 'lit/decorators.js';
 import {classMap} from 'lit/directives/class-map.js';
@@ -39,6 +41,7 @@ enum PanelView {
   MANUAL_CHAT = 'manual_chat',
   API_KEY = 'api_key',
   ALERTS = 'alerts',
+  LOGS = 'logs',
 }
 
 /** Experimenter panel component */
@@ -57,6 +60,62 @@ export class Panel extends MobxLitElement {
   @state() isLoading = false;
   @state() isAckAlertLoading = false;
   @state() participantSearchQuery = '';
+  @state() showToast = false;
+
+  private titleInterval: number | undefined = undefined;
+  private originalTitle = document.title;
+  private disposeReaction: (() => void) | undefined;
+
+  override connectedCallback() {
+    super.connectedCallback();
+    this.originalTitle = document.title;
+
+    this.disposeReaction = reaction(
+      () => this.experimentManager.newAlerts.length,
+      (newCount, previousCount: number | undefined) => {
+        if (
+          newCount > 0 &&
+          (previousCount === undefined || newCount > previousCount)
+        ) {
+          this.startTitleFlash();
+          this.showToast = true;
+        } else if (newCount === 0) {
+          this.stopTitleFlash();
+          this.showToast = false;
+        }
+      },
+      {fireImmediately: true},
+    );
+  }
+
+  override disconnectedCallback() {
+    super.disconnectedCallback();
+    this.stopTitleFlash();
+    if (this.disposeReaction) {
+      this.disposeReaction();
+    }
+  }
+
+  get hasNewAlerts() {
+    return this.experimentManager.hasNewAlerts;
+  }
+
+  private startTitleFlash() {
+    if (this.titleInterval) return;
+    let isOriginal = true;
+    this.titleInterval = window.setInterval(() => {
+      document.title = isOriginal ? '⚠️ New Alert!' : this.originalTitle;
+      isOriginal = !isOriginal;
+    }, 1000);
+  }
+
+  private stopTitleFlash() {
+    if (this.titleInterval) {
+      clearInterval(this.titleInterval);
+      this.titleInterval = undefined;
+      document.title = this.originalTitle;
+    }
+  }
 
   override render() {
     if (!this.authService.isExperimenter) {
@@ -122,24 +181,40 @@ export class Panel extends MobxLitElement {
           </pr-tooltip>
           <pr-tooltip text="Alerts" position="RIGHT_END">
             <pr-icon-button
-              color=${this.experimentManager.hasNewAlerts &&
-              !isSelected(PanelView.ALERTS)
+              class=${this.hasNewAlerts && !isSelected(PanelView.ALERTS)
+                ? 'wiggle'
+                : ''}
+              color=${this.hasNewAlerts && !isSelected(PanelView.ALERTS)
                 ? 'error'
                 : 'secondary'}
-              icon=${this.experimentManager.hasNewAlerts &&
-              !isSelected(PanelView.ALERTS)
+              icon=${this.hasNewAlerts && !isSelected(PanelView.ALERTS)
                 ? 'notifications_active'
                 : 'notifications'}
               size="medium"
               variant=${isSelected(PanelView.ALERTS) ? 'tonal' : 'default'}
               @click=${() => {
                 this.panelView = PanelView.ALERTS;
+                this.showToast = false;
+                this.stopTitleFlash();
+              }}
+            >
+            </pr-icon-button>
+          </pr-tooltip>
+
+          <pr-tooltip text="View LLM logs" position="RIGHT_END">
+            <pr-icon-button
+              color="secondary"
+              icon="browse_activity"
+              size="medium"
+              variant=${isSelected(PanelView.LOGS) ? 'tonal' : 'default'}
+              @click=${() => {
+                this.panelView = PanelView.LOGS;
               }}
             >
             </pr-icon-button>
           </pr-tooltip>
         </div>
-        ${this.renderPanelView()}
+        ${this.renderPanelView()} ${this.renderToast()}
       </div>
     `;
   }
@@ -175,6 +250,8 @@ export class Panel extends MobxLitElement {
         return this.renderApiKeyPanel();
       case PanelView.ALERTS:
         return this.renderAlertPanel();
+      case PanelView.LOGS:
+        return this.renderLogsPanel();
       default:
         return this.renderDefaultPanel();
     }
@@ -186,6 +263,7 @@ export class Panel extends MobxLitElement {
         ${this.renderOutdatedWarning()} ${this.renderCohortListPanel()}
         ${this.renderCohortEditorPanel()}
         <div class="bottom">
+          <alpha-toggle></alpha-toggle>
           <div class="subtitle">
             Experiment Version: ${this.experimentService.experiment?.versionId}
             (latest version: ${EXPERIMENT_VERSION_ID})
@@ -328,7 +406,15 @@ export class Panel extends MobxLitElement {
 
       return html`
         <div class="alert ${alert.status === AlertStatus.NEW ? 'new' : ''}">
-          <div class="alert-top">
+          <div
+            class="alert-top clickable"
+            @click=${() => {
+              this.experimentManager.setCurrentParticipantId(
+                participant.privateId,
+              );
+              this.experimentManager.setShowParticipantPreview(true, true);
+            }}
+          >
             <div class="alert-header">
               <div class="left">
                 <participant-profile-display .profile=${participant}>
@@ -407,6 +493,37 @@ export class Panel extends MobxLitElement {
           <div class="header">Experimenter settings</div>
           <experimenter-data-editor></experimenter-data-editor>
         </div>
+      </div>
+    `;
+  }
+
+  private renderLogsPanel() {
+    return html`
+      <div class="main">
+        <log-dashboard></log-dashboard>
+      </div>
+    `;
+  }
+
+  private renderToast() {
+    if (!this.showToast || !this.hasNewAlerts) return nothing;
+
+    return html`
+      <div class="alert-toast">
+        <div class="content">
+          <pr-icon icon="warning" color="error"></pr-icon>
+          <div>You have new alerts!</div>
+        </div>
+        <pr-icon-button
+          icon="close"
+          color="error"
+          variant="default"
+          @click=${() => {
+            this.showToast = false;
+            this.stopTitleFlash();
+          }}
+        >
+        </pr-icon-button>
       </div>
     `;
   }

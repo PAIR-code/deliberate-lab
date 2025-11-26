@@ -1,4 +1,13 @@
-import {AgentMediatorTemplate, AgentParticipantTemplate} from './agent';
+import {
+  AgentMediatorTemplate,
+  AgentParticipantTemplate,
+  AgentMediatorPersonaConfig,
+  AgentParticipantPersonaConfig,
+} from './agent';
+import {
+  MediatorPromptConfig,
+  ParticipantPromptConfig,
+} from './structured_prompt';
 import {AlertMessage} from './alert';
 import {CohortConfig} from './cohort';
 import {Experiment} from './experiment';
@@ -6,10 +15,10 @@ import {ParticipantProfileExtended} from './participant';
 import {ChatMessage} from './chat_message';
 import {
   StageConfig,
+  StageKind,
   StageParticipantAnswer,
   StagePublicData,
 } from './stages/stage';
-
 /** Experiment data download types and functions. */
 
 // ************************************************************************* //
@@ -30,8 +39,8 @@ export interface ExperimentDownload {
   agentMediatorMap: Record<string, AgentMediatorTemplate>;
   // Maps from agent participant ID to agent template
   agentParticipantMap: Record<string, AgentParticipantTemplate>;
-  // List of alerts sent during this experiment
-  alerts: AlertMessage[];
+  // Map from participant private ID to alerts.
+  alerts: Record<string, AlertMessage[]>;
 }
 
 export interface ParticipantDownload {
@@ -59,7 +68,7 @@ export function createExperimentDownload(
     cohortMap: {},
     agentMediatorMap: {},
     agentParticipantMap: {},
-    alerts: [],
+    alerts: {},
   };
 }
 

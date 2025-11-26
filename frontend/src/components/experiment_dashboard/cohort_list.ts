@@ -1,6 +1,7 @@
 import '../../pair-components/button';
 import '../../pair-components/icon';
 import '../../pair-components/icon_button';
+import '../../pair-components/menu';
 import '../../pair-components/tooltip';
 
 import './cohort_summary';
@@ -42,6 +43,7 @@ export class Component extends MobxLitElement {
   private renderActions() {
     const hideLockedCohorts = this.experimentManager.hideLockedCohorts;
     const expandAllCohorts = this.experimentManager.expandAllCohorts;
+    const showMediators = this.experimentManager.showMediatorsInCohortSummary;
 
     return html`
       <div class="header">
@@ -77,6 +79,54 @@ export class Component extends MobxLitElement {
             >
             </pr-icon>
             <div>${expandAllCohorts ? 'Collapse' : 'Expand'} all cohorts</div>
+          </div>
+          <div
+            class="checkbox-wrapper"
+            @click=${() => {
+              this.experimentManager.setShowMediatorsInCohortSummary(
+                !showMediators,
+              );
+            }}
+          >
+            <pr-icon
+              color="secondary"
+              size="small"
+              variant="default"
+              icon=${showMediators ? 'visibility_off' : 'visibility'}
+            >
+            </pr-icon>
+            <div>${showMediators ? 'Hide' : 'Show'} mediators</div>
+          </div>
+          <div class="sort-controls">
+            <pr-menu
+              name=${this.experimentManager.participantSortBy === 'lastActive'
+                ? 'Last Active'
+                : 'Name'}
+              icon=${this.experimentManager.participantSortBy === 'lastActive'
+                ? 'hourglass_empty'
+                : 'sort_by_alpha'}
+              color="secondary"
+              variant="default"
+            >
+              <div class="menu-wrapper">
+                <div
+                  class="menu-item"
+                  @click=${() => {
+                    this.experimentManager.setParticipantSortBy('lastActive');
+                  }}
+                >
+                  Sort by Last Active
+                </div>
+                <div
+                  class="menu-item"
+                  @click=${() => {
+                    this.experimentManager.setParticipantSortBy('name');
+                  }}
+                >
+                  Sort by name
+                </div>
+              </div>
+            </pr-menu>
           </div>
         </div>
       </div>

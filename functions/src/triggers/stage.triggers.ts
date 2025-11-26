@@ -16,6 +16,7 @@ import {addParticipantAnswerToSurveyStagePublicData} from '../stages/survey.util
 import {addParticipantAnswerToFlipCardStagePublicData} from '../stages/flipcard.utils';
 import {addParticipantAnswerToAssetAllocationStagePublicData} from '../stages/asset_allocation.utils';
 import {addParticipantAnswerToMultiAssetAllocationStagePublicData} from '../stages/multi_asset_allocation.utils';
+import {updateParticipantReadyToEndChat} from '../chat/chat.utils';
 
 //database.instance
 /** When participant (private) stage data is updated. */
@@ -85,6 +86,15 @@ export const onParticipantStageDataUpdated = onDocumentWritten(
           participant,
           data,
         );
+        break;
+      case StageKind.PRIVATE_CHAT:
+        if (data?.readyToEndChat) {
+          updateParticipantReadyToEndChat(
+            event.params.experimentId,
+            stage.id,
+            participant.privateId,
+          );
+        }
         break;
       default:
         break;

@@ -13,6 +13,7 @@ import {
 
 import {getGeminiAPIResponse} from './api/gemini.api';
 import {getOpenAIAPIChatCompletionResponse} from './api/openai.api';
+import {getClaudeAPIChatCompletionResponse} from './api/claude.api';
 import {ollamaChat} from './api/ollama.api';
 
 import {writeModelLogEntry} from './log.utils';
@@ -33,7 +34,7 @@ export async function processModelResponse(
   generationConfig: ModelGenerationConfig,
   structuredOutputConfig?: StructuredOutputConfig,
   numRetries: number = 0,
-): Promise<ModelResponse> {
+): Promise<{response: ModelResponse; logId: string}> {
   // Convert prompt to string for logging
   const promptText =
     typeof prompt === 'string'
@@ -49,6 +50,7 @@ export async function processModelResponse(
   let lastError: Error | undefined;
   const maxRetries = numRetries;
   const initialDelay = 1000; // 1 second initial delay
+  let logId = '';
 
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
     // Create a new log entry for each attempt
@@ -65,6 +67,9 @@ export async function processModelResponse(
       prompt: promptText,
       createdTimestamp: Timestamp.now(),
     });
+
+    logId = log.id;
+
     try {
       const queryTimestamp = Timestamp.now();
       response = (await getAgentResponse(
@@ -119,7 +124,7 @@ export async function processModelResponse(
     console.error(`Failed after ${numRetries} retries:`, lastError);
   }
 
-  return response;
+  return {response, logId};
 }
 
 // TODO: Rename to getAPIResponse?
@@ -142,6 +147,14 @@ export async function getAgentResponse(
     );
   } else if (modelSettings.apiType === ApiKeyType.OPENAI_API_KEY) {
     response = await getOpenAIAPIResponse(
+      apiKeyConfig,
+      modelSettings.modelName,
+      prompt,
+      generationConfig,
+      structuredOutputConfig,
+    );
+  } else if (modelSettings.apiType === ApiKeyType.CLAUDE_API_KEY) {
+    response = await getClaudeAPIResponse(
       apiKeyConfig,
       modelSettings.modelName,
       prompt,
@@ -198,6 +211,23 @@ export async function getOpenAIAPIResponse(
   return await getOpenAIAPIChatCompletionResponse(
     apiKeyConfig.openAIApiKey?.apiKey || '',
     apiKeyConfig.openAIApiKey?.baseUrl || null,
+    model,
+    prompt,
+    generationConfig,
+    structuredOutputConfig,
+  );
+}
+
+export async function getClaudeAPIResponse(
+  apiKeyConfig: APIKeyConfig,
+  model: string,
+  prompt: string | Array<{role: string; content: string; name?: string}>,
+  generationConfig: ModelGenerationConfig,
+  structuredOutputConfig?: StructuredOutputConfig,
+): Promise<ModelResponse> {
+  return await getClaudeAPIChatCompletionResponse(
+    apiKeyConfig.claudeApiKey?.apiKey || '',
+    apiKeyConfig.claudeApiKey?.baseUrl || null,
     model,
     prompt,
     generationConfig,

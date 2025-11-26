@@ -7,7 +7,6 @@ import '../participant_view/participant_view';
 import './cohort_editor';
 import './cohort_settings_dialog';
 import './cohort_list';
-import './log_dashboard';
 import './participant_stats';
 
 import {MobxLitElement} from '@adobe/lit-mobx';
@@ -77,9 +76,6 @@ export class Component extends MobxLitElement {
     return html`
       ${this.renderParticipantStatsPanel()}
       ${this.renderParticipantPreviewPanel()}
-      ${this.experimentManager.showLogs
-        ? html`<log-dashboard></log-dashboard>`
-        : nothing}
     `;
   }
 
@@ -109,10 +105,7 @@ export class Component extends MobxLitElement {
   }
 
   private renderParticipantStatsPanel() {
-    if (
-      !this.experimentManager.showParticipantStats ||
-      this.experimentManager.showLogs
-    ) {
+    if (!this.experimentManager.showParticipantStats) {
       return nothing;
     }
 
@@ -137,19 +130,18 @@ export class Component extends MobxLitElement {
           </participant-stats>
         </div>
         <div class="content-wrapper">
-          <code>
-            ${JSON.stringify(this.experimentManager.currentParticipant)}
-          </code>
+          <pre><code>${JSON.stringify(
+            this.experimentManager.currentParticipant,
+            null,
+            2,
+          )}</code></pre>
         </div>
       </div>
     `;
   }
 
   private renderParticipantPreviewPanel() {
-    if (
-      !this.experimentManager.showParticipantPreview ||
-      this.experimentManager.showLogs
-    ) {
+    if (!this.experimentManager.showParticipantPreview) {
       return nothing;
     }
 
@@ -224,16 +216,6 @@ export class Component extends MobxLitElement {
           ${renderToggle()}
         </div>
         <div class="right">
-          <pr-button
-            color="tertiary"
-            variant="default"
-            size="small"
-            @click=${() => {
-              this.experimentManager.setShowLogs(true);
-            }}
-          >
-            Open log dashboard
-          </pr-button>
           ${this.renderDebugModeButton()} ${this.renderTransferMenu()}
         </div>
       </div>
@@ -304,7 +286,7 @@ export class Component extends MobxLitElement {
     if (cohort.id == currentCohortId) {
       return;
     }
-    // Don't allow transferring to locked cohors
+    // Don't allow transferring to locked cohorts.
     if (
       this.experimentService.experiment &&
       this.experimentService.experiment.cohortLockMap[cohort.id]
@@ -317,9 +299,28 @@ export class Component extends MobxLitElement {
         return;
       }
 
-      const stage = this.experimentService.getStage(
-        this.experimentManager.currentParticipant.currentStageId,
+      const participant = this.experimentManager.currentParticipant;
+      const cohortParticipants = this.experimentManager.getCohortParticipants(
+        cohort.id,
       );
+
+      // Check if there is already a participant with the same name in the cohort.
+      if (participant.name) {
+        const normalize = (name: string) => name.replace(/\s*\d+$/, '');
+        const normalizedName = normalize(participant.name);
+        const duplicateParticipant = cohortParticipants.find(
+          (p) => p.name && normalize(p.name) === normalizedName,
+        );
+
+        if (duplicateParticipant) {
+          const isConfirmed = window.confirm(
+            `Warning: A participant with a similar name ("${duplicateParticipant.name}") already exists in cohort ${cohort.metadata.name}. Do you still want to transfer?`,
+          );
+          if (!isConfirmed) return;
+        }
+      }
+
+      const stage = this.experimentService.getStage(participant.currentStageId);
       if (!stage || !(stage.kind === StageKind.TRANSFER)) {
         const isConfirmed = window.confirm(
           `Participant is not in a transfer stage. Are you sure you want to transfer them?`,
@@ -329,7 +330,7 @@ export class Component extends MobxLitElement {
 
       this.analyticsService.trackButtonClick(ButtonClick.TRANSFER_INITIATE);
       this.experimentManager.initiateParticipantTransfer(
-        this.experimentManager.currentParticipant.privateId,
+        participant.privateId,
         cohort.id,
       );
     };

@@ -62,7 +62,7 @@ export class AllocationReveal extends MobxLitElement {
                   const percentage =
                     participantAnswer.allocationMap[asset.id]?.percentage;
                   return html`<div class="table-cell">
-                    ${percentage?.toFixed(1) ?? 'N/A'}%
+                    ${percentage?.toFixed(1) ?? '0'}%
                   </div>`;
                 })}
               </div>

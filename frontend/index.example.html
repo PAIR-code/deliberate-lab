@@ -4,6 +4,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Deliberate Lab</title>
     <link
+      href="https://fonts.googleapis.com/css?family=Material+Icons&display=block"
+      rel="stylesheet"
+    />
+    <link
       rel="stylesheet"
       href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=block"
     />
@@ -15,7 +19,7 @@
       rel="stylesheet"
       href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap"
     />
-    <% if (process.env.NODE_ENV === 'production') { %>
+    <% if (process.env.NODE_ENV==='production' ) { %>
     <script>
       function addAnalyticsScript() {
         // Create a new script element
@@ -48,6 +52,7 @@
       body {
         margin: 0;
       }
+
       .noscript {
         align-items: center;
         background: #eee;
@@ -62,6 +67,7 @@
         margin: 0;
         padding: 24px;
       }
+
       .noscript section {
         background: #fff;
         border-radius: 8px;
@@ -71,24 +77,27 @@
         gap: 8px;
         padding: 16px;
       }
+
       .noscript h1 {
         font-size: 22px;
         font-weight: 500;
         line-height: 28px;
         margin: 0;
       }
+
       .noscript p {
         margin: 0;
       }
     </style>
   </head>
+
   <body>
     <noscript class="noscript">
       <section>
         <h1>🕊️ JavaScript required</h1>
         <p>
-          Welcome to Deliberate Lab! You'll need to enable JavaScript
-          to use this app.
+          Welcome to Deliberate Lab! You'll need to enable JavaScript to use
+          this app.
         </p>
       </section>
     </noscript>

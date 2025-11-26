@@ -32,6 +32,7 @@ export interface ChatMessage {
   agentId: string; // agent persona used (or blank if none)
   explanation: string; // agent reasoning (or blank if none)
   isError: boolean; // is error message (used for private chats)
+  imageUrls?: string[]; // multiple images
 }
 
 /** Format for LLM API chat message output. */
@@ -72,6 +73,7 @@ export function createChatMessage(
     agentId: config.agentId ?? '',
     explanation: config.explanation ?? '',
     isError: config.isError ?? false,
+    imageUrls: config.imageUrls ?? undefined,
   };
 }
 
@@ -90,6 +92,7 @@ export function createParticipantChatMessage(
     agentId: config.agentId ?? '',
     explanation: config.explanation ?? '',
     isError: config.isError ?? false,
+    imageUrls: config.imageUrls ?? undefined,
   };
 }
 
@@ -108,6 +111,7 @@ export function createMediatorChatMessage(
     agentId: config.agentId ?? '',
     explanation: config.explanation ?? '',
     isError: config.isError ?? false,
+    imageUrls: config.imageUrls ?? undefined,
   };
 }
 
@@ -126,5 +130,24 @@ export function createExperimenterChatMessage(
     agentId: config.agentId ?? '',
     explanation: config.explanation ?? '',
     isError: config.isError ?? false,
+    imageUrls: config.imageUrls ?? undefined,
+  };
+}
+
+/** Create system chat message. */
+export function createSystemChatMessage(
+  config: Partial<ChatMessage> = {},
+): ChatMessage {
+  return {
+    id: config.id ?? generateId(),
+    discussionId: config.discussionId ?? null,
+    type: UserType.SYSTEM,
+    message: config.message ?? '',
+    timestamp: config.timestamp ?? Timestamp.now(),
+    profile: config.profile ?? {name: 'System', avatar: '⚙️', pronouns: null},
+    senderId: config.senderId ?? '',
+    agentId: config.agentId ?? '',
+    explanation: config.explanation ?? '',
+    isError: false,
   };
 }

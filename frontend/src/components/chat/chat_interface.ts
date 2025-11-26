@@ -64,6 +64,7 @@ export class ChatInterface extends MobxLitElement {
               </div>
             </div>
           </div>
+          <slot name="indicators"></slot>
           ${
             !this.showInput
               ? nothing

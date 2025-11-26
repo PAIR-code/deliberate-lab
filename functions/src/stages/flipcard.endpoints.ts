@@ -1,6 +1,5 @@
 import * as admin from 'firebase-admin';
-import * as functions from 'firebase-functions';
-import {onCall} from 'firebase-functions/v2/https';
+import {onCall, HttpsError} from 'firebase-functions/v2/https';
 
 import {app} from '../app';
 
@@ -25,10 +24,7 @@ export const updateFlipCardStageParticipantAnswer = onCall(async (request) => {
       !participantPrivateId ||
       !flipCardStageParticipantAnswer
     ) {
-      throw new functions.https.HttpsError(
-        'invalid-argument',
-        'Missing required fields',
-      );
+      throw new HttpsError('invalid-argument', 'Missing required fields');
     }
 
     // Define participant answer document reference
@@ -53,7 +49,7 @@ export const updateFlipCardStageParticipantAnswer = onCall(async (request) => {
     return {success: true};
   } catch (error) {
     console.error('Error updating FlipCard stage participant answer:', error);
-    throw new functions.https.HttpsError(
+    throw new HttpsError(
       'internal',
       'Failed to update FlipCard stage participant answer',
     );
