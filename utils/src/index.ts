@@ -28,6 +28,7 @@ export * from './cohort.validation';
 // Variable
 export * from './variables';
 export * from './variables.utils';
+export * from './variables.schema.utils';
 export * from './variables.template';
 export * from './variables.validation';
 
@@ -78,6 +79,7 @@ export * from './stages/comprehension_stage.validation';
 export * from './stages/flipcard_stage';
 export * from './stages/flipcard_stage.utils';
 export * from './stages/flipcard_stage.validation';
+export * from './stages/flipcard_stage.manager';
 
 export * from './stages/ranking_stage';
 export * from './stages/ranking_stage.manager';

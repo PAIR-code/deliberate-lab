@@ -19,6 +19,7 @@ import {
   createDefaultPromptItemGroup,
   ShuffleConfig,
   SeedStrategy,
+  createShuffleConfig,
 } from '@deliberation-lab/utils';
 
 import {styles} from './structured_prompt_editor.scss';
@@ -389,10 +390,10 @@ export class EditorComponent extends MobxLitElement {
             .checked=${shuffleConfig.shuffle}
             @change=${() =>
               this.updatePromptItem(group, {
-                shuffleConfig: {
+                shuffleConfig: createShuffleConfig({
                   ...shuffleConfig,
                   shuffle: !shuffleConfig.shuffle,
-                },
+                }),
               })}
           />
           <div>Shuffle items in this group</div>
@@ -405,11 +406,11 @@ export class EditorComponent extends MobxLitElement {
                 .value=${shuffleConfig.seed}
                 @change=${(e: Event) =>
                   this.updatePromptItem(group, {
-                    shuffleConfig: {
+                    shuffleConfig: createShuffleConfig({
                       ...shuffleConfig,
                       seed: ((e.target as HTMLSelectElement).value ||
                         '') as SeedStrategy,
-                    },
+                    }),
                   })}
               >
                 <option
@@ -446,10 +447,10 @@ export class EditorComponent extends MobxLitElement {
                       .value=${shuffleConfig.customSeed}
                       @input=${(e: Event) =>
                         this.updatePromptItem(group, {
-                          shuffleConfig: {
+                          shuffleConfig: createShuffleConfig({
                             ...shuffleConfig,
                             customSeed: (e.target as HTMLInputElement).value,
-                          },
+                          }),
                         })}
                     />
                   `
