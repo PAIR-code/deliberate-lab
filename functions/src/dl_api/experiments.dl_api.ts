@@ -48,34 +48,28 @@ export async function listExperiments(
   res: Response,
 ): Promise<void> {
   if (!hasDeliberateLabAPIPermission(req, 'read')) {
-    res.status(403).json({error: 'Insufficient permissions'});
-    return;
+    throw createHttpError(403, 'Insufficient permissions');
   }
 
   const app = admin.app();
   const firestore = app.firestore();
   const experimenterId = req.deliberateLabAPIKeyData!.experimenterId;
 
-  try {
-    // Get experiments where user is creator or has read access
-    const snapshot = await firestore
-      .collection('experiments')
-      .where('metadata.creator', '==', experimenterId)
-      .get();
+  // Get experiments where user is creator or has read access
+  const snapshot = await firestore
+    .collection('experiments')
+    .where('metadata.creator', '==', experimenterId)
+    .get();
 
-    const experiments = snapshot.docs.map((doc) => ({
-      id: doc.id,
-      ...doc.data(),
-    }));
+  const experiments = snapshot.docs.map((doc) => ({
+    id: doc.id,
+    ...doc.data(),
+  }));
 
-    res.status(200).json({
-      experiments,
-      total: experiments.length,
-    });
-  } catch (error) {
-    console.error('Error listing experiments:', error);
-    res.status(500).json({error: 'Failed to list experiments'});
-  }
+  res.status(200).json({
+    experiments,
+    total: experiments.length,
+  });
 }
 
 /**
@@ -86,85 +80,73 @@ export async function createExperiment(
   res: Response,
 ): Promise<void> {
   if (!hasDeliberateLabAPIPermission(req, 'write')) {
-    res.status(403).json({error: 'Insufficient permissions'});
-    return;
+    throw createHttpError(403, 'Insufficient permissions');
   }
 
   const app = admin.app();
   const firestore = app.firestore();
   const experimenterId = req.deliberateLabAPIKeyData!.experimenterId;
 
-  try {
-    const body = req.body as CreateExperimentRequest;
+  const body = req.body as CreateExperimentRequest;
 
-    // Basic validation
-    if (!body.name) {
-      res.status(400).json({
-        error: 'Invalid request body: name is required',
-      });
-      return;
-    }
-
-    const timestamp = admin.firestore.Timestamp.now() as UnifiedTimestamp;
-
-    // Use existing utility functions to create proper config
-    const metadata: MetadataConfig & {prolificRedirectCode?: string} = {
-      name: body.name,
-      description: body.description || '',
-      publicName: '',
-      tags: [],
-      creator: experimenterId,
-      starred: {},
-      dateCreated: timestamp,
-      dateModified: timestamp,
-    };
-
-    // Add prolific redirect code if provided
-    if (body.prolificRedirectCode) {
-      metadata.prolificRedirectCode = body.prolificRedirectCode;
-    }
-
-    // Validate stages if provided
-    if (!validateOrRespond(body.stages, validateStages, res)) return;
-
-    // Create experiment config with stages (if provided)
-    const stageConfigs = body.stages || [];
-    const experimentConfig = createExperimentConfig(stageConfigs, {
-      metadata,
-    });
-
-    // Use transaction for consistency (similar to writeExperiment)
-    await firestore.runTransaction(async (transaction) => {
-      const experimentRef = firestore
-        .collection('experiments')
-        .doc(experimentConfig.id);
-
-      // Check if experiment already exists
-      const existingDoc = await transaction.get(experimentRef);
-      if (existingDoc.exists) {
-        throw new Error('Experiment with this ID already exists');
-      }
-
-      // Set the experiment document
-      transaction.set(experimentRef, experimentConfig);
-
-      // Add stages subcollection if stages provided
-      for (const stage of stageConfigs) {
-        transaction.set(
-          experimentRef.collection('stages').doc(stage.id),
-          stage,
-        );
-      }
-    });
-
-    res.status(201).json({
-      ...experimentConfig,
-      id: experimentConfig.id,
-    });
-  } catch (error) {
-    console.error('Error creating experiment:', error);
-    res.status(500).json({error: 'Failed to create experiment'});
+  // Basic validation
+  if (!body.name) {
+    throw createHttpError(400, 'Invalid request body: name is required');
   }
+
+  const timestamp = admin.firestore.Timestamp.now() as UnifiedTimestamp;
+
+  // Use existing utility functions to create proper config
+  const metadata: MetadataConfig & {prolificRedirectCode?: string} = {
+    name: body.name,
+    description: body.description || '',
+    publicName: '',
+    tags: [],
+    creator: experimenterId,
+    starred: {},
+    dateCreated: timestamp,
+    dateModified: timestamp,
+  };
+
+  // Add prolific redirect code if provided
+  if (body.prolificRedirectCode) {
+    metadata.prolificRedirectCode = body.prolificRedirectCode;
+  }
+
+  // Validate stages if provided
+  if (!validateOrRespond(body.stages, validateStages, res)) return;
+
+  // Create experiment config with stages (if provided)
+  const stageConfigs = body.stages || [];
+  const experimentConfig = createExperimentConfig(stageConfigs, {
+    metadata,
+  });
+
+  // Use transaction for consistency (similar to writeExperiment)
+  await firestore.runTransaction(async (transaction) => {
+    const experimentRef = firestore
+      .collection('experiments')
+      .doc(experimentConfig.id);
+
+    // Check if experiment already exists
+    const existingDoc = await transaction.get(experimentRef);
+    if (existingDoc.exists) {
+      throw createHttpError(409, 'Experiment with this ID already exists');
+    }
+
+    // Set the experiment document
+    transaction.set(experimentRef, experimentConfig);
+
+    // Add stages subcollection if stages provided
+    for (const stage of stageConfigs) {
+      transaction.set(experimentRef.collection('stages').doc(stage.id), stage);
+    }
+  });
+
+  res.status(201).json({
+    ...experimentConfig,
+    id: experimentConfig.id,
+  });
 }
 
 /**
@@ -175,58 +157,48 @@ export async function getExperiment(
   res: Response,
 ): Promise<void> {
   if (!hasDeliberateLabAPIPermission(req, 'read')) {
-    res.status(403).json({error: 'Insufficient permissions'});
-    return;
+    throw createHttpError(403, 'Insufficient permissions');
   }
 
   const experimentId = req.params.id;
   const experimenterId = req.deliberateLabAPIKeyData!.experimenterId;
 
   if (!experimentId) {
-    res.status(400).json({error: 'Experiment ID required'});
-    return;
+    throw createHttpError(400, 'Experiment ID required');
   }
 
   const app = admin.app();
   const firestore = app.firestore();
 
-  try {
-    // First fetch just the experiment to check permissions (lightweight)
-    const experiment = await getFirestoreExperiment(experimentId);
-    if (!experiment) {
-      res.status(404).json({error: 'Experiment not found'});
-      return;
-    }
-
-    // Check access permissions before fetching full data
-    if (
-      experiment.metadata.creator !== experimenterId &&
-      !experiment.permissions?.readers?.includes(experimenterId)
-    ) {
-      res.status(403).json({error: 'Access denied'});
-      return;
-    }
-
-    // Now fetch full experiment data (stages, agents, etc.)
-    const data = await getExperimentDownload(firestore, experimentId, {
-      includeParticipantData: false,
-    });
-
-    if (!data) {
-      res.status(500).json({error: 'Failed to load experiment data'});
-      return;
-    }
-
-    res.status(200).json({
-      experiment: {...data.experiment, id: experimentId},
-      stageMap: data.stageMap,
-      agentMediatorMap: data.agentMediatorMap,
-      agentParticipantMap: data.agentParticipantMap,
-    });
-  } catch (error) {
-    console.error('Error getting experiment:', error);
-    res.status(500).json({error: 'Failed to get experiment'});
+  // First fetch just the experiment to check permissions (lightweight)
+  const experiment = await getFirestoreExperiment(experimentId);
+  if (!experiment) {
+    throw createHttpError(404, 'Experiment not found');
   }
+
+  // Check access permissions before fetching full data
+  if (
+    experiment.metadata.creator !== experimenterId &&
+    !experiment.permissions?.readers?.includes(experimenterId)
+  ) {
+    throw createHttpError(403, 'Access denied');
+  }
+
+  // Now fetch full experiment data (stages, agents, etc.)
+  const data = await getExperimentDownload(firestore, experimentId, {
+    includeParticipantData: false,
+  });
+
+  if (!data) {
+    throw createHttpError(500, 'Failed to load experiment data');
+  }
+
+  res.status(200).json({
+    experiment: {...data.experiment, id: experimentId},
+    stageMap: data.stageMap,
+    agentMediatorMap: data.agentMediatorMap,
+    agentParticipantMap: data.agentParticipantMap,
+  });
 }
 
 /**
@@ -237,8 +209,7 @@ export async function updateExperiment(
   res: Response,
 ): Promise<void> {
   if (!hasDeliberateLabAPIPermission(req, 'write')) {
-    res.status(403).json({error: 'Insufficient permissions'});
-    return;
+    throw createHttpError(403, 'Insufficient permissions');
   }
 
   const app = admin.app();
@@ -247,8 +218,7 @@ export async function updateExperiment(
   const experimenterId = req.deliberateLabAPIKeyData!.experimenterId;
 
   if (!experimentId) {
-    res.status(400).json({error: 'Experiment ID required'});
-    return;
+    throw createHttpError(400, 'Experiment ID required');
   }
 
   const body = req.body as UpdateExperimentRequest;
@@ -327,8 +297,7 @@ export async function deleteExperiment(
   res: Response,
 ): Promise<void> {
   if (!hasDeliberateLabAPIPermission(req, 'write')) {
-    res.status(403).json({error: 'Insufficient permissions'});
-    return;
+    throw createHttpError(403, 'Insufficient permissions');
   }
 
   const app = admin.app();
@@ -337,39 +306,29 @@ export async function deleteExperiment(
   const experimenterId = req.deliberateLabAPIKeyData!.experimenterId;
 
   if (!experimentId) {
-    res.status(400).json({error: 'Experiment ID required'});
-    return;
+    throw createHttpError(400, 'Experiment ID required');
   }
 
-  try {
-    // Use existing utility to get experiment
-    const experiment = await getFirestoreExperiment(experimentId);
-    if (!experiment) {
-      res.status(404).json({error: 'Experiment not found'});
-      return;
-    }
-
-    // Check ownership
-    if (experiment.metadata.creator !== experimenterId) {
-      res
-        .status(403)
-        .json({error: 'Only the creator can delete the experiment'});
-      return;
-    }
-
-    // Use Firebase's recursive delete to properly clean up all subcollections
-    // This handles stages, cohorts, participants, and all nested data
-    const experimentRef = getFirestoreExperimentRef(experimentId);
-    await firestore.recursiveDelete(experimentRef);
-
-    res.status(200).json({
-      id: experimentId,
-      deleted: true,
-    });
-  } catch (error) {
-    console.error('Error deleting experiment:', error);
-    res.status(500).json({error: 'Failed to delete experiment'});
+  // Use existing utility to get experiment
+  const experiment = await getFirestoreExperiment(experimentId);
+  if (!experiment) {
+    throw createHttpError(404, 'Experiment not found');
   }
+
+  // Check ownership
+  if (experiment.metadata.creator !== experimenterId) {
+    throw createHttpError(403, 'Only the creator can delete the experiment');
+  }
+
+  // Use Firebase's recursive delete to properly clean up all subcollections
+  // This handles stages, cohorts, participants, and all nested data
+  const experimentRef = getFirestoreExperimentRef(experimentId);
+  await firestore.recursiveDelete(experimentRef);
+
+  res.status(200).json({
+    id: experimentId,
+    deleted: true,
+  });
 }
 
 /**
@@ -381,8 +340,7 @@ export async function exportExperimentData(
   res: Response,
 ): Promise<void> {
   if (!hasDeliberateLabAPIPermission(req, 'read')) {
-    res.status(403).json({error: 'Insufficient permissions'});
-    return;
+    throw createHttpError(403, 'Insufficient permissions');
   }
 
   const app = admin.app();
@@ -391,48 +349,39 @@ export async function exportExperimentData(
   const experimenterId = req.deliberateLabAPIKeyData!.experimenterId;
 
   if (!experimentId) {
-    res.status(400).json({error: 'Experiment ID required'});
-    return;
+    throw createHttpError(400, 'Experiment ID required');
   }
 
-  try {
-    // First check permissions using existing utility
-    const experiment = await getFirestoreExperiment(experimentId);
-    if (!experiment) {
-      res.status(404).json({error: 'Experiment not found'});
-      return;
-    }
-
-    // Check access permissions
-    if (
-      experiment.metadata.creator !== experimenterId &&
-      !experiment.permissions?.readers?.includes(experimenterId)
-    ) {
-      res.status(403).json({error: 'Access denied'});
-      return;
-    }
-
-    // Use the shared function to get full experiment data
-    const experimentDownload = await getExperimentDownload(
-      firestore,
-      experimentId,
-    );
-
-    if (!experimentDownload) {
-      res.status(500).json({error: 'Failed to load experiment data'});
-      return;
-    }
-
-    // Format response based on query parameter
-    const format = req.query.format || 'json';
-
-    if (format === 'json') {
-      res.status(200).json(experimentDownload);
-    } else {
-      res.status(400).json({error: 'Unsupported format. Use format=json'});
-    }
-  } catch (error) {
-    console.error('Error exporting experiment data:', error);
-    res.status(500).json({error: 'Failed to export experiment data'});
+  // First check permissions using existing utility
+  const experiment = await getFirestoreExperiment(experimentId);
+  if (!experiment) {
+    throw createHttpError(404, 'Experiment not found');
   }
+
+  // Check access permissions
+  if (
+    experiment.metadata.creator !== experimenterId &&
+    !experiment.permissions?.readers?.includes(experimenterId)
+  ) {
+    throw createHttpError(403, 'Access denied');
+  }
+
+  // Use the shared function to get full experiment data
+  const experimentDownload = await getExperimentDownload(
+    firestore,
+    experimentId,
+  );
+
+  if (!experimentDownload) {
+    throw createHttpError(500, 'Failed to load experiment data');
+  }
+
+  // Format response based on query parameter
+  const format = req.query.format || 'json';
+
+  if (format !== 'json') {
+    throw createHttpError(400, 'Unsupported format. Use format=json');
+  }
+
+  res.status(200).json(experimentDownload);
 }
