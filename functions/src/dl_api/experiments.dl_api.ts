@@ -122,6 +122,9 @@ export async function createExperiment(
       metadata.prolificRedirectCode = body.prolificRedirectCode;
     }
 
+    // Validate stages if provided
+    if (!validateOrRespond(body.stages, validateStages, res)) return;
+
     // Create experiment config with stages (if provided)
     const stageConfigs = body.stages || [];
     const experimentConfig = createExperimentConfig(stageConfigs, {

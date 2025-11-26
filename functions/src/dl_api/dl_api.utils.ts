@@ -168,7 +168,7 @@ export function validateOrRespond<T>(
   validator: (data: T) => string | null,
   res: Response,
 ): boolean {
-  if (!data) return true;
+  if (data === undefined) return true;
 
   const validationError = validator(data);
   if (validationError) {
