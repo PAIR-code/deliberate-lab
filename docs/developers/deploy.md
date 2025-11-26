@@ -13,17 +13,19 @@ Add your Firebase project ID to the `.firebaserc` file.
 Then, using the [Firebase CLI](https://firebase.google.com/docs/cli/), run:
 
 ```bash
-firebase login  # If not already logged in
-firebase deploy
+npx firebase login  # If not already logged in
+npx firebase deploy
 ```
 
 or use one of the following commands to only deploy part(s) of the backend:
 
 ```bash
-firebase deploy --only functions
-firebase deploy --only firestore
-firebase deploy --only firestore:indexes
-firebase deploy --only firestore:rules
+```bash
+npx firebase deploy --only functions
+npx firebase deploy --only firestore
+npx firebase deploy --only firestore:indexes
+npx firebase deploy --only firestore:rules
+```
 ```
 
 See [Firebase documentation](https://firebase.google.com/docs/functions/get-started?gen=2nd#deploy-functions-to-a-production-environment)
