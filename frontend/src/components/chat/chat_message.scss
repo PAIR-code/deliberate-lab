@@ -152,6 +152,28 @@ p {
   max-width: $bubble-width;
 }
 
+.generated-image {
+  max-width: $bubble-width;
+  width: 100%;
+  height: auto;
+  border-radius: common.$spacing-medium;
+  margin-top: common.$spacing-small;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+
+  &:hover {
+    transform: scale(1.02);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+  }
+
+  // Add spacing between multiple images
+  & + .generated-image {
+    margin-top: common.$spacing-medium;
+  }
+}
+
 .system-message {
   @include common.flex-row-align-center;
   justify-content: center;

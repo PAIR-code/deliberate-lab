@@ -9,7 +9,11 @@ import * as admin from 'firebase-admin';
 export const app = admin.initializeApp({
   databaseURL: `https://${process.env.GCLOUD_PROJECT}-default-rtdb.firebaseio.com`,
 });
-app.firestore().settings({ignoreUndefinedProperties: true});
+try {
+  app.firestore().settings({ignoreUndefinedProperties: true});
+} catch (e) {
+  console.warn('Firestore settings already set:', e);
+}
 
 // Stage config manager for directing stage type specific processing actions
 // (e.g., editing private/public answers, fetching prompts)
