@@ -17,7 +17,7 @@ const strict = {additionalProperties: false} as const;
 export const FlipCardData = Type.Object(
   {
     id: Type.String({minLength: 1}),
-    title: Type.String({minLength: 1}),
+    title: Type.String(), // Allow empty titles (content may be in frontContent via template variables)
     frontContent: Type.String({minLength: 1}),
     backContent: Type.String({minLength: 1}),
   },
