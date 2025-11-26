@@ -4,7 +4,7 @@
  */
 
 import * as admin from 'firebase-admin';
-import {randomBytes, scrypt, createHash} from 'crypto';
+import {randomBytes, scrypt, createHash, timingSafeEqual} from 'crypto';
 import {promisify} from 'util';
 import {
   DeliberateLabAPIKeyPermission,
@@ -129,9 +129,10 @@ export async function verifyDeliberateLabAPIKey(
     return {valid: false};
   }
 
-  // Verify the hash
-  const hashBuffer = (await scryptAsync(apiKey, data.salt, 64)) as Buffer;
-  const isValid = hashBuffer.toString('hex') === data.hash;
+  // Verify the hash using constant-time comparison to prevent timing attacks
+  const computedHash = (await scryptAsync(apiKey, data.salt, 64)) as Buffer;
+  const storedHash = Buffer.from(data.hash, 'hex');
+  const isValid = timingSafeEqual(computedHash, storedHash);
 
   if (isValid) {
     // Update last used timestamp
