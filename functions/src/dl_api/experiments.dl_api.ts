@@ -185,16 +185,18 @@ export async function getExperiment(
     return;
   }
 
-  try {
-    // Use existing utility function
-    const experiment = await getFirestoreExperiment(experimentId);
+  const app = admin.app();
+  const firestore = app.firestore();
 
+  try {
+    // First fetch just the experiment to check permissions (lightweight)
+    const experiment = await getFirestoreExperiment(experimentId);
     if (!experiment) {
       res.status(404).json({error: 'Experiment not found'});
       return;
     }
 
-    // Check access permissions
+    // Check access permissions before fetching full data
     if (
       experiment.metadata.creator !== experimenterId &&
       !experiment.permissions?.readers?.includes(experimenterId)
@@ -203,9 +205,21 @@ export async function getExperiment(
       return;
     }
 
+    // Now fetch full experiment data (stages, agents, etc.)
+    const data = await getExperimentDownload(firestore, experimentId, {
+      includeParticipantData: false,
+    });
+
+    if (!data) {
+      res.status(500).json({error: 'Failed to load experiment data'});
+      return;
+    }
+
     res.status(200).json({
-      ...experiment,
-      id: experimentId,
+      experiment: {...data.experiment, id: experimentId},
+      stageMap: data.stageMap,
+      agentMediatorMap: data.agentMediatorMap,
+      agentParticipantMap: data.agentParticipantMap,
     });
   } catch (error) {
     console.error('Error getting experiment:', error);
@@ -401,14 +415,14 @@ export async function exportExperimentData(
       return;
     }
 
-    // Use the shared function directly from utils
+    // Use the shared function to get full experiment data
     const experimentDownload = await getExperimentDownload(
       firestore,
       experimentId,
     );
 
     if (!experimentDownload) {
-      res.status(404).json({error: 'Failed to build experiment download'});
+      res.status(500).json({error: 'Failed to load experiment data'});
       return;
     }
 
