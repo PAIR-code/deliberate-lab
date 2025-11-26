@@ -22,8 +22,8 @@ if ! command -v npm &> /dev/null; then
     exit 1
 fi
 
-if ! command -v firebase &> /dev/null; then
-    echo "Error: 'firebase' command not found. Please install it with 'npm install -g firebase-tools'."
+if ! npx firebase --version &> /dev/null; then
+    echo "Error: 'firebase' command not found. Please run 'npm install' first."
     exit 1
 fi
 
@@ -136,7 +136,7 @@ cd ..
 # 3. Start Firebase emulators
 echo "--- [3/4] Starting Firebase emulators ---"
 # Using --import ./emulator_test_config as per instructions
-tail -f /dev/null | firebase emulators:start --import ./emulator_test_config &
+tail -f /dev/null | npx firebase emulators:start --import ./emulator_test_config &
 EMULATORS_PID=$!
 
 # Wait for emulators to be ready

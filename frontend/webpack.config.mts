@@ -20,7 +20,13 @@ import {GitRevisionPlugin} from 'git-revision-webpack-plugin';
 import HtmlWebpackPlugin from 'html-webpack-plugin';
 import {CleanWebpackPlugin} from 'clean-webpack-plugin';
 import * as path from 'path';
-import * as webpack from 'webpack';
+import webpack from 'webpack';
+import { fileURLToPath } from 'url';
+import { createRequire } from 'module';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const require = createRequire(import.meta.url);
 
 const gitRevisionPlugin = new GitRevisionPlugin({branch: true});
 

@@ -1,13 +1,15 @@
 const esbuild = require('esbuild');
 const { dependencies } = require('./package.json');
 
-// List of dependencies to bundle (local packages)
-const BUNDLE_DEPS = ['@deliberation-lab/utils'];
+// Aggressive bundling: bundle everything except firebase-admin and firebase-functions.
+// This is a common solution to support ESM-only packages (like uuid) in the
+// Firebase Functions CommonJS runtime without migrating the entire project to ESM.
+// Bundling with esbuild converts all dependencies into a single compatible CJS file.
+// See: https://github.com/firebase/firebase-tools/issues/2994
+const EXTERNAL_DEPS = ['firebase-admin', 'firebase-functions'];
 
-// Create list of externals (everything else in dependencies)
-const external = Object.keys(dependencies).filter(
-  (dep) => !BUNDLE_DEPS.includes(dep)
-);
+// Create list of externals
+const external = EXTERNAL_DEPS;
 
 const isWatch = process.argv.includes('--watch');
 
