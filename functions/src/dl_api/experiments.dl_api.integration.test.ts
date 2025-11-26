@@ -470,4 +470,312 @@ describe('API Experiment Creation Integration Tests', () => {
       expect(comparison.differences).toEqual([]);
     }, 30000); // 30 second timeout for Firestore operations
   });
+
+  // ============================================================================
+  // API CRUD Operations Tests
+  // ============================================================================
+
+  describe('API CRUD Operations', () => {
+    /**
+     * Helper to make API requests with proper auth
+     */
+    async function apiRequest(
+      method: string,
+      path: string,
+      body?: unknown,
+    ): Promise<Response> {
+      const options: RequestInit = {
+        method,
+        headers: {
+          Authorization: `Bearer ${testAPIKey}`,
+          'Content-Type': 'application/json',
+        },
+      };
+      if (body) {
+        options.body = JSON.stringify(body);
+      }
+      return fetch(`${baseUrl}${path}`, options);
+    }
+
+    describe('GET /v1/experiments (list)', () => {
+      it('should return empty list when no experiments exist', async () => {
+        const response = await apiRequest('GET', '/v1/experiments');
+        expect(response.status).toBe(200);
+
+        const data = await response.json();
+        expect(data.experiments).toEqual([]);
+        expect(data.total).toBe(0);
+      });
+
+      it('should return list of experiments created by the user', async () => {
+        // Create two experiments
+        const exp1Id = await createExperimentViaAPI(
+          'Experiment 1',
+          'First',
+          [],
+        );
+        const exp2Id = await createExperimentViaAPI(
+          'Experiment 2',
+          'Second',
+          [],
+        );
+
+        const response = await apiRequest('GET', '/v1/experiments');
+        expect(response.status).toBe(200);
+
+        const data = await response.json();
+        expect(data.total).toBe(2);
+        expect(data.experiments).toHaveLength(2);
+
+        const ids = data.experiments.map((e: {id: string}) => e.id);
+        expect(ids).toContain(exp1Id);
+        expect(ids).toContain(exp2Id);
+      });
+    });
+
+    describe('GET /v1/experiments/:id (get)', () => {
+      it('should return 404 for non-existent experiment', async () => {
+        const response = await apiRequest(
+          'GET',
+          '/v1/experiments/non-existent-id',
+        );
+        expect(response.status).toBe(404);
+      });
+
+      it('should return experiment with stages', async () => {
+        const template = getFlipCardExperimentTemplate();
+        const experimentId = await createExperimentViaAPI(
+          template.experiment.metadata.name,
+          template.experiment.metadata.description,
+          template.stageConfigs,
+        );
+
+        const response = await apiRequest(
+          'GET',
+          `/v1/experiments/${experimentId}`,
+        );
+        expect(response.status).toBe(200);
+
+        const data = await response.json();
+        expect(data.experiment).toBeDefined();
+        expect(data.experiment.id).toBe(experimentId);
+        expect(data.stageMap).toBeDefined();
+        expect(Object.keys(data.stageMap).length).toBe(
+          template.stageConfigs.length,
+        );
+      });
+    });
+
+    describe('PUT /v1/experiments/:id (update)', () => {
+      it('should return 404 for non-existent experiment', async () => {
+        const response = await apiRequest(
+          'PUT',
+          '/v1/experiments/non-existent-id',
+          {name: 'Updated Name'},
+        );
+        expect(response.status).toBe(404);
+      });
+
+      it('should update experiment metadata', async () => {
+        const experimentId = await createExperimentViaAPI(
+          'Original Name',
+          'Original Description',
+          [],
+        );
+
+        const response = await apiRequest(
+          'PUT',
+          `/v1/experiments/${experimentId}`,
+          {
+            name: 'Updated Name',
+            description: 'Updated Description',
+          },
+        );
+        expect(response.status).toBe(200);
+
+        const data = await response.json();
+        expect(data.updated).toBe(true);
+        expect(data.id).toBe(experimentId);
+
+        // Verify in Firestore
+        const {experiment} = await getExperimentWithStages(experimentId);
+        expect(experiment.metadata.name).toBe('Updated Name');
+        expect(experiment.metadata.description).toBe('Updated Description');
+      });
+
+      it('should update experiment stages', async () => {
+        // Create experiment with initial stages from FlipCard template
+        const template = getFlipCardExperimentTemplate();
+        const experimentId = await createExperimentViaAPI(
+          'Stage Update Test',
+          'Testing stage updates',
+          template.stageConfigs,
+        );
+
+        // Verify initial stages
+        const initialData = await getExperimentWithStages(experimentId);
+        const initialStageCount = template.stageConfigs.length;
+        expect(initialData.stages.length).toBe(initialStageCount);
+
+        // Update with a subset of stages (first half only)
+        // This tests both deletion of old stages and creation of new ones
+        const newStages = JSON.parse(
+          JSON.stringify(template.stageConfigs.slice(0, 2)),
+        ) as StageConfig[];
+        const removedStages = template.stageConfigs.slice(2);
+
+        const response = await apiRequest(
+          'PUT',
+          `/v1/experiments/${experimentId}`,
+          {stages: newStages},
+        );
+        if (response.status !== 200) {
+          const errorBody = await response.text();
+          console.error('Update stages failed:', response.status, errorBody);
+        }
+        expect(response.status).toBe(200);
+
+        // Verify stages were updated
+        const updatedData = await getExperimentWithStages(experimentId);
+        expect(updatedData.stages.length).toBe(newStages.length);
+        expect(updatedData.experiment.stageIds.length).toBe(newStages.length);
+
+        // Verify kept stages still exist
+        const keptStageIds = newStages.map((s) => s.id);
+        for (const stageId of keptStageIds) {
+          const stage = updatedData.stages.find((s) => s.id === stageId);
+          expect(stage).toBeDefined();
+        }
+
+        // Verify removed stages are gone
+        const removedStageIds = removedStages.map((s) => s.id);
+        for (const stageId of removedStageIds) {
+          const stage = updatedData.stages.find((s) => s.id === stageId);
+          expect(stage).toBeUndefined();
+        }
+      });
+
+      it('should update stages to empty array', async () => {
+        const template = getFlipCardExperimentTemplate();
+        const experimentId = await createExperimentViaAPI(
+          'Empty Stages Test',
+          'Testing clearing stages',
+          template.stageConfigs,
+        );
+
+        // Verify initial stages exist
+        const initialData = await getExperimentWithStages(experimentId);
+        expect(initialData.stages.length).toBeGreaterThan(0);
+
+        // Update with empty stages
+        const response = await apiRequest(
+          'PUT',
+          `/v1/experiments/${experimentId}`,
+          {stages: []},
+        );
+        expect(response.status).toBe(200);
+
+        // Verify stages were cleared
+        const updatedData = await getExperimentWithStages(experimentId);
+        expect(updatedData.stages.length).toBe(0);
+        expect(updatedData.experiment.stageIds).toEqual([]);
+      });
+    });
+
+    describe('DELETE /v1/experiments/:id (delete)', () => {
+      it('should return 404 for non-existent experiment', async () => {
+        const response = await apiRequest(
+          'DELETE',
+          '/v1/experiments/non-existent-id',
+        );
+        expect(response.status).toBe(404);
+      });
+
+      it('should delete experiment and all subcollections', async () => {
+        const template = getFlipCardExperimentTemplate();
+        const experimentId = await createExperimentViaAPI(
+          'Delete Test',
+          'Testing deletion',
+          template.stageConfigs,
+        );
+
+        // Verify experiment exists
+        const initialData = await getExperimentWithStages(experimentId);
+        expect(initialData.experiment).toBeDefined();
+        expect(initialData.stages.length).toBeGreaterThan(0);
+
+        // Delete experiment
+        const response = await apiRequest(
+          'DELETE',
+          `/v1/experiments/${experimentId}`,
+        );
+        expect(response.status).toBe(200);
+
+        const data = await response.json();
+        expect(data.deleted).toBe(true);
+        expect(data.id).toBe(experimentId);
+
+        // Verify experiment is gone from Firestore
+        const experimentDoc = await firestore
+          .collection(EXPERIMENTS_COLLECTION)
+          .doc(experimentId)
+          .get();
+        expect(experimentDoc.exists).toBe(false);
+
+        // Verify stages subcollection is also deleted
+        const stagesSnapshot = await firestore
+          .collection(EXPERIMENTS_COLLECTION)
+          .doc(experimentId)
+          .collection('stages')
+          .get();
+        expect(stagesSnapshot.empty).toBe(true);
+
+        // Remove from cleanup list since it's already deleted
+        const idx = createdExperimentIds.indexOf(experimentId);
+        if (idx > -1) {
+          createdExperimentIds.splice(idx, 1);
+        }
+      });
+    });
+
+    describe('GET /v1/experiments/:id/export (export)', () => {
+      it('should return 404 for non-existent experiment', async () => {
+        const response = await apiRequest(
+          'GET',
+          '/v1/experiments/non-existent-id/export',
+        );
+        expect(response.status).toBe(404);
+      });
+
+      it('should export experiment data structure', async () => {
+        const template = getFlipCardExperimentTemplate();
+        const experimentId = await createExperimentViaAPI(
+          'Export Test',
+          'Testing export',
+          template.stageConfigs,
+        );
+
+        const response = await apiRequest(
+          'GET',
+          `/v1/experiments/${experimentId}/export`,
+        );
+        expect(response.status).toBe(200);
+
+        const data = await response.json();
+
+        // Verify ExperimentDownload structure
+        expect(data.experiment).toBeDefined();
+        expect(data.experiment.id).toBe(experimentId);
+        expect(data.stageMap).toBeDefined();
+        expect(Object.keys(data.stageMap).length).toBe(
+          template.stageConfigs.length,
+        );
+
+        // These should exist but be empty for a new experiment
+        expect(data.participantMap).toBeDefined();
+        expect(data.cohortMap).toBeDefined();
+        expect(data.alerts).toBeDefined();
+      });
+    });
+  });
 });

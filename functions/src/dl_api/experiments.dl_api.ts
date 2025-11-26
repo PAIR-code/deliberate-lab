@@ -263,11 +263,11 @@ export async function updateExperiment(
 
     // Update stages if provided
     if (body.stages !== undefined) {
-      // Delete old stages
-      const oldStagesSnapshot = await transaction.get(
-        experimentRef.collection('stages'),
-      );
-      oldStagesSnapshot.forEach((doc) => transaction.delete(doc.ref));
+      // Delete old stages using stageIds from experiment
+      const oldStageIds = experiment.stageIds || [];
+      for (const stageId of oldStageIds) {
+        transaction.delete(experimentRef.collection('stages').doc(stageId));
+      }
 
       // Add new stages and update stageIds
       const stageIds: string[] = [];
