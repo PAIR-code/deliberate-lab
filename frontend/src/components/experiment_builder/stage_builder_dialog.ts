@@ -539,8 +539,11 @@ export class StageBuilderDialog extends MobxLitElement {
 
     return html`
       <div class="card" @click=${addStage}>
-        <div class="title">🗳️ Ranking / Leadership Rejection</div>
-        <div>TODO: [LR] [CLEM] Blabla dans renderLRRankingCard ...</div>
+        <div class="title">🗳️ LR Triggering Selection Logic</div>
+        <div>
+          TODO: Stage that triggers the selection of a leader based on candidacy
+          and performance in two initial tasks
+        </div>
       </div>
     `;
   }

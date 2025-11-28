@@ -42,7 +42,7 @@ export class RankingEditorComponent extends MobxLitElement {
     const isParticipantRanking = this.stage.rankingType === 'participants';
     const isLRRanking = this.stage.rankingType === RankingType.LR;
 
-    console.log(
+    console.debug(
       '[LR] renderRankingSettings, isElection=',
       isElection,
       ', isParticipantRanking=',
@@ -92,7 +92,7 @@ export class RankingEditorComponent extends MobxLitElement {
     </div>`;
     const waitForAllParticipants = this.stage.progress.waitForAllParticipants;
 
-    console.log(
+    console.debug(
       '[LR] renderRankingSettings bis, isElection=',
       isElection,
       ', isParticipantRanking=',

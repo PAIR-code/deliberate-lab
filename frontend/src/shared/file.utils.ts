@@ -1078,7 +1078,7 @@ export function getRankingStageCSVColumns(
       leaderStatus = lrData.leaderStatusMap?.[participantPublicId] ?? '';
       winnerId = lrData.winnerId ?? '';
     }
-    console.log(
+    console.debug(
       '[LR][getRankingStageCSVColumns] [Leadership Rejection (LR) extension] columns data: leaderStatus=',
       leaderStatus,
       ', winnerId=',
@@ -1091,7 +1091,7 @@ export function getRankingStageCSVColumns(
   } else {
     // Column header. Note: if participant is null (case of headers to return), publicData is null too.
     // Column for participant’s leader status
-    console.log(
+    console.debug(
       '[LR][getRankingStageCSVColumns] [Leadership Rejection (LR) extension] header title',
     );
     columns.push(`Leader status - ${rankingStage.id}`);

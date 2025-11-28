@@ -44,7 +44,7 @@ export interface ParticipantRankingStage extends BaseRankingStage {
 
 export interface LRRankingStage extends BaseRankingStage {
   rankingType: RankingType.LR;
-  enableSelfVoting: false; // Whether to allow voting for oneself. ==> TODO: [LR]: remove this property (or set it to false)
+  enableSelfVoting: false; // Whether to allow voting for oneself.
   strategy: ElectionStrategy.NONE;
 }
 
@@ -70,8 +70,7 @@ export type RankingStageConfig =
  * This is saved as a stage doc (with stage ID as doc ID) under
  * experiments/{experimentId}/participants/{participantPrivateId}/stageData
  */
-export interface RankingStageParticipantAnswer
-  extends BaseStageParticipantAnswer {
+export interface RankingStageParticipantAnswer extends BaseStageParticipantAnswer {
   kind: StageKind.RANKING;
   // ordered answer list of either participant IDs or ranking item IDs
   rankingList: string[];
@@ -93,7 +92,6 @@ export interface RankingStagePublicData extends BaseStagePublicData {
 
 export interface LRRankingStagePublicData extends RankingStagePublicData {
   leaderStatusMap?: Record<string, string>; // e.g. participant -> status
-  // debugLeaderSelection?: Record<string, unknown>;                 // debug info object
 }
 
 // ************************************************************************* //
@@ -139,15 +137,15 @@ export function createRankingStage(
 export function createLRRankingStage(
   config: Partial<RankingStageConfig> = {},
 ): RankingStageConfig {
-  console.log('[LR] createLRRankingStage');
+  console.debug('[LR] createLRRankingStage');
   const baseStageConfig = {
     id: config.id ?? generateId(),
     kind: StageKind.RANKING,
-    name: config.name ?? 'Ranking', // TODO: [LR] [CLEM]: lui donner un autre nom ? (voir si pas d'effets de bord))
+    name: config.name ?? 'LRRanking',
     descriptions:
       config.descriptions ??
       createStageTextConfig({
-        helpText: `TODO: [LR] [CLEM]: trouver le bon helpText dans createLRRankingStage`,
+        helpText: ``,
       }),
     progress:
       config.progress ??

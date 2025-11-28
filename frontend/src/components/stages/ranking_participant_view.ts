@@ -68,7 +68,7 @@ export class RankingView extends MobxLitElement {
     }
 
     const isLRRanking = this.stage.rankingType === RankingType.LR;
-    console.log(
+    console.debug(
       '[LR] ranking-participant-view, this.stage.rankingType=',
       this.stage.rankingType,
     );

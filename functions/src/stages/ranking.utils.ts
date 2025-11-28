@@ -48,7 +48,7 @@ export async function addParticipantAnswerToRankingStagePublicData(
       | RankingStagePublicData
       | LRRankingStagePublicData;
 
-    console.log(
+    console.debug(
       '[LR] addParticipantAnswerToRankingStagePublicData: publicStageData=',
       publicStageData,
     );
@@ -65,7 +65,7 @@ export async function addParticipantAnswerToRankingStagePublicData(
         Object.keys(publicStageData.participantAnswerMap || {}).length === 0 &&
         !publicStageData.winnerId // ensure lottery not run yet
       ) {
-        console.log(`[LR] Triggering leader lottery at ${stage.id}`);
+        console.debug(`[LR] Triggering leader lottery at ${stage.id}`);
 
         // Determine which "apply" stage we are in (Round 1 or Round 2)
         const applyStageId = stage.id.startsWith('r1_')
@@ -90,24 +90,24 @@ export async function addParticipantAnswerToRankingStagePublicData(
 
         if (applyDoc.exists) {
           const applyData = applyDoc.data() as SurveyStagePublicData;
-          console.log(
+          console.debug(
             `[LR] Found applyStage public data for ${applyStageId}:`,
             JSON.stringify(applyData),
           );
 
           if (applyData.kind === StageKind.SURVEY) {
             applications = getApplicationsFromLRApplyStage(applyData);
-            console.log(
+            console.debug(
               '[LR] Applications map from apply stage:',
               applications,
             );
           } else {
-            console.warn(
+            console.debug(
               `[LR] applyStageId=${applyStageId} has kind=${applyData.kind}, expected SURVEY`,
             );
           }
         } else {
-          console.warn(
+          console.debug(
             `[LR] No applyStage public data found for ${applyStageId}. All applied=false.`,
           );
         }
@@ -186,9 +186,9 @@ export async function addParticipantAnswerToRankingStagePublicData(
           });
         }
 
-        console.log('[LR] Inputs passed into lottery:');
+        console.debug('[LR] Inputs passed into lottery:');
         for (const inp of leaderInputs) {
-          console.log(
+          console.debug(
             `[LR][input] publicId=${inp.publicId} applied=${inp.applied} score=${inp.performanceScore}`,
           );
         }
@@ -201,8 +201,8 @@ export async function addParticipantAnswerToRankingStagePublicData(
         publicStageData.winnerId = lotteryResult.winnerId;
         publicStageData.leaderStatusMap = lotteryResult.participantStatusMap;
 
-        console.log(
-          `[LR] 🎲 Winner selected at ${stage.id}: ${lotteryResult.winnerId}`,
+        console.debug(
+          `[LR] Winner selected at ${stage.id}: ${lotteryResult.winnerId}`,
         );
       }
 

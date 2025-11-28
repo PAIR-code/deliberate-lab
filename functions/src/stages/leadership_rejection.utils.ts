@@ -92,28 +92,28 @@ function drawWeightedWinner(weights: Record<string, number>): {
 export function runLeaderLottery(
   participants: LeaderSelectionInput[],
 ): LeaderSelectionResult {
-  console.log('──────────────────────────────────────────────');
-  console.log('[LR][lottery] START Leader Lottery');
-  console.log('[LR][lottery] Raw inputs:');
+  console.debug('──────────────────────────────────────────────');
+  console.debug('[LR][lottery] START Leader Lottery');
+  console.debug('[LR][lottery] Raw inputs:');
   for (const p of participants) {
-    console.log(
+    console.debug(
       `  - ${p.publicId} | applied=${p.applied} | score=${p.performanceScore}`,
     );
   }
-  console.log('──────────────────────────────────────────────');
+  console.debug('──────────────────────────────────────────────');
   // 1. Who applied?
   const applicants = participants.filter((p) => p.applied);
 
   const hasApplicants = applicants.length > 0;
-  console.log(
+  console.debug(
     '[LR][lottery] Applicants:',
     applicants.map((a) => a.publicId),
   );
-  console.log('[LR][lottery] hasApplicants =', hasApplicants);
+  console.debug('[LR][lottery] hasApplicants =', hasApplicants);
 
   // 2. Candidate pool
   const candidatePool = hasApplicants ? applicants : participants;
-  console.log(
+  console.debug(
     '[LR][lottery] Candidate pool:',
     candidatePool.map((p) => p.publicId),
   );
@@ -128,11 +128,11 @@ export function runLeaderLottery(
   });
 
   const rankedIds = ranked.map((p) => p.publicId);
-  console.log('[LR][lottery] Ranked order (best → worst):', rankedIds);
+  console.debug('[LR][lottery] Ranked order (best → worst):', rankedIds);
 
   // 4. Weights
   const weights = computeWeights(rankedIds);
-  console.log('[LR][lottery] Weights:', weights);
+  console.debug('[LR][lottery] Weights:', weights);
 
   // 5. Draw winner
   const {winnerId, roll} = drawWeightedWinner(weights);
@@ -144,7 +144,7 @@ export function runLeaderLottery(
     // applied & selected → candidate_accepted
     // applied & not → candidate_rejected
     // did not apply → non_candidate (+ hypothetical check)
-    console.log('[LR][lottery] Assigning statuses because applicants > 0');
+    console.debug('[LR][lottery] Assigning statuses because applicants > 0');
 
     const winner = winnerId;
 
@@ -199,7 +199,7 @@ export function runLeaderLottery(
     // case 0 applied -> everyone is a "candidate"
     // winner → non_candidate_accepted
     // others → non_candidate_rejected
-    console.log(
+    console.debug(
       '[LR][lottery] NO applicants → everyone considered non_candidate_*',
     );
 

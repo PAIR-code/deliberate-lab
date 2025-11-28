@@ -384,7 +384,7 @@ const LR_INTRO_INFO_DESCRIPTION_PRIMARY = '';
 const LR_INTRO_INFO_LINES = [
   'In this experiment you will play engaging games that present survival scenarios, and answer questions. \n',
   'This experiment consists of two parts:\n\n* Part 1: lasts about 10–15 minutes. \n* Part 2: lasts about 20 minutes.',
-  'You will earn a **£5 fixed fee** for completing the full experiment. On top of that, you’ll have the opportunity to earn **bonuses of up to £3**, depending on your own and other participants decisions. At the end of the experiment, one of the tasks you are about to complete will be randomly selected to determine ârt of your bonus payment. On top of that, you can gain additional bonuses in certain questions (more details later).\n',
+  'You will earn a **£5 fixed fee** for completing the full experiment. On top of that, you’ll have the opportunity to earn **bonuses of up to £3**, depending on your own and other participants decisions. At the end of the experiment, one of the tasks you are about to complete will be randomly selected to determine part of your bonus payment. On top of that, you can gain additional bonuses in certain questions (more details later).\n',
   '⚠️ At the end of Part 1, you will be redirected to a **waiting page**. This waiting time is part of the experiment and allows us to form groups, as the experiment involves live interactions with other participants in Part 2. **You must remain on this page for the full requested duration—if you leave early or close the study before the waiting period ends, your submission will not be approved.** Once a group is formed, you will be invited to continue to Part 2.\n' +
     '\n\n In rare cases, if we are unable to match you with a group for Part 2 (for example, if there are not enough participants online), you will complete only the first part and still receive a fixed fee for completing the first part.\n',
   'To sum up: You will complete the first part individually, and then wait to be invited to the next part of the experiment in groups. **If your are invited, your submission will only be approved if you do the full experiment**. In the rare case where we could not send you an invitation for Part 2, your submission will still be approved.\n',
@@ -789,8 +789,8 @@ export const LR_R1_INSTRUCTIONS_GROUP_INFO =
   'You will complete the group task, while the computer gathers information to determine who the selected leader is. ' +
   "\n\n Recall that for this task only the leader's answers count." +
   "\n\n  ⚠️ Since you could potentially be the leader without knowing it yet, keep in mind that your performance might determine everyone's payoff for this part." +
-  "\n\nAfter the task ends, you will be informed of whether or not you were the leader for this round.'+" +
-  'Remember also that in the extreme case where no one applied, you could be selected as the leader. As a result, try to perform to the best of your ability in the following task, regardless of your application status.';
+  '\n\nAfter the task ends, you will be informed of whether or not you were the leader for this round.' +
+  '\n\n Remember also that in the extreme case where no one applied, you could be selected as the leader. As a result, try to perform to the best of your ability in the following task, regardless of your application status.';
 
 export const LR_R1_INSTRUCTIONS_GROUP = createLRRankingStage({
   id: 'r1_instructions',
@@ -1047,8 +1047,8 @@ export const LR_R2_INFO_INSTRUCTIONS_GROUP =
   'You will complete the group task, while the computer gathers information to determine who the selected leader is. ' +
   "\n\n Recall that for this task only the leader's answers count." +
   "\n\n  ⚠️ Since you could potentially be the leader without knowing it yet, keep in mind that your performance might determine everyone's payoff for this part." +
-  "\n\nAfter the task ends, you will be informed of whether or not you were the leader for this round.'+" +
-  'Remember also that in the extreme case where no one applied, you could be selected as the leader. As a result, try to perform to the best of your ability in the following task, regardless of your application status.';
+  '\n\nAfter the task ends, you will be informed of whether or not you were the leader for this round.' +
+  '\n\n Remember also that in the extreme case where no one applied, you could be selected as the leader. As a result, try to perform to the best of your ability in the following task, regardless of your application status.';
 
 export const LR_R2_INSTRUCTIONS_GROUP = createLRRankingStage({
   id: 'r2_instructions',
@@ -1271,7 +1271,7 @@ export const LR_SURVEYFULL_QUESTION: SurveyQuestion[] = [
   createScaleSurveyQuestion({
     id: 'g',
     questionTitle:
-      'Even the things in life I can’t control tend to go my way because I’m lucky. ',
+      'Even the things in life I can’t control tend to go my way because I’m lucky ',
     lowerText: 'Strongly disagree',
     lowerValue: 1,
     upperText: 'Strongly agree',
@@ -1346,7 +1346,7 @@ export const LR_SURVEYFULL_QUESTION: SurveyQuestion[] = [
   createScaleSurveyQuestion({
     id: '2z',
     questionTitle:
-      'I would rather do something at which I feel confident and relaxed than something which is challenging and difficult.',
+      'I would rather do something at which I feel confident and relaxed than something which is challenging and difficult',
     lowerText: 'Strongly disagree',
     lowerValue: 1,
     upperText: 'Strongly agree',
@@ -1355,7 +1355,7 @@ export const LR_SURVEYFULL_QUESTION: SurveyQuestion[] = [
   createScaleSurveyQuestion({
     id: '2a',
     questionTitle:
-      'When a group I belong to plans an activity, I would rather direct it myself than just help out and have someone else organize it.',
+      'When a group I belong to plans an activity, I would rather direct it myself than just help out and have someone else organize it',
     lowerText: 'Strongly disagree',
     lowerValue: 1,
     upperText: 'Strongly agree',
@@ -1364,7 +1364,7 @@ export const LR_SURVEYFULL_QUESTION: SurveyQuestion[] = [
   createScaleSurveyQuestion({
     id: '2b',
     questionTitle:
-      ' I would rather learn easy, fun games than difficult, thought games.',
+      ' I would rather learn easy, fun games than difficult, thought games',
     lowerText: 'Strongly disagree',
     lowerValue: 1,
     upperText: 'Strongly agree',
@@ -1373,7 +1373,7 @@ export const LR_SURVEYFULL_QUESTION: SurveyQuestion[] = [
   createScaleSurveyQuestion({
     id: '2c',
     questionTitle:
-      'If I am not good at something, I would rather keep struggling to master it than move on to something I may be good at.',
+      'If I am not good at something, I would rather keep struggling to master it than move on to something I may be good at',
     lowerText: 'Strongly disagree',
     lowerValue: 1,
     upperText: 'Strongly agree',
@@ -1381,7 +1381,7 @@ export const LR_SURVEYFULL_QUESTION: SurveyQuestion[] = [
   }),
   createScaleSurveyQuestion({
     id: '2d',
-    questionTitle: 'Once I undertake a task, I persist.',
+    questionTitle: 'Once I undertake a task, I persist',
     lowerText: 'Strongly disagree',
     lowerValue: 1,
     upperText: 'Strongly agree',
@@ -1390,7 +1390,7 @@ export const LR_SURVEYFULL_QUESTION: SurveyQuestion[] = [
   createScaleSurveyQuestion({
     id: '2e',
     questionTitle:
-      'I prefer to work in situations that require a high level of skill.',
+      'I prefer to work in situations that require a high level of skill',
     lowerText: 'Strongly disagree',
     lowerValue: 1,
     upperText: 'Strongly agree',
@@ -1399,7 +1399,7 @@ export const LR_SURVEYFULL_QUESTION: SurveyQuestion[] = [
   createScaleSurveyQuestion({
     id: '2f',
     questionTitle:
-      ' I more often attempt tasks that I am not sure I can do than tasks that I believe I can do.',
+      ' I more often attempt tasks that I am not sure I can do than tasks that I believe I can do',
     lowerText: 'Strongly disagree',
     lowerValue: 1,
     upperText: 'Strongly agree',
@@ -1407,7 +1407,7 @@ export const LR_SURVEYFULL_QUESTION: SurveyQuestion[] = [
   }),
   createScaleSurveyQuestion({
     id: '2g',
-    questionTitle: 'I like to be busy all the time.',
+    questionTitle: 'I like to be busy all the time',
     lowerText: 'Strongly disagree',
     lowerValue: 1,
     upperText: 'Strongly agree',
@@ -1468,7 +1468,7 @@ export const LR_SURVEYFULL__QUESTIOND: SurveyQuestion[] = [
   createScaleSurveyQuestion({
     id: 'g',
     questionTitle:
-      'Even the things in life I can’t control tend to go my way because I’m lucky. ',
+      'Even the things in life I can’t control tend to go my way because I’m lucky',
     lowerText: 'Strongly disagree',
     lowerValue: 1,
     upperText: 'Strongly agree',
@@ -1492,7 +1492,7 @@ export const LR_SURVEYFULL__QUESTIOND: SurveyQuestion[] = [
   }),
   createScaleSurveyQuestion({
     id: 'j',
-    questionTitle: 'Luck works in my favour',
+    questionTitle: 'Luck works in my favor',
     lowerText: 'Strongly disagree',
     lowerValue: 1,
     upperText: 'Strongly agree',
@@ -1793,7 +1793,7 @@ export function createLRPayoutItems() {
     name: 'Part 1a selected',
     description: LR_PAYMENT_PART_1A_DESCRIPTION,
     stageId: LR_BASELINE_TASK1_ID,
-    baseCurrencyAmount: 6,
+    baseCurrencyAmount: 5,
   });
   const part1aQuestion = choice(LAS_INDIVIDUAL_ITEMS_MULTIPLE_CHOICE_QUESTIONS);
   part1a.questionMap[part1aQuestion.id] = 2;
@@ -1807,7 +1807,7 @@ export function createLRPayoutItems() {
     name: 'Parts 1b selected',
     description: LR_PAYMENT_PART_1B_DESCRIPTION,
     stageId: LR_BASELINE_TASK2_ID,
-    baseCurrencyAmount: 6,
+    baseCurrencyAmount: 5,
   });
   const part1bQuestion = choice(SD_INDIVIDUAL_ITEMS_MULTIPLE_CHOICE_QUESTIONS);
   part1b.questionMap[part1bQuestion.id] = 2;
@@ -1818,8 +1818,7 @@ export function createLRPayoutItems() {
     name: 'Parts 2a selected',
     description: [LR_PAYMENT_PART_2_DESCRIPTION].join('\n\n'),
     stageId: LR_R1_GROUP_TASK_ID,
-    baseCurrencyAmount: 6,
-    rankingStageId: LAS_PART_2_ELECTION_STAGE_ID,
+    baseCurrencyAmount: 5,
   });
   const part2Question = choice(LAS_LEADER_ITEMS_MULTIPLE_CHOICE_QUESTIONS);
   part2.questionMap[part2Question.id] = 2;
@@ -1830,7 +1829,7 @@ export function createLRPayoutItems() {
     name: 'Parts 2b selected',
     description: [LR_PAYMENT_PART_3_DESCRIPTION].join('\n\n'),
     stageId: LR_R2_GROUP_TASK_ID,
-    baseCurrencyAmount: 6,
+    baseCurrencyAmount: 5,
   });
   const part3Question = choice(SD_LEADER_ITEMS_MULTIPLE_CHOICE_QUESTIONS);
   part3.questionMap[part3Question.id] = 2;
