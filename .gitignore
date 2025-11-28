@@ -7,4 +7,5 @@ node_modules/
 *deliberation-lab-utils-*.tgz
 
 .idea/
+package-lock.json
 
