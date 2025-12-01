@@ -3,6 +3,7 @@ import {
   FlipCardStageParticipantAnswer,
   FlipCardStagePublicData,
   ParticipantProfileExtended,
+  StageKind,
 } from '@deliberation-lab/utils';
 
 import * as admin from 'firebase-admin';
@@ -30,24 +31,29 @@ export async function addParticipantAnswerToFlipCardStagePublicData(
     const publicDoc = await transaction.get(publicDocument);
     const publicData = publicDoc.data() as FlipCardStagePublicData | undefined;
 
-    if (publicData) {
-      // Update public data with participant's flip history and selections
-      const updatedPublicData: FlipCardStagePublicData = {
-        ...publicData,
-        participantFlipHistory: {
-          ...publicData.participantFlipHistory,
-          [participant.publicId]: answer.flipHistory,
-        },
-        participantSelections: {
-          ...publicData.participantSelections,
-          [participant.publicId]: answer.selectedCardIds,
-        },
-      };
+    const currentPublicData = publicData || {
+      id: stage.id,
+      kind: StageKind.FLIPCARD,
+      participantFlipHistory: {},
+      participantSelections: {},
+    };
 
-      transaction.set(publicDocument, {
-        ...updatedPublicData,
-        timestamp: admin.firestore.FieldValue.serverTimestamp(),
-      });
-    }
+    // Update public data with participant's flip history and selections
+    const updatedPublicData: FlipCardStagePublicData = {
+      ...currentPublicData,
+      participantFlipHistory: {
+        ...currentPublicData.participantFlipHistory,
+        [participant.publicId]: answer.flipHistory,
+      },
+      participantSelections: {
+        ...currentPublicData.participantSelections,
+        [participant.publicId]: answer.selectedCardIds,
+      },
+    };
+
+    transaction.set(publicDocument, {
+      ...updatedPublicData,
+      timestamp: admin.firestore.FieldValue.serverTimestamp(),
+    });
   });
 }
