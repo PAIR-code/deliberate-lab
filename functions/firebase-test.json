@@ -5,7 +5,7 @@
   },
   "functions": [
     {
-      "source": "functions",
+      "source": ".",
       "codebase": "default",
       "ignore": [
         "node_modules",

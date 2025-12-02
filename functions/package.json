@@ -10,7 +10,7 @@
     "deploy": "firebase deploy --only functions",
     "logs": "firebase functions:log",
     "test": "npm run test:unit && npm run test:firestore",
-    "test:firestore": "firebase -c firebase-test.json emulators:exec --only firestore \"npx jest $npm_package_config_firestore_tests\"",
+    "test:firestore": "firebase -c firebase-test.json emulators:exec --only firestore,functions --project=demo-deliberate-lab \"npx jest $npm_package_config_firestore_tests\"",
     "test:unit": "npx jest --testPathIgnorePatterns=$npm_package_config_firestore_tests",
     "typecheck": "tsc --noEmit"
   },
@@ -18,7 +18,7 @@
     "node": "22"
   },
   "config": {
-    "firestore_tests": "src/log.utils.test.ts"
+    "firestore_tests": "src/log.utils.test.ts src/dl_api/experiments.dl_api.integration.test.ts"
   },
   "main": "lib/index.js",
   "dependencies": {
@@ -26,6 +26,8 @@
     "@deliberation-lab/utils": "file:../utils",
     "@google/genai": "^1.30.0",
     "@sinclair/typebox": "^0.34.41",
+    "express": "^5.1.0",
+    "express-rate-limit": "^8.2.1",
     "firebase-admin": "^13.6.0",
     "firebase-functions": "^7.0.0",
     "openai": "^6.9.1",
@@ -37,13 +39,18 @@
     "transform": {
       "^.+\\.[t|j]sx?$": "babel-jest"
     },
-    "testTimeout": 15000
+    "testTimeout": 15000,
+    "moduleNameMapper": {
+      "^@deliberation-lab/utils$": "<rootDir>/../utils/src"
+    }
   },
   "devDependencies": {
     "@babel/preset-env": "^7.28.5",
     "@babel/preset-typescript": "^7.28.5",
     "@firebase/rules-unit-testing": "^5.0.0",
+    "@types/express": "^5.0.5",
     "@types/jest": "^30.0.0",
+    "@types/supertest": "^6.0.3",
     "@typescript-eslint/eslint-plugin": "^8.47.0",
     "@typescript-eslint/parser": "^8.47.0",
     "babel-jest": "^30.2.0",
@@ -57,6 +64,7 @@
     "firebase": "^12.6.0",
     "firebase-functions-test": "^3.4.1",
     "nock": "^14.0.10",
+    "supertest": "^7.1.4",
     "ts-jest": "^29.4.5",
     "typescript": "^5.9.3"
   },

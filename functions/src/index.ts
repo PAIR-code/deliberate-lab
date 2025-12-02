@@ -12,6 +12,8 @@ export * from './experiment.endpoints';
 export * from './mediator.endpoints';
 export * from './participant.endpoints';
 
+export * from './dl_api/dl_api.endpoints';
+
 export * from './stages/asset_allocation.endpoints';
 export * from './stages/chat.endpoints';
 export * from './stages/chip.endpoints';

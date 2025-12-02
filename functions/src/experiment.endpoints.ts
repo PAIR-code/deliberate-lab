@@ -379,6 +379,10 @@ export const downloadExperiment = onCall(async (request) => {
       data.experimentId,
     );
 
+    if (!experimentDownload) {
+      return {data: null};
+    }
+
     const response: ExperimentDownloadResponse = {
       data: experimentDownload,
     };
