@@ -140,7 +140,8 @@ export class Settings extends MobxLitElement {
   private renderExperimenterData() {
     return html`
       <div class="section">
-        <h2>Experimenter Settings</h2>
+        <h2>LLM API Integration</h2>
+        <p>Manage API keys for LLM integrations within experiments.</p>
         <experimenter-data-editor></experimenter-data-editor>
       </div>
     `;
@@ -152,7 +153,12 @@ export class Settings extends MobxLitElement {
         <h2>Deliberate Lab API Access</h2>
         <p>
           Manage Deliberate Lab API keys for programmatic access to your
-          experiments via the REST API.
+          experiments via the
+          <a
+            href="https://pair-code.github.io/deliberate-lab/developers/api"
+            target="_blank"
+            >REST API</a
+          >.
         </p>
         <dl-api-key-manager></dl-api-key-manager>
       </div>
