@@ -32,6 +32,8 @@ export class Settings extends MobxLitElement {
         ${this.authService.isExperimenter
           ? this.renderExperimenterData()
           : nothing}
+
+        <alpha-toggle></alpha-toggle>
         ${this.authService.isExperimenter && this.authService.showAlphaFeatures
           ? this.renderAPIKeySection()
           : nothing}
