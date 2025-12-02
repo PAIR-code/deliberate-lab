@@ -44,6 +44,10 @@ import {
   VariableConfigType,
   VariableType,
   RandomPermutationVariableConfig,
+  StaticVariableConfig,
+  createStaticVariableConfig,
+  VariableScope,
+  createShuffleConfig,
 } from '@deliberation-lab/utils';
 
 type Policy = {
@@ -170,54 +174,55 @@ const EXAMPLE_POLICY_B: Policy = {
   ],
 };
 
-// Create a variable config with the complete policy object (including arrays)
-const POLICY_RANDOM_PERMUTATION_CONFIG: RandomPermutationVariableConfig = {
-  id: 'policy-permutation-config',
-  type: VariableConfigType.RANDOM_PERMUTATION,
-  seedStrategy: SeedStrategy.COHORT,
-  variableNames: ['policy'],
-  schema: VariableType.object({
-    name: VariableType.STRING,
-    policy: VariableType.STRING,
-    petition_pro: VariableType.STRING,
-    petition_con: VariableType.STRING,
-    nonprofit_pro: VariableType.STRING,
-    nonprofit_con: VariableType.STRING,
-    arguments_pro: VariableType.array(
-      VariableType.object({
-        title: VariableType.STRING,
-        text: VariableType.STRING,
-      }),
-    ),
-    arguments_con: VariableType.array(
-      VariableType.object({
-        title: VariableType.STRING,
-        text: VariableType.STRING,
-      }),
-    ),
-  }),
-  values: [JSON.stringify(EXAMPLE_POLICY_A), JSON.stringify(EXAMPLE_POLICY_B)],
-};
+// Schema for a single policy object
+const PolicySchema = VariableType.object({
+  name: VariableType.STRING,
+  policy: VariableType.STRING,
+  petition_pro: VariableType.STRING,
+  petition_con: VariableType.STRING,
+  nonprofit_pro: VariableType.STRING,
+  nonprofit_con: VariableType.STRING,
+  arguments_pro: VariableType.array(
+    VariableType.object({
+      title: VariableType.STRING,
+      text: VariableType.STRING,
+    }),
+  ),
+  arguments_con: VariableType.array(
+    VariableType.object({
+      title: VariableType.STRING,
+      text: VariableType.STRING,
+    }),
+  ),
+});
 
-const NO_SHUFFLE: ShuffleConfig = {
+// Create a static variable config with the complete policy object
+const POLICY_STATIC_CONFIG: StaticVariableConfig = createStaticVariableConfig({
+  id: 'policy-static-config',
+  scope: VariableScope.EXPERIMENT,
+  definition: {
+    name: 'policy',
+    description: 'Policy debate topic',
+    schema: PolicySchema,
+  },
+  value: JSON.stringify(EXAMPLE_POLICY_A),
+});
+
+const NO_SHUFFLE: ShuffleConfig = createShuffleConfig({
   shuffle: false,
   seed: SeedStrategy.PARTICIPANT,
-  customSeed: '',
-};
-const PARTICIPANT_SHUFFLE: ShuffleConfig = {
+});
+const PARTICIPANT_SHUFFLE: ShuffleConfig = createShuffleConfig({
   shuffle: true,
   seed: SeedStrategy.PARTICIPANT,
-  customSeed: '',
-};
+});
 
 // ****************************************************************************
 // Experiment config
 // ****************************************************************************
 export function getPolicyExperimentTemplate(): ExperimentTemplate {
   const stageConfigs = getPolicyStageConfigs();
-  const variableTemplates: VariableConfig[] = [
-    POLICY_RANDOM_PERMUTATION_CONFIG,
-  ];
+  const variableTemplates: VariableConfig[] = [POLICY_STATIC_CONFIG];
   return createExperimentTemplate({
     experiment: createExperimentConfig(stageConfigs, {
       metadata: POLICY_METADATA,

@@ -13,7 +13,8 @@ import {
   StageConfig,
   createExperimentConfig,
   createExperimentTemplate,
-  createVariableToValueMapForSeed,
+  generateVariablesForScope,
+  VariableScope,
 } from '@deliberation-lab/utils';
 import {getExperimentDownload} from './data';
 
@@ -70,9 +71,9 @@ export const writeExperiment = onCall(async (request) => {
     }
 
     // Add variable values at the experiment level
-    experimentConfig.variableMap = createVariableToValueMapForSeed(
+    experimentConfig.variableMap = generateVariablesForScope(
       experimentConfig.variableConfigs ?? [],
-      SeedStrategy.EXPERIMENT,
+      {scope: VariableScope.EXPERIMENT, experimentId: experimentConfig.id},
     );
 
     // Add agent mediators under `agentMediators` collection

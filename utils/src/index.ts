@@ -32,6 +32,7 @@ export * from './cohort.validation';
 // Variable
 export * from './variables';
 export * from './variables.utils';
+export * from './variables.schema.utils';
 export * from './variables.template';
 export * from './variables.validation';
 
