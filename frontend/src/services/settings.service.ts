@@ -48,7 +48,7 @@ export class SettingsService extends Service {
     // Unsubscribe from any existing listener
     this.unsubscribeFromDeliberateLabAPIKeys();
 
-    const userId = this.sp.authService.userId;
+    const userId = this.sp.authService.userEmail?.toLowerCase();
     if (!userId) {
       this.deliberateLabAPIKeys = [];
       return;
