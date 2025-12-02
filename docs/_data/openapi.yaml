@@ -1,0 +1,742 @@
+openapi: 3.0.3
+info:
+  title: Deliberate Lab API
+  description: |
+    REST API for programmatic access to Deliberate Lab experiment management.
+
+    ## Authentication
+
+    All API requests require an API key in the Authorization header:
+    ```
+    Authorization: Bearer YOUR_API_KEY
+    ```
+
+    ### Creating an API Key
+
+    1. Log into the Deliberate Lab web interface
+    2. Navigate to **Settings** (top right menu)
+    3. Scroll to the **API Keys** section
+    4. Click **Create New API Key**
+    5. Enter a descriptive name for your key
+    6. Copy the generated key immediately - it will only be shown once
+
+    **Important:** Store your API key securely. You cannot retrieve it after closing the creation dialog.
+
+    ### Managing API Keys
+
+    In the Settings page API Keys section, you can:
+    - View all your API keys
+    - See when each key was created and last used
+    - Revoke keys you no longer need
+
+    ## Rate Limiting
+
+    - **Limit:** 100 requests per 15-minute window per API key
+    - **Response:** HTTP 429 when exceeded
+
+  version: 1.0.0
+servers:
+  - url: https://deliberate-lab.appspot.com/api/v1
+    description: Production API
+  - url: http://127.0.0.1:5001/demo-deliberate-lab/us-central1/api/v1
+    description: Local development (Firebase emulator)
+
+tags:
+  - name: experiments
+    description: Experiment management operations
+  - name: health
+    description: API health check
+
+security:
+  - BearerAuth: []
+
+paths:
+  /health:
+    get:
+      tags:
+        - health
+      summary: Health check
+      description: Check API health status
+      operationId: healthCheck
+      responses:
+        '200':
+          description: API is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: healthy
+                  version:
+                    type: string
+                    example: 1.0.0
+                  timestamp:
+                    type: string
+                    format: date-time
+                    example: 2024-01-01T00:00:00.000Z
+
+  /experiments:
+    get:
+      tags:
+        - experiments
+      summary: List experiments
+      description: Retrieve a list of all experiments you have access to
+      operationId: listExperiments
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  experiments:
+                    type: array
+                    description: Array of full experiment objects (without stages subcollection)
+                    items:
+                      $ref: '#/components/schemas/Experiment'
+                  total:
+                    type: integer
+                    description: Total number of experiments
+                    example: 1
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '429':
+          $ref: '#/components/responses/RateLimitError'
+
+    post:
+      tags:
+        - experiments
+      summary: Create experiment
+      description: Create a new experiment with specified configuration
+      operationId: createExperiment
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+              properties:
+                name:
+                  type: string
+                  description: Experiment name
+                  example: My Experiment
+                description:
+                  type: string
+                  description: Experiment description
+                  example: Research on decision making
+                prolificRedirectCode:
+                  type: string
+                  description: Prolific completion redirect code (optional)
+                  example: C1234ABC
+                stages:
+                  type: array
+                  description: Array of stage configurations (optional)
+                  items:
+                    $ref: '#/components/schemas/Stage'
+                  default: []
+      responses:
+        '201':
+          description: Experiment created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Experiment'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '429':
+          $ref: '#/components/responses/RateLimitError'
+
+  /experiments/{id}:
+    get:
+      tags:
+        - experiments
+      summary: Get experiment
+      description: |
+        Retrieve detailed information about a specific experiment, including all stages and agent configurations.
+
+        This endpoint returns the experiment configuration without participant data. Use the `/experiments/{id}/export` endpoint to get participant responses and cohort data.
+      operationId: getExperiment
+      parameters:
+        - $ref: '#/components/parameters/ExperimentId'
+      responses:
+        '200':
+          description: Successful operation. Returns experiment configuration without participant data.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExperimentConfig'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '429':
+          $ref: '#/components/responses/RateLimitError'
+
+    put:
+      tags:
+        - experiments
+      summary: Update experiment
+      description: |
+        Update an existing experiment's configuration.
+
+        **Partial updates:** Only provided fields are updated. Omit fields you don't want to change.
+
+        **Stages replacement:** If `stages` is provided, it completely replaces all existing stages. To modify a single stage, first GET the experiment, modify the stages array, then PUT the full array back.
+      operationId: updateExperiment
+      parameters:
+        - $ref: '#/components/parameters/ExperimentId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  description: Updated experiment name
+                description:
+                  type: string
+                  description: Updated description
+                prolificRedirectCode:
+                  type: string
+                  description: Updated Prolific completion redirect code
+                stages:
+                  type: array
+                  description: |
+                    Complete array of stage configurations. If provided, **replaces all existing stages**.
+                    Omit this field to leave stages unchanged.
+                  items:
+                    $ref: '#/components/schemas/Stage'
+            examples:
+              updateNameOnly:
+                summary: Update name only
+                value:
+                  name: My Updated Experiment Name
+              updateWithStages:
+                summary: Update with stages
+                value:
+                  name: My Updated Experiment
+                  description: Updated research on decision making
+                  stages:
+                    - id: stage1
+                      kind: info
+                      name: Welcome
+                      descriptions:
+                        primaryText: Welcome to the experiment
+                        infoText: ""
+                        helpText: ""
+                      progress:
+                        minParticipants: 1
+                        waitForAllParticipants: false
+                        showParticipantProgress: false
+                      infoLines:
+                        - This is the first line of information
+                        - This is the second line
+                        - You can use **markdown** in these lines
+                    - id: stage2
+                      kind: survey
+                      name: Demographics Survey
+                      descriptions:
+                        primaryText: Please complete this survey
+                        infoText: ""
+                        helpText: ""
+                      progress:
+                        minParticipants: 1
+                        waitForAllParticipants: false
+                        showParticipantProgress: false
+                      questions:
+                        - id: q1
+                          kind: scale
+                          questionTitle: How satisfied are you?
+                          lowerValue: 0
+                          upperValue: 10
+                          lowerText: Not at all
+                          upperText: Extremely
+                          middleText: ""
+                          useSlider: false
+                          stepSize: 1
+      responses:
+        '200':
+          description: Experiment updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  updated:
+                    type: boolean
+                    example: true
+                  id:
+                    type: string
+                    example: exp123
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '429':
+          $ref: '#/components/responses/RateLimitError'
+
+    delete:
+      tags:
+        - experiments
+      summary: Delete experiment
+      description: |
+        Delete an experiment and all associated data.
+
+        **Warning:** This operation is permanent and will delete all experiment data including participant responses.
+      operationId: deleteExperiment
+      parameters:
+        - $ref: '#/components/parameters/ExperimentId'
+      responses:
+        '200':
+          description: Experiment deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    example: exp123
+                  deleted:
+                    type: boolean
+                    example: true
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '429':
+          $ref: '#/components/responses/RateLimitError'
+
+  /experiments/{id}/export:
+    get:
+      tags:
+        - experiments
+      summary: Export experiment data
+      description: Export all data from an experiment, including participant responses and stage results
+      operationId: exportExperiment
+      parameters:
+        - $ref: '#/components/parameters/ExperimentId'
+        - name: format
+          in: query
+          description: Export format (only 'json' is currently supported)
+          required: false
+          schema:
+            type: string
+            enum: [json]
+            default: json
+      responses:
+        '200':
+          description: Successful export
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExperimentExport'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '429':
+          $ref: '#/components/responses/RateLimitError'
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: API Key
+      description: |
+        API key authentication. Create an API key in the web app Settings page, then include it in the Authorization header:
+        ```
+        Authorization: Bearer dlb_live_YOUR_API_KEY
+        ```
+
+  parameters:
+    ExperimentId:
+      name: id
+      in: path
+      description: Experiment ID
+      required: true
+      schema:
+        type: string
+      example: exp123
+
+  schemas:
+    Metadata:
+      type: object
+      description: Experiment metadata
+      properties:
+        name:
+          type: string
+          description: Experiment name
+          example: Decision Making Study
+        publicName:
+          type: string
+          description: Public-facing experiment name
+          example: Decision Study
+        description:
+          type: string
+          description: Experiment description
+          example: Research on group decision making
+        tags:
+          type: array
+          description: Tags for categorization
+          items:
+            type: string
+          example: ["research", "decision-making"]
+        creator:
+          type: string
+          description: Experimenter ID who created the experiment
+          example: experimenter123
+        starred:
+          type: object
+          description: Maps experimenter IDs to starred status
+          additionalProperties:
+            type: boolean
+        dateCreated:
+          type: object
+          description: Firestore timestamp
+          additionalProperties: true
+        dateModified:
+          type: object
+          description: Firestore timestamp
+          additionalProperties: true
+
+    Experiment:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Unique experiment identifier
+          example: exp123
+        versionId:
+          type: integer
+          description: Experiment version ID for backwards compatibility
+          example: 18
+        metadata:
+          $ref: '#/components/schemas/Metadata'
+        permissions:
+          type: object
+          description: Experiment permissions
+          properties:
+            visibility:
+              type: string
+              enum: [public, private]
+              description: Experiment visibility
+              example: private
+            readers:
+              type: array
+              description: List of experimenter IDs with read access
+              items:
+                type: string
+              example: ["experimenter123"]
+        stageIds:
+          type: array
+          description: Ordered list of stage IDs (stages are stored in a subcollection, not returned in this response)
+          items:
+            type: string
+          example: ["stage1", "stage2"]
+        defaultCohortConfig:
+          type: object
+          description: Default cohort configuration
+          additionalProperties: true
+        prolificConfig:
+          type: object
+          description: Prolific integration configuration
+          additionalProperties: true
+        cohortLockMap:
+          type: object
+          description: Maps cohort ID to lock status
+          additionalProperties:
+            type: boolean
+
+    Stage:
+      type: object
+      required:
+        - id
+        - kind
+        - name
+        - descriptions
+        - progress
+      properties:
+        id:
+          type: string
+          description: Stage identifier
+          example: stage1
+        kind:
+          type: string
+          description: Stage type
+          example: survey
+          enum: [info, tos, profile, chat, chip, comprehension, flipcard, ranking, payout, privateChat, reveal, salesperson, stockinfo, assetAllocation, multiAssetAllocation, role, survey, surveyPerParticipant, transfer]
+        name:
+          type: string
+          description: Stage name
+          example: Pre-study Survey
+        descriptions:
+          type: object
+          required:
+            - primaryText
+          description: Stage text configuration
+          properties:
+            primaryText:
+              type: string
+              description: Text shown at top of screen under header
+              example: Please complete this survey
+            infoText:
+              type: string
+              description: Text for info popup
+              example: This survey collects demographic information
+            helpText:
+              type: string
+              description: Text for help popup
+              example: Select one option for each question
+        progress:
+          type: object
+          description: Stage progress configuration
+          properties:
+            minParticipants:
+              type: integer
+              description: Minimum participants required for stage
+              example: 1
+            waitForAllParticipants:
+              type: boolean
+              description: Wait for all participants to reach stage
+              example: false
+            showParticipantProgress:
+              type: boolean
+              description: Show participants who completed stage
+              example: false
+      description: Stage configuration (extends BaseStageConfig with kind-specific fields). Note that each stage kind has additional required fields beyond the base fields shown here.
+
+    ParticipantProfile:
+      type: object
+      description: Participant profile (extended version includes privateId and agentConfig)
+      properties:
+        type:
+          type: string
+          enum: [participant]
+          example: participant
+        publicId:
+          type: string
+          description: Public participant identifier
+          example: participant1
+        privateId:
+          type: string
+          description: Private participant identifier (only in extended profile)
+          example: private123
+        prolificId:
+          type: string
+          nullable: true
+          description: Prolific participant ID (if applicable)
+          example: abc123
+        currentStageId:
+          type: string
+          description: Current stage the participant is on
+          example: stage3
+        currentCohortId:
+          type: string
+          description: Current cohort the participant is in
+          example: cohort1
+        transferCohortId:
+          type: string
+          nullable: true
+          description: Cohort ID if pending transfer
+        currentStatus:
+          type: string
+          enum: [PAUSED, ATTENTION_CHECK, IN_PROGRESS, SUCCESS, BOOTED_OUT]
+          description: Current participant status
+          example: IN_PROGRESS
+        pronouns:
+          type: string
+          nullable: true
+          description: Participant's pronouns
+        avatar:
+          type: string
+          nullable: true
+          description: Emoji used as avatar
+        name:
+          type: string
+          nullable: true
+          description: Participant's name
+        timestamps:
+          type: object
+          description: Progress timestamps
+          additionalProperties: true
+        anonymousProfiles:
+          type: object
+          description: Anonymous profile metadata by profile set ID
+          additionalProperties: true
+        connected:
+          type: boolean
+          nullable: true
+          description: Connection status
+        agentConfig:
+          type: object
+          nullable: true
+          description: Agent configuration if participant is AI-controlled
+          additionalProperties: true
+
+    ParticipantDownload:
+      type: object
+      description: Complete participant data including profile and all stage answers
+      properties:
+        profile:
+          $ref: '#/components/schemas/ParticipantProfile'
+        answerMap:
+          type: object
+          description: Maps stage ID to participant's stage answer
+          additionalProperties:
+            type: object
+            additionalProperties: true
+          example:
+            stage1:
+              question1: "Answer text"
+              question2: "5"
+
+    CohortDownload:
+      type: object
+      description: Complete cohort data including config, stage data, and chat messages
+      properties:
+        cohort:
+          type: object
+          description: Cohort configuration
+          additionalProperties: true
+        dataMap:
+          type: object
+          description: Maps stage ID to stage public data
+          additionalProperties:
+            type: object
+            additionalProperties: true
+        chatMap:
+          type: object
+          description: Maps stage ID to ordered list of chat messages
+          additionalProperties:
+            type: array
+            items:
+              type: object
+              additionalProperties: true
+
+    ExperimentConfig:
+      type: object
+      description: Experiment configuration without participant data
+      properties:
+        experiment:
+          $ref: '#/components/schemas/Experiment'
+        stageMap:
+          type: object
+          description: Maps stage ID to stage config
+          additionalProperties:
+            $ref: '#/components/schemas/Stage'
+        agentMediatorMap:
+          type: object
+          description: Maps agent mediator persona ID to agent template
+          additionalProperties:
+            type: object
+            additionalProperties: true
+        agentParticipantMap:
+          type: object
+          description: Maps agent participant ID to agent template
+          additionalProperties:
+            type: object
+            additionalProperties: true
+
+    ExperimentExport:
+      description: Complete experiment data export including participant data
+      allOf:
+        - $ref: '#/components/schemas/ExperimentConfig'
+        - type: object
+          properties:
+            participantMap:
+              type: object
+              description: Maps participant public ID to participant download
+              additionalProperties:
+                $ref: '#/components/schemas/ParticipantDownload'
+            cohortMap:
+              type: object
+              description: Maps cohort ID to cohort download
+              additionalProperties:
+                $ref: '#/components/schemas/CohortDownload'
+            alerts:
+              type: object
+              description: Maps participant private ID to list of alerts
+              additionalProperties:
+                type: array
+                items:
+                  type: object
+                  additionalProperties: true
+
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Error message
+          example: Invalid Authorization header format
+
+  responses:
+    BadRequestError:
+      description: Bad request - Invalid input
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: "Missing required field 'name'"
+
+    UnauthorizedError:
+      description: Unauthorized - Missing or invalid API key
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: "Invalid Authorization header format. Use: Authorization Bearer YOUR_API_KEY"
+
+    ForbiddenError:
+      description: Forbidden - Insufficient permissions or browser access attempted
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: "Browser access not allowed. Use API keys from server-side applications only."
+
+    NotFoundError:
+      description: Not found - Resource doesn't exist
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: Experiment not found
+
+    RateLimitError:
+      description: Too many requests - Rate limit exceeded
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: Rate limit exceeded. Please try again later.
