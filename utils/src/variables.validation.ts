@@ -43,15 +43,6 @@ export const VariableDefinitionData = Type.Object(
   strict,
 );
 
-/** VariableInstance. */
-export const VariableInstanceData = Type.Object(
-  {
-    id: Type.String({minLength: 1}),
-    value: Type.String(),
-  },
-  strict,
-);
-
 /** BaseVariableConfig. */
 export const BaseVariableConfigData = Type.Object({
   id: Type.String({minLength: 1}),
@@ -88,7 +79,7 @@ export const StaticVariableConfigData = Type.Composite([
   Type.Object(
     {
       type: Type.Literal(VariableConfigType.STATIC),
-      value: VariableInstanceData,
+      value: Type.String(),
     },
     strict,
   ),
@@ -101,8 +92,9 @@ export const RandomPermutationVariableConfigData = Type.Composite([
     {
       type: Type.Literal(VariableConfigType.RANDOM_PERMUTATION),
       shuffleConfig: ShuffleConfigData,
-      values: Type.Array(VariableInstanceData),
+      values: Type.Array(Type.String()),
       numToSelect: Type.Optional(Type.Number({minimum: 1})),
+      expandListToSeparateVariables: Type.Optional(Type.Boolean()),
     },
     strict,
   ),

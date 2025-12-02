@@ -9,7 +9,6 @@ import {
   VariableConfig,
   VariableConfigType,
   VariableDefinition,
-  VariableInstance,
   VariableScope,
   VariableType,
 } from './variables';
@@ -67,16 +66,14 @@ export function extractVariablesFromVariableConfigs(
 }
 
 /**
- * Helper to safely get the value of a VariableInstance.
- * Since values are stored as JSON strings, this parses them.
+ * Helper to safely parse a JSON string value.
+ * Returns the parsed value, or the original string if parsing fails.
  */
-export function getVariableInstanceValue<T = unknown>(
-  instance: VariableInstance,
-): T {
+export function parseJsonValue<T = unknown>(jsonString: string): T {
   try {
-    return JSON.parse(instance.value);
+    return JSON.parse(jsonString);
   } catch {
-    return instance.value as unknown as T;
+    return jsonString as unknown as T;
   }
 }
 
@@ -92,7 +89,7 @@ export function createStaticVariableConfig(
       description: '',
       schema: VariableType.STRING,
     },
-    value: config.value ?? {id: generateId(), value: ''},
+    value: config.value ?? '',
   };
 }
 
@@ -154,7 +151,7 @@ function generateRandomPermutationValue(
     );
   }
 
-  let selectedInstances: VariableInstance[];
+  let selectedValues: string[];
 
   if (shuffle) {
     let seedValue = '';
@@ -178,15 +175,13 @@ function generateRandomPermutationValue(
     }
 
     // seed() is called inside choices() if a seed value is provided
-    selectedInstances = choices(config.values, numToSelect, seedValue);
+    selectedValues = choices(config.values, numToSelect, seedValue);
   } else {
-    selectedInstances = config.values.slice(0, numToSelect);
+    selectedValues = config.values.slice(0, numToSelect);
   }
 
-  // Parse instance values and build array
-  return selectedInstances.map((instance: VariableInstance) =>
-    getVariableInstanceValue(instance),
-  );
+  // Parse JSON string values and build array
+  return selectedValues.map((jsonString: string) => parseJsonValue(jsonString));
 }
 
 /**
@@ -196,7 +191,7 @@ function generateRandomPermutationValue(
 function generateStaticVariables(
   config: StaticVariableConfig,
 ): Record<string, string> {
-  const value = getVariableInstanceValue(config.value);
+  const value = parseJsonValue(config.value);
 
   // Validate against schema
   validateParsedVariableValue(

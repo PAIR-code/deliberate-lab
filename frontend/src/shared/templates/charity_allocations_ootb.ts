@@ -207,10 +207,7 @@ const CHARITY_RANDOM_PERMUTATION_CONFIG: RandomPermutationVariableConfig = {
     shuffle: true,
     seed: SeedStrategy.COHORT,
   }),
-  values: CHARITY_DATA.map((charity) => ({
-    id: charity.key,
-    value: JSON.stringify(charity),
-  })),
+  values: CHARITY_DATA.map((charity) => JSON.stringify(charity)),
   numToSelect: 9,
   expandListToSeparateVariables: true, // Creates charity_1, charity_2, etc.
 };

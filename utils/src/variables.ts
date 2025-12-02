@@ -1,5 +1,5 @@
 import {Type, type TSchema} from '@sinclair/typebox';
-import {SeedStrategy, ShuffleConfig} from './utils/random.utils';
+import {ShuffleConfig} from './utils/random.utils';
 
 /** Variable config for defining variables. */
 export type VariableConfig =
@@ -32,15 +32,6 @@ export interface VariableDefinition {
   schema: TSchema; // JSON Schema (TypeBox) describing the structure
 }
 
-/**
- * A concrete value instance with a stable identifier.
- * Used in the pool of values that configs can select from.
- */
-export interface VariableInstance {
-  id: string; // Stable identifier for tracking (e.g., "donors_choose")
-  value: string; // JSON string of actual data
-}
-
 export interface BaseVariableConfig {
   id: string;
   type: VariableConfigType;
@@ -55,18 +46,18 @@ export interface BaseVariableConfig {
  */
 export interface StaticVariableConfig extends BaseVariableConfig {
   type: VariableConfigType.STATIC;
-  value: VariableInstance; // Instance with id and JSON value
+  value: string; // JSON string of the value
 }
 
 /**
  * Random permutation variable config.
- * Randomly selects N instances from a pool and assigns them to a single variable.
- * If numToSelect is not provided, all instances are selected and shuffled.
+ * Randomly selects N values from a pool and assigns them to a single variable.
+ * If numToSelect is not provided, all values are selected and shuffled.
  */
 export interface RandomPermutationVariableConfig extends BaseVariableConfig {
   type: VariableConfigType.RANDOM_PERMUTATION;
   shuffleConfig: ShuffleConfig;
-  values: VariableInstance[]; // Pool of instances to select from
+  values: string[]; // Pool of JSON string values to select from
   numToSelect?: number; // How many to select (if omitted, selects all and shuffles)
   expandListToSeparateVariables?: boolean; // If true, creates name_1, name_2, etc. instead of single array
 }

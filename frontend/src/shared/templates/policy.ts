@@ -205,10 +205,7 @@ const POLICY_STATIC_CONFIG: StaticVariableConfig = createStaticVariableConfig({
     description: 'Policy debate topic',
     schema: PolicySchema,
   },
-  value: {
-    id: 'policy_a',
-    value: JSON.stringify(EXAMPLE_POLICY_A),
-  },
+  value: JSON.stringify(EXAMPLE_POLICY_A),
 });
 
 const NO_SHUFFLE: ShuffleConfig = createShuffleConfig({

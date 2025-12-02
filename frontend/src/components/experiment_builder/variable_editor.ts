@@ -21,7 +21,6 @@ import {
   type RandomPermutationVariableConfig,
   type StaticVariableConfig,
   type VariableConfig,
-  type VariableInstance,
   VariableConfigType,
   VariableScope,
   createRandomPermutationVariableConfig,
@@ -44,7 +43,6 @@ import {
   updateSchemaAtPath,
   extractVariablesFromVariableConfigs,
   findUnusedVariables,
-  generateId,
 } from '@deliberation-lab/utils';
 
 import {styles} from './variable_editor.scss';
@@ -167,7 +165,7 @@ export class VariableEditor extends MobxLitElement {
               <div class="description">
                 ${config.type === VariableConfigType.STATIC
                   ? 'Assigns a single fixed value to all participants/cohorts'
-                  : 'Randomly selects N instances from the pool and assigns to a single variable'}
+                  : 'Randomly selects N values from the pool and assigns to a single variable'}
               </div>
             `,
           )}
@@ -372,25 +370,22 @@ export class VariableEditor extends MobxLitElement {
                   'Values to choose from',
                   html`
                     <div class="description">
-                      Define the pool of instances to select from
+                      Define the pool of values to select from
                     </div>
                     <div class="items-list">
-                      ${config.values.map((instance, i: number) =>
-                        this.renderInstanceEditor(config, index, instance, i),
+                      ${config.values.map((jsonValue: string, i: number) =>
+                        this.renderValueEditor(config, index, jsonValue, i),
                       )}
                     </div>
                     <button
                       class="add-button"
                       @click=${() =>
                         this.updateConfig(config, index, {
-                          values: [
-                            ...config.values,
-                            {id: generateId(), value: ''},
-                          ],
+                          values: [...config.values, ''],
                         })}
                     >
                       <pr-icon icon="add"></pr-icon>
-                      <span>Add instance</span>
+                      <span>Add value</span>
                     </button>
                     ${config.values.length === 0
                       ? html`<div class="validation-error">
@@ -423,10 +418,10 @@ export class VariableEditor extends MobxLitElement {
       const value = currentHasMultipleValues
         ? config.values.length > 0
           ? config.values[0]
-          : {id: 'default', value: ''}
+          : ''
         : currentHasSingleValue
           ? config.value
-          : {id: 'default', value: ''};
+          : '';
 
       const staticConfig = createStaticVariableConfig({
         id: config.id,
@@ -669,25 +664,25 @@ export class VariableEditor extends MobxLitElement {
     path: string,
     defaultValue: unknown,
   ): Partial<VariableConfig> {
-    // Handle single value configs
-    if ('value' in config) {
-      const parsed = safeParseJson(config.value.value, {});
+    // Handle single value configs (Static)
+    if ('value' in config && typeof config.value === 'string') {
+      const parsed = safeParseJson(config.value, {});
       const updatedValue = path
         ? setValueAtPath(parsed, newFullSchema, path, defaultValue)
         : defaultValue;
       return {
-        value: {...config.value, value: JSON.stringify(updatedValue)},
+        value: JSON.stringify(updatedValue),
       };
     }
 
-    // Handle multi-value configs
+    // Handle multi-value configs (RandomPermutation)
     if ('values' in config && Array.isArray(config.values)) {
-      const updatedValues = config.values.map((instance) => {
-        const parsed = safeParseJson(instance.value, {});
+      const updatedValues = config.values.map((jsonValue: string) => {
+        const parsed = safeParseJson(jsonValue, {});
         const updatedValue = path
           ? setValueAtPath(parsed, newFullSchema, path, defaultValue)
           : defaultValue;
-        return {...instance, value: JSON.stringify(updatedValue)};
+        return JSON.stringify(updatedValue);
       });
       return {values: updatedValues};
     }
@@ -775,7 +770,7 @@ export class VariableEditor extends MobxLitElement {
 
     // Update both schema and values in a single call
     if (config.type === VariableConfigType.STATIC) {
-      const parsed = safeParseJson(config.value.value, {});
+      const parsed = safeParseJson(config.value, {});
       const updated = renamePropertyInObject(
         parsed,
         toJS(config.definition.schema) as unknown as TSchema,
@@ -788,18 +783,18 @@ export class VariableEditor extends MobxLitElement {
           schema:
             updatedFullSchema as unknown as typeof config.definition.schema,
         },
-        value: {...config.value, value: JSON.stringify(updated)},
+        value: JSON.stringify(updated),
       });
     } else if (config.type === VariableConfigType.RANDOM_PERMUTATION) {
-      const updatedValues = config.values.map((instance) => {
-        const parsed = safeParseJson(instance.value, {});
+      const updatedValues = config.values.map((jsonValue: string) => {
+        const parsed = safeParseJson(jsonValue, {});
         const updated = renamePropertyInObject(
           parsed,
           toJS(config.definition.schema) as unknown as TSchema,
           oldPropPath,
           newName,
         );
-        return {...instance, value: JSON.stringify(updated)};
+        return JSON.stringify(updated);
       });
       this.updateConfig(config, configIndex, {
         definition: {
@@ -982,39 +977,13 @@ export class VariableEditor extends MobxLitElement {
   ) {
     // Strip MobX observability to prevent stack overflow (see renderSchemaEditor for details)
     const schema = toJS(config.definition.schema) as unknown as TSchema;
-    const error = validateVariableValue(schema, config.value.value);
+    const error = validateVariableValue(schema, config.value);
 
     return html`
       <div class="config-section">
-        <label class="property-label">Instance ID</label>
-        <div class="description">
-          Unique identifier for this value in exported data
-        </div>
-        <pr-textarea
-          placeholder="e.g., default"
-          .value=${config.value.id}
-          variant="outlined"
-          @input=${(e: Event) => {
-            this.updateConfig(config, configIndex, {
-              value: {
-                ...config.value,
-                id: (e.target as HTMLTextAreaElement).value,
-              },
-            });
-          }}
-        ></pr-textarea>
-        ${!config.value.id.trim()
-          ? html`<div class="validation-error">
-              ⚠️ Instance ID is required.
-            </div>`
-          : nothing}
-      </div>
-      <div class="config-section">
         <label class="property-label">Value</label>
-        ${this.renderValueInput(schema, config.value.value, (v) => {
-          this.updateConfig(config, configIndex, {
-            value: {...config.value, value: v},
-          });
+        ${this.renderValueInput(schema, config.value, (v) => {
+          this.updateConfig(config, configIndex, {value: v});
         })}
         ${error
           ? html`<div class="validation-error">⚠️ ${error}</div>`
@@ -1023,61 +992,35 @@ export class VariableEditor extends MobxLitElement {
     `;
   }
 
-  // ===== Instance Editor =====
+  // ===== Value Editor (for RandomPermutation values) =====
 
-  private renderInstanceEditor(
+  private renderValueEditor(
     config: RandomPermutationVariableConfig,
     configIndex: number,
-    instance: VariableInstance,
-    instanceIndex: number,
+    jsonValue: string,
+    valueIndex: number,
   ) {
     // Strip MobX observability to prevent stack overflow (see renderSchemaEditor for details)
     const arraySchema = toJS(config.definition.schema) as unknown as TSchema;
     // For RandomPermutation, the schema is Array(ItemType), so extract the item schema
     const itemSchema =
       'items' in arraySchema ? (arraySchema.items as TSchema) : arraySchema;
-    const error = validateVariableValue(itemSchema, instance.value);
+    const error = validateVariableValue(itemSchema, jsonValue);
 
     return this.renderCollapsibleItem(
-      html`<strong>Instance ${instanceIndex + 1}</strong> ${instance.id
-          ? html`: <code>${instance.id}</code>`
-          : nothing}`,
+      html`<strong>Value ${valueIndex + 1}</strong>`,
       () => {
-        if (!confirm('Delete this instance?')) return;
+        if (!confirm('Delete this value?')) return;
         this.updateConfig(config, configIndex, {
-          values: config.values.filter((_, i) => i !== instanceIndex),
+          values: config.values.filter((_, i) => i !== valueIndex),
         });
       },
       html`
         <div class="config-section">
-          <label class="property-label">Instance ID</label>
-          <div class="description">
-            Unique identifier for this value in exported data
-          </div>
-          <pr-textarea
-            placeholder="e.g., donors_choose"
-            .value=${instance.id}
-            variant="outlined"
-            @input=${(e: Event) => {
-              const values = [...config.values];
-              values[instanceIndex] = {
-                ...instance,
-                id: (e.target as HTMLTextAreaElement).value,
-              };
-              this.updateConfig(config, configIndex, {values});
-            }}
-          ></pr-textarea>
-          ${!instance.id.trim()
-            ? html`<div class="validation-error">
-                ⚠️ Instance ID is required.
-              </div>`
-            : nothing}
-        </div>
-        <div class="config-section">
           <label class="property-label">Value</label>
-          ${this.renderValueInput(itemSchema, instance.value, (v) => {
+          ${this.renderValueInput(itemSchema, jsonValue, (v) => {
             const values = [...config.values];
-            values[instanceIndex] = {...instance, value: v};
+            values[valueIndex] = v;
             this.updateConfig(config, configIndex, {values});
           })}
           ${error

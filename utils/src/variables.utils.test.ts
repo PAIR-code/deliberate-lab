@@ -32,8 +32,8 @@ describe('generateVariablesForScope', () => {
         seed: SeedStrategy.COHORT,
       }),
       values: [
-        {id: '1', value: JSON.stringify('not a number')}, // INVALID
-        {id: '2', value: JSON.stringify(123)}, // VALID
+        JSON.stringify('not a number'), // INVALID
+        JSON.stringify(123), // VALID
       ],
       numToSelect: 2,
       expandListToSeparateVariables: false, // Use array mode to test array validation
@@ -64,7 +64,7 @@ describe('generateVariablesForScope', () => {
         description: '',
         schema: Type.Object({foo: Type.String()}),
       },
-      value: {id: '1', value: JSON.stringify({foo: 123})}, // Invalid: foo should be string
+      value: JSON.stringify({foo: 123}), // Invalid: foo should be string
     });
 
     const result = generateVariablesForScope([config], {
@@ -89,7 +89,7 @@ describe('generateVariablesForScope', () => {
         // Schema describes output type (array of strings)
         schema: Type.Array(Type.String()),
       },
-      values: [{id: '1', value: JSON.stringify('hello')}],
+      values: [JSON.stringify('hello')],
     });
 
     generateVariablesForScope([config], {
@@ -110,9 +110,9 @@ describe('generateVariablesForScope', () => {
         schema: Type.Array(Type.String()),
       },
       values: [
-        {id: '1', value: JSON.stringify('Charity A')},
-        {id: '2', value: JSON.stringify('Charity B')},
-        {id: '3', value: JSON.stringify('Charity C')},
+        JSON.stringify('Charity A'),
+        JSON.stringify('Charity B'),
+        JSON.stringify('Charity C'),
       ],
       expandListToSeparateVariables: true,
       shuffleConfig: createShuffleConfig({
@@ -145,9 +145,9 @@ describe('generateVariablesForScope', () => {
         schema: Type.Array(Type.String()),
       },
       values: [
-        {id: '1', value: JSON.stringify('Charity A')},
-        {id: '2', value: JSON.stringify('Charity B')},
-        {id: '3', value: JSON.stringify('Charity C')},
+        JSON.stringify('Charity A'),
+        JSON.stringify('Charity B'),
+        JSON.stringify('Charity C'),
       ],
       expandListToSeparateVariables: false,
       shuffleConfig: createShuffleConfig({
@@ -181,8 +181,8 @@ describe('generateVariablesForScope', () => {
         ),
       },
       values: [
-        {id: '1', value: JSON.stringify({name: 'Item A', value: 100})},
-        {id: '2', value: JSON.stringify({name: 'Item B', value: 200})},
+        JSON.stringify({name: 'Item A', value: 100}),
+        JSON.stringify({name: 'Item B', value: 200}),
       ],
       expandListToSeparateVariables: true,
       shuffleConfig: createShuffleConfig({
@@ -214,9 +214,9 @@ describe('extractVariablesFromVariableConfigs', () => {
         schema: Type.Array(Type.String()),
       },
       values: [
-        {id: '1', value: JSON.stringify('Charity A')},
-        {id: '2', value: JSON.stringify('Charity B')},
-        {id: '3', value: JSON.stringify('Charity C')},
+        JSON.stringify('Charity A'),
+        JSON.stringify('Charity B'),
+        JSON.stringify('Charity C'),
       ],
       expandListToSeparateVariables: true,
     });
@@ -252,10 +252,10 @@ describe('extractVariablesFromVariableConfigs', () => {
         schema: Type.Array(Type.Number()),
       },
       values: [
-        {id: '1', value: JSON.stringify(100)},
-        {id: '2', value: JSON.stringify(200)},
-        {id: '3', value: JSON.stringify(300)},
-        {id: '4', value: JSON.stringify(400)},
+        JSON.stringify(100),
+        JSON.stringify(200),
+        JSON.stringify(300),
+        JSON.stringify(400),
       ],
       numToSelect: 2, // Only select 2 items
       expandListToSeparateVariables: true,
@@ -278,10 +278,7 @@ describe('extractVariablesFromVariableConfigs', () => {
         description: 'List of charities',
         schema: Type.Array(Type.String()),
       },
-      values: [
-        {id: '1', value: JSON.stringify('Charity A')},
-        {id: '2', value: JSON.stringify('Charity B')},
-      ],
+      values: [JSON.stringify('Charity A'), JSON.stringify('Charity B')],
       expandListToSeparateVariables: false,
     });
 
