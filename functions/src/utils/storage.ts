@@ -24,7 +24,6 @@ export async function uploadBase64ImageToGCS(
     metadata: {
       contentType: mimeType,
     },
-    public: true, // Make the file publicly accessible
   });
 
   return file.publicUrl();
