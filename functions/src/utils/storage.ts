@@ -13,7 +13,7 @@ export async function uploadBase64ImageToGCS(
   mimeType: string,
   prefix = 'generated-images',
 ): Promise<string> {
-  const BUCKET_NAME = 'deliberate-labs';
+  const BUCKET_NAME = 'deliberate-lab';
   const bucket = app.storage().bucket(BUCKET_NAME);
   const fileName = `${prefix}/${generateId()}.${mimeType.split('/')[1]}`;
   const file = bucket.file(fileName);
@@ -24,7 +24,6 @@ export async function uploadBase64ImageToGCS(
     metadata: {
       contentType: mimeType,
     },
-    public: true, // Make the file publicly accessible
   });
 
   return file.publicUrl();
