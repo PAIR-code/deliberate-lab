@@ -4,6 +4,7 @@ import {customElement, property} from 'lit/decorators.js';
 import '../stages/survey_editor_menu';
 import '@material/web/checkbox/checkbox.js';
 import './condition_editor';
+import '../../pair-components/textarea_template';
 import {
   ConditionTarget,
   surveyQuestionsToConditionTargets,
@@ -181,14 +182,14 @@ export class SurveyEditor extends MobxLitElement {
     };
 
     return html`
-      <pr-textarea
+      <pr-textarea-template
         placeholder="Add question title"
         size="medium"
         .value=${question.questionTitle ?? ''}
         ?disabled=${!this.experimentEditor.canEditStages}
         @input=${updateTitle}
       >
-      </pr-textarea>
+      </pr-textarea-template>
     `;
   }
 
@@ -363,13 +364,13 @@ export class SurveyEditor extends MobxLitElement {
           >
           </md-checkbox>
           <div class="mc-item">
-            <pr-textarea
+            <pr-textarea-template
               placeholder="Add text for multiple choice item"
               .value=${item.text}
               ?disabled=${!this.experimentEditor.canEditStages}
               @input=${updateItem}
             >
-            </pr-textarea>
+            </pr-textarea-template>
             <pr-icon-button
               icon="close"
               color="neutral"
@@ -544,7 +545,7 @@ export class SurveyEditor extends MobxLitElement {
         scale.
       </div>
       <div class="scale-text-editors">
-        <pr-textarea
+        <pr-textarea-template
           label="Lower text (${question.lowerValue})"
           variant="outlined"
           placeholder="e.g., Strongly disagree"
@@ -553,8 +554,8 @@ export class SurveyEditor extends MobxLitElement {
           ?disabled=${!this.experimentEditor.canEditStages}
           @input=${updateLowerText}
         >
-        </pr-textarea>
-        <pr-textarea
+        </pr-textarea-template>
+        <pr-textarea-template
           label="Upper text (${question.upperValue})"
           variant="outlined"
           placeholder="e.g., Strongly agree"
@@ -563,8 +564,8 @@ export class SurveyEditor extends MobxLitElement {
           ?disabled=${!this.experimentEditor.canEditStages}
           @input=${updateUpperText}
         >
-        </pr-textarea>
-        <pr-textarea
+        </pr-textarea-template>
+        <pr-textarea-template
           label="Middle text (optional)"
           variant="outlined"
           placeholder="e.g., Neutral"
@@ -573,7 +574,7 @@ export class SurveyEditor extends MobxLitElement {
           ?disabled=${!this.experimentEditor.canEditStages}
           @input=${updateMiddleText}
         >
-        </pr-textarea>
+        </pr-textarea-template>
       </div>
       <label class="checkbox-wrapper">
         <md-checkbox
