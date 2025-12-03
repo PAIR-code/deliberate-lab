@@ -99,6 +99,8 @@ export class VariableEditor extends MobxLitElement {
     const variableConfigs =
       this.experimentEditor.experiment?.variableConfigs ?? [];
     const stages = this.experimentEditor.stages ?? [];
+    const agentMediators = this.experimentEditor.agentMediators ?? [];
+    const agentParticipants = this.experimentEditor.agentParticipants ?? [];
 
     if (variableConfigs.length === 0) {
       return nothing;
@@ -106,9 +108,14 @@ export class VariableEditor extends MobxLitElement {
 
     const variableDefinitions =
       extractVariablesFromVariableConfigs(variableConfigs);
-    const allStagesJson = JSON.stringify(stages);
+    // Search for variable usage in stages and all agent prompts
+    const allContentJson = JSON.stringify({
+      stages,
+      agentMediators,
+      agentParticipants,
+    });
     const unusedVariables = findUnusedVariables(
-      allStagesJson,
+      allContentJson,
       variableDefinitions,
     );
 
