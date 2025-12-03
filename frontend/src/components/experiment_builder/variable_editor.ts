@@ -408,45 +408,53 @@ export class VariableEditor extends MobxLitElement {
   ) {
     if (newType === config.type) return;
 
-    // Determine if current config has single or multiple values
-    const currentHasMultipleValues =
-      'values' in config && Array.isArray(config.values);
-    const currentHasSingleValue = 'value' in config;
+    // Configs either store a single value ('value') or multiple values ('values').
+    // When converting between formats, we need to combine or split the values.
+    // Schema stays as Array(ItemType) - single-value configs store the whole array
+    // as one JSON string, multi-value configs store each item separately.
 
-    if (newType === VariableConfigType.STATIC) {
-      // Converting to a single-value config
-      // Preserve first value from multi-value configs, or existing single value
-      const value = currentHasMultipleValues
-        ? config.values.length > 0
-          ? config.values[0]
-          : ''
-        : currentHasSingleValue
-          ? config.value
-          : '';
+    // Extract current data in a normalized form
+    let value = '';
+    let values: string[] = [];
 
-      const staticConfig = createStaticVariableConfig({
-        id: config.id,
-        scope: config.scope,
-        definition: config.definition,
-        value,
-      });
-      this.experimentEditor.updateVariableConfig(staticConfig, index);
-    } else {
-      // Converting to a multi-value config (RANDOM_PERMUTATION)
-      // Preserve values from multi-value configs, or wrap single value in array
-      const values = currentHasSingleValue
-        ? [config.value]
-        : currentHasMultipleValues
-          ? config.values
-          : [];
+    if ('value' in config && typeof config.value === 'string') {
+      value = config.value;
+      // Split single value (JSON array) into multiple values
+      const parsed = safeParseJson(value, []);
+      values = Array.isArray(parsed)
+        ? parsed.map((item: unknown) => JSON.stringify(item))
+        : [];
+    } else if ('values' in config && Array.isArray(config.values)) {
+      values = config.values;
+      // Combine multiple values into single value (JSON array)
+      const parsedValues = values.map((v: string) => safeParseJson(v, v));
+      value = JSON.stringify(parsedValues);
+    }
 
-      const randomConfig = createRandomPermutationVariableConfig({
-        id: config.id,
-        scope: config.scope,
-        definition: config.definition,
-        values,
-      });
-      this.experimentEditor.updateVariableConfig(randomConfig, index);
+    // Create new config based on target type
+    switch (newType) {
+      case VariableConfigType.STATIC:
+        this.experimentEditor.updateVariableConfig(
+          createStaticVariableConfig({
+            id: config.id,
+            scope: config.scope,
+            definition: config.definition,
+            value,
+          }),
+          index,
+        );
+        break;
+      case VariableConfigType.RANDOM_PERMUTATION:
+        this.experimentEditor.updateVariableConfig(
+          createRandomPermutationVariableConfig({
+            id: config.id,
+            scope: config.scope,
+            definition: config.definition,
+            values,
+          }),
+          index,
+        );
+        break;
     }
   }
 
