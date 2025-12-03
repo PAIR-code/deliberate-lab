@@ -149,7 +149,7 @@ export class BaseStageEditorComponent extends MobxLitElement {
         .error=${!validation.valid}
         .errorText=${validation.valid
           ? ''
-          : `Missing variables: ${validation.missingVariables.join(', ')}`}
+          : `Invalid variables: ${validation.invalidVariables.join(', ')}`}
         @input=${update}
       >
       </md-filled-text-field>
@@ -182,7 +182,7 @@ export class BaseStageEditorComponent extends MobxLitElement {
         .error=${!validation.valid}
         .errorText=${validation.valid
           ? ''
-          : `Missing variables: ${validation.missingVariables.join(', ')}`}
+          : `Invalid variables: ${validation.invalidVariables.join(', ')}`}
         @input=${update}
       >
       </md-filled-text-field>

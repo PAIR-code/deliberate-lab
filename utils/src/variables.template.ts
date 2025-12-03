@@ -15,12 +15,12 @@ export function findUnusedVariables(
   template: string,
   variableDefinitions: Record<string, VariableDefinition>,
 ): string[] {
-  // With empty definitions, all variables are reported as "missing"
-  const {missingVariables} = validateTemplateVariables(template, {});
+  // With empty definitions, all variables are reported as "invalid"
+  const {invalidVariables} = validateTemplateVariables(template, {});
 
   // Extract root variable names from full paths (e.g., "charity" from "charity.name")
   const usedRootNames = new Set<string>();
-  for (const path of missingVariables) {
+  for (const path of invalidVariables) {
     const rootName = path.split('.')[0];
     usedRootNames.add(rootName);
   }
@@ -78,21 +78,29 @@ export function resolveTemplateVariables(
 }
 
 /**
- * Validate that a template's variable references are defined.
+ * Validate that a template's variable references are defined and used correctly.
  * Also validates that the template is valid Mustache syntax.
  *
  * Supports:
  * - Dotted path access (e.g., {{policy.title}})
  * - Array indices (e.g., {{items.0.name}})
  * - Sections/Iteration (e.g., {{#items}}{{name}}{{/items}}) with context stacking
+ *
+ * Returns invalid variables for:
+ * - Undefined variable references
+ * - Object variables used directly without property access (will render as "[object Object]")
  */
 export function validateTemplateVariables(
   template: string,
   variableDefinitions: Record<string, VariableDefinition> = {},
-): {valid: boolean; missingVariables: string[]; syntaxError?: string} {
+): {
+  valid: boolean;
+  invalidVariables: string[];
+  syntaxError?: string;
+} {
   try {
     const tokens = Mustache.parse(template);
-    const missingVariables = new Set<string>();
+    const invalidVariables = new Set<string>();
 
     // Initial schema context is the variable definitions
     // We manually construct a schema-like object to avoid TypeBox runtime overhead/recursion
@@ -111,16 +119,16 @@ export function validateTemplateVariables(
     // Context stack holds schemas for each scope level
     const contextStack: TSchema[] = [rootSchema];
 
-    validateTokens(tokens, contextStack, missingVariables);
+    validateTokens(tokens, contextStack, invalidVariables);
 
     return {
-      valid: missingVariables.size === 0,
-      missingVariables: Array.from(missingVariables),
+      valid: invalidVariables.size === 0,
+      invalidVariables: Array.from(invalidVariables),
     };
   } catch (error) {
     return {
       valid: false,
-      missingVariables: [],
+      invalidVariables: [],
       syntaxError:
         error instanceof Error ? error.message : 'Invalid template syntax',
     };
@@ -133,7 +141,7 @@ export function validateTemplateVariables(
 function validateTokens(
   tokens: unknown[],
   contextStack: TSchema[],
-  missingVariables: Set<string>,
+  invalidVariables: Set<string>,
 ) {
   for (const token of tokens) {
     // Mustache token format: [type, value, start, end, subTokens, index]
@@ -146,29 +154,33 @@ function validateTokens(
       unknown[]?,
     ];
 
-    // Handle Variable tags (name, &, {) and Section tags (#, ^)
-    if (
-      type === 'name' ||
-      type === '#' ||
-      type === '^' ||
-      type === '&' ||
-      type === '{'
-    ) {
-      // Special case: '.' refers to the current context itself
-      if (value === '.') {
-        continue;
-      }
+    // Special case: '.' refers to the current context itself
+    if (value === '.') {
+      continue;
+    }
 
-      const schema = resolvePathInContextStack(value, contextStack);
+    // Direct output: {{var}}, {{{var}}}, {{&var}} - renders value as text
+    const isDirectOutput = type === 'name' || type === '&' || type === '{';
+    // Sections: {{#var}}...{{/var}}, {{^var}}...{{/var}} - iterate/scope
+    const isSection = type === '#' || type === '^';
 
-      if (!schema) {
-        missingVariables.add(value);
-      }
+    if (!isDirectOutput && !isSection) {
+      continue;
+    }
 
-      // If this is a section (# or ^), recurse into sub-tokens
-      if ((type === '#' || type === '^') && subTokens && schema) {
-        // Push new context onto stack
-        // If array, push items schema. If object, push object schema.
+    const schema = resolvePathInContextStack(value, contextStack);
+
+    if (!schema) {
+      invalidVariables.add(value);
+    } else if (isDirectOutput && schema.type === 'object') {
+      // Using {{object}} directly will render as "[object Object]"
+      invalidVariables.add(value);
+    }
+
+    // For sections, recurse into sub-tokens
+    if (isSection && subTokens) {
+      if (schema) {
+        // Push new context onto stack for nested content
         let newContext: TSchema | undefined;
 
         if (schema.type === 'array' && 'items' in schema) {
@@ -179,17 +191,15 @@ function validateTokens(
 
         if (newContext) {
           contextStack.push(newContext);
-          validateTokens(subTokens, contextStack, missingVariables);
+          validateTokens(subTokens, contextStack, invalidVariables);
           contextStack.pop();
         } else {
-          // If primitive or unknown, just validate sub-tokens with current stack
-          // (e.g. boolean toggle section doesn't change data context)
-          validateTokens(subTokens, contextStack, missingVariables);
+          // Primitive type (e.g. boolean toggle) - no context change
+          validateTokens(subTokens, contextStack, invalidVariables);
         }
-      } else if ((type === '#' || type === '^') && subTokens && !schema) {
-        // If section variable was missing, we still validate children
-        // to find other potential errors, but using current stack.
-        validateTokens(subTokens, contextStack, missingVariables);
+      } else {
+        // Schema missing, but still validate children to find other errors
+        validateTokens(subTokens, contextStack, invalidVariables);
       }
     }
   }
