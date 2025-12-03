@@ -1,6 +1,7 @@
 import {Timestamp} from 'firebase-admin/firestore';
 import {
   AutoTransferType,
+  BargainStageParticipantAnswer,
   ChipItem,
   Experiment,
   ParticipantProfileExtended,
@@ -475,6 +476,18 @@ export async function initializeParticipantStageAnswers(
           publicChipData.participantChipValueMap[publicId] =
             chipAnswer.chipValueMap;
           transaction.set(publicChipDoc, publicChipData);
+          break;
+        case StageKind.BARGAIN:
+          // If bargain stage, create placeholder participant answer
+          // Actual values (valuation, makeFirstMove, opponentInfo) will be set when game starts
+          const bargainAnswer: BargainStageParticipantAnswer = {
+            id: stage.id,
+            kind: StageKind.BARGAIN,
+            valuation: 0,              // Placeholder - will be set at game start
+            makeFirstMove: false,      // Placeholder - will be set at game start
+            opponentInfo: '',          // Placeholder - will be set at game start
+          };
+          transaction.set(stageDoc, bargainAnswer);
           break;
         case StageKind.PAYOUT:
           // If payout stage, set random selection of payout items

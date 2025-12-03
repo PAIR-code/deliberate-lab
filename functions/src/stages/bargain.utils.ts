@@ -8,7 +8,6 @@ import {
   BargainTransaction,
   BargainTransactionStatus,
   ParticipantProfileExtended,
-  StageKind,
   createBargainDealLogEntry,
   createBargainNoDealLogEntry,
   createBargainOfferLogEntry,
@@ -156,34 +155,18 @@ export async function initializeBargainStage(
     `[BARGAIN] Opponent info - Buyer sees: "${buyerOpponentInfo}", Seller sees: "${sellerOpponentInfo}"`
   );
 
-  // Create participant answers
+  // Get participant answer document references
   const buyerAnswerDoc = getFirestoreParticipantAnswerRef(
     experimentId,
     buyer.privateId,
     stageConfig.id,
   );
 
-  const buyerAnswer: BargainStageParticipantAnswer = {
-    id: stageConfig.id,
-    kind: StageKind.BARGAIN,
-    valuation: buyerValuation,
-    makeFirstMove: firstMover.publicId === buyer.publicId,
-    opponentInfo: buyerOpponentInfo,
-  };
-
   const sellerAnswerDoc = getFirestoreParticipantAnswerRef(
     experimentId,
     seller.privateId,
     stageConfig.id,
   );
-
-  const sellerAnswer: BargainStageParticipantAnswer = {
-    id: stageConfig.id,
-    kind: StageKind.BARGAIN,
-    valuation: sellerValuation,
-    makeFirstMove: firstMover.publicId === seller.publicId,
-    opponentInfo: sellerOpponentInfo,
-  };
 
   // Write to Firestore
   console.log('[BARGAIN] Writing initialization data to Firestore', {
@@ -198,9 +181,18 @@ export async function initializeBargainStage(
     chatEnabled: chatEnabled,
   });
 
-  // Create participant answers (these don't exist yet, so we use set())
-  transaction.set(buyerAnswerDoc, buyerAnswer);
-  transaction.set(sellerAnswerDoc, sellerAnswer);
+  // Update participant answers with game-specific values
+  // (placeholder answers created during participant creation)
+  transaction.update(buyerAnswerDoc, {
+    valuation: buyerValuation,
+    makeFirstMove: firstMover.publicId === buyer.publicId,
+    opponentInfo: buyerOpponentInfo,
+  });
+  transaction.update(sellerAnswerDoc, {
+    valuation: sellerValuation,
+    makeFirstMove: firstMover.publicId === seller.publicId,
+    opponentInfo: sellerOpponentInfo,
+  });
 
   // Update public data (already exists from cohort creation, so we use update())
   // This ensures we don't overwrite fields like readyParticipants
