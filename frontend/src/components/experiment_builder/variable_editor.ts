@@ -964,9 +964,15 @@ export class VariableEditor extends MobxLitElement {
       path,
       newObjSchema,
     );
-    this.updateDefinition(config, configIndex, {
-      schema: newFullSchema as unknown as typeof config.definition.schema,
-    });
+    // New properties default to string type with empty string value
+    const propPath = path ? `${path}.${name}` : name;
+    this.updateSchemaAndResetValues(
+      config,
+      configIndex,
+      newFullSchema,
+      propPath,
+      getDefaultValue(createSchemaForType('string')),
+    );
   }
 
   // ===== Static Value Editor =====
