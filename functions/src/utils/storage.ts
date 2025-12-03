@@ -22,7 +22,6 @@ export async function uploadBase64ImageToGCS(
 
   const buffer = Buffer.from(base64Data, 'base64');
 
-  // Check if running in Firebase emulator
   const isEmulator = process.env.FUNCTIONS_EMULATOR === 'true';
 
   if (isEmulator) {
