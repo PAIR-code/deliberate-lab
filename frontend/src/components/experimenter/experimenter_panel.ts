@@ -490,7 +490,7 @@ export class Panel extends MobxLitElement {
     return html`
       <div class="main">
         <div class="top">
-          <div class="header">Experimenter settings</div>
+          <div class="header">LLM Integration Settingss</div>
           <experimenter-data-editor></experimenter-data-editor>
         </div>
       </div>

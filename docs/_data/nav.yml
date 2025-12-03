@@ -26,6 +26,8 @@
     url: /developers/add-stage
   - title: Deploying
     url: /developers/deploy
+  - title: API Reference
+    url: /developers/api
 - title: Feature Docs
   pages:
   - title: Variables

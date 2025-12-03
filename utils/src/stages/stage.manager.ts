@@ -1,5 +1,5 @@
 import {ParticipantProfileExtended} from '../participant';
-import {VariableItem} from '../variables';
+import {VariableDefinition} from '../variables';
 import {AgentParticipantStageActions, BaseStageHandler} from './stage.handler';
 import {AssetAllocationStageHandler} from './asset_allocation_stage.manager';
 import {MultiAssetAllocationStageHandler} from './multi_asset_allocation_stage.manager';
@@ -50,13 +50,17 @@ export class StageManager {
    */
   resolveTemplateVariablesInStage(
     stage: StageConfig,
-    variableMap: Record<string, VariableItem>,
+    variableDefinitions: Record<string, VariableDefinition>,
     valueMap: Record<string, string>,
   ) {
     return (
       this.handlerMap
         .get(stage.kind)
-        ?.resolveTemplateVariablesInStage(stage, variableMap, valueMap) ?? stage
+        ?.resolveTemplateVariablesInStage(
+          stage,
+          variableDefinitions,
+          valueMap,
+        ) ?? stage
     );
   }
 

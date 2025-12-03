@@ -5,6 +5,7 @@ import {
   StageTextConfigSchema,
 } from './stage.validation';
 import {SurveyQuestionKind} from './survey_stage';
+import {ConditionSchema} from '../utils/condition.validation';
 
 /** Shorthand for strict TypeBox object validation */
 const strict = {additionalProperties: false} as const;
@@ -19,6 +20,9 @@ export const TextSurveyQuestionData = Type.Object(
     id: Type.String({minLength: 1}),
     kind: Type.Literal(SurveyQuestionKind.TEXT),
     questionTitle: Type.String(),
+    condition: Type.Optional(ConditionSchema),
+    minCharCount: Type.Optional(Type.Number()),
+    maxCharCount: Type.Optional(Type.Number()),
   },
   strict,
 );
@@ -30,6 +34,7 @@ export const CheckSurveyQuestionData = Type.Object(
     kind: Type.Literal(SurveyQuestionKind.CHECK),
     questionTitle: Type.String(),
     isRequired: Type.Boolean(),
+    condition: Type.Optional(ConditionSchema),
   },
   strict,
 );
@@ -52,6 +57,7 @@ export const MultipleChoiceSurveyQuestionData = Type.Object(
     questionTitle: Type.String(),
     options: Type.Array(MultipleChoiceItemData),
     correctAnswerId: Type.Union([Type.Null(), Type.String()]),
+    condition: Type.Optional(ConditionSchema),
   },
   strict,
 );
@@ -69,6 +75,7 @@ export const ScaleSurveyQuestionData = Type.Object(
     middleText: Type.String(),
     useSlider: Type.Boolean(),
     stepSize: Type.Number({minimum: 1}),
+    condition: Type.Optional(ConditionSchema),
   },
   strict,
 );

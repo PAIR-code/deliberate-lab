@@ -1,6 +1,7 @@
 import {
   AckAlertMessageData,
-  type AgentConfigTestData,
+  AgentConfigTestData,
+  DeliberateLabAPIKeyPermission,
   BaseParticipantData,
   type CreateChatMessageData,
   CohortCreationData,
@@ -688,5 +689,56 @@ export const ackAlertMessageCallable = async (
     functions,
     'ackAlertMessage',
   )(config);
+  return data;
+};
+
+/** Create a Deliberate Lab API key. */
+export const createDeliberateLabAPIKeyCallable = async (
+  functions: Functions,
+  keyName: string,
+  permissions?: DeliberateLabAPIKeyPermission[],
+) => {
+  const {data} = await httpsCallable<
+    {keyName: string; permissions?: DeliberateLabAPIKeyPermission[]},
+    {success: boolean; apiKey: string; keyId: string; message: string}
+  >(
+    functions,
+    'createDeliberateLabAPIKey',
+  )({keyName, permissions});
+  return data;
+};
+
+/** List Deliberate Lab API keys. */
+export const listDeliberateLabAPIKeysCallable = async (
+  functions: Functions,
+) => {
+  const {data} = await httpsCallable<
+    undefined,
+    {
+      success: boolean;
+      keys: Array<{
+        keyId: string;
+        name: string;
+        createdAt: number;
+        lastUsed: number | null;
+        permissions: DeliberateLabAPIKeyPermission[];
+      }>;
+    }
+  >(functions, 'listDeliberateLabAPIKeys')();
+  return data;
+};
+
+/** Revoke a Deliberate Lab API key. */
+export const revokeDeliberateLabAPIKeyCallable = async (
+  functions: Functions,
+  keyId: string,
+) => {
+  const {data} = await httpsCallable<
+    {keyId: string},
+    {success: boolean; message: string}
+  >(
+    functions,
+    'revokeDeliberateLabAPIKey',
+  )({keyId});
   return data;
 };

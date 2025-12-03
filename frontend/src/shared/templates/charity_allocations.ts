@@ -51,6 +51,8 @@ import {
   VariableType,
   RandomPermutationVariableConfig,
   SeedStrategy,
+  VariableScope,
+  createShuffleConfig,
 } from '@deliberation-lab/utils';
 
 const EMOJIS = ['1️⃣', '2️⃣', '3️⃣'];
@@ -209,28 +211,27 @@ const CHARITY_DATA: CharityInfo[] = [
 const CHARITY_RANDOM_PERMUTATION_CONFIG: RandomPermutationVariableConfig = {
   id: 'charity-permutation-config',
   type: VariableConfigType.RANDOM_PERMUTATION,
-  seedStrategy: SeedStrategy.COHORT,
-  variableNames: [
-    'charity_1',
-    'charity_2',
-    'charity_3',
-    'charity_4',
-    'charity_5',
-    'charity_6',
-    'charity_7',
-    'charity_8',
-    'charity_9',
-  ],
-
-  schema: VariableType.object({
-    key: VariableType.STRING,
-    name: VariableType.STRING,
-    link: VariableType.STRING,
-    score: VariableType.STRING,
-    mission: VariableType.STRING,
+  scope: VariableScope.COHORT,
+  definition: {
+    name: 'charity',
+    description: 'List of charities for allocation rounds',
+    schema: VariableType.array(
+      VariableType.object({
+        key: VariableType.STRING,
+        name: VariableType.STRING,
+        link: VariableType.STRING,
+        score: VariableType.STRING,
+        mission: VariableType.STRING,
+      }),
+    ),
+  },
+  shuffleConfig: createShuffleConfig({
+    shuffle: true,
+    seed: SeedStrategy.COHORT,
   }),
-
   values: CHARITY_DATA.map((charity) => JSON.stringify(charity)),
+  numToSelect: 9,
+  expandListToSeparateVariables: true, // Creates charity_1, charity_2, etc.
 };
 
 const LIKERT_SCALE_PROPS = {

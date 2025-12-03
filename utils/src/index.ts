@@ -4,6 +4,10 @@
 export * from './alert';
 export * from './alert.validation';
 
+// Deliberate Lab API Key
+export * from './dl_api_key';
+export * from './dl_api_key.validation';
+
 // Experimenter
 export * from './experimenter';
 
@@ -28,6 +32,7 @@ export * from './cohort.validation';
 // Variable
 export * from './variables';
 export * from './variables.utils';
+export * from './variables.schema.utils';
 export * from './variables.template';
 export * from './variables.validation';
 
@@ -139,6 +144,7 @@ export * from './stages/transfer_stage.validation';
 export * from './utils/algebraic.utils';
 export * from './utils/cache.utils';
 export * from './utils/condition';
+export * from './utils/condition.validation';
 export * from './utils/object.utils';
 export * from './utils/random.utils';
 export * from './utils/string.utils';
