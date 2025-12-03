@@ -365,17 +365,22 @@ export class Header extends MobxLitElement {
     }
 
     return html`
-      <pr-button
-        icon="save"
-        color="neutral"
-        variant="outlined"
-        ?disabled=${disabled}
-        @click=${() => {
-          this.experimentEditor.setShowSaveTemplateDialog(true, 'new');
-        }}
+      <pr-tooltip
+        text="This template will be shared with all experimenters."
+        position="BOTTOM_END"
       >
-        Save as template
-      </pr-button>
+        <pr-button
+          icon="save"
+          color="neutral"
+          variant="outlined"
+          ?disabled=${disabled}
+          @click=${() => {
+            this.experimentEditor.setShowSaveTemplateDialog(true, 'new');
+          }}
+        >
+          Save as template
+        </pr-button>
+      </pr-tooltip>
     `;
   }
 
