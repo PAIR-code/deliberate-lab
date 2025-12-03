@@ -81,9 +81,11 @@ export class InfoEditorComponent extends MobxLitElement {
 
     return html`
       <pr-textarea-template
+        class=${!this.stage?.infoLines.join('') ? 'has-error' : ''}
         label="Information to display to participant"
         placeholder="Add info to display to participant"
         variant="outlined"
+        rows="10"
         .value=${this.stage?.infoLines.join('\n\n') ?? ''}
         ?disabled=${!this.experimentEditor.canEditStages}
         @input=${updateInfoLines}

@@ -22,10 +22,7 @@ import {styles} from './textarea_template.css';
  */
 @customElement('pr-textarea-template')
 export class TextAreaTemplate extends TextArea {
-  static override styles: CSSResultGroup = [
-    ...(TextArea.styles as CSSResultGroup[]),
-    styles,
-  ];
+  static override styles: CSSResultGroup = [TextArea.styles, styles];
 
   private readonly experimentEditor = core.getService(ExperimentEditor);
 
