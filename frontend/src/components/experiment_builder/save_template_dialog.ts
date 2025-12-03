@@ -23,7 +23,7 @@ export class SaveTemplateDialog extends MobxLitElement {
       left: 0;
       width: 100%;
       height: 100%;
-      background: rgba(0, 0, 0, 0.5);
+      background: rgba(0, 0, 0, 0.32);
       display: flex;
       justify-content: center;
       align-items: center;
@@ -31,18 +31,19 @@ export class SaveTemplateDialog extends MobxLitElement {
     }
 
     .dialog {
-      background: white;
+      background: var(--md-sys-color-surface);
       border-radius: 8px;
       width: 500px;
       max-width: 90%;
       box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
       display: flex;
       flex-direction: column;
+      color: var(--md-sys-color-on-surface);
     }
 
     .header {
       padding: 16px;
-      border-bottom: 1px solid #eee;
+      border-bottom: 1px solid var(--md-sys-color-outline-variant);
       display: flex;
       justify-content: space-between;
       align-items: center;
@@ -62,7 +63,7 @@ export class SaveTemplateDialog extends MobxLitElement {
 
     .footer {
       padding: 16px;
-      border-top: 1px solid #eee;
+      border-top: 1px solid var(--md-sys-color-outline-variant);
       display: flex;
       justify-content: flex-end;
       gap: 8px;
@@ -94,10 +95,12 @@ export class SaveTemplateDialog extends MobxLitElement {
     select {
       width: 100%;
       padding: 8px;
-      border: 1px solid #ccc;
+      border: 1px solid var(--md-sys-color-outline);
       border-radius: 4px;
       font-size: 14px;
       margin-top: 8px;
+      background: var(--md-sys-color-surface);
+      color: var(--md-sys-color-on-surface);
     }
   `;
 
