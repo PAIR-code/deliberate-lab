@@ -9,6 +9,7 @@ import {ParticipantService} from '../../services/participant.service';
 
 import {
   BargainPayoutItemResult,
+  BaseStageParticipantAnswer,
   ChipPayoutItemResult,
   ChipPayoutValueItem,
   DefaultPayoutItem,
@@ -28,7 +29,7 @@ import {
   SurveyPayoutItemResult,
   SurveyPayoutQuestionResult,
   SurveyQuestionKind,
-  calculatePayoutResultFromAnswerMap,
+  calculatePayoutResult,
   calculatePayoutTotal,
 } from '@deliberation-lab/utils';
 import {styles} from './payout_view.scss';
@@ -50,13 +51,21 @@ export class PayoutView extends MobxLitElement {
       return nothing;
     }
 
-    const resultConfig = calculatePayoutResultFromAnswerMap(
+    // Filter out undefined values from answerMap for calculatePayoutResult
+    const filteredAnswerMap: Record<string, BaseStageParticipantAnswer> = {};
+    Object.entries(this.participantService.answerMap).forEach(([key, value]) => {
+      if (value) {
+        filteredAnswerMap[key] = value;
+      }
+    });
+
+    const resultConfig = calculatePayoutResult(
       this.stage,
       this.answer,
       this.experimentService.stageConfigMap,
       this.cohortService.stagePublicDataMap,
       this.participantService.profile,
-      this.participantService.answerMap,
+      filteredAnswerMap,
     );
 
     return html`
