@@ -7,7 +7,10 @@ import {VariableDefinition} from './variables';
 Mustache.escape = (text: string) => text;
 
 /** Reason why a variable reference is invalid */
-export type InvalidVariableReason = 'undefined' | 'object_needs_property';
+export type InvalidVariableReason =
+  | 'undefined'
+  | 'object_needs_property'
+  | 'syntax';
 
 /** An invalid variable reference in a template */
 export interface InvalidVariable {
@@ -22,6 +25,8 @@ export function formatInvalidVariable(invalid: InvalidVariable): string {
       return `'${invalid.path}' is not defined`;
     case 'object_needs_property':
       return `'${invalid.path}' is an object - access a property like '${invalid.path}.propertyName'`;
+    case 'syntax':
+      return invalid.path || 'Invalid template syntax';
   }
 }
 
@@ -118,7 +123,6 @@ export function validateTemplateVariables(
 ): {
   valid: boolean;
   invalidVariables: InvalidVariable[];
-  syntaxError?: string;
 } {
   try {
     const tokens = Mustache.parse(template);
@@ -148,11 +152,11 @@ export function validateTemplateVariables(
       invalidVariables: Array.from(invalidVariables.values()),
     };
   } catch (error) {
+    const message =
+      error instanceof Error ? error.message : 'Invalid template syntax';
     return {
       valid: false,
-      invalidVariables: [],
-      syntaxError:
-        error instanceof Error ? error.message : 'Invalid template syntax',
+      invalidVariables: [{path: message, reason: 'syntax'}],
     };
   }
 }
