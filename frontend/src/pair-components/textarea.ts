@@ -12,19 +12,19 @@ import {styles} from './textarea.css';
 function fitTextAreaToContent(
   textarea: HTMLElement,
   maxViewportHeight: number | undefined,
+  rows: number | undefined,
 ) {
-  // Measure height of textarea content
-  textarea.style.height = `0px`;
-  const fullHeight = textarea.scrollHeight;
+  // If rows is set, use 'auto' to respect it as minimum height
+  // Otherwise use '0px' to fit exactly to content
+  textarea.style.height = rows !== undefined ? 'auto' : '0px';
+  const height = textarea.scrollHeight;
 
-  // Set height to match content height (or max viewport height)
-  // NOTE: The .01 factor is to convert maxViewportHeight (e.g., 80vh) to
+  // Apply max viewport height constraint if specified
+  // NOTE: The .01 factor converts maxViewportHeight (e.g., 80vh) to
   //       a percentage (e.g., .80) of the window's inner height
-  const height = maxViewportHeight
-    ? Math.min(fullHeight, window.innerHeight * 0.01 * maxViewportHeight)
-    : fullHeight;
-
-  textarea.style.height = `${height}px`;
+  textarea.style.height = maxViewportHeight
+    ? `${Math.min(height, window.innerHeight * 0.01 * maxViewportHeight)}px`
+    : `${height}px`;
 }
 
 /**
@@ -40,6 +40,7 @@ export class TextArea extends LitElement {
   @property({type: String}) value = '';
   @property({type: Boolean}) disabled = false;
   @property({type: Boolean}) focused = false;
+  @property({type: Number}) rows: number | undefined = undefined;
 
   // Max height for the textarea in vh (e.g., 80 for 80vh max height)
   @property() maxViewportHeight: number | undefined = undefined;
@@ -53,7 +54,7 @@ export class TextArea extends LitElement {
   resizeObserver = new ResizeObserver((entries) => {
     entries.forEach((entry) => {
       const textarea = entry.target as HTMLElement;
-      fitTextAreaToContent(textarea, this.maxViewportHeight);
+      fitTextAreaToContent(textarea, this.maxViewportHeight, this.rows);
     });
   });
 
@@ -71,6 +72,7 @@ export class TextArea extends LitElement {
       fitTextAreaToContent(
         this.textareaRef.value as HTMLElement,
         this.maxViewportHeight,
+        this.rows,
       );
     }
   }
@@ -125,6 +127,7 @@ export class TextArea extends LitElement {
           ?disabled=${this.disabled}
           type="text"
           placeholder=${this.placeholder}
+          .rows=${this.rows}
           .value=${this.value}
           @input=${this.onChange}
         ></textarea>
