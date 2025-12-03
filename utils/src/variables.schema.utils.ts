@@ -181,12 +181,13 @@ export function setValueAtPath(
   const pathParts = path.split('.').filter((p) => p);
 
   const setAtLevel = (obj: unknown, s: TSchema, parts: string[]): unknown => {
-    if (!obj || typeof obj !== 'object') return obj;
-
     if (parts.length === 0) {
       // We've reached the target - return the new value
       return newValue;
     }
+
+    // If obj is not an object, we can't navigate further
+    if (!obj || typeof obj !== 'object') return obj;
 
     const o = obj as Record<string, unknown>;
     const nextKey = parts[0];
@@ -213,8 +214,9 @@ export function setValueAtPath(
               setAtLevel(item, itemsSchema, parts.slice(1)),
             ),
           };
-        } else if (nextKey in o) {
-          // Regular object navigation
+        } else {
+          // Regular object navigation - handles both existing and new properties
+          // If property doesn't exist, we still navigate to set the new value
           return {
             ...o,
             [nextKey]: setAtLevel(o[nextKey], propSchema, parts.slice(1)),
