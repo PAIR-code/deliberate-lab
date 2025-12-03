@@ -44,6 +44,7 @@ import {
   StageConfig,
   StageKind,
   extractVariablesFromVariableConfigs,
+  formatInvalidVariable,
   generateId,
   validateTemplateVariables,
 } from '@deliberation-lab/utils';
@@ -563,7 +564,9 @@ export class ExperimentBuilder extends MobxLitElement {
     if (valid) {
       return nothing;
     }
-    const invalidText = `Invalid variable references: ${invalidVariables.join(', ')}`;
+    const invalidText = invalidVariables
+      .map((v) => formatInvalidVariable(v))
+      .join('; ');
     return html`
       <div class="banner warning">
         ⚠️ ${invalidVariables.length > 0 ? invalidText : ''} ${syntaxError}

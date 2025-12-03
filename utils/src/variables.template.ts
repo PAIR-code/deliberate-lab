@@ -3,6 +3,25 @@ import type {TSchema} from '@sinclair/typebox';
 import {getSchemaAtPath} from './variables.utils';
 import {VariableDefinition} from './variables';
 
+/** Reason why a variable reference is invalid */
+export type InvalidVariableReason = 'undefined' | 'object_needs_property';
+
+/** An invalid variable reference in a template */
+export interface InvalidVariable {
+  path: string;
+  reason: InvalidVariableReason;
+}
+
+/** Format an invalid variable as a human-readable error message */
+export function formatInvalidVariable(invalid: InvalidVariable): string {
+  switch (invalid.reason) {
+    case 'undefined':
+      return `'${invalid.path}' is not defined`;
+    case 'object_needs_property':
+      return `'${invalid.path}' is an object - access a property like '${invalid.path}.propertyName'`;
+  }
+}
+
 /**
  * Find defined variables that are never used in a template.
  * Uses validateTemplateVariables with an empty map to extract all variable references.
@@ -20,7 +39,7 @@ export function findUnusedVariables(
 
   // Extract root variable names from full paths (e.g., "charity" from "charity.name")
   const usedRootNames = new Set<string>();
-  for (const path of invalidVariables) {
+  for (const {path} of invalidVariables) {
     const rootName = path.split('.')[0];
     usedRootNames.add(rootName);
   }
@@ -95,12 +114,12 @@ export function validateTemplateVariables(
   variableDefinitions: Record<string, VariableDefinition> = {},
 ): {
   valid: boolean;
-  invalidVariables: string[];
+  invalidVariables: InvalidVariable[];
   syntaxError?: string;
 } {
   try {
     const tokens = Mustache.parse(template);
-    const invalidVariables = new Set<string>();
+    const invalidVariables = new Map<string, InvalidVariable>();
 
     // Initial schema context is the variable definitions
     // We manually construct a schema-like object to avoid TypeBox runtime overhead/recursion
@@ -123,7 +142,7 @@ export function validateTemplateVariables(
 
     return {
       valid: invalidVariables.size === 0,
-      invalidVariables: Array.from(invalidVariables),
+      invalidVariables: Array.from(invalidVariables.values()),
     };
   } catch (error) {
     return {
@@ -141,7 +160,7 @@ export function validateTemplateVariables(
 function validateTokens(
   tokens: unknown[],
   contextStack: TSchema[],
-  invalidVariables: Set<string>,
+  invalidVariables: Map<string, InvalidVariable>,
 ) {
   for (const token of tokens) {
     // Mustache token format: [type, value, start, end, subTokens, index]
@@ -171,10 +190,13 @@ function validateTokens(
     const schema = resolvePathInContextStack(value, contextStack);
 
     if (!schema) {
-      invalidVariables.add(value);
+      invalidVariables.set(value, {path: value, reason: 'undefined'});
     } else if (isDirectOutput && schema.type === 'object') {
       // Using {{object}} directly will render as "[object Object]"
-      invalidVariables.add(value);
+      invalidVariables.set(value, {
+        path: value,
+        reason: 'object_needs_property',
+      });
     }
 
     // For sections, recurse into sub-tokens

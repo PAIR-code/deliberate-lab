@@ -138,7 +138,9 @@ describe('Mustache Template Resolution', () => {
       const template = 'Hello, {{name}} from {{city}}!';
       const result = validateTemplateVariables(template, variableDefinitions);
       expect(result.valid).toBe(false);
-      expect(result.invalidVariables).toEqual(['city']);
+      expect(result.invalidVariables).toEqual([
+        {path: 'city', reason: 'undefined'},
+      ]);
       expect(result.syntaxError).toBeUndefined();
     });
 
@@ -146,7 +148,9 @@ describe('Mustache Template Resolution', () => {
       const template = 'Hello, {{name.first}}!';
       const result = validateTemplateVariables(template, variableDefinitions);
       expect(result.valid).toBe(false);
-      expect(result.invalidVariables).toEqual(['name.first']);
+      expect(result.invalidVariables).toEqual([
+        {path: 'name.first', reason: 'undefined'},
+      ]);
       expect(result.syntaxError).toBeUndefined();
     });
 
@@ -154,7 +158,9 @@ describe('Mustache Template Resolution', () => {
       const template = 'Hello, {{department.chief}}';
       const result = validateTemplateVariables(template, variableDefinitions);
       expect(result.valid).toBe(false);
-      expect(result.invalidVariables).toEqual(['department.chief']);
+      expect(result.invalidVariables).toEqual([
+        {path: 'department.chief', reason: 'undefined'},
+      ]);
       expect(result.syntaxError).toBeUndefined();
     });
 
@@ -177,7 +183,9 @@ describe('Mustache Template Resolution', () => {
       const result = validateTemplateVariables(template, variableDefinitions);
       expect(result.valid).toBe(false);
       // Reports the full path including numeric index for specificity
-      expect(result.invalidVariables).toEqual(['tasks.0.description']);
+      expect(result.invalidVariables).toEqual([
+        {path: 'tasks.0.description', reason: 'undefined'},
+      ]);
     });
 
     it('should validate nested object fields', () => {
@@ -191,7 +199,9 @@ describe('Mustache Template Resolution', () => {
       const template = '{{department.building}}';
       const result = validateTemplateVariables(template, variableDefinitions);
       expect(result.valid).toBe(false);
-      expect(result.invalidVariables).toEqual(['department.building']);
+      expect(result.invalidVariables).toEqual([
+        {path: 'department.building', reason: 'undefined'},
+      ]);
     });
 
     it('should validate section iteration (array)', () => {
@@ -214,7 +224,9 @@ describe('Mustache Template Resolution', () => {
       const template = 'Tasks: {{#tasks}} - {{description}} {{/tasks}}';
       const result = validateTemplateVariables(template, variableDefinitions);
       expect(result.valid).toBe(false);
-      expect(result.invalidVariables).toEqual(['description']);
+      expect(result.invalidVariables).toEqual([
+        {path: 'description', reason: 'undefined'},
+      ]);
     });
 
     it('should fallback to outer context if variable not found in section', () => {
@@ -263,7 +275,9 @@ describe('Mustache Template Resolution', () => {
       const template = 'Department: {{department}}';
       const result = validateTemplateVariables(template, variableDefinitions);
       expect(result.valid).toBe(false);
-      expect(result.invalidVariables).toEqual(['department']);
+      expect(result.invalidVariables).toEqual([
+        {path: 'department', reason: 'object_needs_property'},
+      ]);
     });
 
     it('should not flag object variable used in a section', () => {
@@ -285,7 +299,9 @@ describe('Mustache Template Resolution', () => {
       const template = '{{{department}}} and &{{department}}';
       const result = validateTemplateVariables(template, variableDefinitions);
       expect(result.valid).toBe(false);
-      expect(result.invalidVariables).toContain('department');
+      expect(result.invalidVariables).toEqual([
+        {path: 'department', reason: 'object_needs_property'},
+      ]);
     });
 
     it('should not flag primitives used directly', () => {
