@@ -2,7 +2,16 @@ import {createModelGenerationConfig} from '../agent';
 import {ParticipantProfileExtended} from '../participant';
 import {StructuredOutputType} from '../structured_output';
 import {createDefaultParticipantPrompt} from '../structured_prompt';
-import {SurveyStageConfig, SurveyStageParticipantAnswer} from './survey_stage';
+import {VariableDefinition} from '../variables';
+import {resolveTemplateVariables} from '../variables.template';
+import {
+  MultipleChoiceSurveyQuestion,
+  ScaleSurveyQuestion,
+  SurveyQuestion,
+  SurveyQuestionKind,
+  SurveyStageConfig,
+  SurveyStageParticipantAnswer,
+} from './survey_stage';
 import {
   generateSurveySchema,
   getSurveyStageDisplayPromptString,
@@ -11,7 +20,91 @@ import {
 import {StageContextData} from './stage';
 import {AgentParticipantStageActions, BaseStageHandler} from './stage.handler';
 
+/**
+ * Resolves template variables in survey questions.
+ * Handles questionTitle for all types, options.text for multiple choice,
+ * and lowerText/upperText/middleText for scale questions.
+ */
+export function resolveSurveyQuestionVariables(
+  questions: SurveyQuestion[],
+  variableDefinitions: Record<string, VariableDefinition>,
+  valueMap: Record<string, string>,
+): SurveyQuestion[] {
+  return questions.map((question) => {
+    // Resolve questionTitle for all question types
+    const baseResolved = {
+      ...question,
+      questionTitle: resolveTemplateVariables(
+        question.questionTitle,
+        variableDefinitions,
+        valueMap,
+      ),
+    };
+
+    // Handle type-specific fields
+    switch (question.kind) {
+      case SurveyQuestionKind.MULTIPLE_CHOICE: {
+        const mcQuestion = baseResolved as MultipleChoiceSurveyQuestion;
+        return {
+          ...mcQuestion,
+          options: mcQuestion.options.map((option) => ({
+            ...option,
+            text: resolveTemplateVariables(
+              option.text,
+              variableDefinitions,
+              valueMap,
+            ),
+          })),
+        };
+      }
+      case SurveyQuestionKind.SCALE: {
+        const scaleQuestion = baseResolved as ScaleSurveyQuestion;
+        return {
+          ...scaleQuestion,
+          lowerText: resolveTemplateVariables(
+            scaleQuestion.lowerText,
+            variableDefinitions,
+            valueMap,
+          ),
+          upperText: resolveTemplateVariables(
+            scaleQuestion.upperText,
+            variableDefinitions,
+            valueMap,
+          ),
+          middleText: resolveTemplateVariables(
+            scaleQuestion.middleText,
+            variableDefinitions,
+            valueMap,
+          ),
+        };
+      }
+      default:
+        return baseResolved;
+    }
+  });
+}
+
 export class SurveyStageHandler extends BaseStageHandler {
+  resolveTemplateVariablesInStage(
+    stage: SurveyStageConfig,
+    variableDefinitions: Record<string, VariableDefinition>,
+    valueMap: Record<string, string>,
+  ) {
+    const updatedStage = super.resolveTemplateVariablesInStage(
+      stage,
+      variableDefinitions,
+      valueMap,
+    ) as SurveyStageConfig;
+
+    const questions = resolveSurveyQuestionVariables(
+      updatedStage.questions,
+      variableDefinitions,
+      valueMap,
+    );
+
+    return {...updatedStage, questions};
+  }
+
   getAgentParticipantActionsForStage(): AgentParticipantStageActions {
     return {callApi: true, moveToNextStage: true};
   }
