@@ -7,6 +7,7 @@ import '@material/web/button/outlined-button.js';
 import '@material/web/textfield/outlined-text-field.js';
 import '@material/web/select/outlined-select.js';
 import '@material/web/select/select-option.js';
+import '@material/web/switch/switch.js';
 
 import {MobxLitElement} from '@adobe/lit-mobx';
 import {CSSResultGroup, html, nothing, TemplateResult} from 'lit';
@@ -1058,15 +1059,19 @@ export class VariableEditor extends MobxLitElement {
     }
 
     if (type === 'boolean') {
+      const isTrue = value === 'true';
       return html`
-        <select
-          .value=${value}
-          @change=${(e: Event) =>
-            onUpdate((e.target as HTMLSelectElement).value)}
-        >
-          <option value="true">true</option>
-          <option value="false">false</option>
-        </select>
+        <div class="boolean-switch">
+          <span class="switch-label">false</span>
+          <md-switch
+            ?selected=${isTrue}
+            @change=${(e: Event) => {
+              const target = e.target as HTMLElement & {selected: boolean};
+              onUpdate(target.selected ? 'true' : 'false');
+            }}
+          ></md-switch>
+          <span class="switch-label">true</span>
+        </div>
       `;
     }
 
