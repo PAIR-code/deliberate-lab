@@ -16,6 +16,7 @@ import {
   StageKind,
   StageProgressConfig,
   extractVariablesFromVariableConfigs,
+  formatInvalidVariable,
   validateTemplateVariables,
 } from '@deliberation-lab/utils';
 
@@ -139,6 +140,10 @@ export class BaseStageEditorComponent extends MobxLitElement {
       variableMap,
     );
 
+    const errorText = validation.invalidVariables
+      .map((v) => formatInvalidVariable(v))
+      .join('; ');
+
     return html`
       <md-filled-text-field
         label="Stage description or instructions (optional)"
@@ -147,9 +152,7 @@ export class BaseStageEditorComponent extends MobxLitElement {
         type="textarea"
         rows="3"
         .error=${!validation.valid}
-        .errorText=${validation.valid
-          ? ''
-          : `Missing variables: ${validation.missingVariables.join(', ')}`}
+        .errorText=${validation.valid ? '' : errorText}
         @input=${update}
       >
       </md-filled-text-field>
@@ -173,6 +176,10 @@ export class BaseStageEditorComponent extends MobxLitElement {
       variableMap,
     );
 
+    const errorText = validation.invalidVariables
+      .map((v) => formatInvalidVariable(v))
+      .join('; ');
+
     return html`
       <md-filled-text-field
         label="Info popup text (optional)"
@@ -180,9 +187,7 @@ export class BaseStageEditorComponent extends MobxLitElement {
         ?disabled=${!this.experimentEditor.canEditStages}
         type="textarea"
         .error=${!validation.valid}
-        .errorText=${validation.valid
-          ? ''
-          : `Missing variables: ${validation.missingVariables.join(', ')}`}
+        .errorText=${validation.valid ? '' : errorText}
         @input=${update}
       >
       </md-filled-text-field>

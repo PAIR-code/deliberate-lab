@@ -44,6 +44,7 @@ import {
   StageConfig,
   StageKind,
   extractVariablesFromVariableConfigs,
+  formatInvalidVariable,
   generateId,
   validateTemplateVariables,
 } from '@deliberation-lab/utils';
@@ -555,7 +556,7 @@ export class ExperimentBuilder extends MobxLitElement {
     const stage = this.experimentEditor.currentStage;
     const variableConfigs =
       this.experimentEditor.experiment?.variableConfigs ?? [];
-    const {valid, missingVariables, syntaxError} = validateTemplateVariables(
+    const {valid, invalidVariables, syntaxError} = validateTemplateVariables(
       JSON.stringify(stage),
       extractVariablesFromVariableConfigs(variableConfigs),
     );
@@ -563,10 +564,12 @@ export class ExperimentBuilder extends MobxLitElement {
     if (valid) {
       return nothing;
     }
-    const missingText = `Variables ${JSON.stringify(missingVariables)} are not defined`;
+    const invalidText = invalidVariables
+      .map((v) => formatInvalidVariable(v))
+      .join('; ');
     return html`
       <div class="banner warning">
-        ⚠️ ${missingVariables.length > 0 ? missingText : ''} ${syntaxError}
+        ⚠️ ${invalidVariables.length > 0 ? invalidText : ''} ${syntaxError}
       </div>
     `;
   }
