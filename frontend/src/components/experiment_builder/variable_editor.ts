@@ -72,7 +72,7 @@ export class VariableEditor extends MobxLitElement {
             Mustache templating</a
           >, e.g., {{my_variable}}.
           <a
-            href="https://pair-code.github.io/deliberate-lab/features/variable"
+            href="https://pair-code.github.io/deliberate-lab/features/variables"
             target="_blank"
             >See documentation</a
           >.

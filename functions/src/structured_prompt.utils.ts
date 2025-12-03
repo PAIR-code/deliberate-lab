@@ -5,35 +5,26 @@ import {
   PROFILE_SET_NATURE_ID,
   PROMPT_ITEM_PROFILE_CONTEXT_PARTICIPANT_SCAFFOLDING,
   PROMPT_ITEM_PROFILE_INFO_PARTICIPANT_SCAFFOLDING,
-  AssetAllocationStageParticipantAnswer,
   BasePromptConfig,
-  ChatStageConfig,
   CohortConfig,
   Experiment,
   MediatorProfileExtended,
   ParticipantProfileExtended,
-  PrivateChatStageConfig,
-  ProfileAgentConfig,
   PromptItem,
   PromptItemGroup,
   PromptItemType,
-  RoleStagePublicData,
   StageConfig,
   StageContextData,
   StageContextPromptItem,
   StageKind,
-  StageParticipantAnswer,
-  SurveyStageConfig,
-  SurveyPerParticipantStageConfig,
-  SurveyStageParticipantAnswer,
-  SurveyPerParticipantStageParticipantAnswer,
-  UserProfile,
   UserType,
+  VariableDefinition,
   extractVariablesFromVariableConfigs,
   getAllPrecedingStageIds,
   getNameFromPublicId,
   initializeStageContextData,
   makeStructuredOutputPrompt,
+  resolveTemplateVariables,
   shuffleWithSeed,
 } from '@deliberation-lab/utils';
 import {
@@ -81,7 +72,7 @@ export async function getStructuredPromptConfig(
         user.agentConfig?.agentId,
       );
       // If prompt not stored under experiment, then return undefined
-      return mediatorPrompt;
+      return mediatorPrompt ?? undefined;
     default:
       return undefined;
   }
@@ -107,10 +98,10 @@ export async function getFirestoreDataForStructuredPrompt(
   const data: Record<string, StageContextData> = {};
 
   // Fetch experiment config, which is used to grab preceding stages
-  const experiment = await getFirestoreExperiment(experimentId);
+  const experiment = (await getFirestoreExperiment(experimentId))!;
 
   // Fetch cohort config, which may be needed to populate variables
-  const cohort = await getFirestoreCohort(experimentId, cohortId);
+  const cohort = (await getFirestoreCohort(experimentId, cohortId))!;
 
   // Fetch all active participants in cohort
   const activeParticipants = await getFirestoreActiveParticipants(
@@ -121,19 +112,19 @@ export async function getFirestoreDataForStructuredPrompt(
   // Fetch participants whose answers should be included in prompt
   let answerParticipants: ParticipantProfileExtended[] = [];
 
-  if (contextParticipantIds && contextParticipantIds.length > 0) {
+  if (contextParticipantIds?.length) {
     // If specific participant IDs provided, use those
     // (e.g., for private chats where mediator needs context about one participant)
-    answerParticipants = await Promise.all(
+    answerParticipants = (await Promise.all(
       contextParticipantIds.map((id) =>
         getFirestoreParticipant(experimentId, id),
       ),
-    );
+    )) as ParticipantProfileExtended[];
   } else if (userProfile.type === UserType.PARTICIPANT) {
     // Participant only needs their own context
-    answerParticipants.push(
-      await getFirestoreParticipant(experimentId, userProfile.privateId),
-    );
+    answerParticipants = [
+      (await getFirestoreParticipant(experimentId, userProfile.privateId))!,
+    ];
   } else if (userProfile.type === UserType.MEDIATOR) {
     // Mediator in group context needs all participants
     answerParticipants = activeParticipants;
@@ -384,6 +375,48 @@ function getProfileInfoForPrompt(
   }
 }
 
+/**
+ * Extracts variable definitions and merged value map from experiment, cohort, and user context.
+ * Used for resolving template variables in prompts.
+ *
+ * @param contextParticipant - Optional participant for mediator context (e.g., in private chats).
+ *   When a mediator is chatting with a specific participant, pass that participant here
+ *   to include their participant-scoped variables in the resolution.
+ */
+function getVariableContext(
+  experiment: Experiment,
+  cohort: CohortConfig,
+  userProfile: ParticipantProfileExtended | MediatorProfileExtended,
+  contextParticipant?: ParticipantProfileExtended,
+): {
+  variableDefinitions: Record<string, VariableDefinition>;
+  valueMap: Record<string, string>;
+} {
+  const experimentVariableMap = experiment.variableMap ?? {};
+  const cohortVariableMap = cohort.variableMap ?? {};
+
+  // For participants, include their personal variable map
+  // For mediators, use the context participant's variables if provided (e.g., private chat)
+  let participantVariableMap: Record<string, string> = {};
+  if (userProfile?.type === UserType.PARTICIPANT) {
+    participantVariableMap = userProfile.variableMap ?? {};
+  } else if (contextParticipant) {
+    // Mediator with a specific participant context (e.g., private chat)
+    participantVariableMap = contextParticipant.variableMap ?? {};
+  }
+
+  const variableDefinitions = extractVariablesFromVariableConfigs(
+    experiment.variableConfigs ?? [],
+  );
+  const valueMap = {
+    ...experimentVariableMap,
+    ...cohortVariableMap,
+    ...participantVariableMap,
+  };
+
+  return {variableDefinitions, valueMap};
+}
+
 /** Process prompt items recursively. */
 async function processPromptItems(
   promptItems: PromptItem[],
@@ -401,10 +434,31 @@ async function processPromptItems(
   const experiment = promptData.experiment;
   const items: string[] = [];
 
+  // For mediators in private chat context (single participant), use that participant's variables
+  const contextParticipant =
+    userProfile.type === UserType.MEDIATOR &&
+    promptData.participants.length === 1
+      ? promptData.participants[0]
+      : undefined;
+
+  // Get variable context for resolving templates
+  const {variableDefinitions, valueMap} = getVariableContext(
+    experiment,
+    promptData.cohort,
+    userProfile,
+    contextParticipant,
+  );
+
   for (const promptItem of promptItems) {
     switch (promptItem.type) {
       case PromptItemType.TEXT:
-        items.push(promptItem.text);
+        // Resolve template variables in text prompt items
+        const resolvedText = resolveTemplateVariables(
+          promptItem.text,
+          variableDefinitions,
+          valueMap,
+        );
+        items.push(resolvedText);
         break;
       case PromptItemType.PROFILE_CONTEXT:
         const profileContext = getProfileContextForPrompt(
@@ -447,6 +501,7 @@ async function processPromptItems(
               promptData.cohort,
               userProfile,
               includeScaffolding,
+              contextParticipant,
             ),
           );
         }
@@ -510,28 +565,18 @@ export async function getStageContextForPrompt(
   cohort: CohortConfig,
   userProfile: ParticipantProfileExtended | MediatorProfileExtended,
   includeScaffolding: boolean,
+  contextParticipant?: ParticipantProfileExtended,
 ) {
   // Resolve template variables in the stage context before
   // using it to assemble context for prompt.
-  // WARNING: This is a temporary hack and may not work as expected.
-  // TODO: Move this to an appropriate location/helper function.
-  const experimentVariableMap = experiment.variableMap ?? {};
-  const cohortVariableMap = cohort.variableMap ?? {};
-
-  // WARNING: This only uses the current participant's variables.
-  // If variables vary at the participant level, the other participants'
-  // variables are not yet shown, i.e., agent mediator prompts with
-  // participant-level variables will not work.
-  const participantVariableMap =
-    userProfile?.type === UserType.PARTICIPANT ? userProfile.variableMap : {};
-  const variableDefinitions = extractVariablesFromVariableConfigs(
-    experiment.variableConfigs ?? [],
+  // For mediators with a context participant (e.g., private chat),
+  // use that participant's variables.
+  const {variableDefinitions, valueMap} = getVariableContext(
+    experiment,
+    cohort,
+    userProfile,
+    contextParticipant,
   );
-  const valueMap = {
-    ...experimentVariableMap,
-    ...cohortVariableMap,
-    ...participantVariableMap,
-  };
   const stage = stageManager.resolveTemplateVariablesInStage(
     rawStageContext.stage,
     variableDefinitions,

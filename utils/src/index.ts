@@ -83,6 +83,7 @@ export * from './stages/comprehension_stage.validation';
 export * from './stages/flipcard_stage';
 export * from './stages/flipcard_stage.utils';
 export * from './stages/flipcard_stage.validation';
+export * from './stages/flipcard_stage.manager';
 
 export * from './stages/ranking_stage';
 export * from './stages/ranking_stage.manager';

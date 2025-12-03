@@ -45,6 +45,10 @@ following locations:
 - Stage descriptions (primary text, info text)
 - Info stages (info lines)
 - Multi asset allocation stages (stock name and description)
+- FlipCard stages (card title, front content, back content)
+- Survey stages (question title, multiple choice option text, scale labels)
+- Survey per participant stages (same as Survey stages)
+- Agent prompts (TEXT prompt items)
 
 ### Variable Schemas
 
@@ -241,11 +245,41 @@ functionality).
 
 > NOTE: Not all stages have been migrated to the stage manager/handler setup.
 
+### Survey Per Participant Behavior
+
+In **Survey per participant** stages, where questions are asked about each participant in the cohort, variables are resolved using the **answering participant's** variable values, not the target participant being rated.
+
+For example, if you have a question "Rate this person's contribution to {{project.name}}":
+- The `{{project.name}}` is resolved once based on the answering participant's variable context
+- The same resolved question is displayed for each target participant being rated
+
+This is consistent with how variable scopes work:
+- **Experiment scope:** Same value for everyone
+- **Cohort scope:** Same value for everyone in the cohort
+- **Participant scope:** Unique to the person taking the survey (the answerer)
+
+If you need to display information specific to the target participant being rated (e.g., their name or role), use the built-in participant display features rather than experiment variables.
+
+### Agent Prompt Variable Behavior
+
+Variables in agent prompts are resolved based on who is generating the prompt:
+
+| Scenario | Variables Available |
+|----------|---------------------|
+| **Participant agent** | Experiment + Cohort + Their own participant variables |
+| **Mediator in private chat** | Experiment + Cohort + Target participant's variables |
+| **Mediator in group chat** | Experiment + Cohort only |
+
+For **private chats**, when a mediator is talking to a single participant, the mediator's prompt will have access to that participant's variables. This allows prompts like "Help {{participant_topic}} discussion" to resolve correctly based on the participant being chatted with.
+
+For **group chats** with multiple participants, mediators only have access to experiment and cohort-scoped variables since different participants may have different values for participant-scoped variables.
+
 ## Roadmap / Future Work
 
 The following areas are planned for future integration with Variables:
 
-- [ ] **Prompts:** Support variable interpolation in LLM prompts (e.g., `{{policy.title}}` in a mediator's system instructions).
-- [ ] **Flipcards:** Support variables in flipcard content (e.g., shuffling arguments onto cards).
-- [ ] **Surveys:** Support variables in survey question text and choices (e.g., "How did you feel about {{charity_name}}?").
-- [ ] **Agent Mediators:** Ensure mediators have full visibility into participant-specific variables (context awareness).
+- [x] **Prompts:** Support variable interpolation in LLM prompts (TEXT prompt items resolve `{{variables}}`).
+- [x] **Flipcards:** Support variables in flipcard content (card title, front content, back content).
+- [x] **Surveys:** Support variables in survey question text and choices (question title, option text, scale labels).
+- [x] **Agent Mediators (Private Chat):** Mediators in private chats have access to the target participant's variables.
+- [ ] **Agent Mediators (Group Chat):** Determine approach for handling multiple participants with different variable values.
