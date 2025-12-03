@@ -3,6 +3,9 @@ import type {TSchema} from '@sinclair/typebox';
 import {getSchemaAtPath} from './variables.utils';
 import {VariableDefinition} from './variables';
 
+// Disable HTML escaping (prevents quotes from being rendered as `&quot;`)
+Mustache.escape = (text: string) => text;
+
 /** Reason why a variable reference is invalid */
 export type InvalidVariableReason = 'undefined' | 'object_needs_property';
 

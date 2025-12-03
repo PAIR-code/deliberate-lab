@@ -97,6 +97,51 @@ describe('Mustache Template Resolution', () => {
       );
       expect(resolution).toEqual('- Mark\n- Helly\n- Irving\n');
     });
+
+    it('should not HTML-escape special characters in values', () => {
+      const definitions: Record<string, VariableDefinition> = {
+        personality: {
+          name: 'personality',
+          description: '',
+          schema: VariableType.STRING,
+        },
+      };
+      const values: Record<string, string> = {
+        personality: '"disappointed"',
+      };
+      const template = 'Your personality is {{personality}}.';
+      const resolution = resolveTemplateVariables(
+        template,
+        definitions,
+        values,
+      );
+      // Should NOT escape quotes to &quot;
+      expect(resolution).toEqual('Your personality is "disappointed".');
+      expect(resolution).not.toContain('&quot;');
+    });
+
+    it('should preserve HTML-like content in values without escaping', () => {
+      const definitions: Record<string, VariableDefinition> = {
+        content: {
+          name: 'content',
+          description: '',
+          schema: VariableType.STRING,
+        },
+      };
+      const values: Record<string, string> = {
+        content: '<bold> & "quoted"',
+      };
+      const template = 'Content: {{content}}';
+      const resolution = resolveTemplateVariables(
+        template,
+        definitions,
+        values,
+      );
+      expect(resolution).toEqual('Content: <bold> & "quoted"');
+      expect(resolution).not.toContain('&lt;');
+      expect(resolution).not.toContain('&amp;');
+      expect(resolution).not.toContain('&quot;');
+    });
   });
 
   describe('validateTemplateVariables', () => {
