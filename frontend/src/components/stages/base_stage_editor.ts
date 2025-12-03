@@ -2,8 +2,8 @@ import {MobxLitElement} from '@adobe/lit-mobx';
 import {CSSResultGroup, html, nothing} from 'lit';
 import {customElement, property, state} from 'lit/decorators.js';
 
-import '@material/web/textfield/filled-text-field.js';
 import '@material/web/checkbox/checkbox.js';
+import '../../pair-components/textarea_template';
 
 import {core} from '../../core/core';
 import {ExperimentEditor} from '../../services/experiment.editor';
@@ -15,9 +15,6 @@ import {
   StageConfig,
   StageKind,
   StageProgressConfig,
-  extractVariablesFromVariableConfigs,
-  formatInvalidVariable,
-  validateTemplateVariables,
 } from '@deliberation-lab/utils';
 
 import {styles} from './base_stage_editor.scss';
@@ -132,30 +129,16 @@ export class BaseStageEditorComponent extends MobxLitElement {
       }
     };
 
-    const variableMap = extractVariablesFromVariableConfigs(
-      this.experimentEditor.experiment?.variableConfigs ?? [],
-    );
-    const validation = validateTemplateVariables(
-      this.stage?.descriptions.primaryText ?? '',
-      variableMap,
-    );
-
-    const errorText = validation.invalidVariables
-      .map((v) => formatInvalidVariable(v))
-      .join('; ');
-
     return html`
-      <md-filled-text-field
+      <pr-textarea-template
         label="Stage description or instructions (optional)"
         .value=${this.stage?.descriptions.primaryText ?? ''}
         ?disabled=${!this.experimentEditor.canEditStages}
-        type="textarea"
+        variant="outlined"
         rows="3"
-        .error=${!validation.valid}
-        .errorText=${validation.valid ? '' : errorText}
         @input=${update}
       >
-      </md-filled-text-field>
+      </pr-textarea-template>
     `;
   }
 
@@ -168,29 +151,16 @@ export class BaseStageEditorComponent extends MobxLitElement {
       }
     };
 
-    const variableMap = extractVariablesFromVariableConfigs(
-      this.experimentEditor.experiment?.variableConfigs ?? [],
-    );
-    const validation = validateTemplateVariables(
-      this.stage?.descriptions.infoText ?? '',
-      variableMap,
-    );
-
-    const errorText = validation.invalidVariables
-      .map((v) => formatInvalidVariable(v))
-      .join('; ');
-
     return html`
-      <md-filled-text-field
+      <pr-textarea-template
         label="Info popup text (optional)"
         .value=${this.stage?.descriptions.infoText ?? ''}
         ?disabled=${!this.experimentEditor.canEditStages}
-        type="textarea"
-        .error=${!validation.valid}
-        .errorText=${validation.valid ? '' : errorText}
+        variant="outlined"
+        rows="3"
         @input=${update}
       >
-      </md-filled-text-field>
+      </pr-textarea-template>
     `;
   }
 
