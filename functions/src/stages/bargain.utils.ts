@@ -7,7 +7,6 @@ import {
   BargainStagePublicData,
   BargainTransaction,
   BargainTransactionStatus,
-  ParticipantProfile,
   ParticipantProfileExtended,
   StageKind,
   createBargainDealLogEntry,
@@ -17,7 +16,11 @@ import {
   createBargainStartLogEntry,
 } from '@deliberation-lab/utils';
 import {Timestamp, Transaction} from 'firebase-admin/firestore';
-import {app} from '../app';
+import {
+  getFirestoreStagePublicDataRef,
+  getFirestoreStageRef,
+  getFirestoreParticipantAnswerRef,
+} from '../utils/firestore';
 
 /**
  * Initialize bargain stage for a cohort when both participants are ready.
@@ -44,14 +47,11 @@ export async function initializeBargainStage(
     participant2: gameParticipants[1].publicId,
   });
 
-  const publicDataDoc = app
-    .firestore()
-    .collection('experiments')
-    .doc(experimentId)
-    .collection('cohorts')
-    .doc(cohortId)
-    .collection('publicStageData')
-    .doc(stageConfig.id);
+  const publicDataDoc = getFirestoreStagePublicDataRef(
+    experimentId,
+    cohortId,
+    stageConfig.id,
+  );
 
   // Validate configuration values
   console.log(`[BARGAIN] Config validation - Buyer range: [${stageConfig.buyerValuationMin}, ${stageConfig.buyerValuationMax}], Seller range: [${stageConfig.sellerValuationMin}, ${stageConfig.sellerValuationMax}]`);
@@ -157,14 +157,11 @@ export async function initializeBargainStage(
   );
 
   // Create participant answers
-  const buyerAnswerDoc = app
-    .firestore()
-    .collection('experiments')
-    .doc(experimentId)
-    .collection('participants')
-    .doc(buyer.privateId)
-    .collection('stageData')
-    .doc(stageConfig.id);
+  const buyerAnswerDoc = getFirestoreParticipantAnswerRef(
+    experimentId,
+    buyer.privateId,
+    stageConfig.id,
+  );
 
   const buyerAnswer: BargainStageParticipantAnswer = {
     id: stageConfig.id,
@@ -174,14 +171,11 @@ export async function initializeBargainStage(
     opponentInfo: buyerOpponentInfo,
   };
 
-  const sellerAnswerDoc = app
-    .firestore()
-    .collection('experiments')
-    .doc(experimentId)
-    .collection('participants')
-    .doc(seller.privateId)
-    .collection('stageData')
-    .doc(stageConfig.id);
+  const sellerAnswerDoc = getFirestoreParticipantAnswerRef(
+    experimentId,
+    seller.privateId,
+    stageConfig.id,
+  );
 
   const sellerAnswer: BargainStageParticipantAnswer = {
     id: stageConfig.id,
@@ -189,25 +183,6 @@ export async function initializeBargainStage(
     valuation: sellerValuation,
     makeFirstMove: firstMover.publicId === seller.publicId,
     opponentInfo: sellerOpponentInfo,
-  };
-
-  // Initialize public data
-  const initialPublicData: BargainStagePublicData = {
-    id: stageConfig.id,
-    kind: StageKind.BARGAIN,
-    isGameOver: false,
-    currentTurn: 1,
-    maxTurns: maxTurns,
-    chatEnabled: chatEnabled,
-    currentOfferer: firstMover.publicId,
-    buyerId: buyer.publicId,
-    sellerId: seller.publicId,
-    participantRoles: {
-      [buyer.publicId]: BargainRole.BUYER,
-      [seller.publicId]: BargainRole.SELLER,
-    },
-    transactions: [],
-    agreedPrice: null,
   };
 
   // Write to Firestore
@@ -223,9 +198,27 @@ export async function initializeBargainStage(
     chatEnabled: chatEnabled,
   });
 
+  // Create participant answers (these don't exist yet, so we use set())
   transaction.set(buyerAnswerDoc, buyerAnswer);
   transaction.set(sellerAnswerDoc, sellerAnswer);
-  transaction.set(publicDataDoc, initialPublicData);
+
+  // Update public data (already exists from cohort creation, so we use update())
+  // This ensures we don't overwrite fields like readyParticipants
+  transaction.update(publicDataDoc, {
+    isGameOver: false,
+    currentTurn: 1,
+    maxTurns: maxTurns,
+    chatEnabled: chatEnabled,
+    currentOfferer: firstMover.publicId,
+    buyerId: buyer.publicId,
+    sellerId: seller.publicId,
+    participantRoles: {
+      [buyer.publicId]: BargainRole.BUYER,
+      [seller.publicId]: BargainRole.SELLER,
+    },
+    transactions: [],
+    agreedPrice: null,
+  });
 
   // Log the start
   const logDoc = publicDataDoc.collection('logs').doc();
@@ -252,14 +245,11 @@ export async function processBargainOffer(
   price: number,
   message: string,
 ) {
-  const publicDataDoc = app
-    .firestore()
-    .collection('experiments')
-    .doc(experimentId)
-    .collection('cohorts')
-    .doc(cohortId)
-    .collection('publicStageData')
-    .doc(stageId);
+  const publicDataDoc = getFirestoreStagePublicDataRef(
+    experimentId,
+    cohortId,
+    stageId,
+  );
 
   const publicDataSnapshot = await transaction.get(publicDataDoc);
   const publicData = publicDataSnapshot.data() as BargainStagePublicData;
@@ -324,31 +314,20 @@ export async function processBargainResponse(
   accept: boolean,
   message: string,
 ) {
-  const publicDataDoc = app
-    .firestore()
-    .collection('experiments')
-    .doc(experimentId)
-    .collection('cohorts')
-    .doc(cohortId)
-    .collection('publicStageData')
-    .doc(stageId);
+  const publicDataDoc = getFirestoreStagePublicDataRef(
+    experimentId,
+    cohortId,
+    stageId,
+  );
 
-  const stageDoc = app
-    .firestore()
-    .collection('experiments')
-    .doc(experimentId)
-    .collection('stages')
-    .doc(stageId);
+  const stageDoc = getFirestoreStageRef(experimentId, stageId);
 
   // Get participant answer to access their maxTurns
-  const participantAnswerDoc = app
-    .firestore()
-    .collection('experiments')
-    .doc(experimentId)
-    .collection('participants')
-    .doc(participantPrivateId)
-    .collection('stageData')
-    .doc(stageId);
+  const participantAnswerDoc = getFirestoreParticipantAnswerRef(
+    experimentId,
+    participantPrivateId,
+    stageId,
+  );
 
   const publicDataSnapshot = await transaction.get(publicDataDoc);
   const stageSnapshot = await transaction.get(stageDoc);
@@ -460,121 +439,4 @@ export async function processBargainResponse(
     Timestamp.now() as any,
   );
   transaction.set(responseLogDoc, responseLogEntry);
-}
-
-/**
- * Get all participants in a cohort.
- */
-export async function getBargainParticipants(
-  experimentId: string,
-  cohortId: string,
-): Promise<ParticipantProfile[]> {
-  const participantsSnapshot = await app
-    .firestore()
-    .collection('experiments')
-    .doc(experimentId)
-    .collection('participants')
-    .where('currentCohortId', '==', cohortId)
-    .get();
-
-  return participantsSnapshot.docs.map((doc) => doc.data() as ParticipantProfile);
-}
-
-/**
- * Check if bargain stage should be initialized (when both participants reach the stage).
- * Called from participant trigger when a participant's stage changes.
- */
-export async function checkAndInitializeBargainStage(
-  experimentId: string,
-  stageConfig: BargainStageConfig,
-  participant: ParticipantProfile,
-) {
-  console.log('[BARGAIN] checkAndInitializeBargainStage called', {
-    experimentId,
-    stageId: stageConfig.id,
-    participantId: participant.publicId,
-    currentStageId: participant.currentStageId,
-  });
-
-  // Only initialize if this participant just reached the bargain stage
-  if (participant.currentStageId !== stageConfig.id) {
-    console.log('[BARGAIN] Participant not at bargain stage, skipping');
-    return;
-  }
-
-  const cohortId = participant.currentCohortId;
-  console.log('[BARGAIN] Checking participants in cohort', {cohortId});
-
-  try {
-    // Get all participants in this cohort who are at this stage
-    const participantsSnapshot = await app
-      .firestore()
-      .collection('experiments')
-      .doc(experimentId)
-      .collection('participants')
-      .where('currentCohortId', '==', cohortId)
-      .where('currentStageId', '==', stageConfig.id)
-      .get();
-
-    const participantsAtStage = participantsSnapshot.docs.map(
-      (doc) => doc.data() as ParticipantProfileExtended,
-    );
-
-    console.log('[BARGAIN] Participants at stage count:', {
-      count: participantsAtStage.length,
-      participantIds: participantsAtStage.map((p) => p.publicId),
-    });
-
-    // Only initialize when exactly 2 participants are at the stage
-    if (participantsAtStage.length === 2) {
-      console.log('[BARGAIN] 2 participants ready, attempting initialization');
-
-      await app.firestore().runTransaction(async (transaction) => {
-        // Double-check public data hasn't been initialized yet
-        const publicDataDoc = app
-          .firestore()
-          .collection('experiments')
-          .doc(experimentId)
-          .collection('cohorts')
-          .doc(cohortId)
-          .collection('publicStageData')
-          .doc(stageConfig.id);
-
-        const publicDataSnapshot = await transaction.get(publicDataDoc);
-        const publicData = publicDataSnapshot.data() as
-          | BargainStagePublicData
-          | undefined;
-
-        console.log('[BARGAIN] Public data check:', {
-          exists: !!publicData,
-          currentTurn: publicData?.currentTurn,
-          isGameOver: publicData?.isGameOver,
-        });
-
-        // Only initialize if currentTurn is 0 (not yet started)
-        if (!publicData || publicData.currentTurn === 0) {
-          console.log('[BARGAIN] Initializing bargain stage');
-          await initializeBargainStage(
-            transaction,
-            experimentId,
-            cohortId,
-            stageConfig,
-            participantsAtStage,
-          );
-          console.log('[BARGAIN] Initialization complete');
-        } else {
-          console.log('[BARGAIN] Already initialized, skipping (currentTurn > 0)');
-        }
-      });
-
-      console.log('[BARGAIN] Transaction completed successfully');
-    } else if (participantsAtStage.length < 2) {
-      console.log('[BARGAIN] Waiting for second participant');
-    } else {
-      console.log('[BARGAIN] WARNING: More than 2 participants at stage:', participantsAtStage.length);
-    }
-  } catch (error) {
-    console.error('[BARGAIN] Error in checkAndInitializeBargainStage:', error);
-    throw error;
-  }
 }
