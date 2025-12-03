@@ -1,4 +1,5 @@
 import '../../pair-components/textarea';
+import '../../pair-components/textarea_template';
 
 import {MobxLitElement} from '@adobe/lit-mobx';
 import {CSSResultGroup, html, nothing} from 'lit';
@@ -149,7 +150,7 @@ export class FlipCardEditor extends MobxLitElement {
         <div class="card-fields">
           <div class="field">
             <label class="field-label">Title*</label>
-            <pr-textarea
+            <pr-textarea-template
               .value=${card.title}
               @input=${(e: InputEvent) =>
                 this.updateCardTitle(
@@ -159,12 +160,12 @@ export class FlipCardEditor extends MobxLitElement {
               placeholder="Enter card title"
               size="medium"
               ?disabled=${!this.experimentEditor.canEditStages}
-            ></pr-textarea>
+            ></pr-textarea-template>
           </div>
 
           <div class="field">
             <label class="field-label">Front Content*</label>
-            <pr-textarea
+            <pr-textarea-template
               .value=${card.frontContent}
               @input=${(e: InputEvent) =>
                 this.updateCardFrontContent(
@@ -174,12 +175,12 @@ export class FlipCardEditor extends MobxLitElement {
               placeholder="Enter content for the front of the card"
               size="large"
               ?disabled=${!this.experimentEditor.canEditStages}
-            ></pr-textarea>
+            ></pr-textarea-template>
           </div>
 
           <div class="field">
             <label class="field-label">Back Content*</label>
-            <pr-textarea
+            <pr-textarea-template
               .value=${card.backContent}
               @input=${(e: InputEvent) =>
                 this.updateCardBackContent(
@@ -189,7 +190,7 @@ export class FlipCardEditor extends MobxLitElement {
               placeholder="Enter additional content for the back of the card"
               size="large"
               ?disabled=${!this.experimentEditor.canEditStages}
-            ></pr-textarea>
+            ></pr-textarea-template>
           </div>
         </div>
       </div>

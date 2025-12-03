@@ -1,6 +1,7 @@
 import '../../pair-components/icon_button';
 import '../../pair-components/menu';
 import '../../pair-components/textarea';
+import '../../pair-components/textarea_template';
 
 import {MobxLitElement} from '@adobe/lit-mobx';
 import {CSSResultGroup, html, nothing, TemplateResult} from 'lit';
@@ -230,12 +231,12 @@ export class EditorComponent extends MobxLitElement {
       this.updatePromptItem(item, {text: text});
     };
     return html`
-      <pr-textarea
+      <pr-textarea-template
         placeholder="Add freeform text here"
         .value=${item.text}
         @input=${onInput}
       >
-      </pr-textarea>
+      </pr-textarea-template>
     `;
   }
 

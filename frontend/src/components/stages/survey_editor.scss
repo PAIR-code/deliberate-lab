@@ -101,7 +101,8 @@
   padding: common.$spacing-small common.$spacing-large;
 }
 
-pr-textarea {
+pr-textarea,
+pr-textarea-template {
   flex-grow: 1;
   width: 100%;
 }
