@@ -97,6 +97,51 @@ describe('Mustache Template Resolution', () => {
       );
       expect(resolution).toEqual('- Mark\n- Helly\n- Irving\n');
     });
+
+    it('should not HTML-escape special characters in values', () => {
+      const definitions: Record<string, VariableDefinition> = {
+        personality: {
+          name: 'personality',
+          description: '',
+          schema: VariableType.STRING,
+        },
+      };
+      const values: Record<string, string> = {
+        personality: '"disappointed"',
+      };
+      const template = 'Your personality is {{personality}}.';
+      const resolution = resolveTemplateVariables(
+        template,
+        definitions,
+        values,
+      );
+      // Should NOT escape quotes to &quot;
+      expect(resolution).toEqual('Your personality is "disappointed".');
+      expect(resolution).not.toContain('&quot;');
+    });
+
+    it('should preserve HTML-like content in values without escaping', () => {
+      const definitions: Record<string, VariableDefinition> = {
+        content: {
+          name: 'content',
+          description: '',
+          schema: VariableType.STRING,
+        },
+      };
+      const values: Record<string, string> = {
+        content: '<bold> & "quoted"',
+      };
+      const template = 'Content: {{content}}';
+      const resolution = resolveTemplateVariables(
+        template,
+        definitions,
+        values,
+      );
+      expect(resolution).toEqual('Content: <bold> & "quoted"');
+      expect(resolution).not.toContain('&lt;');
+      expect(resolution).not.toContain('&amp;');
+      expect(resolution).not.toContain('&quot;');
+    });
   });
 
   describe('validateTemplateVariables', () => {
@@ -130,7 +175,7 @@ describe('Mustache Template Resolution', () => {
       const template = 'Hello, {{name}}!';
       const result = validateTemplateVariables(template, variableDefinitions);
       expect(result.valid).toBe(true);
-      expect(result.missingVariables).toEqual([]);
+      expect(result.invalidVariables).toEqual([]);
       expect(result.syntaxError).toBeUndefined();
     });
 
@@ -138,7 +183,9 @@ describe('Mustache Template Resolution', () => {
       const template = 'Hello, {{name}} from {{city}}!';
       const result = validateTemplateVariables(template, variableDefinitions);
       expect(result.valid).toBe(false);
-      expect(result.missingVariables).toEqual(['city']);
+      expect(result.invalidVariables).toEqual([
+        {path: 'city', reason: 'undefined'},
+      ]);
       expect(result.syntaxError).toBeUndefined();
     });
 
@@ -146,7 +193,9 @@ describe('Mustache Template Resolution', () => {
       const template = 'Hello, {{name.first}}!';
       const result = validateTemplateVariables(template, variableDefinitions);
       expect(result.valid).toBe(false);
-      expect(result.missingVariables).toEqual(['name.first']);
+      expect(result.invalidVariables).toEqual([
+        {path: 'name.first', reason: 'undefined'},
+      ]);
       expect(result.syntaxError).toBeUndefined();
     });
 
@@ -154,7 +203,9 @@ describe('Mustache Template Resolution', () => {
       const template = 'Hello, {{department.chief}}';
       const result = validateTemplateVariables(template, variableDefinitions);
       expect(result.valid).toBe(false);
-      expect(result.missingVariables).toEqual(['department.chief']);
+      expect(result.invalidVariables).toEqual([
+        {path: 'department.chief', reason: 'undefined'},
+      ]);
       expect(result.syntaxError).toBeUndefined();
     });
 
@@ -169,7 +220,7 @@ describe('Mustache Template Resolution', () => {
       const template = '{{tasks.0.title}}: {{tasks.1.priority}}';
       const result = validateTemplateVariables(template, variableDefinitions);
       expect(result.valid).toBe(true);
-      expect(result.missingVariables).toEqual([]);
+      expect(result.invalidVariables).toEqual([]);
     });
 
     it('should detect invalid array element field access', () => {
@@ -177,21 +228,25 @@ describe('Mustache Template Resolution', () => {
       const result = validateTemplateVariables(template, variableDefinitions);
       expect(result.valid).toBe(false);
       // Reports the full path including numeric index for specificity
-      expect(result.missingVariables).toEqual(['tasks.0.description']);
+      expect(result.invalidVariables).toEqual([
+        {path: 'tasks.0.description', reason: 'undefined'},
+      ]);
     });
 
     it('should validate nested object fields', () => {
       const template = '{{department.name}} on floor {{department.floor}}';
       const result = validateTemplateVariables(template, variableDefinitions);
       expect(result.valid).toBe(true);
-      expect(result.missingVariables).toEqual([]);
+      expect(result.invalidVariables).toEqual([]);
     });
 
     it('should detect invalid nested object fields', () => {
       const template = '{{department.building}}';
       const result = validateTemplateVariables(template, variableDefinitions);
       expect(result.valid).toBe(false);
-      expect(result.missingVariables).toEqual(['department.building']);
+      expect(result.invalidVariables).toEqual([
+        {path: 'department.building', reason: 'undefined'},
+      ]);
     });
 
     it('should validate section iteration (array)', () => {
@@ -199,7 +254,7 @@ describe('Mustache Template Resolution', () => {
         'Tasks: {{#tasks}} - {{title}} (Priority: {{priority}}) {{/tasks}}';
       const result = validateTemplateVariables(template, variableDefinitions);
       expect(result.valid).toBe(true);
-      expect(result.missingVariables).toEqual([]);
+      expect(result.invalidVariables).toEqual([]);
     });
 
     it('should validate section context (object)', () => {
@@ -207,21 +262,23 @@ describe('Mustache Template Resolution', () => {
         'Dept: {{#department}} {{name}} - Floor {{floor}} {{/department}}';
       const result = validateTemplateVariables(template, variableDefinitions);
       expect(result.valid).toBe(true);
-      expect(result.missingVariables).toEqual([]);
+      expect(result.invalidVariables).toEqual([]);
     });
 
     it('should detect missing variables inside sections', () => {
       const template = 'Tasks: {{#tasks}} - {{description}} {{/tasks}}';
       const result = validateTemplateVariables(template, variableDefinitions);
       expect(result.valid).toBe(false);
-      expect(result.missingVariables).toEqual(['description']);
+      expect(result.invalidVariables).toEqual([
+        {path: 'description', reason: 'undefined'},
+      ]);
     });
 
     it('should fallback to outer context if variable not found in section', () => {
       const template = '{{#tasks}} Task for {{name}}: {{title}} {{/tasks}}';
       const result = validateTemplateVariables(template, variableDefinitions);
       expect(result.valid).toBe(true);
-      expect(result.missingVariables).toEqual([]);
+      expect(result.invalidVariables).toEqual([]);
     });
 
     it('should validate deeply nested sections', () => {
@@ -249,14 +306,61 @@ describe('Mustache Template Resolution', () => {
         '{{#company.teams}} Lead: {{lead}}, Members: {{#members}} {{name}} {{/members}} {{/company.teams}}';
       const result = validateTemplateVariables(template, complexMap);
       expect(result.valid).toBe(true);
-      expect(result.missingVariables).toEqual([]);
+      expect(result.invalidVariables).toEqual([]);
     });
 
     it('should validate triple mustache and ampersand tags', () => {
       const template = '{{{name}}} is &{{name}}';
       const result = validateTemplateVariables(template, variableDefinitions);
       expect(result.valid).toBe(true);
-      expect(result.missingVariables).toEqual([]);
+      expect(result.invalidVariables).toEqual([]);
+    });
+
+    it('should detect object variable used directly without property access', () => {
+      const template = 'Department: {{department}}';
+      const result = validateTemplateVariables(template, variableDefinitions);
+      expect(result.valid).toBe(false);
+      expect(result.invalidVariables).toEqual([
+        {path: 'department', reason: 'object_needs_property'},
+      ]);
+    });
+
+    it('should not flag object variable used in a section', () => {
+      const template =
+        'Dept: {{#department}} {{name}} - Floor {{floor}} {{/department}}';
+      const result = validateTemplateVariables(template, variableDefinitions);
+      expect(result.valid).toBe(true);
+      expect(result.invalidVariables).toEqual([]);
+    });
+
+    it('should not flag when object property is accessed', () => {
+      const template = 'Department: {{department.name}}';
+      const result = validateTemplateVariables(template, variableDefinitions);
+      expect(result.valid).toBe(true);
+      expect(result.invalidVariables).toEqual([]);
+    });
+
+    it('should detect triple mustache and ampersand tags with objects', () => {
+      const template = '{{{department}}} and &{{department}}';
+      const result = validateTemplateVariables(template, variableDefinitions);
+      expect(result.valid).toBe(false);
+      expect(result.invalidVariables).toEqual([
+        {path: 'department', reason: 'object_needs_property'},
+      ]);
+    });
+
+    it('should not flag primitives used directly', () => {
+      const template = '{{name}}';
+      const result = validateTemplateVariables(template, variableDefinitions);
+      expect(result.valid).toBe(true);
+      expect(result.invalidVariables).toEqual([]);
+    });
+
+    it('should not flag arrays used directly (they are often iterated)', () => {
+      const template = '{{tasks}}';
+      const result = validateTemplateVariables(template, variableDefinitions);
+      expect(result.valid).toBe(true);
+      expect(result.invalidVariables).toEqual([]);
     });
   });
 

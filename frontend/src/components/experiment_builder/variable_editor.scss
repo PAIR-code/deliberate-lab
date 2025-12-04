@@ -408,3 +408,15 @@ pr-button {
     }
   }
 }
+
+// Boolean Switch
+.boolean-switch {
+  @include common.flex-row-align-center;
+  gap: common.$spacing-small;
+}
+
+.switch-label {
+  @include typescale.label-medium;
+  color: var(--md-sys-color-on-surface);
+  font-family: monospace;
+}
