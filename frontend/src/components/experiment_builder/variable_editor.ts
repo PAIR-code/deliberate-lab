@@ -519,23 +519,31 @@ export class VariableEditor extends MobxLitElement {
       )}
       ${this.renderDivider()}
       ${this.renderSection(
-        'Condition Values',
+        'Condition Values & Weights',
         html`
           <div class="description">
             Define the values (conditions) to assign. Each participant will
-            receive exactly one value.
+            receive exactly one value. Optionally set weights to control the
+            distribution (e.g., weights 2:1 means ~67% get first value, ~33% get
+            second).
           </div>
           <div class="items-list">
             ${config.values.map((jsonValue: string, i: number) =>
-              this.renderValueEditor(config, index, jsonValue, i),
+              this.renderWeightedValueEditor(config, index, jsonValue, i),
             )}
           </div>
           <button
             class="add-button"
-            @click=${() =>
+            @click=${() => {
+              const newValues = [...config.values, ''];
+              const newWeights = config.weights
+                ? [...config.weights, 1]
+                : undefined;
               this.updateConfig(config, index, {
-                values: [...config.values, ''],
-              })}
+                values: newValues,
+                weights: newWeights,
+              });
+            }}
           >
             <pr-icon icon="add"></pr-icon>
             <span>Add condition</span>
@@ -543,6 +551,11 @@ export class VariableEditor extends MobxLitElement {
           ${config.values.length < 2
             ? html`<div class="validation-error">
                 ⚠️ At least two conditions are required for balanced assignment.
+              </div>`
+            : nothing}
+          ${config.weights && config.weights.length !== config.values.length
+            ? html`<div class="validation-error">
+                ⚠️ Number of weights must match number of values.
               </div>`
             : nothing}
         `,
@@ -1202,6 +1215,76 @@ export class VariableEditor extends MobxLitElement {
           ${error
             ? html`<div class="validation-error">⚠️ ${error}</div>`
             : nothing}
+        </div>
+      `,
+    );
+  }
+
+  // ===== Weighted Value Editor (for BalancedAssignment with weights) =====
+
+  private renderWeightedValueEditor(
+    config: BalancedAssignmentVariableConfig,
+    configIndex: number,
+    jsonValue: string,
+    valueIndex: number,
+  ) {
+    // Strip MobX observability to prevent stack overflow
+    const arraySchema = toJS(config.definition.schema) as unknown as TSchema;
+    const itemSchema =
+      'items' in arraySchema ? (arraySchema.items as TSchema) : arraySchema;
+    const error = validateVariableValue(itemSchema, jsonValue);
+
+    const weight = config.weights?.[valueIndex] ?? 1;
+    const hasWeights = config.weights && config.weights.length > 0;
+
+    return this.renderCollapsibleItem(
+      html`<strong>Condition ${valueIndex + 1}</strong> ${hasWeights
+          ? html`<span class="weight-badge">(weight: ${weight})</span>`
+          : nothing}`,
+      () => {
+        if (!confirm('Delete this condition?')) return;
+        const newValues = config.values.filter((_, i) => i !== valueIndex);
+        const newWeights = config.weights
+          ? config.weights.filter((_, i) => i !== valueIndex)
+          : undefined;
+        this.updateConfig(config, configIndex, {
+          values: newValues,
+          weights: newWeights,
+        });
+      },
+      html`
+        <div class="config-section">
+          <label class="property-label">Value</label>
+          ${this.renderValueInput(itemSchema, jsonValue, (v) => {
+            const values = [...config.values];
+            values[valueIndex] = v;
+            this.updateConfig(config, configIndex, {values});
+          })}
+          ${error
+            ? html`<div class="validation-error">⚠️ ${error}</div>`
+            : nothing}
+        </div>
+        <div class="config-section">
+          <label class="property-label">Weight (optional)</label>
+          <div class="description">
+            Higher weights mean more participants receive this value. Leave all
+            weights equal for balanced distribution.
+          </div>
+          <input
+            type="number"
+            min="1"
+            step="1"
+            .value=${String(weight)}
+            @input=${(e: Event) => {
+              const newWeight =
+                parseInt((e.target as HTMLInputElement).value) || 1;
+              const weights = config.weights
+                ? [...config.weights]
+                : config.values.map(() => 1);
+              weights[valueIndex] = Math.max(1, newWeight);
+              this.updateConfig(config, configIndex, {weights});
+            }}
+          />
         </div>
       `,
     );

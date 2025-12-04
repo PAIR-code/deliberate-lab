@@ -9,45 +9,53 @@ import {
   choices,
   generateRandomPermutationVariables,
   generateStaticVariables,
+  normalizeWeights,
   parseJsonValue,
   validateParsedVariableValue,
+  weightedChoice,
+  weightedRoundRobin,
 } from '@deliberation-lab/utils';
 
 import {app} from './app';
 
 /**
- * Get the value to assign using the LEAST_USED strategy.
- * Picks the value with the fewest assignments; breaks ties using seeded random.
+ * Get the value to assign using the LEAST_USED strategy with optional weights.
+ * Picks the value that is most under-represented relative to its target ratio.
+ * Breaks ties using seeded random.
  */
 function getLeastUsedValue(
   counts: Record<string, number>,
   values: string[],
+  weights: number[] | undefined,
   participantSeed: string,
 ): string {
-  const minCount = Math.min(...Object.values(counts));
-  const leastUsedValues = values.filter((v) => counts[v] === minCount);
+  const normalized = normalizeWeights(values.length, weights);
+  const totalAssigned = Object.values(counts).reduce((sum, c) => sum + c, 0);
 
-  // Pick using seeded random among least-used values
-  return choices(leastUsedValues, 1, participantSeed)[0];
-}
+  if (totalAssigned === 0) {
+    // No assignments yet - pick based on weights (highest weight first, random tie-break)
+    const maxWeight = Math.max(...normalized);
+    const highestWeightValues = values.filter(
+      (_, i) => normalized[i] === maxWeight,
+    );
+    return choices(highestWeightValues, 1, participantSeed)[0];
+  }
 
-/**
- * Get the value to assign using the ROUND_ROBIN strategy.
- * Uses the total participant count modulo number of values.
- */
-function getRoundRobinValue(
-  participantCount: number,
-  values: string[],
-): string {
-  return values[participantCount % values.length];
-}
+  // Calculate how under-represented each value is relative to its target
+  // Positive deviation = under-represented, negative = over-represented
+  const deviations = values.map((v, i) => {
+    const targetRatio = normalized[i];
+    const actualRatio = counts[v] / totalAssigned;
+    return targetRatio - actualRatio;
+  });
 
-/**
- * Get the value to assign using the RANDOM strategy.
- * Uses seeded random based on participant ID for reproducibility.
- */
-function getRandomValue(values: string[], participantSeed: string): string {
-  return choices(values, 1, participantSeed)[0];
+  const maxDeviation = Math.max(...deviations);
+  const mostUnderRepresented = values.filter(
+    (_, i) => deviations[i] === maxDeviation,
+  );
+
+  // Pick using seeded random among most under-represented values
+  return choices(mostUnderRepresented, 1, participantSeed)[0];
 }
 
 /**
@@ -76,7 +84,11 @@ async function generateBalancedAssignmentVariables(
   switch (config.balanceStrategy) {
     case BalanceStrategy.RANDOM:
       // Pure random doesn't need database queries, but uses seeded random
-      selectedValue = getRandomValue(config.values, variableSeed);
+      selectedValue = weightedChoice(
+        config.values,
+        config.weights,
+        variableSeed,
+      );
       break;
 
     case BalanceStrategy.ROUND_ROBIN: {
@@ -100,7 +112,11 @@ async function generateBalancedAssignmentVariables(
         participantCount = countResult.data().count;
       }
 
-      selectedValue = getRoundRobinValue(participantCount, config.values);
+      selectedValue = weightedRoundRobin(
+        config.values,
+        participantCount,
+        config.weights,
+      );
       break;
     }
 
@@ -131,7 +147,12 @@ async function generateBalancedAssignmentVariables(
         counts[value] = countResult.data().count;
       }
 
-      selectedValue = getLeastUsedValue(counts, config.values, variableSeed);
+      selectedValue = getLeastUsedValue(
+        counts,
+        config.values,
+        config.weights,
+        variableSeed,
+      );
       break;
     }
 
@@ -144,9 +165,10 @@ async function generateBalancedAssignmentVariables(
         .collection(`experiments/${experimentId}/participants`)
         .count()
         .get();
-      selectedValue = getRoundRobinValue(
-        countResult.data().count,
+      selectedValue = weightedRoundRobin(
         config.values,
+        countResult.data().count,
+        config.weights,
       );
   }
 

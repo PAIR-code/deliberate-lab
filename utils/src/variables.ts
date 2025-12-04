@@ -110,12 +110,16 @@ export enum BalanceAcross {
 
 /**
  * Balanced assignment variable config.
- * Assigns one value from a pool to each participant with balanced distribution.
+ * Assigns one value from a pool to each participant with balanced or weighted distribution.
  * Always PARTICIPANT-scoped since it assigns per-participant.
+ *
+ * If weights are provided, values are assigned proportionally to their weights.
+ * If weights are omitted, all values are assigned with equal probability (balanced).
  */
 export interface BalancedAssignmentVariableConfig extends BaseVariableConfig {
   type: VariableConfigType.BALANCED_ASSIGNMENT;
   values: string[]; // Pool of JSON string values to assign from
+  weights?: number[]; // Optional weights for each value (must match values.length if provided)
   balanceStrategy: BalanceStrategy;
   balanceAcross: BalanceAcross;
 }

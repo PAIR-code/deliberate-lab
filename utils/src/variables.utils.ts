@@ -153,6 +153,9 @@ export function createRandomPermutationVariableConfig(
  * Always PARTICIPANT-scoped since it assigns per-participant.
  * Schema is stored as Array(ItemType),
  * but each value in values[] is a single item (not an array).
+ *
+ * If weights are provided, they must match the length of values.
+ * If weights are omitted, equal weights are assumed.
  */
 export function createBalancedAssignmentVariableConfig(
   config: Partial<BalancedAssignmentVariableConfig> = {},
@@ -169,6 +172,7 @@ export function createBalancedAssignmentVariableConfig(
       schema: VariableType.array(VariableType.STRING),
     },
     values: config.values ?? [],
+    weights: config.weights, // undefined means equal weights
     balanceStrategy: config.balanceStrategy ?? BalanceStrategy.ROUND_ROBIN,
     balanceAcross: config.balanceAcross ?? BalanceAcross.EXPERIMENT,
   };

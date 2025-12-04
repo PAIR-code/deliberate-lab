@@ -383,6 +383,186 @@ describe('generateVariablesForScope', () => {
       // Config has PARTICIPANT scope, so it's filtered out when requesting COHORT scope
       expect(result['condition']).toBeUndefined();
     });
+
+    it('should assign using ROUND_ROBIN with weights', async () => {
+      // Weights [2, 1] means: first 2 participants get 'A', next 1 gets 'B', repeat
+      const config = createBalancedAssignmentVariableConfig({
+        definition: {
+          name: 'weighted_condition',
+          description: 'Weighted condition',
+          schema: VariableType.STRING,
+        },
+        values: [JSON.stringify('A'), JSON.stringify('B')],
+        weights: [2, 1], // 2:1 ratio - A should get ~67%, B should get ~33%
+        balanceStrategy: BalanceStrategy.ROUND_ROBIN,
+        balanceAcross: BalanceAcross.EXPERIMENT,
+      });
+
+      const expId = 'weighted-rr-exp';
+
+      // Participant 0 (position 0 % 3 = 0, falls in [0,2) -> A)
+      const result0 = await generateVariablesForScope([config], {
+        scope: VariableScope.PARTICIPANT,
+        experimentId: expId,
+        cohortId,
+        participantId: 'wp0',
+      });
+      expect(result0['weighted_condition']).toBe(JSON.stringify('A'));
+
+      // Add participant 0
+      await mockFirestore
+        .collection(`experiments/${expId}/participants`)
+        .doc('wp0')
+        .set(
+          createParticipantProfileExtended({
+            privateId: 'wp0',
+            publicId: 'pub-wp0',
+            currentCohortId: cohortId,
+            currentStatus: ParticipantStatus.IN_PROGRESS,
+          }),
+        );
+
+      // Participant 1 (position 1 % 3 = 1, falls in [0,2) -> A)
+      const result1 = await generateVariablesForScope([config], {
+        scope: VariableScope.PARTICIPANT,
+        experimentId: expId,
+        cohortId,
+        participantId: 'wp1',
+      });
+      expect(result1['weighted_condition']).toBe(JSON.stringify('A'));
+
+      // Add participant 1
+      await mockFirestore
+        .collection(`experiments/${expId}/participants`)
+        .doc('wp1')
+        .set(
+          createParticipantProfileExtended({
+            privateId: 'wp1',
+            publicId: 'pub-wp1',
+            currentCohortId: cohortId,
+            currentStatus: ParticipantStatus.IN_PROGRESS,
+          }),
+        );
+
+      // Participant 2 (position 2 % 3 = 2, falls in [2,3) -> B)
+      const result2 = await generateVariablesForScope([config], {
+        scope: VariableScope.PARTICIPANT,
+        experimentId: expId,
+        cohortId,
+        participantId: 'wp2',
+      });
+      expect(result2['weighted_condition']).toBe(JSON.stringify('B'));
+    });
+
+    it('should assign using LEAST_USED with weights', async () => {
+      // Weights [2, 1] means target ratio is 67% A, 33% B
+      const config = createBalancedAssignmentVariableConfig({
+        definition: {
+          name: 'weighted_group',
+          description: 'Weighted group',
+          schema: VariableType.STRING,
+        },
+        values: [JSON.stringify('A'), JSON.stringify('B')],
+        weights: [2, 1], // Target: 67% A, 33% B
+        balanceStrategy: BalanceStrategy.LEAST_USED,
+        balanceAcross: BalanceAcross.EXPERIMENT,
+      });
+
+      const expId = 'weighted-lu-exp';
+
+      // Add 1 participant to each group (50/50 split)
+      // Target is 67/33, so A is under-represented
+      await mockFirestore
+        .collection(`experiments/${expId}/participants`)
+        .doc('existing1')
+        .set({
+          ...createParticipantProfileExtended({
+            privateId: 'existing1',
+            publicId: 'pub-e1',
+            currentCohortId: cohortId,
+            currentStatus: ParticipantStatus.IN_PROGRESS,
+          }),
+          variableMap: {weighted_group: JSON.stringify('A')},
+        });
+
+      await mockFirestore
+        .collection(`experiments/${expId}/participants`)
+        .doc('existing2')
+        .set({
+          ...createParticipantProfileExtended({
+            privateId: 'existing2',
+            publicId: 'pub-e2',
+            currentCohortId: cohortId,
+            currentStatus: ParticipantStatus.IN_PROGRESS,
+          }),
+          variableMap: {weighted_group: JSON.stringify('B')},
+        });
+
+      // With 1 A and 1 B:
+      // A: actual 50%, target 67% -> deviation +17% (under-represented)
+      // B: actual 50%, target 33% -> deviation -17% (over-represented)
+      // New participant should get A
+      const result = await generateVariablesForScope([config], {
+        scope: VariableScope.PARTICIPANT,
+        experimentId: expId,
+        cohortId,
+        participantId: 'new-weighted',
+      });
+      expect(result['weighted_group']).toBe(JSON.stringify('A'));
+    });
+
+    it('should handle equal weights same as no weights', async () => {
+      const configWithWeights = createBalancedAssignmentVariableConfig({
+        definition: {
+          name: 'equal_weighted',
+          description: 'Equal weighted',
+          schema: VariableType.STRING,
+        },
+        values: [JSON.stringify('X'), JSON.stringify('Y')],
+        weights: [1, 1], // Equal weights
+        balanceStrategy: BalanceStrategy.ROUND_ROBIN,
+        balanceAcross: BalanceAcross.EXPERIMENT,
+      });
+
+      const configNoWeights = createBalancedAssignmentVariableConfig({
+        definition: {
+          name: 'no_weights',
+          description: 'No weights',
+          schema: VariableType.STRING,
+        },
+        values: [JSON.stringify('X'), JSON.stringify('Y')],
+        // No weights specified
+        balanceStrategy: BalanceStrategy.ROUND_ROBIN,
+        balanceAcross: BalanceAcross.EXPERIMENT,
+      });
+
+      const expId = 'equal-weights-exp';
+
+      // Both should give same result for first participant
+      const resultWithWeights = await generateVariablesForScope(
+        [configWithWeights],
+        {
+          scope: VariableScope.PARTICIPANT,
+          experimentId: expId,
+          cohortId,
+          participantId: 'p1',
+        },
+      );
+
+      const resultNoWeights = await generateVariablesForScope(
+        [configNoWeights],
+        {
+          scope: VariableScope.PARTICIPANT,
+          experimentId: expId,
+          cohortId,
+          participantId: 'p1',
+        },
+      );
+
+      // Both should get 'X' (first value, index 0)
+      expect(resultWithWeights['equal_weighted']).toBe(JSON.stringify('X'));
+      expect(resultNoWeights['no_weights']).toBe(JSON.stringify('X'));
+    });
   });
 
   describe('multiple variable configs', () => {
