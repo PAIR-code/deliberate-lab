@@ -33,8 +33,7 @@ export interface FlipCardStageConfig extends BaseStageConfig {
 }
 
 /** FlipCard participant answer. */
-export interface FlipCardStageParticipantAnswer
-  extends BaseStageParticipantAnswer {
+export interface FlipCardStageParticipantAnswer extends BaseStageParticipantAnswer {
   kind: StageKind.FLIPCARD;
   selectedCardIds: string[];
   flippedCardIds: string[];

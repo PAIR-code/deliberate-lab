@@ -59,8 +59,7 @@ export type RankingStageConfig = ParticipantRankingStage | ItemRankingStage;
  * This is saved as a stage doc (with stage ID as doc ID) under
  * experiments/{experimentId}/participants/{participantPrivateId}/stageData
  */
-export interface RankingStageParticipantAnswer
-  extends BaseStageParticipantAnswer {
+export interface RankingStageParticipantAnswer extends BaseStageParticipantAnswer {
   kind: StageKind.RANKING;
   // ordered answer list of either participant IDs or ranking item IDs
   rankingList: string[];

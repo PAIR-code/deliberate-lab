@@ -80,8 +80,7 @@ export interface SurveyPayoutItem extends BasePayoutItem {
 }
 
 /** Participant settings for payout stage (e.g., random selection). */
-export interface PayoutStageParticipantAnswer
-  extends BaseStageParticipantAnswer {
+export interface PayoutStageParticipantAnswer extends BaseStageParticipantAnswer {
   kind: StageKind.PAYOUT;
   // maps from random selection ID to ID of randomly selected payout item
   randomSelectionMap: Record<string, string>;
