@@ -359,6 +359,19 @@ export class Header extends MobxLitElement {
               <pr-icon icon="save"></pr-icon>
               Save as new template
             </div>
+            ${!this.experimentEditor.isLoadedTemplatePublic
+              ? html`
+                  <div
+                    class="menu-item"
+                    @click=${() => {
+                      this.experimentEditor.setShowShareTemplateDialog(true);
+                    }}
+                  >
+                    <pr-icon icon="share"></pr-icon>
+                    Share template
+                  </div>
+                `
+              : nothing}
           </pr-menu>
         </div>
       `;

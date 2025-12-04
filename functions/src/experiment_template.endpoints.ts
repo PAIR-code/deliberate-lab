@@ -35,6 +35,13 @@ export const saveExperimentTemplate = onCall(async (request) => {
       template.experiment.metadata.creator.toLowerCase();
   }
 
+  // Sanitize sharedWith
+  if (template.sharedWith) {
+    template.sharedWith = template.sharedWith
+      .map((email) => email.toLowerCase().trim())
+      .filter((email) => email.length > 0);
+  }
+
   // Check for existing template with same name
   const existingTemplates = await app
     .firestore()
@@ -68,12 +75,47 @@ export const saveExperimentTemplate = onCall(async (request) => {
 // ************************************************************************* //
 export const getExperimentTemplates = onCall(async (request) => {
   await AuthGuard.isExperimenter(request);
+  const userEmail = request.auth?.token.email?.toLowerCase() || '';
 
-  const templates = (
-    await app.firestore().collection(EXPERIMENT_TEMPLATES_COLLECTION).get()
-  ).docs.map((doc) => doc.data() as ExperimentTemplate);
+  const publicTemplatesQuery = app
+    .firestore()
+    .collection(EXPERIMENT_TEMPLATES_COLLECTION)
+    .where('visibility', '==', 'public')
+    .get();
 
-  return {templates};
+  const myTemplatesQuery = app
+    .firestore()
+    .collection(EXPERIMENT_TEMPLATES_COLLECTION)
+    .where('experiment.metadata.creator', '==', userEmail)
+    .get();
+
+  const sharedWithMeQuery = app
+    .firestore()
+    .collection(EXPERIMENT_TEMPLATES_COLLECTION)
+    .where('sharedWith', 'array-contains', userEmail)
+    .get();
+
+  const [publicTemplates, myTemplates, sharedWithMe] = await Promise.all([
+    publicTemplatesQuery,
+    myTemplatesQuery,
+    sharedWithMeQuery,
+  ]);
+
+  const templateMap = new Map<string, ExperimentTemplate>();
+
+  publicTemplates.docs.forEach((doc) => {
+    templateMap.set(doc.id, doc.data() as ExperimentTemplate);
+  });
+
+  myTemplates.docs.forEach((doc) => {
+    templateMap.set(doc.id, doc.data() as ExperimentTemplate);
+  });
+
+  sharedWithMe.docs.forEach((doc) => {
+    templateMap.set(doc.id, doc.data() as ExperimentTemplate);
+  });
+
+  return {templates: Array.from(templateMap.values())};
 });
 
 // ************************************************************************* //

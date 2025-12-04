@@ -91,6 +91,7 @@ export class ExperimentEditor extends Service {
   @observable showStageBuilderDialog = false;
   @observable showTemplatesTab = false;
   @observable showSaveTemplateDialog = false;
+  @observable showShareTemplateDialog = false;
 
   // **************************************************************************
   // EXPERIMENT LOADING
@@ -170,6 +171,14 @@ export class ExperimentEditor extends Service {
     return this.savedTemplates.some((t) => t.id === this.loadedTemplateId);
   }
 
+  @computed get isLoadedTemplatePublic() {
+    if (!this.loadedTemplateId) return false;
+    const template = this.savedTemplates.find(
+      (t) => t.id === this.loadedTemplateId,
+    );
+    return template?.visibility === 'public';
+  }
+
   loadExperiment(experiment: Experiment, stages: StageConfig[]) {
     this.experiment = experiment;
     this.setStages(stages);
@@ -191,7 +200,13 @@ export class ExperimentEditor extends Service {
     this.loadedTemplateId = template.id;
   }
 
-  async saveTemplate(name?: string, description?: string, templateId?: string) {
+  async saveTemplate(
+    name?: string,
+    description?: string,
+    templateId?: string,
+    visibility: 'public' | 'private' | 'shared' = 'private',
+    sharedWith: string[] = [],
+  ) {
     this.isWritingExperiment = true;
     const experiment = {
       ...this.experiment,
@@ -210,6 +225,8 @@ export class ExperimentEditor extends Service {
           stageConfigs: this.stages,
           agentMediators: this.agentMediators,
           agentParticipants: this.agentParticipants,
+          visibility,
+          sharedWith,
         },
       },
     );
@@ -220,6 +237,28 @@ export class ExperimentEditor extends Service {
     }
     this.isWritingExperiment = false;
     return response;
+  }
+
+  async updateTemplateVisibility(
+    visibility: 'public' | 'private' | 'shared',
+    sharedWith: string[],
+  ) {
+    if (!this.loadedTemplateId) return;
+    const template = this.savedTemplates.find(
+      (t) => t.id === this.loadedTemplateId,
+    );
+    if (!template) return;
+
+    this.isWritingExperiment = true;
+    await saveExperimentTemplateCallable(this.sp.firebaseService.functions, {
+      experimentTemplate: {
+        ...template,
+        visibility,
+        sharedWith,
+      },
+    });
+    await this.loadTemplates();
+    this.isWritingExperiment = false;
   }
 
   async loadTemplates() {
@@ -395,6 +434,10 @@ export class ExperimentEditor extends Service {
   setShowSaveTemplateDialog(show: boolean, mode: 'new' | 'update' = 'new') {
     this.showSaveTemplateDialog = show;
     this.saveTemplateMode = mode;
+  }
+
+  setShowShareTemplateDialog(show: boolean) {
+    this.showShareTemplateDialog = show;
   }
 
   // **************************************************************************

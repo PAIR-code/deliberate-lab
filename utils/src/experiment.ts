@@ -63,6 +63,8 @@ export interface ExperimentTemplate {
   stageConfigs: StageConfig[];
   agentMediators: AgentMediatorTemplate[];
   agentParticipants: AgentParticipantTemplate[];
+  visibility?: 'public' | 'private' | 'shared';
+  sharedWith?: string[];
 }
 
 /** Experiment config for participant options. */
@@ -120,6 +122,8 @@ export function createExperimentTemplate(
     stageConfigs: config.stageConfigs ?? [],
     agentMediators: config.agentMediators ?? [],
     agentParticipants: config.agentParticipants ?? [],
+    visibility: config.visibility ?? 'private',
+    sharedWith: config.sharedWith ?? [],
   };
 }
 
