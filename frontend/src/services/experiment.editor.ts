@@ -179,6 +179,18 @@ export class ExperimentEditor extends Service {
     return template?.visibility === 'public';
   }
 
+  @computed get isCreatorOfLoadedTemplate() {
+    if (!this.loadedTemplateId) return false;
+    const template = this.savedTemplates.find(
+      (t) => t.id === this.loadedTemplateId,
+    );
+    if (!template) return false;
+    return (
+      template.experiment.metadata.creator === this.sp.authService.userEmail ||
+      this.sp.authService.isAdmin
+    );
+  }
+
   loadExperiment(experiment: Experiment, stages: StageConfig[]) {
     this.experiment = experiment;
     this.setStages(stages);

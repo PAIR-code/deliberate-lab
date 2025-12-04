@@ -359,7 +359,7 @@ export class Header extends MobxLitElement {
               <pr-icon icon="save"></pr-icon>
               Save as new template
             </div>
-            ${!this.experimentEditor.isLoadedTemplatePublic
+            ${this.experimentEditor.isCreatorOfLoadedTemplate
               ? html`
                   <div
                     class="menu-item"
@@ -368,7 +368,7 @@ export class Header extends MobxLitElement {
                     }}
                   >
                     <pr-icon icon="share"></pr-icon>
-                    Share template
+                    Modify sharing settings
                   </div>
                 `
               : nothing}

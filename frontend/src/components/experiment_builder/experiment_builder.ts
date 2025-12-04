@@ -26,6 +26,7 @@ import './experiment_builder_nav';
 import './experiment_settings_editor';
 import './stage_builder_dialog';
 import './save_template_dialog';
+import './share_template_dialog';
 import './variable_editor';
 
 import {MobxLitElement} from '@adobe/lit-mobx';
@@ -80,8 +81,15 @@ export class ExperimentBuilder extends MobxLitElement {
     return html`
       ${this.renderPanelView()} ${this.renderExperimentConfigBuilder()}
       ${this.renderExperimenterSettings()} ${this.renderStageBuilderDialog()}
-      ${this.renderSaveTemplateDialog()}
+      ${this.renderSaveTemplateDialog()} ${this.renderShareTemplateDialog()}
     `;
+  }
+
+  private renderShareTemplateDialog() {
+    if (this.experimentEditor.showShareTemplateDialog) {
+      return html`<share-template-dialog></share-template-dialog>`;
+    }
+    return nothing;
   }
 
   private renderSaveTemplateDialog() {
