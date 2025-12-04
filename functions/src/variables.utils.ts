@@ -2,8 +2,6 @@ import {
   BalancedAssignmentVariableConfig,
   BalanceAcross,
   BalanceStrategy,
-  ParticipantProfileExtended,
-  ParticipantStatus,
   ScopeContext,
   VariableConfig,
   VariableConfigType,
@@ -16,32 +14,6 @@ import {
 } from '@deliberation-lab/utils';
 
 import {app} from './app';
-
-/**
- * Count how many participants have been assigned each value for a balanced assignment variable.
- * Returns a map of JSON string value to count.
- */
-function countValueAssignments(
-  participants: ParticipantProfileExtended[],
-  variableName: string,
-  values: string[],
-): Record<string, number> {
-  // Initialize counts for all possible values
-  const counts: Record<string, number> = {};
-  for (const value of values) {
-    counts[value] = 0;
-  }
-
-  // Count existing assignments
-  for (const participant of participants) {
-    const assignedValue = participant.variableMap?.[variableName];
-    if (assignedValue && assignedValue in counts) {
-      counts[assignedValue]++;
-    }
-  }
-
-  return counts;
-}
 
 /**
  * Get the value to assign using the LEAST_USED strategy.
@@ -133,42 +105,32 @@ async function generateBalancedAssignmentVariables(
     }
 
     case BalanceStrategy.LEAST_USED: {
-      // Get participants based on balance scope
-      let participantsQuery;
+      // Count assignments per value using efficient count() queries
+      const counts: Record<string, number> = {};
+      const baseCollection = firestore.collection(
+        `experiments/${experimentId}/participants`,
+      );
 
-      if (config.balanceAcross === BalanceAcross.EXPERIMENT) {
-        // All active participants in the experiment
-        participantsQuery = firestore
-          .collection(`experiments/${experimentId}/participants`)
-          .where('currentStatus', 'in', [
-            ParticipantStatus.IN_PROGRESS,
-            ParticipantStatus.TRANSFER_PENDING,
-            ParticipantStatus.ATTENTION_CHECK,
-            ParticipantStatus.SUCCESS,
-          ]);
-      } else {
-        // Active participants in the current cohort
-        participantsQuery = firestore
-          .collection(`experiments/${experimentId}/participants`)
-          .where('currentCohortId', '==', cohortId)
-          .where('currentStatus', 'in', [
-            ParticipantStatus.IN_PROGRESS,
-            ParticipantStatus.TRANSFER_PENDING,
-            ParticipantStatus.ATTENTION_CHECK,
-            ParticipantStatus.SUCCESS,
-          ]);
+      for (const value of config.values) {
+        let query;
+        if (config.balanceAcross === BalanceAcross.EXPERIMENT) {
+          // Count all participants with this value
+          query = baseCollection.where(
+            `variableMap.${config.definition.name}`,
+            '==',
+            value,
+          );
+        } else {
+          // Count participants in the current cohort with this value
+          query = baseCollection
+            .where('currentCohortId', '==', cohortId)
+            .where(`variableMap.${config.definition.name}`, '==', value);
+        }
+
+        const countResult = await query.count().get();
+        counts[value] = countResult.data().count;
       }
 
-      const participantsSnapshot = await participantsQuery.get();
-      const participants = participantsSnapshot.docs.map(
-        (doc) => doc.data() as ParticipantProfileExtended,
-      );
-
-      const counts = countValueAssignments(
-        participants,
-        config.definition.name,
-        config.values,
-      );
       selectedValue = getLeastUsedValue(counts, config.values, variableSeed);
       break;
     }
