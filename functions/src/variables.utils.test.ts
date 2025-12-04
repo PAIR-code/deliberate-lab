@@ -540,6 +540,126 @@ describe('generateVariablesForScope', () => {
     });
   });
 
+  describe('statistical validation with 120 participants', () => {
+    const experimentId = 'exp-statistical';
+    const cohortId = 'cohort-statistical';
+
+    // Test with 5 values and weights [5, 4, 3, 2, 1] = 15 total
+    // 120 participants = 8 complete cycles
+    // Expected counts: A=40 (33.3%), B=32 (26.7%), C=24 (20%), D=16 (13.3%), E=8 (6.7%)
+    const values = ['A', 'B', 'C', 'D', 'E'];
+    const weights = [5, 4, 3, 2, 1];
+    const totalWeight = weights.reduce((sum, w) => sum + w, 0); // 15
+    const numParticipants = 120;
+    const expectedCounts: Record<string, number> = {};
+    values.forEach((v, i) => {
+      expectedCounts[v] = (weights[i] / totalWeight) * numParticipants;
+    });
+
+    it('should achieve exact weighted ratio with ROUND_ROBIN over 120 participants', async () => {
+      const config = createBalancedAssignmentVariableConfig({
+        definition: {
+          name: 'rr_condition',
+          description: 'Round robin condition',
+          schema: VariableType.STRING,
+        },
+        values: values.map((v) => JSON.stringify(v)),
+        weights,
+        balanceStrategy: BalanceStrategy.ROUND_ROBIN,
+        balanceAcross: BalanceAcross.EXPERIMENT,
+      });
+
+      const counts: Record<string, number> = {A: 0, B: 0, C: 0, D: 0, E: 0};
+
+      // Simulate 120 participants joining sequentially
+      for (let i = 0; i < numParticipants; i++) {
+        const participantId = `rr-p${i}`;
+
+        const result = await generateVariablesForScope([config], {
+          scope: VariableScope.PARTICIPANT,
+          experimentId,
+          cohortId,
+          participantId,
+        });
+
+        const value = JSON.parse(result['rr_condition']);
+        counts[value]++;
+
+        // Add participant to Firestore for next iteration's count
+        await firestore
+          .collection(`experiments/${experimentId}/participants`)
+          .doc(participantId)
+          .set(
+            createParticipantProfileExtended({
+              privateId: participantId,
+              publicId: `pub-${participantId}`,
+              currentCohortId: cohortId,
+              currentStatus: ParticipantStatus.IN_PROGRESS,
+            }),
+          );
+      }
+
+      // ROUND_ROBIN should achieve exact ratio over full cycles
+      // 120 participants with weights [5,4,3,2,1] = 8 complete cycles of 15
+      // Expected: exactly A=40, B=32, C=24, D=16, E=8
+      values.forEach((v) => {
+        expect(counts[v]).toBe(expectedCounts[v]);
+      });
+    });
+
+    it('should converge to weighted ratio with LEAST_USED over 120 participants', async () => {
+      const config = createBalancedAssignmentVariableConfig({
+        definition: {
+          name: 'lu_condition',
+          description: 'Least used condition',
+          schema: VariableType.STRING,
+        },
+        values: values.map((v) => JSON.stringify(v)),
+        weights,
+        balanceStrategy: BalanceStrategy.LEAST_USED,
+        balanceAcross: BalanceAcross.EXPERIMENT,
+      });
+
+      const counts: Record<string, number> = {A: 0, B: 0, C: 0, D: 0, E: 0};
+
+      // Simulate 120 participants joining sequentially
+      for (let i = 0; i < numParticipants; i++) {
+        const participantId = `lu-p${i}`;
+
+        const result = await generateVariablesForScope([config], {
+          scope: VariableScope.PARTICIPANT,
+          experimentId,
+          cohortId,
+          participantId,
+        });
+
+        const value = JSON.parse(result['lu_condition']);
+        counts[value]++;
+
+        // Add participant to Firestore with their assigned value
+        await firestore
+          .collection(`experiments/${experimentId}/participants`)
+          .doc(participantId)
+          .set({
+            ...createParticipantProfileExtended({
+              privateId: participantId,
+              publicId: `pub-${participantId}`,
+              currentCohortId: cohortId,
+              currentStatus: ParticipantStatus.IN_PROGRESS,
+            }),
+            variableMap: {lu_condition: result['lu_condition']},
+          });
+      }
+
+      // LEAST_USED should converge very close to target ratio
+      // Allow ±1 deviation due to tie-breaking randomness
+      values.forEach((v) => {
+        expect(counts[v]).toBeGreaterThanOrEqual(expectedCounts[v] - 1);
+        expect(counts[v]).toBeLessThanOrEqual(expectedCounts[v] + 1);
+      });
+    });
+  });
+
   describe('multiple variable configs', () => {
     it('should handle mixed variable types for same scope', async () => {
       const staticConfig = createStaticVariableConfig({
