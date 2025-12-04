@@ -1,14 +1,7 @@
 // This test requires a Firestore emulator running. Run via:
 // npm run test:firestore
-// Or manually:
-// FIRESTORE_EMULATOR_HOST="localhost:8080" npx jest src/variables.utils.test.ts
 
-// Set project ID before importing firebase-admin
-if (!process.env.GCLOUD_PROJECT) {
-  process.env.GCLOUD_PROJECT = 'demo-deliberate-lab';
-}
-
-import * as admin from 'firebase-admin';
+import {app} from './app';
 import {
   initializeTestEnvironment,
   RulesTestEnvironment,
@@ -27,23 +20,15 @@ import {
 } from '@deliberation-lab/utils';
 import {generateVariablesForScope} from './variables.utils';
 
-let mockFirestore: FirebaseFirestore.Firestore;
-
-jest.mock('./app', () => ({
-  app: {
-    firestore: () => mockFirestore,
-  },
-}));
+const firestore = app.firestore();
 
 describe('generateVariablesForScope', () => {
   let testEnv: RulesTestEnvironment;
 
   beforeAll(async () => {
-    const projectId = process.env.GCLOUD_PROJECT || 'demo-deliberate-lab';
-
     // Initialize test environment for cleanup utilities
     testEnv = await initializeTestEnvironment({
-      projectId,
+      projectId: 'demo-deliberate-lab',
       firestore: process.env.FIRESTORE_EMULATOR_HOST
         ? undefined
         : {
@@ -52,22 +37,12 @@ describe('generateVariablesForScope', () => {
           },
     });
 
-    // Initialize Firebase Admin SDK - this connects to the emulator
-    // via FIRESTORE_EMULATOR_HOST environment variable and has full
-    // Firestore API support including .count()
-    if (!admin.apps.length) {
-      admin.initializeApp({projectId});
-    }
-    mockFirestore = admin.firestore();
-    mockFirestore.settings({ignoreUndefinedProperties: true});
+    // Clear any leftover data from previous test runs
+    await testEnv.clearFirestore();
   });
 
   afterAll(async () => {
     await testEnv.cleanup();
-  });
-
-  beforeEach(async () => {
-    await testEnv.clearFirestore();
   });
 
   describe('static variables', () => {
@@ -167,7 +142,7 @@ describe('generateVariablesForScope', () => {
       expect(result1['condition']).toBe(JSON.stringify('control'));
 
       // Add a participant to Firestore
-      await mockFirestore
+      await firestore
         .collection(`experiments/${experimentId}/participants`)
         .doc('p1')
         .set(
@@ -189,7 +164,7 @@ describe('generateVariablesForScope', () => {
       expect(result2['condition']).toBe(JSON.stringify('treatment'));
 
       // Add second participant
-      await mockFirestore
+      await firestore
         .collection(`experiments/${experimentId}/participants`)
         .doc('p2')
         .set(
@@ -225,7 +200,7 @@ describe('generateVariablesForScope', () => {
 
       // Add participants with existing assignments
       // 2 in group A, 1 in group B, 0 in group C
-      await mockFirestore
+      await firestore
         .collection(`experiments/${experimentId}/participants`)
         .doc('existing1')
         .set({
@@ -238,7 +213,7 @@ describe('generateVariablesForScope', () => {
           variableMap: {group: JSON.stringify('A')},
         });
 
-      await mockFirestore
+      await firestore
         .collection(`experiments/${experimentId}/participants`)
         .doc('existing2')
         .set({
@@ -251,7 +226,7 @@ describe('generateVariablesForScope', () => {
           variableMap: {group: JSON.stringify('A')},
         });
 
-      await mockFirestore
+      await firestore
         .collection(`experiments/${experimentId}/participants`)
         .doc('existing3')
         .set({
@@ -328,7 +303,7 @@ describe('generateVariablesForScope', () => {
       const cohortB = 'cohort-B';
 
       // Add 1 participant to cohort A
-      await mockFirestore
+      await firestore
         .collection(`experiments/${experimentId}/participants`)
         .doc('pA1')
         .set(
@@ -410,7 +385,7 @@ describe('generateVariablesForScope', () => {
       expect(result0['weighted_condition']).toBe(JSON.stringify('A'));
 
       // Add participant 0
-      await mockFirestore
+      await firestore
         .collection(`experiments/${expId}/participants`)
         .doc('wp0')
         .set(
@@ -432,7 +407,7 @@ describe('generateVariablesForScope', () => {
       expect(result1['weighted_condition']).toBe(JSON.stringify('A'));
 
       // Add participant 1
-      await mockFirestore
+      await firestore
         .collection(`experiments/${expId}/participants`)
         .doc('wp1')
         .set(
@@ -472,7 +447,7 @@ describe('generateVariablesForScope', () => {
 
       // Add 1 participant to each group (50/50 split)
       // Target is 67/33, so A is under-represented
-      await mockFirestore
+      await firestore
         .collection(`experiments/${expId}/participants`)
         .doc('existing1')
         .set({
@@ -485,7 +460,7 @@ describe('generateVariablesForScope', () => {
           variableMap: {weighted_group: JSON.stringify('A')},
         });
 
-      await mockFirestore
+      await firestore
         .collection(`experiments/${expId}/participants`)
         .doc('existing2')
         .set({
