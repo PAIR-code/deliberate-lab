@@ -3,6 +3,9 @@ import {generateId} from './shared';
 import {SeedStrategy, choices, createShuffleConfig} from './utils/random.utils';
 import {type TSchema} from '@sinclair/typebox';
 import {
+  BalancedAssignmentVariableConfig,
+  BalanceAcross,
+  BalanceStrategy,
   RandomPermutationVariableConfig,
   ScopeContext,
   StaticVariableConfig,
@@ -56,6 +59,19 @@ export function extractVariablesFromVariableConfigs(
           // Standard array variable
           variableDefinitions[config.definition.name] = config.definition;
         }
+        break;
+      case VariableConfigType.BALANCED_ASSIGNMENT:
+        // Balanced assignment produces a single variable with one value from the pool
+        // Schema is stored as Array(ItemType), so extract the item schema
+        const itemSchema =
+          'items' in config.definition.schema
+            ? (config.definition.schema.items as TSchema)
+            : config.definition.schema;
+        variableDefinitions[config.definition.name] = {
+          name: config.definition.name,
+          description: config.definition.description,
+          schema: itemSchema,
+        };
         break;
       default:
         break;
@@ -133,6 +149,36 @@ export function createRandomPermutationVariableConfig(
 }
 
 /**
+ * Create a balanced assignment variable config.
+ * Always PARTICIPANT-scoped since it assigns per-participant.
+ * Schema is stored as Array(ItemType),
+ * but each value in values[] is a single item (not an array).
+ *
+ * If weights are provided, they must match the length of values.
+ * If weights are omitted, equal weights are assumed.
+ */
+export function createBalancedAssignmentVariableConfig(
+  config: Partial<BalancedAssignmentVariableConfig> = {},
+): BalancedAssignmentVariableConfig {
+  return {
+    id: config.id ?? generateId(),
+    type: VariableConfigType.BALANCED_ASSIGNMENT,
+    // Always participant-scoped
+    scope: VariableScope.PARTICIPANT,
+    definition: config.definition ?? {
+      name: 'condition',
+      description: 'Assigned experimental condition',
+      // Schema describes the pool as array of items
+      schema: VariableType.array(VariableType.STRING),
+    },
+    values: config.values ?? [],
+    weights: config.weights, // undefined means equal weights
+    balanceStrategy: config.balanceStrategy ?? BalanceStrategy.ROUND_ROBIN,
+    balanceAcross: config.balanceAcross ?? BalanceAcross.EXPERIMENT,
+  };
+}
+
+/**
  * Helper to generate value for RandomPermutationVariableConfig
  */
 function generateRandomPermutationValue(
@@ -188,7 +234,7 @@ function generateRandomPermutationValue(
  * Generate variables for a Static config.
  * Returns a map of variable name to JSON string value.
  */
-function generateStaticVariables(
+export function generateStaticVariables(
   config: StaticVariableConfig,
 ): Record<string, string> {
   const value = parseJsonValue(config.value);
@@ -210,7 +256,7 @@ function generateStaticVariables(
  * Returns a map of variable name(s) to JSON string value(s).
  * May return multiple variables if expandListToSeparateVariables is true.
  */
-function generateRandomPermutationVariables(
+export function generateRandomPermutationVariables(
   config: RandomPermutationVariableConfig,
   context: ScopeContext,
 ): Record<string, string> {
@@ -242,52 +288,6 @@ function generateRandomPermutationVariables(
   }
 
   return variables;
-}
-
-/**
- * Given variable configs, generate variable-to-value mappings
- * for a specific scope (Experiment, Cohort, or Participant).
- *
- * - Static variables: Included if their scope matches the requested scope.
- * - Random permutation: Included if their scope matches the requested scope.
- *
- * @param variableConfigs List of configs to process
- * @param context The scope context (scope + IDs)
- */
-export function generateVariablesForScope(
-  variableConfigs: VariableConfig[],
-  context: ScopeContext,
-): Record<string, string> {
-  const variableToValueMap: Record<string, string> = {};
-
-  // Filter configs by scope first
-  const scopedConfigs = variableConfigs.filter(
-    (c) => c.scope === context.scope,
-  );
-
-  for (const config of scopedConfigs) {
-    let generatedVariables: Record<string, string> = {};
-
-    switch (config.type) {
-      case VariableConfigType.STATIC:
-        generatedVariables = generateStaticVariables(config);
-        break;
-      case VariableConfigType.RANDOM_PERMUTATION:
-        generatedVariables = generateRandomPermutationVariables(
-          config,
-          context,
-        );
-        break;
-      default:
-        // Unknown config type - skip
-        break;
-    }
-
-    // Merge generated variables into the result map
-    Object.assign(variableToValueMap, generatedVariables);
-  }
-
-  return variableToValueMap;
 }
 
 /**

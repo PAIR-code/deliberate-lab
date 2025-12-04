@@ -4,9 +4,9 @@ import {
   MediatorProfileExtended,
   StageConfig,
   createPublicDataFromStageConfigs,
-  generateVariablesForScope,
   VariableScope,
 } from '@deliberation-lab/utils';
+import {generateVariablesForScope} from './variables.utils';
 import {createMediatorsForCohort} from './mediator.utils';
 import {app} from './app';
 
@@ -67,7 +67,7 @@ export async function createCohortInternal(
   }
 
   // Add variable values at the cohort level
-  cohortConfig.variableMap = generateVariablesForScope(
+  cohortConfig.variableMap = await generateVariablesForScope(
     experiment.variableConfigs ?? [],
     {scope: VariableScope.COHORT, experimentId, cohortId: cohortConfig.id},
   );

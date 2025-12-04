@@ -4,22 +4,14 @@
  * These tests verify that experiments created via the REST API are equivalent
  * to experiments created using the traditional template system.
  *
- * This test assumes that a Firestore emulator is running.
- * Run using: npm run test:firestore experiments.api.integration.test.ts
- * Or: firebase emulators:exec --only firestore "npx jest experiments.api.integration.test.ts"
+ * This test requires a Firestore emulator running. Run via:
+ * npm run test:firestore
  */
-
-// Don't override GCLOUD_PROJECT - let firebase emulators:exec set it
-// If not set, use a demo project ID that the emulator will accept
-if (!process.env.GCLOUD_PROJECT) {
-  process.env.GCLOUD_PROJECT = 'demo-deliberate-lab';
-}
 
 import {
   initializeTestEnvironment,
   RulesTestEnvironment,
 } from '@firebase/rules-unit-testing';
-import * as admin from 'firebase-admin';
 import {
   createExperimentConfig,
   StageConfig,
@@ -53,8 +45,7 @@ describe('API Experiment Creation Integration Tests', () => {
   const createdExperimentIds: string[] = [];
 
   beforeAll(async () => {
-    // Use the same project ID that the emulator will use
-    const projectId = process.env.GCLOUD_PROJECT || 'demo-deliberate-lab';
+    const projectId = 'demo-deliberate-lab';
 
     testEnv = await initializeTestEnvironment({
       projectId,
@@ -67,13 +58,6 @@ describe('API Experiment Creation Integration Tests', () => {
     });
     firestore = testEnv.unauthenticatedContext().firestore();
     firestore.settings({ignoreUndefinedProperties: true, merge: true});
-
-    // Initialize Firebase Admin SDK (will use emulator via FIRESTORE_EMULATOR_HOST environment variable)
-    if (!admin.apps.length) {
-      admin.initializeApp({
-        projectId,
-      });
-    }
 
     // Create test API key (this will be stored in the emulator)
     console.log('Creating API key...');

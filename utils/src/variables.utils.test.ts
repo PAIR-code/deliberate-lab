@@ -1,7 +1,8 @@
 import {Type} from '@sinclair/typebox';
 import {SeedStrategy, createShuffleConfig} from './utils/random.utils';
 import {
-  generateVariablesForScope,
+  generateRandomPermutationVariables,
+  generateStaticVariables,
   createRandomPermutationVariableConfig,
   createStaticVariableConfig,
   extractVariablesFromVariableConfigs,
@@ -9,14 +10,14 @@ import {
 } from './variables.utils';
 import {VariableConfigType, VariableScope} from './variables';
 
-describe('generateVariablesForScope', () => {
+describe('generateRandomPermutationVariables', () => {
   const consoleSpy = jest.spyOn(console, 'warn').mockImplementation();
 
   afterEach(() => {
     consoleSpy.mockClear();
   });
 
-  it('should validate schema and warn if value does not match (Random Permutation)', () => {
+  it('should validate schema and warn if value does not match', () => {
     const config = createRandomPermutationVariableConfig({
       id: 'test',
       type: VariableConfigType.RANDOM_PERMUTATION,
@@ -39,7 +40,7 @@ describe('generateVariablesForScope', () => {
       expandListToSeparateVariables: false, // Use array mode to test array validation
     });
 
-    const result = generateVariablesForScope([config], {
+    const result = generateRandomPermutationVariables(config, {
       scope: VariableScope.COHORT,
       experimentId: 'exp',
       cohortId: 'cohort',
@@ -55,30 +56,6 @@ describe('generateVariablesForScope', () => {
     expect(parsed).toHaveLength(2);
   });
 
-  it('should validate schema and warn if value does not match (Static)', () => {
-    const config = createStaticVariableConfig({
-      id: 'test_static',
-      scope: VariableScope.COHORT,
-      definition: {
-        name: 'static_var',
-        description: '',
-        schema: Type.Object({foo: Type.String()}),
-      },
-      value: JSON.stringify({foo: 123}), // Invalid: foo should be string
-    });
-
-    const result = generateVariablesForScope([config], {
-      scope: VariableScope.COHORT,
-      experimentId: 'exp',
-      cohortId: 'cohort',
-    });
-
-    expect(consoleSpy).toHaveBeenCalled();
-    expect(consoleSpy.mock.calls[0][0]).toContain(
-      'Variable "static_var" value does not match its schema definition',
-    );
-  });
-
   it('should pass validation for correct values', () => {
     const config = createRandomPermutationVariableConfig({
       id: 'test',
@@ -92,7 +69,7 @@ describe('generateVariablesForScope', () => {
       values: [JSON.stringify('hello')],
     });
 
-    generateVariablesForScope([config], {
+    generateRandomPermutationVariables(config, {
       scope: VariableScope.COHORT,
       experimentId: 'exp',
       cohortId: 'cohort',
@@ -121,7 +98,7 @@ describe('generateVariablesForScope', () => {
       }),
     });
 
-    const result = generateVariablesForScope([config], {
+    const result = generateRandomPermutationVariables(config, {
       scope: VariableScope.COHORT,
       experimentId: 'exp',
       cohortId: 'cohort',
@@ -156,7 +133,7 @@ describe('generateVariablesForScope', () => {
       }),
     });
 
-    const result = generateVariablesForScope([config], {
+    const result = generateRandomPermutationVariables(config, {
       scope: VariableScope.COHORT,
       experimentId: 'exp',
       cohortId: 'cohort',
@@ -191,7 +168,7 @@ describe('generateVariablesForScope', () => {
       }),
     });
 
-    const result = generateVariablesForScope([config], {
+    const result = generateRandomPermutationVariables(config, {
       scope: VariableScope.COHORT,
       experimentId: 'exp',
       cohortId: 'cohort',
@@ -201,6 +178,52 @@ describe('generateVariablesForScope', () => {
     expect(JSON.parse(result['item_1'])).toEqual({name: 'Item A', value: 100});
     expect(JSON.parse(result['item_2'])).toEqual({name: 'Item B', value: 200});
     expect(result['item']).toBeUndefined();
+  });
+});
+
+describe('generateStaticVariables', () => {
+  const consoleSpy = jest.spyOn(console, 'warn').mockImplementation();
+
+  afterEach(() => {
+    consoleSpy.mockClear();
+  });
+
+  it('should validate schema and warn if value does not match', () => {
+    const config = createStaticVariableConfig({
+      id: 'test_static',
+      scope: VariableScope.COHORT,
+      definition: {
+        name: 'static_var',
+        description: '',
+        schema: Type.Object({foo: Type.String()}),
+      },
+      value: JSON.stringify({foo: 123}), // Invalid: foo should be string
+    });
+
+    generateStaticVariables(config);
+
+    expect(consoleSpy).toHaveBeenCalled();
+    expect(consoleSpy.mock.calls[0][0]).toContain(
+      'Variable "static_var" value does not match its schema definition',
+    );
+  });
+
+  it('should pass validation for correct values', () => {
+    const config = createStaticVariableConfig({
+      id: 'test_static',
+      scope: VariableScope.COHORT,
+      definition: {
+        name: 'static_var',
+        description: '',
+        schema: Type.Object({foo: Type.String()}),
+      },
+      value: JSON.stringify({foo: 'bar'}),
+    });
+
+    const result = generateStaticVariables(config);
+
+    expect(consoleSpy).not.toHaveBeenCalled();
+    expect(JSON.parse(result['static_var'])).toEqual({foo: 'bar'});
   });
 });
 

@@ -15,7 +15,6 @@ import {
   StageConfig,
   TransferStageConfig,
   createParticipantProfileExtended,
-  generateVariablesForScope,
   setProfile,
   VariableScope,
 } from '@deliberation-lab/utils';
@@ -24,6 +23,7 @@ import {
   updateParticipantNextStage,
   handleAutomaticTransfer,
 } from './participant.utils';
+import {generateVariablesForScope} from './variables.utils';
 
 import {onCall, HttpsError} from 'firebase-functions/v2/https';
 
@@ -77,7 +77,13 @@ export const createParticipant = onCall(async (request) => {
     .collection('participants')
     .doc(participantConfig.privateId);
 
-  // Set random timeout to avoid data contention with transaction
+  // Set random timeout to avoid data contention with transaction.
+  // Note: This also mitigates (but doesn't eliminate) a race condition with
+  // BalancedAssignment variables. The count/query used to determine assignment
+  // happens inside the transaction, but Firestore transactions only lock
+  // documents that are read—not aggregation queries. Two concurrent participants
+  // could see the same count and receive the same assignment. For most experiments
+  // with moderate join rates, the random delay provides sufficient distribution.
   await new Promise((resolve) => {
     setTimeout(resolve, Math.random() * 2000);
   });
@@ -129,7 +135,7 @@ export const createParticipant = onCall(async (request) => {
     participantConfig.currentStageId = experiment.stageIds[0];
 
     // Add variable values at the participant level
-    participantConfig.variableMap = generateVariablesForScope(
+    participantConfig.variableMap = await generateVariablesForScope(
       experiment.variableConfigs ?? [],
       {
         scope: VariableScope.PARTICIPANT,
