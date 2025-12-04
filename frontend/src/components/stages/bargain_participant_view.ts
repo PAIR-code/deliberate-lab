@@ -10,7 +10,6 @@ import {customElement, property, state} from 'lit/decorators.js';
 import {core} from '../../core/core';
 import {CohortService} from '../../services/cohort.service';
 import {ParticipantService} from '../../services/participant.service';
-import {ParticipantAnswerService} from '../../services/participant.answer';
 
 import {
   BargainRole,
@@ -30,7 +29,6 @@ export class BargainParticipantView extends MobxLitElement {
 
   private readonly cohortService = core.getService(CohortService);
   private readonly participantService = core.getService(ParticipantService);
-  private readonly participantAnswerService = core.getService(ParticipantAnswerService);
 
   @property() stage: BargainStageConfig | null = null;
   @property() answer: BargainStageParticipantAnswer | null = null;
@@ -108,7 +106,7 @@ export class BargainParticipantView extends MobxLitElement {
     const startGame = async () => {
       if (!this.stage) return;
       this.isStartGameLoading = true;
-      await this.participantAnswerService.startBargainGame(this.stage.id);
+      await this.participantService.startBargainGame(this.stage.id);
       this.isStartGameLoading = false;
     };
 

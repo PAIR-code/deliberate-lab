@@ -6,6 +6,7 @@ import {
 import {
   ParticipantProfileExtended,
   StageConfig,
+  StageKind,
 } from '@deliberation-lab/utils';
 import {startAgentParticipant} from '../agent_participant.utils';
 import {
@@ -13,7 +14,7 @@ import {
   getParticipantRecord,
   initializeParticipantStageAnswers,
 } from '../participant.utils';
-import {getFirestoreParticipant, getFirestoreStage} from '../utils/firestore';
+import {getFirestoreParticipant} from '../utils/firestore';
 
 import {app} from '../app';
 
@@ -113,34 +114,6 @@ export const onParticipantReconnect = onDocumentUpdated(
             }
           }
         });
-      }
-    }
-  },
-);
-
-/** Trigger when participant's current stage changes - initialize bargain stage if needed. */
-export const onParticipantStageChange = onDocumentUpdated(
-  {
-    document: 'experiments/{experimentId}/participants/{participantId}',
-  },
-  async (event) => {
-    if (!event.data) return;
-    const experimentId = event.params.experimentId;
-
-    const before = event.data.before.data() as ParticipantProfileExtended;
-    const after = event.data.after.data() as ParticipantProfileExtended;
-
-    // Check if participant moved to a new stage
-    if (before.currentStageId !== after.currentStageId) {
-      // Handle automatic stage initialization for stages that require it
-      // Note: Bargain stage initialization is now manual via "Start Game" button
-      // Get the stage config for the new stage if needed for other stage types
-      const stage = await getFirestoreStage(experimentId, after.currentStageId);
-
-      // Add automatic initialization logic for other stage types here if needed
-      // Bargain stage does NOT use automatic initialization
-      if (stage) {
-        // Future: Add other stage types that need automatic initialization
       }
     }
   },
