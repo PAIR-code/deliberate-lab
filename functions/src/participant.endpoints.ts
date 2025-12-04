@@ -24,6 +24,7 @@ import {
   updateParticipantNextStage,
   handleAutomaticTransfer,
 } from './participant.utils';
+import {generateBalancedAssignmentVariables} from './balanced_assignment.utils';
 
 import {onCall, HttpsError} from 'firebase-functions/v2/https';
 
@@ -129,6 +130,7 @@ export const createParticipant = onCall(async (request) => {
     participantConfig.currentStageId = experiment.stageIds[0];
 
     // Add variable values at the participant level
+    // First, generate standard participant-scoped variables (static, random permutation)
     participantConfig.variableMap = generateVariablesForScope(
       experiment.variableConfigs ?? [],
       {
@@ -138,6 +140,21 @@ export const createParticipant = onCall(async (request) => {
         participantId: participantConfig.privateId,
       },
     );
+
+    // Then, generate balanced assignment variables (requires database queries)
+    const balancedAssignmentVariables =
+      await generateBalancedAssignmentVariables(
+        experiment.variableConfigs ?? [],
+        data.experimentId,
+        data.cohortId,
+        participantConfig.privateId,
+      );
+
+    // Merge balanced assignment variables into the participant's variable map
+    participantConfig.variableMap = {
+      ...participantConfig.variableMap,
+      ...balancedAssignmentVariables,
+    };
 
     // Write new participant document
     transaction.set(document, participantConfig);

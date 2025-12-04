@@ -1,6 +1,11 @@
 import {Type, type TSchema} from '@sinclair/typebox';
 import {SeedStrategy} from './utils/random.utils';
-import {VariableConfigType, VariableScope} from './variables';
+import {
+  BalanceAcross,
+  BalanceStrategy,
+  VariableConfigType,
+  VariableScope,
+} from './variables';
 
 /** Shorthand for strict TypeBox object validation */
 const strict = {additionalProperties: false} as const;
@@ -49,6 +54,7 @@ export const BaseVariableConfigData = Type.Object({
   type: Type.Union([
     Type.Literal(VariableConfigType.STATIC),
     Type.Literal(VariableConfigType.RANDOM_PERMUTATION),
+    Type.Literal(VariableConfigType.BALANCED_ASSIGNMENT),
   ]),
   scope: Type.Union([
     Type.Literal(VariableScope.EXPERIMENT),
@@ -100,8 +106,30 @@ export const RandomPermutationVariableConfigData = Type.Composite([
   ),
 ]);
 
+/** BalancedAssignmentVariableConfig. */
+export const BalancedAssignmentVariableConfigData = Type.Composite([
+  BaseVariableConfigData,
+  Type.Object(
+    {
+      type: Type.Literal(VariableConfigType.BALANCED_ASSIGNMENT),
+      values: Type.Array(Type.String()),
+      balanceStrategy: Type.Union([
+        Type.Literal(BalanceStrategy.LEAST_USED),
+        Type.Literal(BalanceStrategy.ROUND_ROBIN),
+        Type.Literal(BalanceStrategy.RANDOM),
+      ]),
+      balanceAcross: Type.Union([
+        Type.Literal(BalanceAcross.EXPERIMENT),
+        Type.Literal(BalanceAcross.COHORT),
+      ]),
+    },
+    strict,
+  ),
+]);
+
 /** VariableConfig. */
 export const VariableConfigData = Type.Union([
   StaticVariableConfigData,
   RandomPermutationVariableConfigData,
+  BalancedAssignmentVariableConfigData,
 ]);

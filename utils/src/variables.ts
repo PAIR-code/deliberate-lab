@@ -4,7 +4,8 @@ import {ShuffleConfig} from './utils/random.utils';
 /** Variable config for defining variables. */
 export type VariableConfig =
   | StaticVariableConfig
-  | RandomPermutationVariableConfig;
+  | RandomPermutationVariableConfig
+  | BalancedAssignmentVariableConfig;
 
 export enum VariableScope {
   EXPERIMENT = 'experiment',
@@ -63,15 +64,60 @@ export interface RandomPermutationVariableConfig extends BaseVariableConfig {
 }
 
 export enum VariableConfigType {
-  // Assigns a single static value to all participants/cohorts
+  /** Assigns a single fixed value to all participants/cohorts */
   STATIC = 'static',
-  // Randomly selects N values from a pool and assigns to a single variable (often an array)
-  // If numToSelect is omitted, all values are selected and shuffled
+  /** Randomly selects and shuffles N values from the pool into separate variables */
   RANDOM_PERMUTATION = 'random_permutation',
-  // Other eventual config types might include:
-  // - MANUAL_COHORT_ASSIGNMENT: Manually specify values for each cohort
-  // - RANDOM_NUMBER: Randomly choose number within specified bounds, step
-  // - DISTRIBUTION: Assign one of N values based on specified value weights
+  /** Assigns one value from a pool to each participant with balanced distribution */
+  BALANCED_ASSIGNMENT = 'balanced_assignment',
+}
+
+/** Returns a human-readable description of a variable config type */
+export function getVariableConfigTypeDescription(
+  type: VariableConfigType,
+): string {
+  switch (type) {
+    case VariableConfigType.STATIC:
+      return 'Assigns a single fixed value to all participants/cohorts';
+    case VariableConfigType.RANDOM_PERMUTATION:
+      return 'Randomly selects and shuffles N values from the pool into separate variables';
+    case VariableConfigType.BALANCED_ASSIGNMENT:
+      return 'Assigns one value from a pool to each participant';
+  }
+}
+
+/**
+ * Strategy for balancing assignments across participants.
+ */
+export enum BalanceStrategy {
+  /** Assign to value used by fewest participants (query-based) */
+  LEAST_USED = 'least_used',
+  /** Cycle through values based on participant count (deterministic) */
+  ROUND_ROBIN = 'round_robin',
+  /** Random selection without balancing (seeded by participant ID) */
+  RANDOM = 'random',
+}
+
+/**
+ * Scope for balancing: across entire experiment or per-cohort.
+ */
+export enum BalanceAcross {
+  /** Balance across all participants in the experiment */
+  EXPERIMENT = 'experiment',
+  /** Balance within each cohort independently */
+  COHORT = 'cohort',
+}
+
+/**
+ * Balanced assignment variable config.
+ * Assigns one value from a pool to each participant with balanced distribution.
+ * Always PARTICIPANT-scoped since it assigns per-participant.
+ */
+export interface BalancedAssignmentVariableConfig extends BaseVariableConfig {
+  type: VariableConfigType.BALANCED_ASSIGNMENT;
+  values: string[]; // Pool of JSON string values to assign from
+  balanceStrategy: BalanceStrategy;
+  balanceAcross: BalanceAcross;
 }
 
 /** TypeBox schema helpers for variable types */

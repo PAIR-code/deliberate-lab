@@ -3,6 +3,9 @@ import {generateId} from './shared';
 import {SeedStrategy, choices, createShuffleConfig} from './utils/random.utils';
 import {type TSchema} from '@sinclair/typebox';
 import {
+  BalancedAssignmentVariableConfig,
+  BalanceAcross,
+  BalanceStrategy,
   RandomPermutationVariableConfig,
   ScopeContext,
   StaticVariableConfig,
@@ -56,6 +59,19 @@ export function extractVariablesFromVariableConfigs(
           // Standard array variable
           variableDefinitions[config.definition.name] = config.definition;
         }
+        break;
+      case VariableConfigType.BALANCED_ASSIGNMENT:
+        // Balanced assignment produces a single variable with one value from the pool
+        // Schema is stored as Array(ItemType), so extract the item schema
+        const itemSchema =
+          'items' in config.definition.schema
+            ? (config.definition.schema.items as TSchema)
+            : config.definition.schema;
+        variableDefinitions[config.definition.name] = {
+          name: config.definition.name,
+          description: config.definition.description,
+          schema: itemSchema,
+        };
         break;
       default:
         break;
@@ -129,6 +145,32 @@ export function createRandomPermutationVariableConfig(
     values: config.values ?? [],
     numToSelect: config.numToSelect,
     expandListToSeparateVariables: config.expandListToSeparateVariables ?? true,
+  };
+}
+
+/**
+ * Create a balanced assignment variable config.
+ * Always PARTICIPANT-scoped since it assigns per-participant.
+ * Schema is stored as Array(ItemType),
+ * but each value in values[] is a single item (not an array).
+ */
+export function createBalancedAssignmentVariableConfig(
+  config: Partial<BalancedAssignmentVariableConfig> = {},
+): BalancedAssignmentVariableConfig {
+  return {
+    id: config.id ?? generateId(),
+    type: VariableConfigType.BALANCED_ASSIGNMENT,
+    // Always participant-scoped
+    scope: VariableScope.PARTICIPANT,
+    definition: config.definition ?? {
+      name: 'condition',
+      description: 'Assigned experimental condition',
+      // Schema describes the pool as array of items
+      schema: VariableType.array(VariableType.STRING),
+    },
+    values: config.values ?? [],
+    balanceStrategy: config.balanceStrategy ?? BalanceStrategy.ROUND_ROBIN,
+    balanceAcross: config.balanceAcross ?? BalanceAcross.EXPERIMENT,
   };
 }
 

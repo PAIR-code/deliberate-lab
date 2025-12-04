@@ -19,13 +19,18 @@ import {core} from '../../core/core';
 import {ExperimentEditor} from '../../services/experiment.editor';
 
 import {
+  type BalancedAssignmentVariableConfig,
   type RandomPermutationVariableConfig,
   type StaticVariableConfig,
   type VariableConfig,
+  BalanceAcross,
+  BalanceStrategy,
   VariableConfigType,
   VariableScope,
+  createBalancedAssignmentVariableConfig,
   createRandomPermutationVariableConfig,
   createStaticVariableConfig,
+  getVariableConfigTypeDescription,
   validateVariableValue,
   sanitizeVariableName,
   createShuffleConfig,
@@ -169,11 +174,16 @@ export class VariableEditor extends MobxLitElement {
                 >
                   Random permutation
                 </option>
+                <option
+                  value="${VariableConfigType.BALANCED_ASSIGNMENT}"
+                  ?selected=${config.type ===
+                  VariableConfigType.BALANCED_ASSIGNMENT}
+                >
+                  Balanced assignment
+                </option>
               </select>
               <div class="description">
-                ${config.type === VariableConfigType.STATIC
-                  ? 'Assigns a single fixed value to all participants/cohorts'
-                  : 'Randomly selects N values from the pool and assigns to a single variable'}
+                ${getVariableConfigTypeDescription(config.type)}
               </div>
             `,
           )}
@@ -195,53 +205,61 @@ export class VariableEditor extends MobxLitElement {
                       <span>Experiment (Global)</span>
                     </div>
                   `
-                : html`
-                    <select
-                      @change=${(e: Event) => {
-                        const scope = (e.target as HTMLSelectElement)
-                          .value as VariableScope;
+                : config.type === VariableConfigType.BALANCED_ASSIGNMENT
+                  ? html`
+                      <div class="static-scope">
+                        <pr-icon icon="lock"></pr-icon>
+                        <span>Participant (each gets one assignment)</span>
+                      </div>
+                    `
+                  : html`
+                      <select
+                        @change=${(e: Event) => {
+                          const scope = (e.target as HTMLSelectElement)
+                            .value as VariableScope;
 
-                        let updates: Partial<VariableConfig> = {scope};
+                          let updates: Partial<VariableConfig> = {scope};
 
-                        // Automatically update seed strategy based on scope for Random Permutation variables
-                        if (
-                          config.type ===
-                            VariableConfigType.RANDOM_PERMUTATION &&
-                          'shuffleConfig' in config
-                        ) {
-                          const seed = mapScopeToSeedStrategy(scope);
-                          updates = {
-                            ...updates,
-                            shuffleConfig: createShuffleConfig({
-                              ...config.shuffleConfig,
-                              seed,
-                            }),
-                          };
-                        }
+                          // Automatically update seed strategy based on scope for Random Permutation variables
+                          if (
+                            config.type ===
+                              VariableConfigType.RANDOM_PERMUTATION &&
+                            'shuffleConfig' in config
+                          ) {
+                            const seed = mapScopeToSeedStrategy(scope);
+                            updates = {
+                              ...updates,
+                              shuffleConfig: createShuffleConfig({
+                                ...config.shuffleConfig,
+                                seed,
+                              }),
+                            };
+                          }
 
-                        this.updateConfig(config, index, updates);
-                      }}
-                    >
-                      <option
-                        value="${VariableScope.EXPERIMENT}"
-                        ?selected=${config.scope === VariableScope.EXPERIMENT}
+                          this.updateConfig(config, index, updates);
+                        }}
                       >
-                        Experiment
-                      </option>
-                      <option
-                        value="${VariableScope.COHORT}"
-                        ?selected=${config.scope === VariableScope.COHORT}
-                      >
-                        Cohort
-                      </option>
-                      <option
-                        value="${VariableScope.PARTICIPANT}"
-                        ?selected=${config.scope === VariableScope.PARTICIPANT}
-                      >
-                        Participant
-                      </option>
-                    </select>
-                  `}
+                        <option
+                          value="${VariableScope.EXPERIMENT}"
+                          ?selected=${config.scope === VariableScope.EXPERIMENT}
+                        >
+                          Experiment
+                        </option>
+                        <option
+                          value="${VariableScope.COHORT}"
+                          ?selected=${config.scope === VariableScope.COHORT}
+                        >
+                          Cohort
+                        </option>
+                        <option
+                          value="${VariableScope.PARTICIPANT}"
+                          ?selected=${config.scope ===
+                          VariableScope.PARTICIPANT}
+                        >
+                          Participant
+                        </option>
+                      </select>
+                    `}
             `,
           )}
           ${this.renderDivider()}
@@ -308,103 +326,227 @@ export class VariableEditor extends MobxLitElement {
                   `,
                 )}
               `
-            : html`
-                ${this.renderDivider()}
-                ${this.renderSection(
-                  'Output Format',
-                  html`
-                    <div class="description">
-                      ${(config.expandListToSeparateVariables ?? true)
-                        ? html`Creates separate variables. Access via
-                            <code>{{${config.definition.name}_1}}</code>,
-                            <code>{{${config.definition.name}_2}}</code>, etc.`
-                        : html`Creates a single array variable. Access
-                            individual values via
-                            <code>{{${config.definition.name}.0}}</code>,
-                            <code>{{${config.definition.name}.1}}</code>, etc.`}
-                    </div>
-                    <label class="checkbox-label">
-                      <input
-                        type="checkbox"
-                        .checked=${config.expandListToSeparateVariables ?? true}
-                        @change=${(e: Event) => {
+            : config.type === VariableConfigType.RANDOM_PERMUTATION
+              ? html`
+                  ${this.renderDivider()}
+                  ${this.renderSection(
+                    'Output Format',
+                    html`
+                      <div class="description">
+                        ${(config.expandListToSeparateVariables ?? true)
+                          ? html`Creates separate variables. Access via
+                              <code>{{${config.definition.name}_1}}</code>,
+                              <code>{{${config.definition.name}_2}}</code>, etc.`
+                          : html`Creates a single array variable. Access
+                              individual values via
+                              <code>{{${config.definition.name}.0}}</code>,
+                              <code>{{${config.definition.name}.1}}</code>, etc.`}
+                      </div>
+                      <label class="checkbox-label">
+                        <input
+                          type="checkbox"
+                          .checked=${config.expandListToSeparateVariables ??
+                          true}
+                          @change=${(e: Event) => {
+                            this.updateConfig(config, index, {
+                              expandListToSeparateVariables: (
+                                e.target as HTMLInputElement
+                              ).checked,
+                            });
+                          }}
+                        />
+                        <span>Expand to separate variables</span>
+                      </label>
+                    `,
+                  )}
+                  ${this.renderDivider()}
+                  ${this.renderSection(
+                    'Selection Size',
+                    html`
+                      <div class="description">
+                        Number of instances to select (leave empty to select all
+                        and shuffle)
+                      </div>
+                      <div class="number-input">
+                        <input
+                          type="number"
+                          min="1"
+                          .max=${config.values.length || ''}
+                          placeholder="Leave empty for all"
+                          .value=${config.numToSelect ?? ''}
+                          @input=${(e: Event) => {
+                            const val = (e.target as HTMLInputElement).value;
+                            this.updateConfig(config, index, {
+                              numToSelect: val === '' ? undefined : Number(val),
+                            });
+                          }}
+                        />
+                      </div>
+                      ${config.numToSelect != null &&
+                      config.values.length > 0 &&
+                      (config.numToSelect < 1 ||
+                        config.numToSelect > config.values.length)
+                        ? html`<div class="validation-error">
+                            ⚠️ Selection size must be between 1 and
+                            ${config.values.length}
+                          </div>`
+                        : nothing}
+                    `,
+                  )}
+                  ${this.renderDivider()}
+                  ${this.renderSection(
+                    'Values to choose from',
+                    html`
+                      <div class="description">
+                        Define the pool of values to select from
+                      </div>
+                      <div class="items-list">
+                        ${config.values.map((jsonValue: string, i: number) =>
+                          this.renderValueEditor(config, index, jsonValue, i),
+                        )}
+                      </div>
+                      <button
+                        class="add-button"
+                        @click=${() =>
                           this.updateConfig(config, index, {
-                            expandListToSeparateVariables: (
-                              e.target as HTMLInputElement
-                            ).checked,
-                          });
-                        }}
-                      />
-                      <span>Expand to separate variables</span>
-                    </label>
-                  `,
-                )}
-                ${this.renderDivider()}
-                ${this.renderSection(
-                  'Selection Size',
-                  html`
-                    <div class="description">
-                      Number of instances to select (leave empty to select all
-                      and shuffle)
-                    </div>
-                    <div class="number-input">
-                      <input
-                        type="number"
-                        min="1"
-                        .max=${config.values.length || ''}
-                        placeholder="Leave empty for all"
-                        .value=${config.numToSelect ?? ''}
-                        @input=${(e: Event) => {
-                          const val = (e.target as HTMLInputElement).value;
-                          this.updateConfig(config, index, {
-                            numToSelect: val === '' ? undefined : Number(val),
-                          });
-                        }}
-                      />
-                    </div>
-                    ${config.numToSelect != null &&
-                    config.values.length > 0 &&
-                    (config.numToSelect < 1 ||
-                      config.numToSelect > config.values.length)
-                      ? html`<div class="validation-error">
-                          ⚠️ Selection size must be between 1 and
-                          ${config.values.length}
-                        </div>`
-                      : nothing}
-                  `,
-                )}
-                ${this.renderDivider()}
-                ${this.renderSection(
-                  'Values to choose from',
-                  html`
-                    <div class="description">
-                      Define the pool of values to select from
-                    </div>
-                    <div class="items-list">
-                      ${config.values.map((jsonValue: string, i: number) =>
-                        this.renderValueEditor(config, index, jsonValue, i),
-                      )}
-                    </div>
-                    <button
-                      class="add-button"
-                      @click=${() =>
-                        this.updateConfig(config, index, {
-                          values: [...config.values, ''],
-                        })}
-                    >
-                      <pr-icon icon="add"></pr-icon>
-                      <span>Add value</span>
-                    </button>
-                    ${config.values.length === 0
-                      ? html`<div class="validation-error">
-                          ⚠️ At least one value is required.
-                        </div>`
-                      : nothing}
-                  `,
-                )}
-              `}
+                            values: [...config.values, ''],
+                          })}
+                      >
+                        <pr-icon icon="add"></pr-icon>
+                        <span>Add value</span>
+                      </button>
+                      ${config.values.length === 0
+                        ? html`<div class="validation-error">
+                            ⚠️ At least one value is required.
+                          </div>`
+                        : nothing}
+                    `,
+                  )}
+                `
+              : html`
+                  ${this.renderDivider()}
+                  ${this.renderBalancedAssignmentSettings(
+                    config as BalancedAssignmentVariableConfig,
+                    index,
+                  )}
+                `}
         </div>
       </div>
+    `;
+  }
+
+  private renderBalancedAssignmentSettings(
+    config: BalancedAssignmentVariableConfig,
+    index: number,
+  ) {
+    return html`
+      ${this.renderSection(
+        'Balance Strategy',
+        html`
+          <div class="description">
+            How participants are assigned to conditions
+          </div>
+          <select
+            @change=${(e: Event) => {
+              const strategy = (e.target as HTMLSelectElement)
+                .value as BalanceStrategy;
+              this.updateConfig(config, index, {balanceStrategy: strategy});
+            }}
+          >
+            <option
+              value="${BalanceStrategy.ROUND_ROBIN}"
+              ?selected=${config.balanceStrategy ===
+              BalanceStrategy.ROUND_ROBIN}
+            >
+              Round Robin
+            </option>
+            <option
+              value="${BalanceStrategy.LEAST_USED}"
+              ?selected=${config.balanceStrategy === BalanceStrategy.LEAST_USED}
+            >
+              Least Used
+            </option>
+            <option
+              value="${BalanceStrategy.RANDOM}"
+              ?selected=${config.balanceStrategy === BalanceStrategy.RANDOM}
+            >
+              Random
+            </option>
+          </select>
+          <div class="description">
+            ${config.balanceStrategy === BalanceStrategy.ROUND_ROBIN
+              ? 'Cycles through values in order based on participant count (deterministic, perfectly balanced)'
+              : config.balanceStrategy === BalanceStrategy.LEAST_USED
+                ? 'Assigns to the value used by the fewest participants (query-based, handles dropouts)'
+                : 'Random selection without balancing (seeded by participant ID)'}
+          </div>
+        `,
+      )}
+      ${this.renderDivider()}
+      ${this.renderSection(
+        'Balance Across',
+        html`
+          <div class="description">
+            Whether to balance across the entire experiment or within each
+            cohort
+          </div>
+          <select
+            @change=${(e: Event) => {
+              const balanceAcross = (e.target as HTMLSelectElement)
+                .value as BalanceAcross;
+              this.updateConfig(config, index, {balanceAcross});
+            }}
+          >
+            <option
+              value="${BalanceAcross.EXPERIMENT}"
+              ?selected=${config.balanceAcross === BalanceAcross.EXPERIMENT}
+            >
+              Experiment-wide
+            </option>
+            <option
+              value="${BalanceAcross.COHORT}"
+              ?selected=${config.balanceAcross === BalanceAcross.COHORT}
+            >
+              Per-cohort
+            </option>
+          </select>
+          <div class="description">
+            ${config.balanceAcross === BalanceAcross.EXPERIMENT
+              ? 'Balances across all participants in the experiment'
+              : 'Balances within each cohort independently'}
+          </div>
+        `,
+      )}
+      ${this.renderDivider()}
+      ${this.renderSection(
+        'Condition Values',
+        html`
+          <div class="description">
+            Define the values (conditions) to assign. Each participant will
+            receive exactly one value.
+          </div>
+          <div class="items-list">
+            ${config.values.map((jsonValue: string, i: number) =>
+              this.renderValueEditor(config, index, jsonValue, i),
+            )}
+          </div>
+          <button
+            class="add-button"
+            @click=${() =>
+              this.updateConfig(config, index, {
+                values: [...config.values, ''],
+              })}
+          >
+            <pr-icon icon="add"></pr-icon>
+            <span>Add condition</span>
+          </button>
+          ${config.values.length < 2
+            ? html`<div class="validation-error">
+                ⚠️ At least two conditions are required for balanced assignment.
+              </div>`
+            : nothing}
+        `,
+      )}
     `;
   }
 
@@ -456,6 +598,17 @@ export class VariableEditor extends MobxLitElement {
           createRandomPermutationVariableConfig({
             id: config.id,
             scope: config.scope,
+            definition: config.definition,
+            values,
+          }),
+          index,
+        );
+        break;
+      case VariableConfigType.BALANCED_ASSIGNMENT:
+        this.experimentEditor.updateVariableConfig(
+          createBalancedAssignmentVariableConfig({
+            id: config.id,
+            // Balanced assignment is always participant-scoped
             definition: config.definition,
             values,
           }),
@@ -1014,17 +1167,18 @@ export class VariableEditor extends MobxLitElement {
     `;
   }
 
-  // ===== Value Editor (for RandomPermutation values) =====
+  // ===== Value Editor (for RandomPermutation and BalancedAssignment values) =====
 
   private renderValueEditor(
-    config: RandomPermutationVariableConfig,
+    config: RandomPermutationVariableConfig | BalancedAssignmentVariableConfig,
     configIndex: number,
     jsonValue: string,
     valueIndex: number,
   ) {
     // Strip MobX observability to prevent stack overflow (see renderSchemaEditor for details)
     const arraySchema = toJS(config.definition.schema) as unknown as TSchema;
-    // For RandomPermutation, the schema is Array(ItemType), so extract the item schema
+    // Both RandomPermutation and BalancedAssignment store schema as Array(ItemType),
+    // so extract the item schema for validation
     const itemSchema =
       'items' in arraySchema ? (arraySchema.items as TSchema) : arraySchema;
     const error = validateVariableValue(itemSchema, jsonValue);
