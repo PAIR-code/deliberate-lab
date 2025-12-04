@@ -101,16 +101,14 @@ export type SurveyQuestion =
  * This is saved as a stage doc (with stage ID as doc ID) under
  * experiments/{experimentId}/participants/{participantPrivateId}/stageData
  */
-export interface SurveyStageParticipantAnswer
-  extends BaseStageParticipantAnswer {
+export interface SurveyStageParticipantAnswer extends BaseStageParticipantAnswer {
   kind: StageKind.SURVEY;
   answerMap: Record<string, SurveyAnswer>; // map of question ID to answer
 }
 
 /** Special "survey per participant" stage
  * with each question asked for each participant. */
-export interface SurveyPerParticipantStageParticipantAnswer
-  extends BaseStageParticipantAnswer {
+export interface SurveyPerParticipantStageParticipantAnswer extends BaseStageParticipantAnswer {
   kind: StageKind.SURVEY_PER_PARTICIPANT;
   // map of question ID to (map of participant public ID to answer)
   answerMap: Record<string, Record<string, SurveyAnswer>>;

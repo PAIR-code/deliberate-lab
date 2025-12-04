@@ -37,8 +37,7 @@ export interface StructuredOutputConfig {
 }
 
 // TODO: Move to mediator or chat file
-export interface ChatMediatorStructuredOutputConfig
-  extends StructuredOutputConfig {
+export interface ChatMediatorStructuredOutputConfig extends StructuredOutputConfig {
   shouldRespondField: string;
   messageField: string;
   readyToEndField: string;

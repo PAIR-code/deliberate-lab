@@ -39,15 +39,13 @@ export interface TextComprehensionQuestion extends BaseComprehensionQuestion {
   correctAnswer: string;
 }
 
-export interface MultipleChoiceComprehensionQuestion
-  extends BaseComprehensionQuestion {
+export interface MultipleChoiceComprehensionQuestion extends BaseComprehensionQuestion {
   kind: ComprehensionQuestionKind.MULTIPLE_CHOICE;
   options: MultipleChoiceItem[];
   correctAnswerId: string;
 }
 
-export interface ComprehensionStageParticipantAnswer
-  extends BaseStageParticipantAnswer {
+export interface ComprehensionStageParticipantAnswer extends BaseStageParticipantAnswer {
   kind: StageKind.COMPREHENSION;
   answerMap: Record<string, string>; // question ID to answer
 }
