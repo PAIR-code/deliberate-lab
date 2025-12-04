@@ -113,6 +113,7 @@ export const BalancedAssignmentVariableConfigData = Type.Composite([
     {
       type: Type.Literal(VariableConfigType.BALANCED_ASSIGNMENT),
       values: Type.Array(Type.String()),
+      weights: Type.Optional(Type.Array(Type.Number({minimum: 1}))),
       balanceStrategy: Type.Union([
         Type.Literal(BalanceStrategy.LEAST_USED),
         Type.Literal(BalanceStrategy.ROUND_ROBIN),
