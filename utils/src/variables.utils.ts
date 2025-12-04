@@ -230,7 +230,7 @@ function generateRandomPermutationValue(
  * Generate variables for a Static config.
  * Returns a map of variable name to JSON string value.
  */
-function generateStaticVariables(
+export function generateStaticVariables(
   config: StaticVariableConfig,
 ): Record<string, string> {
   const value = parseJsonValue(config.value);
@@ -252,7 +252,7 @@ function generateStaticVariables(
  * Returns a map of variable name(s) to JSON string value(s).
  * May return multiple variables if expandListToSeparateVariables is true.
  */
-function generateRandomPermutationVariables(
+export function generateRandomPermutationVariables(
   config: RandomPermutationVariableConfig,
   context: ScopeContext,
 ): Record<string, string> {
@@ -284,52 +284,6 @@ function generateRandomPermutationVariables(
   }
 
   return variables;
-}
-
-/**
- * Given variable configs, generate variable-to-value mappings
- * for a specific scope (Experiment, Cohort, or Participant).
- *
- * - Static variables: Included if their scope matches the requested scope.
- * - Random permutation: Included if their scope matches the requested scope.
- *
- * @param variableConfigs List of configs to process
- * @param context The scope context (scope + IDs)
- */
-export function generateVariablesForScope(
-  variableConfigs: VariableConfig[],
-  context: ScopeContext,
-): Record<string, string> {
-  const variableToValueMap: Record<string, string> = {};
-
-  // Filter configs by scope first
-  const scopedConfigs = variableConfigs.filter(
-    (c) => c.scope === context.scope,
-  );
-
-  for (const config of scopedConfigs) {
-    let generatedVariables: Record<string, string> = {};
-
-    switch (config.type) {
-      case VariableConfigType.STATIC:
-        generatedVariables = generateStaticVariables(config);
-        break;
-      case VariableConfigType.RANDOM_PERMUTATION:
-        generatedVariables = generateRandomPermutationVariables(
-          config,
-          context,
-        );
-        break;
-      default:
-        // Unknown config type - skip
-        break;
-    }
-
-    // Merge generated variables into the result map
-    Object.assign(variableToValueMap, generatedVariables);
-  }
-
-  return variableToValueMap;
 }
 
 /**
