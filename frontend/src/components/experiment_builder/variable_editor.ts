@@ -1254,17 +1254,6 @@ export class VariableEditor extends MobxLitElement {
       },
       html`
         <div class="config-section">
-          <label class="property-label">Value</label>
-          ${this.renderValueInput(itemSchema, jsonValue, (v) => {
-            const values = [...config.values];
-            values[valueIndex] = v;
-            this.updateConfig(config, configIndex, {values});
-          })}
-          ${error
-            ? html`<div class="validation-error">⚠️ ${error}</div>`
-            : nothing}
-        </div>
-        <div class="config-section">
           <label class="property-label">Weight (optional)</label>
           <div class="description">
             Higher weights mean more participants receive this value. Leave all
@@ -1285,6 +1274,17 @@ export class VariableEditor extends MobxLitElement {
               this.updateConfig(config, configIndex, {weights});
             }}
           />
+        </div>
+        <div class="config-section">
+          <label class="property-label">Value</label>
+          ${this.renderValueInput(itemSchema, jsonValue, (v) => {
+            const values = [...config.values];
+            values[valueIndex] = v;
+            this.updateConfig(config, configIndex, {values});
+          })}
+          ${error
+            ? html`<div class="validation-error">⚠️ ${error}</div>`
+            : nothing}
         </div>
       `,
     );
