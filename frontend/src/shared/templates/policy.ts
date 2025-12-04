@@ -44,13 +44,10 @@ import {
   VariableConfigType,
   VariableType,
   RandomPermutationVariableConfig,
-  StaticVariableConfig,
   BalancedAssignmentVariableConfig,
   BalanceStrategy,
   BalanceAcross,
-  createStaticVariableConfig,
   createBalancedAssignmentVariableConfig,
-  VariableScope,
   createShuffleConfig,
 } from '@deliberation-lab/utils';
 
@@ -200,19 +197,6 @@ const PolicySchema = VariableType.object({
   ),
 });
 
-// Create a static variable config with the complete policy object
-// (Use this for single-policy experiments)
-const POLICY_STATIC_CONFIG: StaticVariableConfig = createStaticVariableConfig({
-  id: 'policy-static-config',
-  scope: VariableScope.EXPERIMENT,
-  definition: {
-    name: 'policy',
-    description: 'Policy debate topic',
-    schema: PolicySchema,
-  },
-  value: JSON.stringify(EXAMPLE_POLICY_A),
-});
-
 // Create a balanced assignment config for multi-policy experiments
 // Each participant is randomly assigned one policy with even distribution
 const POLICY_BALANCED_ASSIGNMENT_CONFIG: BalancedAssignmentVariableConfig =
@@ -245,36 +229,11 @@ const PARTICIPANT_SHUFFLE: ShuffleConfig = createShuffleConfig({
 // ****************************************************************************
 export function getPolicyExperimentTemplate(): ExperimentTemplate {
   const stageConfigs = getPolicyStageConfigs();
-  const variableTemplates: VariableConfig[] = [POLICY_STATIC_CONFIG];
+  const variableConfigs: VariableConfig[] = [POLICY_BALANCED_ASSIGNMENT_CONFIG];
   return createExperimentTemplate({
     experiment: createExperimentConfig(stageConfigs, {
       metadata: POLICY_METADATA,
-      variableConfigs: variableTemplates,
-    }),
-    stageConfigs,
-    agentMediators: POLICY_MEDIATOR_AGENTS,
-  });
-}
-
-/**
- * Alternative template that randomly assigns participants to different policies
- * with balanced distribution (equal numbers in each condition).
- */
-export function getPolicyBalancedExperimentTemplate(): ExperimentTemplate {
-  const stageConfigs = getPolicyStageConfigs();
-  // Use balanced assignment instead of static config
-  const variableTemplates: VariableConfig[] = [
-    POLICY_BALANCED_ASSIGNMENT_CONFIG,
-  ];
-  return createExperimentTemplate({
-    experiment: createExperimentConfig(stageConfigs, {
-      metadata: createMetadataConfig({
-        name: 'Policy Discussion (Balanced)',
-        publicName: 'Policy Discussion Study',
-        description:
-          'A study where participants are randomly assigned to different policies with balanced distribution',
-      }),
-      variableConfigs: variableTemplates,
+      variableConfigs,
     }),
     stageConfigs,
     agentMediators: POLICY_MEDIATOR_AGENTS,
