@@ -61,6 +61,14 @@ function getLeastUsedValue(
 /**
  * Generate variables for a Balanced Assignment config.
  * Requires database queries to determine the assignment based on existing participants.
+ *
+ * IMPORTANT: Race condition consideration
+ * The count/aggregation queries used here are not locked by Firestore transactions.
+ * If multiple participants join simultaneously, they may see the same counts and
+ * receive identical assignments. This is mitigated by a random delay before the
+ * transaction in createParticipant, but not fully eliminated. For experiments
+ * requiring strict balance guarantees under high concurrency, consider using
+ * LEAST_USED strategy which self-corrects over time.
  */
 async function generateBalancedAssignmentVariables(
   config: BalancedAssignmentVariableConfig,
