@@ -57,6 +57,7 @@ export class Menu extends MobxLitElement {
 
     return html`
       <pr-button
+        color=${this.color}
         variant=${this.variant}
         @click=${toggleMenu}
         ?disabled=${this.disabled}

@@ -21,6 +21,9 @@ from the home page gallery.
   alt="Screenshot of Deliberate Lab experiment editor with stages"
 />
 
+### Using templates
+You can also start from a template to quickly set up your experiment. See [Experiment templates](./templates) for more information on how to use, save, and update templates.
+
 ## Edit or fork experiment
 To edit an experiment, click on its card in the home page gallery.
 

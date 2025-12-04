@@ -25,6 +25,8 @@ import './agent_persona_editor';
 import './experiment_builder_nav';
 import './experiment_settings_editor';
 import './stage_builder_dialog';
+import './save_template_dialog';
+import './share_template_dialog';
 import './variable_editor';
 
 import {MobxLitElement} from '@adobe/lit-mobx';
@@ -79,7 +81,22 @@ export class ExperimentBuilder extends MobxLitElement {
     return html`
       ${this.renderPanelView()} ${this.renderExperimentConfigBuilder()}
       ${this.renderExperimenterSettings()} ${this.renderStageBuilderDialog()}
+      ${this.renderSaveTemplateDialog()} ${this.renderShareTemplateDialog()}
     `;
+  }
+
+  private renderShareTemplateDialog() {
+    if (this.experimentEditor.showShareTemplateDialog) {
+      return html`<share-template-dialog></share-template-dialog>`;
+    }
+    return nothing;
+  }
+
+  private renderSaveTemplateDialog() {
+    if (this.experimentEditor.showSaveTemplateDialog) {
+      return html`<save-template-dialog></save-template-dialog>`;
+    }
+    return nothing;
   }
 
   private renderStageBuilderDialog() {
@@ -268,7 +285,38 @@ export class ExperimentBuilder extends MobxLitElement {
           }}
         >
         </pr-icon-button>
-      </pr-tootipt>
+      </pr-tooltip>
+    `;
+  }
+
+  private renderSaveTemplateButton() {
+    return html`
+      ${this.experimentEditor.loadedTemplateId
+        ? html`
+            <pr-button
+              icon="update"
+              color="neutral"
+              variant="outlined"
+              ?disabled=${!this.experimentEditor.canEditStages}
+              @click=${() => {
+                this.experimentEditor.setShowSaveTemplateDialog(true, 'update');
+              }}
+            >
+              Update template
+            </pr-button>
+          `
+        : nothing}
+      <pr-button
+        icon="save"
+        color="neutral"
+        variant="outlined"
+        ?disabled=${!this.experimentEditor.canEditStages}
+        @click=${() => {
+          this.experimentEditor.setShowSaveTemplateDialog(true, 'new');
+        }}
+      >
+        Save as template
+      </pr-button>
     `;
   }
 
@@ -481,7 +529,10 @@ export class ExperimentBuilder extends MobxLitElement {
     return html`
       <experiment-builder-nav></experiment-builder-nav>
       <div class="experiment-builder">
-        <div class="header">${this.renderTitle()} ${this.renderActions()}</div>
+        <div class="header">
+          ${this.renderTitle()}
+          <div class="actions">${this.renderActions()}</div>
+        </div>
         ${this.renderVariableCheck()}
         <div class="content">${this.renderContent()}</div>
       </div>
