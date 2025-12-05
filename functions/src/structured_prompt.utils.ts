@@ -6,6 +6,7 @@ import {
   PROMPT_ITEM_PROFILE_CONTEXT_PARTICIPANT_SCAFFOLDING,
   PROMPT_ITEM_PROFILE_INFO_PARTICIPANT_SCAFFOLDING,
   BasePromptConfig,
+  Condition,
   CohortConfig,
   Experiment,
   MediatorProfileExtended,
@@ -20,12 +21,15 @@ import {
   UserType,
   VariableDefinition,
   extractVariablesFromVariableConfigs,
+  extractMultipleConditionDependencies,
   getAllPrecedingStageIds,
   getNameFromPublicId,
   initializeStageContextData,
   makeStructuredOutputPrompt,
   resolveTemplateVariables,
   shuffleWithSeed,
+  filterByCondition,
+  StageParticipantAnswer,
 } from '@deliberation-lab/utils';
 import {
   getAgentMediatorPrompt,
@@ -130,7 +134,41 @@ export async function getFirestoreDataForStructuredPrompt(
     answerParticipants = activeParticipants;
   }
 
-  for (const item of promptConfig.prompt) {
+  // First, fetch stage answers needed for condition evaluation
+  // This populates data with minimal info needed to evaluate conditions
+  await fetchConditionStageAnswers(
+    experimentId,
+    cohortId,
+    promptConfig.prompt,
+    answerParticipants,
+    data,
+  );
+
+  // Filter prompt items by conditions, then fetch data only for visible items
+  // TODO(rasmi): For now, conditions are not supported for group chats.
+  const isGroupChat =
+    userProfile.type === UserType.MEDIATOR && answerParticipants.length > 1;
+
+  let visiblePromptItems: PromptItem[];
+  if (isGroupChat) {
+    visiblePromptItems = promptConfig.prompt;
+  } else {
+    // For participants or mediators in private chat, use appropriate answers
+    const conditionParticipant =
+      userProfile.type === UserType.MEDIATOR && answerParticipants.length === 1
+        ? answerParticipants[0]
+        : userProfile;
+    const conditionStageAnswers = buildStageAnswersForParticipant(
+      data,
+      conditionParticipant.publicId,
+    );
+    visiblePromptItems = filterPromptItemsRecursively(
+      promptConfig.prompt,
+      conditionStageAnswers,
+    );
+  }
+
+  for (const item of visiblePromptItems) {
     await addFirestoreDataForPromptItem(
       experiment,
       cohortId,
@@ -415,6 +453,118 @@ function getVariableContext(
   };
 
   return {variableDefinitions, valueMap};
+}
+
+/**
+ * Collect all conditions from prompt items recursively (including nested groups).
+ */
+function collectPromptItemConditions(items: PromptItem[]): Condition[] {
+  const conditions: Condition[] = [];
+
+  for (const item of items) {
+    if (item.condition) {
+      conditions.push(item.condition);
+    }
+    if (item.type === PromptItemType.GROUP) {
+      conditions.push(
+        ...collectPromptItemConditions((item as PromptItemGroup).items),
+      );
+    }
+  }
+
+  return conditions;
+}
+
+/**
+ * Fetch stage answers needed for condition evaluation that aren't already in data.
+ * Populates the data object with StageContextData for any missing stages.
+ */
+async function fetchConditionStageAnswers(
+  experimentId: string,
+  cohortId: string,
+  promptItems: PromptItem[],
+  answerParticipants: ParticipantProfileExtended[],
+  data: Record<string, StageContextData>,
+): Promise<void> {
+  // Find which stages conditions depend on
+  const conditions = collectPromptItemConditions(promptItems);
+  if (conditions.length === 0) {
+    return;
+  }
+
+  const dependencies = extractMultipleConditionDependencies(conditions);
+  const requiredStageIds = [...new Set(dependencies.map((dep) => dep.stageId))];
+
+  // Find stages not already in data
+  const missingStageIds = requiredStageIds.filter((stageId) => !data[stageId]);
+
+  // Fetch missing stage answers
+  if (missingStageIds.length > 0) {
+    await Promise.all(
+      missingStageIds.map(async (stageId) => {
+        // Fetch stage config
+        const stage = await getFirestoreStage(experimentId, stageId);
+        if (!stage) return;
+
+        // Initialize stage context data
+        data[stageId] = initializeStageContextData(stage);
+
+        // Fetch answers for the condition participant
+        data[stageId].privateAnswers = await getFirestoreAnswersForStage(
+          experimentId,
+          cohortId,
+          stageId,
+          answerParticipants,
+        );
+      }),
+    );
+  }
+}
+
+/**
+ * Build stage answers map from StageContextData for a specific participant.
+ * Used for condition evaluation after all data has been fetched.
+ */
+function buildStageAnswersForParticipant(
+  stageContextData: Record<string, StageContextData>,
+  participantPublicId: string,
+): Record<string, StageParticipantAnswer> {
+  const stageAnswers: Record<string, StageParticipantAnswer> = {};
+
+  for (const [stageId, stageData] of Object.entries(stageContextData)) {
+    const participantAnswer = stageData.privateAnswers.find(
+      (entry) => entry.participantPublicId === participantPublicId,
+    );
+    if (participantAnswer) {
+      stageAnswers[stageId] = participantAnswer.answer;
+    }
+  }
+
+  return stageAnswers;
+}
+
+/**
+ * Filter prompt items by conditions recursively.
+ * Returns a new array with only visible items, with GROUP items containing filtered children.
+ */
+function filterPromptItemsRecursively(
+  items: PromptItem[],
+  conditionStageAnswers: Record<string, StageParticipantAnswer>,
+): PromptItem[] {
+  // Filter top-level items by their conditions
+  const visibleItems = filterByCondition(items, conditionStageAnswers);
+
+  // For GROUP items, recursively filter their children
+  return visibleItems.map((item) => {
+    if (item.type === PromptItemType.GROUP) {
+      const group = item as PromptItemGroup;
+      return {
+        ...group,
+        items: filterPromptItemsRecursively(group.items, conditionStageAnswers),
+      };
+    }
+    return item;
+  });
 }
 
 /** Process prompt items recursively. */
