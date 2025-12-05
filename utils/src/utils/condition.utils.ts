@@ -13,11 +13,16 @@ import {
   evaluateCondition,
   Condition,
 } from './condition';
-import {StageKind, StageParticipantAnswer} from '../stages/stage';
+import {StageKind, StageConfig, StageParticipantAnswer} from '../stages/stage';
 import {
+  SurveyStageConfig,
+  SurveyPerParticipantStageConfig,
   SurveyStageParticipantAnswer,
   SurveyPerParticipantStageParticipantAnswer,
   SurveyAnswer,
+  SurveyQuestion,
+  SurveyQuestionKind,
+  MultipleChoiceSurveyQuestion,
   extractAnswerValue,
 } from '../stages/survey_stage';
 
@@ -178,4 +183,131 @@ export function filterByCondition<T extends {condition?: Condition}>(
     if (!item.condition) return true;
     return evaluateCondition(item.condition, targetValues);
   });
+}
+
+// ============================================================================
+// Condition Target Utilities (for editor UI)
+// ============================================================================
+
+/**
+ * Represents a possible target for a condition in the editor UI.
+ * Used to populate dropdowns in condition editors.
+ */
+export interface ConditionTarget {
+  ref: ConditionTargetReference;
+  label: string;
+  type: 'text' | 'number' | 'boolean' | 'choice';
+  choices?: Array<{id: string; label: string}>;
+  stageName?: string;
+}
+
+/** Convert survey questions to condition targets for the editor UI. */
+export function surveyQuestionsToConditionTargets(
+  questions: SurveyQuestion[],
+  stageId: string,
+  stageName?: string,
+): ConditionTarget[] {
+  return questions.map((q) => {
+    let type: ConditionTarget['type'] = 'text';
+    let choices: ConditionTarget['choices'] = undefined;
+
+    switch (q.kind) {
+      case SurveyQuestionKind.TEXT:
+        type = 'text';
+        break;
+      case SurveyQuestionKind.CHECK:
+        type = 'boolean';
+        break;
+      case SurveyQuestionKind.SCALE:
+        type = 'number';
+        break;
+      case SurveyQuestionKind.MULTIPLE_CHOICE:
+        type = 'choice';
+        const mcQuestion = q as MultipleChoiceSurveyQuestion;
+        choices = mcQuestion.options.map((opt) => ({
+          id: opt.id,
+          label: opt.text || `Option ${opt.id}`,
+        }));
+        break;
+    }
+
+    const ref: ConditionTargetReference = {
+      stageId: stageId,
+      questionId: q.id,
+    };
+
+    const label = q.questionTitle || `Question ${q.id}`;
+
+    return {
+      ref,
+      label,
+      type,
+      choices,
+      stageName,
+    };
+  });
+}
+
+/**
+ * Get condition targets from stages preceding (and optionally including) the specified stage.
+ *
+ * @param stages - All stages in the experiment
+ * @param currentStageId - The ID of the current stage
+ * @param options - Configuration options
+ * @param options.includeCurrentStage - Whether to include the current stage (default: true)
+ * @param options.currentStageQuestionIndex - If including current stage, only include questions before this index
+ * @returns Array of condition targets from qualifying stages
+ */
+export function getConditionTargetsFromStages(
+  stages: StageConfig[],
+  currentStageId: string,
+  options: {
+    includeCurrentStage?: boolean;
+    currentStageQuestionIndex?: number;
+  } = {},
+): ConditionTarget[] {
+  const {includeCurrentStage = true, currentStageQuestionIndex} = options;
+
+  const currentStageIndex = stages.findIndex(
+    (stage) => stage.id === currentStageId,
+  );
+
+  if (currentStageIndex < 0) {
+    return [];
+  }
+
+  const targets: ConditionTarget[] = [];
+
+  const endIndex = includeCurrentStage
+    ? currentStageIndex + 1
+    : currentStageIndex;
+
+  for (let i = 0; i < endIndex; i++) {
+    const stage = stages[i];
+
+    if (
+      stage.kind === StageKind.SURVEY ||
+      stage.kind === StageKind.SURVEY_PER_PARTICIPANT
+    ) {
+      const surveyStage = stage as
+        | SurveyStageConfig
+        | SurveyPerParticipantStageConfig;
+
+      let questions = surveyStage.questions;
+
+      // If this is the current stage and we have a question index, slice the questions
+      if (i === currentStageIndex && currentStageQuestionIndex !== undefined) {
+        questions = questions.slice(0, currentStageQuestionIndex);
+      }
+
+      const stageTargets = surveyQuestionsToConditionTargets(
+        questions,
+        stage.id,
+        stage.name,
+      );
+      targets.push(...stageTargets);
+    }
+  }
+
+  return targets;
 }

@@ -5,18 +5,14 @@ import '../stages/survey_editor_menu';
 import '@material/web/checkbox/checkbox.js';
 import './condition_editor';
 import '../../pair-components/textarea_template';
-import {
-  ConditionTarget,
-  surveyQuestionsToConditionTargets,
-} from './condition_editor';
 
 import {core} from '../../core/core';
 import {AuthService} from '../../services/auth.service';
 import {ExperimentEditor} from '../../services/experiment.editor';
-
 import {
   CheckSurveyQuestion,
   Condition,
+  getConditionTargetsFromStages,
   MultipleChoiceItem,
   MultipleChoiceSurveyQuestion,
   ScaleSurveyQuestion,
@@ -24,7 +20,6 @@ import {
   SurveyStageConfig,
   SurveyQuestion,
   SurveyQuestionKind,
-  StageKind,
   TextSurveyQuestion,
   createMultipleChoiceItem,
 } from '@deliberation-lab/utils';
@@ -207,40 +202,12 @@ export class SurveyEditor extends MobxLitElement {
       );
     };
 
-    // Get all questions before this one in current stage (can only reference previous questions)
-    const currentStageQuestions = this.stage.questions.slice(0, index);
-    const currentTargets = surveyQuestionsToConditionTargets(
-      currentStageQuestions,
+    // Get condition targets from all preceding stages and questions before this one
+    const allTargets = getConditionTargetsFromStages(
+      this.experimentEditor.stages,
       this.stage.id,
-      this.stage.name,
+      {includeCurrentStage: true, currentStageQuestionIndex: index},
     );
-
-    // Get questions from all previous stages
-    const allTargets: ConditionTarget[] = [...currentTargets];
-    const currentStageIndex = this.experimentEditor.stages.findIndex(
-      (s) => s.id === this.stage?.id,
-    );
-
-    if (currentStageIndex > 0) {
-      // Add questions from previous stages
-      for (let i = 0; i < currentStageIndex; i++) {
-        const prevStage = this.experimentEditor.stages[i];
-        if (
-          prevStage.kind === StageKind.SURVEY ||
-          prevStage.kind === StageKind.SURVEY_PER_PARTICIPANT
-        ) {
-          const prevSurveyStage = prevStage as
-            | SurveyStageConfig
-            | SurveyPerParticipantStageConfig;
-          const prevTargets = surveyQuestionsToConditionTargets(
-            prevSurveyStage.questions,
-            prevStage.id,
-            prevStage.name,
-          );
-          allTargets.push(...prevTargets);
-        }
-      }
-    }
 
     if (allTargets.length === 0) {
       return nothing; // No questions to reference
