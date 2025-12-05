@@ -17,6 +17,7 @@ import {
   SeedStrategy,
   createShuffleConfig,
 } from './utils/random.utils';
+import {Condition} from './utils/condition';
 
 // ****************************************************************************
 // CONSTANTS
@@ -100,6 +101,8 @@ export type PromptItem =
 
 export interface BasePromptItem {
   type: PromptItemType;
+  // Optional condition for showing/hiding this prompt item
+  condition?: Condition;
 }
 
 export enum PromptItemType {
