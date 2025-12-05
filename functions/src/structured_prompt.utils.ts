@@ -21,14 +21,14 @@ import {
   UserType,
   VariableDefinition,
   extractVariablesFromVariableConfigs,
-  extractMultipleConditionDependencies,
+  extractConditionDependencies,
+  evaluateConditionWithStageAnswers,
   getAllPrecedingStageIds,
   getNameFromPublicId,
   initializeStageContextData,
   makeStructuredOutputPrompt,
   resolveTemplateVariables,
   shuffleWithSeed,
-  filterByCondition,
   StageParticipantAnswer,
 } from '@deliberation-lab/utils';
 import {
@@ -134,41 +134,7 @@ export async function getFirestoreDataForStructuredPrompt(
     answerParticipants = activeParticipants;
   }
 
-  // First, fetch stage answers needed for condition evaluation
-  // This populates data with minimal info needed to evaluate conditions
-  await fetchConditionStageAnswers(
-    experimentId,
-    cohortId,
-    promptConfig.prompt,
-    answerParticipants,
-    data,
-  );
-
-  // Filter prompt items by conditions, then fetch data only for visible items
-  // TODO(rasmi): For now, conditions are not supported for group chats.
-  const isGroupChat =
-    userProfile.type === UserType.MEDIATOR && answerParticipants.length > 1;
-
-  let visiblePromptItems: PromptItem[];
-  if (isGroupChat) {
-    visiblePromptItems = promptConfig.prompt;
-  } else {
-    // For participants or mediators in private chat, use appropriate answers
-    const conditionParticipant =
-      userProfile.type === UserType.MEDIATOR && answerParticipants.length === 1
-        ? answerParticipants[0]
-        : userProfile;
-    const conditionStageAnswers = buildStageAnswersForParticipant(
-      data,
-      conditionParticipant.publicId,
-    );
-    visiblePromptItems = filterPromptItemsRecursively(
-      promptConfig.prompt,
-      conditionStageAnswers,
-    );
-  }
-
-  for (const item of visiblePromptItems) {
+  for (const item of promptConfig.prompt) {
     await addFirestoreDataForPromptItem(
       experiment,
       cohortId,
@@ -196,6 +162,33 @@ export async function addFirestoreDataForPromptItem(
   answerParticipants: ParticipantProfileExtended[],
   data: Record<string, StageContextData> = {},
 ) {
+  // Check condition if present
+  // Conditions are only supported for single-participant contexts (not group chats)
+  // TODO(rasmi): Add support for conditions in group chats.
+  if (promptItem.condition && answerParticipants.length === 1) {
+    const conditionParticipantPublicId = answerParticipants[0].publicId;
+
+    // Lazily fetch any missing stage data needed for condition evaluation
+    await fetchConditionDependencies(
+      experiment.id,
+      cohortId,
+      promptItem.condition,
+      answerParticipants,
+      data,
+    );
+
+    // Evaluate condition
+    const stageAnswers = buildStageAnswersForParticipant(
+      data,
+      conditionParticipantPublicId,
+    );
+    if (
+      !evaluateConditionWithStageAnswers(promptItem.condition, stageAnswers)
+    ) {
+      return; // Condition not met, skip this item
+    }
+  }
+
   // Get profile set ID based on stage ID
   // (Temporary workaround before profile sets are refactored)
   const getProfileSetId = (stageId: string) => {
@@ -456,43 +449,17 @@ function getVariableContext(
 }
 
 /**
- * Collect all conditions from prompt items recursively (including nested groups).
+ * Lazily fetch stage data needed for condition evaluation.
+ * Only fetches data for stages not already present in the data object.
  */
-function collectPromptItemConditions(items: PromptItem[]): Condition[] {
-  const conditions: Condition[] = [];
-
-  for (const item of items) {
-    if (item.condition) {
-      conditions.push(item.condition);
-    }
-    if (item.type === PromptItemType.GROUP) {
-      conditions.push(
-        ...collectPromptItemConditions((item as PromptItemGroup).items),
-      );
-    }
-  }
-
-  return conditions;
-}
-
-/**
- * Fetch stage answers needed for condition evaluation that aren't already in data.
- * Populates the data object with StageContextData for any missing stages.
- */
-async function fetchConditionStageAnswers(
+async function fetchConditionDependencies(
   experimentId: string,
   cohortId: string,
-  promptItems: PromptItem[],
+  condition: Condition,
   answerParticipants: ParticipantProfileExtended[],
   data: Record<string, StageContextData>,
 ): Promise<void> {
-  // Find which stages conditions depend on
-  const conditions = collectPromptItemConditions(promptItems);
-  if (conditions.length === 0) {
-    return;
-  }
-
-  const dependencies = extractMultipleConditionDependencies(conditions);
+  const dependencies = extractConditionDependencies(condition);
   const requiredStageIds = [...new Set(dependencies.map((dep) => dep.stageId))];
 
   // Find stages not already in data
@@ -502,14 +469,9 @@ async function fetchConditionStageAnswers(
   if (missingStageIds.length > 0) {
     await Promise.all(
       missingStageIds.map(async (stageId) => {
-        // Fetch stage config
         const stage = await getFirestoreStage(experimentId, stageId);
         if (!stage) return;
-
-        // Initialize stage context data
         data[stageId] = initializeStageContextData(stage);
-
-        // Fetch answers for the condition participant
         data[stageId].privateAnswers = await getFirestoreAnswersForStage(
           experimentId,
           cohortId,
@@ -541,30 +503,6 @@ function buildStageAnswersForParticipant(
   }
 
   return stageAnswers;
-}
-
-/**
- * Filter prompt items by conditions recursively.
- * Returns a new array with only visible items, with GROUP items containing filtered children.
- */
-function filterPromptItemsRecursively(
-  items: PromptItem[],
-  conditionStageAnswers: Record<string, StageParticipantAnswer>,
-): PromptItem[] {
-  // Filter top-level items by their conditions
-  const visibleItems = filterByCondition(items, conditionStageAnswers);
-
-  // For GROUP items, recursively filter their children
-  return visibleItems.map((item) => {
-    if (item.type === PromptItemType.GROUP) {
-      const group = item as PromptItemGroup;
-      return {
-        ...group,
-        items: filterPromptItemsRecursively(group.items, conditionStageAnswers),
-      };
-    }
-    return item;
-  });
 }
 
 /** Process prompt items recursively. */
