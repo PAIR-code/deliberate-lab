@@ -186,11 +186,11 @@ export function filterByCondition<T extends {condition?: Condition}>(
 }
 
 // ============================================================================
-// Condition Target Utilities (for editor UI)
+// Condition Target Utilities
 // ============================================================================
 
 /**
- * Represents a possible target for a condition in the editor UI.
+ * Readable representation of a possible target for a condition.
  * Used to populate dropdowns in condition editors.
  */
 export interface ConditionTarget {
