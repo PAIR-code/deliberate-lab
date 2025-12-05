@@ -145,6 +145,7 @@ export * from './stages/transfer_stage.validation';
 export * from './utils/algebraic.utils';
 export * from './utils/cache.utils';
 export * from './utils/condition';
+export * from './utils/condition.utils';
 export * from './utils/condition.validation';
 export * from './utils/object.utils';
 export * from './utils/random.utils';

@@ -103,9 +103,7 @@ function evaluateComparisonCondition(
   condition: ComparisonCondition,
   targetValues: Record<string, unknown>,
 ): boolean {
-  // Build key from structured target
-  // Using :: as separator since it's unlikely to appear in IDs
-  const targetKey = `${condition.target.stageId}::${condition.target.questionId}`;
+  const targetKey = getConditionTargetKey(condition.target);
   const targetValue = targetValues[targetKey];
 
   if (targetValue === undefined) return false;
@@ -170,23 +168,25 @@ export function getConditionOperatorLabel(operator: ConditionOperator): string {
   }
 }
 
+/** Build the key string for a condition target reference */
+export function getConditionTargetKey(
+  target: ConditionTargetReference,
+): string {
+  return `${target.stageId}::${target.questionId}`;
+}
+
+/** Parse a condition target key back into a reference */
+export function parseConditionTargetKey(key: string): ConditionTargetReference {
+  const [stageId, questionId] = key.split('::');
+  return {stageId, questionId};
+}
+
 /** Helper to deduplicate condition target references */
 function deduplicateTargetReferences(
   references: ConditionTargetReference[],
 ): ConditionTargetReference[] {
-  // Remove duplicates by converting to string keys and back
-  // Using :: as separator since it's unlikely to appear in IDs
-  const uniqueKeys = new Set(
-    references.map((d) => `${d.stageId}::${d.questionId}`),
-  );
-
-  return Array.from(uniqueKeys).map((key) => {
-    const parts = key.split('::');
-    return {
-      stageId: parts[0],
-      questionId: parts[1],
-    };
-  });
+  const uniqueKeys = new Set(references.map(getConditionTargetKey));
+  return Array.from(uniqueKeys).map(parseConditionTargetKey);
 }
 
 /** Extract all target references that a condition depends on */
