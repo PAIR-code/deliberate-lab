@@ -2,6 +2,8 @@ import {
   ParticipantProfileExtended,
   SurveyStageParticipantAnswer,
   SurveyStagePublicData,
+  SurveyStageConfig,
+  createSurveyStagePublicData,
 } from '@deliberation-lab/utils';
 
 import {app} from '../app';
@@ -25,9 +27,13 @@ export async function addParticipantAnswerToSurveyStagePublicData(
       .doc(stage.id);
 
     // Update public stage data (current participant rankings, current winner)
-    const publicStageData = (
-      await publicDocument.get()
-    ).data() as SurveyStagePublicData;
+    const publicDoc = await transaction.get(publicDocument);
+    let publicStageData = publicDoc.data() as SurveyStagePublicData | undefined;
+
+    if (!publicStageData) {
+      publicStageData = createSurveyStagePublicData(stage.id);
+    }
+
     publicStageData.participantAnswerMap[participant.publicId] =
       answer.answerMap;
 

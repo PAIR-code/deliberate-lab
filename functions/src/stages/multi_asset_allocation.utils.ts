@@ -3,6 +3,7 @@ import {
   MultiAssetAllocationStageParticipantAnswer,
   MultiAssetAllocationStagePublicData,
   ParticipantProfile,
+  StageKind,
 } from '@deliberation-lab/utils';
 import * as admin from 'firebase-admin';
 import {app} from '../app';
@@ -41,17 +42,16 @@ export async function addParticipantAnswerToMultiAssetAllocationStagePublicData(
       | MultiAssetAllocationStagePublicData
       | undefined;
 
-    if (!publicData) {
-      console.error(
-        `Public data for stage ${stage.id} does not exist. Cannot update.`,
-      );
-      return;
-    }
+    const currentPublicData = publicData || {
+      id: stage.id,
+      kind: StageKind.MULTI_ASSET_ALLOCATION,
+      participantAnswerMap: {},
+    };
 
     const updatedPublicData: MultiAssetAllocationStagePublicData = {
-      ...publicData,
+      ...currentPublicData,
       participantAnswerMap: {
-        ...publicData.participantAnswerMap,
+        ...currentPublicData.participantAnswerMap,
         [participant.publicId]: answer,
       },
     };
