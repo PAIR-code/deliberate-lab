@@ -11,6 +11,8 @@ import {
   getConditionOperatorLabel,
   extractConditionDependencies,
   extractMultipleConditionDependencies,
+  getConditionTargetKey,
+  parseConditionTargetKey,
 } from './condition';
 
 // Mock generateId for predictable test results
@@ -676,6 +678,270 @@ describe('condition utilities', () => {
         {stageId: 'stage2', questionId: 'q2'},
         {stageId: 'stage3', questionId: 'q3'},
       ]);
+    });
+  });
+
+  describe('getConditionTargetKey', () => {
+    test('builds key from stage and question IDs', () => {
+      const target: ConditionTargetReference = {
+        stageId: 'stage1',
+        questionId: 'q1',
+      };
+      expect(getConditionTargetKey(target)).toBe('stage1::q1');
+    });
+
+    test('handles IDs with special characters', () => {
+      const target: ConditionTargetReference = {
+        stageId: 'stage-with-dashes',
+        questionId: 'question_with_underscores',
+      };
+      expect(getConditionTargetKey(target)).toBe(
+        'stage-with-dashes::question_with_underscores',
+      );
+    });
+
+    test('handles empty string IDs', () => {
+      const target: ConditionTargetReference = {
+        stageId: '',
+        questionId: '',
+      };
+      expect(getConditionTargetKey(target)).toBe('::');
+    });
+  });
+
+  describe('parseConditionTargetKey', () => {
+    test('parses key back to stage and question IDs', () => {
+      const result = parseConditionTargetKey('stage1::q1');
+      expect(result).toEqual({
+        stageId: 'stage1',
+        questionId: 'q1',
+      });
+    });
+
+    test('handles IDs with special characters', () => {
+      const result = parseConditionTargetKey(
+        'stage-with-dashes::question_with_underscores',
+      );
+      expect(result).toEqual({
+        stageId: 'stage-with-dashes',
+        questionId: 'question_with_underscores',
+      });
+    });
+
+    test('handles empty string IDs', () => {
+      const result = parseConditionTargetKey('::');
+      expect(result).toEqual({
+        stageId: '',
+        questionId: '',
+      });
+    });
+
+    test('roundtrip: getConditionTargetKey and parseConditionTargetKey', () => {
+      const original: ConditionTargetReference = {
+        stageId: 'my-stage-123',
+        questionId: 'question_abc',
+      };
+      const key = getConditionTargetKey(original);
+      const parsed = parseConditionTargetKey(key);
+      expect(parsed).toEqual(original);
+    });
+  });
+
+  describe('evaluateCondition edge cases', () => {
+    test('handles boolean target values', () => {
+      const condition: ComparisonCondition = {
+        id: '1',
+        type: 'comparison',
+        target: {stageId: 'stage1', questionId: 'q1'},
+        operator: ComparisonOperator.EQUALS,
+        value: true,
+      };
+      expect(evaluateCondition(condition, {'stage1::q1': true})).toBe(true);
+      expect(evaluateCondition(condition, {'stage1::q1': false})).toBe(false);
+
+      condition.value = false;
+      expect(evaluateCondition(condition, {'stage1::q1': false})).toBe(true);
+      expect(evaluateCondition(condition, {'stage1::q1': true})).toBe(false);
+    });
+
+    test('handles empty string values', () => {
+      const condition: ComparisonCondition = {
+        id: '1',
+        type: 'comparison',
+        target: {stageId: 'stage1', questionId: 'q1'},
+        operator: ComparisonOperator.EQUALS,
+        value: '',
+      };
+      expect(evaluateCondition(condition, {'stage1::q1': ''})).toBe(true);
+      expect(evaluateCondition(condition, {'stage1::q1': 'notempty'})).toBe(
+        false,
+      );
+    });
+
+    test('handles zero value comparisons', () => {
+      const condition: ComparisonCondition = {
+        id: '1',
+        type: 'comparison',
+        target: {stageId: 'stage1', questionId: 'q1'},
+        operator: ComparisonOperator.EQUALS,
+        value: 0,
+      };
+      expect(evaluateCondition(condition, {'stage1::q1': 0})).toBe(true);
+      expect(evaluateCondition(condition, {'stage1::q1': 1})).toBe(false);
+    });
+
+    test('GREATER_THAN with zero boundary', () => {
+      const condition: ComparisonCondition = {
+        id: '1',
+        type: 'comparison',
+        target: {stageId: 'stage1', questionId: 'q1'},
+        operator: ComparisonOperator.GREATER_THAN,
+        value: 0,
+      };
+      expect(evaluateCondition(condition, {'stage1::q1': 1})).toBe(true);
+      expect(evaluateCondition(condition, {'stage1::q1': 0})).toBe(false);
+      expect(evaluateCondition(condition, {'stage1::q1': -1})).toBe(false);
+    });
+
+    test('LESS_THAN with zero boundary', () => {
+      const condition: ComparisonCondition = {
+        id: '1',
+        type: 'comparison',
+        target: {stageId: 'stage1', questionId: 'q1'},
+        operator: ComparisonOperator.LESS_THAN,
+        value: 0,
+      };
+      expect(evaluateCondition(condition, {'stage1::q1': -1})).toBe(true);
+      expect(evaluateCondition(condition, {'stage1::q1': 0})).toBe(false);
+      expect(evaluateCondition(condition, {'stage1::q1': 1})).toBe(false);
+    });
+
+    test('CONTAINS with empty search string', () => {
+      const condition: ComparisonCondition = {
+        id: '1',
+        type: 'comparison',
+        target: {stageId: 'stage1', questionId: 'q1'},
+        operator: ComparisonOperator.CONTAINS,
+        value: '',
+      };
+      // Empty string is contained in all strings
+      expect(evaluateCondition(condition, {'stage1::q1': 'anything'})).toBe(
+        true,
+      );
+      expect(evaluateCondition(condition, {'stage1::q1': ''})).toBe(true);
+    });
+
+    test('NOT_CONTAINS with empty search string', () => {
+      const condition: ComparisonCondition = {
+        id: '1',
+        type: 'comparison',
+        target: {stageId: 'stage1', questionId: 'q1'},
+        operator: ComparisonOperator.NOT_CONTAINS,
+        value: '',
+      };
+      // Empty string is contained in all strings, so NOT_CONTAINS returns false
+      expect(evaluateCondition(condition, {'stage1::q1': 'anything'})).toBe(
+        false,
+      );
+    });
+
+    test('numeric comparison with negative numbers', () => {
+      const condition: ComparisonCondition = {
+        id: '1',
+        type: 'comparison',
+        target: {stageId: 'stage1', questionId: 'q1'},
+        operator: ComparisonOperator.GREATER_THAN,
+        value: -5,
+      };
+      expect(evaluateCondition(condition, {'stage1::q1': -3})).toBe(true);
+      expect(evaluateCondition(condition, {'stage1::q1': -5})).toBe(false);
+      expect(evaluateCondition(condition, {'stage1::q1': -10})).toBe(false);
+    });
+
+    test('numeric comparison with decimal numbers', () => {
+      const condition: ComparisonCondition = {
+        id: '1',
+        type: 'comparison',
+        target: {stageId: 'stage1', questionId: 'q1'},
+        operator: ComparisonOperator.GREATER_THAN_OR_EQUAL,
+        value: 3.5,
+      };
+      expect(evaluateCondition(condition, {'stage1::q1': 3.5})).toBe(true);
+      expect(evaluateCondition(condition, {'stage1::q1': 4.0})).toBe(true);
+      expect(evaluateCondition(condition, {'stage1::q1': 3.4})).toBe(false);
+    });
+
+    test('deeply nested condition groups', () => {
+      // Three levels deep: AND(OR(AND(comparison, comparison), comparison))
+      const deeplyNested: ConditionGroup = {
+        id: '1',
+        type: 'group',
+        operator: ConditionOperator.AND,
+        conditions: [
+          {
+            id: '2',
+            type: 'group',
+            operator: ConditionOperator.OR,
+            conditions: [
+              {
+                id: '3',
+                type: 'group',
+                operator: ConditionOperator.AND,
+                conditions: [
+                  {
+                    id: '4',
+                    type: 'comparison',
+                    target: {stageId: 'stage1', questionId: 'q1'},
+                    operator: ComparisonOperator.EQUALS,
+                    value: 'a',
+                  },
+                  {
+                    id: '5',
+                    type: 'comparison',
+                    target: {stageId: 'stage1', questionId: 'q2'},
+                    operator: ComparisonOperator.EQUALS,
+                    value: 'b',
+                  },
+                ],
+              },
+              {
+                id: '6',
+                type: 'comparison',
+                target: {stageId: 'stage1', questionId: 'q3'},
+                operator: ComparisonOperator.EQUALS,
+                value: 'c',
+              },
+            ],
+          },
+        ],
+      };
+
+      // Inner AND group is true (q1='a' AND q2='b')
+      expect(
+        evaluateCondition(deeplyNested, {
+          'stage1::q1': 'a',
+          'stage1::q2': 'b',
+          'stage1::q3': 'x',
+        }),
+      ).toBe(true);
+
+      // OR alternative is true (q3='c')
+      expect(
+        evaluateCondition(deeplyNested, {
+          'stage1::q1': 'x',
+          'stage1::q2': 'x',
+          'stage1::q3': 'c',
+        }),
+      ).toBe(true);
+
+      // Neither path is true
+      expect(
+        evaluateCondition(deeplyNested, {
+          'stage1::q1': 'a',
+          'stage1::q2': 'x', // breaks inner AND
+          'stage1::q3': 'x', // not 'c'
+        }),
+      ).toBe(false);
     });
   });
 });
