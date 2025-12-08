@@ -192,6 +192,14 @@ export async function initializeBargainStage(
     opponentInfo: sellerOpponentInfo,
   });
 
+  // Create start log entry
+  const startLogEntry = createBargainStartLogEntry(
+    buyer.publicId,
+    seller.publicId,
+    firstMover.publicId,
+    Timestamp.now() as any, // Use firebase-admin Timestamp
+  );
+
   // Update public data (already exists from cohort creation, so we use update())
   // This ensures we don't overwrite fields like readyParticipants
   transaction.update(publicDataDoc, {
@@ -207,17 +215,8 @@ export async function initializeBargainStage(
     },
     transactions: [],
     agreedPrice: null,
+    logs: [startLogEntry],
   });
-
-  // Log the start
-  const logDoc = publicDataDoc.collection('logs').doc();
-  const logEntry = createBargainStartLogEntry(
-    buyer.publicId,
-    seller.publicId,
-    firstMover.publicId,
-    Timestamp.now() as any, // Use firebase-admin Timestamp
-  );
-  transaction.set(logDoc, logEntry);
 
   console.log('[BARGAIN] initializeBargainStage completed successfully');
 }
@@ -251,6 +250,10 @@ export async function processBargainOffer(
     throw new Error('Game is already over');
   }
 
+  if (publicData.currentTurn === null) {
+    throw new Error('Game has not started yet');
+  }
+
   if (publicData.currentOfferer !== participantPublicId) {
     throw new Error('Not your turn to make an offer');
   }
@@ -275,19 +278,18 @@ export async function processBargainOffer(
   // Add to transactions
   const updatedTransactions = [...publicData.transactions, bargainTransaction];
 
+  // Create offer log entry
+  const offerLogEntry = createBargainOfferLogEntry(offer, Timestamp.now() as any);
+
   // Update public data - keep currentOfferer same but they're now waiting for response
   const updatedPublicData: BargainStagePublicData = {
     ...publicData,
     transactions: updatedTransactions,
+    logs: [...publicData.logs, offerLogEntry],
     // currentOfferer stays the same - they'll get it back if offer is rejected
   };
 
   transaction.update(publicDataDoc, updatedPublicData as any);
-
-  // Log the offer
-  const logDoc = publicDataDoc.collection('logs').doc();
-  const logEntry = createBargainOfferLogEntry(offer, Timestamp.now() as any);
-  transaction.set(logDoc, logEntry);
 }
 
 /**
@@ -335,6 +337,10 @@ export async function processBargainResponse(
     throw new Error('Game is already over');
   }
 
+  if (publicData.currentTurn === null) {
+    throw new Error('Game has not started yet');
+  }
+
   // Get the last transaction (should be pending)
   const lastTransaction =
     publicData.transactions[publicData.transactions.length - 1];
@@ -368,45 +374,50 @@ export async function processBargainResponse(
     updatedTransaction,
   ];
 
+  // Create response log entry (always needed)
+  const responseLogEntry = createBargainResponseLogEntry(
+    participantPublicId,
+    response,
+    Timestamp.now() as any,
+  );
+
   let updatedPublicData: BargainStagePublicData;
 
   if (accept) {
     // Deal reached - game over
+    // Create deal log entry
+    const dealLogEntry = createBargainDealLogEntry(
+      lastTransaction.offer.price,
+      publicData.currentTurn,
+      Timestamp.now() as any,
+    );
+
     updatedPublicData = {
       ...publicData,
       transactions: updatedTransactions,
       isGameOver: true,
       agreedPrice: lastTransaction.offer.price,
+      logs: [...publicData.logs, responseLogEntry, dealLogEntry],
     };
-
-    // Log the deal
-    const logDoc = publicDataDoc.collection('logs').doc();
-    const logEntry = createBargainDealLogEntry(
-      lastTransaction.offer.price,
-      publicData.currentTurn,
-      Timestamp.now() as any,
-    );
-    transaction.set(logDoc, logEntry);
   } else {
     // Offer rejected - check if we've reached max turns
     const nextTurn = publicData.currentTurn + 1;
 
     if (nextTurn > publicData.maxTurns) {
       // Max turns reached - no deal
+      // Create no deal log entry
+      const noDealLogEntry = createBargainNoDealLogEntry(
+        publicData.maxTurns,
+        Timestamp.now() as any,
+      );
+
       updatedPublicData = {
         ...publicData,
         transactions: updatedTransactions,
         isGameOver: true,
         currentTurn: nextTurn,
+        logs: [...publicData.logs, responseLogEntry, noDealLogEntry],
       };
-
-      // Log no deal
-      const logDoc = publicDataDoc.collection('logs').doc();
-      const logEntry = createBargainNoDealLogEntry(
-        publicData.maxTurns,
-        Timestamp.now() as any,
-      );
-      transaction.set(logDoc, logEntry);
     } else {
       // Continue negotiation - respondent (who rejected) becomes the next offerer
       updatedPublicData = {
@@ -414,18 +425,10 @@ export async function processBargainResponse(
         transactions: updatedTransactions,
         currentTurn: nextTurn,
         currentOfferer: participantPublicId, // Responder becomes next offerer
+        logs: [...publicData.logs, responseLogEntry],
       };
     }
   }
 
   transaction.update(publicDataDoc, updatedPublicData as any);
-
-  // Log the response
-  const responseLogDoc = publicDataDoc.collection('logs').doc();
-  const responseLogEntry = createBargainResponseLogEntry(
-    participantPublicId,
-    response,
-    Timestamp.now() as any,
-  );
-  transaction.set(responseLogDoc, responseLogEntry);
 }

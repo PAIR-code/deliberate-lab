@@ -125,6 +125,8 @@ export interface BargainStagePublicData extends BaseStagePublicData {
   transactions: BargainTransaction[];
   // If a deal was reached, the agreed price; otherwise null
   agreedPrice: number | null;
+  // Ordered list of all log entries for this negotiation
+  logs: BargainLogEntry[];
 }
 
 /** Bargain log entry. */
@@ -292,6 +294,7 @@ export function createBargainStagePublicData(
     readyParticipants: [],
     transactions: [],
     agreedPrice: null,
+    logs: [],
   };
 }
 
