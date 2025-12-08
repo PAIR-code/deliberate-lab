@@ -15,20 +15,12 @@
  */
 
 import CopyWebpackPlugin from 'copy-webpack-plugin';
-import type {Configuration} from 'webpack';
-import webpack from 'webpack';
+import {Configuration} from 'webpack';
 import {GitRevisionPlugin} from 'git-revision-webpack-plugin';
 import HtmlWebpackPlugin from 'html-webpack-plugin';
 import {CleanWebpackPlugin} from 'clean-webpack-plugin';
 import * as path from 'path';
-import {createRequire} from 'node:module';
-import {fileURLToPath} from 'node:url';
-import {dirname} from 'node:path';
-
-// Create require function and __dirname for ES modules
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-const require = createRequire(import.meta.url);
+import * as webpack from 'webpack';
 
 const gitRevisionPlugin = new GitRevisionPlugin({branch: true});
 
@@ -49,7 +41,7 @@ export default (
         },
         {
           test: /\.css$/,
-          loader: './lit-css-loader.js',
+          loader: path.resolve(__dirname, './lit-css-loader.js'),
         },
         {
           test: /\.scss$/,
@@ -90,9 +82,6 @@ export default (
       }),
       new webpack.ProvidePlugin({
         process: 'process/browser',
-      }),
-      new webpack.ProvidePlugin({
-        Buffer: ['buffer', 'Buffer'],
       }),
     ],
     resolve: {
