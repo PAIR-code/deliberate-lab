@@ -61,8 +61,6 @@ export interface BargainStageParticipantAnswer extends BaseStageParticipantAnswe
   kind: StageKind.BARGAIN;
   // Participant's private valuation for the item
   valuation: number;
-  // Whether this participant makes the first move
-  makeFirstMove: boolean;
   // Information shown to this participant about opponent's valuation
   // Either "Values between $6 - $12" or "You have no idea" (calculated from config)
   opponentInfo: string;
@@ -117,6 +115,8 @@ export interface BargainStagePublicData extends BaseStagePublicData {
   chatEnabled: boolean;
   // Public ID of participant whose turn it is to make an offer
   currentOfferer: string | null;
+  // Public ID of participant who made the first offer (fixed value for analysis)
+  firstMoverId: string | null;
   // Mapping from participant public ID to their role
   participantRoles: Record<string, BargainRole>;
   // Array of participant public IDs who have clicked "Start Game" (ready to play)
@@ -263,14 +263,12 @@ export function createBargainTransaction(
 export function createBargainStageParticipantAnswer(
   id: string, // stage ID
   valuation: number,
-  makeFirstMove: boolean,
   opponentInfo: string,
 ): BargainStageParticipantAnswer {
   return {
     id,
     kind: StageKind.BARGAIN,
     valuation,
-    makeFirstMove,
     opponentInfo,
   };
 }
@@ -289,6 +287,7 @@ export function createBargainStagePublicData(
     maxTurns,
     chatEnabled,
     currentOfferer: null,
+    firstMoverId: null,
     participantRoles: {},
     readyParticipants: [],
     transactions: [],

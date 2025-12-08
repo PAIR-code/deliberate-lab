@@ -128,6 +128,7 @@ export const startBargainGame = onCall(async (request) => {
           maxTurns: 8,
           chatEnabled: false,
           currentOfferer: null,
+          firstMoverId: null,
           participantRoles: {},
           readyParticipants: readyParticipantsArray,
           transactions: [],

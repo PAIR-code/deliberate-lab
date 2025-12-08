@@ -185,12 +185,10 @@ export async function initializeBargainStage(
   // (placeholder answers created during participant creation)
   transaction.update(buyerAnswerDoc, {
     valuation: buyerValuation,
-    makeFirstMove: firstMover.publicId === buyer.publicId,
     opponentInfo: buyerOpponentInfo,
   });
   transaction.update(sellerAnswerDoc, {
     valuation: sellerValuation,
-    makeFirstMove: firstMover.publicId === seller.publicId,
     opponentInfo: sellerOpponentInfo,
   });
 
@@ -202,6 +200,7 @@ export async function initializeBargainStage(
     maxTurns: maxTurns,
     chatEnabled: chatEnabled,
     currentOfferer: firstMover.publicId,
+    firstMoverId: firstMover.publicId,
     participantRoles: {
       [buyer.publicId]: BargainRole.BUYER,
       [seller.publicId]: BargainRole.SELLER,
