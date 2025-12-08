@@ -662,7 +662,7 @@ export class ExperimentManager extends Service {
       this.sp.firebaseService.functions,
       {
         collectionName: 'experiments',
-        experimentTemplate: experimentTemplate,
+        experimentTemplate,
       },
     );
 
