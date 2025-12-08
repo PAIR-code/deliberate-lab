@@ -412,11 +412,10 @@ export class BargainParticipantView extends MobxLitElement {
 
     if (!publicData) return 'Unknown';
 
-    if (senderId === publicData.buyerId) {
-      return 'Buyer';
-    } else if (senderId === publicData.sellerId) {
-      return 'Seller';
-    }
+    const role = publicData.participantRoles[senderId];
+    if (role === BargainRole.BUYER) return 'Buyer';
+    if (role === BargainRole.SELLER) return 'Seller';
+    if (role === BargainRole.BYSTANDER) return 'Bystander';
     return 'Unknown';
   }
 

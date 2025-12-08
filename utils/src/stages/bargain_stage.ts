@@ -117,10 +117,6 @@ export interface BargainStagePublicData extends BaseStagePublicData {
   chatEnabled: boolean;
   // Public ID of participant whose turn it is to make an offer
   currentOfferer: string | null;
-  // Buyer's public ID
-  buyerId: string | null;
-  // Seller's public ID
-  sellerId: string | null;
   // Mapping from participant public ID to their role
   participantRoles: Record<string, BargainRole>;
   // Array of participant public IDs who have clicked "Start Game" (ready to play)
@@ -159,8 +155,8 @@ export enum BargainLogType {
 
 export interface BargainStartLogEntry extends BaseBargainLogEntry {
   type: BargainLogType.START;
-  buyerId: string;
-  sellerId: string;
+  buyerPublicId: string;
+  sellerPublicId: string;
   firstOfferer: string;
 }
 
@@ -293,8 +289,6 @@ export function createBargainStagePublicData(
     maxTurns,
     chatEnabled,
     currentOfferer: null,
-    buyerId: null,
-    sellerId: null,
     participantRoles: {},
     readyParticipants: [],
     transactions: [],
@@ -328,15 +322,15 @@ export function createBargainErrorLogEntry(
 
 /** Create bargain start log entry. */
 export function createBargainStartLogEntry(
-  buyerId: string,
-  sellerId: string,
+  buyerPublicId: string,
+  sellerPublicId: string,
   firstOfferer: string,
   timestamp = Timestamp.now(),
 ): BargainStartLogEntry {
   return {
     type: BargainLogType.START,
-    buyerId,
-    sellerId,
+    buyerPublicId,
+    sellerPublicId,
     firstOfferer,
     timestamp,
   };

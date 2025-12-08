@@ -170,8 +170,8 @@ export async function initializeBargainStage(
 
   // Write to Firestore
   console.log('[BARGAIN] Writing initialization data to Firestore', {
-    buyerId: buyer.publicId,
-    sellerId: seller.publicId,
+    buyerPublicId: buyer.publicId,
+    sellerPublicId: seller.publicId,
     buyerValuation,
     sellerValuation,
     firstMoverId: firstMover.publicId,
@@ -202,8 +202,6 @@ export async function initializeBargainStage(
     maxTurns: maxTurns,
     chatEnabled: chatEnabled,
     currentOfferer: firstMover.publicId,
-    buyerId: buyer.publicId,
-    sellerId: seller.publicId,
     participantRoles: {
       [buyer.publicId]: BargainRole.BUYER,
       [seller.publicId]: BargainRole.SELLER,
