@@ -57,11 +57,23 @@ export async function createAgentChatMessageFromPrompt(
   // Profile of agent who will be sending the chat message
   user: ParticipantProfileExtended | MediatorProfileExtended,
 ) {
-  if (!user.agentConfig) return false;
+  console.log(
+    `[AgentChat] createAgentChatMessageFromPrompt called for user ${user.publicId} (type: ${user.type}), stage: ${stageId}, triggerChatId: ${triggerChatId || 'initial'}`,
+  );
+
+  if (!user.agentConfig) {
+    console.log(
+      `[AgentChat] No agentConfig for user ${user.publicId}, returning false`,
+    );
+    return false;
+  }
 
   // Stage (in order to determine stage kind)
   const stage = await getFirestoreStage(experimentId, stageId);
-  if (!stage) return false;
+  if (!stage) {
+    console.log(`[AgentChat] Stage ${stageId} not found, returning false`);
+    return false;
+  }
 
   // Fetches stored (else default) prompt config for given stage
   const promptConfig = (await getStructuredPromptConfig(
@@ -71,8 +83,19 @@ export async function createAgentChatMessageFromPrompt(
   )) as ChatPromptConfig | undefined;
 
   if (!promptConfig) {
+    console.log(
+      `[AgentChat] No promptConfig for user ${user.publicId} on stage ${stageId}, returning false`,
+    );
     return false;
   }
+
+  console.log(
+    `[AgentChat] Got promptConfig for user ${user.publicId}:`,
+    JSON.stringify({
+      hasPrompt: !!promptConfig.prompt,
+      chatSettings: promptConfig.chatSettings,
+    }),
+  );
 
   // Check if this is an initial message request (empty triggerChatId)
   if (triggerChatId === '') {
@@ -203,9 +226,19 @@ export async function getAgentChatMessage(
 
   // Confirm that agent can send chat messages based on prompt config
   const chatSettings = promptConfig.chatSettings;
+  console.log(
+    `[AgentChat] getAgentChatMessage for ${user.publicId}: checking canSendAgentChatMessage with ${chatMessages.length} existing messages, chatSettings:`,
+    JSON.stringify(chatSettings),
+  );
   if (!canSendAgentChatMessage(user.publicId, chatSettings, chatMessages)) {
+    console.log(
+      `[AgentChat] canSendAgentChatMessage returned false for ${user.publicId}`,
+    );
     return {message: null, success: true};
   }
+  console.log(
+    `[AgentChat] canSendAgentChatMessage returned true for ${user.publicId}`,
+  );
 
   // Ensure user has agent config
   if (!user.agentConfig) {
@@ -505,7 +538,13 @@ export async function sendAgentGroupChatMessage(
     .doc(chatMessage.id);
 
   chatMessage.timestamp = Timestamp.now();
-  agentDocument.set(chatMessage);
+  console.log(
+    `[AgentChat] sendAgentGroupChatMessage: Writing message ${chatMessage.id} from ${chatMessage.senderId} to experiments/${experimentId}/cohorts/${cohortId}/publicStageData/${stageId}/chats`,
+  );
+  await agentDocument.set(chatMessage);
+  console.log(
+    `[AgentChat] sendAgentGroupChatMessage: Message ${chatMessage.id} written successfully`,
+  );
 
   return true;
 }

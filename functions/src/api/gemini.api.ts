@@ -15,6 +15,7 @@ import {
   StructuredOutputSchema,
   ModelResponseStatus,
   ModelResponse,
+  addParsedModelResponse,
 } from '@deliberation-lab/utils';
 
 const GEMINI_DEFAULT_MODEL = 'gemini-2.5-flash';
@@ -253,7 +254,8 @@ export async function callGemini(
     imageDataList: imageDataList.length > 0 ? imageDataList : undefined,
   };
 
-  return modelResponse;
+  // Parse JSON from response text if present
+  return addParsedModelResponse(modelResponse) ?? modelResponse;
 }
 
 /** Constructs Gemini API query and returns response. */

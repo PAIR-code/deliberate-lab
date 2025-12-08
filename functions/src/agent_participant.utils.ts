@@ -29,6 +29,10 @@ export async function completeStageAsAgentParticipant(
   participant: ParticipantProfileExtended,
 ) {
   const experimentId = experiment.id;
+  console.log(
+    `[AgentParticipant] completeStageAsAgentParticipant called for ${participant.publicId}, stage: ${participant.currentStageId}, status: ${participant.currentStatus}`,
+  );
+
   const participantDoc = getFirestoreParticipantRef(
     experimentId,
     participant.privateId,
@@ -40,10 +44,12 @@ export async function completeStageAsAgentParticipant(
 
   if (!stage) {
     console.error(
-      `Could not find stage ${participant.currentStageId} for experiment ${experimentId}`,
+      `[AgentParticipant] Could not find stage ${participant.currentStageId} for experiment ${experimentId}`,
     );
     return;
   }
+
+  console.log(`[AgentParticipant] Stage kind: ${stage.kind}`);
 
   const status = participant.currentStatus;
   let updatedStatus = false;
@@ -99,7 +105,14 @@ export async function completeStageAsAgentParticipant(
     stage,
   );
 
+  console.log(
+    `[AgentParticipant] stageActions for ${participant.publicId}: callApi=${stageActions.callApi}, moveToNextStage=${stageActions.moveToNextStage}`,
+  );
+
   if (stageActions.callApi) {
+    console.log(
+      `[AgentParticipant] Calling API for ${participant.publicId}...`,
+    );
     const response = await getParsedAgentParticipantPromptResponse(
       experimenterData,
       experiment.id,
@@ -109,11 +122,19 @@ export async function completeStageAsAgentParticipant(
       // TODO: Try fetching custom participant prompt first
       stageManager.getDefaultParticipantStructuredPrompt(stage),
     );
+    console.log(
+      `[AgentParticipant] API response for ${participant.publicId}:`,
+      response ? JSON.stringify(response) : 'null',
+    );
     if (response) {
       const answer = stageManager.extractAgentParticipantAnswerFromResponse(
         participant,
         stage,
         response,
+      );
+      console.log(
+        `[AgentParticipant] Extracted answer for ${participant.publicId}:`,
+        answer ? JSON.stringify(answer) : 'undefined',
       );
       // If profile stage, no action needed as there is no "answer"
       // TODO: Consider making "set profile" not part of a stage
@@ -128,22 +149,43 @@ export async function completeStageAsAgentParticipant(
           .doc(participant.privateId)
           .collection('stageData')
           .doc(stage.id);
+        console.log(
+          `[AgentParticipant] Writing answer to stageData for ${participant.publicId}`,
+        );
         answerDoc.set(answer);
+      }
+      // For profile stage, log that the participant object was modified
+      if (stage.kind === StageKind.PROFILE) {
+        console.log(
+          `[AgentParticipant] Profile stage - participant updated: name=${participant.name}, avatar=${participant.avatar}, pronouns=${participant.pronouns}`,
+        );
       }
     }
   }
 
   if (stageActions.moveToNextStage) {
+    console.log(
+      `[AgentParticipant] Moving ${participant.publicId} to next stage...`,
+    );
     await updateParticipantNextStage(
       experimentId,
       participant,
       experiment.stageIds,
     );
+    console.log(
+      `[AgentParticipant] ${participant.publicId} now on stage ${participant.currentStageId}`,
+    );
   }
 
   // Write ParticipantAnswer doc if profile has been updated
   if (stageActions.moveToNextStage || updatedStatus) {
-    participantDoc.set(participant);
+    console.log(
+      `[AgentParticipant] Writing participant doc for ${participant.publicId} (moveToNextStage=${stageActions.moveToNextStage}, updatedStatus=${updatedStatus})`,
+    );
+    await participantDoc.set(participant);
+    console.log(
+      `[AgentParticipant] Participant doc written for ${participant.publicId}`,
+    );
   }
 }
 
