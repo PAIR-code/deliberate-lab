@@ -446,13 +446,13 @@ export function calculatePayoutItemResult(
   }
 }
 
-/** Calculate default payout results for a single item (or null if can't calculate). */
+/** Calculate default payout results for a single item. */
 export function calculateDefaultPayoutItemResult(
   item: DefaultPayoutItem,
   stageConfigMap: Record<string, StageConfig>,
   publicDataMap: Record<string, StagePublicData>,
   profile: ParticipantProfile, // current participant profile
-  participantAnswerMap?: Record<string, BaseStageParticipantAnswer>,
+  participantAnswerMap: Record<string, BaseStageParticipantAnswer>,
 ): DefaultPayoutItemResult | null {
   if (!item.isActive) return null;
 
