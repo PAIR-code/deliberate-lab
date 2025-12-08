@@ -144,6 +144,7 @@ export async function getAgentResponse(
       prompt,
       generationConfig,
       structuredOutputConfig,
+      modelSettings.useWebSearch,
     );
   } else if (modelSettings.apiType === ApiKeyType.OPENAI_API_KEY) {
     response = await getOpenAIAPIResponse(
@@ -152,6 +153,7 @@ export async function getAgentResponse(
       prompt,
       generationConfig,
       structuredOutputConfig,
+      modelSettings.useWebSearch,
     );
   } else if (modelSettings.apiType === ApiKeyType.CLAUDE_API_KEY) {
     response = await getClaudeAPIResponse(
@@ -160,6 +162,7 @@ export async function getAgentResponse(
       prompt,
       generationConfig,
       structuredOutputConfig,
+      modelSettings.useWebSearch,
     );
   } else if (modelSettings.apiType === ApiKeyType.OLLAMA_CUSTOM_URL) {
     response = await getOllamaResponse(
@@ -191,6 +194,7 @@ export async function getGeminiResponse(
   prompt: string | Array<{role: string; content: string; name?: string}>,
   generationConfig: ModelGenerationConfig,
   structuredOutputConfig?: StructuredOutputConfig,
+  useWebSearch?: boolean,
 ): Promise<ModelResponse> {
   return await getGeminiAPIResponse(
     apiKeyConfig.geminiApiKey,
@@ -198,6 +202,7 @@ export async function getGeminiResponse(
     prompt,
     generationConfig,
     structuredOutputConfig,
+    useWebSearch,
   );
 }
 
@@ -207,6 +212,7 @@ export async function getOpenAIAPIResponse(
   prompt: string | Array<{role: string; content: string; name?: string}>,
   generationConfig: ModelGenerationConfig,
   structuredOutputConfig?: StructuredOutputConfig,
+  useWebSearch?: boolean,
 ): Promise<ModelResponse> {
   return await getOpenAIAPIChatCompletionResponse(
     apiKeyConfig.openAIApiKey?.apiKey || '',
@@ -215,6 +221,7 @@ export async function getOpenAIAPIResponse(
     prompt,
     generationConfig,
     structuredOutputConfig,
+    useWebSearch,
   );
 }
 
@@ -224,6 +231,7 @@ export async function getClaudeAPIResponse(
   prompt: string | Array<{role: string; content: string; name?: string}>,
   generationConfig: ModelGenerationConfig,
   structuredOutputConfig?: StructuredOutputConfig,
+  useWebSearch?: boolean,
 ): Promise<ModelResponse> {
   return await getClaudeAPIChatCompletionResponse(
     apiKeyConfig.claudeApiKey?.apiKey || '',
@@ -232,6 +240,7 @@ export async function getClaudeAPIResponse(
     prompt,
     generationConfig,
     structuredOutputConfig,
+    useWebSearch,
   );
 }
 

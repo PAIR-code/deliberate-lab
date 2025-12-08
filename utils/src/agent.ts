@@ -4,10 +4,7 @@ import {
 } from './participant';
 import {generateId} from './shared';
 import {StageKind} from './stages/stage';
-import {
-  ChatMediatorStructuredOutputConfig,
-  createStructuredOutputConfig,
-} from './structured_output';
+import {ChatMediatorStructuredOutputConfig} from './structured_output';
 import {
   MediatorPromptConfig,
   ParticipantPromptConfig,
@@ -37,6 +34,8 @@ export interface ProfileAgentConfig {
   agentId: string; // ID of agent persona used
   promptContext: string; // Additional text to concatenate to agent prompts
   modelSettings: AgentModelSettings;
+  // Optional chat settings override for quick-add agents (when no persona prompt is defined)
+  chatSettings?: AgentChatSettings;
 }
 
 /** Generation config for a specific stage's model call. */
@@ -65,6 +64,8 @@ export interface ModelGenerationConfig {
 export interface AgentModelSettings {
   apiType: ApiKeyType;
   modelName: string;
+  // Enable web search grounding (Google Search for Gemini, web_search for OpenAI/Claude)
+  useWebSearch?: boolean;
 }
 
 // TODO: Move to structured_prompt.ts
@@ -191,6 +192,7 @@ export function createAgentModelSettings(
     apiType: config.apiType ?? DEFAULT_AGENT_API_TYPE,
     // TODO: pick model name that matches API?
     modelName: config.modelName ?? DEFAULT_AGENT_API_MODEL,
+    useWebSearch: config.useWebSearch ?? false,
   };
 }
 

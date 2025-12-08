@@ -339,39 +339,51 @@ export async function getAgentChatMessage(
   let shouldRespond = true;
   let readyToEndChat = false;
 
-  if (structured?.enabled && response.text) {
-    const jsonMatch = response.text.match(/```json\n(\{[\s\S]*\})\n```/);
-    if (jsonMatch && jsonMatch[1]) {
-      try {
-        const parsed = JSON.parse(jsonMatch[1]) as Record<string, unknown>;
+  if (structured?.enabled) {
+    // Try to get parsed response - either from parsedResponse (set by addParsedModelResponse)
+    // or by parsing markdown code blocks in the text
+    let parsed: Record<string, unknown> | null = null;
 
-        const shouldRespondValue = structured.shouldRespondField
-          ? parsed[structured.shouldRespondField]
-          : undefined;
-        shouldRespond = shouldRespondValue === false ? false : true;
-
-        const messageField = structured.messageField || 'response';
-        if (typeof parsed[messageField] === 'string') {
-          message = parsed[messageField] as string;
+    if (response.parsedResponse) {
+      // Use already-parsed response (from OpenAI structured output, etc.)
+      parsed = response.parsedResponse as Record<string, unknown>;
+    } else if (response.text) {
+      // Try to parse from markdown code block (legacy format)
+      const jsonMatch = response.text.match(/```json\n(\{[\s\S]*\})\n```/);
+      if (jsonMatch && jsonMatch[1]) {
+        try {
+          parsed = JSON.parse(jsonMatch[1]) as Record<string, unknown>;
+        } catch (error) {
+          console.error('getAgentChatMessage JSON parse error in text:', error);
         }
-
-        const explanationField = structured.explanationField || 'explanation';
-        if (typeof parsed[explanationField] === 'string') {
-          explanation = parsed[explanationField] as string;
-        }
-
-        readyToEndChat = structured.readyToEndField
-          ? Boolean(parsed[structured.readyToEndField])
-          : false;
-      } catch (error) {
-        console.error('getAgentChatMessage JSON parse error in text:', error);
-        // message remains response.text
       }
-    } else {
-      // JSON block not found, message remains response.text
     }
-  } else if (
+
+    if (parsed) {
+      const shouldRespondValue = structured.shouldRespondField
+        ? parsed[structured.shouldRespondField]
+        : undefined;
+      shouldRespond = shouldRespondValue === false ? false : true;
+
+      const messageField = structured.messageField || 'response';
+      if (typeof parsed[messageField] === 'string') {
+        message = parsed[messageField] as string;
+      }
+
+      const explanationField = structured.explanationField || 'explanation';
+      if (typeof parsed[explanationField] === 'string') {
+        explanation = parsed[explanationField] as string;
+      }
+
+      readyToEndChat = structured.readyToEndField
+        ? Boolean(parsed[structured.readyToEndField])
+        : false;
+    }
+  }
+
+  if (
     !response.text &&
+    !response.parsedResponse &&
     (!response.imageDataList || response.imageDataList.length === 0)
   ) {
     return {message: null, success: false};

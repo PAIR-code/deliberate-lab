@@ -58,30 +58,6 @@ function makeStructuredOutputSchema(schema: StructuredOutputSchema): object {
   };
 }
 
-function makeStructuredOutputGenerationConfig(
-  structuredOutputConfig?: StructuredOutputConfig,
-): Partial<GenerationConfig> {
-  if (
-    !structuredOutputConfig ||
-    structuredOutputConfig.type === StructuredOutputType.NONE
-  ) {
-    return {responseMimeType: 'text/plain'};
-  }
-  if (structuredOutputConfig.type === StructuredOutputType.JSON_FORMAT) {
-    return {responseMimeType: 'application/json'};
-  }
-  if (!structuredOutputConfig.schema) {
-    throw new Error(
-      `Expected schema for structured output type ${structuredOutputConfig.type}`,
-    );
-  }
-  const schema = makeStructuredOutputSchema(structuredOutputConfig.schema);
-  return {
-    responseMimeType: 'application/json',
-    responseSchema: schema,
-  };
-}
-
 function convertToClaudeFormat(
   prompt: string | Array<{role: string; content: string; name?: string}>,
 ): Array<{role: string; content: string; name?: string}> {
@@ -98,6 +74,7 @@ export async function callClaudeChatCompletion(
   prompt: string | Array<{role: string; content: string; name?: string}>,
   generationConfig: ModelGenerationConfig,
   structuredOutputConfig?: StructuredOutputConfig,
+  useWebSearch?: boolean,
 ): Promise<ModelResponse> {
   const client = new Anthropic({apiKey, baseURL: baseUrl});
   const allMessages = convertToClaudeFormat(prompt);
@@ -112,6 +89,12 @@ export async function callClaudeChatCompletion(
     content: string;
   }[];
 
+  // Configure web search tool if enabled
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const tools: any[] | undefined = useWebSearch
+    ? [{type: 'web_search_20250305', name: 'web_search'}]
+    : undefined;
+
   let response;
   try {
     response = await client.messages.create({
@@ -119,6 +102,7 @@ export async function callClaudeChatCompletion(
       system: systemPrompt, // The system prompt as a top-level string
       messages: filteredMessages, // The array containing only user/assistant turns
       max_tokens: generationConfig.maxTokens,
+      ...(tools && {tools}),
       ...(generationConfig.temperature !== 1.0
         ? {temperature: generationConfig.temperature}
         : generationConfig.topP !== 1.0
@@ -161,13 +145,19 @@ export async function callClaudeChatCompletion(
     };
   }
 
+  // Find the text content block (when web search is used, response contains multiple blocks)
+  const textBlock = response.content.find(
+    (block: {type: string}) => block.type === 'text',
+  ) as {type: string; text?: string} | undefined;
+  const responseText = textBlock?.text;
+
   const finishReason = response.stop_reason;
   if (finishReason === MAX_TOKENS_FINISH_REASON) {
     return {
       status: ModelResponseStatus.LENGTH_ERROR,
       generationConfig,
       rawResponse: JSON.stringify(response),
-      text: response.content[0].text,
+      text: responseText,
       errorMessage: `Token limit (${generationConfig.maxTokens}) exceeded`,
     };
   } else if (finishReason !== SUCCESS_FINISH_REASON) {
@@ -175,7 +165,7 @@ export async function callClaudeChatCompletion(
       status: ModelResponseStatus.UNKNOWN_ERROR,
       generationConfig,
       rawResponse: JSON.stringify(response),
-      text: response.content[0].text,
+      text: responseText,
       errorMessage: `Provider sent unrecognized finish_reason: ${finishReason}`,
     };
   }
@@ -184,7 +174,7 @@ export async function callClaudeChatCompletion(
     status: ModelResponseStatus.OK,
     generationConfig,
     rawResponse: JSON.stringify(response),
-    text: response.content[0].text,
+    text: responseText,
   };
   if (structuredOutputConfig?.enabled) {
     return addParsedModelResponse(modelResponse);
@@ -199,6 +189,7 @@ export async function getClaudeAPIChatCompletionResponse(
   promptText: string | Array<{role: string; content: string; name?: string}>,
   generationConfig: ModelGenerationConfig,
   structuredOutputConfig?: StructuredOutputConfig,
+  useWebSearch?: boolean,
 ): Promise<ModelResponse> {
   try {
     const response = await callClaudeChatCompletion(
@@ -208,6 +199,7 @@ export async function getClaudeAPIChatCompletionResponse(
       promptText,
       generationConfig,
       structuredOutputConfig,
+      useWebSearch,
     );
     if (!response) {
       return {

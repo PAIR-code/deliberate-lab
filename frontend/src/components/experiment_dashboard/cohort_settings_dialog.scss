@@ -4,6 +4,7 @@
 
 :host {
   @include common.overlay;
+  z-index: 20; // Above cohort-list header (z-index: 10)
 }
 
 .dialog {

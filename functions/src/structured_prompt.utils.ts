@@ -44,6 +44,8 @@ import {stageManager} from './app';
 
 /** Attempts to fetch corresponding prompt config from storage,
  * else returns the stage's default config.
+ * If the user has chat settings in their agentConfig, those are merged into
+ * the prompt config (for quick-add agents that use default prompts).
  */
 export async function getStructuredPromptConfig(
   experimentId: string,
@@ -53,6 +55,8 @@ export async function getStructuredPromptConfig(
   if (!user.agentConfig) {
     return undefined;
   }
+  let promptConfig: BasePromptConfig | undefined;
+
   switch (user.type) {
     case UserType.PARTICIPANT:
       const participantPrompt = await getAgentParticipantPrompt(
@@ -61,10 +65,10 @@ export async function getStructuredPromptConfig(
         user.agentConfig?.agentId,
       );
       // Return stored prompt or fallback default prompt
-      return (
+      promptConfig =
         participantPrompt ??
-        stageManager.getDefaultParticipantStructuredPrompt(stage)
-      );
+        stageManager.getDefaultParticipantStructuredPrompt(stage);
+      break;
     case UserType.MEDIATOR:
       const mediatorPrompt = await getAgentMediatorPrompt(
         experimentId,
@@ -72,10 +76,32 @@ export async function getStructuredPromptConfig(
         user.agentConfig?.agentId,
       );
       // If prompt not stored under experiment, then return undefined
-      return mediatorPrompt ?? undefined;
+      promptConfig = mediatorPrompt ?? undefined;
+      break;
     default:
       return undefined;
   }
+
+  // If we have a prompt config and the user has chat settings override,
+  // merge them into the prompt config (for chat stages)
+  if (
+    promptConfig &&
+    user.agentConfig.chatSettings &&
+    (stage.kind === StageKind.CHAT || stage.kind === StageKind.PRIVATE_CHAT)
+  ) {
+    // Cast to ChatPromptConfig to access chatSettings
+    const chatPromptConfig = promptConfig as BasePromptConfig & {
+      chatSettings?: typeof user.agentConfig.chatSettings;
+    };
+    if (chatPromptConfig.chatSettings) {
+      chatPromptConfig.chatSettings = {
+        ...chatPromptConfig.chatSettings,
+        ...user.agentConfig.chatSettings,
+      };
+    }
+  }
+
+  return promptConfig;
 }
 
 /** Populates data object with Firestore documents needed for given
