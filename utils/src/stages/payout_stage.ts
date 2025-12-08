@@ -413,7 +413,6 @@ export function calculatePayoutItemResult(
         stageConfigMap,
         publicDataMap,
         profile,
-        participantAnswerMap,
       );
     case PayoutItemType.SURVEY:
       return calculateSurveyPayoutItemResult(
@@ -441,7 +440,6 @@ export function calculateDefaultPayoutItemResult(
   stageConfigMap: Record<string, StageConfig>,
   publicDataMap: Record<string, StagePublicData>,
   profile: ParticipantProfile, // current participant profile
-  participantAnswerMap: Record<string, BaseStageParticipantAnswer>,
 ): DefaultPayoutItemResult | null {
   if (!item.isActive) return null;
 
