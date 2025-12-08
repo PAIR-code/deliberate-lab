@@ -40,3 +40,80 @@ h4 {
 .stats-wrapper {
   padding: 0 common.$spacing-large;
 }
+
+// Agent log section
+.agent-log-wrapper {
+  @include common.flex-column;
+  gap: common.$spacing-medium;
+  padding: 0 common.$spacing-large;
+}
+
+.agent-config {
+  margin-bottom: common.$spacing-medium;
+}
+
+.agent-log-summary {
+  @include common.flex-row;
+  flex-wrap: wrap;
+  gap: common.$spacing-small;
+  margin-bottom: common.$spacing-medium;
+}
+
+.empty-message {
+  color: var(--md-sys-color-outline);
+  padding: common.$spacing-medium 0;
+}
+
+.log-entry {
+  @include common.flex-column;
+  border: 1px solid var(--md-sys-color-outline-variant);
+  border-radius: common.$spacing-small;
+  gap: common.$spacing-small;
+  padding: common.$spacing-medium;
+  margin-bottom: common.$spacing-small;
+}
+
+.log-entry-header {
+  @include common.flex-row-align-center;
+  flex-wrap: wrap;
+  gap: common.$spacing-small;
+}
+
+.log-timestamp {
+  @include typescale.label-small;
+  color: var(--md-sys-color-outline);
+}
+
+.log-duration {
+  @include typescale.label-small;
+  color: var(--md-sys-color-outline);
+}
+
+.log-description {
+  @include typescale.body-small;
+  color: var(--md-sys-color-on-surface-variant);
+}
+
+details {
+  margin-top: common.$spacing-small;
+}
+
+details summary {
+  @include typescale.label-medium;
+  cursor: pointer;
+  color: var(--md-sys-color-primary);
+}
+
+details pre {
+  background: var(--md-sys-color-surface-variant);
+  border-radius: common.$spacing-small;
+  overflow: auto;
+  padding: common.$spacing-medium;
+  margin-top: common.$spacing-small;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+details code {
+  font-size: 90%;
+}

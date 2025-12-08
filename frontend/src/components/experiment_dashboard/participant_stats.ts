@@ -15,6 +15,12 @@ import {
   StageKind,
   UnifiedTimestamp,
   calculatePayoutTotal,
+  LogEntry,
+  LogEntryType,
+  ModelLogEntry,
+  ModelResponseStatus,
+  getUnifiedDurationSeconds,
+  convertUnifiedTimestampToDateTime,
 } from '@deliberation-lab/utils';
 import {getCohortName} from '../../shared/cohort.utils';
 import {getParticipantInlineDisplay} from '../../shared/participant.utils';
@@ -56,7 +62,7 @@ export class Preview extends MobxLitElement {
     return html`
       ${this.renderChips()} ${this.renderTable()} ${this.renderStats()}
       <div class="divider"></div>
-      ${this.renderStageDatas()}
+      ${this.renderAgentLog()} ${this.renderStageDatas()}
     `;
   }
 
@@ -327,6 +333,126 @@ export class Preview extends MobxLitElement {
     }
     return html`
       <div><b>${label}:</b> ${convertUnifiedTimestampToDate(value)}</div>
+    `;
+  }
+
+  /** Get logs filtered to this participant */
+  private getParticipantLogs(): ModelLogEntry[] {
+    if (!this.profile) return [];
+    const privateId = this.profile.privateId;
+    return this.experimentManager.logs
+      .filter(
+        (log): log is ModelLogEntry =>
+          log.type === LogEntryType.MODEL && log.privateId === privateId,
+      )
+      .sort((a, b) => {
+        // Sort by query timestamp descending (newest first)
+        const aTime = Number(a.queryTimestamp ?? 0);
+        const bTime = Number(b.queryTimestamp ?? 0);
+        return bTime - aTime;
+      });
+  }
+
+  /** Render the Agent log section */
+  private renderAgentLog() {
+    if (!this.profile?.agentConfig) {
+      return nothing;
+    }
+
+    const agentConfig = this.profile.agentConfig;
+    const logs = this.getParticipantLogs();
+
+    return html`
+      <h3>Agent log</h3>
+      <div class="agent-log-wrapper">
+        ${this.renderAgentConfig(agentConfig)}
+        <div class="agent-log-summary">
+          <span class="chip neutral">
+            <b>Total API calls:</b> ${logs.length}
+          </span>
+          <span class="chip success">
+            <b>Successful:</b>
+            ${logs.filter((l) => l.response.status === ModelResponseStatus.OK)
+              .length}
+          </span>
+          <span class="chip error">
+            <b>Failed:</b>
+            ${logs.filter((l) => l.response.status !== ModelResponseStatus.OK)
+              .length}
+          </span>
+        </div>
+        ${logs.length === 0
+          ? html`<div class="empty-message">No API calls yet</div>`
+          : logs.map((log) => this.renderLogEntry(log))}
+      </div>
+      <div class="divider"></div>
+    `;
+  }
+
+  /** Render agent configuration info */
+  private renderAgentConfig(
+    agentConfig: NonNullable<ParticipantProfileExtended['agentConfig']>,
+  ) {
+    return html`
+      <div class="agent-config">
+        <div class="table">
+          <div class="table-row">
+            <div class="table-cell small">API Type</div>
+            <div class="table-cell">${agentConfig.modelSettings.apiType}</div>
+          </div>
+          <div class="table-row">
+            <div class="table-cell small">Model</div>
+            <div class="table-cell">${agentConfig.modelSettings.modelName}</div>
+          </div>
+          ${agentConfig.promptContext
+            ? html`
+                <div class="table-row">
+                  <div class="table-cell small">Prompt context</div>
+                  <div class="table-cell">${agentConfig.promptContext}</div>
+                </div>
+              `
+            : nothing}
+        </div>
+      </div>
+    `;
+  }
+
+  /** Render a single log entry */
+  private renderLogEntry(log: ModelLogEntry) {
+    const status = log.response.status;
+    const isSuccess = status === ModelResponseStatus.OK;
+
+    return html`
+      <div class="log-entry">
+        <div class="log-entry-header">
+          <span class="chip ${isSuccess ? 'success' : 'error'}">
+            ${status.toUpperCase()}
+          </span>
+          <span class="log-timestamp">
+            ${log.queryTimestamp
+              ? convertUnifiedTimestampToDateTime(log.queryTimestamp)
+              : 'N/A'}
+          </span>
+          <span class="log-duration">
+            (${getUnifiedDurationSeconds(
+              log.queryTimestamp,
+              log.responseTimestamp,
+            )}s)
+          </span>
+          <span class="chip neutral"> ${this.getStageName(log.stageId)} </span>
+        </div>
+        ${log.description
+          ? html`<div class="log-description">${log.description}</div>`
+          : nothing}
+        <details>
+          <summary>Prompt</summary>
+          <pre><code>${log.prompt}</code></pre>
+        </details>
+        <details>
+          <summary>Response</summary>
+          <pre><code>${JSON.stringify(log.response, null, 2)}</code></pre>
+        </details>
+      </div>
     `;
   }
 }
