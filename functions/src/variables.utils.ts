@@ -6,10 +6,8 @@ import {
   VariableConfig,
   VariableConfigType,
   VariableScope,
-  choices,
   generateRandomPermutationVariables,
   generateStaticVariables,
-  normalizeWeights,
   parseJsonValue,
   validateParsedVariableValue,
   weightedChoice,
@@ -19,46 +17,6 @@ import {
 import {app} from './app';
 
 /**
- * Get the value to assign using the LEAST_USED strategy with optional weights.
- * Picks the value that is most under-represented relative to its target ratio.
- * Breaks ties using seeded random.
- */
-function getLeastUsedValue(
-  counts: Record<string, number>,
-  values: string[],
-  weights: number[] | undefined,
-  participantSeed: string,
-): string {
-  const normalized = normalizeWeights(values.length, weights);
-  const totalAssigned = Object.values(counts).reduce((sum, c) => sum + c, 0);
-
-  if (totalAssigned === 0) {
-    // No assignments yet - pick based on weights (highest weight first, random tie-break)
-    const maxWeight = Math.max(...normalized);
-    const highestWeightValues = values.filter(
-      (_, i) => normalized[i] === maxWeight,
-    );
-    return choices(highestWeightValues, 1, participantSeed)[0];
-  }
-
-  // Calculate how under-represented each value is relative to its target
-  // Positive deviation = under-represented, negative = over-represented
-  const deviations = values.map((v, i) => {
-    const targetRatio = normalized[i];
-    const actualRatio = counts[v] / totalAssigned;
-    return targetRatio - actualRatio;
-  });
-
-  const maxDeviation = Math.max(...deviations);
-  const mostUnderRepresented = values.filter(
-    (_, i) => deviations[i] === maxDeviation,
-  );
-
-  // Pick using seeded random among most under-represented values
-  return choices(mostUnderRepresented, 1, participantSeed)[0];
-}
-
-/**
  * Generate variables for a Balanced Assignment config.
  * Requires database queries to determine the assignment based on existing participants.
  *
@@ -66,9 +24,7 @@ function getLeastUsedValue(
  * The count/aggregation queries used here are not locked by Firestore transactions.
  * If multiple participants join simultaneously, they may see the same counts and
  * receive identical assignments. This is mitigated by a random delay before the
- * transaction in createParticipant, but not fully eliminated. For experiments
- * requiring strict balance guarantees under high concurrency, consider using
- * LEAST_USED strategy which self-corrects over time.
+ * transaction in createParticipant, but not fully eliminated.
  */
 async function generateBalancedAssignmentVariables(
   config: BalancedAssignmentVariableConfig,
@@ -124,42 +80,6 @@ async function generateBalancedAssignmentVariables(
         config.values,
         participantCount,
         config.weights,
-      );
-      break;
-    }
-
-    case BalanceStrategy.LEAST_USED: {
-      // Count assignments per value using efficient count() queries
-      const counts: Record<string, number> = {};
-      const baseCollection = firestore.collection(
-        `experiments/${experimentId}/participants`,
-      );
-
-      for (const value of config.values) {
-        let query;
-        if (config.balanceAcross === BalanceAcross.EXPERIMENT) {
-          // Count all participants with this value
-          query = baseCollection.where(
-            `variableMap.${config.definition.name}`,
-            '==',
-            value,
-          );
-        } else {
-          // Count participants in the current cohort with this value
-          query = baseCollection
-            .where('currentCohortId', '==', cohortId)
-            .where(`variableMap.${config.definition.name}`, '==', value);
-        }
-
-        const countResult = await query.count().get();
-        counts[value] = countResult.data().count;
-      }
-
-      selectedValue = getLeastUsedValue(
-        counts,
-        config.values,
-        config.weights,
-        variableSeed,
       );
       break;
     }

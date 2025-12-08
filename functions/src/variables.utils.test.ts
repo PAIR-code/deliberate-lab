@@ -186,69 +186,6 @@ describe('generateVariablesForScope', () => {
       expect(result3['condition']).toBe(JSON.stringify('control'));
     });
 
-    it('should assign using LEAST_USED strategy', async () => {
-      const config = createBalancedAssignmentVariableConfig({
-        definition: {
-          name: 'group',
-          description: 'Assigned group',
-          schema: VariableType.STRING,
-        },
-        values: [JSON.stringify('A'), JSON.stringify('B'), JSON.stringify('C')],
-        balanceStrategy: BalanceStrategy.LEAST_USED,
-        balanceAcross: BalanceAcross.EXPERIMENT,
-      });
-
-      // Add participants with existing assignments
-      // 2 in group A, 1 in group B, 0 in group C
-      await firestore
-        .collection(`experiments/${experimentId}/participants`)
-        .doc('existing1')
-        .set({
-          ...createParticipantProfileExtended({
-            privateId: 'existing1',
-            publicId: 'pub-e1',
-            currentCohortId: cohortId,
-            currentStatus: ParticipantStatus.IN_PROGRESS,
-          }),
-          variableMap: {group: JSON.stringify('A')},
-        });
-
-      await firestore
-        .collection(`experiments/${experimentId}/participants`)
-        .doc('existing2')
-        .set({
-          ...createParticipantProfileExtended({
-            privateId: 'existing2',
-            publicId: 'pub-e2',
-            currentCohortId: cohortId,
-            currentStatus: ParticipantStatus.IN_PROGRESS,
-          }),
-          variableMap: {group: JSON.stringify('A')},
-        });
-
-      await firestore
-        .collection(`experiments/${experimentId}/participants`)
-        .doc('existing3')
-        .set({
-          ...createParticipantProfileExtended({
-            privateId: 'existing3',
-            publicId: 'pub-e3',
-            currentCohortId: cohortId,
-            currentStatus: ParticipantStatus.IN_PROGRESS,
-          }),
-          variableMap: {group: JSON.stringify('B')},
-        });
-
-      // New participant should get 'C' (least used with 0 assignments)
-      const result = await generateVariablesForScope([config], {
-        scope: VariableScope.PARTICIPANT,
-        experimentId,
-        cohortId,
-        participantId: 'new-participant',
-      });
-      expect(result['group']).toBe(JSON.stringify('C'));
-    });
-
     it('should assign using RANDOM strategy with seeded randomization', async () => {
       const config = createBalancedAssignmentVariableConfig({
         definition: {
@@ -429,63 +366,6 @@ describe('generateVariablesForScope', () => {
       expect(result2['weighted_condition']).toBe(JSON.stringify('B'));
     });
 
-    it('should assign using LEAST_USED with weights', async () => {
-      // Weights [2, 1] means target ratio is 67% A, 33% B
-      const config = createBalancedAssignmentVariableConfig({
-        definition: {
-          name: 'weighted_group',
-          description: 'Weighted group',
-          schema: VariableType.STRING,
-        },
-        values: [JSON.stringify('A'), JSON.stringify('B')],
-        weights: [2, 1], // Target: 67% A, 33% B
-        balanceStrategy: BalanceStrategy.LEAST_USED,
-        balanceAcross: BalanceAcross.EXPERIMENT,
-      });
-
-      const expId = 'weighted-lu-exp';
-
-      // Add 1 participant to each group (50/50 split)
-      // Target is 67/33, so A is under-represented
-      await firestore
-        .collection(`experiments/${expId}/participants`)
-        .doc('existing1')
-        .set({
-          ...createParticipantProfileExtended({
-            privateId: 'existing1',
-            publicId: 'pub-e1',
-            currentCohortId: cohortId,
-            currentStatus: ParticipantStatus.IN_PROGRESS,
-          }),
-          variableMap: {weighted_group: JSON.stringify('A')},
-        });
-
-      await firestore
-        .collection(`experiments/${expId}/participants`)
-        .doc('existing2')
-        .set({
-          ...createParticipantProfileExtended({
-            privateId: 'existing2',
-            publicId: 'pub-e2',
-            currentCohortId: cohortId,
-            currentStatus: ParticipantStatus.IN_PROGRESS,
-          }),
-          variableMap: {weighted_group: JSON.stringify('B')},
-        });
-
-      // With 1 A and 1 B:
-      // A: actual 50%, target 67% -> deviation +17% (under-represented)
-      // B: actual 50%, target 33% -> deviation -17% (over-represented)
-      // New participant should get A
-      const result = await generateVariablesForScope([config], {
-        scope: VariableScope.PARTICIPANT,
-        experimentId: expId,
-        cohortId,
-        participantId: 'new-weighted',
-      });
-      expect(result['weighted_group']).toBe(JSON.stringify('A'));
-    });
-
     it('should handle equal weights same as no weights', async () => {
       const configWithWeights = createBalancedAssignmentVariableConfig({
         definition: {
@@ -604,58 +484,6 @@ describe('generateVariablesForScope', () => {
       // Expected: exactly A=40, B=32, C=24, D=16, E=8
       values.forEach((v) => {
         expect(counts[v]).toBe(expectedCounts[v]);
-      });
-    });
-
-    it('should converge to weighted ratio with LEAST_USED over 120 participants', async () => {
-      const config = createBalancedAssignmentVariableConfig({
-        definition: {
-          name: 'lu_condition',
-          description: 'Least used condition',
-          schema: VariableType.STRING,
-        },
-        values: values.map((v) => JSON.stringify(v)),
-        weights,
-        balanceStrategy: BalanceStrategy.LEAST_USED,
-        balanceAcross: BalanceAcross.EXPERIMENT,
-      });
-
-      const counts: Record<string, number> = {A: 0, B: 0, C: 0, D: 0, E: 0};
-
-      // Simulate 120 participants joining sequentially
-      for (let i = 0; i < numParticipants; i++) {
-        const participantId = `lu-p${i}`;
-
-        const result = await generateVariablesForScope([config], {
-          scope: VariableScope.PARTICIPANT,
-          experimentId,
-          cohortId,
-          participantId,
-        });
-
-        const value = JSON.parse(result['lu_condition']);
-        counts[value]++;
-
-        // Add participant to Firestore with their assigned value
-        await firestore
-          .collection(`experiments/${experimentId}/participants`)
-          .doc(participantId)
-          .set({
-            ...createParticipantProfileExtended({
-              privateId: participantId,
-              publicId: `pub-${participantId}`,
-              currentCohortId: cohortId,
-              currentStatus: ParticipantStatus.IN_PROGRESS,
-            }),
-            variableMap: {lu_condition: result['lu_condition']},
-          });
-      }
-
-      // LEAST_USED should converge very close to target ratio
-      // Allow ±1 deviation due to tie-breaking randomness
-      values.forEach((v) => {
-        expect(counts[v]).toBeGreaterThanOrEqual(expectedCounts[v] - 1);
-        expect(counts[v]).toBeLessThanOrEqual(expectedCounts[v] + 1);
       });
     });
   });

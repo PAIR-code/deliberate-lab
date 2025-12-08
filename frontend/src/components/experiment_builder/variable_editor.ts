@@ -461,12 +461,6 @@ export class VariableEditor extends MobxLitElement {
               Round Robin
             </option>
             <option
-              value="${BalanceStrategy.LEAST_USED}"
-              ?selected=${config.balanceStrategy === BalanceStrategy.LEAST_USED}
-            >
-              Least Used
-            </option>
-            <option
               value="${BalanceStrategy.RANDOM}"
               ?selected=${config.balanceStrategy === BalanceStrategy.RANDOM}
             >
@@ -476,9 +470,7 @@ export class VariableEditor extends MobxLitElement {
           <div class="description">
             ${config.balanceStrategy === BalanceStrategy.ROUND_ROBIN
               ? 'Cycles through values in order based on participant count (deterministic, perfectly balanced)'
-              : config.balanceStrategy === BalanceStrategy.LEAST_USED
-                ? 'Assigns to the value used by the fewest participants (query-based, handles dropouts)'
-                : 'Random selection without balancing (seeded by participant ID)'}
+              : 'Random selection without balancing (seeded by participant ID)'}
           </div>
         `,
       )}

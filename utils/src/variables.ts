@@ -90,8 +90,6 @@ export function getVariableConfigTypeDescription(
  * Strategy for balancing assignments across participants.
  */
 export enum BalanceStrategy {
-  /** Assign to value used by fewest participants (query-based) */
-  LEAST_USED = 'least_used',
   /** Cycle through values based on participant count (deterministic) */
   ROUND_ROBIN = 'round_robin',
   /** Random selection without balancing (seeded by participant ID) */
