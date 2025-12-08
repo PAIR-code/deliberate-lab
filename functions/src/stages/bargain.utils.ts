@@ -32,28 +32,14 @@ export async function initializeBargainStage(
   stageConfig: BargainStageConfig,
   participants: ParticipantProfileExtended[],
 ) {
-  console.log('[BARGAIN] initializeBargainStage starting', {
-    experimentId,
-    cohortId,
-    stageId: stageConfig.id,
-    participantCount: participants.length,
-  });
-
   // Use first 2 participants for the game
   const gameParticipants = participants.slice(0, 2);
-  console.log('[BARGAIN] Initializing game with participants:', {
-    participant1: gameParticipants[0].publicId,
-    participant2: gameParticipants[1].publicId,
-  });
 
   const publicDataDoc = getFirestoreStagePublicDataRef(
     experimentId,
     cohortId,
     stageConfig.id,
   );
-
-  // Validate configuration values
-  console.log(`[BARGAIN] Config validation - Buyer range: [${stageConfig.buyerValuationMin}, ${stageConfig.buyerValuationMax}], Seller range: [${stageConfig.sellerValuationMin}, ${stageConfig.sellerValuationMax}]`);
 
   if (
     stageConfig.buyerValuationMin < 6 ||
@@ -121,10 +107,6 @@ export async function initializeBargainStage(
     );
   }
 
-  console.log(
-    `[BARGAIN] Generated valuations - Buyer: ${buyerValuation}, Seller: ${sellerValuation} (iterations: ${iterationCount})`
-  );
-
   // Randomly select who makes the first move
   const firstMover = Math.random() < 0.5 ? buyer : seller;
 
@@ -147,14 +129,6 @@ export async function initializeBargainStage(
     ? `Values between $${stageConfig.buyerValuationMin} - $${stageConfig.buyerValuationMax}`
     : 'You have no idea';
 
-  console.log(
-    `[BARGAIN] Randomized settings for this cohort - maxTurns: ${maxTurns}, chatEnabled: ${chatEnabled}, ` +
-    `showSellerToBuyer: ${showSellerToBuyer}, showBuyerToSeller: ${showBuyerToSeller}`
-  );
-  console.log(
-    `[BARGAIN] Opponent info - Buyer sees: "${buyerOpponentInfo}", Seller sees: "${sellerOpponentInfo}"`
-  );
-
   // Get participant answer document references
   const buyerAnswerDoc = getFirestoreParticipantAnswerRef(
     experimentId,
@@ -167,19 +141,6 @@ export async function initializeBargainStage(
     seller.privateId,
     stageConfig.id,
   );
-
-  // Write to Firestore
-  console.log('[BARGAIN] Writing initialization data to Firestore', {
-    buyerPublicId: buyer.publicId,
-    sellerPublicId: seller.publicId,
-    buyerValuation,
-    sellerValuation,
-    firstMoverId: firstMover.publicId,
-    buyerInfo: buyerOpponentInfo,
-    sellerInfo: sellerOpponentInfo,
-    maxTurns: maxTurns,
-    chatEnabled: chatEnabled,
-  });
 
   // Update participant answers with game-specific values
   // (placeholder answers created during participant creation)
@@ -217,8 +178,6 @@ export async function initializeBargainStage(
     agreedPrice: null,
     logs: [startLogEntry],
   });
-
-  console.log('[BARGAIN] initializeBargainStage completed successfully');
 }
 
 /**

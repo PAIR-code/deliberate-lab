@@ -65,7 +65,6 @@ export const startBargainGame = onCall(async (request) => {
 
     // If game is already started (currentTurn is not null), no action needed
     if (publicData && publicData.currentTurn !== null) {
-      console.log('[BARGAIN] Game already started, currentTurn:', publicData.currentTurn);
       return {success: false, message: 'Game already started'};
     }
 
@@ -83,14 +82,8 @@ export const startBargainGame = onCall(async (request) => {
       (doc) => doc.data() as ParticipantProfileExtended,
     );
 
-    console.log('[BARGAIN] Participants at stage:', {
-      count: participantsAtStage.length,
-      participantIds: participantsAtStage.map((p) => p.publicId),
-    });
-
     // Need at least 2 participants to start the game
     if (participantsAtStage.length < 2) {
-      console.log('[BARGAIN] Not enough participants to start game');
       return {success: false, message: 'Need at least 2 participants'};
     }
 
@@ -102,17 +95,10 @@ export const startBargainGame = onCall(async (request) => {
     // Add current participant to ready list if not already there
     if (!readyParticipantsArray.includes(data.participantPublicId)) {
       readyParticipantsArray.push(data.participantPublicId);
-      console.log('[BARGAIN] Participant marked as ready:', data.participantPublicId);
     }
 
     // Check if we have enough ready participants (need at least 2)
     if (readyParticipantsArray.length < 2) {
-      console.log('[BARGAIN] Waiting for more participants to be ready:', {
-        ready: readyParticipantsArray.length,
-        needed: 2,
-        readyParticipants: readyParticipantsArray,
-      });
-
       // Update public data with ready status but don't start game yet
       if (publicData) {
         transaction.update(publicDoc, {
@@ -140,7 +126,6 @@ export const startBargainGame = onCall(async (request) => {
     }
 
     // All required participants are ready, start the game!
-    console.log('[BARGAIN] All participants ready, starting game initialization');
 
     // Get stage config
     const stageSnapshot = await transaction.get(stageDoc);

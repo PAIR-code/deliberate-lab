@@ -297,27 +297,17 @@ export function calculatePayoutResult(
   // For each payout item, only add result to list if item is active;
   // if the payout item has a randomSelectionId,
   // only add the item if it was randomly selected for that participant
-  console.log('[PAYOUT] Processing payout items', {
-    itemCount: payoutConfig.payoutItems.length,
-    items: payoutConfig.payoutItems.map(i => ({id: i.id, type: i.type, isActive: i.isActive})),
-  });
-
   payoutConfig.payoutItems.forEach((item) => {
-    console.log('[PAYOUT] Processing item', {id: item.id, type: item.type, isActive: item.isActive});
-
     if (!item.isActive) {
-      console.log('[PAYOUT] Item not active, skipping');
       return;
     }
     if (
       item.randomSelectionId !== '' &&
       payoutAnswer.randomSelectionMap[item.randomSelectionId] !== item.id
     ) {
-      console.log('[PAYOUT] Item not randomly selected, skipping');
       return;
     }
     // Item is active and (if randomSelectionId) is selected
-    console.log('[PAYOUT] Calculating result for item', {id: item.id, type: item.type});
     const result = calculatePayoutItemResult(
       item,
       stageConfigMap,
@@ -325,7 +315,6 @@ export function calculatePayoutResult(
       profile,
       participantAnswerMap,
     );
-    console.log('[PAYOUT] Result calculated', {hasResult: !!result, result});
     if (result) {
       results.push(result);
     }
@@ -483,21 +472,12 @@ export function calculateBargainPayoutItemResult(
   profile: ParticipantProfile, // current participant profile
   participantAnswerMap?: Record<string, BaseStageParticipantAnswer>,
 ): BargainPayoutItemResult | null {
-  console.log('[BARGAIN PAYOUT ITEM] Starting calculation', {
-    itemId: item.id,
-    stageId: item.stageId,
-    isActive: item.isActive,
-    profilePublicId: profile.publicId,
-  });
-
   if (!item.isActive) {
-    console.log('[BARGAIN PAYOUT ITEM] Item not active');
     return null;
   }
 
   const stage = stageConfigMap[item.stageId];
   if (!stage) {
-    console.log('[BARGAIN PAYOUT ITEM] Stage not found in config map');
     return null;
   }
 
@@ -505,7 +485,6 @@ export function calculateBargainPayoutItemResult(
   const completedStage =
     stageTimestamp !== null && stageTimestamp !== undefined;
 
-  console.log('[BARGAIN PAYOUT ITEM] Calling calculateBargainPayout');
   // Calculate payout based on bargain game outcome
   const bargainPayout = calculateBargainPayout(
     item.stageId,
@@ -513,8 +492,6 @@ export function calculateBargainPayoutItemResult(
     publicDataMap,
     participantAnswerMap,
   );
-
-  console.log('[BARGAIN PAYOUT ITEM] Payout calculated', {bargainPayout});
 
   return {
     id: item.id,
