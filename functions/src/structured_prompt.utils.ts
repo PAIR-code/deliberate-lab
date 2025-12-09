@@ -166,8 +166,6 @@ export async function addFirestoreDataForPromptItem(
   // Conditions are only supported for single-participant contexts (not group chats)
   // TODO(rasmi): Add support for conditions in group chats.
   if (promptItem.condition && answerParticipants.length === 1) {
-    const conditionParticipantPublicId = answerParticipants[0].publicId;
-
     // Lazily fetch any missing stage data needed for condition evaluation
     await fetchConditionDependencies(
       experiment.id,
@@ -177,17 +175,8 @@ export async function addFirestoreDataForPromptItem(
       data,
     );
 
-    // Evaluate condition
-    const stageAnswers = buildStageAnswersForParticipant(
-      data,
-      conditionParticipantPublicId,
-    );
-    if (
-      !evaluateConditionWithStageAnswers(promptItem.condition, stageAnswers)
-    ) {
-      // Condition not met, skip this item.
-      // NOTE: This doesn't prevent the item from being processed,
-      // it just prevents us from fetching the remaining data unnecessarily as this prompt won't be displayed.
+    // Evaluate condition - skip fetching remaining data if condition not met
+    if (!shouldIncludePromptItem(promptItem, answerParticipants, data)) {
       return;
     }
   }
@@ -508,6 +497,26 @@ function buildStageAnswersForParticipant(
   return stageAnswers;
 }
 
+/**
+ * Evaluate a prompt item's condition for a single participant.
+ * Returns true if the condition is met (or if there's no condition).
+ * Only works for single-participant contexts.
+ */
+function shouldIncludePromptItem(
+  promptItem: PromptItem,
+  participants: ParticipantProfileExtended[],
+  stageContextData: Record<string, StageContextData>,
+): boolean {
+  if (!promptItem.condition || participants.length !== 1) {
+    return true;
+  }
+  const stageAnswers = buildStageAnswersForParticipant(
+    stageContextData,
+    participants[0].publicId,
+  );
+  return evaluateConditionWithStageAnswers(promptItem.condition, stageAnswers);
+}
+
 /** Process prompt items recursively. */
 async function processPromptItems(
   promptItems: PromptItem[],
@@ -542,16 +551,14 @@ async function processPromptItems(
 
   for (const promptItem of promptItems) {
     // Check condition if present (only for single-participant contexts)
-    if (promptItem.condition && promptData.participants.length === 1) {
-      const stageAnswers = buildStageAnswersForParticipant(
+    if (
+      !shouldIncludePromptItem(
+        promptItem,
+        promptData.participants,
         promptData.data,
-        promptData.participants[0].publicId,
-      );
-      if (
-        !evaluateConditionWithStageAnswers(promptItem.condition, stageAnswers)
-      ) {
-        continue; // Condition not met, skip this item
-      }
+      )
+    ) {
+      continue;
     }
 
     switch (promptItem.type) {
