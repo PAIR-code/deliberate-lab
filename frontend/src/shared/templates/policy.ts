@@ -44,9 +44,10 @@ import {
   VariableConfigType,
   VariableType,
   RandomPermutationVariableConfig,
-  StaticVariableConfig,
-  createStaticVariableConfig,
-  VariableScope,
+  BalancedAssignmentVariableConfig,
+  BalanceStrategy,
+  BalanceAcross,
+  createBalancedAssignmentVariableConfig,
   createShuffleConfig,
 } from '@deliberation-lab/utils';
 
@@ -196,17 +197,23 @@ const PolicySchema = VariableType.object({
   ),
 });
 
-// Create a static variable config with the complete policy object
-const POLICY_STATIC_CONFIG: StaticVariableConfig = createStaticVariableConfig({
-  id: 'policy-static-config',
-  scope: VariableScope.EXPERIMENT,
-  definition: {
-    name: 'policy',
-    description: 'Policy debate topic',
-    schema: PolicySchema,
-  },
-  value: JSON.stringify(EXAMPLE_POLICY_A),
-});
+// Create a balanced assignment config for multi-policy experiments
+// Each participant is randomly assigned one policy with even distribution
+const POLICY_BALANCED_ASSIGNMENT_CONFIG: BalancedAssignmentVariableConfig =
+  createBalancedAssignmentVariableConfig({
+    id: 'policy-balanced-assignment',
+    definition: {
+      name: 'policy',
+      description: 'Randomly assigned policy for balanced conditions',
+      schema: PolicySchema,
+    },
+    values: [
+      JSON.stringify(EXAMPLE_POLICY_A),
+      JSON.stringify(EXAMPLE_POLICY_B),
+    ],
+    balanceStrategy: BalanceStrategy.ROUND_ROBIN,
+    balanceAcross: BalanceAcross.EXPERIMENT,
+  });
 
 const NO_SHUFFLE: ShuffleConfig = createShuffleConfig({
   shuffle: false,
@@ -222,11 +229,11 @@ const PARTICIPANT_SHUFFLE: ShuffleConfig = createShuffleConfig({
 // ****************************************************************************
 export function getPolicyExperimentTemplate(): ExperimentTemplate {
   const stageConfigs = getPolicyStageConfigs();
-  const variableTemplates: VariableConfig[] = [POLICY_STATIC_CONFIG];
+  const variableConfigs: VariableConfig[] = [POLICY_BALANCED_ASSIGNMENT_CONFIG];
   return createExperimentTemplate({
     experiment: createExperimentConfig(stageConfigs, {
       metadata: POLICY_METADATA,
-      variableConfigs: variableTemplates,
+      variableConfigs,
     }),
     stageConfigs,
     agentMediators: POLICY_MEDIATOR_AGENTS,

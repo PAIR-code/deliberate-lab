@@ -13,9 +13,9 @@ import {
   StageConfig,
   createExperimentConfig,
   createExperimentTemplate,
-  generateVariablesForScope,
   VariableScope,
 } from '@deliberation-lab/utils';
+import {generateVariablesForScope} from './variables.utils';
 import {getExperimentDownload} from './data';
 
 import {onCall, HttpsError} from 'firebase-functions/v2/https';
@@ -71,7 +71,7 @@ export const writeExperiment = onCall(async (request) => {
     }
 
     // Add variable values at the experiment level
-    experimentConfig.variableMap = generateVariablesForScope(
+    experimentConfig.variableMap = await generateVariablesForScope(
       experimentConfig.variableConfigs ?? [],
       {scope: VariableScope.EXPERIMENT, experimentId: experimentConfig.id},
     );
