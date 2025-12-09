@@ -29,7 +29,7 @@ profile-display {
   @include common.flex-column-align-center;
   flex-wrap: wrap;
   gap: common.$spacing-medium;
-  overflow-wrap: anywhere;
+  overflow-wrap: break-word;
   text-align: center;
   width: 100px;
 }
