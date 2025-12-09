@@ -10,95 +10,11 @@ import {customElement, state} from 'lit/decorators.js';
 import {core} from '../../core/core';
 import {ExperimentEditor} from '../../services/experiment.editor';
 
+import {styles} from './save_template_dialog.scss';
+
 @customElement('save-template-dialog')
 export class SaveTemplateDialog extends MobxLitElement {
-  static override styles: CSSResultGroup = css`
-    :host {
-      display: block;
-    }
-
-    .dialog-overlay {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0, 0, 0, 0.32);
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      z-index: 1000;
-    }
-
-    .dialog {
-      background: var(--md-sys-color-surface);
-      border-radius: 8px;
-      width: 500px;
-      max-width: 90%;
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-      display: flex;
-      flex-direction: column;
-      color: var(--md-sys-color-on-surface);
-    }
-
-    .header {
-      padding: 16px;
-      border-bottom: 1px solid var(--md-sys-color-outline-variant);
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .title {
-      font-size: 18px;
-      font-weight: 500;
-    }
-
-    .body {
-      padding: 16px;
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-    }
-
-    .footer {
-      padding: 16px;
-      border-top: 1px solid var(--md-sys-color-outline-variant);
-      display: flex;
-      justify-content: flex-end;
-      gap: 8px;
-    }
-
-    pr-textarea {
-      width: 100%;
-    }
-    .error-message {
-      color: var(--md-sys-color-error);
-      font-size: 12px;
-      margin-top: 4px;
-    }
-
-    .form-group {
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-    }
-
-    .form-group label {
-      font-weight: 500;
-      font-size: 14px;
-    }
-
-    select {
-      width: 100%;
-      padding: 8px;
-      border: 1px solid var(--md-sys-color-outline);
-      border-radius: 4px;
-      font-size: 14px;
-      background: var(--md-sys-color-surface);
-      color: var(--md-sys-color-on-surface);
-    }
-  `;
+  static override styles: CSSResultGroup = [styles];
 
   private readonly experimentEditor = core.getService(ExperimentEditor);
 

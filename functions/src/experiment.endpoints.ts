@@ -32,7 +32,7 @@ const EXPERIMENTS_COLLECTION = 'experiments';
 // writeExperiment endpoint                                                  //
 // (create new experiment to specified Firestore collection)                 //
 //                                                                           //
-// Input structure: { collectionName, experimentTemplate }                   //
+// Input structure: { experimentTemplate }                   //
 // Validation: utils/src/experiment.validation.ts                            //
 // ************************************************************************* //
 export const writeExperiment = onCall(async (request) => {
@@ -110,7 +110,7 @@ export const writeExperiment = onCall(async (request) => {
 // updateExperiment endpoint                                                 //
 // (Update existing experiment to specified Firestore collection)            //
 //                                                                           //
-// Input structure: { collectionName, experimentTemplate }                   //
+// Input structure: { experimentTemplate }                   //
 // Validation: utils/src/experiment.validation.ts                            //
 // ************************************************************************* //
 export const updateExperiment = onCall(async (request) => {
