@@ -6,6 +6,7 @@ import {
   PROMPT_ITEM_PROFILE_CONTEXT_PARTICIPANT_SCAFFOLDING,
   PROMPT_ITEM_PROFILE_INFO_PARTICIPANT_SCAFFOLDING,
   BasePromptConfig,
+  Condition,
   CohortConfig,
   Experiment,
   MediatorProfileExtended,
@@ -20,12 +21,15 @@ import {
   UserType,
   VariableDefinition,
   extractVariablesFromVariableConfigs,
+  extractConditionDependencies,
+  evaluateConditionWithStageAnswers,
   getAllPrecedingStageIds,
   getNameFromPublicId,
   initializeStageContextData,
   makeStructuredOutputPrompt,
   resolveTemplateVariables,
   shuffleWithSeed,
+  StageParticipantAnswer,
 } from '@deliberation-lab/utils';
 import {
   getAgentMediatorPrompt,
@@ -158,6 +162,25 @@ export async function addFirestoreDataForPromptItem(
   answerParticipants: ParticipantProfileExtended[],
   data: Record<string, StageContextData> = {},
 ) {
+  // Check condition if present
+  // Conditions are only supported for single-participant contexts (not group chats)
+  // TODO(rasmi): Add support for conditions in group chats.
+  if (promptItem.condition && answerParticipants.length === 1) {
+    // Lazily fetch any missing stage data needed for condition evaluation
+    await fetchConditionDependencies(
+      experiment.id,
+      cohortId,
+      promptItem.condition,
+      answerParticipants,
+      data,
+    );
+
+    // Evaluate condition - skip fetching remaining data if condition not met
+    if (!shouldIncludePromptItem(promptItem, answerParticipants, data)) {
+      return;
+    }
+  }
+
   // Get profile set ID based on stage ID
   // (Temporary workaround before profile sets are refactored)
   const getProfileSetId = (stageId: string) => {
@@ -417,6 +440,83 @@ function getVariableContext(
   return {variableDefinitions, valueMap};
 }
 
+/**
+ * Lazily fetch stage data needed for condition evaluation.
+ * Only fetches data for stages not already present in the data object.
+ */
+async function fetchConditionDependencies(
+  experimentId: string,
+  cohortId: string,
+  condition: Condition,
+  answerParticipants: ParticipantProfileExtended[],
+  data: Record<string, StageContextData>,
+): Promise<void> {
+  const dependencies = extractConditionDependencies(condition);
+  const requiredStageIds = [...new Set(dependencies.map((dep) => dep.stageId))];
+
+  // Find stages not already in data
+  const missingStageIds = requiredStageIds.filter((stageId) => !data[stageId]);
+
+  // Fetch missing stage answers
+  if (missingStageIds.length > 0) {
+    await Promise.all(
+      missingStageIds.map(async (stageId) => {
+        const stage = await getFirestoreStage(experimentId, stageId);
+        if (!stage) return;
+        data[stageId] = initializeStageContextData(stage);
+        data[stageId].privateAnswers = await getFirestoreAnswersForStage(
+          experimentId,
+          cohortId,
+          stageId,
+          answerParticipants,
+        );
+      }),
+    );
+  }
+}
+
+/**
+ * Build stage answers map from StageContextData for a specific participant.
+ * Used for condition evaluation after all data has been fetched.
+ */
+function buildStageAnswersForParticipant(
+  stageContextData: Record<string, StageContextData>,
+  participantPublicId: string,
+): Record<string, StageParticipantAnswer> {
+  const stageAnswers: Record<string, StageParticipantAnswer> = {};
+
+  for (const [stageId, stageData] of Object.entries(stageContextData)) {
+    const participantAnswer = stageData.privateAnswers.find(
+      (entry) => entry.participantPublicId === participantPublicId,
+    );
+    if (participantAnswer) {
+      stageAnswers[stageId] = participantAnswer.answer;
+    }
+  }
+
+  return stageAnswers;
+}
+
+/**
+ * Evaluate a prompt item's condition for a single participant.
+ * Returns true if the condition is met (or if there's no condition).
+ * Only works for single-participant contexts.
+ */
+function shouldIncludePromptItem(
+  promptItem: PromptItem,
+  participants: ParticipantProfileExtended[],
+  stageContextData: Record<string, StageContextData>,
+): boolean {
+  if (!promptItem.condition || participants.length !== 1) {
+    return true;
+  }
+  const stageAnswers = buildStageAnswersForParticipant(
+    stageContextData,
+    participants[0].publicId,
+  );
+  return evaluateConditionWithStageAnswers(promptItem.condition, stageAnswers);
+}
+
 /** Process prompt items recursively. */
 async function processPromptItems(
   promptItems: PromptItem[],
@@ -450,6 +550,17 @@ async function processPromptItems(
   );
 
   for (const promptItem of promptItems) {
+    // Check condition if present (only for single-participant contexts)
+    if (
+      !shouldIncludePromptItem(
+        promptItem,
+        promptData.participants,
+        promptData.data,
+      )
+    ) {
+      continue;
+    }
+
     switch (promptItem.type) {
       case PromptItemType.TEXT:
         // Resolve template variables in text prompt items
