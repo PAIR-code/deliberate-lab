@@ -6,15 +6,23 @@ import {
   VariableConfig,
   VariableConfigType,
   VariableScope,
+  containsTemplateVariables,
   generateRandomPermutationVariables,
   generateStaticVariables,
+  getVariableContext,
   parseJsonValue,
+  resolveTemplateVariables,
   validateParsedVariableValue,
   weightedChoice,
   weightedRoundRobin,
 } from '@deliberation-lab/utils';
 
 import {app} from './app';
+import {
+  getFirestoreCohort,
+  getFirestoreExperiment,
+  getFirestoreParticipant,
+} from './utils/firestore';
 
 /**
  * Generate variables for a Balanced Assignment config.
@@ -176,4 +184,45 @@ export async function generateVariablesForScope(
   }
 
   return variableToValueMap;
+}
+
+/**
+ * Resolve template variables in a string using experiment/cohort/participant context.
+ * Fetches necessary data from Firestore and resolves variables like {{policy.name}}.
+ * Returns the original text unchanged if no template variables are present.
+ *
+ * @param participantPrivateId - The participant whose variables should be used for resolution.
+ *   For agent participants, pass themselves. For mediators in private chats, pass the
+ *   participant they're chatting with.
+ */
+export async function resolveStringWithVariables(
+  text: string,
+  experimentId: string,
+  cohortId: string,
+  participantPrivateId?: string,
+): Promise<string> {
+  // Early return if no template variables present
+  if (!containsTemplateVariables(text)) {
+    return text;
+  }
+
+  const experiment = await getFirestoreExperiment(experimentId);
+  const cohort = await getFirestoreCohort(experimentId, cohortId);
+
+  if (!experiment || !cohort) {
+    return text;
+  }
+
+  // Fetch participant if provided, to include their variables.
+  const participant = participantPrivateId
+    ? await getFirestoreParticipant(experimentId, participantPrivateId)
+    : undefined;
+
+  const {variableDefinitions, valueMap} = getVariableContext(
+    experiment,
+    cohort,
+    participant,
+  );
+
+  return resolveTemplateVariables(text, variableDefinitions, valueMap);
 }
