@@ -19,12 +19,11 @@ import {
   StageContextPromptItem,
   StageKind,
   UserType,
-  VariableDefinition,
-  extractVariablesFromVariableConfigs,
   extractConditionDependencies,
   evaluateConditionWithStageAnswers,
   getAllPrecedingStageIds,
   getNameFromPublicId,
+  getVariableContext,
   initializeStageContextData,
   makeStructuredOutputPrompt,
   resolveTemplateVariables,
@@ -290,9 +289,14 @@ export async function addFirestoreDataForPromptItem(
   }
 }
 
-/** Assemble prompt items into final prompt string.
+/** Assemble prompt items into final prompt string for an agent.
  * This is the main function called to get a final prompt string that
  * can be sent to an LLM API without any further edits.
+ *
+ * @param userProfile - The agent (participant or mediator) for whom the prompt is being generated.
+ *   This determines whose variables are used for template resolution.
+ * @param contextParticipantIds - Optional participant IDs to scope StageContext (e.g., survey answers
+ *   for private chats where a mediator needs context about specific participants).
  *
  * TODO: Instead of having the functions under this fetch documents
  * from Firestore, pass in a data structure containing all the database docs
@@ -399,48 +403,6 @@ function getProfileInfoForPrompt(
 }
 
 /**
- * Extracts variable definitions and merged value map from experiment, cohort, and user context.
- * Used for resolving template variables in prompts.
- *
- * @param contextParticipant - Optional participant for mediator context (e.g., in private chats).
- *   When a mediator is chatting with a specific participant, pass that participant here
- *   to include their participant-scoped variables in the resolution.
- */
-function getVariableContext(
-  experiment: Experiment,
-  cohort: CohortConfig,
-  userProfile: ParticipantProfileExtended | MediatorProfileExtended,
-  contextParticipant?: ParticipantProfileExtended,
-): {
-  variableDefinitions: Record<string, VariableDefinition>;
-  valueMap: Record<string, string>;
-} {
-  const experimentVariableMap = experiment.variableMap ?? {};
-  const cohortVariableMap = cohort.variableMap ?? {};
-
-  // For participants, include their personal variable map
-  // For mediators, use the context participant's variables if provided (e.g., private chat)
-  let participantVariableMap: Record<string, string> = {};
-  if (userProfile?.type === UserType.PARTICIPANT) {
-    participantVariableMap = userProfile.variableMap ?? {};
-  } else if (contextParticipant) {
-    // Mediator with a specific participant context (e.g., private chat)
-    participantVariableMap = contextParticipant.variableMap ?? {};
-  }
-
-  const variableDefinitions = extractVariablesFromVariableConfigs(
-    experiment.variableConfigs ?? [],
-  );
-  const valueMap = {
-    ...experimentVariableMap,
-    ...cohortVariableMap,
-    ...participantVariableMap,
-  };
-
-  return {variableDefinitions, valueMap};
-}
-
-/**
  * Lazily fetch stage data needed for condition evaluation.
  * Only fetches data for stages not already present in the data object.
  */
@@ -534,19 +496,24 @@ async function processPromptItems(
   const experiment = promptData.experiment;
   const items: string[] = [];
 
-  // For mediators in private chat context (single participant), use that participant's variables
-  const contextParticipant =
+  // Determine which participant's variables to use for template resolution.
+  // For agent participants, use their own variables.
+  // For mediators in private chat (single participant), use that participant's variables.
+  let participantForVariables: ParticipantProfileExtended | undefined;
+  if (userProfile.type === UserType.PARTICIPANT) {
+    participantForVariables = userProfile as ParticipantProfileExtended;
+  } else if (
     userProfile.type === UserType.MEDIATOR &&
     promptData.participants.length === 1
-      ? promptData.participants[0]
-      : undefined;
+  ) {
+    participantForVariables = promptData.participants[0];
+  }
 
   // Get variable context for resolving templates
   const {variableDefinitions, valueMap} = getVariableContext(
     experiment,
     promptData.cohort,
-    userProfile,
-    contextParticipant,
+    participantForVariables,
   );
 
   for (const promptItem of promptItems) {
@@ -602,17 +569,24 @@ async function processPromptItems(
           if (id === stageId && labelStages) {
             items.push(`\n--- Current stage ---`);
           }
+          // Resolve template variables in stage config before formatting
+          const rawStageContext = promptData.data[id];
+          const resolvedStage = stageManager.resolveTemplateVariablesInStage(
+            rawStageContext.stage,
+            variableDefinitions,
+            valueMap,
+          );
+          const resolvedStageContext = {
+            ...rawStageContext,
+            stage: resolvedStage,
+          };
+
           items.push(
-            await getStageContextForPrompt(
+            getStageContextForPrompt(
               promptData.participants,
-              promptData.data[id],
-              id,
+              resolvedStageContext,
               promptItem,
-              promptData.experiment,
-              promptData.cohort,
-              userProfile,
               includeScaffolding,
-              contextParticipant,
             ),
           );
         }
@@ -633,8 +607,10 @@ async function processPromptItems(
               seedString = cohortId;
               break;
             case 'participant':
-              // Use participant's public ID for consistent per-participant shuffling
-              seedString = userProfile.publicId;
+              // Use participant's public ID for consistent per-participant shuffling.
+              // For mediators in private chat, use the participant they're chatting with.
+              seedString =
+                participantForVariables?.publicId ?? userProfile.publicId;
               break;
             case 'custom':
               seedString = promptGroup.shuffleConfig.customSeed;
@@ -665,36 +641,16 @@ async function processPromptItems(
  * human participants for the stage) based on the prompt item settings of
  * what to include (e.g., stage description, participant's answers for the
  * stage) and formatted specifically for inserting into an LLM prompt.
+ *
+ * @param stageContext - Stage context with template variables already resolved.
  */
-export async function getStageContextForPrompt(
+function getStageContextForPrompt(
   participants: ParticipantProfileExtended[],
-  rawStageContext: StageContextData,
-  currentStageId: string,
+  stageContext: StageContextData,
   item: StageContextPromptItem,
-  // The following params are needed for variable extraction
-  experiment: Experiment,
-  cohort: CohortConfig,
-  userProfile: ParticipantProfileExtended | MediatorProfileExtended,
   includeScaffolding: boolean,
-  contextParticipant?: ParticipantProfileExtended,
-) {
-  // Resolve template variables in the stage context before
-  // using it to assemble context for prompt.
-  // For mediators with a context participant (e.g., private chat),
-  // use that participant's variables.
-  const {variableDefinitions, valueMap} = getVariableContext(
-    experiment,
-    cohort,
-    userProfile,
-    contextParticipant,
-  );
-  const stage = stageManager.resolveTemplateVariablesInStage(
-    rawStageContext.stage,
-    variableDefinitions,
-    valueMap,
-  );
-  const stageContext = {...rawStageContext, stage};
-
+): string {
+  const stage = stageContext.stage;
   const textItems: string[] = [];
 
   // Include name of stage if scaffolding
