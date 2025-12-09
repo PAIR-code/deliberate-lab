@@ -10,7 +10,7 @@
     "deploy": "firebase deploy --only functions",
     "logs": "firebase functions:log",
     "test": "npm run test:unit && npm run test:firestore",
-    "test:firestore": "firebase -c firebase-test.json emulators:exec --only firestore,functions --project=demo-deliberate-lab \"npx jest $npm_package_config_firestore_tests\"",
+    "test:firestore": "firebase -c firebase-test.json emulators:exec --only firestore,functions --project=demo-deliberate-lab \"npx jest --runInBand $npm_package_config_firestore_tests\"",
     "test:unit": "npx jest --testPathIgnorePatterns=$npm_package_config_firestore_tests",
     "typecheck": "tsc --noEmit"
   },
@@ -18,7 +18,7 @@
     "node": "22"
   },
   "config": {
-    "firestore_tests": "src/log.utils.test.ts src/dl_api/experiments.dl_api.integration.test.ts"
+    "firestore_tests": "src/log.utils.test.ts src/dl_api/experiments.dl_api.integration.test.ts src/variables.utils.test.ts"
   },
   "main": "lib/index.js",
   "dependencies": {

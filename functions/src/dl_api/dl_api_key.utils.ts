@@ -3,13 +3,13 @@
  * Handles generation, hashing, storage, and verification of API keys
  */
 
-import * as admin from 'firebase-admin';
 import {randomBytes, scrypt, createHash, timingSafeEqual} from 'crypto';
 import {promisify} from 'util';
 import {
   DeliberateLabAPIKeyPermission,
   DeliberateLabAPIKeyData,
 } from '@deliberation-lab/utils';
+import {app} from '../app';
 
 const scryptAsync = promisify(scrypt);
 
@@ -67,7 +67,6 @@ export async function createDeliberateLabAPIKey(
     DeliberateLabAPIKeyPermission.WRITE,
   ],
 ): Promise<{apiKey: string; keyId: string}> {
-  const app = admin.app();
   const firestore = app.firestore();
 
   // Generate the API key
@@ -104,7 +103,6 @@ export async function createDeliberateLabAPIKey(
 export async function verifyDeliberateLabAPIKey(
   apiKey: string,
 ): Promise<{valid: boolean; data?: DeliberateLabAPIKeyData}> {
-  const app = admin.app();
   const firestore = app.firestore();
 
   // Get key ID to look up the document
@@ -151,7 +149,6 @@ export async function revokeDeliberateLabAPIKey(
   keyId: string,
   experimenterId: string,
 ): Promise<boolean> {
-  const app = admin.app();
   const firestore = app.firestore();
 
   const doc = await firestore
@@ -195,7 +192,6 @@ export async function listDeliberateLabAPIKeys(experimenterId: string): Promise<
     permissions: DeliberateLabAPIKeyPermission[];
   }>
 > {
-  const app = admin.app();
   const firestore = app.firestore();
 
   const snapshot = await firestore
