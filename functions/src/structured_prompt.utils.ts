@@ -185,7 +185,10 @@ export async function addFirestoreDataForPromptItem(
     if (
       !evaluateConditionWithStageAnswers(promptItem.condition, stageAnswers)
     ) {
-      return; // Condition not met, skip this item
+      // Condition not met, skip this item.
+      // NOTE: This doesn't prevent the item from being processed,
+      // it just prevents us from fetching the remaining data unnecessarily as this prompt won't be displayed.
+      return;
     }
   }
 
@@ -538,6 +541,19 @@ async function processPromptItems(
   );
 
   for (const promptItem of promptItems) {
+    // Check condition if present (only for single-participant contexts)
+    if (promptItem.condition && promptData.participants.length === 1) {
+      const stageAnswers = buildStageAnswersForParticipant(
+        promptData.data,
+        promptData.participants[0].publicId,
+      );
+      if (
+        !evaluateConditionWithStageAnswers(promptItem.condition, stageAnswers)
+      ) {
+        continue; // Condition not met, skip this item
+      }
+    }
+
     switch (promptItem.type) {
       case PromptItemType.TEXT:
         // Resolve template variables in text prompt items

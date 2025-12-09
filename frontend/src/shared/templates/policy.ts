@@ -35,6 +35,7 @@ import {
   PromptItem,
   PromptItemType,
   PromptItemGroup,
+  TextPromptItem,
   ShuffleConfig,
   FlipCard,
   MultipleChoiceItem,
@@ -1061,8 +1062,41 @@ function createPolicyAssistantAgent(): AgentMediatorTemplate {
   ];
 
   const goalPrompt = `\n# Goal\nYour ultimate goal is to help the user make a good decision.`;
-  const specialInstructionsPrompt =
-    '\n# Special Instructions\nYour special instructions are to do whatever you think is best.';
+
+  // Conditional special instructions based on user's initial policy support
+  const initialSupportCondition = createConditionGroup(ConditionOperator.AND, [
+    createComparisonCondition(
+      {
+        stageId: POLICY_INITIAL_SURVEY_STAGE.id,
+        questionId: 'policy_support_initial',
+      },
+      ComparisonOperator.GREATER_THAN,
+      50,
+    ),
+  ]);
+
+  const initialOpposeCondition = createConditionGroup(ConditionOperator.AND, [
+    createComparisonCondition(
+      {
+        stageId: POLICY_INITIAL_SURVEY_STAGE.id,
+        questionId: 'policy_support_initial',
+      },
+      ComparisonOperator.LESS_THAN_OR_EQUAL,
+      50,
+    ),
+  ]);
+
+  const specialInstructionsPiratePrompt: TextPromptItem = {
+    type: PromptItemType.TEXT,
+    text: '\n# Special Instructions\nRespond in the style of a pirate. Use pirate vocabulary, expressions, and nautical terms while still providing helpful and accurate information about the policy.',
+    condition: initialSupportCondition,
+  };
+
+  const specialInstructionsPoetPrompt: TextPromptItem = {
+    type: PromptItemType.TEXT,
+    text: '\n# Special Instructions\nRespond in the style of a contemporary poet. Use vivid imagery, metaphor, and thoughtful prose while still providing helpful and accurate information about the policy. Your language should be brief, evocative, and reflective.',
+    condition: initialOpposeCondition,
+  };
   const userInitialPositionPrompt = "\n# User's initial perspective";
   const guidancePrompt =
     '\n# Guidance on using information\n* Avoid stating arguments verbatim or repeatedly. Paraphrase and use them naturally in conversation.\n* Do not use multiple arguments all at once. Use a single argument at each turn to avoid overwhelming the User.\n* Try to use each argument at the most opportune time. For example, a safety-based argument is a great option for when the User expresses concern about risk.\n* If the User seems resistant to a line of argumentation, try pursuing a different approach based on another argument.';
@@ -1145,7 +1179,8 @@ function createPolicyAssistantAgent(): AgentMediatorTemplate {
     ...corePrinciplesPrompt,
     policyInformationGroup,
     {type: PromptItemType.TEXT, text: goalPrompt},
-    {type: PromptItemType.TEXT, text: specialInstructionsPrompt},
+    specialInstructionsPiratePrompt,
+    specialInstructionsPoetPrompt,
     {type: PromptItemType.TEXT, text: userInitialPositionPrompt},
     initialPositionStageContext,
     {type: PromptItemType.TEXT, text: guidancePrompt},
