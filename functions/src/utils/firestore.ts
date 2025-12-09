@@ -386,8 +386,13 @@ export async function getAgentMediatorPrompt(
 export async function getAgentParticipantPrompt(
   experimentId: string,
   stageId: string,
-  agentId: string,
+  agentId: string | undefined,
 ): Promise<ParticipantPromptConfig | null> {
+  // If no agentId, return null to use default prompt
+  if (!agentId) {
+    return null;
+  }
+
   const prompt = await app
     .firestore()
     .collection('experiments')

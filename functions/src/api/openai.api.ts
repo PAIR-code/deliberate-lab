@@ -15,14 +15,15 @@ const MAX_TOKENS_FINISH_REASON = 'length';
 const REFUSAL_FINISH_REASON = 'content_filter';
 
 function makeStructuredOutputSchema(schema: StructuredOutputSchema): object {
+  // OpenAI JSON Schema requires lowercase type names
   const typeMap: {[key in StructuredOutputDataType]?: string} = {
-    [StructuredOutputDataType.STRING]: 'STRING',
-    [StructuredOutputDataType.NUMBER]: 'NUMBER',
-    [StructuredOutputDataType.INTEGER]: 'INTEGER',
-    [StructuredOutputDataType.BOOLEAN]: 'BOOLEAN',
-    [StructuredOutputDataType.ARRAY]: 'ARRAY',
-    [StructuredOutputDataType.OBJECT]: 'OBJECT',
-    [StructuredOutputDataType.ENUM]: 'STRING',
+    [StructuredOutputDataType.STRING]: 'string',
+    [StructuredOutputDataType.NUMBER]: 'number',
+    [StructuredOutputDataType.INTEGER]: 'integer',
+    [StructuredOutputDataType.BOOLEAN]: 'boolean',
+    [StructuredOutputDataType.ARRAY]: 'array',
+    [StructuredOutputDataType.OBJECT]: 'object',
+    [StructuredOutputDataType.ENUM]: 'string',
   };
   const type = typeMap[schema.type];
   if (!type) {
@@ -83,8 +84,11 @@ function makeStructuredOutputParameters(
   const schema = makeStructuredOutputSchema(structuredOutputConfig.schema);
   return {
     type: 'json_schema',
-    strict: true,
-    json_schema: schema,
+    json_schema: {
+      name: 'response_schema',
+      strict: true,
+      schema: schema,
+    },
   };
 }
 
@@ -116,6 +120,7 @@ export async function callOpenAIChatCompletion(
   prompt: string | Array<{role: string; content: string; name?: string}>,
   generationConfig: ModelGenerationConfig,
   structuredOutputConfig?: StructuredOutputConfig,
+  _useWebSearch?: boolean, // Accepted but not implemented - OpenAI chat completions API doesn't support web search
 ): Promise<ModelResponse> {
   const client = new OpenAI({
     apiKey: apiKey,
@@ -247,6 +252,7 @@ export async function getOpenAIAPIChatCompletionResponse(
   promptText: string | Array<{role: string; content: string; name?: string}>,
   generationConfig: ModelGenerationConfig,
   structuredOutputConfig?: StructuredOutputConfig,
+  useWebSearch?: boolean,
 ): Promise<ModelResponse> {
   if (!modelName) {
     console.warn('OpenAI API model name not set.');
@@ -275,6 +281,7 @@ export async function getOpenAIAPIChatCompletionResponse(
       promptText,
       generationConfig,
       structuredOutputConfig,
+      useWebSearch,
     );
     if (!response) {
       return {

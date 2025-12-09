@@ -1,0 +1,94 @@
+@use '../../sass/colors';
+@use '../../sass/common';
+@use '../../sass/typescale';
+
+:host {
+  @include common.overlay;
+  z-index: 20; // Above cohort-list header (z-index: 10)
+}
+
+.dialog {
+  @include common.dialog;
+  height: 700px;
+  width: 800px;
+}
+
+.header {
+  @include typescale.title-medium;
+  @include common.flex-row-align-center;
+  border-bottom: 1px solid var(--md-sys-color-outline-variant);
+  flex-shrink: 0;
+  gap: common.$spacing-medium;
+  height: common.$header-height;
+  justify-content: space-between;
+  padding: 0 common.$main-content-padding;
+}
+
+.body {
+  @include common.flex-column;
+  flex-grow: 1;
+  gap: common.$spacing-xl;
+  overflow: auto;
+  padding: common.$main-content-padding;
+}
+
+.section {
+  @include common.flex-column;
+  gap: common.$spacing-large;
+}
+
+.section-title {
+  @include typescale.title-medium;
+}
+
+.field {
+  @include common.flex-column;
+  gap: common.$spacing-small;
+  width: 100%;
+}
+
+.field-title {
+  @include typescale.label-small;
+}
+
+.description {
+  @include typescale.label-small;
+  color: var(--md-sys-color-outline);
+  font-style: italic;
+}
+
+.small {
+  @include typescale.label-small;
+  color: var(--md-sys-color-outline);
+}
+
+.action-buttons {
+  @include common.flex-row;
+  flex-wrap: wrap;
+  gap: common.$spacing-medium;
+}
+
+.checkbox-wrapper {
+  @include common.flex-row-align-center;
+  gap: common.$spacing-small;
+  overflow-wrap: break-word;
+
+  md-checkbox {
+    flex-shrink: 0;
+  }
+}
+
+.number-input {
+  @include common.number-input;
+  width: max-content;
+}
+
+.divider {
+  border-bottom: 1px solid var(--md-sys-color-outline-variant);
+  width: 100%;
+}
+
+.buttons-wrapper {
+  @include common.flex-row-align-center;
+  justify-content: end;
+}

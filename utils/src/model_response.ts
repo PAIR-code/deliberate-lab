@@ -114,8 +114,13 @@ export function addParsedModelResponse(response: ModelResponse) {
     return;
   }
 
+  // If there's no text to parse, return the response as-is
+  if (!response.text) {
+    return response;
+  }
+
   try {
-    const cleanedText = response.text!.replace(/```json\s*|\s*```/g, '').trim();
+    const cleanedText = response.text.replace(/```json\s*|\s*```/g, '').trim();
     response.parsedResponse = JSON.parse(cleanedText);
     return response;
   } catch (error) {

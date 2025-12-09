@@ -91,6 +91,14 @@ export const onPublicChatMessageCreated = onDocumentCreated(
     const agentParticipants = allParticipants.filter(
       (p) => p.agentConfig && p.currentStatus === ParticipantStatus.IN_PROGRESS,
     );
+    console.log(
+      `[ChatTrigger] onPublicChatMessageCreated: Found ${allParticipants.length} total participants, ${agentParticipants.length} agent participants with IN_PROGRESS status`,
+    );
+    agentParticipants.forEach((p) => {
+      console.log(
+        `[ChatTrigger] Agent participant: publicId=${p.publicId}, privateId=${p.privateId}, status=${p.currentStatus}, stageId=${p.currentStageId}`,
+      );
+    });
     await Promise.all(
       agentParticipants.map((participant) =>
         createAgentChatMessageFromPrompt(

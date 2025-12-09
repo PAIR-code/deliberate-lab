@@ -15,6 +15,7 @@ import {
   StructuredOutputSchema,
   ModelResponseStatus,
   ModelResponse,
+  addParsedModelResponse,
 } from '@deliberation-lab/utils';
 
 const GEMINI_DEFAULT_MODEL = 'gemini-2.5-flash';
@@ -165,6 +166,7 @@ export async function callGemini(
   generationConfig: GenerationConfig,
   modelName = GEMINI_DEFAULT_MODEL,
   safetySettings?: SafetySetting[],
+  useGoogleSearch?: boolean,
 ): Promise<ModelResponse> {
   const genAI = new GoogleGenAI({apiKey});
 
@@ -179,6 +181,11 @@ export async function callGemini(
 
   if (systemInstruction) {
     config.systemInstruction = systemInstruction;
+  }
+
+  // Add Google Search grounding tool if enabled
+  if (useGoogleSearch) {
+    config.tools = [{googleSearch: {}}];
   }
 
   const response = await genAI.models.generateContent({
@@ -253,7 +260,8 @@ export async function callGemini(
     imageDataList: imageDataList.length > 0 ? imageDataList : undefined,
   };
 
-  return modelResponse;
+  // Parse JSON from response text if present
+  return addParsedModelResponse(modelResponse) ?? modelResponse;
 }
 
 /** Constructs Gemini API query and returns response. */
@@ -263,6 +271,7 @@ export async function getGeminiAPIResponse(
   promptText: string | Array<{role: string; content: string; name?: string}>,
   generationConfig: ModelGenerationConfig,
   structuredOutputConfig?: StructuredOutputConfig,
+  useGoogleSearch?: boolean,
 ): Promise<ModelResponse> {
   // Extract disableSafetyFilters setting from generationConfig
   const disableSafetyFilters = generationConfig.disableSafetyFilters ?? false;
@@ -319,6 +328,7 @@ export async function getGeminiAPIResponse(
       geminiConfig,
       modelName,
       safetySettings,
+      useGoogleSearch,
     );
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (error: any) {
