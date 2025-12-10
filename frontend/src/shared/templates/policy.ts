@@ -216,6 +216,21 @@ const POLICY_BALANCED_ASSIGNMENT_CONFIG: BalancedAssignmentVariableConfig =
     balanceAcross: BalanceAcross.EXPERIMENT,
   });
 
+// Create a balanced assignment config for position (support/oppose)
+// Each participant is assigned either "support" or "oppose" with round-robin distribution
+const POSITION_BALANCED_ASSIGNMENT_CONFIG: BalancedAssignmentVariableConfig =
+  createBalancedAssignmentVariableConfig({
+    id: 'position-balanced-assignment',
+    definition: {
+      name: 'position',
+      description: 'Assigned position to support or oppose the policy',
+      schema: VariableType.STRING,
+    },
+    values: ['support', 'oppose'],
+    balanceStrategy: BalanceStrategy.ROUND_ROBIN,
+    balanceAcross: BalanceAcross.EXPERIMENT,
+  });
+
 const NO_SHUFFLE: ShuffleConfig = createShuffleConfig({
   shuffle: false,
   seed: SeedStrategy.PARTICIPANT,
@@ -230,7 +245,10 @@ const PARTICIPANT_SHUFFLE: ShuffleConfig = createShuffleConfig({
 // ****************************************************************************
 export function getPolicyExperimentTemplate(): ExperimentTemplate {
   const stageConfigs = getPolicyStageConfigs();
-  const variableConfigs: VariableConfig[] = [POLICY_BALANCED_ASSIGNMENT_CONFIG];
+  const variableConfigs: VariableConfig[] = [
+    POLICY_BALANCED_ASSIGNMENT_CONFIG,
+    POSITION_BALANCED_ASSIGNMENT_CONFIG,
+  ];
   return createExperimentTemplate({
     experiment: createExperimentConfig(stageConfigs, {
       metadata: POLICY_METADATA,
@@ -1061,7 +1079,7 @@ function createPolicyAssistantAgent(): AgentMediatorTemplate {
     },
   ];
 
-  const goalPrompt = `\n# Goal\nYour ultimate goal is to help the user make a good decision.`;
+  const goalPrompt = `\n# Goal\nYour ultimate goal is to convince the User to {{position}} the policy.`;
 
   // Conditional special instructions based on user's initial policy support
   const initialSupportCondition = createConditionGroup(ConditionOperator.AND, [
