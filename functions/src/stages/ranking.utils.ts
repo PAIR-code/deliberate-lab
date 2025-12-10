@@ -9,7 +9,6 @@ import {
   getCondorcetElectionWinner,
   getRankingCandidatesFromWTL,
   LAS_WTL_STAGE_ID,
-  createRankingStagePublicData,
 } from '@deliberation-lab/utils';
 
 import {app} from '../app';
@@ -43,12 +42,15 @@ export async function addParticipantAnswerToRankingStagePublicData(
       .doc(LAS_WTL_STAGE_ID);
     // Update public stage data (current participant rankings, current winner)
     const publicDoc = await publicDocument.get();
-    let publicStageData = publicDoc.data() as
+    const publicStageData = publicDoc.data() as
       | RankingStagePublicData
       | undefined;
 
     if (!publicStageData) {
-      publicStageData = createRankingStagePublicData(stage.id);
+      console.warn(
+        `Public stage data not found for stage ${stage.id} in cohort ${participant.currentCohortId}. This should have been initialized on cohort creation.`,
+      );
+      return;
     }
 
     publicStageData.participantAnswerMap[participant.publicId] =

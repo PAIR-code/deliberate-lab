@@ -3,7 +3,6 @@ import {
   FlipCardStageParticipantAnswer,
   FlipCardStagePublicData,
   ParticipantProfileExtended,
-  StageKind,
 } from '@deliberation-lab/utils';
 
 import * as admin from 'firebase-admin';
@@ -31,12 +30,14 @@ export async function addParticipantAnswerToFlipCardStagePublicData(
     const publicDoc = await transaction.get(publicDocument);
     const publicData = publicDoc.data() as FlipCardStagePublicData | undefined;
 
-    const currentPublicData = publicData || {
-      id: stage.id,
-      kind: StageKind.FLIPCARD,
-      participantFlipHistory: {},
-      participantSelections: {},
-    };
+    if (!publicData) {
+      console.warn(
+        `Public stage data not found for stage ${stage.id} in cohort ${participant.currentCohortId}. This should have been initialized on cohort creation.`,
+      );
+      return;
+    }
+
+    const currentPublicData = publicData;
 
     // Update public data with participant's flip history and selections
     const updatedPublicData: FlipCardStagePublicData = {

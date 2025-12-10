@@ -3,7 +3,6 @@ import {
   SurveyStageParticipantAnswer,
   SurveyStagePublicData,
   SurveyStageConfig,
-  createSurveyStagePublicData,
 } from '@deliberation-lab/utils';
 
 import {app} from '../app';
@@ -28,10 +27,15 @@ export async function addParticipantAnswerToSurveyStagePublicData(
 
     // Update public stage data (current participant rankings, current winner)
     const publicDoc = await transaction.get(publicDocument);
-    let publicStageData = publicDoc.data() as SurveyStagePublicData | undefined;
+    const publicStageData = publicDoc.data() as
+      | SurveyStagePublicData
+      | undefined;
 
     if (!publicStageData) {
-      publicStageData = createSurveyStagePublicData(stage.id);
+      console.warn(
+        `Public stage data not found for stage ${stage.id} in cohort ${participant.currentCohortId}. This should have been initialized on cohort creation.`,
+      );
+      return;
     }
 
     publicStageData.participantAnswerMap[participant.publicId] =
