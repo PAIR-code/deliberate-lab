@@ -53,7 +53,7 @@ export const VariableDefinitionData = Type.Object(
     description: Type.String(),
     schema: JSONSchemaData,
   },
-  strict,
+  {$id: 'VariableDefinition', ...strict},
 );
 
 /** BaseVariableConfig. */

@@ -116,6 +116,7 @@ jobs:
     - name: Regenerate schemas
       run: |
         cd utils && npx tsx src/export-schemas.ts
+        npx prettier --write ../docs/assets/api/schemas.json
         cd ../scripts && uv run datamodel-codegen \
           --input ../docs/assets/api/schemas.json \
           --output dl_api_types.py \
@@ -128,7 +129,10 @@ jobs:
 
     - name: Format Python files
       run: |
-        cd scripts && uvx black dl_api_types.py dl_api_client.py
+        cd scripts
+        # Add lint disable comments to generated file
+        sed -i '1s/^/# pyright: reportInvalidTypeForm=false\n# pylint: disable=missing-module-docstring,missing-class-docstring,invalid-name,too-few-public-methods\n/' dl_api_types.py
+        uvx black dl_api_types.py dl_api_client.py
 
     - name: Commit and push if changed
       run: |

@@ -931,114 +931,117 @@
           ]
         },
         "definition": {
-          "additionalProperties": false,
-          "type": "object",
-          "properties": {
-            "name": {
-              "minLength": 1,
-              "type": "string"
-            },
-            "description": {
-              "type": "string"
-            },
-            "schema": {
-              "title": "JSONSchemaDefinition",
-              "anyOf": [
-                {
-                  "additionalProperties": true,
-                  "type": "object",
-                  "properties": {
-                    "type": {
-                      "const": "string",
-                      "type": "string"
-                    }
-                  },
-                  "required": ["type"],
-                  "title": "String"
-                },
-                {
-                  "additionalProperties": true,
-                  "type": "object",
-                  "properties": {
-                    "type": {
-                      "const": "number",
-                      "type": "string"
-                    }
-                  },
-                  "required": ["type"],
-                  "title": "Number"
-                },
-                {
-                  "additionalProperties": true,
-                  "type": "object",
-                  "properties": {
-                    "type": {
-                      "const": "integer",
-                      "type": "string"
-                    }
-                  },
-                  "required": ["type"],
-                  "title": "Integer"
-                },
-                {
-                  "additionalProperties": true,
-                  "type": "object",
-                  "properties": {
-                    "type": {
-                      "const": "boolean",
-                      "type": "string"
-                    }
-                  },
-                  "required": ["type"],
-                  "title": "Boolean"
-                },
-                {
-                  "additionalProperties": true,
-                  "type": "object",
-                  "properties": {
-                    "type": {
-                      "const": "object",
-                      "type": "string"
-                    },
-                    "properties": {
-                      "type": "object",
-                      "patternProperties": {
-                        "^(.*)$": {
-                          "$ref": "#/$defs/JSONSchemaDefinition"
-                        }
-                      },
-                      "title": "Properties"
-                    }
-                  },
-                  "required": ["type"],
-                  "title": "Object"
-                },
-                {
-                  "additionalProperties": true,
-                  "type": "object",
-                  "properties": {
-                    "type": {
-                      "const": "array",
-                      "type": "string"
-                    },
-                    "items": {
-                      "$ref": "#/$defs/JSONSchemaDefinition"
-                    }
-                  },
-                  "required": ["type"],
-                  "title": "Array"
-                }
-              ]
-            }
-          },
-          "required": ["name", "description", "schema"],
-          "title": "Definition"
+          "$ref": "#/$defs/VariableDefinition"
         },
         "value": {
           "type": "string"
         }
       },
       "required": ["id", "type", "scope", "definition", "value"]
+    },
+    "VariableDefinition": {
+      "title": "VariableDefinition",
+      "additionalProperties": false,
+      "type": "object",
+      "properties": {
+        "name": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "schema": {
+          "title": "JSONSchemaDefinition",
+          "anyOf": [
+            {
+              "additionalProperties": true,
+              "type": "object",
+              "properties": {
+                "type": {
+                  "const": "string",
+                  "type": "string"
+                }
+              },
+              "required": ["type"],
+              "title": "String"
+            },
+            {
+              "additionalProperties": true,
+              "type": "object",
+              "properties": {
+                "type": {
+                  "const": "number",
+                  "type": "string"
+                }
+              },
+              "required": ["type"],
+              "title": "Number"
+            },
+            {
+              "additionalProperties": true,
+              "type": "object",
+              "properties": {
+                "type": {
+                  "const": "integer",
+                  "type": "string"
+                }
+              },
+              "required": ["type"],
+              "title": "Integer"
+            },
+            {
+              "additionalProperties": true,
+              "type": "object",
+              "properties": {
+                "type": {
+                  "const": "boolean",
+                  "type": "string"
+                }
+              },
+              "required": ["type"],
+              "title": "Boolean"
+            },
+            {
+              "additionalProperties": true,
+              "type": "object",
+              "properties": {
+                "type": {
+                  "const": "object",
+                  "type": "string"
+                },
+                "properties": {
+                  "type": "object",
+                  "patternProperties": {
+                    "^(.*)$": {
+                      "$ref": "#/$defs/JSONSchemaDefinition"
+                    }
+                  },
+                  "title": "Properties"
+                }
+              },
+              "required": ["type"],
+              "title": "Object"
+            },
+            {
+              "additionalProperties": true,
+              "type": "object",
+              "properties": {
+                "type": {
+                  "const": "array",
+                  "type": "string"
+                },
+                "items": {
+                  "$ref": "#/$defs/JSONSchemaDefinition"
+                }
+              },
+              "required": ["type"],
+              "title": "Array"
+            }
+          ]
+        }
+      },
+      "required": ["name", "description", "schema"]
     },
     "JSONSchemaDefinition": {
       "title": "JSONSchemaDefinition",
@@ -1178,108 +1181,7 @@
           ]
         },
         "definition": {
-          "additionalProperties": false,
-          "type": "object",
-          "properties": {
-            "name": {
-              "minLength": 1,
-              "type": "string"
-            },
-            "description": {
-              "type": "string"
-            },
-            "schema": {
-              "title": "JSONSchemaDefinition",
-              "anyOf": [
-                {
-                  "additionalProperties": true,
-                  "type": "object",
-                  "properties": {
-                    "type": {
-                      "const": "string",
-                      "type": "string"
-                    }
-                  },
-                  "required": ["type"],
-                  "title": "String"
-                },
-                {
-                  "additionalProperties": true,
-                  "type": "object",
-                  "properties": {
-                    "type": {
-                      "const": "number",
-                      "type": "string"
-                    }
-                  },
-                  "required": ["type"],
-                  "title": "Number"
-                },
-                {
-                  "additionalProperties": true,
-                  "type": "object",
-                  "properties": {
-                    "type": {
-                      "const": "integer",
-                      "type": "string"
-                    }
-                  },
-                  "required": ["type"],
-                  "title": "Integer"
-                },
-                {
-                  "additionalProperties": true,
-                  "type": "object",
-                  "properties": {
-                    "type": {
-                      "const": "boolean",
-                      "type": "string"
-                    }
-                  },
-                  "required": ["type"],
-                  "title": "Boolean"
-                },
-                {
-                  "additionalProperties": true,
-                  "type": "object",
-                  "properties": {
-                    "type": {
-                      "const": "object",
-                      "type": "string"
-                    },
-                    "properties": {
-                      "type": "object",
-                      "patternProperties": {
-                        "^(.*)$": {
-                          "$ref": "#/$defs/JSONSchemaDefinition"
-                        }
-                      },
-                      "title": "Properties"
-                    }
-                  },
-                  "required": ["type"],
-                  "title": "Object"
-                },
-                {
-                  "additionalProperties": true,
-                  "type": "object",
-                  "properties": {
-                    "type": {
-                      "const": "array",
-                      "type": "string"
-                    },
-                    "items": {
-                      "$ref": "#/$defs/JSONSchemaDefinition"
-                    }
-                  },
-                  "required": ["type"],
-                  "title": "Array"
-                }
-              ]
-            }
-          },
-          "required": ["name", "description", "schema"],
-          "title": "Definition"
+          "$ref": "#/$defs/VariableDefinition"
         },
         "shuffleConfig": {
           "additionalProperties": false,
@@ -1387,108 +1289,7 @@
           ]
         },
         "definition": {
-          "additionalProperties": false,
-          "type": "object",
-          "properties": {
-            "name": {
-              "minLength": 1,
-              "type": "string"
-            },
-            "description": {
-              "type": "string"
-            },
-            "schema": {
-              "title": "JSONSchemaDefinition",
-              "anyOf": [
-                {
-                  "additionalProperties": true,
-                  "type": "object",
-                  "properties": {
-                    "type": {
-                      "const": "string",
-                      "type": "string"
-                    }
-                  },
-                  "required": ["type"],
-                  "title": "String"
-                },
-                {
-                  "additionalProperties": true,
-                  "type": "object",
-                  "properties": {
-                    "type": {
-                      "const": "number",
-                      "type": "string"
-                    }
-                  },
-                  "required": ["type"],
-                  "title": "Number"
-                },
-                {
-                  "additionalProperties": true,
-                  "type": "object",
-                  "properties": {
-                    "type": {
-                      "const": "integer",
-                      "type": "string"
-                    }
-                  },
-                  "required": ["type"],
-                  "title": "Integer"
-                },
-                {
-                  "additionalProperties": true,
-                  "type": "object",
-                  "properties": {
-                    "type": {
-                      "const": "boolean",
-                      "type": "string"
-                    }
-                  },
-                  "required": ["type"],
-                  "title": "Boolean"
-                },
-                {
-                  "additionalProperties": true,
-                  "type": "object",
-                  "properties": {
-                    "type": {
-                      "const": "object",
-                      "type": "string"
-                    },
-                    "properties": {
-                      "type": "object",
-                      "patternProperties": {
-                        "^(.*)$": {
-                          "$ref": "#/$defs/JSONSchemaDefinition"
-                        }
-                      },
-                      "title": "Properties"
-                    }
-                  },
-                  "required": ["type"],
-                  "title": "Object"
-                },
-                {
-                  "additionalProperties": true,
-                  "type": "object",
-                  "properties": {
-                    "type": {
-                      "const": "array",
-                      "type": "string"
-                    },
-                    "items": {
-                      "$ref": "#/$defs/JSONSchemaDefinition"
-                    }
-                  },
-                  "required": ["type"],
-                  "title": "Array"
-                }
-              ]
-            }
-          },
-          "required": ["name", "description", "schema"],
-          "title": "Definition"
+          "$ref": "#/$defs/VariableDefinition"
         },
         "values": {
           "type": "array",
