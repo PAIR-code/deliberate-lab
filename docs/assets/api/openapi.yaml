@@ -1,4 +1,4 @@
-openapi: 3.0.3
+openapi: 3.1.0
 info:
   title: Deliberate Lab API
   description: |
@@ -473,62 +473,9 @@ components:
             type: boolean
 
     Stage:
-      type: object
-      required:
-        - id
-        - kind
-        - name
-        - descriptions
-        - progress
-      properties:
-        id:
-          type: string
-          description: Stage identifier
-          example: stage1
-        kind:
-          type: string
-          description: Stage type
-          example: survey
-          enum: [info, tos, profile, chat, chip, comprehension, flipcard, ranking, payout, privateChat, reveal, salesperson, stockinfo, assetAllocation, multiAssetAllocation, role, survey, surveyPerParticipant, transfer]
-        name:
-          type: string
-          description: Stage name
-          example: Pre-study Survey
-        descriptions:
-          type: object
-          required:
-            - primaryText
-          description: Stage text configuration
-          properties:
-            primaryText:
-              type: string
-              description: Text shown at top of screen under header
-              example: Please complete this survey
-            infoText:
-              type: string
-              description: Text for info popup
-              example: This survey collects demographic information
-            helpText:
-              type: string
-              description: Text for help popup
-              example: Select one option for each question
-        progress:
-          type: object
-          description: Stage progress configuration
-          properties:
-            minParticipants:
-              type: integer
-              description: Minimum participants required for stage
-              example: 1
-            waitForAllParticipants:
-              type: boolean
-              description: Wait for all participants to reach stage
-              example: false
-            showParticipantProgress:
-              type: boolean
-              description: Show participants who completed stage
-              example: false
-      description: Stage configuration (extends BaseStageConfig with kind-specific fields). Note that each stage kind has additional required fields beyond the base fields shown here.
+      description: |
+        Stage configuration. This is a discriminated union - the `kind` field determines the stage type and its required fields.
+      $ref: 'schemas.json#/properties/stage'
 
     ParticipantProfile:
       type: object
@@ -547,8 +494,7 @@ components:
           description: Private participant identifier (only in extended profile)
           example: private123
         prolificId:
-          type: string
-          nullable: true
+          type: ['string', 'null']
           description: Prolific participant ID (if applicable)
           example: abc123
         currentStageId:
@@ -560,8 +506,7 @@ components:
           description: Current cohort the participant is in
           example: cohort1
         transferCohortId:
-          type: string
-          nullable: true
+          type: ['string', 'null']
           description: Cohort ID if pending transfer
         currentStatus:
           type: string
@@ -569,16 +514,13 @@ components:
           description: Current participant status
           example: IN_PROGRESS
         pronouns:
-          type: string
-          nullable: true
+          type: ['string', 'null']
           description: Participant's pronouns
         avatar:
-          type: string
-          nullable: true
+          type: ['string', 'null']
           description: Emoji used as avatar
         name:
-          type: string
-          nullable: true
+          type: ['string', 'null']
           description: Participant's name
         timestamps:
           type: object
@@ -589,12 +531,10 @@ components:
           description: Anonymous profile metadata by profile set ID
           additionalProperties: true
         connected:
-          type: boolean
-          nullable: true
+          type: ['boolean', 'null']
           description: Connection status
         agentConfig:
-          type: object
-          nullable: true
+          type: ['object', 'null']
           description: Agent configuration if participant is AI-controlled
           additionalProperties: true
 
