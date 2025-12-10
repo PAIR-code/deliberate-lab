@@ -1,3 +1,4 @@
+# pylint: disable=line-too-long
 """
 Deliberate Lab REST API Client
 
@@ -33,7 +34,7 @@ import os
 import requests
 
 # Import types module - use as `types.SurveyStageConfig`, `types.TextSurveyQuestion`, etc.
-import dl_api_types as types
+import dl_api_types as types  # noqa: F401  # pylint: disable=unused-import
 
 if TYPE_CHECKING:
     from pydantic import BaseModel

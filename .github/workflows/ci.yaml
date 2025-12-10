@@ -126,6 +126,10 @@ jobs:
           --use-title-as-name \
           --output-model-type pydantic_v2.BaseModel
 
+    - name: Format Python files
+      run: |
+        cd scripts && uvx black dl_api_types.py dl_api_client.py
+
     - name: Commit and push if changed
       run: |
         git config user.name "github-actions[bot]"
