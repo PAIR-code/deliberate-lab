@@ -138,6 +138,7 @@ export async function getFirestoreDataForStructuredPrompt(
       experiment,
       cohortId,
       currentStageId,
+      promptConfig.type,
       item,
       activeParticipants,
       answerParticipants,
@@ -154,6 +155,7 @@ export async function addFirestoreDataForPromptItem(
   experiment: Experiment,
   cohortId: string,
   currentStageId: string,
+  stageKind: StageKind,
   promptItem: PromptItem,
   // All active participants in cohort
   activeParticipants: ParticipantProfileExtended[],
@@ -162,9 +164,8 @@ export async function addFirestoreDataForPromptItem(
   data: Record<string, StageContextData> = {},
 ) {
   // Check condition if present
-  // Conditions are only supported for single-participant contexts (not group chats)
-  // TODO(rasmi): Add support for conditions in group chats.
-  if (promptItem.condition && answerParticipants.length === 1) {
+  // Conditions are only supported for private chat contexts
+  if (promptItem.condition && stageKind === StageKind.PRIVATE_CHAT) {
     // Lazily fetch any missing stage data needed for condition evaluation
     await fetchConditionDependencies(
       experiment.id,
@@ -175,7 +176,9 @@ export async function addFirestoreDataForPromptItem(
     );
 
     // Evaluate condition - skip fetching remaining data if condition not met
-    if (!shouldIncludePromptItem(promptItem, answerParticipants, data)) {
+    if (
+      !shouldIncludePromptItem(promptItem, stageKind, answerParticipants, data)
+    ) {
       return;
     }
   }
@@ -204,6 +207,7 @@ export async function addFirestoreDataForPromptItem(
             experiment,
             cohortId,
             currentStageId,
+            stageKind,
             {...promptItem, stageId},
             activeParticipants,
             answerParticipants,
@@ -277,6 +281,7 @@ export async function addFirestoreDataForPromptItem(
           experiment,
           cohortId,
           currentStageId,
+          stageKind,
           item,
           activeParticipants,
           answerParticipants,
@@ -328,6 +333,7 @@ export async function getPromptFromConfig(
     promptConfig.prompt,
     cohortId,
     stageId,
+    promptConfig.type, // Pass stageKind to distinguish privateChat from groupChat.
     promptData,
     userProfile,
     promptConfig.includeScaffoldingInPrompt,
@@ -358,7 +364,18 @@ function getProfileContextForPrompt(
   return '';
 }
 
-/** Returns string representing ProfileInfo prompt item. */
+/**
+ * Returns string representing ProfileInfo prompt item.
+ *
+ * @param userProfile - The agent's profile.
+ * @param includeScaffolding - Whether to include scaffolding text.
+ * @param stageId - The current stage ID. Used for a temporary hack where we
+ *   check if the stageId string contains special profile set identifiers
+ *   (SECONDARY_PROFILE_SET_ID, TERTIARY_PROFILE_SET_ID) to override which
+ *   profile name/avatar to display. A better approach would be to add a
+ *   profileSetId field to BaseStageConfig instead of encoding this in the
+ *   stage ID string.
+ */
 function getProfileInfoForPrompt(
   userProfile: ParticipantProfileExtended | MediatorProfileExtended,
   includeScaffolding: boolean,
@@ -462,14 +479,19 @@ function buildStageAnswersForParticipant(
 /**
  * Evaluate a prompt item's condition for a single participant.
  * Returns true if the condition is met (or if there's no condition).
- * Only works for single-participant contexts.
+ * Only works for private chat contexts with a single participant.
  */
 function shouldIncludePromptItem(
   promptItem: PromptItem,
+  stageKind: StageKind,
   participants: ParticipantProfileExtended[],
   stageContextData: Record<string, StageContextData>,
 ): boolean {
-  if (!promptItem.condition || participants.length !== 1) {
+  if (
+    !promptItem.condition ||
+    stageKind !== StageKind.PRIVATE_CHAT ||
+    participants.length !== 1
+  ) {
     return true;
   }
   const stageAnswers = buildStageAnswersForParticipant(
@@ -479,11 +501,38 @@ function shouldIncludePromptItem(
   return evaluateConditionWithStageAnswers(promptItem.condition, stageAnswers);
 }
 
-/** Process prompt items recursively. */
+/**
+ * Process prompt items recursively and return the assembled prompt text.
+ *
+ * @param promptItems - The list of prompt items to process.
+ * @param cohortId - The cohort ID (used as shuffle seed for GROUP items with cohort-based shuffling).
+ * @param stageId - The current stage ID. Used for:
+ *   - Determining preceding stages when STAGE_CONTEXT has empty stageId
+ *   - Labeling current vs previous stages in scaffolding
+ *   - Profile set override hack (see getProfileInfoForPrompt)
+ * @param stageKind - The kind of the current stage (e.g., PRIVATE_CHAT, CHAT).
+ *   Used to determine whether participant-level variables should be resolved.
+ *   We pass this explicitly rather than deriving from stageId because the stage
+ *   config may not be in promptData.data (it's only fetched when needed by
+ *   STAGE_CONTEXT prompt items).
+ * @param promptData - Pre-fetched data from Firestore:
+ *   - experiment: The experiment config (also used for experiment-based shuffle seeding)
+ *   - cohort: The cohort config (for cohort-level variables)
+ *   - participants: Participants whose answers are used for STAGE_CONTEXT rendering,
+ *     condition evaluation, and participant-based shuffle seeding
+ *   - data: Stage context data keyed by stage ID
+ * @param userProfile - The agent's profile (participant or mediator). Used for:
+ *   - Determining variable resolution strategy (agent participants use their own variables)
+ *   - PROFILE_CONTEXT and PROFILE_INFO prompt item rendering (tells the agent its own identity)
+ *   - Determining scaffolding behavior (stage labeling for agent participants)
+ *   - Fallback for participant-based shuffle seeding
+ * @param includeScaffolding - Whether to include scaffolding text in the prompt.
+ */
 async function processPromptItems(
   promptItems: PromptItem[],
   cohortId: string,
   stageId: string,
+  stageKind: StageKind,
   promptData: {
     experiment: Experiment;
     cohort: CohortConfig;
@@ -498,15 +547,18 @@ async function processPromptItems(
 
   // Determine which participant's variables to use for template resolution.
   // For agent participants, use their own variables.
-  // For mediators in private chat (single participant), use that participant's variables.
+  // For mediators in private chat, use that participant's variables.
   let participantForVariables: ParticipantProfileExtended | undefined;
   if (userProfile.type === UserType.PARTICIPANT) {
     participantForVariables = userProfile as ParticipantProfileExtended;
   } else if (
     userProfile.type === UserType.MEDIATOR &&
-    promptData.participants.length === 1
+    stageKind === StageKind.PRIVATE_CHAT
   ) {
-    participantForVariables = promptData.participants[0];
+    participantForVariables =
+      promptData.participants.length === 1
+        ? promptData.participants[0]
+        : undefined;
   }
 
   // Get variable context for resolving templates
@@ -517,10 +569,11 @@ async function processPromptItems(
   );
 
   for (const promptItem of promptItems) {
-    // Check condition if present (only for single-participant contexts)
+    // Check condition if present (only for private chat contexts)
     if (
       !shouldIncludePromptItem(
         promptItem,
+        stageKind,
         promptData.participants,
         promptData.data,
       )
@@ -623,6 +676,7 @@ async function processPromptItems(
           groupItems,
           cohortId,
           stageId,
+          stageKind,
           promptData,
           userProfile,
           includeScaffolding,
