@@ -10,7 +10,8 @@
     "build": "tsup --onSuccess \"npm run declarations\"",
     "build:watch": "tsup --watch --onSuccess \"npm run declarations\"",
     "test": "jest",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "export-schemas": "npx tsx src/export-schemas.ts && npx prettier --write ../docs/assets/api/schemas.json"
   },
   "files": [
     "dist/**/*"

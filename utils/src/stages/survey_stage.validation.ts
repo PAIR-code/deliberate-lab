@@ -24,7 +24,7 @@ export const TextSurveyQuestionData = Type.Object(
     minCharCount: Type.Optional(Type.Number()),
     maxCharCount: Type.Optional(Type.Number()),
   },
-  strict,
+  {$id: 'TextSurveyQuestion', ...strict},
 );
 
 /** CheckSurveyQuestion input validation. */
@@ -36,7 +36,7 @@ export const CheckSurveyQuestionData = Type.Object(
     isRequired: Type.Boolean(),
     condition: Type.Optional(ConditionSchema),
   },
-  strict,
+  {$id: 'CheckSurveyQuestion', ...strict},
 );
 
 /** MultipleChoiceItem input validation. */
@@ -46,7 +46,7 @@ export const MultipleChoiceItemData = Type.Object(
     imageId: Type.String(),
     text: Type.String(),
   },
-  strict,
+  {$id: 'MultipleChoiceItem', ...strict},
 );
 
 /** MultipleChoiceSurveyQuestion input validation. */
@@ -59,7 +59,7 @@ export const MultipleChoiceSurveyQuestionData = Type.Object(
     correctAnswerId: Type.Union([Type.Null(), Type.String()]),
     condition: Type.Optional(ConditionSchema),
   },
-  strict,
+  {$id: 'MultipleChoiceSurveyQuestion', ...strict},
 );
 
 /** ScaleSurveyQuestion input validation. */
@@ -72,12 +72,12 @@ export const ScaleSurveyQuestionData = Type.Object(
     upperText: Type.String(),
     lowerValue: Type.Number(),
     lowerText: Type.String(),
-    middleText: Type.String(),
-    useSlider: Type.Boolean(),
-    stepSize: Type.Number({minimum: 1}),
+    middleText: Type.Optional(Type.String()),
+    useSlider: Type.Optional(Type.Boolean()),
+    stepSize: Type.Optional(Type.Number({minimum: 1})),
     condition: Type.Optional(ConditionSchema),
   },
-  strict,
+  {$id: 'ScaleSurveyQuestion', ...strict},
 );
 
 /** SurveyQuestion input validation. */
@@ -98,7 +98,7 @@ export const SurveyStageConfigData = Type.Object(
     progress: Type.Ref(StageProgressConfigSchema),
     questions: Type.Array(SurveyQuestionData),
   },
-  strict,
+  {$id: 'SurveyStageConfig', ...strict},
 );
 
 /** SurveyPerParticipantStageConfig input validation. */
@@ -112,7 +112,7 @@ export const SurveyPerParticipantStageConfigData = Type.Object(
     questions: Type.Array(SurveyQuestionData),
     enableSelfSurvey: Type.Boolean(),
   },
-  strict,
+  {$id: 'SurveyPerParticipantStageConfig', ...strict},
 );
 
 // ************************************************************************* //
@@ -126,7 +126,7 @@ export const TextSurveyAnswerData = Type.Object(
     kind: Type.Literal(SurveyQuestionKind.TEXT),
     answer: Type.String(),
   },
-  strict,
+  {$id: 'TextSurveyAnswer', ...strict},
 );
 
 /** CheckSurveyAnswer input validation. */
@@ -136,7 +136,7 @@ export const CheckSurveyAnswerData = Type.Object(
     kind: Type.Literal(SurveyQuestionKind.CHECK),
     isChecked: Type.Boolean(),
   },
-  strict,
+  {$id: 'CheckSurveyAnswer', ...strict},
 );
 
 /** MultipleChoiceSurveyAnswer input validation. */
@@ -146,7 +146,7 @@ export const MultipleChoiceSurveyAnswerData = Type.Object(
     kind: Type.Literal(SurveyQuestionKind.MULTIPLE_CHOICE),
     choiceId: Type.String({minLength: 1}),
   },
-  strict,
+  {$id: 'MultipleChoiceSurveyAnswer', ...strict},
 );
 
 /** ScaleSurveyAnswer input validation. */
@@ -156,7 +156,7 @@ export const ScaleSurveyAnswerData = Type.Object(
     kind: Type.Literal(SurveyQuestionKind.SCALE),
     value: Type.Number(),
   },
-  strict,
+  {$id: 'ScaleSurveyAnswer', ...strict},
 );
 
 /** SurveyAnswer input validation. */

@@ -18,6 +18,7 @@ import {
   ExperimentTemplate,
   Experiment,
   DeliberateLabAPIKeyPermission,
+  ProlificConfig,
 } from '@deliberation-lab/utils';
 import {
   createDeliberateLabAPIKey,
@@ -198,7 +199,7 @@ describe('API Experiment Creation Integration Tests', () => {
     name: string,
     description: string,
     stages: StageConfig[],
-    prolificRedirectCode?: string,
+    prolificConfig?: ProlificConfig,
   ): Promise<string> {
     // Prepare request body matching API schema
     // Serialize stages to JSON (removes Timestamps, like a real API client would send)
@@ -206,15 +207,15 @@ describe('API Experiment Creation Integration Tests', () => {
       name: string;
       description: string;
       stages: StageConfig[];
-      prolificRedirectCode?: string;
+      prolificConfig?: ProlificConfig;
     } = {
       name,
       description,
       stages: JSON.parse(JSON.stringify(stages)) as StageConfig[],
     };
 
-    if (prolificRedirectCode) {
-      requestBody.prolificRedirectCode = prolificRedirectCode;
+    if (prolificConfig) {
+      requestBody.prolificConfig = prolificConfig;
     }
 
     // Make actual HTTP POST request to API
@@ -596,6 +597,52 @@ describe('API Experiment Creation Integration Tests', () => {
         const {experiment} = await getExperimentWithStages(experimentId);
         expect(experiment.metadata.name).toBe('Updated Name');
         expect(experiment.metadata.description).toBe('Updated Description');
+      });
+
+      it('should create experiment with prolificConfig', async () => {
+        const prolificConfig: ProlificConfig = {
+          enableProlificIntegration: true,
+          defaultRedirectCode: 'ABC123',
+          attentionFailRedirectCode: 'FAIL456',
+          bootedRedirectCode: 'BOOT789',
+        };
+
+        const experimentId = await createExperimentViaAPI(
+          'Prolific Test',
+          'Testing Prolific config',
+          [],
+          prolificConfig,
+        );
+
+        // Verify in Firestore
+        const {experiment} = await getExperimentWithStages(experimentId);
+        expect(experiment.prolificConfig).toEqual(prolificConfig);
+      });
+
+      it('should update experiment prolificConfig', async () => {
+        const experimentId = await createExperimentViaAPI(
+          'Prolific Update Test',
+          'Testing Prolific config update',
+          [],
+        );
+
+        const newProlificConfig: ProlificConfig = {
+          enableProlificIntegration: true,
+          defaultRedirectCode: 'UPDATED123',
+          attentionFailRedirectCode: 'UPDATED456',
+          bootedRedirectCode: 'UPDATED789',
+        };
+
+        const response = await apiRequest(
+          'PUT',
+          `/v1/experiments/${experimentId}`,
+          {prolificConfig: newProlificConfig},
+        );
+        expect(response.status).toBe(200);
+
+        // Verify in Firestore
+        const {experiment} = await getExperimentWithStages(experimentId);
+        expect(experiment.prolificConfig).toEqual(newProlificConfig);
       });
 
       it('should update experiment stages', async () => {

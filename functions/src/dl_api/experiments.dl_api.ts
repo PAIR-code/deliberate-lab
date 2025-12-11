@@ -16,6 +16,7 @@ import {
   StageConfig,
   MetadataConfig,
   UnifiedTimestamp,
+  ProlificConfig,
 } from '@deliberation-lab/utils';
 import {
   getFirestoreExperiment,
@@ -30,14 +31,14 @@ interface CreateExperimentRequest {
   name: string;
   description?: string;
   stages?: StageConfig[];
-  prolificRedirectCode?: string;
+  prolificConfig?: ProlificConfig;
 }
 
 interface UpdateExperimentRequest {
   name?: string;
   description?: string;
   stages?: StageConfig[];
-  prolificRedirectCode?: string;
+  prolificConfig?: ProlificConfig;
 }
 
 /**
@@ -97,7 +98,7 @@ export async function createExperiment(
   const timestamp = admin.firestore.Timestamp.now() as UnifiedTimestamp;
 
   // Use existing utility functions to create proper config
-  const metadata: MetadataConfig & {prolificRedirectCode?: string} = {
+  const metadata: MetadataConfig = {
     name: body.name,
     description: body.description || '',
     publicName: '',
@@ -108,11 +109,6 @@ export async function createExperiment(
     dateModified: timestamp,
   };
 
-  // Add prolific redirect code if provided
-  if (body.prolificRedirectCode) {
-    metadata.prolificRedirectCode = body.prolificRedirectCode;
-  }
-
   // Validate stages if provided
   if (!validateOrRespond(body.stages, validateStages, res)) return;
 
@@ -120,6 +116,7 @@ export async function createExperiment(
   const stageConfigs = body.stages || [];
   const experimentConfig = createExperimentConfig(stageConfigs, {
     metadata,
+    prolificConfig: body.prolificConfig,
   });
 
   // Use transaction for consistency (similar to writeExperiment)
@@ -228,8 +225,8 @@ export async function updateExperiment(
   if (body.name !== undefined) updates['metadata.name'] = body.name;
   if (body.description !== undefined)
     updates['metadata.description'] = body.description;
-  if (body.prolificRedirectCode !== undefined) {
-    updates['metadata.prolificRedirectCode'] = body.prolificRedirectCode;
+  if (body.prolificConfig !== undefined) {
+    updates['prolificConfig'] = body.prolificConfig;
   }
 
   // Update timestamp

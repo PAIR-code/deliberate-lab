@@ -22,16 +22,14 @@ layout: default
 <script src="https://unpkg.com/swagger-ui-dist@5/swagger-ui-standalone-preset.js"></script>
 <script>
   window.onload = function () {
-    const spec = {{ site.data.openapi | jsonify }};
-
     const ui = SwaggerUIBundle({
-      spec: spec,
+      url: '{{ site.baseurl }}/assets/api/openapi.yaml',
       dom_id: '#swagger-ui',
       deepLinking: true,
       presets: [SwaggerUIBundle.presets.apis, SwaggerUIStandalonePreset],
       layout: 'BaseLayout',
       defaultModelsExpandDepth: 1,
-      defaultModelExpandDepth: 1,
+      defaultModelExpandDepth: 0,
       docExpansion: 'list',
       filter: true,
       tryItOutEnabled: true,
