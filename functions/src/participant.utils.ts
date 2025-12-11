@@ -2,10 +2,12 @@ import {Timestamp} from 'firebase-admin/firestore';
 import {
   AutoTransferType,
   ChipItem,
+  ConditionAutoTransferConfig,
   Experiment,
   ParticipantProfileExtended,
   ParticipantStatus,
   TransferStageConfig,
+  TransferGroup,
   StageConfig,
   StageKind,
   CohortConfig,
@@ -16,6 +18,10 @@ import {
   createChipStageParticipantAnswer,
   createPayoutStageParticipantAnswer,
   ChipStagePublicData,
+  evaluateCondition,
+  extractMultipleConditionDependencies,
+  getConditionTargetKey,
+  extractAnswerValue,
 } from '@deliberation-lab/utils';
 import {completeStageAsAgentParticipant} from './agent_participant.utils';
 import {
@@ -207,27 +213,52 @@ export async function updateCohortStageUnlocked(
   });
 }
 
-/** Automatically transfer participants based on survey answers. */
+/** Automatically transfer participants based on config type. */
 export async function handleAutomaticTransfer(
   transaction: FirebaseFirestore.Transaction,
   experimentId: string,
   stageConfig: TransferStageConfig,
   participant: ParticipantProfileExtended,
 ): Promise<{currentStageId: string; endExperiment: boolean} | null> {
-  const firestore = app.firestore();
-
-  // If stage config does not have an auto-transfer config, ignore
-  // TODO: Remove temporary ignore of "default" transfer type
-  if (
-    !stageConfig.autoTransferConfig ||
-    stageConfig.autoTransferConfig.type !== AutoTransferType.SURVEY
-  ) {
+  if (!stageConfig.autoTransferConfig) {
     return null;
   }
 
-  // Auto-transfer config
-  // TODO: Add switch statement depending on transfer type
-  const autoTransferConfig = stageConfig.autoTransferConfig;
+  switch (stageConfig.autoTransferConfig.type) {
+    case AutoTransferType.SURVEY:
+      return handleSurveyAutoTransfer(
+        transaction,
+        experimentId,
+        stageConfig,
+        participant,
+      );
+    case AutoTransferType.CONDITION:
+      return handleConditionAutoTransfer(
+        transaction,
+        experimentId,
+        stageConfig,
+        participant,
+      );
+    case AutoTransferType.DEFAULT:
+    default:
+      // DEFAULT type not yet implemented
+      return null;
+  }
+}
+
+/** Handle SURVEY type auto-transfer (legacy - multiple choice only). */
+async function handleSurveyAutoTransfer(
+  transaction: FirebaseFirestore.Transaction,
+  experimentId: string,
+  stageConfig: TransferStageConfig,
+  participant: ParticipantProfileExtended,
+): Promise<{currentStageId: string; endExperiment: boolean} | null> {
+  const firestore = app.firestore();
+  const autoTransferConfig = stageConfig.autoTransferConfig!;
+
+  if (autoTransferConfig.type !== AutoTransferType.SURVEY) {
+    return null;
+  }
 
   // Do a read to lock the current participant's document for this transaction
   // The data itself might be outdated, so we discard it
@@ -401,6 +432,220 @@ export async function handleAutomaticTransfer(
   participant.transferCohortId = cohortConfig.id;
 
   return {currentStageId: stageConfig.id, endExperiment: false};
+}
+
+/**
+ * Handle CONDITION type auto-transfer.
+ * Uses the Condition system for flexible routing based on any survey question type.
+ */
+async function handleConditionAutoTransfer(
+  transaction: FirebaseFirestore.Transaction,
+  experimentId: string,
+  stageConfig: TransferStageConfig,
+  participant: ParticipantProfileExtended,
+): Promise<{currentStageId: string; endExperiment: boolean} | null> {
+  const firestore = app.firestore();
+  const autoTransferConfig =
+    stageConfig.autoTransferConfig as ConditionAutoTransferConfig;
+
+  // Do a read to lock the current participant's document for this transaction
+  const participantDocRef = firestore
+    .collection('experiments')
+    .doc(experimentId)
+    .collection('participants')
+    .doc(participant.privateId);
+  await transaction.get(participantDocRef);
+
+  // Fetch participants waiting at this stage and in the same cohort
+  const waitingParticipants = (
+    await transaction.get(
+      firestore
+        .collection('experiments')
+        .doc(experimentId)
+        .collection('participants')
+        .where('currentStageId', '==', stageConfig.id)
+        .where('currentStatus', '==', ParticipantStatus.IN_PROGRESS)
+        .where('currentCohortId', '==', participant.currentCohortId)
+        .where('transferCohortId', '==', null),
+    )
+  ).docs.map((doc) => doc.data() as ParticipantProfileExtended);
+
+  // Add the current participant if not already present
+  if (!waitingParticipants.some((p) => p.privateId === participant.privateId)) {
+    waitingParticipants.push(participant);
+  }
+
+  // Filter connected participants
+  const connectedParticipants = waitingParticipants.filter((p) => p.connected);
+
+  console.log(
+    `[CONDITION] Connected participants for transfer stage ${stageConfig.id}: ${connectedParticipants
+      .map((p) => p.publicId)
+      .join(', ')}`,
+  );
+
+  // Extract all stage IDs we need survey data from
+  const dependencies = extractMultipleConditionDependencies(
+    autoTransferConfig.transferGroups.map((g) => g.condition),
+  );
+  const stageIds = [...new Set(dependencies.map((d) => d.stageId))];
+
+  // Fetch survey data for all referenced stages
+  const surveyDataMap: Record<string, SurveyStagePublicData> = {};
+  for (const stageId of stageIds) {
+    const surveyStageDoc = firestore
+      .collection('experiments')
+      .doc(experimentId)
+      .collection('cohorts')
+      .doc(participant.currentCohortId)
+      .collection('publicStageData')
+      .doc(stageId);
+
+    const surveyStageData = (await transaction.get(surveyStageDoc)).data() as
+      | SurveyStagePublicData
+      | undefined;
+
+    if (surveyStageData) {
+      surveyDataMap[stageId] = surveyStageData;
+    }
+  }
+
+  // Build target values for each participant and evaluate conditions
+  const participantGroups: Record<string, ParticipantProfileExtended[]> = {};
+
+  for (const connectedParticipant of connectedParticipants) {
+    const targetValues = buildTargetValuesForParticipant(
+      connectedParticipant,
+      surveyDataMap,
+    );
+
+    // Find first matching group (evaluated in order)
+    for (const group of autoTransferConfig.transferGroups) {
+      if (evaluateCondition(group.condition, targetValues)) {
+        if (!participantGroups[group.id]) {
+          participantGroups[group.id] = [];
+        }
+        participantGroups[group.id].push(connectedParticipant);
+        console.log(
+          `[CONDITION] Participant ${connectedParticipant.publicId} matched group "${group.name}"`,
+        );
+        break; // Stop at first matching group
+      }
+    }
+  }
+
+  // Find the group the current participant belongs to
+  let currentParticipantGroup: TransferGroup | null = null;
+  for (const group of autoTransferConfig.transferGroups) {
+    const groupParticipants = participantGroups[group.id] || [];
+    if (groupParticipants.some((p) => p.privateId === participant.privateId)) {
+      currentParticipantGroup = group;
+      break;
+    }
+  }
+
+  if (!currentParticipantGroup) {
+    console.log(
+      `[CONDITION] Current participant ${participant.publicId} did not match any transfer group`,
+    );
+    return null;
+  }
+
+  // Check if we have enough participants in the current participant's group
+  let groupParticipants = participantGroups[currentParticipantGroup.id] || [];
+
+  if (groupParticipants.length < currentParticipantGroup.minParticipants) {
+    console.log(
+      `[CONDITION] Not enough participants for group "${currentParticipantGroup.name}": ` +
+        `expected ${currentParticipantGroup.minParticipants}, found ${groupParticipants.length}`,
+    );
+    return null;
+  }
+
+  // Sort by waiting time (oldest first)
+  groupParticipants = groupParticipants.sort((a, b) => {
+    const aTime = a.timestamps.readyStages?.[stageConfig.id]?.toMillis?.() ?? 0;
+    const bTime = b.timestamps.readyStages?.[stageConfig.id]?.toMillis?.() ?? 0;
+    return aTime - bTime;
+  });
+
+  // Move the current participant to the front if present
+  groupParticipants = groupParticipants
+    .filter((p) => p.privateId === participant.privateId)
+    .concat(
+      groupParticipants.filter((p) => p.privateId !== participant.privateId),
+    );
+
+  // Limit to maxParticipants
+  const cohortParticipants = groupParticipants.slice(
+    0,
+    currentParticipantGroup.maxParticipants,
+  );
+
+  // Create a new cohort and transfer participants
+  const cohortConfig = createCohortConfig({
+    id: generateId(),
+    metadata: createMetadataConfig({
+      creator: 'system',
+      dateCreated: Timestamp.now(),
+      dateModified: Timestamp.now(),
+    }),
+    participantConfig: autoTransferConfig.autoCohortParticipantConfig,
+  });
+
+  console.log(
+    `[CONDITION] Creating cohort ${cohortConfig.id} for group "${currentParticipantGroup.name}" ` +
+      `with participants: ${cohortParticipants.map((p) => p.publicId).join(', ')}`,
+  );
+
+  await createCohortInternal(transaction, experimentId, cohortConfig);
+
+  for (const p of cohortParticipants) {
+    const participantDoc = firestore
+      .collection('experiments')
+      .doc(experimentId)
+      .collection('participants')
+      .doc(p.privateId);
+
+    transaction.update(participantDoc, {
+      transferCohortId: cohortConfig.id,
+      currentStatus: ParticipantStatus.TRANSFER_PENDING,
+    });
+
+    console.log(
+      `[CONDITION] Transferring participant ${p.publicId} to cohort ${cohortConfig.id}`,
+    );
+  }
+
+  // Update the passed-in participant as a side-effect
+  participant.currentStatus = ParticipantStatus.TRANSFER_PENDING;
+  participant.transferCohortId = cohortConfig.id;
+
+  return {currentStageId: stageConfig.id, endExperiment: false};
+}
+
+/**
+ * Build target values map for condition evaluation from participant's survey answers.
+ * Returns a map with keys in format "stageId::questionId" and values from survey answers.
+ */
+function buildTargetValuesForParticipant(
+  participant: ParticipantProfileExtended,
+  surveyDataMap: Record<string, SurveyStagePublicData>,
+): Record<string, unknown> {
+  const targetValues: Record<string, unknown> = {};
+
+  for (const [stageId, surveyData] of Object.entries(surveyDataMap)) {
+    const participantAnswers =
+      surveyData.participantAnswerMap[participant.publicId];
+    if (!participantAnswers) continue;
+
+    for (const [questionId, answer] of Object.entries(participantAnswers)) {
+      const key = getConditionTargetKey({stageId, questionId});
+      targetValues[key] = extractAnswerValue(answer);
+    }
+  }
+
+  return targetValues;
 }
 
 /** Fetch a participant record by experimentId and participantId. */
