@@ -7,9 +7,9 @@ Simple Python client for interacting with the Deliberate Lab API.
 Usage:
     Set the DL_API_KEY environment variable with your API key, then:
 
-    from dl_api_client import DeliberateLabClient, dl
+    import deliberate_lab as dl
 
-    client = DeliberateLabClient()
+    client = dl.Client()
 
     # List experiments
     experiments = client.list_experiments()
@@ -33,14 +33,14 @@ from typing import Optional, TYPE_CHECKING
 import os
 import requests
 
-# Import types module - use as `dl.SurveyStageConfig`, `dl.TextSurveyQuestion`, etc.
-import dl_api_types as dl  # noqa: F401  # pylint: disable=unused-import
+# Re-export all types so users can do: dl.SurveyStageConfig, dl.TextSurveyQuestion, etc.
+from deliberate_lab_types import *  # pylint: disable=wildcard-import,unused-wildcard-import
 
 if TYPE_CHECKING:
     from pydantic import BaseModel
 
 
-class DeliberateLabAPIError(requests.HTTPError):
+class APIError(requests.HTTPError):
     """Exception raised for API errors with parsed error message."""
 
     def __init__(self, response: requests.Response, message: str):
@@ -50,7 +50,7 @@ class DeliberateLabAPIError(requests.HTTPError):
         )
 
 
-class DeliberateLabClient:
+class Client:
     """Client for the Deliberate Lab REST API."""
 
     DEFAULT_BASE_URL = "https://us-central1-deliberate-lab.cloudfunctions.net/api/v1"
@@ -92,7 +92,7 @@ class DeliberateLabClient:
                 error_msg = response.json().get("error", response.text)
             except ValueError:
                 error_msg = response.text
-            raise DeliberateLabAPIError(response, error_msg)
+            raise APIError(response, error_msg)
         return response.json()
 
     def health_check(self) -> dict:
@@ -249,7 +249,7 @@ class DeliberateLabClient:
 if __name__ == "__main__":
     # Quick test - requires DL_API_KEY to be set
     try:
-        client = DeliberateLabClient()
+        client = Client()
 
         print("Checking API health...")
         health = client.health_check()
@@ -262,7 +262,7 @@ if __name__ == "__main__":
         for exp in result["experiments"][:5]:  # Show first 5
             print(f"  - {exp['metadata']['name']} ({exp['id']})")
 
-    except DeliberateLabAPIError as e:
+    except APIError as e:
         print(f"API Error: {e}")
     except ValueError as e:
         print(f"Configuration Error: {e}")
