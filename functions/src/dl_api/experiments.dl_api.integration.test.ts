@@ -9,122 +9,51 @@
  */
 
 import {
-  initializeTestEnvironment,
-  RulesTestEnvironment,
-} from '@firebase/rules-unit-testing';
-import {
-  createExperimentConfig,
   StageConfig,
   ExperimentTemplate,
   Experiment,
-  DeliberateLabAPIKeyPermission,
   ProlificConfig,
+  createExperimentConfig,
 } from '@deliberation-lab/utils';
 import {
-  createDeliberateLabAPIKey,
-  verifyDeliberateLabAPIKey,
-} from './dl_api_key.utils';
+  TestContext,
+  setupTestContext,
+  teardownTestContext,
+  cleanupExperiment,
+  createApiRequestHelper,
+  serializeForFirestore,
+  EXPERIMENTS_COLLECTION,
+  TEST_EXPERIMENTER_ID,
+} from './dl_api.test.utils';
 
 // Import actual experiment templates from frontend
 import {getFlipCardExperimentTemplate} from '../../../frontend/src/shared/templates/flipcard';
 import {getQuickstartGroupChatTemplate} from '../../../frontend/src/shared/templates/quickstart_group_chat';
 import {getPolicyExperimentTemplate} from '../../../frontend/src/shared/templates/policy';
 
-let testEnv: RulesTestEnvironment;
-// Use any for firestore as the RulesTestEnvironment type is complex
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-let firestore: any;
-let testAPIKey: string;
-let baseUrl: string;
-
-// Test configuration
-const TEST_EXPERIMENTER_ID = 'test-experimenter@example.com';
-const EXPERIMENTS_COLLECTION = 'experiments';
+let ctx: TestContext;
+let apiRequest: ReturnType<typeof createApiRequestHelper>;
 
 describe('API Experiment Creation Integration Tests', () => {
   // Store created experiment IDs for cleanup
   const createdExperimentIds: string[] = [];
 
   beforeAll(async () => {
-    const projectId = 'demo-deliberate-lab';
-
-    testEnv = await initializeTestEnvironment({
-      projectId,
-      firestore: process.env.FIRESTORE_EMULATOR_HOST
-        ? undefined
-        : {
-            host: 'localhost',
-            port: 8081,
-          },
-    });
-    firestore = testEnv.unauthenticatedContext().firestore();
-    firestore.settings({ignoreUndefinedProperties: true, merge: true});
-
-    // Create test API key (this will be stored in the emulator)
-    console.log('Creating API key...');
-    const {apiKey} = await createDeliberateLabAPIKey(
-      TEST_EXPERIMENTER_ID,
-      'Test API Key',
-      [DeliberateLabAPIKeyPermission.READ, DeliberateLabAPIKeyPermission.WRITE],
-    );
-    testAPIKey = apiKey;
-    // Verify the key can be validated (this uses admin SDK internally)
-    console.log('Verifying API key...');
-    const {valid, data} = await verifyDeliberateLabAPIKey(apiKey);
-    console.log('API key valid:', valid);
-    if (!valid || !data) {
-      throw new Error('API key verification failed');
-    }
-
-    // Construct base URL dynamically from environment and config
-    // Firebase emulators don't set FIREBASE_FUNCTIONS_EMULATOR_HOST, so we use convention
-    const functionsHost =
-      process.env.FIREBASE_FUNCTIONS_EMULATOR_HOST || 'localhost';
-    const functionsPort =
-      process.env.FIREBASE_FUNCTIONS_EMULATOR_PORT || '5101';
-    const region = 'us-central1'; // Default region for Cloud Functions
-
-    baseUrl = `http://${functionsHost}:${functionsPort}/${projectId}/${region}/api`;
-    console.log('API base URL:', baseUrl);
+    ctx = await setupTestContext('Experiment Tests');
+    apiRequest = createApiRequestHelper(ctx.baseUrl, ctx.apiKey);
   });
 
   afterAll(async () => {
-    // Cleanup test environment
-    await testEnv.cleanup();
+    await teardownTestContext(ctx);
   });
 
   beforeEach(async () => {
-    // Clear experiments but keep API keys
-    // We need to keep the API key that was created in beforeAll
-    // Use withSecurityRulesDisabled to bypass Firestore rules for cleanup
-    await testEnv.withSecurityRulesDisabled(async (context) => {
-      const adminFirestore = context.firestore();
-      for (const expId of createdExperimentIds) {
-        try {
-          const expRef = adminFirestore
-            .collection(EXPERIMENTS_COLLECTION)
-            .doc(expId);
-          await expRef.delete();
-          // Also delete subcollections
-          const stages = await expRef.collection('stages').get();
-          for (const stage of stages.docs) {
-            await stage.ref.delete();
-          }
-        } catch (error) {
-          console.error('Error cleaning up experiment:', expId, error);
-        }
-      }
-    });
+    // Clear experiments from previous tests
+    for (const expId of createdExperimentIds) {
+      await cleanupExperiment(ctx.firestore, expId);
+    }
     createdExperimentIds.length = 0;
   });
-
-  /**
-   * Helper function to serialize data for Firestore
-   * Converts Timestamp objects to plain objects
-   */
-  function serializeForFirestore<T>(data: T): T {
-    return JSON.parse(JSON.stringify(data)) as T;
-  }
 
   /**
    * Helper function to create an experiment using the template system
@@ -141,13 +70,9 @@ describe('API Experiment Creation Integration Tests', () => {
     // Override creator to test user
     experimentConfig.metadata.creator = TEST_EXPERIMENTER_ID;
 
-    // Use withSecurityRulesDisabled to simulate admin SDK behavior
-    // (the writeExperiment cloud function uses admin SDK which bypasses rules)
-    await testEnv.withSecurityRulesDisabled(async (context) => {
-      const adminFirestore = context.firestore();
-      const document = adminFirestore
-        .collection(EXPERIMENTS_COLLECTION)
-        .doc(experimentConfig.id);
+    const document = ctx.firestore
+      .collection(EXPERIMENTS_COLLECTION)
+      .doc(experimentConfig.id);
 
       // Write experiment directly (serialize to remove Timestamp objects)
       await document.set(serializeForFirestore(experimentConfig));
@@ -192,50 +117,31 @@ describe('API Experiment Creation Integration Tests', () => {
   }
 
   /**
-   * Helper function to create an experiment using the API
-   * Makes actual HTTP POST request to the REST API endpoint
+   * Helper function to create an experiment using the API and track for cleanup
    */
-  async function createExperimentViaAPI(
+  async function createTestExperiment(
     name: string,
     description: string,
     stages: StageConfig[],
     prolificConfig?: ProlificConfig,
   ): Promise<string> {
-    // Prepare request body matching API schema
-    // Serialize stages to JSON (removes Timestamps, like a real API client would send)
-    const requestBody: {
-      name: string;
-      description: string;
-      stages: StageConfig[];
-      prolificConfig?: ProlificConfig;
-    } = {
+    const body: Record<string, unknown> = {
       name,
       description,
-      stages: JSON.parse(JSON.stringify(stages)) as StageConfig[],
+      stages: JSON.parse(JSON.stringify(stages)),
     };
-
     if (prolificConfig) {
-      requestBody.prolificConfig = prolificConfig;
+      body.prolificConfig = prolificConfig;
     }
 
-    // Make actual HTTP POST request to API
-    const response = await fetch(`${baseUrl}/v1/experiments`, {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${testAPIKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(requestBody),
-    });
+    const response = await apiRequest('POST', '/v1/experiments', body);
 
-    // Assert successful creation
     if (!response.ok) {
       const errorBody = await response.text();
       console.error('API request failed:', response.status, errorBody);
     }
     expect(response.status).toBe(201);
 
-    // Extract experiment ID from response
     const responseBody = await response.json();
     const experimentId = responseBody.experiment.id;
     createdExperimentIds.push(experimentId);
@@ -248,14 +154,14 @@ describe('API Experiment Creation Integration Tests', () => {
   async function getExperimentWithStages(
     experimentId: string,
   ): Promise<{experiment: Experiment; stages: StageConfig[]}> {
-    const experimentDoc = await firestore
+    const experimentDoc = await ctx.firestore
       .collection(EXPERIMENTS_COLLECTION)
       .doc(experimentId)
       .get();
 
     const experiment = experimentDoc.data() as Experiment;
 
-    const stagesSnapshot = await firestore
+    const stagesSnapshot = await ctx.firestore
       .collection(EXPERIMENTS_COLLECTION)
       .doc(experimentId)
       .collection('stages')
@@ -440,7 +346,7 @@ describe('API Experiment Creation Integration Tests', () => {
       const templateExperimentId = await createExperimentViaTemplate(template);
 
       // Create experiment via API with same configuration
-      const apiExperimentId = await createExperimentViaAPI(
+      const apiExperimentId = await createTestExperiment(
         template.experiment.metadata.name,
         template.experiment.metadata.description,
         template.stageConfigs,
@@ -472,27 +378,6 @@ describe('API Experiment Creation Integration Tests', () => {
   // ============================================================================
 
   describe('API CRUD Operations', () => {
-    /**
-     * Helper to make API requests with proper auth
-     */
-    async function apiRequest(
-      method: string,
-      path: string,
-      body?: unknown,
-    ): Promise<Response> {
-      const options: RequestInit = {
-        method,
-        headers: {
-          Authorization: `Bearer ${testAPIKey}`,
-          'Content-Type': 'application/json',
-        },
-      };
-      if (body) {
-        options.body = JSON.stringify(body);
-      }
-      return fetch(`${baseUrl}${path}`, options);
-    }
-
     describe('GET /v1/experiments (list)', () => {
       it('should return empty list when no experiments exist', async () => {
         const response = await apiRequest('GET', '/v1/experiments');
@@ -505,16 +390,8 @@ describe('API Experiment Creation Integration Tests', () => {
 
       it('should return list of experiments created by the user', async () => {
         // Create two experiments
-        const exp1Id = await createExperimentViaAPI(
-          'Experiment 1',
-          'First',
-          [],
-        );
-        const exp2Id = await createExperimentViaAPI(
-          'Experiment 2',
-          'Second',
-          [],
-        );
+        const exp1Id = await createTestExperiment('Experiment 1', 'First', []);
+        const exp2Id = await createTestExperiment('Experiment 2', 'Second', []);
 
         const response = await apiRequest('GET', '/v1/experiments');
         expect(response.status).toBe(200);
@@ -540,7 +417,7 @@ describe('API Experiment Creation Integration Tests', () => {
 
       it('should return experiment with stages', async () => {
         const template = getFlipCardExperimentTemplate();
-        const experimentId = await createExperimentViaAPI(
+        const experimentId = await createTestExperiment(
           template.experiment.metadata.name,
           template.experiment.metadata.description,
           template.stageConfigs,
@@ -573,7 +450,7 @@ describe('API Experiment Creation Integration Tests', () => {
       });
 
       it('should update experiment metadata', async () => {
-        const experimentId = await createExperimentViaAPI(
+        const experimentId = await createTestExperiment(
           'Original Name',
           'Original Description',
           [],
@@ -607,7 +484,7 @@ describe('API Experiment Creation Integration Tests', () => {
           bootedRedirectCode: 'BOOT789',
         };
 
-        const experimentId = await createExperimentViaAPI(
+        const experimentId = await createTestExperiment(
           'Prolific Test',
           'Testing Prolific config',
           [],
@@ -620,7 +497,7 @@ describe('API Experiment Creation Integration Tests', () => {
       });
 
       it('should update experiment prolificConfig', async () => {
-        const experimentId = await createExperimentViaAPI(
+        const experimentId = await createTestExperiment(
           'Prolific Update Test',
           'Testing Prolific config update',
           [],
@@ -648,7 +525,7 @@ describe('API Experiment Creation Integration Tests', () => {
       it('should update experiment stages', async () => {
         // Create experiment with initial stages from FlipCard template
         const template = getFlipCardExperimentTemplate();
-        const experimentId = await createExperimentViaAPI(
+        const experimentId = await createTestExperiment(
           'Stage Update Test',
           'Testing stage updates',
           template.stageConfigs,
@@ -699,7 +576,7 @@ describe('API Experiment Creation Integration Tests', () => {
 
       it('should update stages to empty array', async () => {
         const template = getFlipCardExperimentTemplate();
-        const experimentId = await createExperimentViaAPI(
+        const experimentId = await createTestExperiment(
           'Empty Stages Test',
           'Testing clearing stages',
           template.stageConfigs,
@@ -735,7 +612,7 @@ describe('API Experiment Creation Integration Tests', () => {
 
       it('should delete experiment and all subcollections', async () => {
         const template = getFlipCardExperimentTemplate();
-        const experimentId = await createExperimentViaAPI(
+        const experimentId = await createTestExperiment(
           'Delete Test',
           'Testing deletion',
           template.stageConfigs,
@@ -758,14 +635,14 @@ describe('API Experiment Creation Integration Tests', () => {
         expect(data.id).toBe(experimentId);
 
         // Verify experiment is gone from Firestore
-        const experimentDoc = await firestore
+        const experimentDoc = await ctx.firestore
           .collection(EXPERIMENTS_COLLECTION)
           .doc(experimentId)
           .get();
         expect(experimentDoc.exists).toBe(false);
 
         // Verify stages subcollection is also deleted
-        const stagesSnapshot = await firestore
+        const stagesSnapshot = await ctx.firestore
           .collection(EXPERIMENTS_COLLECTION)
           .doc(experimentId)
           .collection('stages')
@@ -791,7 +668,7 @@ describe('API Experiment Creation Integration Tests', () => {
 
       it('should export experiment data structure', async () => {
         const template = getFlipCardExperimentTemplate();
-        const experimentId = await createExperimentViaAPI(
+        const experimentId = await createTestExperiment(
           'Export Test',
           'Testing export',
           template.stageConfigs,
