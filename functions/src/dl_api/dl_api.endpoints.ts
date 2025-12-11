@@ -21,6 +21,7 @@ import {
   updateExperiment,
   deleteExperiment,
   exportExperimentData,
+  forkExperiment,
 } from './experiments.dl_api';
 import {
   listCohorts,
@@ -71,6 +72,7 @@ app.get('/v1/experiments/:id', getExperiment);
 app.put('/v1/experiments/:id', updateExperiment);
 app.delete('/v1/experiments/:id', deleteExperiment);
 app.get('/v1/experiments/:id/export', exportExperimentData);
+app.post('/v1/experiments/:id/fork', forkExperiment);
 
 // API Routes - Cohorts (nested under experiments)
 app.get('/v1/experiments/:experimentId/cohorts', listCohorts);
