@@ -134,7 +134,7 @@ jobs:
 
     - name: Validate generated Python
       run: |
-        cd scripts && uvx pyright deliberate_lab_types.py deliberate_lab.py
+        cd scripts && uv run pyright deliberate_lab_types.py deliberate_lab.py
 
     - name: Commit and push if changed
       run: |

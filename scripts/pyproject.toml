@@ -10,5 +10,10 @@ dependencies = [
     "requests",
 ]
 
+[dependency-groups]
+dev = [
+    "pyright>=1.1.391",
+]
+
 [[tool.uv.index]]
 url = "https://pypi.org/simple"
