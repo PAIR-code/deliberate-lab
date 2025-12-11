@@ -133,46 +133,86 @@ class Client:
 
     def create_experiment(
         self,
-        name: str,
+        name: Optional[str] = None,
         description: Optional[str] = None,
         stages: Optional[list[BaseModel]] = None,
         prolific_config: Optional[ProlificConfig] = None,
+        agent_mediators: Optional[list[BaseModel]] = None,
+        agent_participants: Optional[list[BaseModel]] = None,
+        template: Optional[BaseModel] = None,
     ) -> dict:
         """
         Create a new experiment.
 
+        Supports two modes:
+
+        1. **Simple creation**: Provide name (required), plus optional fields
+        2. **Full template creation**: Provide a complete ExperimentTemplate
+
+        When `template` is provided, creates experiment with all stages and agents.
+        This uses the same logic as the UI's experiment creation.
+
         Args:
-            name: Experiment name (required)
-            description: Optional description
-            stages: Optional list of stage configurations (use typed StageConfig classes)
-            prolific_config: Optional Prolific integration config with redirect codes
+            name: Experiment name (required for simple creation)
+            description: Optional description (simple creation)
+            stages: Optional list of stage configurations (simple creation)
+            prolific_config: Optional Prolific integration config (simple creation)
+            agent_mediators: Optional list of AgentMediatorTemplate (simple creation)
+            agent_participants: Optional list of AgentParticipantTemplate (simple creation)
+            template: Optional full ExperimentTemplate for complete creation.
+                      When provided, all other fields are ignored.
 
         Returns:
             dict with 'experiment' containing created experiment config (including 'id')
 
-        Example:
-            stage = dl.SurveyStageConfig(
-                id="survey1",
-                kind="survey",
-                name="Demographics",
-                descriptions=dl.StageTextConfig(primaryText="Answer", infoText="", helpText=""),
-                progress=dl.StageProgressConfig(minParticipants=1, waitForAllParticipants=False, showParticipantProgress=False),
-                questions=[dl.TextSurveyQuestion(id="q1", kind="text", questionTitle="Name?")]
-            )
+        Example (simple creation):
+            stage = dl.SurveyStageConfig(...)
             client.create_experiment(name="My Study", stages=[stage])
-        """
-        data: dict = {"name": name}
-        if description is not None:
-            data["description"] = description
-        if stages is not None:
-            # Convert Pydantic models to dicts for JSON serialization
-            data["stages"] = [
-                s.model_dump(by_alias=True, exclude_none=True) for s in stages
-            ]
-        if prolific_config is not None:
-            data["prolificConfig"] = prolific_config.model_dump(
-                by_alias=True, exclude_none=True
+
+        Example (simple creation with agents):
+            client.create_experiment(
+                name="My Study",
+                stages=[stage],
+                agent_mediators=[mediator]
             )
+
+        Example (full template creation):
+            template = dl.ExperimentTemplate(...)
+            client.create_experiment(template=template)
+        """
+        data: dict = {}
+
+        # Full template creation takes precedence
+        if template is not None:
+            data["template"] = template.model_dump(by_alias=True, exclude_none=True)
+        else:
+            # Simple creation mode
+            if name is None:
+                raise ValueError(
+                    "name is required for simple creation (or provide template)"
+                )
+            data["name"] = name
+            if description is not None:
+                data["description"] = description
+            if stages is not None:
+                # Convert Pydantic models to dicts for JSON serialization
+                data["stages"] = [
+                    s.model_dump(by_alias=True, exclude_none=True) for s in stages
+                ]
+            if prolific_config is not None:
+                data["prolificConfig"] = prolific_config.model_dump(
+                    by_alias=True, exclude_none=True
+                )
+            if agent_mediators is not None:
+                data["agentMediators"] = [
+                    a.model_dump(by_alias=True, exclude_none=True)
+                    for a in agent_mediators
+                ]
+            if agent_participants is not None:
+                data["agentParticipants"] = [
+                    a.model_dump(by_alias=True, exclude_none=True)
+                    for a in agent_participants
+                ]
 
         response = self._session.post(
             f"{self.base_url}/experiments", json=data, timeout=self.timeout
@@ -186,33 +226,76 @@ class Client:
         description: Optional[str] = None,
         stages: Optional[list[BaseModel]] = None,
         prolific_config: Optional[ProlificConfig] = None,
+        agent_mediators: Optional[list[BaseModel]] = None,
+        agent_participants: Optional[list[BaseModel]] = None,
+        template: Optional[BaseModel] = None,
     ) -> dict:
         """
         Update an existing experiment.
 
+        Supports two modes:
+
+        1. **Partial update**: Provide individual fields to update only those fields.
+           Omit fields you don't want to change.
+
+        2. **Full template update**: Provide a complete ExperimentTemplate in the `template` field.
+           This replaces the entire experiment including all stages and agents.
+           Other fields are ignored when template is provided.
+
         Args:
             experiment_id: The experiment ID to update
-            name: Optional new name
-            description: Optional new description
-            stages: Optional new list of stage configurations (use typed StageConfig classes)
-            prolific_config: Optional new Prolific integration config
+            name: Optional new name (partial update)
+            description: Optional new description (partial update)
+            stages: Optional new list of stage configurations (partial update, replaces all stages)
+            prolific_config: Optional new Prolific integration config (partial update)
+            agent_mediators: Optional list of AgentMediatorTemplate (partial update, replaces all mediators)
+            agent_participants: Optional list of AgentParticipantTemplate (partial update, replaces all participants)
+            template: Optional full ExperimentTemplate for complete replacement.
+                      When provided, replaces entire experiment. Other fields are ignored.
 
         Returns:
             dict with 'updated' bool and 'id'
+
+        Example (partial update - just name):
+            client.update_experiment("exp123", name="New Name")
+
+        Example (partial update - just agents):
+            mediator = dl.AgentMediatorTemplate(...)
+            client.update_experiment("exp123", agent_mediators=[mediator])
+
+        Example (full template update):
+            template = dl.ExperimentTemplate(...)
+            client.update_experiment("exp123", template=template)
         """
         data: dict = {}
-        if name is not None:
-            data["name"] = name
-        if description is not None:
-            data["description"] = description
-        if stages is not None:
-            data["stages"] = [
-                s.model_dump(by_alias=True, exclude_none=True) for s in stages
-            ]
-        if prolific_config is not None:
-            data["prolificConfig"] = prolific_config.model_dump(
-                by_alias=True, exclude_none=True
-            )
+
+        # Full template update takes precedence
+        if template is not None:
+            data["template"] = template.model_dump(by_alias=True, exclude_none=True)
+        else:
+            # Partial update mode
+            if name is not None:
+                data["name"] = name
+            if description is not None:
+                data["description"] = description
+            if stages is not None:
+                data["stages"] = [
+                    s.model_dump(by_alias=True, exclude_none=True) for s in stages
+                ]
+            if prolific_config is not None:
+                data["prolificConfig"] = prolific_config.model_dump(
+                    by_alias=True, exclude_none=True
+                )
+            if agent_mediators is not None:
+                data["agentMediators"] = [
+                    a.model_dump(by_alias=True, exclude_none=True)
+                    for a in agent_mediators
+                ]
+            if agent_participants is not None:
+                data["agentParticipants"] = [
+                    a.model_dump(by_alias=True, exclude_none=True)
+                    for a in agent_participants
+                ]
 
         response = self._session.put(
             f"{self.base_url}/experiments/{experiment_id}",
@@ -250,6 +333,37 @@ class Client:
         response = self._session.get(
             f"{self.base_url}/experiments/{experiment_id}/export",
             timeout=(self.timeout * 3),  # Allow more time for exports
+        )
+        return self._handle_response(response)
+
+    def fork_experiment(self, experiment_id: str, name: Optional[str] = None) -> dict:
+        """
+        Fork an experiment, creating a copy with all stages and agents.
+
+        Args:
+            experiment_id: The experiment ID to fork
+            name: Optional custom name for the forked experiment.
+                  Defaults to "Copy of [original name]"
+
+        Returns:
+            dict with 'experiment' (the new experiment) and 'sourceExperimentId'
+
+        Example:
+            # Fork with default name
+            result = client.fork_experiment("exp123")
+            print(f"Forked to: {result['experiment']['id']}")
+
+            # Fork with custom name
+            result = client.fork_experiment("exp123", name="My New Study")
+        """
+        data: dict = {}
+        if name is not None:
+            data["name"] = name
+
+        response = self._session.post(
+            f"{self.base_url}/experiments/{experiment_id}/fork",
+            json=data if data else None,
+            timeout=self.timeout,
         )
         return self._handle_response(response)
 

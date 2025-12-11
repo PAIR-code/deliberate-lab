@@ -13,6 +13,7 @@ import {
   ExperimentTemplate,
   Experiment,
   ProlificConfig,
+  Visibility,
   createExperimentConfig,
 } from '@deliberation-lab/utils';
 import {
@@ -25,6 +26,8 @@ import {
   EXPERIMENTS_COLLECTION,
   TEST_EXPERIMENTER_ID,
 } from './dl_api.test.utils';
+import {DeliberateLabAPIKeyPermission} from '@deliberation-lab/utils';
+import {createDeliberateLabAPIKey} from './dl_api_key.utils';
 
 // Import actual experiment templates from frontend
 import {getFlipCardExperimentTemplate} from '../../../frontend/src/shared/templates/flipcard';
@@ -700,6 +703,196 @@ describe('API Experiment Creation Integration Tests', () => {
         expect(data.cohortMap).toBeDefined();
         expect(data.alerts).toBeDefined();
       });
+    });
+  });
+
+  describe('Fork Experiment', () => {
+    it('should fork an experiment with default name', async () => {
+      const template = getFlipCardExperimentTemplate();
+
+      // Create original experiment
+      const originalId = await createTestExperiment(
+        'Original Experiment',
+        'Test description',
+        template.stageConfigs,
+      );
+
+      // Fork the experiment
+      const response = await apiRequest(
+        'POST',
+        `/v1/experiments/${originalId}/fork`,
+      );
+      expect(response.status).toBe(201);
+
+      const data = await response.json();
+      expect(data.experiment).toBeDefined();
+      expect(data.experiment.id).toBeDefined();
+      expect(data.experiment.id).not.toBe(originalId);
+      expect(data.sourceExperimentId).toBe(originalId);
+      expect(data.experiment.metadata.name).toBe('Copy of Original Experiment');
+
+      // Track for cleanup
+      createdExperimentIds.push(data.experiment.id);
+
+      // Verify stages were copied
+      const {stages} = await getExperimentWithStages(data.experiment.id);
+      expect(stages.length).toBe(template.stageConfigs.length);
+    });
+
+    it('should fork an experiment with custom name', async () => {
+      const template = getFlipCardExperimentTemplate();
+
+      // Create original experiment
+      const originalId = await createTestExperiment(
+        'Original Experiment',
+        'Test description',
+        template.stageConfigs,
+      );
+
+      // Fork with custom name
+      const response = await apiRequest(
+        'POST',
+        `/v1/experiments/${originalId}/fork`,
+        {
+          name: 'My Custom Fork',
+        },
+      );
+      expect(response.status).toBe(201);
+
+      const data = await response.json();
+      expect(data.experiment.metadata.name).toBe('My Custom Fork');
+
+      // Track for cleanup
+      createdExperimentIds.push(data.experiment.id);
+    });
+
+    it('should return 404 for non-existent experiment', async () => {
+      const response = await apiRequest(
+        'POST',
+        '/v1/experiments/nonexistent123/fork',
+      );
+      expect(response.status).toBe(404);
+    });
+
+    it('should return 403 when forking private experiment owned by another user', async () => {
+      const template = getFlipCardExperimentTemplate();
+
+      // Create experiment owned by the main test user
+      const originalId = await createTestExperiment(
+        'Private Experiment',
+        'Test description',
+        template.stageConfigs,
+      );
+
+      // Create a second API key for a different user
+      const otherExperimenterId = 'other-user@example.com';
+      const {apiKey: otherApiKey} = await createDeliberateLabAPIKey(
+        otherExperimenterId,
+        'Other User API Key',
+        [
+          DeliberateLabAPIKeyPermission.READ,
+          DeliberateLabAPIKeyPermission.WRITE,
+        ],
+      );
+      const otherUserRequest = createApiRequestHelper(ctx.baseUrl, otherApiKey);
+
+      // Try to fork with the other user - should fail since experiment is private
+      // (default visibility is not PUBLIC)
+      const response = await otherUserRequest(
+        'POST',
+        `/v1/experiments/${originalId}/fork`,
+      );
+      expect(response.status).toBe(403);
+
+      const data = await response.json();
+      expect(data.error).toContain('Cannot fork this experiment');
+    });
+
+    it('should allow forking a PUBLIC experiment by another user', async () => {
+      const template = getFlipCardExperimentTemplate();
+
+      // Create experiment owned by the main test user
+      const originalId = await createTestExperiment(
+        'Public Experiment',
+        'Test description',
+        template.stageConfigs,
+      );
+
+      // Update experiment to be PUBLIC using admin access
+      await ctx.testEnv.withSecurityRulesDisabled(async (context) => {
+        const adminFirestore = context.firestore();
+        await adminFirestore
+          .collection(EXPERIMENTS_COLLECTION)
+          .doc(originalId)
+          .update({'permissions.visibility': Visibility.PUBLIC});
+      });
+
+      // Create a second API key for a different user
+      const otherExperimenterId = 'other-user@example.com';
+      const {apiKey: otherApiKey} = await createDeliberateLabAPIKey(
+        otherExperimenterId,
+        'Other User API Key',
+        [
+          DeliberateLabAPIKeyPermission.READ,
+          DeliberateLabAPIKeyPermission.WRITE,
+        ],
+      );
+      const otherUserRequest = createApiRequestHelper(ctx.baseUrl, otherApiKey);
+
+      // Fork with the other user - should succeed since experiment is PUBLIC
+      const response = await otherUserRequest(
+        'POST',
+        `/v1/experiments/${originalId}/fork`,
+      );
+      expect(response.status).toBe(201);
+
+      const data = await response.json();
+      expect(data.experiment).toBeDefined();
+      expect(data.experiment.id).not.toBe(originalId);
+      expect(data.sourceExperimentId).toBe(originalId);
+      expect(data.experiment.metadata.name).toBe('Copy of Public Experiment');
+
+      // The forked experiment should be owned by the other user
+      expect(data.experiment.metadata.creator).toBe(otherExperimenterId);
+
+      // Track for cleanup
+      createdExperimentIds.push(data.experiment.id);
+    });
+
+    it('should copy all stages in correct order', async () => {
+      const template = getPolicyExperimentTemplate();
+
+      // Create original experiment
+      const originalId = await createTestExperiment(
+        'Policy Experiment',
+        'Test description',
+        template.stageConfigs,
+      );
+
+      // Fork the experiment
+      const response = await apiRequest(
+        'POST',
+        `/v1/experiments/${originalId}/fork`,
+      );
+      expect(response.status).toBe(201);
+
+      const data = await response.json();
+      createdExperimentIds.push(data.experiment.id);
+
+      // Verify stage IDs match and are in same order
+      const originalExp = await getExperimentWithStages(originalId);
+      const forkedExp = await getExperimentWithStages(data.experiment.id);
+
+      expect(forkedExp.experiment.stageIds).toEqual(
+        originalExp.experiment.stageIds,
+      );
+
+      // Verify stage content matches
+      for (let i = 0; i < originalExp.stages.length; i++) {
+        const origStage = normalizeStageForComparison(originalExp.stages[i]);
+        const forkStage = normalizeStageForComparison(forkedExp.stages[i]);
+        expect(forkStage).toEqual(origStage);
+      }
     });
   });
 });

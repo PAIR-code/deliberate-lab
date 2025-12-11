@@ -82,7 +82,17 @@ paths:
       tags:
         - experiments
       summary: Create experiment
-      description: Create a new experiment with specified configuration
+      description: |
+        Create a new experiment with specified configuration.
+
+        Supports two modes:
+
+        **1. Simple creation:** Provide `name` (required), `description`, `stages`, `prolificConfig`.
+        This is the easiest way to create a basic experiment.
+
+        **2. Full template creation:** Provide a complete `template` object (ExperimentTemplate).
+        This creates the experiment with all stages and agents, using the same logic as the UI.
+        Other fields are ignored when template is provided.
       operationId: createExperiment
       requestBody:
         required: true
@@ -90,27 +100,45 @@ paths:
           application/json:
             schema:
               type: object
-              required:
-                - name
               properties:
                 name:
                   type: string
-                  description: Experiment name
+                  description: (Simple creation) Experiment name - required unless template provided
                   example: My Experiment
                 description:
                   type: string
-                  description: Experiment description
+                  description: (Simple creation) Experiment description
                   example: Research on decision making
                 prolificRedirectCode:
                   type: string
-                  description: Prolific completion redirect code (optional)
+                  description: (Simple creation) Prolific completion redirect code
                   example: C1234ABC
                 stages:
                   type: array
-                  description: Array of stage configurations (optional)
+                  description: (Simple creation) Array of stage configurations
                   items:
                     $ref: '#/components/schemas/Stage'
                   default: []
+                agentMediators:
+                  type: array
+                  description: |
+                    (Simple creation) Array of agent mediator templates.
+                    Each agent includes persona config and a promptMap with stage-specific prompts.
+                  items:
+                    type: object
+                agentParticipants:
+                  type: array
+                  description: |
+                    (Simple creation) Array of agent participant templates.
+                    Each agent includes persona config and a promptMap with stage-specific prompts.
+                  items:
+                    type: object
+                template:
+                  type: object
+                  description: |
+                    (Full template creation) Complete ExperimentTemplate object.
+                    When provided, creates experiment with all stages and agents.
+                    All other fields are ignored.
       responses:
         '201':
           description: Experiment created successfully
@@ -165,9 +193,17 @@ paths:
       description: |
         Update an existing experiment's configuration.
 
-        **Partial updates:** Only provided fields are updated. Omit fields you don't want to change.
+        Supports two modes:
 
-        **Stages replacement:** If `stages` is provided, it completely replaces all existing stages. To modify a single stage, first GET the experiment, modify the stages array, then PUT the full array back.
+        **1. Partial updates:** Provide individual fields (name, description, stages, prolificConfig).
+        Only provided fields are updated. Omit fields you don't want to change.
+
+        **2. Full template update:** Provide a complete `template` object (ExperimentTemplate).
+        This replaces the entire experiment including all stages and agents.
+        Other fields are ignored when template is provided.
+
+        **Stages replacement (partial mode):** If `stages` is provided, it completely replaces all existing stages.
+        To modify a single stage, first GET the experiment, modify the stages array, then PUT the full array back.
       operationId: updateExperiment
       parameters:
         - $ref: '#/components/parameters/ExperimentId'
@@ -180,20 +216,43 @@ paths:
               properties:
                 name:
                   type: string
-                  description: Updated experiment name
+                  description: (Partial update) Updated experiment name
                 description:
                   type: string
-                  description: Updated description
+                  description: (Partial update) Updated description
                 prolificRedirectCode:
                   type: string
-                  description: Updated Prolific completion redirect code
+                  description: (Partial update) Updated Prolific completion redirect code
                 stages:
                   type: array
                   description: |
-                    Complete array of stage configurations. If provided, **replaces all existing stages**.
+                    (Partial update) Complete array of stage configurations. If provided, **replaces all existing stages**.
                     Omit this field to leave stages unchanged.
                   items:
                     $ref: '#/components/schemas/Stage'
+                agentMediators:
+                  type: array
+                  description: |
+                    (Partial update) Complete array of agent mediator templates. If provided, **replaces all existing agent mediators**.
+                    Each agent includes persona config and a promptMap with stage-specific prompts.
+                    Omit this field to leave agent mediators unchanged.
+                  items:
+                    type: object
+                agentParticipants:
+                  type: array
+                  description: |
+                    (Partial update) Complete array of agent participant templates. If provided, **replaces all existing agent participants**.
+                    Each agent includes persona config and a promptMap with stage-specific prompts.
+                    Omit this field to leave agent participants unchanged.
+                  items:
+                    type: object
+                template:
+                  type: object
+                  description: |
+                    (Full template update) Complete ExperimentTemplate object.
+                    When provided, replaces the entire experiment including all stages and agents.
+                    All other fields (name, description, stages, agentMediators, agentParticipants) are ignored.
+                    Use this mode when you need atomic replacement of the entire experiment.
             examples:
               updateNameOnly:
                 summary: Update name only
@@ -325,6 +384,66 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ExperimentExport'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '429':
+          $ref: '#/components/responses/RateLimitError'
+
+  /experiments/{id}/fork:
+    post:
+      tags:
+        - experiments
+      summary: Fork experiment
+      description: |
+        Create a copy of an experiment with all its stages and agents.
+
+        **Access Control:** You can only fork an experiment if:
+        - The experiment's visibility is set to `PUBLIC`, OR
+        - You are the owner/creator of the experiment
+
+        The forked experiment will have:
+        - A new unique ID
+        - Name set to "Copy of [original name]" (or custom name if provided)
+        - The current user as creator
+        - All stages copied
+        - All agent mediators and agent participants copied
+
+        The forked experiment will NOT include:
+        - Cohorts
+        - Participants
+        - Any collected data
+      operationId: forkExperiment
+      parameters:
+        - $ref: '#/components/parameters/ExperimentId'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  description: Optional custom name for the forked experiment
+                  example: My Forked Experiment
+      responses:
+        '201':
+          description: Experiment forked successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  experiment:
+                    $ref: '#/components/schemas/Experiment'
+                  sourceExperimentId:
+                    type: string
+                    description: ID of the original experiment that was forked
+                    example: exp123
         '401':
           $ref: '#/components/responses/UnauthorizedError'
         '403':
