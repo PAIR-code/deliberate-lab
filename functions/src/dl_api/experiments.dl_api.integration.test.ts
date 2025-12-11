@@ -80,7 +80,7 @@ describe('API Experiment Creation Integration Tests', () => {
     const functionsHost =
       process.env.FIREBASE_FUNCTIONS_EMULATOR_HOST || 'localhost';
     const functionsPort =
-      process.env.FIREBASE_FUNCTIONS_EMULATOR_PORT || '5001';
+      process.env.FIREBASE_FUNCTIONS_EMULATOR_PORT || '5101';
     const region = 'us-central1'; // Default region for Cloud Functions
 
     baseUrl = `http://${functionsHost}:${functionsPort}/${projectId}/${region}/api`;
@@ -95,19 +95,25 @@ describe('API Experiment Creation Integration Tests', () => {
   beforeEach(async () => {
     // Clear experiments but keep API keys
     // We need to keep the API key that was created in beforeAll
-    for (const expId of createdExperimentIds) {
-      try {
-        const expRef = firestore.collection(EXPERIMENTS_COLLECTION).doc(expId);
-        await expRef.delete();
-        // Also delete subcollections
-        const stages = await expRef.collection('stages').get();
-        for (const stage of stages.docs) {
-          await stage.ref.delete();
+    // Use withSecurityRulesDisabled to bypass Firestore rules for cleanup
+    await testEnv.withSecurityRulesDisabled(async (context) => {
+      const adminFirestore = context.firestore();
+      for (const expId of createdExperimentIds) {
+        try {
+          const expRef = adminFirestore
+            .collection(EXPERIMENTS_COLLECTION)
+            .doc(expId);
+          await expRef.delete();
+          // Also delete subcollections
+          const stages = await expRef.collection('stages').get();
+          for (const stage of stages.docs) {
+            await stage.ref.delete();
+          }
+        } catch (error) {
+          console.error('Error cleaning up experiment:', expId, error);
         }
-      } catch (error) {
-        console.error('Error cleaning up experiment:', expId, error);
       }
-    }
+    });
     createdExperimentIds.length = 0;
   });
 
@@ -121,7 +127,7 @@ describe('API Experiment Creation Integration Tests', () => {
 
   /**
    * Helper function to create an experiment using the template system
-   * (mimics the writeExperiment endpoint behavior)
+   * (mimics the writeExperiment endpoint behavior which uses admin SDK)
    */
   async function createExperimentViaTemplate(
     template: ExperimentTemplate,
@@ -134,46 +140,51 @@ describe('API Experiment Creation Integration Tests', () => {
     // Override creator to test user
     experimentConfig.metadata.creator = TEST_EXPERIMENTER_ID;
 
-    const document = firestore
-      .collection(EXPERIMENTS_COLLECTION)
-      .doc(experimentConfig.id);
+    // Use withSecurityRulesDisabled to simulate admin SDK behavior
+    // (the writeExperiment cloud function uses admin SDK which bypasses rules)
+    await testEnv.withSecurityRulesDisabled(async (context) => {
+      const adminFirestore = context.firestore();
+      const document = adminFirestore
+        .collection(EXPERIMENTS_COLLECTION)
+        .doc(experimentConfig.id);
 
-    // Write experiment directly (serialize to remove Timestamp objects)
-    await document.set(serializeForFirestore(experimentConfig));
+      // Write experiment directly (serialize to remove Timestamp objects)
+      await document.set(serializeForFirestore(experimentConfig));
 
-    // Add stages subcollection
-    for (const stage of template.stageConfigs) {
-      await document
-        .collection('stages')
-        .doc(stage.id)
-        .set(serializeForFirestore(stage));
-    }
-
-    // Add agent mediators if any
-    for (const agent of template.agentMediators) {
-      const doc = document.collection('agentMediators').doc(agent.persona.id);
-      await doc.set(serializeForFirestore(agent.persona));
-      for (const prompt of Object.values(agent.promptMap)) {
-        await doc
-          .collection('prompts')
-          .doc(prompt.id)
-          .set(serializeForFirestore(prompt));
+      // Add stages subcollection
+      for (const stage of template.stageConfigs) {
+        await document
+          .collection('stages')
+          .doc(stage.id)
+          .set(serializeForFirestore(stage));
       }
-    }
 
-    // Add agent participants if any
-    for (const agent of template.agentParticipants) {
-      const doc = document
-        .collection('agentParticipants')
-        .doc(agent.persona.id);
-      await doc.set(serializeForFirestore(agent.persona));
-      for (const prompt of Object.values(agent.promptMap)) {
-        await doc
-          .collection('prompts')
-          .doc(prompt.id)
-          .set(serializeForFirestore(prompt));
+      // Add agent mediators if any
+      for (const agent of template.agentMediators) {
+        const doc = document.collection('agentMediators').doc(agent.persona.id);
+        await doc.set(serializeForFirestore(agent.persona));
+        for (const prompt of Object.values(agent.promptMap)) {
+          await doc
+            .collection('prompts')
+            .doc(prompt.id)
+            .set(serializeForFirestore(prompt));
+        }
       }
-    }
+
+      // Add agent participants if any
+      for (const agent of template.agentParticipants) {
+        const doc = document
+          .collection('agentParticipants')
+          .doc(agent.persona.id);
+        await doc.set(serializeForFirestore(agent.persona));
+        for (const prompt of Object.values(agent.promptMap)) {
+          await doc
+            .collection('prompts')
+            .doc(prompt.id)
+            .set(serializeForFirestore(prompt));
+        }
+      }
+    });
 
     createdExperimentIds.push(experimentConfig.id);
     return experimentConfig.id;
