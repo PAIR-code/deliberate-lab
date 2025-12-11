@@ -219,6 +219,16 @@ function evaluateComparisonCondition(
   return applyComparison(condition.operator, targetValue, condition.value);
 }
 
+/** Filter values by a comparison spec */
+function filterValues(values: unknown[], spec: ComparisonSpec): unknown[] {
+  return values.filter((v) => applyComparison(spec.operator, v, spec.value));
+}
+
+/** Sum numeric values */
+function sumValues(values: unknown[]): number {
+  return values.reduce((acc: number, v) => acc + (Number(v) || 0), 0);
+}
+
 /**
  * Evaluate an aggregation condition against multiple values.
  */
@@ -231,77 +241,35 @@ function evaluateAggregationCondition(
 
   if (!values || values.length === 0) return false;
 
+  // Helper to compare result against condition's operator/value
+  const compareResult = (result: unknown) =>
+    applyComparison(condition.operator, result, condition.value);
+
+  // Helper to get filtered values for COUNT/SUM/AVERAGE
+  const getFiltered = () =>
+    condition.filterComparison
+      ? filterValues(values, condition.filterComparison)
+      : values;
+
   switch (condition.aggregator) {
     case AggregationOperator.ANY:
-      // True if any value passes the comparison
-      return values.some((v) =>
-        applyComparison(condition.operator, v, condition.value),
-      );
+      return values.some(compareResult);
     case AggregationOperator.ALL:
-      // True if all values pass the comparison
-      return values.every((v) =>
-        applyComparison(condition.operator, v, condition.value),
-      );
+      return values.every(compareResult);
     case AggregationOperator.NONE:
-      // True if no value passes the comparison
-      return !values.some((v) =>
-        applyComparison(condition.operator, v, condition.value),
-      );
+      return !values.some(compareResult);
     case AggregationOperator.COUNT: {
-      // Filter values if filterComparison is set, otherwise count all non-null
-      let filteredValues: unknown[];
-      if (condition.filterComparison) {
-        filteredValues = values.filter((v) =>
-          applyComparison(
-            condition.filterComparison!.operator,
-            v,
-            condition.filterComparison!.value,
-          ),
-        );
-      } else {
-        filteredValues = values.filter((v) => v !== undefined && v !== null);
-      }
-      return applyComparison(
-        condition.operator,
-        filteredValues.length,
-        condition.value,
-      );
+      const filtered = condition.filterComparison
+        ? filterValues(values, condition.filterComparison)
+        : values.filter((v) => v !== undefined && v !== null);
+      return compareResult(filtered.length);
     }
-    case AggregationOperator.SUM: {
-      // Filter values if filterComparison is set, then sum
-      let filteredValues = values;
-      if (condition.filterComparison) {
-        filteredValues = values.filter((v) =>
-          applyComparison(
-            condition.filterComparison!.operator,
-            v,
-            condition.filterComparison!.value,
-          ),
-        );
-      }
-      const sum = filteredValues.reduce(
-        (acc: number, v) => acc + (Number(v) || 0),
-        0,
-      );
-      return applyComparison(condition.operator, sum, condition.value);
-    }
+    case AggregationOperator.SUM:
+      return compareResult(sumValues(getFiltered()));
     case AggregationOperator.AVERAGE: {
-      // Filter values if filterComparison is set, then average
-      let filteredValues = values;
-      if (condition.filterComparison) {
-        filteredValues = values.filter((v) =>
-          applyComparison(
-            condition.filterComparison!.operator,
-            v,
-            condition.filterComparison!.value,
-          ),
-        );
-      }
-      if (filteredValues.length === 0) return false;
-      const avg =
-        filteredValues.reduce((acc: number, v) => acc + (Number(v) || 0), 0) /
-        filteredValues.length;
-      return applyComparison(condition.operator, avg, condition.value);
+      const filtered = getFiltered();
+      if (filtered.length === 0) return false;
+      return compareResult(sumValues(filtered) / filtered.length);
     }
     default:
       return false;
