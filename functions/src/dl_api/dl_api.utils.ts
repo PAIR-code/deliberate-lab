@@ -140,48 +140,6 @@ export function requireDeliberateLabAPIPermission(permission: string) {
 }
 
 // ************************************************************************* //
-// VALIDATION HELPERS                                                        //
-// ************************************************************************* //
-
-/**
- * Generic validation helper that validates data and sends error response if invalid
- *
- * This helper simplifies validation in Express endpoints by handling both validation
- * and error response in a single call.
- *
- * @param data - Data to validate (can be undefined)
- * @param validator - Validation function that returns error message string or null if valid
- * @param res - Express response object
- * @returns true if data is valid or undefined, false if validation failed (response already sent)
- *
- * @example
- * ```typescript
- * // In an Express endpoint
- * if (!validateOrRespond(body.stages, validateStages, res)) return;
- *
- * // With custom validator
- * const validateEmail = (email: string) => {
- *   return email.includes('@') ? null : 'Invalid email format';
- * };
- * if (!validateOrRespond(body.email, validateEmail, res)) return;
- * ```
- */
-export function validateOrRespond<T>(
-  data: T | undefined,
-  validator: (data: T) => string | null,
-  res: Response,
-): boolean {
-  if (data === undefined) return true;
-
-  const validationError = validator(data);
-  if (validationError) {
-    res.status(400).json({error: validationError});
-    return false;
-  }
-  return true;
-}
-
-// ************************************************************************* //
 // EXPERIMENT ACCESS HELPERS                                                 //
 // ************************************************************************* //
 

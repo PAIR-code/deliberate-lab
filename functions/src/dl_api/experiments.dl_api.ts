@@ -9,7 +9,6 @@ import {app} from '../app';
 import {
   DeliberateLabAPIRequest,
   hasDeliberateLabAPIPermission,
-  validateOrRespond,
   verifyExperimentAccess,
   verifyExperimentOwnership,
 } from './dl_api.utils';
@@ -107,7 +106,12 @@ export async function createExperiment(
   };
 
   // Validate stages if provided
-  if (!validateOrRespond(body.stages, validateStages, res)) return;
+  if (body.stages !== undefined) {
+    const stagesValidation = validateStages(body.stages);
+    if (!stagesValidation.valid) {
+      throw createHttpError(400, stagesValidation.error);
+    }
+  }
 
   // Create experiment config with stages (if provided)
   const stageConfigs = body.stages || [];
@@ -228,9 +232,9 @@ export async function updateExperiment(
 
     // Validate stages if provided
     if (body.stages !== undefined) {
-      const validationError = validateStages(body.stages);
-      if (validationError) {
-        throw createHttpError(400, validationError);
+      const stagesValidation = validateStages(body.stages);
+      if (!stagesValidation.valid) {
+        throw createHttpError(400, stagesValidation.error);
       }
     }
 
