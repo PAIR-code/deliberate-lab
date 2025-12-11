@@ -2,6 +2,8 @@
 
 import {
   CONFIG_DATA,
+  CohortParticipantConfig,
+  CohortParticipantConfigSchema,
   Index,
   StageConfigData,
   StageTextConfigSchema,
@@ -191,5 +193,37 @@ export function validateStages(stages: unknown[]): ValidationResult {
   if (errorMessages.length > 0) {
     return {valid: false, error: errorMessages.join('\n')};
   }
+  return {valid: true};
+}
+
+// ************************************************************************* //
+// COHORT VALIDATION                                                         //
+// ************************************************************************* //
+
+/**
+ * Validate cohort participant configuration
+ * Uses schema validation plus business logic (min <= max)
+ */
+export function validateCohortParticipantConfig(
+  config: CohortParticipantConfig,
+): ValidationResult {
+  // Schema validation
+  const schemaResult = validateSchema(CohortParticipantConfigSchema, config);
+  if (!schemaResult.valid) {
+    return schemaResult;
+  }
+
+  // Business logic: min <= max
+  if (
+    typeof config.minParticipantsPerCohort === 'number' &&
+    typeof config.maxParticipantsPerCohort === 'number' &&
+    config.minParticipantsPerCohort > config.maxParticipantsPerCohort
+  ) {
+    return {
+      valid: false,
+      error: 'minParticipantsPerCohort cannot exceed maxParticipantsPerCohort',
+    };
+  }
+
   return {valid: true};
 }

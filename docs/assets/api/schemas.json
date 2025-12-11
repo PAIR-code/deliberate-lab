@@ -2,6 +2,80 @@
   "title": "Deliberate Lab API Schemas",
   "description": "JSON Schema definitions for Deliberate Lab API request types",
   "$defs": {
+    "Stock": {
+      "title": "Stock",
+      "additionalProperties": false,
+      "type": "object",
+      "properties": {
+        "id": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "name": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "csvData": {
+          "type": "string"
+        },
+        "parsedData": {
+          "type": "array",
+          "items": {
+            "additionalProperties": false,
+            "type": "object",
+            "properties": {
+              "date": {
+                "minLength": 1,
+                "type": "string"
+              },
+              "close": {
+                "type": "number"
+              }
+            },
+            "required": ["date", "close"],
+            "title": "ParsedItem"
+          }
+        },
+        "customCards": {
+          "type": "array",
+          "items": {
+            "additionalProperties": false,
+            "type": "object",
+            "properties": {
+              "id": {
+                "minLength": 1,
+                "type": "string"
+              },
+              "title": {
+                "type": "string"
+              },
+              "value": {
+                "type": "string"
+              },
+              "subtext": {
+                "type": "string"
+              },
+              "enabled": {
+                "type": "boolean"
+              }
+            },
+            "required": ["id", "title", "value", "subtext", "enabled"],
+            "title": "CustomCard"
+          }
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "description",
+        "csvData",
+        "parsedData",
+        "customCards"
+      ]
+    },
     "ChatStageConfig": {
       "title": "ChatStageConfig",
       "type": "object",
@@ -882,6 +956,42 @@
         "questions"
       ]
     },
+    "CohortParticipantConfig": {
+      "title": "CohortParticipantConfig",
+      "type": "object",
+      "properties": {
+        "minParticipantsPerCohort": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "minimum": 0,
+              "type": "number"
+            }
+          ]
+        },
+        "maxParticipantsPerCohort": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "minimum": 1,
+              "type": "number"
+            }
+          ]
+        },
+        "includeAllParticipantsInCohortCount": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "minParticipantsPerCohort",
+        "maxParticipantsPerCohort",
+        "includeAllParticipantsInCohortCount"
+      ]
+    },
     "StaticVariableConfig": {
       "title": "StaticVariableConfig",
       "type": "object",
@@ -1339,6 +1449,70 @@
         "balanceAcross"
       ]
     },
+    "AgentMediatorTemplate": {
+      "title": "AgentMediatorTemplate",
+      "type": "object",
+      "properties": {
+        "persona": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "name": {
+              "type": "string"
+            }
+          },
+          "required": ["id", "name"],
+          "title": "Persona"
+        },
+        "promptMap": {
+          "type": "object",
+          "patternProperties": {
+            "^(.*)$": {
+              "type": "object",
+              "properties": {},
+              "title": "^(.*)$"
+            }
+          },
+          "title": "PromptMap"
+        }
+      },
+      "required": ["persona", "promptMap"]
+    },
+    "AgentParticipantTemplate": {
+      "title": "AgentParticipantTemplate",
+      "type": "object",
+      "properties": {
+        "persona": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "name": {
+              "type": "string"
+            }
+          },
+          "required": ["id", "name"],
+          "title": "Persona"
+        },
+        "promptMap": {
+          "type": "object",
+          "patternProperties": {
+            "^(.*)$": {
+              "type": "object",
+              "properties": {},
+              "title": "^(.*)$"
+            }
+          },
+          "title": "PromptMap"
+        }
+      },
+      "required": ["persona", "promptMap"]
+    },
     "AssetAllocationStageConfig": {
       "additionalProperties": false,
       "type": "object",
@@ -1370,152 +1544,10 @@
               "type": "string"
             },
             "stockA": {
-              "additionalProperties": false,
-              "type": "object",
-              "properties": {
-                "id": {
-                  "minLength": 1,
-                  "type": "string"
-                },
-                "name": {
-                  "minLength": 1,
-                  "type": "string"
-                },
-                "description": {
-                  "type": "string"
-                },
-                "csvData": {
-                  "type": "string"
-                },
-                "parsedData": {
-                  "type": "array",
-                  "items": {
-                    "additionalProperties": false,
-                    "type": "object",
-                    "properties": {
-                      "date": {
-                        "minLength": 1,
-                        "type": "string"
-                      },
-                      "close": {
-                        "type": "number"
-                      }
-                    },
-                    "required": ["date", "close"],
-                    "title": "ParsedItem"
-                  }
-                },
-                "customCards": {
-                  "type": "array",
-                  "items": {
-                    "additionalProperties": false,
-                    "type": "object",
-                    "properties": {
-                      "id": {
-                        "minLength": 1,
-                        "type": "string"
-                      },
-                      "title": {
-                        "type": "string"
-                      },
-                      "value": {
-                        "type": "string"
-                      },
-                      "subtext": {
-                        "type": "string"
-                      },
-                      "enabled": {
-                        "type": "boolean"
-                      }
-                    },
-                    "required": ["id", "title", "value", "subtext", "enabled"],
-                    "title": "CustomCard"
-                  }
-                }
-              },
-              "required": [
-                "id",
-                "name",
-                "description",
-                "csvData",
-                "parsedData",
-                "customCards"
-              ],
-              "title": "StockA"
+              "$ref": "#/$defs/Stock"
             },
             "stockB": {
-              "additionalProperties": false,
-              "type": "object",
-              "properties": {
-                "id": {
-                  "minLength": 1,
-                  "type": "string"
-                },
-                "name": {
-                  "minLength": 1,
-                  "type": "string"
-                },
-                "description": {
-                  "type": "string"
-                },
-                "csvData": {
-                  "type": "string"
-                },
-                "parsedData": {
-                  "type": "array",
-                  "items": {
-                    "additionalProperties": false,
-                    "type": "object",
-                    "properties": {
-                      "date": {
-                        "minLength": 1,
-                        "type": "string"
-                      },
-                      "close": {
-                        "type": "number"
-                      }
-                    },
-                    "required": ["date", "close"],
-                    "title": "ParsedItem"
-                  }
-                },
-                "customCards": {
-                  "type": "array",
-                  "items": {
-                    "additionalProperties": false,
-                    "type": "object",
-                    "properties": {
-                      "id": {
-                        "minLength": 1,
-                        "type": "string"
-                      },
-                      "title": {
-                        "type": "string"
-                      },
-                      "value": {
-                        "type": "string"
-                      },
-                      "subtext": {
-                        "type": "string"
-                      },
-                      "enabled": {
-                        "type": "boolean"
-                      }
-                    },
-                    "required": ["id", "title", "value", "subtext", "enabled"],
-                    "title": "CustomCard"
-                  }
-                }
-              },
-              "required": [
-                "id",
-                "name",
-                "description",
-                "csvData",
-                "parsedData",
-                "customCards"
-              ],
-              "title": "StockB"
+              "$ref": "#/$defs/Stock"
             }
           },
           "required": ["stockA", "stockB"],
@@ -1557,78 +1589,7 @@
         "stockOptions": {
           "type": "array",
           "items": {
-            "additionalProperties": false,
-            "type": "object",
-            "properties": {
-              "id": {
-                "minLength": 1,
-                "type": "string"
-              },
-              "name": {
-                "minLength": 1,
-                "type": "string"
-              },
-              "description": {
-                "type": "string"
-              },
-              "csvData": {
-                "type": "string"
-              },
-              "parsedData": {
-                "type": "array",
-                "items": {
-                  "additionalProperties": false,
-                  "type": "object",
-                  "properties": {
-                    "date": {
-                      "minLength": 1,
-                      "type": "string"
-                    },
-                    "close": {
-                      "type": "number"
-                    }
-                  },
-                  "required": ["date", "close"],
-                  "title": "ParsedItem"
-                }
-              },
-              "customCards": {
-                "type": "array",
-                "items": {
-                  "additionalProperties": false,
-                  "type": "object",
-                  "properties": {
-                    "id": {
-                      "minLength": 1,
-                      "type": "string"
-                    },
-                    "title": {
-                      "type": "string"
-                    },
-                    "value": {
-                      "type": "string"
-                    },
-                    "subtext": {
-                      "type": "string"
-                    },
-                    "enabled": {
-                      "type": "boolean"
-                    }
-                  },
-                  "required": ["id", "title", "value", "subtext", "enabled"],
-                  "title": "CustomCard"
-                }
-              }
-            },
-            "required": [
-              "id",
-              "name",
-              "description",
-              "csvData",
-              "parsedData",
-              "customCards"
-            ],
-            "title": "StockOption"
+            "$ref": "#/$defs/Stock"
           }
         },
         "stockInfoStageId": {
@@ -2141,78 +2102,7 @@
         "stocks": {
           "type": "array",
           "items": {
-            "additionalProperties": false,
-            "type": "object",
-            "properties": {
-              "id": {
-                "minLength": 1,
-                "type": "string"
-              },
-              "name": {
-                "minLength": 1,
-                "type": "string"
-              },
-              "description": {
-                "type": "string"
-              },
-              "csvData": {
-                "type": "string"
-              },
-              "parsedData": {
-                "type": "array",
-                "items": {
-                  "additionalProperties": false,
-                  "type": "object",
-                  "properties": {
-                    "date": {
-                      "minLength": 1,
-                      "type": "string"
-                    },
-                    "close": {
-                      "type": "number"
-                    }
-                  },
-                  "required": ["date", "close"],
-                  "title": "ParsedItem"
-                }
-              },
-              "customCards": {
-                "type": "array",
-                "items": {
-                  "additionalProperties": false,
-                  "type": "object",
-                  "properties": {
-                    "id": {
-                      "minLength": 1,
-                      "type": "string"
-                    },
-                    "title": {
-                      "type": "string"
-                    },
-                    "value": {
-                      "type": "string"
-                    },
-                    "subtext": {
-                      "type": "string"
-                    },
-                    "enabled": {
-                      "type": "boolean"
-                    }
-                  },
-                  "required": ["id", "title", "value", "subtext", "enabled"],
-                  "title": "CustomCard"
-                }
-              }
-            },
-            "required": [
-              "id",
-              "name",
-              "description",
-              "csvData",
-              "parsedData",
-              "customCards"
-            ],
-            "title": "Stock"
+            "$ref": "#/$defs/Stock"
           }
         },
         "showBestYearCard": {
@@ -2468,40 +2358,7 @@
                   "title": "Permissions"
                 },
                 "defaultCohortConfig": {
-                  "type": "object",
-                  "properties": {
-                    "minParticipantsPerCohort": {
-                      "anyOf": [
-                        {
-                          "type": "null"
-                        },
-                        {
-                          "minimum": 0,
-                          "type": "number"
-                        }
-                      ]
-                    },
-                    "maxParticipantsPerCohort": {
-                      "anyOf": [
-                        {
-                          "type": "null"
-                        },
-                        {
-                          "minimum": 1,
-                          "type": "number"
-                        }
-                      ]
-                    },
-                    "includeAllParticipantsInCohortCount": {
-                      "type": "boolean"
-                    }
-                  },
-                  "required": [
-                    "minParticipantsPerCohort",
-                    "maxParticipantsPerCohort",
-                    "includeAllParticipantsInCohortCount"
-                  ],
-                  "title": "DefaultCohortConfig"
+                  "$ref": "#/$defs/CohortParticipantConfig"
                 },
                 "prolificConfig": {
                   "type": "object",
@@ -2655,71 +2512,13 @@
             "agentMediators": {
               "type": "array",
               "items": {
-                "type": "object",
-                "properties": {
-                  "persona": {
-                    "type": "object",
-                    "properties": {
-                      "id": {
-                        "minLength": 1,
-                        "type": "string"
-                      },
-                      "name": {
-                        "type": "string"
-                      }
-                    },
-                    "required": ["id", "name"],
-                    "title": "Persona"
-                  },
-                  "promptMap": {
-                    "type": "object",
-                    "patternProperties": {
-                      "^(.*)$": {
-                        "type": "object",
-                        "properties": {},
-                        "title": "^(.*)$"
-                      }
-                    },
-                    "title": "PromptMap"
-                  }
-                },
-                "required": ["persona", "promptMap"],
-                "title": "AgentMediator"
+                "$ref": "#/$defs/AgentMediatorTemplate"
               }
             },
             "agentParticipants": {
               "type": "array",
               "items": {
-                "type": "object",
-                "properties": {
-                  "persona": {
-                    "type": "object",
-                    "properties": {
-                      "id": {
-                        "minLength": 1,
-                        "type": "string"
-                      },
-                      "name": {
-                        "type": "string"
-                      }
-                    },
-                    "required": ["id", "name"],
-                    "title": "Persona"
-                  },
-                  "promptMap": {
-                    "type": "object",
-                    "patternProperties": {
-                      "^(.*)$": {
-                        "type": "object",
-                        "properties": {},
-                        "title": "^(.*)$"
-                      }
-                    },
-                    "title": "PromptMap"
-                  }
-                },
-                "required": ["persona", "promptMap"],
-                "title": "AgentParticipant"
+                "$ref": "#/$defs/AgentParticipantTemplate"
               }
             }
           },
@@ -2735,8 +2534,115 @@
       },
       "required": ["collectionName", "experimentTemplate"],
       "title": "ExperimentCreation"
+    },
+    "cohortCreation": {
+      "additionalProperties": false,
+      "type": "object",
+      "properties": {
+        "experimentId": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "cohortConfig": {
+          "additionalProperties": false,
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string"
+            },
+            "metadata": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "publicName": {
+                  "type": "string"
+                },
+                "description": {
+                  "type": "string"
+                },
+                "tags": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": ["name", "publicName", "description", "tags"],
+              "title": "Metadata"
+            },
+            "participantConfig": {
+              "$ref": "#/$defs/CohortParticipantConfig"
+            },
+            "stageUnlockMap": {
+              "type": "object",
+              "patternProperties": {
+                "^(.*)$": {
+                  "type": "boolean"
+                }
+              },
+              "title": "StageUnlockMap"
+            },
+            "variableMap": {
+              "type": "object",
+              "patternProperties": {
+                "^(.*)$": {
+                  "type": "string"
+                }
+              },
+              "title": "VariableMap"
+            }
+          },
+          "required": ["id", "metadata", "participantConfig", "stageUnlockMap"],
+          "title": "CohortConfig"
+        }
+      },
+      "required": ["experimentId", "cohortConfig"],
+      "title": "CohortCreation"
+    },
+    "cohortUpdate": {
+      "additionalProperties": false,
+      "type": "object",
+      "properties": {
+        "experimentId": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "cohortId": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "metadata": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "publicName": {
+              "type": "string"
+            },
+            "description": {
+              "type": "string"
+            },
+            "tags": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "required": ["name", "publicName", "description", "tags"],
+          "title": "Metadata"
+        },
+        "participantConfig": {
+          "$ref": "#/$defs/CohortParticipantConfig"
+        }
+      },
+      "required": ["experimentId", "cohortId", "metadata", "participantConfig"],
+      "title": "CohortUpdate"
     }
   },
-  "required": ["stage", "experimentCreation"],
+  "required": ["stage", "experimentCreation", "cohortCreation", "cohortUpdate"],
   "$id": "DeliberateLabSchemas"
 }

@@ -31,12 +31,6 @@ class Permissions(BaseModel):
     readers: List[str]
 
 
-class DefaultCohortConfig(BaseModel):
-    minParticipantsPerCohort: confloat(ge=0.0) | None = None
-    maxParticipantsPerCohort: confloat(ge=1.0) | None = None
-    includeAllParticipantsInCohortCount: bool
-
-
 class ProlificConfig(BaseModel):
     enableProlificIntegration: bool
     defaultRedirectCode: str
@@ -44,19 +38,35 @@ class ProlificConfig(BaseModel):
     bootedRedirectCode: str
 
 
-class Persona(BaseModel):
-    id: constr(min_length=1)
-    name: str
-
-
-class AgentMediator(BaseModel):
-    persona: Persona = Field(..., title="Persona")
-    promptMap: Dict[constr(pattern=r"^(.*)$"), Dict[str, Any]] = Field(
-        ..., title="PromptMap"
+class ParsedItem(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
     )
+    date: constr(min_length=1)
+    close: float
 
 
-AgentParticipant = AgentMediator
+class CustomCard(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    id: constr(min_length=1)
+    title: str
+    value: str
+    subtext: str
+    enabled: bool
+
+
+class Stock(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    id: constr(min_length=1)
+    name: constr(min_length=1)
+    description: str
+    csvData: str
+    parsedData: List[ParsedItem]
+    customCards: List[CustomCard]
 
 
 class ChipItem(BaseModel):
@@ -124,6 +134,12 @@ class ConditionOperator(Enum):
     or_ = "or"
 
 
+class CohortParticipantConfig(BaseModel):
+    minParticipantsPerCohort: confloat(ge=0.0) | None = None
+    maxParticipantsPerCohort: confloat(ge=1.0) | None = None
+    includeAllParticipantsInCohortCount: bool
+
+
 class Type(BaseModel):
     pass
 
@@ -188,38 +204,19 @@ class BalanceAcross(Enum):
     cohort = "cohort"
 
 
-class ParsedItem(BaseModel):
-    model_config = ConfigDict(
-        extra="forbid",
-    )
-    date: constr(min_length=1)
-    close: float
-
-
-class CustomCard(BaseModel):
-    model_config = ConfigDict(
-        extra="forbid",
-    )
+class Persona(BaseModel):
     id: constr(min_length=1)
-    title: str
-    value: str
-    subtext: str
-    enabled: bool
+    name: str
 
 
-class StockA(BaseModel):
-    model_config = ConfigDict(
-        extra="forbid",
+class AgentMediatorTemplate(BaseModel):
+    persona: Persona = Field(..., title="Persona")
+    promptMap: Dict[constr(pattern=r"^(.*)$"), Dict[str, Any]] = Field(
+        ..., title="PromptMap"
     )
-    id: constr(min_length=1)
-    name: constr(min_length=1)
-    description: str
-    csvData: str
-    parsedData: List[ParsedItem]
-    customCards: List[CustomCard]
 
 
-StockB = StockA
+AgentParticipantTemplate = AgentMediatorTemplate
 
 
 class StockConfig(BaseModel):
@@ -227,11 +224,8 @@ class StockConfig(BaseModel):
         extra="forbid",
     )
     stockInfoStageId: constr(min_length=1) | None = None
-    stockA: StockA = Field(..., title="StockA")
-    stockB: StockB = Field(..., title="StockB")
-
-
-StockOption = StockA
+    stockA: Stock
+    stockB: Stock
 
 
 class TextQuestion(BaseModel):
@@ -293,15 +287,45 @@ class Role(BaseModel):
     maxParticipants: float | None = None
 
 
-Stock = StockA
-
-
 class StageProgressConfig(RootModel[Any]):
     root: Any
 
 
 class StageTextConfig(StageProgressConfig):
     pass
+
+
+class CohortConfig(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    id: str
+    metadata: Metadata = Field(..., title="Metadata")
+    participantConfig: CohortParticipantConfig
+    stageUnlockMap: Dict[constr(pattern=r"^(.*)$"), bool] = Field(
+        ..., title="StageUnlockMap"
+    )
+    variableMap: Dict[constr(pattern=r"^(.*)$"), str] | None = Field(
+        None, title="VariableMap"
+    )
+
+
+class CohortCreation(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    experimentId: constr(min_length=1)
+    cohortConfig: CohortConfig = Field(..., title="CohortConfig")
+
+
+class CohortUpdate(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    experimentId: constr(min_length=1)
+    cohortId: constr(min_length=1)
+    metadata: Metadata = Field(..., title="Metadata")
+    participantConfig: CohortParticipantConfig
 
 
 class ChatStageConfig(BaseModel):
@@ -417,7 +441,7 @@ class MultiAssetAllocationStageConfig(BaseModel):
     name: constr(min_length=1)
     descriptions: Any
     progress: Any
-    stockOptions: List[StockOption]
+    stockOptions: List[Stock]
     stockInfoStageId: str
 
 
@@ -541,7 +565,7 @@ class Experiment(BaseModel):
     versionId: float
     metadata: Metadata = Field(..., title="Metadata")
     permissions: Permissions = Field(..., title="Permissions")
-    defaultCohortConfig: DefaultCohortConfig = Field(..., title="DefaultCohortConfig")
+    defaultCohortConfig: CohortParticipantConfig
     prolificConfig: ProlificConfig = Field(..., title="ProlificConfig")
     stageIds: List[str]
     cohortLockMap: Dict[constr(pattern=r"^(.*)$"), bool] = Field(
@@ -585,8 +609,8 @@ class ExperimentTemplate(BaseModel):
         | TosStageConfig
         | TransferStageConfig
     ]
-    agentMediators: List[AgentMediator]
-    agentParticipants: List[AgentParticipant]
+    agentMediators: List[AgentMediatorTemplate]
+    agentParticipants: List[AgentParticipantTemplate]
 
 
 class ExperimentCreation(BaseModel):
@@ -621,6 +645,8 @@ class DeliberateLabAPISchemas(BaseModel):
         | TransferStageConfig
     )
     experimentCreation: ExperimentCreation = Field(..., title="ExperimentCreation")
+    cohortCreation: CohortCreation = Field(..., title="CohortCreation")
+    cohortUpdate: CohortUpdate = Field(..., title="CohortUpdate")
 
 
 class SurveyPerParticipantStageConfig(BaseModel):
