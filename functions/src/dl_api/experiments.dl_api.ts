@@ -2,7 +2,6 @@
  * API endpoints for experiment management (Express version)
  */
 
-import {Timestamp} from 'firebase-admin/firestore';
 import {Response} from 'express';
 import createHttpError from 'http-errors';
 import {app} from '../app';
@@ -10,34 +9,71 @@ import {
   DeliberateLabAPIRequest,
   hasDeliberateLabAPIPermission,
   verifyExperimentAccess,
-  verifyExperimentOwnership,
 } from './dl_api.utils';
+import {Timestamp} from 'firebase-admin/firestore';
 import {
+  AgentMediatorTemplate,
+  AgentParticipantTemplate,
   createExperimentConfig,
+  createExperimentTemplate,
   Experiment,
-  StageConfig,
+  ExperimentTemplate,
   MetadataConfig,
-  UnifiedTimestamp,
+  StageConfig,
   ProlificConfig,
+  UnifiedTimestamp,
 } from '@deliberation-lab/utils';
 import {getFirestoreExperimentRef} from '../utils/firestore';
-import {validateStages} from '../utils/validation';
 import {getExperimentDownload} from '../data';
+import {
+  deleteExperimentById,
+  forkExperimentById,
+  updateExperimentFromTemplate,
+  writeExperimentFromTemplate,
+} from '../experiment.utils';
 
 // Use simplified schemas for the REST API
 // The full ExperimentCreationData schema is for the internal endpoints
 interface CreateExperimentRequest {
-  name: string;
+  /** For simple creation: experiment name (required unless template provided) */
+  name?: string;
+  /** For simple creation: experiment description */
   description?: string;
+  /** For simple creation: stage configurations */
   stages?: StageConfig[];
+  /** For simple creation: Prolific integration config */
   prolificConfig?: ProlificConfig;
+  /** For simple creation: agent mediator configurations */
+  agentMediators?: AgentMediatorTemplate[];
+  /** For simple creation: agent participant configurations */
+  agentParticipants?: AgentParticipantTemplate[];
+  /**
+   * For full template creation: provide a complete ExperimentTemplate.
+   * When provided, creates experiment with all stages and agents.
+   * Other fields (name, description, etc.) are ignored.
+   */
+  template?: ExperimentTemplate;
 }
 
 interface UpdateExperimentRequest {
+  /** For partial updates: update just the name */
   name?: string;
+  /** For partial updates: update just the description */
   description?: string;
+  /** For partial updates: replace all stages */
   stages?: StageConfig[];
+  /** For partial updates: update prolific config */
   prolificConfig?: ProlificConfig;
+  /** For partial updates: replace all agent mediators */
+  agentMediators?: AgentMediatorTemplate[];
+  /** For partial updates: replace all agent participants */
+  agentParticipants?: AgentParticipantTemplate[];
+  /**
+   * For full template updates: provide a complete ExperimentTemplate.
+   * When provided, this replaces the entire experiment config including
+   * all stages and agents. Other fields (name, description, etc.) are ignored.
+   */
+  template?: ExperimentTemplate;
 }
 
 /**
@@ -73,6 +109,13 @@ export async function listExperiments(
 
 /**
  * Create a new experiment
+ *
+ * Supports two modes:
+ * 1. Simple creation: Provide name, description, stages, prolificConfig
+ * 2. Full template creation: Provide a complete ExperimentTemplate
+ *
+ * When `template` is provided, it creates the experiment with all stages and agents.
+ * This uses the same logic as the UI's writeExperiment callable.
  */
 export async function createExperiment(
   req: DeliberateLabAPIRequest,
@@ -86,61 +129,80 @@ export async function createExperiment(
 
   const body = req.body as CreateExperimentRequest;
 
-  // Basic validation
-  if (!body.name) {
-    throw createHttpError(400, 'Invalid request body: name is required');
+  // If a full template is provided, use the shared utility
+  if (body.template) {
+    const experimentId = await writeExperimentFromTemplate(
+      app.firestore(),
+      body.template,
+      experimenterId,
+    );
+
+    if (!experimentId) {
+      throw createHttpError(409, 'Experiment with this ID already exists');
+    }
+
+    // Fetch the created experiment to return full config
+    const experimentDoc = await getFirestoreExperimentRef(experimentId).get();
+    const experimentConfig = experimentDoc.data() as Experiment;
+
+    res.status(201).json({
+      experiment: {...experimentConfig, id: experimentId},
+    });
+    return;
   }
 
-  const timestamp = Timestamp.now() as UnifiedTimestamp;
+  // Simple creation mode: name is required
+  if (!body.name) {
+    throw createHttpError(
+      400,
+      'Invalid request body: name is required (or provide template)',
+    );
+  }
 
-  // Use existing utility functions to create proper config
+  // Build experiment config from simple inputs
+  const stageConfigs = body.stages || [];
+  const timestamp = Timestamp.now() as UnifiedTimestamp;
   const metadata: MetadataConfig = {
     name: body.name,
     description: body.description || '',
     publicName: '',
     tags: [],
-    creator: experimenterId,
+    creator: '', // Will be set by writeExperimentFromTemplate
     starred: {},
     dateCreated: timestamp,
     dateModified: timestamp,
   };
-
-  // Validate stages if provided
-  if (body.stages !== undefined) {
-    const stagesValidation = validateStages(body.stages);
-    if (!stagesValidation.valid) {
-      throw createHttpError(400, stagesValidation.error);
-    }
-  }
-
-  // Create experiment config with stages (if provided)
-  const stageConfigs = body.stages || [];
   const experimentConfig = createExperimentConfig(stageConfigs, {
     metadata,
     prolificConfig: body.prolificConfig,
   });
 
-  // Use transaction for consistency (similar to writeExperiment)
-  await app.firestore().runTransaction(async (transaction) => {
-    const experimentRef = getFirestoreExperimentRef(experimentConfig.id);
-
-    // Check if experiment already exists
-    const existingDoc = await transaction.get(experimentRef);
-    if (existingDoc.exists) {
-      throw createHttpError(409, 'Experiment with this ID already exists');
-    }
-
-    // Set the experiment document
-    transaction.set(experimentRef, experimentConfig);
-
-    // Add stages subcollection if stages provided
-    for (const stage of stageConfigs) {
-      transaction.set(experimentRef.collection('stages').doc(stage.id), stage);
-    }
+  // Build template from simple inputs
+  const template = createExperimentTemplate({
+    id: experimentConfig.id,
+    experiment: experimentConfig,
+    stageConfigs,
+    agentMediators: body.agentMediators || [],
+    agentParticipants: body.agentParticipants || [],
   });
 
+  // Use shared utility to write experiment
+  const experimentId = await writeExperimentFromTemplate(
+    app.firestore(),
+    template,
+    experimenterId,
+  );
+
+  if (!experimentId) {
+    throw createHttpError(409, 'Experiment with this ID already exists');
+  }
+
+  // Fetch the created experiment to return full config
+  const experimentDoc = await getFirestoreExperimentRef(experimentId).get();
+  const createdExperiment = experimentDoc.data() as Experiment;
+
   res.status(201).json({
-    experiment: experimentConfig,
+    experiment: {...createdExperiment, id: experimentId},
   });
 }
 
@@ -184,6 +246,13 @@ export async function getExperiment(
 
 /**
  * Update an experiment
+ *
+ * Supports two modes:
+ * 1. Partial update: Provide individual fields (name, description, stages, prolificConfig)
+ * 2. Full template update: Provide a complete ExperimentTemplate in the `template` field
+ *
+ * When `template` is provided, it replaces the entire experiment including all stages
+ * and agents. This uses the same logic as the UI's updateExperiment callable.
  */
 export async function updateExperiment(
   req: DeliberateLabAPIRequest,
@@ -202,65 +271,129 @@ export async function updateExperiment(
 
   const body = req.body as UpdateExperimentRequest;
 
-  // Build update object for metadata fields
-  const updates: Record<string, unknown> = {};
-  if (body.name !== undefined) updates['metadata.name'] = body.name;
-  if (body.description !== undefined)
-    updates['metadata.description'] = body.description;
-  if (body.prolificConfig !== undefined) {
-    updates['prolificConfig'] = body.prolificConfig;
+  // If a full template is provided, use the shared utility for full replacement
+  if (body.template) {
+    // Ensure the template's experiment ID matches the URL parameter
+    if (
+      body.template.experiment.id &&
+      body.template.experiment.id !== experimentId
+    ) {
+      throw createHttpError(
+        400,
+        'Template experiment ID does not match URL parameter',
+      );
+    }
+    // Set the ID in case it wasn't provided
+    body.template.experiment.id = experimentId;
+
+    const result = await updateExperimentFromTemplate(
+      app.firestore(),
+      body.template,
+      experimenterId,
+    );
+
+    if (!result.success) {
+      if (result.error === 'not-found') {
+        throw createHttpError(404, 'Experiment not found');
+      } else if (result.error === 'not-owner') {
+        throw createHttpError(
+          403,
+          'Only the creator can update the experiment',
+        );
+      }
+    }
+
+    res.status(200).json({
+      updated: true,
+      id: experimentId,
+    });
+    return;
   }
 
-  // Update timestamp
-  updates['metadata.dateModified'] = Timestamp.now();
+  // Partial update mode: fetch existing data and merge updates
+  // This ensures all Firestore logic is unified in the shared utility
+  const existingData = await getExperimentDownload(
+    app.firestore(),
+    experimentId,
+    {
+      includeParticipantData: false,
+    },
+  );
 
-  // Run all checks and updates in a transaction for consistency
-  await app.firestore().runTransaction(async (transaction) => {
-    const experimentRef = getFirestoreExperimentRef(experimentId);
+  if (!existingData) {
+    throw createHttpError(404, 'Experiment not found');
+  }
 
-    // Check existence and ownership inside transaction
-    const experimentDoc = await transaction.get(experimentRef);
-    if (!experimentDoc.exists) {
-      throw createHttpError(404, 'Experiment not found');
+  const existingExperiment = existingData.experiment;
+
+  // Verify ownership before proceeding
+  if (existingExperiment.metadata.creator !== experimenterId) {
+    throw createHttpError(403, 'Only the creator can update the experiment');
+  }
+
+  // Merge partial updates into existing experiment
+  const mergedExperiment: Experiment = {
+    ...existingExperiment,
+    id: experimentId,
+    metadata: {
+      ...existingExperiment.metadata,
+      ...(body.name !== undefined && {name: body.name}),
+      ...(body.description !== undefined && {description: body.description}),
+    },
+    ...(body.prolificConfig !== undefined && {
+      prolificConfig: body.prolificConfig,
+    }),
+  };
+
+  // Get stages: use provided stages or existing stages
+  let stageConfigs: StageConfig[];
+  if (body.stages !== undefined) {
+    stageConfigs = body.stages;
+  } else {
+    // Get existing stages in order
+    stageConfigs = [];
+    for (const stageId of existingExperiment.stageIds || []) {
+      const stage = existingData.stageMap[stageId];
+      if (stage) {
+        stageConfigs.push(stage);
+      }
     }
+  }
 
-    const experiment = experimentDoc.data() as Experiment;
-    if (experiment.metadata.creator !== experimenterId) {
+  // Get agents: use provided or existing
+  const agentMediators =
+    body.agentMediators !== undefined
+      ? body.agentMediators
+      : Object.values(existingData.agentMediatorMap || {});
+
+  const agentParticipants =
+    body.agentParticipants !== undefined
+      ? body.agentParticipants
+      : Object.values(existingData.agentParticipantMap || {});
+
+  // Build template from merged data
+  const template = createExperimentTemplate({
+    id: experimentId,
+    experiment: mergedExperiment,
+    stageConfigs,
+    agentMediators,
+    agentParticipants,
+  });
+
+  // Use shared utility to update experiment
+  const result = await updateExperimentFromTemplate(
+    app.firestore(),
+    template,
+    experimenterId,
+  );
+
+  if (!result.success) {
+    if (result.error === 'not-found') {
+      throw createHttpError(404, 'Experiment not found');
+    } else if (result.error === 'not-owner') {
       throw createHttpError(403, 'Only the creator can update the experiment');
     }
-
-    // Validate stages if provided
-    if (body.stages !== undefined) {
-      const stagesValidation = validateStages(body.stages);
-      if (!stagesValidation.valid) {
-        throw createHttpError(400, stagesValidation.error);
-      }
-    }
-
-    // Update experiment metadata
-    transaction.update(experimentRef, updates);
-
-    // Update stages if provided
-    if (body.stages !== undefined) {
-      // Delete old stages using stageIds from experiment
-      const oldStageIds = experiment.stageIds || [];
-      for (const stageId of oldStageIds) {
-        transaction.delete(experimentRef.collection('stages').doc(stageId));
-      }
-
-      // Add new stages and update stageIds
-      const stageIds: string[] = [];
-      for (const stage of body.stages) {
-        const stageRef = experimentRef
-          .collection('stages')
-          .doc(stage.id || experimentRef.collection('stages').doc().id);
-        transaction.set(stageRef, stage);
-        stageIds.push(stageRef.id);
-      }
-
-      transaction.update(experimentRef, {stageIds});
-    }
-  });
+  }
 
   res.status(200).json({
     updated: true,
@@ -286,13 +419,20 @@ export async function deleteExperiment(
     throw createHttpError(400, 'Experiment ID required');
   }
 
-  // Verify ownership before deleting
-  await verifyExperimentOwnership(experimentId, experimenterId);
+  // Use shared utility to delete experiment
+  const result = await deleteExperimentById(
+    app.firestore(),
+    experimentId,
+    experimenterId,
+  );
 
-  // Use Firebase's recursive delete to properly clean up all subcollections
-  // This handles stages, cohorts, participants, and all nested data
-  const experimentRef = getFirestoreExperimentRef(experimentId);
-  await app.firestore().recursiveDelete(experimentRef);
+  if (!result.success) {
+    if (result.error === 'not-found') {
+      throw createHttpError(404, 'Experiment not found');
+    } else if (result.error === 'not-owner') {
+      throw createHttpError(403, 'Only the experiment creator can delete');
+    }
+  }
 
   res.status(200).json({
     id: experimentId,
@@ -340,4 +480,54 @@ export async function exportExperimentData(
   }
 
   res.status(200).json(experimentDownload);
+}
+
+/**
+ * Fork an experiment
+ * Creates a copy of the experiment with all stages and agents
+ *
+ * Access: Only public experiments or experiments owned by the requester can be forked
+ */
+export async function forkExperiment(
+  req: DeliberateLabAPIRequest,
+  res: Response,
+): Promise<void> {
+  if (!hasDeliberateLabAPIPermission(req, 'write')) {
+    throw createHttpError(403, 'Insufficient permissions');
+  }
+
+  const experimentId = req.params.id;
+  const experimenterId = req.deliberateLabAPIKeyData!.experimenterId;
+
+  if (!experimentId) {
+    throw createHttpError(400, 'Experiment ID required');
+  }
+
+  // forkExperimentById handles access checks internally
+  const result = await forkExperimentById(
+    app.firestore(),
+    experimentId,
+    experimenterId,
+    {newName: req.body?.name},
+  );
+
+  if (!result.success) {
+    if (result.error === 'not-found') {
+      throw createHttpError(404, 'Experiment not found');
+    } else if (result.error === 'access-denied') {
+      throw createHttpError(
+        403,
+        'Cannot fork this experiment. Only public experiments or your own experiments can be forked.',
+      );
+    }
+  }
+
+  // Fetch the created experiment to return full config
+  const newExperimentDoc = await getFirestoreExperimentRef(result.id!).get();
+  const newExperimentConfig = newExperimentDoc.data() as Experiment;
+
+  res.status(201).json({
+    experiment: {...newExperimentConfig, id: result.id},
+    sourceExperimentId: experimentId,
+  });
 }
