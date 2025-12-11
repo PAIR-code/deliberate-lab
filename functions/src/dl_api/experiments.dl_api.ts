@@ -2,9 +2,10 @@
  * API endpoints for experiment management (Express version)
  */
 
-import * as admin from 'firebase-admin';
+import {Timestamp} from 'firebase-admin/firestore';
 import {Response} from 'express';
 import createHttpError from 'http-errors';
+import {app} from '../app';
 import {
   DeliberateLabAPIRequest,
   hasDeliberateLabAPIPermission,
@@ -51,12 +52,11 @@ export async function listExperiments(
     throw createHttpError(403, 'Insufficient permissions');
   }
 
-  const app = admin.app();
-  const firestore = app.firestore();
   const experimenterId = req.deliberateLabAPIKeyData!.experimenterId;
 
   // Get experiments where user is creator or has read access
-  const snapshot = await firestore
+  const snapshot = await app
+    .firestore()
     .collection('experiments')
     .where('metadata.creator', '==', experimenterId)
     .get();
@@ -83,8 +83,6 @@ export async function createExperiment(
     throw createHttpError(403, 'Insufficient permissions');
   }
 
-  const app = admin.app();
-  const firestore = app.firestore();
   const experimenterId = req.deliberateLabAPIKeyData!.experimenterId;
 
   const body = req.body as CreateExperimentRequest;
@@ -94,7 +92,7 @@ export async function createExperiment(
     throw createHttpError(400, 'Invalid request body: name is required');
   }
 
-  const timestamp = admin.firestore.Timestamp.now() as UnifiedTimestamp;
+  const timestamp = Timestamp.now() as UnifiedTimestamp;
 
   // Use existing utility functions to create proper config
   const metadata: MetadataConfig = {
@@ -119,10 +117,8 @@ export async function createExperiment(
   });
 
   // Use transaction for consistency (similar to writeExperiment)
-  await firestore.runTransaction(async (transaction) => {
-    const experimentRef = firestore
-      .collection('experiments')
-      .doc(experimentConfig.id);
+  await app.firestore().runTransaction(async (transaction) => {
+    const experimentRef = getFirestoreExperimentRef(experimentConfig.id);
 
     // Check if experiment already exists
     const existingDoc = await transaction.get(experimentRef);
@@ -163,14 +159,11 @@ export async function getExperiment(
     throw createHttpError(400, 'Experiment ID required');
   }
 
-  const app = admin.app();
-  const firestore = app.firestore();
-
   // Verify access permissions before fetching full data
   await verifyExperimentAccess(experimentId, experimenterId);
 
   // Now fetch full experiment data (stages, agents, etc.)
-  const data = await getExperimentDownload(firestore, experimentId, {
+  const data = await getExperimentDownload(app.firestore(), experimentId, {
     includeParticipantData: false,
   });
 
@@ -197,8 +190,6 @@ export async function updateExperiment(
     throw createHttpError(403, 'Insufficient permissions');
   }
 
-  const app = admin.app();
-  const firestore = app.firestore();
   const experimentId = req.params.id;
   const experimenterId = req.deliberateLabAPIKeyData!.experimenterId;
 
@@ -218,10 +209,10 @@ export async function updateExperiment(
   }
 
   // Update timestamp
-  updates['metadata.dateModified'] = admin.firestore.Timestamp.now();
+  updates['metadata.dateModified'] = Timestamp.now();
 
   // Run all checks and updates in a transaction for consistency
-  await firestore.runTransaction(async (transaction) => {
+  await app.firestore().runTransaction(async (transaction) => {
     const experimentRef = getFirestoreExperimentRef(experimentId);
 
     // Check existence and ownership inside transaction
@@ -285,8 +276,6 @@ export async function deleteExperiment(
     throw createHttpError(403, 'Insufficient permissions');
   }
 
-  const app = admin.app();
-  const firestore = app.firestore();
   const experimentId = req.params.id;
   const experimenterId = req.deliberateLabAPIKeyData!.experimenterId;
 
@@ -300,7 +289,7 @@ export async function deleteExperiment(
   // Use Firebase's recursive delete to properly clean up all subcollections
   // This handles stages, cohorts, participants, and all nested data
   const experimentRef = getFirestoreExperimentRef(experimentId);
-  await firestore.recursiveDelete(experimentRef);
+  await app.firestore().recursiveDelete(experimentRef);
 
   res.status(200).json({
     id: experimentId,
@@ -320,8 +309,6 @@ export async function exportExperimentData(
     throw createHttpError(403, 'Insufficient permissions');
   }
 
-  const app = admin.app();
-  const firestore = app.firestore();
   const experimentId = req.params.id;
   const experimenterId = req.deliberateLabAPIKeyData!.experimenterId;
 
@@ -334,7 +321,7 @@ export async function exportExperimentData(
 
   // Use the shared function to get full experiment data
   const experimentDownload = await getExperimentDownload(
-    firestore,
+    app.firestore(),
     experimentId,
   );
 
