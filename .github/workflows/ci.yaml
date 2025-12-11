@@ -125,14 +125,16 @@ jobs:
           --collapse-root-models \
           --use-union-operator \
           --use-title-as-name \
-          --output-model-type pydantic_v2.BaseModel
+          --output-model-type pydantic_v2.BaseModel \
+          --custom-file-header $'# pyright: reportInvalidTypeForm=false\n# pylint: disable=missing-module-docstring,missing-class-docstring,invalid-name,too-few-public-methods'
 
     - name: Format Python files
       run: |
-        cd scripts
-        # Add lint disable comments to generated file
-        sed -i '1s/^/# pyright: reportInvalidTypeForm=false\n# pylint: disable=missing-module-docstring,missing-class-docstring,invalid-name,too-few-public-methods\n/' dl_api_types.py
-        uvx black dl_api_types.py dl_api_client.py
+        cd scripts && uvx black dl_api_types.py dl_api_client.py
+
+    - name: Validate generated Python
+      run: |
+        cd scripts && uvx pyright dl_api_types.py dl_api_client.py
 
     - name: Commit and push if changed
       run: |
