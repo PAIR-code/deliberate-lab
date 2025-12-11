@@ -132,7 +132,7 @@ class Client:
         name: str,
         description: Optional[str] = None,
         stages: Optional[list[BaseModel]] = None,
-        prolific_redirect_code: Optional[str] = None,
+        prolific_config: Optional[ProlificConfig] = None,
     ) -> dict:
         """
         Create a new experiment.
@@ -141,7 +141,7 @@ class Client:
             name: Experiment name (required)
             description: Optional description
             stages: Optional list of stage configurations (use typed StageConfig classes)
-            prolific_redirect_code: Optional Prolific redirect code
+            prolific_config: Optional Prolific integration config with redirect codes
 
         Returns:
             dict with created experiment data including 'id'
@@ -165,8 +165,8 @@ class Client:
             data["stages"] = [
                 s.model_dump(by_alias=True, exclude_none=True) for s in stages
             ]
-        if prolific_redirect_code is not None:
-            data["prolificRedirectCode"] = prolific_redirect_code
+        if prolific_config is not None:
+            data["prolificConfig"] = prolific_config.model_dump(by_alias=True, exclude_none=True)
 
         response = self._session.post(
             f"{self.base_url}/experiments", json=data, timeout=self.timeout
@@ -179,7 +179,7 @@ class Client:
         name: Optional[str] = None,
         description: Optional[str] = None,
         stages: Optional[list[BaseModel]] = None,
-        prolific_redirect_code: Optional[str] = None,
+        prolific_config: Optional[ProlificConfig] = None,
     ) -> dict:
         """
         Update an existing experiment.
@@ -189,7 +189,7 @@ class Client:
             name: Optional new name
             description: Optional new description
             stages: Optional new list of stage configurations (use typed StageConfig classes)
-            prolific_redirect_code: Optional new Prolific redirect code
+            prolific_config: Optional new Prolific integration config
 
         Returns:
             dict with 'updated' bool and 'id'
@@ -203,8 +203,8 @@ class Client:
             data["stages"] = [
                 s.model_dump(by_alias=True, exclude_none=True) for s in stages
             ]
-        if prolific_redirect_code is not None:
-            data["prolificRedirectCode"] = prolific_redirect_code
+        if prolific_config is not None:
+            data["prolificConfig"] = prolific_config.model_dump(by_alias=True, exclude_none=True)
 
         response = self._session.put(
             f"{self.base_url}/experiments/{experiment_id}",
