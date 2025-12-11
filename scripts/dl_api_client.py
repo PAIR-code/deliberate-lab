@@ -7,7 +7,7 @@ Simple Python client for interacting with the Deliberate Lab API.
 Usage:
     Set the DL_API_KEY environment variable with your API key, then:
 
-    from dl_api_client import DeliberateLabClient, types
+    from dl_api_client import DeliberateLabClient, dl
 
     client = DeliberateLabClient()
 
@@ -15,14 +15,14 @@ Usage:
     experiments = client.list_experiments()
 
     # Create experiment with typed stage configs
-    stage = types.SurveyStageConfig(
+    stage = dl.SurveyStageConfig(
         id="survey1",
         kind="survey",
         name="Demographics",
-        descriptions=types.StageTextConfig(primaryText="Please answer", infoText="", helpText=""),
-        progress=types.StageProgressConfig(minParticipants=1, waitForAllParticipants=False, showParticipantProgress=False),
+        descriptions=dl.StageTextConfig(primaryText="Please answer", infoText="", helpText=""),
+        progress=dl.StageProgressConfig(minParticipants=1, waitForAllParticipants=False, showParticipantProgress=False),
         questions=[
-            types.TextSurveyQuestion(id="q1", kind="text", questionTitle="What is your name?")
+            dl.TextSurveyQuestion(id="q1", kind="text", questionTitle="What is your name?")
         ]
     )
     client.create_experiment(name="My Study", stages=[stage])
@@ -33,8 +33,8 @@ from typing import Optional, TYPE_CHECKING
 import os
 import requests
 
-# Import types module - use as `types.SurveyStageConfig`, `types.TextSurveyQuestion`, etc.
-import dl_api_types as types  # noqa: F401  # pylint: disable=unused-import
+# Import types module - use as `dl.SurveyStageConfig`, `dl.TextSurveyQuestion`, etc.
+import dl_api_types as dl  # noqa: F401  # pylint: disable=unused-import
 
 if TYPE_CHECKING:
     from pydantic import BaseModel
@@ -147,13 +147,13 @@ class DeliberateLabClient:
             dict with created experiment data including 'id'
 
         Example:
-            stage = types.SurveyStageConfig(
+            stage = dl.SurveyStageConfig(
                 id="survey1",
                 kind="survey",
                 name="Demographics",
-                descriptions=types.StageTextConfig(primaryText="Answer", infoText="", helpText=""),
-                progress=types.StageProgressConfig(minParticipants=1, waitForAllParticipants=False, showParticipantProgress=False),
-                questions=[types.TextSurveyQuestion(id="q1", kind="text", questionTitle="Name?")]
+                descriptions=dl.StageTextConfig(primaryText="Answer", infoText="", helpText=""),
+                progress=dl.StageProgressConfig(minParticipants=1, waitForAllParticipants=False, showParticipantProgress=False),
+                questions=[dl.TextSurveyQuestion(id="q1", kind="text", questionTitle="Name?")]
             )
             client.create_experiment(name="My Study", stages=[stage])
         """
