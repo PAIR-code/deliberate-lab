@@ -1,11 +1,14 @@
 import {
   ConditionOperator,
   ComparisonOperator,
+  AggregationOperator,
   ConditionGroup,
   ComparisonCondition,
+  AggregationCondition,
   ConditionTargetReference,
   createConditionGroup,
   createComparisonCondition,
+  createAggregationCondition,
   evaluateCondition,
   getComparisonOperatorLabel,
   getConditionOperatorLabel,
@@ -13,6 +16,7 @@ import {
   extractMultipleConditionDependencies,
   getConditionTargetKey,
   parseConditionTargetKey,
+  hasAggregationConditions,
 } from './condition';
 
 // Mock generateId for predictable test results
@@ -123,6 +127,45 @@ describe('condition utilities', () => {
         target,
         operator: ComparisonOperator.GREATER_THAN,
         value: 10,
+      });
+    });
+  });
+
+  describe('createAggregationCondition', () => {
+    test('creates aggregation condition with default values', () => {
+      const target: ConditionTargetReference = {
+        stageId: 'stage1',
+        questionId: 'q1',
+      };
+      const condition = createAggregationCondition(target);
+      expect(condition).toEqual({
+        id: 'test-id',
+        type: 'aggregation',
+        target,
+        aggregator: AggregationOperator.ANY,
+        operator: ComparisonOperator.EQUALS,
+        value: '',
+      });
+    });
+
+    test('creates aggregation condition with specified values', () => {
+      const target: ConditionTargetReference = {
+        stageId: 'stage2',
+        questionId: 'q2',
+      };
+      const condition = createAggregationCondition(
+        target,
+        AggregationOperator.COUNT,
+        ComparisonOperator.GREATER_THAN_OR_EQUAL,
+        3,
+      );
+      expect(condition).toEqual({
+        id: 'test-id',
+        type: 'aggregation',
+        target,
+        aggregator: AggregationOperator.COUNT,
+        operator: ComparisonOperator.GREATER_THAN_OR_EQUAL,
+        value: 3,
       });
     });
   });
@@ -446,6 +489,433 @@ describe('condition utilities', () => {
         expect(evaluateCondition(nestedGroup, targetValues)).toBe(true);
       });
     });
+
+    describe('aggregation conditions', () => {
+      // Multi-value target data for aggregation tests
+      const multiValues = {
+        'stage1::q1': ['yes', 'yes', 'no', 'yes'],
+        'stage1::q2': [5, 10, 15, 20],
+        'stage1::q3': ['a', 'b', 'c'],
+        'stage1::empty': [],
+      };
+
+      describe('ANY aggregator', () => {
+        test('returns true if any value matches', () => {
+          const condition: AggregationCondition = {
+            id: '1',
+            type: 'aggregation',
+            target: {stageId: 'stage1', questionId: 'q1'},
+            aggregator: AggregationOperator.ANY,
+            operator: ComparisonOperator.EQUALS,
+            value: 'yes',
+          };
+          expect(evaluateCondition(condition, multiValues)).toBe(true);
+        });
+
+        test('returns false if no value matches', () => {
+          const condition: AggregationCondition = {
+            id: '1',
+            type: 'aggregation',
+            target: {stageId: 'stage1', questionId: 'q1'},
+            aggregator: AggregationOperator.ANY,
+            operator: ComparisonOperator.EQUALS,
+            value: 'maybe',
+          };
+          expect(evaluateCondition(condition, multiValues)).toBe(false);
+        });
+
+        test('returns false for empty array', () => {
+          const condition: AggregationCondition = {
+            id: '1',
+            type: 'aggregation',
+            target: {stageId: 'stage1', questionId: 'empty'},
+            aggregator: AggregationOperator.ANY,
+            operator: ComparisonOperator.EQUALS,
+            value: 'test',
+          };
+          expect(evaluateCondition(condition, multiValues)).toBe(false);
+        });
+
+        test('works with numeric comparisons', () => {
+          const condition: AggregationCondition = {
+            id: '1',
+            type: 'aggregation',
+            target: {stageId: 'stage1', questionId: 'q2'},
+            aggregator: AggregationOperator.ANY,
+            operator: ComparisonOperator.GREATER_THAN,
+            value: 15,
+          };
+          expect(evaluateCondition(condition, multiValues)).toBe(true);
+
+          condition.value = 25;
+          expect(evaluateCondition(condition, multiValues)).toBe(false);
+        });
+      });
+
+      describe('ALL aggregator', () => {
+        test('returns true if all values match', () => {
+          const condition: AggregationCondition = {
+            id: '1',
+            type: 'aggregation',
+            target: {stageId: 'stage1', questionId: 'q2'},
+            aggregator: AggregationOperator.ALL,
+            operator: ComparisonOperator.GREATER_THAN,
+            value: 0,
+          };
+          expect(evaluateCondition(condition, multiValues)).toBe(true);
+        });
+
+        test('returns false if any value does not match', () => {
+          const condition: AggregationCondition = {
+            id: '1',
+            type: 'aggregation',
+            target: {stageId: 'stage1', questionId: 'q1'},
+            aggregator: AggregationOperator.ALL,
+            operator: ComparisonOperator.EQUALS,
+            value: 'yes',
+          };
+          expect(evaluateCondition(condition, multiValues)).toBe(false);
+        });
+
+        test('returns false for empty array', () => {
+          const condition: AggregationCondition = {
+            id: '1',
+            type: 'aggregation',
+            target: {stageId: 'stage1', questionId: 'empty'},
+            aggregator: AggregationOperator.ALL,
+            operator: ComparisonOperator.EQUALS,
+            value: 'test',
+          };
+          expect(evaluateCondition(condition, multiValues)).toBe(false);
+        });
+      });
+
+      describe('NONE aggregator', () => {
+        test('returns true if no value matches', () => {
+          const condition: AggregationCondition = {
+            id: '1',
+            type: 'aggregation',
+            target: {stageId: 'stage1', questionId: 'q1'},
+            aggregator: AggregationOperator.NONE,
+            operator: ComparisonOperator.EQUALS,
+            value: 'maybe',
+          };
+          expect(evaluateCondition(condition, multiValues)).toBe(true);
+        });
+
+        test('returns false if any value matches', () => {
+          const condition: AggregationCondition = {
+            id: '1',
+            type: 'aggregation',
+            target: {stageId: 'stage1', questionId: 'q1'},
+            aggregator: AggregationOperator.NONE,
+            operator: ComparisonOperator.EQUALS,
+            value: 'yes',
+          };
+          expect(evaluateCondition(condition, multiValues)).toBe(false);
+        });
+
+        test('returns false for empty array', () => {
+          const condition: AggregationCondition = {
+            id: '1',
+            type: 'aggregation',
+            target: {stageId: 'stage1', questionId: 'empty'},
+            aggregator: AggregationOperator.NONE,
+            operator: ComparisonOperator.EQUALS,
+            value: 'test',
+          };
+          expect(evaluateCondition(condition, multiValues)).toBe(false);
+        });
+      });
+
+      describe('COUNT aggregator', () => {
+        test('counts all non-null values without filterComparison', () => {
+          const condition: AggregationCondition = {
+            id: '1',
+            type: 'aggregation',
+            target: {stageId: 'stage1', questionId: 'q1'},
+            aggregator: AggregationOperator.COUNT,
+            operator: ComparisonOperator.EQUALS,
+            value: 4,
+          };
+          expect(evaluateCondition(condition, multiValues)).toBe(true);
+
+          condition.value = 3;
+          expect(evaluateCondition(condition, multiValues)).toBe(false);
+        });
+
+        test('counts filtered values with filterComparison', () => {
+          const condition: AggregationCondition = {
+            id: '1',
+            type: 'aggregation',
+            target: {stageId: 'stage1', questionId: 'q1'},
+            aggregator: AggregationOperator.COUNT,
+            operator: ComparisonOperator.EQUALS,
+            value: 3,
+            filterComparison: {
+              operator: ComparisonOperator.EQUALS,
+              value: 'yes',
+            },
+          };
+          // 3 values equal 'yes'
+          expect(evaluateCondition(condition, multiValues)).toBe(true);
+        });
+
+        test('count with GREATER_THAN_OR_EQUAL comparison', () => {
+          const condition: AggregationCondition = {
+            id: '1',
+            type: 'aggregation',
+            target: {stageId: 'stage1', questionId: 'q1'},
+            aggregator: AggregationOperator.COUNT,
+            operator: ComparisonOperator.GREATER_THAN_OR_EQUAL,
+            value: 3,
+            filterComparison: {
+              operator: ComparisonOperator.EQUALS,
+              value: 'yes',
+            },
+          };
+          // 3 values equal 'yes', >= 3
+          expect(evaluateCondition(condition, multiValues)).toBe(true);
+
+          condition.value = 4;
+          expect(evaluateCondition(condition, multiValues)).toBe(false);
+        });
+
+        test('count with numeric filterComparison', () => {
+          const condition: AggregationCondition = {
+            id: '1',
+            type: 'aggregation',
+            target: {stageId: 'stage1', questionId: 'q2'},
+            aggregator: AggregationOperator.COUNT,
+            operator: ComparisonOperator.EQUALS,
+            value: 2,
+            filterComparison: {
+              operator: ComparisonOperator.GREATER_THAN,
+              value: 10,
+            },
+          };
+          // Values > 10: [15, 20] = 2
+          expect(evaluateCondition(condition, multiValues)).toBe(true);
+        });
+
+        test('returns zero count for empty array', () => {
+          const condition: AggregationCondition = {
+            id: '1',
+            type: 'aggregation',
+            target: {stageId: 'stage1', questionId: 'empty'},
+            aggregator: AggregationOperator.COUNT,
+            operator: ComparisonOperator.EQUALS,
+            value: 0,
+          };
+          expect(evaluateCondition(condition, multiValues)).toBe(false);
+        });
+      });
+
+      describe('SUM aggregator', () => {
+        test('sums all values without filterComparison', () => {
+          const condition: AggregationCondition = {
+            id: '1',
+            type: 'aggregation',
+            target: {stageId: 'stage1', questionId: 'q2'},
+            aggregator: AggregationOperator.SUM,
+            operator: ComparisonOperator.EQUALS,
+            value: 50, // 5 + 10 + 15 + 20 = 50
+          };
+          expect(evaluateCondition(condition, multiValues)).toBe(true);
+        });
+
+        test('sums filtered values with filterComparison', () => {
+          const condition: AggregationCondition = {
+            id: '1',
+            type: 'aggregation',
+            target: {stageId: 'stage1', questionId: 'q2'},
+            aggregator: AggregationOperator.SUM,
+            operator: ComparisonOperator.EQUALS,
+            value: 35, // 15 + 20 = 35 (values > 10)
+            filterComparison: {
+              operator: ComparisonOperator.GREATER_THAN,
+              value: 10,
+            },
+          };
+          expect(evaluateCondition(condition, multiValues)).toBe(true);
+        });
+
+        test('sum with GREATER_THAN comparison', () => {
+          const condition: AggregationCondition = {
+            id: '1',
+            type: 'aggregation',
+            target: {stageId: 'stage1', questionId: 'q2'},
+            aggregator: AggregationOperator.SUM,
+            operator: ComparisonOperator.GREATER_THAN,
+            value: 40,
+          };
+          expect(evaluateCondition(condition, multiValues)).toBe(true);
+
+          condition.value = 50;
+          expect(evaluateCondition(condition, multiValues)).toBe(false);
+        });
+
+        test('returns false for empty array', () => {
+          const condition: AggregationCondition = {
+            id: '1',
+            type: 'aggregation',
+            target: {stageId: 'stage1', questionId: 'empty'},
+            aggregator: AggregationOperator.SUM,
+            operator: ComparisonOperator.EQUALS,
+            value: 0,
+          };
+          expect(evaluateCondition(condition, multiValues)).toBe(false);
+        });
+      });
+
+      describe('AVERAGE aggregator', () => {
+        test('averages all values without filterComparison', () => {
+          const condition: AggregationCondition = {
+            id: '1',
+            type: 'aggregation',
+            target: {stageId: 'stage1', questionId: 'q2'},
+            aggregator: AggregationOperator.AVERAGE,
+            operator: ComparisonOperator.EQUALS,
+            value: 12.5, // (5 + 10 + 15 + 20) / 4 = 12.5
+          };
+          expect(evaluateCondition(condition, multiValues)).toBe(true);
+        });
+
+        test('averages filtered values with filterComparison', () => {
+          const condition: AggregationCondition = {
+            id: '1',
+            type: 'aggregation',
+            target: {stageId: 'stage1', questionId: 'q2'},
+            aggregator: AggregationOperator.AVERAGE,
+            operator: ComparisonOperator.EQUALS,
+            value: 17.5, // (15 + 20) / 2 = 17.5 (values > 10)
+            filterComparison: {
+              operator: ComparisonOperator.GREATER_THAN,
+              value: 10,
+            },
+          };
+          expect(evaluateCondition(condition, multiValues)).toBe(true);
+        });
+
+        test('average with GREATER_THAN_OR_EQUAL comparison', () => {
+          const condition: AggregationCondition = {
+            id: '1',
+            type: 'aggregation',
+            target: {stageId: 'stage1', questionId: 'q2'},
+            aggregator: AggregationOperator.AVERAGE,
+            operator: ComparisonOperator.GREATER_THAN_OR_EQUAL,
+            value: 12.5,
+          };
+          expect(evaluateCondition(condition, multiValues)).toBe(true);
+
+          condition.value = 13;
+          expect(evaluateCondition(condition, multiValues)).toBe(false);
+        });
+
+        test('returns false for empty array', () => {
+          const condition: AggregationCondition = {
+            id: '1',
+            type: 'aggregation',
+            target: {stageId: 'stage1', questionId: 'empty'},
+            aggregator: AggregationOperator.AVERAGE,
+            operator: ComparisonOperator.EQUALS,
+            value: 0,
+          };
+          expect(evaluateCondition(condition, multiValues)).toBe(false);
+        });
+
+        test('returns false when filter leaves no values', () => {
+          const condition: AggregationCondition = {
+            id: '1',
+            type: 'aggregation',
+            target: {stageId: 'stage1', questionId: 'q2'},
+            aggregator: AggregationOperator.AVERAGE,
+            operator: ComparisonOperator.EQUALS,
+            value: 0,
+            filterComparison: {
+              operator: ComparisonOperator.GREATER_THAN,
+              value: 100, // No values > 100
+            },
+          };
+          expect(evaluateCondition(condition, multiValues)).toBe(false);
+        });
+      });
+
+      describe('aggregation with missing target', () => {
+        test('returns false for non-existent target', () => {
+          const condition: AggregationCondition = {
+            id: '1',
+            type: 'aggregation',
+            target: {stageId: 'nonexistent', questionId: 'q1'},
+            aggregator: AggregationOperator.ANY,
+            operator: ComparisonOperator.EQUALS,
+            value: 'test',
+          };
+          expect(evaluateCondition(condition, multiValues)).toBe(false);
+        });
+      });
+
+      describe('aggregation in condition groups', () => {
+        test('combines aggregation with comparison conditions', () => {
+          const group: ConditionGroup = {
+            id: '1',
+            type: 'group',
+            operator: ConditionOperator.AND,
+            conditions: [
+              {
+                id: '2',
+                type: 'aggregation',
+                target: {stageId: 'stage1', questionId: 'q1'},
+                aggregator: AggregationOperator.COUNT,
+                operator: ComparisonOperator.GREATER_THAN_OR_EQUAL,
+                value: 3,
+                filterComparison: {
+                  operator: ComparisonOperator.EQUALS,
+                  value: 'yes',
+                },
+              },
+              {
+                id: '3',
+                type: 'aggregation',
+                target: {stageId: 'stage1', questionId: 'q2'},
+                aggregator: AggregationOperator.AVERAGE,
+                operator: ComparisonOperator.GREATER_THAN,
+                value: 10,
+              },
+            ],
+          };
+          // 3 'yes' values >= 3, and average 12.5 > 10
+          expect(evaluateCondition(group, multiValues)).toBe(true);
+        });
+
+        test('OR group with aggregation conditions', () => {
+          const group: ConditionGroup = {
+            id: '1',
+            type: 'group',
+            operator: ConditionOperator.OR,
+            conditions: [
+              {
+                id: '2',
+                type: 'aggregation',
+                target: {stageId: 'stage1', questionId: 'q1'},
+                aggregator: AggregationOperator.ALL,
+                operator: ComparisonOperator.EQUALS,
+                value: 'yes', // false - not all are 'yes'
+              },
+              {
+                id: '3',
+                type: 'aggregation',
+                target: {stageId: 'stage1', questionId: 'q2'},
+                aggregator: AggregationOperator.SUM,
+                operator: ComparisonOperator.EQUALS,
+                value: 50, // true - sum is 50
+              },
+            ],
+          };
+          expect(evaluateCondition(group, multiValues)).toBe(true);
+        });
+      });
+    });
   });
 
   describe('getComparisonOperatorLabel', () => {
@@ -508,6 +978,20 @@ describe('condition utilities', () => {
         target: {stageId: 'stage1', questionId: 'q1'},
         operator: ComparisonOperator.EQUALS,
         value: 'test',
+      };
+      expect(extractConditionDependencies(condition)).toEqual([
+        {stageId: 'stage1', questionId: 'q1'},
+      ]);
+    });
+
+    test('extracts single dependency from aggregation condition', () => {
+      const condition: AggregationCondition = {
+        id: '1',
+        type: 'aggregation',
+        target: {stageId: 'stage1', questionId: 'q1'},
+        aggregator: AggregationOperator.COUNT,
+        operator: ComparisonOperator.GREATER_THAN,
+        value: 3,
       };
       expect(extractConditionDependencies(condition)).toEqual([
         {stageId: 'stage1', questionId: 'q1'},
@@ -678,6 +1162,129 @@ describe('condition utilities', () => {
         {stageId: 'stage2', questionId: 'q2'},
         {stageId: 'stage3', questionId: 'q3'},
       ]);
+    });
+  });
+
+  describe('hasAggregationConditions', () => {
+    test('returns false for undefined condition', () => {
+      expect(hasAggregationConditions(undefined)).toBe(false);
+    });
+
+    test('returns false for comparison condition', () => {
+      const condition: ComparisonCondition = {
+        id: '1',
+        type: 'comparison',
+        target: {stageId: 'stage1', questionId: 'q1'},
+        operator: ComparisonOperator.EQUALS,
+        value: 'test',
+      };
+      expect(hasAggregationConditions(condition)).toBe(false);
+    });
+
+    test('returns true for aggregation condition', () => {
+      const condition: AggregationCondition = {
+        id: '1',
+        type: 'aggregation',
+        target: {stageId: 'stage1', questionId: 'q1'},
+        aggregator: AggregationOperator.COUNT,
+        operator: ComparisonOperator.GREATER_THAN,
+        value: 3,
+      };
+      expect(hasAggregationConditions(condition)).toBe(true);
+    });
+
+    test('returns false for group with only comparison conditions', () => {
+      const group: ConditionGroup = {
+        id: '1',
+        type: 'group',
+        operator: ConditionOperator.AND,
+        conditions: [
+          {
+            id: '2',
+            type: 'comparison',
+            target: {stageId: 'stage1', questionId: 'q1'},
+            operator: ComparisonOperator.EQUALS,
+            value: 'test',
+          },
+          {
+            id: '3',
+            type: 'comparison',
+            target: {stageId: 'stage2', questionId: 'q2'},
+            operator: ComparisonOperator.EQUALS,
+            value: 'test',
+          },
+        ],
+      };
+      expect(hasAggregationConditions(group)).toBe(false);
+    });
+
+    test('returns true for group containing aggregation condition', () => {
+      const group: ConditionGroup = {
+        id: '1',
+        type: 'group',
+        operator: ConditionOperator.AND,
+        conditions: [
+          {
+            id: '2',
+            type: 'comparison',
+            target: {stageId: 'stage1', questionId: 'q1'},
+            operator: ComparisonOperator.EQUALS,
+            value: 'test',
+          },
+          {
+            id: '3',
+            type: 'aggregation',
+            target: {stageId: 'stage2', questionId: 'q2'},
+            aggregator: AggregationOperator.ANY,
+            operator: ComparisonOperator.EQUALS,
+            value: 'test',
+          },
+        ],
+      };
+      expect(hasAggregationConditions(group)).toBe(true);
+    });
+
+    test('returns true for nested group containing aggregation condition', () => {
+      const nestedGroup: ConditionGroup = {
+        id: '1',
+        type: 'group',
+        operator: ConditionOperator.AND,
+        conditions: [
+          {
+            id: '2',
+            type: 'group',
+            operator: ConditionOperator.OR,
+            conditions: [
+              {
+                id: '3',
+                type: 'comparison',
+                target: {stageId: 'stage1', questionId: 'q1'},
+                operator: ComparisonOperator.EQUALS,
+                value: 'test',
+              },
+              {
+                id: '4',
+                type: 'aggregation',
+                target: {stageId: 'stage2', questionId: 'q2'},
+                aggregator: AggregationOperator.SUM,
+                operator: ComparisonOperator.GREATER_THAN,
+                value: 100,
+              },
+            ],
+          },
+        ],
+      };
+      expect(hasAggregationConditions(nestedGroup)).toBe(true);
+    });
+
+    test('returns false for empty group', () => {
+      const group: ConditionGroup = {
+        id: '1',
+        type: 'group',
+        operator: ConditionOperator.AND,
+        conditions: [],
+      };
+      expect(hasAggregationConditions(group)).toBe(false);
     });
   });
 
