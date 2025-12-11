@@ -41,8 +41,9 @@ describe('Cohort API Integration Tests', () => {
 
   beforeEach(async () => {
     // Clear experiments (and their cohorts) from previous tests
+    // Uses withSecurityRulesDisabled to bypass Firestore rules for cleanup
     for (const expId of createdExperimentIds) {
-      await cleanupExperiment(ctx.firestore, expId);
+      await cleanupExperiment(ctx.testEnv, expId);
     }
     createdExperimentIds.length = 0;
   });

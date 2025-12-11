@@ -49,8 +49,9 @@ describe('API Experiment Creation Integration Tests', () => {
 
   beforeEach(async () => {
     // Clear experiments from previous tests
+    // Uses withSecurityRulesDisabled to bypass Firestore rules for cleanup
     for (const expId of createdExperimentIds) {
-      await cleanupExperiment(ctx.firestore, expId);
+      await cleanupExperiment(ctx.testEnv, expId);
     }
     createdExperimentIds.length = 0;
   });
@@ -70,9 +71,13 @@ describe('API Experiment Creation Integration Tests', () => {
     // Override creator to test user
     experimentConfig.metadata.creator = TEST_EXPERIMENTER_ID;
 
-    const document = ctx.firestore
-      .collection(EXPERIMENTS_COLLECTION)
-      .doc(experimentConfig.id);
+    // Use withSecurityRulesDisabled to simulate admin SDK behavior
+    // (the writeExperiment cloud function uses admin SDK which bypasses rules)
+    await ctx.testEnv.withSecurityRulesDisabled(async (context) => {
+      const adminFirestore = context.firestore();
+      const document = adminFirestore
+        .collection(EXPERIMENTS_COLLECTION)
+        .doc(experimentConfig.id);
 
       // Write experiment directly (serialize to remove Timestamp objects)
       await document.set(serializeForFirestore(experimentConfig));

@@ -79,7 +79,7 @@ export async function setupTestContext(testName: string): Promise<TestContext> {
   // Construct base URL
   const functionsHost =
     process.env.FIREBASE_FUNCTIONS_EMULATOR_HOST || 'localhost';
-  const functionsPort = process.env.FIREBASE_FUNCTIONS_EMULATOR_PORT || '5001';
+  const functionsPort = process.env.FIREBASE_FUNCTIONS_EMULATOR_PORT || '5101';
   const region = 'us-central1';
   const baseUrl = `http://${functionsHost}:${functionsPort}/${PROJECT_ID}/${region}/api`;
   console.log('API base URL:', baseUrl);
@@ -101,32 +101,35 @@ export async function teardownTestContext(ctx: TestContext): Promise<void> {
 }
 
 /**
- * Clean up an experiment and its subcollections
+ * Clean up an experiment and its subcollections.
+ * Uses withSecurityRulesDisabled to bypass Firestore rules for cleanup.
  */
 export async function cleanupExperiment(
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  firestore: any,
+  testEnv: RulesTestEnvironment,
   experimentId: string,
 ): Promise<void> {
   try {
-    const expRef = firestore
-      .collection(EXPERIMENTS_COLLECTION)
-      .doc(experimentId);
+    await testEnv.withSecurityRulesDisabled(async (context) => {
+      const firestore = context.firestore();
+      const expRef = firestore
+        .collection(EXPERIMENTS_COLLECTION)
+        .doc(experimentId);
 
-    // Delete cohorts subcollection
-    const cohorts = await expRef.collection('cohorts').get();
-    for (const cohort of cohorts.docs) {
-      await cohort.ref.delete();
-    }
+      // Delete cohorts subcollection
+      const cohorts = await expRef.collection('cohorts').get();
+      for (const cohort of cohorts.docs) {
+        await cohort.ref.delete();
+      }
 
-    // Delete stages subcollection
-    const stages = await expRef.collection('stages').get();
-    for (const stage of stages.docs) {
-      await stage.ref.delete();
-    }
+      // Delete stages subcollection
+      const stages = await expRef.collection('stages').get();
+      for (const stage of stages.docs) {
+        await stage.ref.delete();
+      }
 
-    // Delete experiment document
-    await expRef.delete();
+      // Delete experiment document
+      await expRef.delete();
+    });
   } catch (error) {
     console.error('Error cleaning up experiment:', experimentId, error);
   }
