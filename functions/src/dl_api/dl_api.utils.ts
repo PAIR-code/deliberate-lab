@@ -4,10 +4,13 @@
  */
 
 import {Request, Response, NextFunction} from 'express';
+import createHttpError from 'http-errors';
+import {Experiment} from '@deliberation-lab/utils';
 import {
   verifyDeliberateLabAPIKey,
   extractDeliberateLabBearerToken,
 } from './dl_api_key.utils';
+import {getFirestoreExperiment} from '../utils/firestore';
 
 // ************************************************************************* //
 // TYPES                                                                     //
@@ -137,43 +140,53 @@ export function requireDeliberateLabAPIPermission(permission: string) {
 }
 
 // ************************************************************************* //
-// VALIDATION HELPERS                                                        //
+// EXPERIMENT ACCESS HELPERS                                                 //
 // ************************************************************************* //
 
 /**
- * Generic validation helper that validates data and sends error response if invalid
- *
- * This helper simplifies validation in Express endpoints by handling both validation
- * and error response in a single call.
- *
- * @param data - Data to validate (can be undefined)
- * @param validator - Validation function that returns error message string or null if valid
- * @param res - Express response object
- * @returns true if data is valid or undefined, false if validation failed (response already sent)
- *
- * @example
- * ```typescript
- * // In an Express endpoint
- * if (!validateOrRespond(body.stages, validateStages, res)) return;
- *
- * // With custom validator
- * const validateEmail = (email: string) => {
- *   return email.includes('@') ? null : 'Invalid email format';
- * };
- * if (!validateOrRespond(body.email, validateEmail, res)) return;
- * ```
+ * Verify the authenticated user has read access to the experiment.
+ * Returns the experiment if access is granted.
+ * Throws HttpError if experiment not found or access denied.
  */
-export function validateOrRespond<T>(
-  data: T | undefined,
-  validator: (data: T) => string | null,
-  res: Response,
-): boolean {
-  if (data === undefined) return true;
-
-  const validationError = validator(data);
-  if (validationError) {
-    res.status(400).json({error: validationError});
-    return false;
+export async function verifyExperimentAccess(
+  experimentId: string,
+  experimenterId: string,
+): Promise<Experiment> {
+  const experiment = await getFirestoreExperiment(experimentId);
+  if (!experiment) {
+    throw createHttpError(404, 'Experiment not found');
   }
-  return true;
+
+  if (
+    experiment.metadata.creator !== experimenterId &&
+    !experiment.permissions?.readers?.includes(experimenterId)
+  ) {
+    throw createHttpError(403, 'Access denied');
+  }
+
+  return experiment;
+}
+
+/**
+ * Verify the authenticated user is the creator/owner of the experiment.
+ * Returns the experiment if ownership is verified.
+ * Throws HttpError if experiment not found or not owner.
+ */
+export async function verifyExperimentOwnership(
+  experimentId: string,
+  experimenterId: string,
+): Promise<Experiment> {
+  const experiment = await getFirestoreExperiment(experimentId);
+  if (!experiment) {
+    throw createHttpError(404, 'Experiment not found');
+  }
+
+  if (experiment.metadata.creator !== experimenterId) {
+    throw createHttpError(
+      403,
+      'Only the experiment creator can perform this action',
+    );
+  }
+
+  return experiment;
 }

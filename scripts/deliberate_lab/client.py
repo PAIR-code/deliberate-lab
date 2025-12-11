@@ -34,7 +34,7 @@ import os
 import requests
 
 # Re-export all types so users can do: dl.SurveyStageConfig, dl.TextSurveyQuestion, etc.
-from deliberate_lab_types import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from deliberate_lab.types import *  # pylint: disable=wildcard-import,unused-wildcard-import
 
 if TYPE_CHECKING:
     from pydantic import BaseModel
@@ -100,6 +100,10 @@ class Client:
         response = self._session.get(f"{self.base_url}/health", timeout=self.timeout)
         return self._handle_response(response)
 
+    # =========================================================================
+    # Experiment Methods
+    # =========================================================================
+
     def list_experiments(self) -> dict:
         """
         List all experiments for the authenticated user.
@@ -144,7 +148,7 @@ class Client:
             prolific_config: Optional Prolific integration config with redirect codes
 
         Returns:
-            dict with created experiment data including 'id'
+            dict with 'experiment' containing created experiment config (including 'id')
 
         Example:
             stage = dl.SurveyStageConfig(
@@ -166,7 +170,9 @@ class Client:
                 s.model_dump(by_alias=True, exclude_none=True) for s in stages
             ]
         if prolific_config is not None:
-            data["prolificConfig"] = prolific_config.model_dump(by_alias=True, exclude_none=True)
+            data["prolificConfig"] = prolific_config.model_dump(
+                by_alias=True, exclude_none=True
+            )
 
         response = self._session.post(
             f"{self.base_url}/experiments", json=data, timeout=self.timeout
@@ -204,7 +210,9 @@ class Client:
                 s.model_dump(by_alias=True, exclude_none=True) for s in stages
             ]
         if prolific_config is not None:
-            data["prolificConfig"] = prolific_config.model_dump(by_alias=True, exclude_none=True)
+            data["prolificConfig"] = prolific_config.model_dump(
+                by_alias=True, exclude_none=True
+            )
 
         response = self._session.put(
             f"{self.base_url}/experiments/{experiment_id}",
@@ -242,6 +250,142 @@ class Client:
         response = self._session.get(
             f"{self.base_url}/experiments/{experiment_id}/export",
             timeout=(self.timeout * 3),  # Allow more time for exports
+        )
+        return self._handle_response(response)
+
+    # =========================================================================
+    # Cohort Methods
+    # =========================================================================
+
+    def list_cohorts(self, experiment_id: str) -> dict:
+        """
+        List all cohorts for an experiment.
+
+        Args:
+            experiment_id: The experiment ID
+
+        Returns:
+            dict with 'cohorts' list and 'total' count
+        """
+        response = self._session.get(
+            f"{self.base_url}/experiments/{experiment_id}/cohorts",
+            timeout=self.timeout,
+        )
+        return self._handle_response(response)
+
+    def get_cohort(self, experiment_id: str, cohort_id: str) -> dict:
+        """
+        Get a specific cohort by ID.
+
+        Args:
+            experiment_id: The experiment ID
+            cohort_id: The cohort ID
+
+        Returns:
+            dict with 'cohort' and 'participantCount'
+        """
+        response = self._session.get(
+            f"{self.base_url}/experiments/{experiment_id}/cohorts/{cohort_id}",
+            timeout=self.timeout,
+        )
+        return self._handle_response(response)
+
+    def create_cohort(
+        self,
+        experiment_id: str,
+        name: str,
+        description: Optional[str] = None,
+        participant_config: Optional[BaseModel] = None,
+    ) -> dict:
+        """
+        Create a new cohort in an experiment.
+
+        Args:
+            experiment_id: The experiment ID
+            name: Cohort name (required)
+            description: Optional description
+            participant_config: Optional CohortParticipantConfig with min/max participants
+
+        Returns:
+            dict with 'cohort' containing created cohort config
+
+        Example:
+            client.create_cohort(
+                experiment_id="exp123",
+                name="Control Group",
+                description="Participants in control condition",
+            )
+        """
+        data: dict = {"name": name}
+        if description is not None:
+            data["description"] = description
+        if participant_config is not None:
+            data["participantConfig"] = participant_config.model_dump(
+                by_alias=True, exclude_none=True
+            )
+
+        response = self._session.post(
+            f"{self.base_url}/experiments/{experiment_id}/cohorts",
+            json=data,
+            timeout=self.timeout,
+        )
+        return self._handle_response(response)
+
+    def update_cohort(
+        self,
+        experiment_id: str,
+        cohort_id: str,
+        name: Optional[str] = None,
+        description: Optional[str] = None,
+        participant_config: Optional[BaseModel] = None,
+    ) -> dict:
+        """
+        Update an existing cohort.
+
+        Args:
+            experiment_id: The experiment ID
+            cohort_id: The cohort ID to update
+            name: Optional new name
+            description: Optional new description
+            participant_config: Optional new CohortParticipantConfig
+
+        Returns:
+            dict with 'updated' bool and 'id'
+        """
+        data: dict = {}
+        if name is not None:
+            data["name"] = name
+        if description is not None:
+            data["description"] = description
+        if participant_config is not None:
+            data["participantConfig"] = participant_config.model_dump(
+                by_alias=True, exclude_none=True
+            )
+
+        response = self._session.put(
+            f"{self.base_url}/experiments/{experiment_id}/cohorts/{cohort_id}",
+            json=data,
+            timeout=self.timeout,
+        )
+        return self._handle_response(response)
+
+    def delete_cohort(self, experiment_id: str, cohort_id: str) -> dict:
+        """
+        Delete a cohort.
+
+        Note: This marks all participants in the cohort as DELETED and
+        recursively deletes all cohort data.
+
+        Args:
+            experiment_id: The experiment ID
+            cohort_id: The cohort ID to delete
+
+        Returns:
+            dict with 'deleted' bool and 'id'
+        """
+        response = self._session.delete(
+            f"{self.base_url}/experiments/{experiment_id}/cohorts/{cohort_id}",
+            timeout=self.timeout,
         )
         return self._handle_response(response)
 

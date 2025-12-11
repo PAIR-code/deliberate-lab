@@ -15,6 +15,10 @@ import {Type} from '@sinclair/typebox';
 // Import top-level schemas
 import {StageConfigData, CONFIG_DATA} from './stages/stage.validation';
 import {ExperimentCreationData} from './experiment.validation';
+import {
+  CohortCreationData,
+  UpdateCohortMetadataData,
+} from './cohort.validation';
 
 /**
  * Recursively collect all schemas with $id from a schema tree.
@@ -59,6 +63,8 @@ const baseSchema = Type.Object(
   {
     stage: StageConfigData,
     experimentCreation: ExperimentCreationData,
+    cohortCreation: CohortCreationData,
+    cohortUpdate: UpdateCohortMetadataData,
   },
   {
     $id: 'DeliberateLabSchemas',
@@ -91,6 +97,8 @@ const combinedSchema = Type.Object(
   {
     stage: StageConfigData,
     experimentCreation: ExperimentCreationData,
+    cohortCreation: CohortCreationData,
+    cohortUpdate: UpdateCohortMetadataData,
   },
   {
     $id: 'DeliberateLabSchemas',

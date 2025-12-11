@@ -1,19 +1,26 @@
 [project]
-name = "scripts"
+name = "deliberate-lab"
 version = "0.1.0"
-description = "Add your description here"
+description = "Python client for Deliberate Lab API"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
-    "datamodel-code-generator>=0.42.2",
-    "pydantic>=2.12.5",
+    "pydantic>=2.0",
     "requests",
 ]
 
 [dependency-groups]
 dev = [
+    "datamodel-code-generator>=0.42.2",
     "pyright>=1.1.391",
 ]
+
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["."]
 
 [[tool.uv.index]]
 url = "https://pypi.org/simple"

@@ -18,7 +18,7 @@
     "node": "22"
   },
   "config": {
-    "firestore_tests": "src/log.utils.test.ts src/dl_api/experiments.dl_api.integration.test.ts src/variables.utils.test.ts"
+    "firestore_tests": "src/log.utils.test.ts src/dl_api/experiments.dl_api.integration.test.ts src/dl_api/cohorts.dl_api.integration.test.ts src/variables.utils.test.ts"
   },
   "main": "lib/index.js",
   "dependencies": {
