@@ -16,15 +16,15 @@
     "dist/**/*"
   ],
   "peerDependencies": {
-    "@sinclair/typebox": "^0.32.30",
-    "firebase": "^10.11.1"
+    "@sinclair/typebox": "^0.34.41",
+    "firebase": "^12.6.0"
   },
   "devDependencies": {
     "@babel/preset-env": "^7.28.5",
     "@babel/preset-typescript": "^7.28.5",
     "@types/jest": "^30.0.0",
     "@types/mustache": "^4.2.6",
-    "@typescript-eslint/eslint-plugin": "^8.48.1",
+    "@typescript-eslint/eslint-plugin": "^8.49.0",
     "babel-jest": "^30.2.0",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-prettier": "^5.5.4",
