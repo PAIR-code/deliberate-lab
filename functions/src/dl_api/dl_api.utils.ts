@@ -4,10 +4,13 @@
  */
 
 import {Request, Response, NextFunction} from 'express';
+import createHttpError from 'http-errors';
+import {Experiment} from '@deliberation-lab/utils';
 import {
   verifyDeliberateLabAPIKey,
   extractDeliberateLabBearerToken,
 } from './dl_api_key.utils';
+import {getFirestoreExperiment} from '../utils/firestore';
 
 // ************************************************************************* //
 // TYPES                                                                     //
@@ -176,4 +179,56 @@ export function validateOrRespond<T>(
     return false;
   }
   return true;
+}
+
+// ************************************************************************* //
+// EXPERIMENT ACCESS HELPERS                                                 //
+// ************************************************************************* //
+
+/**
+ * Verify the authenticated user has read access to the experiment.
+ * Returns the experiment if access is granted.
+ * Throws HttpError if experiment not found or access denied.
+ */
+export async function verifyExperimentAccess(
+  experimentId: string,
+  experimenterId: string,
+): Promise<Experiment> {
+  const experiment = await getFirestoreExperiment(experimentId);
+  if (!experiment) {
+    throw createHttpError(404, 'Experiment not found');
+  }
+
+  if (
+    experiment.metadata.creator !== experimenterId &&
+    !experiment.permissions?.readers?.includes(experimenterId)
+  ) {
+    throw createHttpError(403, 'Access denied');
+  }
+
+  return experiment;
+}
+
+/**
+ * Verify the authenticated user is the creator/owner of the experiment.
+ * Returns the experiment if ownership is verified.
+ * Throws HttpError if experiment not found or not owner.
+ */
+export async function verifyExperimentOwnership(
+  experimentId: string,
+  experimenterId: string,
+): Promise<Experiment> {
+  const experiment = await getFirestoreExperiment(experimentId);
+  if (!experiment) {
+    throw createHttpError(404, 'Experiment not found');
+  }
+
+  if (experiment.metadata.creator !== experimenterId) {
+    throw createHttpError(
+      403,
+      'Only the experiment creator can perform this action',
+    );
+  }
+
+  return experiment;
 }

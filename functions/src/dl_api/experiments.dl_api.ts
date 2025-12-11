@@ -9,6 +9,8 @@ import {
   DeliberateLabAPIRequest,
   hasDeliberateLabAPIPermission,
   validateOrRespond,
+  verifyExperimentAccess,
+  verifyExperimentOwnership,
 } from './dl_api.utils';
 import {
   createExperimentConfig,
@@ -18,10 +20,7 @@ import {
   UnifiedTimestamp,
   ProlificConfig,
 } from '@deliberation-lab/utils';
-import {
-  getFirestoreExperiment,
-  getFirestoreExperimentRef,
-} from '../utils/firestore';
+import {getFirestoreExperimentRef} from '../utils/firestore';
 import {validateStages} from '../utils/validation';
 import {getExperimentDownload} from '../data';
 
@@ -167,19 +166,8 @@ export async function getExperiment(
   const app = admin.app();
   const firestore = app.firestore();
 
-  // First fetch just the experiment to check permissions (lightweight)
-  const experiment = await getFirestoreExperiment(experimentId);
-  if (!experiment) {
-    throw createHttpError(404, 'Experiment not found');
-  }
-
-  // Check access permissions before fetching full data
-  if (
-    experiment.metadata.creator !== experimenterId &&
-    !experiment.permissions?.readers?.includes(experimenterId)
-  ) {
-    throw createHttpError(403, 'Access denied');
-  }
+  // Verify access permissions before fetching full data
+  await verifyExperimentAccess(experimentId, experimenterId);
 
   // Now fetch full experiment data (stages, agents, etc.)
   const data = await getExperimentDownload(firestore, experimentId, {
@@ -306,16 +294,8 @@ export async function deleteExperiment(
     throw createHttpError(400, 'Experiment ID required');
   }
 
-  // Use existing utility to get experiment
-  const experiment = await getFirestoreExperiment(experimentId);
-  if (!experiment) {
-    throw createHttpError(404, 'Experiment not found');
-  }
-
-  // Check ownership
-  if (experiment.metadata.creator !== experimenterId) {
-    throw createHttpError(403, 'Only the creator can delete the experiment');
-  }
+  // Verify ownership before deleting
+  await verifyExperimentOwnership(experimentId, experimenterId);
 
   // Use Firebase's recursive delete to properly clean up all subcollections
   // This handles stages, cohorts, participants, and all nested data
@@ -349,19 +329,8 @@ export async function exportExperimentData(
     throw createHttpError(400, 'Experiment ID required');
   }
 
-  // First check permissions using existing utility
-  const experiment = await getFirestoreExperiment(experimentId);
-  if (!experiment) {
-    throw createHttpError(404, 'Experiment not found');
-  }
-
-  // Check access permissions
-  if (
-    experiment.metadata.creator !== experimenterId &&
-    !experiment.permissions?.readers?.includes(experimenterId)
-  ) {
-    throw createHttpError(403, 'Access denied');
-  }
+  // Verify access permissions
+  await verifyExperimentAccess(experimentId, experimenterId);
 
   // Use the shared function to get full experiment data
   const experimentDownload = await getExperimentDownload(
