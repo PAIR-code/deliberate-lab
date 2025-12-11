@@ -140,8 +140,7 @@ export async function createExperiment(
   });
 
   res.status(201).json({
-    ...experimentConfig,
-    id: experimentConfig.id,
+    experiment: experimentConfig,
   });
 }
 

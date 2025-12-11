@@ -237,7 +237,7 @@ describe('API Experiment Creation Integration Tests', () => {
 
     // Extract experiment ID from response
     const responseBody = await response.json();
-    const experimentId = responseBody.id;
+    const experimentId = responseBody.experiment.id;
     createdExperimentIds.push(experimentId);
     return experimentId;
   }

@@ -147,7 +147,10 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Experiment'
+                type: object
+                properties:
+                  experiment:
+                    $ref: '#/components/schemas/Experiment'
         '400':
           $ref: '#/components/responses/BadRequestError'
         '401':
