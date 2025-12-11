@@ -38,7 +38,11 @@ In the Settings page API Keys section, you can:
 
 ## Python Client
 
-A Python client with fully-typed Pydantic models is available in [`scripts/`](https://github.com/PAIR-code/deliberate-lab/tree/main/scripts):
+A Python client with fully-typed Pydantic models is available:
+
+```bash
+pip install git+https://github.com/PAIR-code/deliberate-lab.git#subdirectory=scripts
+```
 
 ```python
 import deliberate_lab as dl

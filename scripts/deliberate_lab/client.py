@@ -34,7 +34,7 @@ import os
 import requests
 
 # Re-export all types so users can do: dl.SurveyStageConfig, dl.TextSurveyQuestion, etc.
-from deliberate_lab_types import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from deliberate_lab.types import *  # pylint: disable=wildcard-import,unused-wildcard-import
 
 if TYPE_CHECKING:
     from pydantic import BaseModel

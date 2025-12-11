@@ -9,3 +9,5 @@ node_modules/
 # Python scripts
 .venv
 *.pyc
+__pycache__
+*.egg-info/
