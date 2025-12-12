@@ -194,7 +194,7 @@ export function getRankingCandidatesFromWTL(
  * filter rankings so that they only include those candidates. */
 export function filterRankingsByCandidates(
   participantRankings: Record<string, string[]>,
-  candidateList = [],
+  candidateList: string[] = [],
 ) {
   Object.keys(participantRankings).forEach((id) => {
     participantRankings[id] = participantRankings[id].filter(

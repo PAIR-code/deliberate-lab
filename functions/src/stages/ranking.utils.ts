@@ -41,9 +41,18 @@ export async function addParticipantAnswerToRankingStagePublicData(
       .collection('publicStageData')
       .doc(LAS_WTL_STAGE_ID);
     // Update public stage data (current participant rankings, current winner)
-    const publicStageData = (
-      await publicDocument.get()
-    ).data() as RankingStagePublicData;
+    const publicDoc = await publicDocument.get();
+    const publicStageData = publicDoc.data() as
+      | RankingStagePublicData
+      | undefined;
+
+    if (!publicStageData) {
+      console.warn(
+        `Public stage data not found for stage ${stage.id} in cohort ${participant.currentCohortId}. This should have been initialized on cohort creation.`,
+      );
+      return;
+    }
+
     publicStageData.participantAnswerMap[participant.publicId] =
       answer.rankingList;
 
