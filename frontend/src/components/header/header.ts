@@ -1,6 +1,7 @@
 import '../../pair-components/button';
 import '../../pair-components/icon_button';
 import '../../pair-components/tooltip';
+import '../../pair-components/menu';
 import '../../components/experiment_builder/experiment_builder_nav';
 import {MobxLitElement} from '@adobe/lit-mobx';
 import {CSSResultGroup, html, nothing} from 'lit';
@@ -253,7 +254,12 @@ export class Header extends MobxLitElement {
         return html`
           ${errors.length === 0
             ? nothing
-            : html` <div class="error">⚠️ ${errors.join(', ')}</div> `}
+            : html`
+                <div class="error">
+                  ⚠️ ${errors.map((e) => e.message).join(', ')}
+                </div>
+              `}
+          ${this.renderTemplateButtons(errors.some((e) => !e.isApiError))}
           <pr-button
             ?loading=${this.experimentEditor.isWritingExperiment}
             ?disabled=${errors.length > 0}
@@ -274,6 +280,7 @@ export class Header extends MobxLitElement {
       case Pages.EXPERIMENT:
         if (this.experimentManager.isEditingFull) {
           if (!this.experimentManager.isCreator) return nothing;
+          const errors = this.experimentEditor.getExperimentConfigErrors();
 
           return html`
             <pr-button
@@ -283,10 +290,16 @@ export class Header extends MobxLitElement {
             >
               Cancel
             </pr-button>
+            ${this.renderTemplateButtons(
+              !this.experimentManager.isCreator ||
+                // API errors shouldn't affect the ability to save as template - everything else is fair game.
+                errors.some((e) => !e.isApiError),
+            )}
             <pr-button
               color="tertiary"
               variant="tonal"
-              ?disabled=${!this.experimentManager.isCreator}
+              ?disabled=${!this.experimentManager.isCreator ||
+              errors.length > 0}
               @click=${() => {
                 this.analyticsService.trackButtonClick(
                   ButtonClick.EXPERIMENT_SAVE_EXISTING,
@@ -309,6 +322,79 @@ export class Header extends MobxLitElement {
       default:
         return nothing;
     }
+  }
+
+  private renderTemplateButtons(disabled: boolean) {
+    if (
+      this.experimentEditor.loadedTemplateId &&
+      this.experimentEditor.isLoadedTemplateEditable
+    ) {
+      return html`
+        <div class="split-button">
+          <pr-button
+            icon="update"
+            color="neutral"
+            variant="outlined"
+            ?disabled=${disabled}
+            @click=${() => {
+              this.experimentEditor.setShowSaveTemplateDialog(true, 'update');
+            }}
+          >
+            Update template
+          </pr-button>
+          <pr-menu
+            class="split-dropdown"
+            name=""
+            icon=""
+            color="neutral"
+            variant="outlined"
+            ?disabled=${disabled}
+          >
+            <div
+              class="menu-item"
+              @click=${() => {
+                this.experimentEditor.setShowSaveTemplateDialog(true, 'new');
+              }}
+            >
+              <pr-icon icon="save"></pr-icon>
+              Save as new template
+            </div>
+            ${this.experimentEditor.isCreatorOfLoadedTemplate
+              ? html`
+                  <div
+                    class="menu-item"
+                    @click=${() => {
+                      this.experimentEditor.setShowShareTemplateDialog(true);
+                    }}
+                  >
+                    <pr-icon icon="share"></pr-icon>
+                    Modify sharing settings
+                  </div>
+                `
+              : nothing}
+          </pr-menu>
+        </div>
+      `;
+    }
+
+    return html`
+      <pr-tooltip
+        text="This template will be shared with all experimenters."
+        position="BOTTOM_END"
+      >
+        <pr-button
+          icon="save"
+          color="neutral"
+          variant="outlined"
+          ?disabled=${disabled}
+          @click=${() => {
+            this.experimentEditor.setShowSaveTemplateDialog(true, 'new');
+          }}
+        >
+          Save as template
+        </pr-button>
+      </pr-tooltip>
+    `;
   }
 
   private renderExperimentDownloadButton() {

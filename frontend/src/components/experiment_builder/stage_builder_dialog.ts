@@ -108,6 +108,11 @@ export class StageBuilderDialog extends MobxLitElement {
   // Used to populate resource allocation template
   @state() private consensusTopics: string = 'Climate Change';
 
+  override connectedCallback() {
+    super.connectedCallback();
+    this.experimentEditor.loadTemplates();
+  }
+
   override render() {
     return html`
       <div class="dialog">
@@ -173,12 +178,28 @@ export class StageBuilderDialog extends MobxLitElement {
         configuration!
       </div>
       <div class="card-gallery-wrapper">
-        ${this.renderFlipCardTemplateCard()}
-        ${this.renderFruitTestTemplateCard()}
-        ${this.renderConditionalSurveyTemplateCard()}
-        ${this.renderStockInfoGameCard()}
-        ${this.renderAssetAllocationTemplateCard()}
-        ${this.renderPolicyTemplateCard()} ${this.renderAgentIntegrationCard()}
+        ${this.experimentEditor.savedTemplates.length > 0
+          ? html`
+              <div class="gallery-section">
+                <div class="gallery-title">Saved Templates</div>
+                <div class="card-gallery-wrapper">
+                  ${this.renderSavedTemplates()}
+                </div>
+              </div>
+            `
+          : nothing}
+        <div class="gallery-section">
+          <div class="gallery-title">Pre-defined Templates</div>
+          <div class="card-gallery-wrapper">
+            ${this.renderFlipCardTemplateCard()}
+            ${this.renderFruitTestTemplateCard()}
+            ${this.renderConditionalSurveyTemplateCard()}
+            ${this.renderStockInfoGameCard()}
+            ${this.renderAssetAllocationTemplateCard()}
+            ${this.renderPolicyTemplateCard()}
+            ${this.renderAgentIntegrationCard()}
+          </div>
+        </div>
       </div>
       ${this.authService.hasResearchTemplateAccess
         ? this.renderResearchTemplateGallery()
@@ -216,6 +237,45 @@ export class StageBuilderDialog extends MobxLitElement {
           ${this.renderOOTBCharityDebateTemplateCard()}
         </div>
       </div>
+    `;
+  }
+
+  private renderSavedTemplates() {
+    return html`
+      ${this.experimentEditor.savedTemplates.map(
+        (template) => html`
+          <div class="card saved-template">
+            <div
+              class="card-content"
+              @click=${() => this.addTemplate(template)}
+            >
+              <div class="title">${template.experiment.metadata.name}</div>
+              <div>${template.experiment.metadata.description}</div>
+              <div class="template-footer">
+                <div class="creator">
+                  By ${template.experiment.metadata.creator}
+                </div>
+              </div>
+            </div>
+            <div class="card-actions">
+              <pr-icon-button
+                icon="delete"
+                color="error"
+                variant="default"
+                @click=${(e: Event) => {
+                  e.stopPropagation();
+                  if (
+                    confirm('Are you sure you want to delete this template?')
+                  ) {
+                    this.experimentEditor.deleteTemplate(template.id);
+                  }
+                }}
+              >
+              </pr-icon-button>
+            </div>
+          </div>
+        `,
+      )}
     `;
   }
 

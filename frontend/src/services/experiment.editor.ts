@@ -32,6 +32,9 @@ import {computed, makeObservable, observable} from 'mobx';
 import {
   writeExperimentCallable,
   updateExperimentCallable,
+  saveExperimentTemplateCallable,
+  getExperimentTemplatesCallable,
+  deleteExperimentTemplateCallable,
 } from '../shared/callables';
 
 import {AuthService} from './auth.service';
@@ -44,6 +47,11 @@ interface ServiceProvider {
   authService: AuthService;
   experimentManager: ExperimentManager;
   firebaseService: FirebaseService;
+}
+
+export interface ExperimentError {
+  message: string;
+  isApiError: boolean;
 }
 
 /**
@@ -69,6 +77,11 @@ export class ExperimentEditor extends Service {
   // dashboard and will use a default set of prompts (see PR #864)
   @observable agentParticipants: AgentParticipantTemplate[] = [];
 
+  // Templates
+  @observable savedTemplates: ExperimentTemplate[] = [];
+  @observable loadedTemplateId: string | undefined = undefined;
+  @observable saveTemplateMode: 'new' | 'update' = 'new';
+
   // Loading
   @observable isWritingExperiment = false;
 
@@ -77,20 +90,28 @@ export class ExperimentEditor extends Service {
   @observable currentStageId: string | undefined = undefined;
   @observable showStageBuilderDialog = false;
   @observable showTemplatesTab = false;
+  @observable showSaveTemplateDialog = false;
+  @observable showShareTemplateDialog = false;
 
   // **************************************************************************
   // EXPERIMENT LOADING
   // **************************************************************************
 
-  getExperimentConfigErrors() {
-    const errors: string[] = [];
+  getExperimentConfigErrors(): ExperimentError[] {
+    const errors: ExperimentError[] = [];
 
     if (this.experiment.metadata.name.length === 0) {
-      errors.push('Experiment does not have a name');
+      errors.push({
+        message: 'Experiment does not have a name',
+        isApiError: false,
+      });
     }
 
     if (this.stages.length === 0) {
-      errors.push('You must add at least one stage to your experiment');
+      errors.push({
+        message: 'You must add at least one stage to your experiment',
+        isApiError: false,
+      });
     }
 
     // Check if relevant API key is set up for agents
@@ -106,9 +127,10 @@ export class ExperimentEditor extends Service {
 
     const renderApiErrorMessage = (apiType: ApiKeyType) => {
       if (hasAgentsWithApiType(apiType)) {
-        errors.push(
-          `Your experiment includes agents that use the ${apiType} API, but you have not set your API key yet`,
-        );
+        errors.push({
+          message: `Your experiment includes agents that use the ${apiType} API, but you have not set your API key yet`,
+          isApiError: true,
+        });
       }
     };
     renderApiErrorMessage(ApiKeyType.GEMINI_API_KEY);
@@ -121,9 +143,10 @@ export class ExperimentEditor extends Service {
           // Ensure all questions have a non-empty title
           stage.questions.forEach((question, index) => {
             if (question.questionTitle === '') {
-              errors.push(
-                `${stage.name} question ${index + 1} is missing a title`,
-              );
+              errors.push({
+                message: `${stage.name} question ${index + 1} is missing a title`,
+                isApiError: false,
+              });
             }
           });
           break;
@@ -141,6 +164,31 @@ export class ExperimentEditor extends Service {
 
   @computed get canEditStages() {
     return this.sp.experimentManager.canEditExperimentStages;
+  }
+
+  @computed get isLoadedTemplateEditable() {
+    if (!this.loadedTemplateId) return false;
+    return this.savedTemplates.some((t) => t.id === this.loadedTemplateId);
+  }
+
+  @computed get isLoadedTemplatePublic() {
+    if (!this.loadedTemplateId) return false;
+    const template = this.savedTemplates.find(
+      (t) => t.id === this.loadedTemplateId,
+    );
+    return template?.visibility === 'public';
+  }
+
+  @computed get isCreatorOfLoadedTemplate() {
+    if (!this.loadedTemplateId) return false;
+    const template = this.savedTemplates.find(
+      (t) => t.id === this.loadedTemplateId,
+    );
+    if (!template) return false;
+    return (
+      template.experiment.metadata.creator === this.sp.authService.userEmail ||
+      this.sp.authService.isAdmin
+    );
   }
 
   loadExperiment(experiment: Experiment, stages: StageConfig[]) {
@@ -161,6 +209,83 @@ export class ExperimentEditor extends Service {
     this.setStages(template.stageConfigs);
     this.setAgentMediators(template.agentMediators);
     this.setAgentParticipants(template.agentParticipants);
+    this.loadedTemplateId = template.id;
+  }
+
+  async saveTemplate(
+    name?: string,
+    description?: string,
+    templateId?: string,
+    visibility: 'public' | 'private' | 'shared' = 'private',
+    sharedWith: string[] = [],
+  ) {
+    this.isWritingExperiment = true;
+    const experiment = {
+      ...this.experiment,
+      metadata: {
+        ...this.experiment.metadata,
+        name: name ?? this.experiment.metadata.name,
+        description: description ?? this.experiment.metadata.description,
+      },
+    };
+    const response = await saveExperimentTemplateCallable(
+      this.sp.firebaseService.functions,
+      {
+        experimentTemplate: {
+          id: templateId ?? generateId(),
+          experiment,
+          stageConfigs: this.stages,
+          agentMediators: this.agentMediators,
+          agentParticipants: this.agentParticipants,
+          visibility,
+          sharedWith,
+        },
+      },
+    );
+    await this.loadTemplates();
+    if (response && response.id) {
+      this.loadedTemplateId = response.id;
+      this.saveTemplateMode = 'update';
+    }
+    this.isWritingExperiment = false;
+    return response;
+  }
+
+  async updateTemplateVisibility(
+    visibility: 'public' | 'private' | 'shared',
+    sharedWith: string[],
+  ) {
+    if (!this.loadedTemplateId) return;
+    const template = this.savedTemplates.find(
+      (t) => t.id === this.loadedTemplateId,
+    );
+    if (!template) return;
+
+    this.isWritingExperiment = true;
+    await saveExperimentTemplateCallable(this.sp.firebaseService.functions, {
+      experimentTemplate: {
+        ...template,
+        visibility,
+        sharedWith,
+      },
+    });
+    await this.loadTemplates();
+    this.isWritingExperiment = false;
+  }
+
+  async loadTemplates() {
+    const response = await getExperimentTemplatesCallable(
+      this.sp.firebaseService.functions,
+      {},
+    );
+    this.savedTemplates = response.templates;
+  }
+
+  async deleteTemplate(templateId: string) {
+    await deleteExperimentTemplateCallable(this.sp.firebaseService.functions, {
+      templateId,
+    });
+    await this.loadTemplates();
   }
 
   resetExperiment() {
@@ -168,6 +293,8 @@ export class ExperimentEditor extends Service {
     this.stages = [];
     this.agentMediators = [];
     this.agentParticipants = [];
+    this.loadedTemplateId = undefined;
+    this.saveTemplateMode = 'new';
   }
 
   // **************************************************************************
@@ -314,6 +441,15 @@ export class ExperimentEditor extends Service {
   toggleStageBuilderDialog(showTemplates: boolean = false) {
     this.showStageBuilderDialog = !this.showStageBuilderDialog;
     this.showTemplatesTab = showTemplates;
+  }
+
+  setShowSaveTemplateDialog(show: boolean, mode: 'new' | 'update' = 'new') {
+    this.showSaveTemplateDialog = show;
+    this.saveTemplateMode = mode;
+  }
+
+  setShowShareTemplateDialog(show: boolean) {
+    this.showShareTemplateDialog = show;
   }
 
   // **************************************************************************
@@ -533,7 +669,6 @@ export class ExperimentEditor extends Service {
     const response = await writeExperimentCallable(
       this.sp.firebaseService.functions,
       {
-        collectionName: 'experiments',
         experimentTemplate: {
           id: '',
           experiment: this.experiment,
@@ -560,7 +695,6 @@ export class ExperimentEditor extends Service {
     const response = await updateExperimentCallable(
       this.sp.firebaseService.functions,
       {
-        collectionName: 'experiments',
         experimentTemplate: {
           id: '',
           experiment: this.experiment,

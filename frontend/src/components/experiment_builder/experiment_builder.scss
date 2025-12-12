@@ -121,6 +121,10 @@
     gap: common.$spacing-medium;
   }
 
+    .actions {
+      @include common.flex-row-align-center;
+      gap: common.$spacing-medium;
+    }
   .left {
     flex-grow: 1;
   }
