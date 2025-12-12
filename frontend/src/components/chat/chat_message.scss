@@ -177,16 +177,12 @@ $bubble-width: 400px;
 }
 
 .image-modal {
+  @include common.flex-row-align-center;
   position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
+  inset: 0;
   background: rgba(0, 0, 0, 0.92);
-  display: flex;
-  align-items: center;
   justify-content: center;
-  z-index: 9999;
+  z-index: 1;
   cursor: pointer;
   animation: fadeIn 0.2s ease;
   // Ensure modal is isolated from parent stacking context
@@ -211,9 +207,10 @@ $bubble-width: 400px;
 }
 
 .close-button {
-  position: absolute;
-  top: -40px;
-  right: 0;
+  @include common.flex-row-align-center;
+  position: fixed;
+  top: 20px;
+  right: 20px;
   background: var(--md-sys-color-surface);
   color: var(--md-sys-color-on-surface);
   border: none;
@@ -222,11 +219,10 @@ $bubble-width: 400px;
   height: 36px;
   font-size: 20px;
   cursor: pointer;
-  display: flex;
-  align-items: center;
   justify-content: center;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
   transition: background 0.2s ease;
+  z-index: 2;
 
   &:hover {
     background: var(--md-sys-color-surface-variant);
