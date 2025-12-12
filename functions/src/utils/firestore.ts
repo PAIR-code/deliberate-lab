@@ -388,6 +388,10 @@ export async function getAgentParticipantPrompt(
   stageId: string,
   agentId: string,
 ): Promise<ParticipantPromptConfig | null> {
+  if (!agentId) {
+    return null;
+  }
+
   const prompt = await app
     .firestore()
     .collection('experiments')
