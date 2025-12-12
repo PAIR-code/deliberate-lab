@@ -3,7 +3,7 @@ import '../participant_profile/avatar_icon';
 import {MobxLitElement} from '@adobe/lit-mobx';
 
 import {CSSResultGroup, html, nothing} from 'lit';
-import {customElement, property} from 'lit/decorators.js';
+import {customElement, property, state} from 'lit/decorators.js';
 import {classMap} from 'lit/directives/class-map.js';
 import {unsafeHTML} from 'lit/directives/unsafe-html.js';
 
@@ -32,18 +32,44 @@ export class ChatMessageComponent extends MobxLitElement {
   private readonly participantService = core.getService(ParticipantService);
 
   @property() chat: ChatMessage | undefined = undefined;
-  private maximizedImageUrl: string | null = null;
+  @state() private maximizedImageUrl: string | null = null;
   private modalElement: HTMLDivElement | null = null;
-  private keyboardHandler: ((e: KeyboardEvent) => void) | null = null;
 
   private openImageModal(imageUrl: string) {
     this.maximizedImageUrl = imageUrl;
-    this.renderModalToBody();
   }
 
   private closeImageModal() {
     this.maximizedImageUrl = null;
+  }
+
+  private handleEscapeKey = (e: KeyboardEvent) => {
+    if (e.key === 'Escape' && this.maximizedImageUrl) {
+      this.closeImageModal();
+    }
+  };
+
+  override connectedCallback() {
+    super.connectedCallback();
+    document.addEventListener('keydown', this.handleEscapeKey);
+  }
+
+  override disconnectedCallback() {
+    super.disconnectedCallback();
+    document.removeEventListener('keydown', this.handleEscapeKey);
     this.removeModalFromBody();
+  }
+
+  override updated(changedProperties: Map<string, unknown>) {
+    super.updated(changedProperties);
+
+    if (changedProperties.has('maximizedImageUrl')) {
+      if (this.maximizedImageUrl) {
+        this.renderModalToBody();
+      } else {
+        this.removeModalFromBody();
+      }
+    }
   }
 
   private renderModalToBody() {
@@ -53,37 +79,92 @@ export class ChatMessageComponent extends MobxLitElement {
     // Create modal element
     this.modalElement = document.createElement('div');
     this.modalElement.className = 'chat-image-modal';
-    this.modalElement.innerHTML = `
-      <div class="modal-backdrop">
-        <div class="modal-content">
-          <button class="close-button">✕</button>
-          <img src="${this.maximizedImageUrl}" alt="Maximized Image" />
-        </div>
-      </div>
+    this.modalElement.style.cssText = `
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.92);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1;
+      cursor: pointer;
+      animation: fadeIn 0.2s ease;
     `;
 
-    // Add event listeners
-    const backdrop = this.modalElement.querySelector('.modal-backdrop');
-    const closeButton = this.modalElement.querySelector('.close-button');
-    const img = this.modalElement.querySelector('img');
+    const content = document.createElement('div');
+    content.style.cssText = `
+      position: relative;
+      max-width: 95vw;
+      max-height: 95vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    `;
 
-    backdrop?.addEventListener('click', () => this.closeImageModal());
-    closeButton?.addEventListener('click', () => this.closeImageModal());
-    img?.addEventListener('click', (e) => e.stopPropagation());
+    const closeButton = document.createElement('button');
+    closeButton.textContent = '✕';
+    closeButton.style.cssText = `
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: var(--md-sys-color-surface);
+      color: var(--md-sys-color-on-surface);
+      border: 2px solid var(--md-sys-color-outline);
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      font-size: 24px;
+      font-weight: bold;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+      transition: all 0.2s ease;
+      z-index: 2;
+    `;
+    closeButton.addEventListener('click', () => this.closeImageModal());
+    closeButton.addEventListener('mouseenter', () => {
+      closeButton.style.background = 'var(--md-sys-color-surface-variant)';
+      closeButton.style.transform = 'scale(1.1)';
+    });
+    closeButton.addEventListener('mouseleave', () => {
+      closeButton.style.background = 'var(--md-sys-color-surface)';
+      closeButton.style.transform = 'scale(1)';
+    });
 
-    // Add keyboard listener for Escape key
-    this.keyboardHandler = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        this.closeImageModal();
-      }
-    };
-    document.addEventListener('keydown', this.keyboardHandler);
+    const img = document.createElement('img');
+    img.src = this.maximizedImageUrl!;
+    img.alt = 'Maximized Image';
+    img.style.cssText = `
+      max-width: 100%;
+      max-height: 95vh;
+      object-fit: contain;
+      border-radius: 8px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    `;
+    img.addEventListener('click', (e) => e.stopPropagation());
 
-    // Add styles
-    this.injectModalStyles();
+    content.appendChild(img);
+    this.modalElement.appendChild(content);
+    this.modalElement.appendChild(closeButton);
+    this.modalElement.addEventListener('click', () => this.closeImageModal());
 
-    // Append to body
+    // Append modal to body
     document.body.appendChild(this.modalElement);
+
+    // Add fade-in keyframes if not already present
+    if (!document.getElementById('chat-modal-keyframes')) {
+      const style = document.createElement('style');
+      style.id = 'chat-modal-keyframes';
+      style.textContent = `
+        @keyframes fadeIn {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+      `;
+      document.head.appendChild(style);
+    }
   }
 
   private removeModalFromBody() {
@@ -91,88 +172,6 @@ export class ChatMessageComponent extends MobxLitElement {
       this.modalElement.remove();
       this.modalElement = null;
     }
-    // Remove keyboard listener
-    if (this.keyboardHandler) {
-      document.removeEventListener('keydown', this.keyboardHandler);
-      this.keyboardHandler = null;
-    }
-  }
-
-  private injectModalStyles() {
-    // Check if styles already exist
-    if (document.getElementById('chat-message-modal-styles')) {
-      return;
-    }
-
-    const styleElement = document.createElement('style');
-    styleElement.id = 'chat-message-modal-styles';
-    styleElement.textContent = `
-      .chat-image-modal .modal-backdrop {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100vw;
-        height: 100vh;
-        background: rgba(0, 0, 0, 0.92);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        z-index: 999999;
-        cursor: pointer;
-        animation: fadeIn 0.2s ease;
-      }
-
-      .chat-image-modal .modal-content {
-        position: relative;
-        max-width: 95vw;
-        max-height: 95vh;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-      }
-
-      .chat-image-modal .modal-content img {
-        max-width: 100%;
-        max-height: 95vh;
-        object-fit: contain;
-        border-radius: 8px;
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-      }
-
-      .chat-image-modal .close-button {
-        position: absolute;
-        top: -40px;
-        right: 0;
-        background: #fff;
-        color: #000;
-        border: none;
-        border-radius: 50%;
-        width: 36px;
-        height: 36px;
-        font-size: 20px;
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-        transition: background 0.2s ease;
-      }
-
-      .chat-image-modal .close-button:hover {
-        background: #f0f0f0;
-      }
-
-      @keyframes fadeIn {
-        from { opacity: 0; }
-        to { opacity: 1; }
-      }
-    `;
-    document.head.appendChild(styleElement);
-  }
-
-  override disconnectedCallback() {
-    super.disconnectedCallback();
-    this.removeModalFromBody();
   }
 
   override render() {
