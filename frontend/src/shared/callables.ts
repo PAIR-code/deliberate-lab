@@ -15,8 +15,8 @@ import {
   ExperimentDownloadResponse,
   ExperimentTemplate,
   InitiateParticipantTransferData,
+  ModelResponse,
   ParticipantNextStageResponse,
-  ParticipantProfile,
   RequestChipAssistanceData,
   SendAlertMessageData,
   SendChipOfferData,
@@ -623,11 +623,8 @@ export const updateParticipantStatusCallable = async (
 export const testAgentConfigCallable = async (
   functions: Functions,
   config: AgentConfigTestData,
-) => {
-  const {data} = await httpsCallable<
-    AgentConfigTestData,
-    SimpleResponse<string>
-  >(
+): Promise<ModelResponse> => {
+  const {data} = await httpsCallable<AgentConfigTestData, ModelResponse>(
     functions,
     'testAgentConfig',
   )(config);

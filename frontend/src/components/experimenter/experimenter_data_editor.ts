@@ -2,8 +2,8 @@ import '../../pair-components/icon_button';
 import '../../pair-components/tooltip';
 
 import {MobxLitElement} from '@adobe/lit-mobx';
-import {CSSResultGroup, html, nothing} from 'lit';
-import {customElement, property, state} from 'lit/decorators.js';
+import {CSSResultGroup, html} from 'lit';
+import {customElement, state} from 'lit/decorators.js';
 
 import '@material/web/textfield/filled-text-field.js';
 
@@ -26,7 +26,20 @@ import {
   createClaudeServerConfig,
   createOpenAIServerConfig,
   createStructuredOutputConfig,
+  ModelResponseStatus,
 } from '@deliberation-lab/utils';
+
+enum CheckApiKeyStatus {
+  NONE = 0,
+  PENDING = 1,
+  SUCCESS = 2,
+  FAILURE = 3,
+}
+
+interface CheckApiKeyResult {
+  status: number;
+  errorMessage?: string;
+}
 
 /** Editor for adjusting experimenter data */
 @customElement('experimenter-data-editor')
@@ -37,10 +50,18 @@ export class ExperimenterDataEditor extends MobxLitElement {
   private readonly experimentManager = core.getService(ExperimentManager);
   private readonly experimentService = core.getService(ExperimentService);
 
-  @state() geminiKeyResponse: null | boolean = null;
-  @state() openAIKeyResponse: null | boolean = null;
-  @state() claudeKeyResponse: null | boolean = null;
-  @state() ollamaKeyResponse: null | boolean = null;
+  @state() geminiKeyResponse: CheckApiKeyResult = {
+    status: CheckApiKeyStatus.NONE,
+  };
+  @state() openAIKeyResponse: CheckApiKeyResult = {
+    status: CheckApiKeyStatus.NONE,
+  };
+  @state() claudeKeyResponse: CheckApiKeyResult = {
+    status: CheckApiKeyStatus.NONE,
+  };
+  @state() ollamaKeyResponse: CheckApiKeyResult = {
+    status: CheckApiKeyStatus.NONE,
+  };
 
   override render() {
     const experiment = this.experimentService.experiment;
@@ -84,13 +105,27 @@ export class ExperimenterDataEditor extends MobxLitElement {
     };
 
     const testEndpoint = async () => {
-      const result =
-        (
-          await this.experimentManager.testAgentConfig(
-            agentConfig,
-            promptConfig,
-          )
-        )?.length > 0;
+      if (apiType === ApiKeyType.GEMINI_API_KEY) {
+        this.geminiKeyResponse = {status: CheckApiKeyStatus.PENDING};
+      } else if (apiType === ApiKeyType.OPENAI_API_KEY) {
+        this.openAIKeyResponse = {status: CheckApiKeyStatus.PENDING};
+      } else if (apiType === ApiKeyType.CLAUDE_API_KEY) {
+        this.claudeKeyResponse = {status: CheckApiKeyStatus.PENDING};
+      } else if (apiType === ApiKeyType.OLLAMA_CUSTOM_URL) {
+        this.ollamaKeyResponse = {status: CheckApiKeyStatus.PENDING};
+      }
+
+      const response = await this.experimentManager.testAgentConfig(
+        agentConfig,
+        promptConfig,
+      );
+      const result = {
+        status:
+          response.status == ModelResponseStatus.OK
+            ? CheckApiKeyStatus.SUCCESS
+            : CheckApiKeyStatus.FAILURE,
+        errorMessage: `Error: ${response.status}: ${response.errorMessage}`,
+      };
       if (apiType === ApiKeyType.GEMINI_API_KEY) {
         this.geminiKeyResponse = result;
       } else if (apiType === ApiKeyType.OPENAI_API_KEY) {
@@ -112,6 +147,22 @@ export class ExperimenterDataEditor extends MobxLitElement {
       } else if (apiType === ApiKeyType.OLLAMA_CUSTOM_URL) {
         return this.ollamaKeyResponse;
       }
+      console.error(`Unrecognized API type ${apiType}`);
+      return this.geminiKeyResponse;
+    };
+
+    const renderResult = (result: CheckApiKeyResult) => {
+      switch (result.status) {
+        case CheckApiKeyStatus.NONE:
+          return '';
+        case CheckApiKeyStatus.PENDING:
+          return html`<div class="banner">Sending test message...</div>`;
+        case CheckApiKeyStatus.SUCCESS:
+          return html`<div class="banner success">Valid API key</div>`;
+        case CheckApiKeyStatus.FAILURE:
+        default:
+          return html`<div class="banner error">${result.errorMessage}</div>`;
+      }
     };
 
     const result = getResult();
@@ -126,11 +177,7 @@ export class ExperimenterDataEditor extends MobxLitElement {
           >
           </pr-icon-button>
         </pr-tooltip>
-        ${result === null
-          ? ''
-          : result
-            ? html`<div class="banner success">Valid API key</div>`
-            : html`<div class="banner error">Invalid API key</div>`}
+        ${renderResult(result)}
       </div>
     `;
   }
@@ -142,7 +189,7 @@ export class ExperimenterDataEditor extends MobxLitElement {
       if (!oldData) return;
 
       const geminiKey = (e.target as HTMLTextAreaElement).value;
-      this.geminiKeyResponse = null;
+      this.geminiKeyResponse = {status: CheckApiKeyStatus.NONE};
       const newData = updateExperimenterData(oldData, {
         apiKeys: {...oldData.apiKeys, geminiApiKey: geminiKey},
       });
@@ -176,7 +223,7 @@ export class ExperimenterDataEditor extends MobxLitElement {
       if (!oldData) return;
 
       const value = (e.target as HTMLInputElement).value;
-      this.claudeKeyResponse = null;
+      this.claudeKeyResponse = {status: CheckApiKeyStatus.NONE};
 
       const newData = updateExperimenterData(oldData, {
         apiKeys: {
@@ -223,7 +270,7 @@ export class ExperimenterDataEditor extends MobxLitElement {
       if (!oldData) return;
 
       const value = (e.target as HTMLInputElement).value;
-      this.openAIKeyResponse = null;
+      this.openAIKeyResponse = {status: CheckApiKeyStatus.NONE};
       let newData;
 
       switch (field) {
@@ -290,7 +337,7 @@ export class ExperimenterDataEditor extends MobxLitElement {
       if (!oldData) return;
 
       const value = (e.target as HTMLInputElement).value;
-      this.ollamaKeyResponse = null;
+      this.ollamaKeyResponse = {status: CheckApiKeyStatus.NONE};
       let newData;
 
       switch (field) {
