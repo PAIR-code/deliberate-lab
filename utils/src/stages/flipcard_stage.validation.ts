@@ -21,7 +21,7 @@ export const FlipCardData = Type.Object(
     frontContent: Type.String({minLength: 1}),
     backContent: Type.String({minLength: 1}),
   },
-  strict,
+  {$id: 'FlipCard', ...strict},
 );
 
 /** FlipCard stage config validation. */
@@ -39,7 +39,7 @@ export const FlipCardStageConfigData = Type.Object(
     minUniqueCardsFlippedRequirement: Type.Number(),
     shuffleCards: Type.Boolean(),
   },
-  strict,
+  {$id: 'FlipCardStageConfig', ...strict},
 );
 
 /** FlipCard stage participant answer validation. */

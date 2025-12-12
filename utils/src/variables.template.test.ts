@@ -176,7 +176,6 @@ describe('Mustache Template Resolution', () => {
       const result = validateTemplateVariables(template, variableDefinitions);
       expect(result.valid).toBe(true);
       expect(result.invalidVariables).toEqual([]);
-      expect(result.syntaxError).toBeUndefined();
     });
 
     it('should detect missing variables', () => {
@@ -186,7 +185,6 @@ describe('Mustache Template Resolution', () => {
       expect(result.invalidVariables).toEqual([
         {path: 'city', reason: 'undefined'},
       ]);
-      expect(result.syntaxError).toBeUndefined();
     });
 
     it('should detect if template references a field, but variable is not an object', () => {
@@ -196,7 +194,6 @@ describe('Mustache Template Resolution', () => {
       expect(result.invalidVariables).toEqual([
         {path: 'name.first', reason: 'undefined'},
       ]);
-      expect(result.syntaxError).toBeUndefined();
     });
 
     it('should detect if variable is an object and template references an undefined field', () => {
@@ -206,14 +203,15 @@ describe('Mustache Template Resolution', () => {
       expect(result.invalidVariables).toEqual([
         {path: 'department.chief', reason: 'undefined'},
       ]);
-      expect(result.syntaxError).toBeUndefined();
     });
 
     it('should detect syntax errors', () => {
       const template = 'Unclosed {{#section}} without closing';
       const result = validateTemplateVariables(template, variableDefinitions);
       expect(result.valid).toBe(false);
-      expect(result.syntaxError).toBeDefined();
+      expect(result.invalidVariables.length).toBe(1);
+      expect(result.invalidVariables[0].reason).toBe('syntax');
+      expect(result.invalidVariables[0].path).toBeTruthy();
     });
 
     it('should validate array element access with numeric indices', () => {

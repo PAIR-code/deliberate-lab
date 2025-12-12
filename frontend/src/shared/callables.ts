@@ -143,6 +143,21 @@ export const deleteExperimentTemplateCallable = async (
   return data;
 };
 
+/** Fork an experiment (create a copy with all stages and agents). */
+export const forkExperimentCallable = async (
+  functions: Functions,
+  config: {collectionName: string; experimentId: string; newName?: string},
+) => {
+  const {data} = await httpsCallable<
+    {collectionName: string; experimentId: string; newName?: string},
+    CreationResponse
+  >(
+    functions,
+    'forkExperiment',
+  )(config);
+  return data;
+};
+
 /** Generic endpoint to download experiment data. */
 export const downloadExperimentCallable = async (
   functions: Functions,

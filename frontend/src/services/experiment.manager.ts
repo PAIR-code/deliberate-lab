@@ -38,7 +38,6 @@ import {
   StageKind,
   createCohortConfig,
   createExperimenterChatMessage,
-  generateId,
 } from '@deliberation-lab/utils';
 import {
   ackAlertMessageCallable,
@@ -50,6 +49,7 @@ import {
   createParticipantCallable,
   deleteCohortCallable,
   deleteExperimentCallable,
+  forkExperimentCallable,
   getExperimentTemplateCallable,
   initiateParticipantTransferCallable,
   sendParticipantCheckCallable,
@@ -58,7 +58,6 @@ import {
   updateCohortMetadataCallable,
   updateMediatorStatusCallable,
   updateParticipantStatusCallable,
-  writeExperimentCallable,
 } from '../shared/callables';
 import {
   getCohortParticipants,
@@ -663,10 +662,9 @@ export class ExperimentManager extends Service {
 
   /** Fork the current experiment. */
   async forkExperiment() {
-    const experiment = this.sp.experimentService.experiment;
-    if (!experiment || !this.experimentId) return;
+    if (!this.experimentId) return;
 
-    const experimentTemplate = await getExperimentTemplateCallable(
+    const response = await forkExperimentCallable(
       this.sp.firebaseService.functions,
       {
         experimentId: this.experimentId,
@@ -685,9 +683,9 @@ export class ExperimentManager extends Service {
       },
     );
 
-    // Route to new experiment and reload to update changes
+    // Route to new experiment
     this.sp.routerService.navigate(Pages.EXPERIMENT, {
-      experiment: experimentTemplate.experiment.id,
+      experiment: response.id,
     });
 
     return response;

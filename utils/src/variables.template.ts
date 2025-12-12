@@ -1,13 +1,22 @@
 import Mustache from 'mustache';
 import type {TSchema} from '@sinclair/typebox';
-import {getSchemaAtPath} from './variables.utils';
+import {CohortConfig} from './cohort';
+import {Experiment} from './experiment';
+import {ParticipantProfileExtended} from './participant';
 import {VariableDefinition} from './variables';
+import {
+  extractVariablesFromVariableConfigs,
+  getSchemaAtPath,
+} from './variables.utils';
 
 // Disable HTML escaping (prevents quotes from being rendered as `&quot;`)
 Mustache.escape = (text: string) => text;
 
 /** Reason why a variable reference is invalid */
-export type InvalidVariableReason = 'undefined' | 'object_needs_property';
+export type InvalidVariableReason =
+  | 'undefined'
+  | 'object_needs_property'
+  | 'syntax';
 
 /** An invalid variable reference in a template */
 export interface InvalidVariable {
@@ -22,6 +31,8 @@ export function formatInvalidVariable(invalid: InvalidVariable): string {
       return `'${invalid.path}' is not defined`;
     case 'object_needs_property':
       return `'${invalid.path}' is an object - access a property like '${invalid.path}.propertyName'`;
+    case 'syntax':
+      return invalid.path || 'Invalid template syntax';
   }
 }
 
@@ -118,7 +129,6 @@ export function validateTemplateVariables(
 ): {
   valid: boolean;
   invalidVariables: InvalidVariable[];
-  syntaxError?: string;
 } {
   try {
     const tokens = Mustache.parse(template);
@@ -148,11 +158,11 @@ export function validateTemplateVariables(
       invalidVariables: Array.from(invalidVariables.values()),
     };
   } catch (error) {
+    const message =
+      error instanceof Error ? error.message : 'Invalid template syntax';
     return {
       valid: false,
-      invalidVariables: [],
-      syntaxError:
-        error instanceof Error ? error.message : 'Invalid template syntax',
+      invalidVariables: [{path: message, reason: 'syntax'}],
     };
   }
 }
@@ -246,4 +256,46 @@ function resolvePathInContextStack(
     }
   }
   return undefined;
+}
+
+/**
+ * Check if a string contains template variable syntax (e.g., {{variable}}).
+ * This is a fast check to avoid unnecessary template processing.
+ */
+export function containsTemplateVariables(text: string): boolean {
+  return text.includes('{{');
+}
+
+/**
+ * Extracts variable definitions and merged value map from experiment, cohort, and participant context.
+ * Used for resolving template variables in prompts.
+ *
+ * Variable maps are merged in order of precedence: experiment < cohort < participant.
+ *
+ * @param participant - The participant whose variables should be included (optional).
+ *   For agent participants, pass themselves. For mediators in private chats, pass the
+ *   participant they're chatting with.
+ */
+export function getVariableContext(
+  experiment: Experiment,
+  cohort: CohortConfig,
+  participant?: ParticipantProfileExtended | null,
+): {
+  variableDefinitions: Record<string, VariableDefinition>;
+  valueMap: Record<string, string>;
+} {
+  const experimentVariableMap = experiment.variableMap ?? {};
+  const cohortVariableMap = cohort.variableMap ?? {};
+  const participantVariableMap = participant?.variableMap ?? {};
+
+  const variableDefinitions = extractVariablesFromVariableConfigs(
+    experiment.variableConfigs ?? [],
+  );
+  const valueMap = {
+    ...experimentVariableMap,
+    ...cohortVariableMap,
+    ...participantVariableMap,
+  };
+
+  return {variableDefinitions, valueMap};
 }

@@ -20,6 +20,7 @@ import {
   getPromptFromConfig,
   getStructuredPromptConfig,
 } from '../structured_prompt.utils';
+import {resolveStringWithVariables} from '../variables.utils';
 import {
   convertChatToMessages,
   shouldUseMessageFormat,
@@ -74,10 +75,11 @@ export async function createAgentChatMessageFromPrompt(
     return false;
   }
 
+  const isPrivateChat = stage.kind === StageKind.PRIVATE_CHAT;
+
   // Check if this is an initial message request (empty triggerChatId)
   if (triggerChatId === '') {
     // Check if we've already sent an initial message for this user
-    const isPrivateChat = stage.kind === StageKind.PRIVATE_CHAT;
 
     // Build the appropriate trigger log reference based on chat type
     const triggerLogId = `initial-${user.publicId}`;
@@ -111,9 +113,17 @@ export async function createAgentChatMessageFromPrompt(
   if (triggerChatId === '') {
     const initialMessage = promptConfig.chatSettings?.initialMessage;
     if (initialMessage && initialMessage.trim() !== '') {
-      // Use configured initial message
+      // Resolve template variables in the initial message.
+      // Only use participant variables for private chats.
+      const resolvedMessage = await resolveStringWithVariables(
+        initialMessage,
+        experimentId,
+        cohortId,
+        isPrivateChat ? participantIds[0] : undefined,
+      );
+
       message = createChatMessage({
-        message: initialMessage,
+        message: resolvedMessage,
         senderId: user.publicId,
         type: user.type,
         profile: createParticipantProfileBase(user),

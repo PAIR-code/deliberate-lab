@@ -22,5 +22,5 @@ export const InfoStageConfigData = Type.Object(
     progress: Type.Ref(StageProgressConfigSchema),
     infoLines: Type.Array(Type.String()),
   },
-  strict,
+  {$id: 'InfoStageConfig', ...strict},
 );
