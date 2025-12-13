@@ -73,9 +73,13 @@ export const LRRankingStageConfigData = Type.Object(
 );
 
 export const RankingStageConfigData = Type.Union(
-  [ItemRankingStageConfigData, ParticipantRankingStageConfigData, LRRankingStageConfigData],
+  [
+    ItemRankingStageConfigData,
+    ParticipantRankingStageConfigData,
+    LRRankingStageConfigData,
+  ],
   {$id: 'RankingStageConfig'},
-]);
+);
 
 // ************************************************************************* //
 // updateRankingStageParticipantAnswer endpoint                              //
