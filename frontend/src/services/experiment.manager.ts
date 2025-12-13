@@ -664,29 +664,18 @@ export class ExperimentManager extends Service {
   async forkExperiment() {
     if (!this.experimentId) return;
 
-    const response = await forkExperimentCallable(
-      this.sp.firebaseService.functions,
-      {
-        experimentId: this.experimentId,
-      },
-    );
-
-    // Change ID (creator will be changed by cloud functions)
-    experimentTemplate.experiment.id = generateId();
-    experimentTemplate.experiment.metadata.name = `Copy of ${experiment.metadata.name}`;
-
-    let response = {};
-    response = await writeExperimentCallable(
-      this.sp.firebaseService.functions,
-      {
-        experimentTemplate,
-      },
-    );
-
-    // Route to new experiment
-    this.sp.routerService.navigate(Pages.EXPERIMENT, {
-      experiment: response.id,
+    let response = {id: ''};
+    response = await forkExperimentCallable(this.sp.firebaseService.functions, {
+      collectionName: 'experiments',
+      experimentId: this.experimentId,
     });
+
+    if (response.id) {
+      // Route to new experiment
+      this.sp.routerService.navigate(Pages.EXPERIMENT, {
+        experiment: response.id,
+      });
+    }
 
     return response;
   }
