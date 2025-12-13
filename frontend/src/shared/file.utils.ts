@@ -19,6 +19,7 @@ import {
   PayoutStageConfig,
   PayoutStageParticipantAnswer,
   RankingStageConfig,
+  LRRankingStagePublicData,
   StageKind,
   SurveyPerParticipantStageConfig,
   SurveyQuestionKind,
@@ -1065,6 +1066,38 @@ export function getRankingStageCSVColumns(
         ? `"${stageAnswer.rankingList.join(',')}"`
         : '',
   );
+
+  // 🧩 Leadership Rejection (LR) extension
+  if (participant) {
+    // Column data
+    let leaderStatus = '';
+    let winnerId = '';
+    if (publicData && 'leaderStatusMap' in publicData) {
+      const lrData = publicData as LRRankingStagePublicData;
+      const participantPublicId = participant.profile.publicId ?? '';
+      leaderStatus = lrData.leaderStatusMap?.[participantPublicId] ?? '';
+      winnerId = lrData.winnerId ?? '';
+    }
+    console.debug(
+      '[LR][getRankingStageCSVColumns] [Leadership Rejection (LR) extension] columns data: leaderStatus=',
+      leaderStatus,
+      ', winnerId=',
+      winnerId,
+    );
+    // Column for participant’s leader status
+    columns.push(leaderStatus);
+    // Optional: export winner ID again for clarity
+    columns.push(winnerId);
+  } else {
+    // Column header. Note: if participant is null (case of headers to return), publicData is null too.
+    // Column for participant’s leader status
+    console.debug(
+      '[LR][getRankingStageCSVColumns] [Leadership Rejection (LR) extension] header title',
+    );
+    columns.push(`Leader status - ${rankingStage.id}`);
+    // Optional: export winner ID again for clarity
+    columns.push(`Leader winner ID - ${rankingStage.id}`);
+  }
 
   return columns;
 }
