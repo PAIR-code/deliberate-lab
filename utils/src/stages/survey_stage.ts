@@ -1,11 +1,11 @@
 import {generateId} from '../shared';
 import {
   Condition,
-  ConditionTargetReference,
   evaluateCondition,
   extractConditionDependencies,
   extractMultipleConditionDependencies,
 } from '../utils/condition';
+import {getConditionDependencyValuesWithCurrentStage} from '../utils/condition.utils';
 import {
   BaseStageConfig,
   BaseStageParticipantAnswer,
@@ -101,16 +101,14 @@ export type SurveyQuestion =
  * This is saved as a stage doc (with stage ID as doc ID) under
  * experiments/{experimentId}/participants/{participantPrivateId}/stageData
  */
-export interface SurveyStageParticipantAnswer
-  extends BaseStageParticipantAnswer {
+export interface SurveyStageParticipantAnswer extends BaseStageParticipantAnswer {
   kind: StageKind.SURVEY;
   answerMap: Record<string, SurveyAnswer>; // map of question ID to answer
 }
 
 /** Special "survey per participant" stage
  * with each question asked for each participant. */
-export interface SurveyPerParticipantStageParticipantAnswer
-  extends BaseStageParticipantAnswer {
+export interface SurveyPerParticipantStageParticipantAnswer extends BaseStageParticipantAnswer {
   kind: StageKind.SURVEY_PER_PARTICIPANT;
   // map of question ID to (map of participant public ID to answer)
   answerMap: Record<string, Record<string, SurveyAnswer>>;
@@ -328,7 +326,7 @@ export function getVisibleSurveyQuestions(
   );
 
   // Get the actual values for all condition targets
-  const targetValues = getConditionDependencyValues(
+  const targetValues = getConditionDependencyValuesWithCurrentStage(
     allDependencies,
     currentStageId,
     currentStageAnswers,
@@ -360,7 +358,7 @@ export function isQuestionVisible(
   const dependencies = extractConditionDependencies(question.condition);
 
   // Get the actual values for this question's condition targets
-  const targetValues = getConditionDependencyValues(
+  const targetValues = getConditionDependencyValuesWithCurrentStage(
     dependencies,
     currentStageId,
     currentStageAnswers,
@@ -371,65 +369,8 @@ export function isQuestionVisible(
   return evaluateCondition(question.condition, targetValues);
 }
 
-/** Get the actual answer values for the specified dependencies. */
-function getConditionDependencyValues(
-  dependencies: ConditionTargetReference[],
-  currentStageId: string,
-  currentStageAnswers: Record<string, SurveyAnswer>,
-  allStageAnswers?: Record<string, StageParticipantAnswer>,
-  targetParticipantId?: string, // For survey-per-participant: which participant is being evaluated
-): Record<string, unknown> {
-  const values: Record<string, unknown> = {};
-
-  for (const targetRef of dependencies) {
-    // Build the key for this dependency
-    // Using :: as separator since it's unlikely to appear in IDs
-    const dataKey = `${targetRef.stageId}::${targetRef.questionId}`;
-
-    if (targetRef.stageId === currentStageId) {
-      // Reference to current stage
-      const answer = currentStageAnswers[targetRef.questionId];
-      if (answer) {
-        values[dataKey] = extractAnswerValue(answer);
-      }
-    } else if (allStageAnswers && allStageAnswers[targetRef.stageId]) {
-      // Reference to another stage
-      const stageAnswer = allStageAnswers[targetRef.stageId];
-      if (stageAnswer && 'answerMap' in stageAnswer) {
-        if (stageAnswer.kind === StageKind.SURVEY) {
-          // Regular survey stage
-          const surveyAnswer = stageAnswer as SurveyStageParticipantAnswer;
-          const answer = surveyAnswer.answerMap[targetRef.questionId];
-          if (answer) {
-            values[dataKey] = extractAnswerValue(answer);
-          }
-        } else if (stageAnswer.kind === StageKind.SURVEY_PER_PARTICIPANT) {
-          // Survey-per-participant: get answer about the target participant
-          const surveyAnswer =
-            stageAnswer as SurveyPerParticipantStageParticipantAnswer;
-
-          // For cross-stage references, we need targetParticipantId to know which answer to use
-          if (
-            targetParticipantId &&
-            surveyAnswer.answerMap[targetRef.questionId]
-          ) {
-            const participantAnswers =
-              surveyAnswer.answerMap[targetRef.questionId];
-            if (participantAnswers && participantAnswers[targetParticipantId]) {
-              const answer = participantAnswers[targetParticipantId];
-              values[dataKey] = extractAnswerValue(answer);
-            }
-          }
-        }
-      }
-    }
-  }
-
-  return values;
-}
-
 /** Extract the value from a survey answer */
-function extractAnswerValue(
+export function extractAnswerValue(
   answer: SurveyAnswer,
 ): string | number | boolean | undefined {
   switch (answer.kind) {

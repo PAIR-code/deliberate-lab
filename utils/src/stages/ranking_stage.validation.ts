@@ -20,7 +20,7 @@ export const RankingItemData = Type.Object(
     imageId: Type.String(),
     text: Type.String(),
   },
-  strict,
+  {$id: 'RankingItem', ...strict},
 );
 
 /** RankingStageConfig input validation. */
@@ -38,7 +38,7 @@ export const ItemRankingStageConfigData = Type.Object(
     ]),
     rankingItems: Type.Array(RankingItemData),
   },
-  strict,
+  {$id: 'ItemRankingStageConfig', ...strict},
 );
 
 export const ParticipantRankingStageConfigData = Type.Object(
@@ -55,7 +55,7 @@ export const ParticipantRankingStageConfigData = Type.Object(
     ]),
     enableSelfVoting: Type.Boolean(),
   },
-  strict,
+  {$id: 'ParticipantRankingStageConfig', ...strict},
 );
 
 export const LRRankingStageConfigData = Type.Object(
@@ -69,13 +69,12 @@ export const LRRankingStageConfigData = Type.Object(
     strategy: Type.Literal(ElectionStrategy.NONE),
     enableSelfVoting: Type.Boolean(),
   },
-  strict,
+  {$id: 'LRRankingStageConfigData', ...strict},
 );
 
-export const RankingStageConfigData = Type.Union([
-  ItemRankingStageConfigData,
-  ParticipantRankingStageConfigData,
-  LRRankingStageConfigData,
+export const RankingStageConfigData = Type.Union(
+  [ItemRankingStageConfigData, ParticipantRankingStageConfigData, LRRankingStageConfigData],
+  {$id: 'RankingStageConfig'},
 ]);
 
 // ************************************************************************* //

@@ -41,8 +41,7 @@ export interface AssetAllocationStageConfig extends BaseStageConfig {
 }
 
 /** AssetAllocation stage participant answer. */
-export interface AssetAllocationStageParticipantAnswer
-  extends BaseStageParticipantAnswer {
+export interface AssetAllocationStageParticipantAnswer extends BaseStageParticipantAnswer {
   kind: StageKind.ASSET_ALLOCATION;
   allocation: AssetAllocation;
   confirmed: boolean;
@@ -68,8 +67,7 @@ export interface MultiAssetAllocationStageConfig extends BaseStageConfig {
 }
 
 /** 2+ asset allocation stage participant answer. */
-export interface MultiAssetAllocationStageParticipantAnswer
-  extends BaseStageParticipantAnswer {
+export interface MultiAssetAllocationStageParticipantAnswer extends BaseStageParticipantAnswer {
   kind: StageKind.MULTI_ASSET_ALLOCATION;
   // Maps from stock ID to stock allocation
   allocationMap: Record<string, StockAllocation>;
@@ -78,8 +76,7 @@ export interface MultiAssetAllocationStageParticipantAnswer
   confirmedTimestamp: UnifiedTimestamp | null;
 }
 
-export interface MultiAssetAllocationStagePublicData
-  extends BaseStagePublicData {
+export interface MultiAssetAllocationStagePublicData extends BaseStagePublicData {
   kind: StageKind.MULTI_ASSET_ALLOCATION;
   participantAnswerMap: Record<
     string,

@@ -8,13 +8,17 @@ agent mediators or agent participants
 
 ## Experimenter setup
 Deliberate Lab offers variable support within experiments.
-Variable configs can be defined in the experiment builder; for the currently
-available config type ("random permutation"),
-experimenters can specify:
+Variable configs can be defined in the experiment builder; experimenters can
+specify:
 - A **schema** defining the variable structure (primitives, objects, or arrays)
-- Whether values are assigned at the **cohort level** (every participant in the cohort sees the same value) or **participant level**
+- A **scope** defining when the variable is assigned:
+  - **Experiment (Global):** Value is constant for the entire experiment.
+  - **Cohort:** Value is assigned when a cohort is created (shared by all participants in that cohort).
+  - **Participant:** Value is assigned when a participant joins (unique to that participant, or independently shuffled).
 - A set of **variable names** to be populated
 - A set of **values** to choose from (as JSON strings)
+
+For **Random Permutation** variables, values are randomly selected from the pool based on the scope (e.g., a Cohort-scoped variable is randomized once per cohort).
 
 > Support for other config types, such as populating variables based on a
 weight distribution of values or manually assigning values when creating
@@ -24,6 +28,15 @@ a cohort, to be added eventually.
   alt="Screenshot of defining a new variable config that uses random permutation"
 />
 
+### Variable Naming Rules
+
+Variable and property names can only contain:
+- Letters (a-z, A-Z)
+- Numbers (0-9)
+- Underscores (_)
+
+Names cannot start with a number. This prevents conflicts with Mustache template syntax where dots (`.`) are used for path access (e.g., `{{obj.field}}`).
+
 The variables use
 [Mustache templating](https://mustache.github.io/mustache.5.html)
 and are supported in the
@@ -32,6 +45,10 @@ following locations:
 - Stage descriptions (primary text, info text)
 - Info stages (info lines)
 - Multi asset allocation stages (stock name and description)
+- FlipCard stages (card title, front content, back content)
+- Survey stages (question title, multiple choice option text, scale labels)
+- Survey per participant stages (same as Survey stages)
+- Agent prompts (TEXT prompt items)
 
 ### Variable Schemas
 
@@ -91,7 +108,24 @@ schema: VariableType.array(
 
 Template usage: `{{arguments.0.title}}`, `{{arguments.1.text}}`
 
-#### Nested Structures
+### Expanding Arrays to Separate Variables
+
+For **Random Permutation** variables, you can choose to expand an array into individual indexed variables. This is controlled by the **"Expand to separate variables"** option (enabled by default).
+
+**When enabled (`expandListToSeparateVariables: true`):**
+- Creates separate variables: `charity_1`, `charity_2`, `charity_3`, etc.
+- Each variable holds a single value from the array
+- Template usage: `{{charity_1}}`, `{{charity_2}}`
+
+**When disabled (`expandListToSeparateVariables: false`):**
+- Creates a single array variable: `charity`
+- Template usage: `{{charity.0}}`, `{{charity.1}}` or iteration with `{{#charity}}...{{/charity}}`
+
+This is useful when you want predictable variable names for a fixed number of items (e.g., always showing exactly 3 charities) rather than working with array indices.
+
+**Tip:** If you need to easily distinguish between items with identical display values in your analysis, use an Object variable and include an identifier field in the value itself (e.g., `{id: "donors_choose", name: "Education Charity"}`).
+
+### Nested Structures
 
 Schemas can be nested arbitrarily:
 
@@ -113,14 +147,14 @@ schema: VariableType.object({
 })
 ```
 
-#### Runtime Validation
+### Validation
 
-All schemas are validated at runtime when:
-- Creating or updating variable configs via the API
-- Assigning values to variables
-- Resolving templates
+Variables are validated at multiple points:
+- **In the variable editor:** Values are validated against schemas as you type, with errors shown inline.
+- **In the experiment builder:** Template references are checked for missing variables (referenced but not defined) and unused variables (defined but never referenced).
+- **When creating cohorts/participants:** Values are validated when `generateVariablesForScope()` assigns them. Validation errors are logged as warnings.
 
-Invalid schemas or values will be rejected with detailed error messages.
+See the [Implementation](#schema-validation) section for details.
 
 ## Implementation
 
@@ -140,47 +174,36 @@ export namespace VariableType {
 }
 ```
 
-Each `VariableItem` contains:
-- `name`: Variable identifier
-- `description`: Human-readable description
-- `schema`: TypeBox schema (TSchema) defining the structure
+Each `VariableConfig` contains:
+- `definition`: The `VariableDefinition` (name, description, schema).
+- `type`: The type of config (e.g., `STATIC`, `RANDOM_PERMUTATION`).
+- `scope`: The scope of assignment (`EXPERIMENT`, `COHORT`, `PARTICIPANT`).
 
-### Schema Validation (`utils/src/variables.validation.ts`)
+### Schema Validation
 
-Runtime validation uses recursive TypeBox schemas to validate incoming JSON Schema objects from API requests:
+Validation uses TypeBox schemas with [Ajv](https://ajv.js.org/) as the underlying validator. Validation occurs at these points:
 
-```typescript
-const JSONSchemaData: any = Type.Recursive((Self) =>
-  Type.Union([
-    Type.Object({type: Type.Literal('string')}, {additionalProperties: true}),
-    Type.Object({type: Type.Literal('number')}, {additionalProperties: true}),
-    Type.Object({type: Type.Literal('boolean')}, {additionalProperties: true}),
-    Type.Object({
-      type: Type.Literal('object'),
-      properties: Type.Optional(Type.Record(Type.String(), Self)),
-    }, {additionalProperties: true}),
-    Type.Object({
-      type: Type.Literal('array'),
-      items: Type.Optional(Self),
-    }, {additionalProperties: true}),
-  ])
-);
-```
+1. **In the variable editor** (design-time): As you edit variable values, the UI validates them against the schema and shows errors inline (`validateVariableValue()` in `variables.utils.ts`).
 
-This ensures malformed schemas are rejected before being stored.
+2. **When cohorts/participants are created** (runtime): Values are validated when `generateVariablesForScope()` assigns values. Validation errors are logged as warnings but don't block creation (`validateParsedVariableValue()` in `variables.utils.ts`).
+
+> Note: TypeBox schemas in `variables.validation.ts` are used for TypeScript type checking but not for runtime API validation of experiment saves.
 
 ### Value Assignments
 
 When experiments, cohorts, and participants are created (in `functions/`),
 the variable configs (from the experiment config) are used to assign relevant
-values to a `variableMap`.
+values to a `variableMap` on the respective object (Experiment, Cohort, or Participant).
 
-For instance, when setting up a cohort, the variable configs are passed into
-variable utility functions (`utils/src/variables.utils.ts`) that extract
-variable items (as each variable config may contain multiple variables)
-that are to be assigned at the cohort level. Values are then generated via
-the specified means (e.g., random permutation) and a `variableMap` matching
-variable names to values is updated for the cohort config.
+The backend utility `generateVariablesForScope` (`utils/src/variables.utils.ts`)
+filters the configs based on the current scope being created (e.g., only processing
+`COHORT` scoped variables when creating a cohort). Values are then generated
+(e.g., selecting a random permutation) and stored as JSON strings.
+
+For **Random Permutation** variables with `expandListToSeparateVariables` enabled:
+- Multiple variables are created: `name_1`, `name_2`, etc.
+- Each variable holds a single item from the selected array
+- The `numToSelect` option controls how many items are selected (validated to be within `[1, values.length]`)
 
 Values are type-coerced based on the schema:
 - `string`: Used directly
@@ -206,6 +229,11 @@ runs specified fields through template resolution.
   - Skips numeric array indices
   - Validates field existence at each level
 
+**Editor validation:**
+The experiment builder validates templates and shows warnings for:
+- Missing variables (referenced in templates but not defined)
+- Unused variables (defined but never referenced in any stage)
+
 **Template rendering:**
 - Type-coerces values based on schema type
 - Uses Mustache.js for template rendering
@@ -216,3 +244,42 @@ text) fields are resolved (extended classes are encouraged to extend this
 functionality).
 
 > NOTE: Not all stages have been migrated to the stage manager/handler setup.
+
+### Survey Per Participant Behavior
+
+In **Survey per participant** stages, where questions are asked about each participant in the cohort, variables are resolved using the **answering participant's** variable values, not the target participant being rated.
+
+For example, if you have a question "Rate this person's contribution to {{project.name}}":
+- The `{{project.name}}` is resolved once based on the answering participant's variable context
+- The same resolved question is displayed for each target participant being rated
+
+This is consistent with how variable scopes work:
+- **Experiment scope:** Same value for everyone
+- **Cohort scope:** Same value for everyone in the cohort
+- **Participant scope:** Unique to the person taking the survey (the answerer)
+
+If you need to display information specific to the target participant being rated (e.g., their name or role), use the built-in participant display features rather than experiment variables.
+
+### Agent Prompt Variable Behavior
+
+Variables in agent prompts are resolved based on who is generating the prompt:
+
+| Scenario | Variables Available |
+|----------|---------------------|
+| **Participant agent** | Experiment + Cohort + Their own participant variables |
+| **Mediator in private chat** | Experiment + Cohort + Target participant's variables |
+| **Mediator in group chat** | Experiment + Cohort only |
+
+For **private chats**, when a mediator is talking to a single participant, the mediator's prompt will have access to that participant's variables. This allows prompts like "Help {{participant_topic}} discussion" to resolve correctly based on the participant being chatted with.
+
+For **group chats** with multiple participants, mediators only have access to experiment and cohort-scoped variables since different participants may have different values for participant-scoped variables.
+
+## Roadmap / Future Work
+
+The following areas are planned for future integration with Variables:
+
+- [x] **Prompts:** Support variable interpolation in LLM prompts (TEXT prompt items resolve `{{variables}}`).
+- [x] **Flipcards:** Support variables in flipcard content (card title, front content, back content).
+- [x] **Surveys:** Support variables in survey question text and choices (question title, option text, scale labels).
+- [x] **Agent Mediators (Private Chat):** Mediators in private chats have access to the target participant's variables.
+- [ ] **Agent Mediators (Group Chat):** Determine approach for handling multiple participants with different variable values.

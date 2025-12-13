@@ -49,8 +49,7 @@ export interface StockInfoStageConfig extends BaseStageConfig {
 }
 
 /** StockInfo stage participant answer. */
-export interface StockInfoStageParticipantAnswer
-  extends BaseStageParticipantAnswer {
+export interface StockInfoStageParticipantAnswer extends BaseStageParticipantAnswer {
   kind: StageKind.STOCKINFO;
   viewedStockIds: string[];
   currentStockIndex: number;

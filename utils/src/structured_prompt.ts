@@ -12,7 +12,12 @@ import {
   ChatMediatorStructuredOutputConfig,
   createStructuredOutputConfig,
 } from './structured_output';
-import {ShuffleConfig, SeedStrategy} from './utils/random.utils';
+import {
+  ShuffleConfig,
+  SeedStrategy,
+  createShuffleConfig,
+} from './utils/random.utils';
+import {Condition} from './utils/condition';
 
 // ****************************************************************************
 // CONSTANTS
@@ -96,6 +101,8 @@ export type PromptItem =
 
 export interface BasePromptItem {
   type: PromptItemType;
+  // Optional condition for showing/hiding this prompt item
+  condition?: Condition;
 }
 
 export enum PromptItemType {
@@ -189,11 +196,10 @@ export function createDefaultPromptItemGroup(
     type: PromptItemType.GROUP,
     title,
     items,
-    shuffleConfig: {
+    shuffleConfig: createShuffleConfig({
       shuffle: false,
       seed: SeedStrategy.PARTICIPANT,
-      customSeed: '',
-    },
+    }),
   };
 }
 

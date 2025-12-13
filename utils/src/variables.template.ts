@@ -1,6 +1,66 @@
 import Mustache from 'mustache';
 import type {TSchema} from '@sinclair/typebox';
-import {VariableItem} from './variables';
+import {CohortConfig} from './cohort';
+import {Experiment} from './experiment';
+import {ParticipantProfileExtended} from './participant';
+import {VariableDefinition} from './variables';
+import {
+  extractVariablesFromVariableConfigs,
+  getSchemaAtPath,
+} from './variables.utils';
+
+// Disable HTML escaping (prevents quotes from being rendered as `&quot;`)
+Mustache.escape = (text: string) => text;
+
+/** Reason why a variable reference is invalid */
+export type InvalidVariableReason =
+  | 'undefined'
+  | 'object_needs_property'
+  | 'syntax';
+
+/** An invalid variable reference in a template */
+export interface InvalidVariable {
+  path: string;
+  reason: InvalidVariableReason;
+}
+
+/** Format an invalid variable as a human-readable error message */
+export function formatInvalidVariable(invalid: InvalidVariable): string {
+  switch (invalid.reason) {
+    case 'undefined':
+      return `'${invalid.path}' is not defined`;
+    case 'object_needs_property':
+      return `'${invalid.path}' is an object - access a property like '${invalid.path}.propertyName'`;
+    case 'syntax':
+      return invalid.path || 'Invalid template syntax';
+  }
+}
+
+/**
+ * Find defined variables that are never used in a template.
+ * Uses validateTemplateVariables with an empty map to extract all variable references.
+ *
+ * @param template The template string to check (e.g., JSON.stringify of all stages)
+ * @param variableDefinitions Map of variable names to their definitions
+ * @returns Array of variable names that are defined but never referenced
+ */
+export function findUnusedVariables(
+  template: string,
+  variableDefinitions: Record<string, VariableDefinition>,
+): string[] {
+  // With empty definitions, all variables are reported as "invalid"
+  const {invalidVariables} = validateTemplateVariables(template, {});
+
+  // Extract root variable names from full paths (e.g., "charity" from "charity.name")
+  const usedRootNames = new Set<string>();
+  for (const {path} of invalidVariables) {
+    const rootName = path.split('.')[0];
+    usedRootNames.add(rootName);
+  }
+
+  const definedNames = Object.keys(variableDefinitions);
+  return definedNames.filter((name) => !usedRootNames.has(name));
+}
 
 /**
  * Resolve Mustache template variables in a given string.
@@ -8,7 +68,7 @@ import {VariableItem} from './variables';
  */
 export function resolveTemplateVariables(
   template: string,
-  variableMap: Record<string, VariableItem>,
+  variableDefinitions: Record<string, VariableDefinition>,
   valueMap: Record<string, string>,
 ) {
   const typedValueMap: Record<
@@ -16,7 +76,7 @@ export function resolveTemplateVariables(
     string | boolean | number | object | unknown[]
   > = {};
   Object.keys(valueMap).forEach((variableName) => {
-    const variable = variableMap[variableName];
+    const variable = variableDefinitions[variableName];
     const schemaType = variable?.schema?.type;
 
     switch (schemaType) {
@@ -51,132 +111,191 @@ export function resolveTemplateVariables(
 }
 
 /**
- * Validate that a template's variable references are defined.
+ * Validate that a template's variable references are defined and used correctly.
  * Also validates that the template is valid Mustache syntax.
  *
- * This validates dotted path access (e.g., {{policy.arguments_pro.0.title}})
- * by checking each level exists in the schema. Numeric array indices are
- * skipped since we can't validate them statically.
+ * Supports:
+ * - Dotted path access (e.g., {{policy.title}})
+ * - Array indices (e.g., {{items.0.name}})
+ * - Sections/Iteration (e.g., {{#items}}{{name}}{{/items}}) with context stacking
+ *
+ * Returns invalid variables for:
+ * - Undefined variable references
+ * - Object variables used directly without property access (will render as "[object Object]")
  */
 export function validateTemplateVariables(
   template: string,
-  variableMap: Record<string, VariableItem> = {},
-): {valid: boolean; missingVariables: string[]; syntaxError?: string} {
+  variableDefinitions: Record<string, VariableDefinition> = {},
+): {
+  valid: boolean;
+  invalidVariables: InvalidVariable[];
+} {
   try {
-    // First, check if template is valid Mustache syntax
-    Mustache.parse(template);
+    const tokens = Mustache.parse(template);
+    const invalidVariables = new Map<string, InvalidVariable>();
 
-    // Extract all variable references from the template
-    const references = extractVariableReferences(template);
-    const missingVariables: string[] = [];
+    // Initial schema context is the variable definitions
+    // We manually construct a schema-like object to avoid TypeBox runtime overhead/recursion
+    const rootSchema: TSchema = {
+      type: 'object',
+      properties: {},
+      additionalProperties: false,
+    } as unknown as TSchema;
 
-    for (const ref of references) {
-      const parts = ref.split('.');
-      const baseName = parts[0];
-
-      // Check if base variable exists
-      const baseVariable = variableMap[baseName];
-      if (!baseVariable) {
-        missingVariables.push(baseName);
-        continue;
-      }
-
-      // Validate nested path access using JSON Schema (TypeBox)
-      let currentSchema: TSchema = baseVariable.schema;
-
-      for (let i = 1; i < parts.length; i++) {
-        const part = parts[i];
-
-        // Skip numeric array indices (e.g., 0, 1, 2...)
-        // After a numeric index, we're accessing array item properties
-        if (/^\d+$/.test(part)) {
-          // For arrays, navigate to the items schema
-          if (
-            currentSchema.type === 'array' &&
-            'items' in currentSchema &&
-            currentSchema.items
-          ) {
-            currentSchema = currentSchema.items as TSchema;
-          }
-          continue;
-        }
-
-        // For objects, check if the property exists
-        if (currentSchema.type === 'object') {
-          const properties =
-            'properties' in currentSchema
-              ? currentSchema.properties
-              : undefined;
-          if (!properties || !properties[part]) {
-            missingVariables.push(parts.slice(0, i + 1).join('.'));
-            break;
-          }
-          currentSchema = properties[part] as TSchema;
-        } else {
-          // Not an object, can't access properties
-          missingVariables.push(parts.slice(0, i + 1).join('.'));
-          break;
-        }
+    if (rootSchema.properties) {
+      for (const [name, def] of Object.entries(variableDefinitions)) {
+        rootSchema.properties[name] = def.schema;
       }
     }
 
+    // Context stack holds schemas for each scope level
+    const contextStack: TSchema[] = [rootSchema];
+
+    validateTokens(tokens, contextStack, invalidVariables);
+
     return {
-      valid: missingVariables.length === 0,
-      missingVariables: [...new Set(missingVariables)],
+      valid: invalidVariables.size === 0,
+      invalidVariables: Array.from(invalidVariables.values()),
     };
   } catch (error) {
+    const message =
+      error instanceof Error ? error.message : 'Invalid template syntax';
     return {
       valid: false,
-      missingVariables: [],
-      syntaxError:
-        error instanceof Error ? error.message : 'Invalid template syntax',
+      invalidVariables: [{path: message, reason: 'syntax'}],
     };
   }
 }
 
 /**
- * Extract all variable references from a Mustache template.
- * Uses Mustache's own parser to get accurate variable names.
+ * Recursively validate Mustache tokens against a context stack of schemas.
  */
-export function extractVariableReferences(template: string): string[] {
-  try {
-    const tokens = Mustache.parse(template);
-    const references = new Set<string>();
+function validateTokens(
+  tokens: unknown[],
+  contextStack: TSchema[],
+  invalidVariables: Map<string, InvalidVariable>,
+) {
+  for (const token of tokens) {
+    // Mustache token format: [type, value, start, end, subTokens, index]
+    if (!Array.isArray(token)) continue;
+    const [type, value, , , subTokens] = token as [
+      string,
+      string,
+      number,
+      number,
+      unknown[]?,
+    ];
 
-    // Recursively extract variable names from parsed tokens
-    function extractFromTokens(tokens: unknown[]): void {
-      for (const token of tokens) {
-        // Mustache tokens are tuples with varying lengths depending on token type
-        // We only care about extracting the type and name fields
-        if (!Array.isArray(token)) continue;
-        const [type, name, , , subTokens] = token as [
-          string,
-          string,
-          number,
-          number,
-          unknown[]?,
-        ];
-
-        // Token types: 'name' for variables, '#' for sections, '^' for inverted sections
-        if (
-          (type === 'name' || type === '#' || type === '^' || type === '&') &&
-          name
-        ) {
-          references.add(name);
-        }
-
-        // Recursively process sub-tokens in sections
-        if (subTokens && Array.isArray(subTokens)) {
-          extractFromTokens(subTokens);
-        }
-      }
+    // Special case: '.' refers to the current context itself
+    if (value === '.') {
+      continue;
     }
 
-    extractFromTokens(tokens);
-    return Array.from(references);
-  } catch (error) {
-    // If parsing fails, return empty array
-    console.warn('Failed to parse template for variable extraction:', error);
-    return [];
+    // Direct output: {{var}}, {{{var}}}, {{&var}} - renders value as text
+    const isDirectOutput = type === 'name' || type === '&' || type === '{';
+    // Sections: {{#var}}...{{/var}}, {{^var}}...{{/var}} - iterate/scope
+    const isSection = type === '#' || type === '^';
+
+    if (!isDirectOutput && !isSection) {
+      continue;
+    }
+
+    const schema = resolvePathInContextStack(value, contextStack);
+
+    if (!schema) {
+      invalidVariables.set(value, {path: value, reason: 'undefined'});
+    } else if (isDirectOutput && schema.type === 'object') {
+      // Using {{object}} directly will render as "[object Object]"
+      invalidVariables.set(value, {
+        path: value,
+        reason: 'object_needs_property',
+      });
+    }
+
+    // For sections, recurse into sub-tokens
+    if (isSection && subTokens) {
+      if (schema) {
+        // Push new context onto stack for nested content
+        let newContext: TSchema | undefined;
+
+        if (schema.type === 'array' && 'items' in schema) {
+          newContext = schema.items as TSchema;
+        } else if (schema.type === 'object') {
+          newContext = schema;
+        }
+
+        if (newContext) {
+          contextStack.push(newContext);
+          validateTokens(subTokens, contextStack, invalidVariables);
+          contextStack.pop();
+        } else {
+          // Primitive type (e.g. boolean toggle) - no context change
+          validateTokens(subTokens, contextStack, invalidVariables);
+        }
+      } else {
+        // Schema missing, but still validate children to find other errors
+        validateTokens(subTokens, contextStack, invalidVariables);
+      }
+    }
   }
+}
+
+/**
+ * Try to resolve a dotted path against schemas in the context stack,
+ * searching from top (most specific) to bottom (root).
+ */
+function resolvePathInContextStack(
+  path: string,
+  contextStack: TSchema[],
+): TSchema | undefined {
+  // Search stack from top to bottom
+  for (let i = contextStack.length - 1; i >= 0; i--) {
+    const schema = getSchemaAtPath(contextStack[i], path);
+    if (schema) {
+      return schema;
+    }
+  }
+  return undefined;
+}
+
+/**
+ * Check if a string contains template variable syntax (e.g., {{variable}}).
+ * This is a fast check to avoid unnecessary template processing.
+ */
+export function containsTemplateVariables(text: string): boolean {
+  return text.includes('{{');
+}
+
+/**
+ * Extracts variable definitions and merged value map from experiment, cohort, and participant context.
+ * Used for resolving template variables in prompts.
+ *
+ * Variable maps are merged in order of precedence: experiment < cohort < participant.
+ *
+ * @param participant - The participant whose variables should be included (optional).
+ *   For agent participants, pass themselves. For mediators in private chats, pass the
+ *   participant they're chatting with.
+ */
+export function getVariableContext(
+  experiment: Experiment,
+  cohort: CohortConfig,
+  participant?: ParticipantProfileExtended | null,
+): {
+  variableDefinitions: Record<string, VariableDefinition>;
+  valueMap: Record<string, string>;
+} {
+  const experimentVariableMap = experiment.variableMap ?? {};
+  const cohortVariableMap = cohort.variableMap ?? {};
+  const participantVariableMap = participant?.variableMap ?? {};
+
+  const variableDefinitions = extractVariablesFromVariableConfigs(
+    experiment.variableConfigs ?? [],
+  );
+  const valueMap = {
+    ...experimentVariableMap,
+    ...cohortVariableMap,
+    ...participantVariableMap,
+  };
+
+  return {variableDefinitions, valueMap};
 }

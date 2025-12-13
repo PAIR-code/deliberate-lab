@@ -2,8 +2,8 @@ import {MobxLitElement} from '@adobe/lit-mobx';
 import {CSSResultGroup, html, nothing} from 'lit';
 import {customElement, property, state} from 'lit/decorators.js';
 
-import '@material/web/textfield/filled-text-field.js';
 import '@material/web/checkbox/checkbox.js';
+import '../../pair-components/textarea_template';
 
 import {core} from '../../core/core';
 import {ExperimentEditor} from '../../services/experiment.editor';
@@ -130,15 +130,15 @@ export class BaseStageEditorComponent extends MobxLitElement {
     };
 
     return html`
-      <md-filled-text-field
+      <pr-textarea-template
         label="Stage description or instructions (optional)"
         .value=${this.stage?.descriptions.primaryText ?? ''}
         ?disabled=${!this.experimentEditor.canEditStages}
-        type="textarea"
+        variant="outlined"
         rows="3"
         @input=${update}
       >
-      </md-filled-text-field>
+      </pr-textarea-template>
     `;
   }
 
@@ -152,14 +152,15 @@ export class BaseStageEditorComponent extends MobxLitElement {
     };
 
     return html`
-      <md-filled-text-field
+      <pr-textarea-template
         label="Info popup text (optional)"
         .value=${this.stage?.descriptions.infoText ?? ''}
         ?disabled=${!this.experimentEditor.canEditStages}
-        type="textarea"
+        variant="outlined"
+        rows="3"
         @input=${update}
       >
-      </md-filled-text-field>
+      </pr-textarea-template>
     `;
   }
 

@@ -8,3 +8,8 @@ node_modules/
 
 .idea/
 
+# Python scripts
+.venv
+*.pyc
+__pycache__
+*.egg-info/

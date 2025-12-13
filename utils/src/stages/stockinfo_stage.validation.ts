@@ -43,7 +43,7 @@ export const StockData = Type.Object(
     parsedData: Type.Array(StockDataPointData),
     customCards: Type.Array(StockInfoCardData),
   },
-  strict,
+  {$id: 'Stock', ...strict},
 );
 
 /** StockInfo stage config validation. */

@@ -1,5 +1,5 @@
 import {ParticipantProfileExtended} from '../participant';
-import {VariableItem} from '../variables';
+import {VariableDefinition} from '../variables';
 import {resolveTemplateVariables} from '../variables.template';
 import {
   MediatorPromptConfig,
@@ -21,21 +21,21 @@ export interface AgentParticipantStageActions {
 export class BaseStageHandler {
   resolveTemplateVariablesInStage(
     stage: StageConfig,
-    variableMap: Record<string, VariableItem>,
+    variableDefinitions: Record<string, VariableDefinition>,
     valueMap: Record<string, string>,
   ) {
     // By default, resolve variables in stage descriptions
     const primaryText = resolveTemplateVariables(
       stage.descriptions.primaryText,
-      variableMap,
+      variableDefinitions,
       valueMap,
     );
     const infoText = resolveTemplateVariables(
       stage.descriptions.infoText,
-      variableMap,
+      variableDefinitions,
       valueMap,
     );
-    const descriptions = {...stage.descriptions, primaryText};
+    const descriptions = {...stage.descriptions, primaryText, infoText};
     return {...stage, descriptions};
   }
 
