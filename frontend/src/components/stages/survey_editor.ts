@@ -12,10 +12,10 @@ import {renderConditionEditor} from '../../shared/condition_editor.utils';
 import {
   CheckSurveyQuestion,
   Condition,
-  extractConditionDependencies,
   getConditionTargetsFromStages,
   MultipleChoiceItem,
   MultipleChoiceSurveyQuestion,
+  sanitizeSurveyQuestionConditions,
   ScaleSurveyQuestion,
   SurveyPerParticipantStageConfig,
   SurveyStageConfig,
@@ -105,55 +105,15 @@ export class SurveyEditor extends MobxLitElement {
   }
 
   /**
-   * Sanitize question conditions to ensure they only reference valid targets.
-   * A condition is invalid if it references:
-   * - A question that doesn't exist in the list
-   * - A question that comes at or after the current question's position
-   *
-   * This is called automatically when updating questions to handle any
-   * reordering, deletion, or other changes that might invalidate conditions.
-   */
-  private sanitizeQuestionConditions(
-    questions: SurveyQuestion[],
-  ): SurveyQuestion[] {
-    if (!this.stage) return questions;
-
-    const stageId = this.stage.id;
-
-    // Build a map of question ID to its index in the new ordering
-    const questionIndexMap = new Map<string, number>();
-    questions.forEach((q, idx) => {
-      questionIndexMap.set(q.id, idx);
-    });
-
-    return questions.map((question, index) => {
-      if (!question.condition) return question;
-
-      const dependencies = extractConditionDependencies(question.condition);
-
-      // Check if any dependency in the same stage is invalid
-      const hasInvalidDependency = dependencies.some((dep) => {
-        if (dep.stageId !== stageId) return false; // Other stages are fine
-
-        const refIndex = questionIndexMap.get(dep.questionId);
-        // Invalid if: question doesn't exist, or comes at/after current position
-        return refIndex === undefined || refIndex >= index;
-      });
-
-      if (hasInvalidDependency) {
-        return {...question, condition: undefined};
-      }
-      return question;
-    });
-  }
-
-  /**
    * Update the stage with new questions, automatically sanitizing conditions.
    */
   private updateStageQuestions(questions: SurveyQuestion[]) {
     if (!this.stage) return;
 
-    const sanitizedQuestions = this.sanitizeQuestionConditions(questions);
+    const sanitizedQuestions = sanitizeSurveyQuestionConditions(
+      questions,
+      this.stage.id,
+    );
 
     this.experimentEditor.updateStage({
       ...this.stage,
