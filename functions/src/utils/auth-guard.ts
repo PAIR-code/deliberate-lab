@@ -54,12 +54,13 @@ export class AuthGuard {
     creatorEmail: string,
   ) {
     const email = request.auth?.token.email?.toLowerCase();
+    if (!email) return false;
     if (email === creatorEmail) return true;
 
     const allowlistDoc = await app
       .firestore()
       .collection('allowlist')
-      .doc(email || '')
+      .doc(email)
       .get();
 
     return allowlistDoc.exists && allowlistDoc.data()?.isAdmin === true;
