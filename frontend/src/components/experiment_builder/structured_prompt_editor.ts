@@ -13,19 +13,21 @@ import {renderConditionEditor} from '../../shared/condition_editor.utils';
 
 import {
   Condition,
+  ConditionOperator,
   ConditionTarget,
+  createConditionGroup,
+  createDefaultPromptItemGroup,
+  createDefaultStageContextPromptItem,
+  createShuffleConfig,
+  getConditionTargetsFromStages,
   PromptItem,
-  PromptItemType,
   PromptItemGroup,
+  PromptItemType,
+  SeedStrategy,
+  ShuffleConfig,
   StageContextPromptItem,
   StageKind,
   TextPromptItem,
-  createDefaultStageContextPromptItem,
-  createDefaultPromptItemGroup,
-  getConditionTargetsFromStages,
-  ShuffleConfig,
-  SeedStrategy,
-  createShuffleConfig,
 } from '@deliberation-lab/utils';
 
 import {styles} from './structured_prompt_editor.scss';
@@ -211,13 +213,32 @@ export class EditorComponent extends MobxLitElement {
     }
 
     const conditionTargets = this.getConditionTargets();
+    const supportsConditions =
+      this.supportsConditions() && conditionTargets.length > 0;
 
-    return items.map(
-      (item, index) => html`
+    return items.map((item, index) => {
+      const hasCondition = item.condition !== undefined;
+
+      return html`
         <div class="prompt-item-wrapper ${isNested ? 'nested' : ''}">
           <div class="prompt-item-row">
             <div class="prompt-item-editor">${this.renderItemEditor(item)}</div>
             <div class="prompt-item-actions">
+              ${supportsConditions && item.type !== PromptItemType.GROUP
+                ? html`
+                    <pr-icon-button
+                      icon="rule"
+                      color=${hasCondition ? 'primary' : 'neutral'}
+                      variant="default"
+                      size="small"
+                      title=${hasCondition
+                        ? 'Remove display condition'
+                        : 'Add display condition'}
+                      @click=${() => this.toggleCondition(item)}
+                    >
+                    </pr-icon-button>
+                  `
+                : nothing}
               <pr-icon-button
                 icon="arrow_upward"
                 color="neutral"
@@ -244,42 +265,44 @@ export class EditorComponent extends MobxLitElement {
               </pr-icon-button>
             </div>
           </div>
-          ${this.renderPromptItemCondition(item, conditionTargets)}
+          ${hasCondition
+            ? this.renderPromptItemCondition(item, conditionTargets)
+            : nothing}
         </div>
-      `,
-    );
+      `;
+    });
+  }
+
+  private toggleCondition(item: PromptItem) {
+    if (item.condition !== undefined) {
+      // Remove condition
+      this.updatePromptItem(item, {condition: undefined});
+    } else {
+      // Add an empty condition group - user will add conditions via the editor
+      this.updatePromptItem(item, {
+        condition: createConditionGroup(ConditionOperator.AND, []),
+      });
+    }
   }
 
   private renderPromptItemCondition(
     item: PromptItem,
     conditionTargets: ConditionTarget[],
   ) {
-    // Don't show condition editor for GROUP items (they contain other items that can have conditions)
-    if (item.type === PromptItemType.GROUP) {
-      return nothing;
-    }
-
-    // Conditions are only supported for private chat stages (not group chat)
-    if (!this.supportsConditions()) {
-      return nothing;
-    }
-
     const onConditionChange = (condition: Condition | undefined) => {
       this.updatePromptItem(item, {condition});
     };
 
-    const conditionEditor = renderConditionEditor({
-      condition: item.condition,
-      targets: conditionTargets,
-      canEdit: this.experimentEditor.canEditStages,
-      onConditionChange,
-    });
-
-    if (conditionEditor === nothing) {
-      return nothing;
-    }
-
-    return html` <div class="prompt-item-condition">${conditionEditor}</div> `;
+    return html`
+      <div class="prompt-item-condition">
+        ${renderConditionEditor({
+          condition: item.condition,
+          targets: conditionTargets,
+          canEdit: this.experimentEditor.canEditStages,
+          onConditionChange,
+        })}
+      </div>
+    `;
   }
 
   private renderTextPromptItemEditor(item: TextPromptItem) {
