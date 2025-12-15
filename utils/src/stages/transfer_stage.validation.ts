@@ -38,14 +38,23 @@ export const SurveyAutoTransferConfigSchema = Type.Object(
   strict,
 );
 
+/** GroupComposition validation */
+export const GroupCompositionSchema = Type.Object(
+  {
+    id: Type.String({minLength: 1}),
+    condition: ConditionSchema,
+    minCount: Type.Number({minimum: 1}),
+    maxCount: Type.Number({minimum: 1}),
+  },
+  strict,
+);
+
 /** TransferGroup validation */
 export const TransferGroupSchema = Type.Object(
   {
     id: Type.String({minLength: 1}),
     name: Type.String({minLength: 1}),
-    condition: ConditionSchema,
-    minParticipants: Type.Number({minimum: 1}),
-    maxParticipants: Type.Number({minimum: 1}),
+    composition: Type.Array(GroupCompositionSchema, {minItems: 1}),
     targetCohortAlias: Type.Optional(Type.String({minLength: 1})),
   },
   strict,
