@@ -63,6 +63,7 @@ export const CohortParticipantConfigSchema = Type.Object(
       Type.Number({minimum: 1}),
     ]),
     includeAllParticipantsInCohortCount: Type.Boolean(),
+    botProtection: Type.Boolean(),
   },
   {$id: 'CohortParticipantConfig'},
 );

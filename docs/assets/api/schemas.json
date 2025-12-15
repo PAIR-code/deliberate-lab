@@ -984,12 +984,16 @@
         },
         "includeAllParticipantsInCohortCount": {
           "type": "boolean"
+        },
+        "botProtection": {
+          "type": "boolean"
         }
       },
       "required": [
         "minParticipantsPerCohort",
         "maxParticipantsPerCohort",
-        "includeAllParticipantsInCohortCount"
+        "includeAllParticipantsInCohortCount",
+        "botProtection"
       ]
     },
     "StaticVariableConfig": {
