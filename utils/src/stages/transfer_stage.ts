@@ -58,16 +58,30 @@ export interface SurveyAutoTransferConfig extends BaseAutoTransferConfig {
 }
 
 /**
- * A transfer group defines a set of participants matched by a condition.
- * Participants are evaluated against groups in order and assigned to the
- * first matching group.
+ * A group composition entry defines criteria for selecting participants.
+ * Multiple entries can be combined in a TransferGroup to form
+ * mixed-composition cohorts (e.g., 2 pro-AI + 3 skeptic participants).
+ */
+export interface GroupComposition {
+  id: string;
+  condition: Condition; // Condition that must be met
+  minCount: number; // Minimum participants needed with this condition
+  maxCount: number; // Maximum participants to take with this condition
+}
+
+/**
+ * A transfer group defines how to compose cohorts from participants.
+ * Supports both single-condition groups and mixed-composition groups.
+ *
+ * Single-entry: One composition entry, all matching participants go together
+ * Mixed-composition: Multiple composition entries, cohort needs participants from each
+ *
+ * A cohort is formed when ALL composition entries have met their minCount.
  */
 export interface TransferGroup {
   id: string;
-  name: string; // Human-readable name for the group (e.g., "Pro-Agent Cohort")
-  condition: Condition; // Condition that must be met to join this group
-  minParticipants: number; // Minimum participants needed before transfer
-  maxParticipants: number; // Maximum participants per cohort
+  name: string; // Human-readable name for the group (e.g., "Diverse Discussion Group")
+  composition: GroupComposition[]; // Composition entries, cohort forms when all are satisfied
   // If set, route to existing cohort instead of creating a new one
   targetCohortAlias?: string;
 }
@@ -77,9 +91,9 @@ export interface TransferGroup {
  * Uses the Condition system for flexible routing based on any survey question type
  * (scale, multiple choice, text, etc.) with rich comparison operators.
  *
- * Participants are evaluated against transfer groups in order and assigned to
- * the first group whose condition matches. When a group reaches its minParticipants,
- * those participants are transferred to a new cohort.
+ * Participants are evaluated against transfer groups in order and categorized
+ * by the first composition entry they match. When all composition entries in a
+ * group reach their minCount, those participants are transferred to a new cohort.
  */
 export interface ConditionAutoTransferConfig extends BaseAutoTransferConfig {
   type: AutoTransferType.CONDITION;
@@ -124,16 +138,35 @@ export function createSurveyAutoTransferConfig(
   };
 }
 
+/** Create a group composition entry for transfer groups. */
+export function createGroupComposition(
+  config: Partial<GroupComposition> & {condition: Condition},
+): GroupComposition {
+  const minCount = config.minCount ?? 1;
+  const maxCount = config.maxCount ?? 1;
+
+  if (minCount > maxCount) {
+    throw new Error(
+      `Invalid GroupComposition: minCount (${minCount}) cannot be greater than maxCount (${maxCount})`,
+    );
+  }
+
+  return {
+    id: config.id ?? generateId(),
+    condition: config.condition,
+    minCount,
+    maxCount,
+  };
+}
+
 /** Create a transfer group for condition-based transfers. */
 export function createTransferGroup(
-  config: Partial<TransferGroup> & {condition: Condition},
+  config: Partial<TransferGroup> & {composition: GroupComposition[]},
 ): TransferGroup {
   return {
     id: config.id ?? generateId(),
     name: config.name ?? 'Transfer Group',
-    condition: config.condition,
-    minParticipants: config.minParticipants ?? 1,
-    maxParticipants: config.maxParticipants ?? 1,
+    composition: config.composition,
     targetCohortAlias: config.targetCohortAlias,
   };
 }

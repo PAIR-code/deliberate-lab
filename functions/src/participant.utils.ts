@@ -467,6 +467,9 @@ async function handleSurveyAutoTransfer(
  * Handle CONDITION type auto-transfer.
  * Uses the Condition system for flexible routing based on any survey question type.
  *
+ * Supports mixed-composition cohorts: each TransferGroup can have multiple composition entries,
+ * and a cohort is formed when ALL composition entries in the group have met their minCount.
+ *
  * For direct transfers (targetCohortAlias set), returns transfer instructions
  * to be executed after the transaction commits (sequential pattern).
  * For TRANSFER_PENDING (new cohort), sets status and returns response.
@@ -521,10 +524,11 @@ async function handleConditionAutoTransfer(
       .join(', ')}`,
   );
 
-  // Extract all stage IDs we need survey data from
-  const dependencies = extractMultipleConditionDependencies(
-    autoTransferConfig.transferGroups.map((g) => g.condition),
+  // Extract all stage IDs we need survey data from (from all conditions in all composition entries)
+  const allConditions = autoTransferConfig.transferGroups.flatMap((g) =>
+    g.composition.map((entry) => entry.condition),
   );
+  const dependencies = extractMultipleConditionDependencies(allConditions);
   const stageIds = [...new Set(dependencies.map((d) => d.stageId))];
 
   // Fetch survey data for all referenced stages
@@ -547,104 +551,149 @@ async function handleConditionAutoTransfer(
     }
   }
 
-  // Build target values for each participant and evaluate conditions
-  const participantGroups: Record<string, ParticipantProfileExtended[]> = {};
-
-  for (const connectedParticipant of connectedParticipants) {
-    const targetValues = buildTargetValuesForParticipant(
-      connectedParticipant,
-      surveyDataMap,
+  // Build target values for each participant
+  const participantTargetValues = new Map<string, Record<string, unknown>>();
+  for (const p of connectedParticipants) {
+    participantTargetValues.set(
+      p.privateId,
+      buildTargetValuesForParticipant(p, surveyDataMap),
     );
+  }
 
-    // Find first matching group (evaluated in order)
+  // For each TransferGroup, categorize participants by which composition entry they satisfy
+  // Structure: { groupId: { compositionEntryId: [participants] } }
+  type GroupBuckets = Record<string, ParticipantProfileExtended[]>;
+  const groupCompositionBuckets: Record<string, GroupBuckets> = {};
+
+  for (const group of autoTransferConfig.transferGroups) {
+    groupCompositionBuckets[group.id] = {};
+    for (const entry of group.composition) {
+      groupCompositionBuckets[group.id][entry.id] = [];
+    }
+  }
+
+  // Categorize each participant into buckets
+  // A participant goes into the first composition entry they satisfy within each group
+  for (const p of connectedParticipants) {
+    const targetValues = participantTargetValues.get(p.privateId) || {};
+
     for (const group of autoTransferConfig.transferGroups) {
-      if (evaluateCondition(group.condition, targetValues)) {
-        if (!participantGroups[group.id]) {
-          participantGroups[group.id] = [];
+      // Find first matching composition entry in this group
+      for (const entry of group.composition) {
+        if (evaluateCondition(entry.condition, targetValues)) {
+          groupCompositionBuckets[group.id][entry.id].push(p);
+          console.log(
+            `[CONDITION] Participant ${p.publicId} matched composition "${entry.id}" in group "${group.name}"`,
+          );
+          break; // Only match one composition entry per group per participant
         }
-        participantGroups[group.id].push(connectedParticipant);
-        console.log(
-          `[CONDITION] Participant ${connectedParticipant.publicId} matched group "${group.name}"`,
-        );
-        break; // Stop at first matching group
       }
     }
   }
 
-  // Find the group the current participant belongs to
-  let currentParticipantGroup: TransferGroup | null = null;
+  // Find a group that can form a complete cohort (all composition entries have minCount)
+  // and includes the current participant
+  let readyGroup: TransferGroup | null = null;
+  let readyGroupBuckets: GroupBuckets | null = null;
+
   for (const group of autoTransferConfig.transferGroups) {
-    const groupParticipants = participantGroups[group.id] || [];
-    if (groupParticipants.some((p) => p.privateId === participant.privateId)) {
-      currentParticipantGroup = group;
+    const buckets = groupCompositionBuckets[group.id];
+
+    // Check if current participant is in any bucket for this group
+    const currentParticipantComposition = group.composition.find((entry) =>
+      buckets[entry.id].some((p) => p.privateId === participant.privateId),
+    );
+
+    if (!currentParticipantComposition) {
+      continue; // Current participant not in this group
+    }
+
+    // Check if ALL composition entries have enough participants
+    const allConditionsMet = group.composition.every(
+      (entry) => buckets[entry.id].length >= entry.minCount,
+    );
+
+    if (allConditionsMet) {
+      readyGroup = group;
+      readyGroupBuckets = buckets;
+      console.log(
+        `[CONDITION] Group "${group.name}" is ready to form a cohort`,
+      );
       break;
+    } else {
+      // Log which composition entries are not yet met
+      for (const entry of group.composition) {
+        if (buckets[entry.id].length < entry.minCount) {
+          console.log(
+            `[CONDITION] Group "${group.name}" waiting: composition "${entry.id}" has ${buckets[entry.id].length}/${entry.minCount} participants`,
+          );
+        }
+      }
     }
   }
 
-  if (!currentParticipantGroup) {
+  if (!readyGroup || !readyGroupBuckets) {
     console.log(
-      `[CONDITION] Current participant ${participant.publicId} did not match any transfer group`,
+      `[CONDITION] No group ready to form cohort with current participant ${participant.publicId}`,
     );
     return emptyResult;
   }
 
-  // Check if we have enough participants in the current participant's group
-  let groupParticipants = participantGroups[currentParticipantGroup.id] || [];
+  // Build cohort participants from each composition entry bucket
+  const cohortParticipants: ParticipantProfileExtended[] = [];
 
-  if (groupParticipants.length < currentParticipantGroup.minParticipants) {
+  for (const entry of readyGroup.composition) {
+    let bucketParticipants = readyGroupBuckets[entry.id];
+
+    // Sort by waiting time (oldest first)
+    bucketParticipants = bucketParticipants.sort((a, b) => {
+      const aTime =
+        a.timestamps.readyStages?.[stageConfig.id]?.toMillis?.() ?? 0;
+      const bTime =
+        b.timestamps.readyStages?.[stageConfig.id]?.toMillis?.() ?? 0;
+      return aTime - bTime;
+    });
+
+    // Move the current participant to the front if present in this bucket
+    bucketParticipants = bucketParticipants
+      .filter((p) => p.privateId === participant.privateId)
+      .concat(
+        bucketParticipants.filter((p) => p.privateId !== participant.privateId),
+      );
+
+    // Take up to maxCount from this bucket
+    const selected = bucketParticipants.slice(0, entry.maxCount);
+    cohortParticipants.push(...selected);
+
     console.log(
-      `[CONDITION] Not enough participants for group "${currentParticipantGroup.name}": ` +
-        `expected ${currentParticipantGroup.minParticipants}, found ${groupParticipants.length}`,
+      `[CONDITION] Selected ${selected.length} participants from composition "${entry.id}": ${selected.map((p) => p.publicId).join(', ')}`,
     );
-    return emptyResult;
   }
-
-  // Sort by waiting time (oldest first)
-  groupParticipants = groupParticipants.sort((a, b) => {
-    const aTime = a.timestamps.readyStages?.[stageConfig.id]?.toMillis?.() ?? 0;
-    const bTime = b.timestamps.readyStages?.[stageConfig.id]?.toMillis?.() ?? 0;
-    return aTime - bTime;
-  });
-
-  // Move the current participant to the front if present
-  groupParticipants = groupParticipants
-    .filter((p) => p.privateId === participant.privateId)
-    .concat(
-      groupParticipants.filter((p) => p.privateId !== participant.privateId),
-    );
-
-  // Limit to maxParticipants
-  const cohortParticipants = groupParticipants.slice(
-    0,
-    currentParticipantGroup.maxParticipants,
-  );
 
   // Check if routing to existing cohort or creating new one
-  if (currentParticipantGroup.targetCohortAlias) {
+  if (readyGroup.targetCohortAlias) {
     // Route to existing cohort - return instructions for sequential transfers
-    // (transfers will be executed after this transaction commits)
     const experiment = await getFirestoreExperiment(experimentId);
     if (!experiment) {
       throw new Error(`Experiment ${experimentId} not found`);
     }
 
     const definition = experiment.cohortDefinitions?.find(
-      (d) => d.alias === currentParticipantGroup.targetCohortAlias,
+      (d) => d.alias === readyGroup!.targetCohortAlias,
     );
     if (!definition?.generatedCohortId) {
       throw new Error(
-        `No cohort found for alias "${currentParticipantGroup.targetCohortAlias}"`,
+        `No cohort found for alias "${readyGroup.targetCohortAlias}"`,
       );
     }
     const targetCohortId = definition.generatedCohortId;
 
     console.log(
-      `[CONDITION] Preparing direct transfer to cohort ${targetCohortId} (alias: ${currentParticipantGroup.targetCohortAlias}) ` +
-        `for group "${currentParticipantGroup.name}" ` +
+      `[CONDITION] Preparing direct transfer to cohort ${targetCohortId} (alias: ${readyGroup.targetCohortAlias}) ` +
+        `for group "${readyGroup.name}" ` +
         `with participants: ${cohortParticipants.map((p) => p.publicId).join(', ')}`,
     );
 
-    // Return instructions for sequential transfers (executed after transaction commits)
     return {
       response: {currentStageId: stageConfig.id, endExperiment: false},
       directTransferInstructions: {
@@ -655,7 +704,7 @@ async function handleConditionAutoTransfer(
       },
     };
   } else {
-    // Create a new cohort and transfer participants (existing TRANSFER_PENDING behavior)
+    // Create a new cohort and transfer participants (TRANSFER_PENDING behavior)
     const cohortConfig = createCohortConfig({
       id: generateId(),
       metadata: createMetadataConfig({
@@ -667,13 +716,13 @@ async function handleConditionAutoTransfer(
     });
 
     console.log(
-      `[CONDITION] Creating cohort ${cohortConfig.id} for group "${currentParticipantGroup.name}" ` +
+      `[CONDITION] Creating cohort ${cohortConfig.id} for group "${readyGroup.name}" ` +
         `with participants: ${cohortParticipants.map((p) => p.publicId).join(', ')}`,
     );
 
     await createCohortInternal(transaction, experimentId, cohortConfig);
 
-    // Set TRANSFER_PENDING for all participants (frontend calls acceptParticipantTransfer)
+    // Set TRANSFER_PENDING for all participants
     for (const p of cohortParticipants) {
       const participantDoc = firestore
         .collection('experiments')

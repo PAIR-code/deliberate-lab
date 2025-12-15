@@ -13,12 +13,21 @@ import {
 } from '@firebase/rules-unit-testing';
 import {
   CohortConfig,
-  createStaticVariableConfig,
+  ComparisonOperator,
   createCohortConfig,
+  createCohortParticipantConfig,
+  createConditionAutoTransferConfig,
+  createGroupComposition,
   createMetadataConfig,
   createParticipantProfileExtended,
+  createStaticVariableConfig,
+  createSurveyStagePublicData,
+  createTransferGroup,
+  createTransferStage,
   ParticipantProfileExtended,
   ParticipantStatus,
+  SurveyQuestionKind,
+  TransferStageConfig,
   VariableScope,
   VariableType,
   generateId,
@@ -27,6 +36,7 @@ import {createCohortInternal, findCohortByAlias} from './cohort.utils';
 import {
   executeDirectTransfers,
   DirectTransferInstructions,
+  handleAutomaticTransfer,
 } from './participant.utils';
 
 const firestore = app.firestore();
@@ -43,7 +53,10 @@ function serializeForFirestore<T>(data: T): T {
  */
 async function createTestExperiment(
   experimentId: string,
-  variableConfigs: ReturnType<typeof createStaticVariableConfig>[] = [],
+  config: {
+    variableConfigs?: ReturnType<typeof createStaticVariableConfig>[];
+    stageIds?: string[];
+  } = {},
 ): Promise<void> {
   await firestore
     .collection('experiments')
@@ -51,8 +64,8 @@ async function createTestExperiment(
     .set({
       id: experimentId,
       metadata: {name: 'Test Experiment'},
-      variableConfigs: serializeForFirestore(variableConfigs),
-      stageIds: [],
+      variableConfigs: serializeForFirestore(config.variableConfigs ?? []),
+      stageIds: config.stageIds ?? [],
       defaultCohortConfig: {},
     });
 }
@@ -87,15 +100,26 @@ async function createTestParticipant(
   experimentId: string,
   participantId: string,
   cohortId: string,
-  stageId: string = '',
+  config: {
+    stageId?: string;
+    publicId?: string;
+    connected?: boolean;
+  } = {},
 ): Promise<ParticipantProfileExtended> {
   const participant = createParticipantProfileExtended({
     privateId: participantId,
-    publicId: `pub-${participantId}`,
+    publicId: config.publicId ?? `pub-${participantId}`,
     currentCohortId: cohortId,
-    currentStageId: stageId,
+    currentStageId: config.stageId ?? '',
     currentStatus: ParticipantStatus.IN_PROGRESS,
   });
+  // Set connected explicitly to simulate presence system state.
+  // In prod, createParticipantProfileExtended creates humans as disconnected,
+  // then the presence trigger updates connected=true when browser connects.
+  // By the time someone reaches a transfer stage, they'd be connected.
+  if (config.connected !== undefined) {
+    participant.connected = config.connected;
+  }
 
   await firestore
     .collection(`experiments/${experimentId}/participants`)
@@ -103,6 +127,63 @@ async function createTestParticipant(
     .set(participant);
 
   return participant;
+}
+
+/**
+ * Helper to create a transfer stage config in Firestore.
+ */
+async function createTestTransferStage(
+  experimentId: string,
+  stageConfig: TransferStageConfig,
+): Promise<void> {
+  await firestore
+    .collection(`experiments/${experimentId}/stages`)
+    .doc(stageConfig.id)
+    .set(serializeForFirestore(stageConfig));
+}
+
+/**
+ * Helper to set up survey public data with participant answers.
+ */
+async function createTestSurveyData(
+  experimentId: string,
+  cohortId: string,
+  surveyStageId: string,
+  participantAnswers: Record<
+    string,
+    Record<
+      string,
+      {kind: SurveyQuestionKind; value?: number; choiceId?: string}
+    >
+  >,
+): Promise<void> {
+  const surveyData = createSurveyStagePublicData(surveyStageId);
+
+  for (const [publicId, answers] of Object.entries(participantAnswers)) {
+    surveyData.participantAnswerMap[publicId] = {};
+    for (const [questionId, answer] of Object.entries(answers)) {
+      if (answer.kind === SurveyQuestionKind.SCALE) {
+        surveyData.participantAnswerMap[publicId][questionId] = {
+          id: questionId,
+          kind: SurveyQuestionKind.SCALE,
+          value: answer.value!,
+        };
+      } else if (answer.kind === SurveyQuestionKind.MULTIPLE_CHOICE) {
+        surveyData.participantAnswerMap[publicId][questionId] = {
+          id: questionId,
+          kind: SurveyQuestionKind.MULTIPLE_CHOICE,
+          choiceId: answer.choiceId!,
+        };
+      }
+    }
+  }
+
+  await firestore
+    .collection(
+      `experiments/${experimentId}/cohorts/${cohortId}/publicStageData`,
+    )
+    .doc(surveyStageId)
+    .set(surveyData);
 }
 
 describe('Cohort Definitions Integration Tests', () => {
@@ -145,7 +226,7 @@ describe('Cohort Definitions Integration Tests', () => {
         }),
       ];
 
-      await createTestExperiment(experimentId, variableConfigs);
+      await createTestExperiment(experimentId, {variableConfigs});
 
       const cohortConfig = createTestCohortConfig(
         cohortId,
@@ -191,7 +272,7 @@ describe('Cohort Definitions Integration Tests', () => {
         }),
       ];
 
-      await createTestExperiment(experimentId, variableConfigs);
+      await createTestExperiment(experimentId, {variableConfigs});
 
       const cohortConfig = createTestCohortConfig(
         cohortId,
@@ -233,7 +314,7 @@ describe('Cohort Definitions Integration Tests', () => {
         }),
       ];
 
-      await createTestExperiment(experimentId, variableConfigs);
+      await createTestExperiment(experimentId, {variableConfigs});
 
       // No alias - regular cohort
       const cohortConfig = createTestCohortConfig(cohortId, 'Regular Cohort');
@@ -332,7 +413,7 @@ describe('Cohort Definitions Integration Tests', () => {
         }),
       ];
 
-      await createTestExperiment(experimentId, variableConfigs);
+      await createTestExperiment(experimentId, {variableConfigs});
 
       // Create two cohorts with different aliases
       const enthusiastCohortId = generateId(true);
@@ -418,12 +499,9 @@ describe('Cohort Definitions Integration Tests', () => {
       });
 
       // Create participant in source cohort
-      await createTestParticipant(
-        experimentId,
-        participantId,
-        sourceCohortId,
-        'stage-1',
-      );
+      await createTestParticipant(experimentId, participantId, sourceCohortId, {
+        stageId: 'stage-1',
+      });
 
       // Execute direct transfer
       const instructions: DirectTransferInstructions = {
@@ -491,19 +569,19 @@ describe('Cohort Definitions Integration Tests', () => {
         experimentId,
         participant1Id,
         sourceCohortId,
-        'stage-1',
+        {stageId: 'stage-1'},
       );
       await createTestParticipant(
         experimentId,
         participant2Id,
         sourceCohortId,
-        'stage-1',
+        {stageId: 'stage-1'},
       );
       await createTestParticipant(
         experimentId,
         participant3Id,
         sourceCohortId,
-        'stage-1',
+        {stageId: 'stage-1'},
       );
 
       // Execute group transfer
@@ -604,13 +682,13 @@ describe('Cohort Definitions Integration Tests', () => {
         experimentId,
         participant1Id,
         sourceCohortId,
-        'stage-1',
+        {stageId: 'stage-1'},
       );
       await createTestParticipant(
         experimentId,
         participant2Id,
         sourceCohortId,
-        'stage-1',
+        {stageId: 'stage-1'},
       );
 
       // Execute transfers
@@ -643,6 +721,505 @@ describe('Cohort Definitions Integration Tests', () => {
       // Both should have transfer timestamps (proves both transactions completed)
       expect(p1.timestamps.cohortTransfers[sourceCohortId]).toBeDefined();
       expect(p2.timestamps.cohortTransfers[sourceCohortId]).toBeDefined();
+    });
+  });
+
+  describe('Condition Auto-Transfer', () => {
+    /**
+     * Helper to create a cohort (used by condition tests).
+     */
+    async function createTestCohort(
+      experimentId: string,
+      cohortId: string,
+      name: string,
+    ): Promise<void> {
+      const cohortConfig = createTestCohortConfig(cohortId, name);
+      await firestore.runTransaction(async (transaction) => {
+        await createCohortInternal(transaction, experimentId, cohortConfig);
+      });
+    }
+
+    beforeEach(async () => {
+      await testEnv.clearFirestore();
+    });
+
+    describe('Single composition entry (simple grouping)', () => {
+      it('should wait until minCount is met before forming cohort', async () => {
+        const experimentId = generateId();
+        const cohortId = generateId(true);
+        const surveyStageId = 'survey-stage';
+        const transferStageId = 'transfer-stage';
+
+        // Create experiment
+        await createTestExperiment(experimentId, {
+          stageIds: [surveyStageId, transferStageId],
+        });
+        await createTestCohort(experimentId, cohortId, 'Source Cohort');
+
+        // Create transfer stage with single composition entry requiring 3 participants
+        const transferStage = createTransferStage({
+          id: transferStageId,
+          autoTransferConfig: createConditionAutoTransferConfig({
+            autoCohortParticipantConfig: createCohortParticipantConfig(),
+            transferGroups: [
+              createTransferGroup({
+                name: 'High Scorers',
+                composition: [
+                  createGroupComposition({
+                    id: 'high-score',
+                    condition: {
+                      id: 'cond-1',
+                      type: 'comparison',
+                      target: {stageId: surveyStageId, questionId: 'q1'},
+                      operator: ComparisonOperator.GREATER_THAN_OR_EQUAL,
+                      value: 7,
+                    },
+                    minCount: 3,
+                    maxCount: 5,
+                  }),
+                ],
+              }),
+            ],
+          }),
+        });
+        await createTestTransferStage(experimentId, transferStage);
+
+        // Create 2 participants with high scores (not enough yet)
+        const p1 = await createTestParticipant(experimentId, 'p1', cohortId, {
+          stageId: transferStageId,
+          publicId: 'pub-p1',
+          connected: true,
+        });
+        await createTestParticipant(experimentId, 'p2', cohortId, {
+          stageId: transferStageId,
+          publicId: 'pub-p2',
+          connected: true,
+        });
+
+        // Set up survey answers
+        await createTestSurveyData(experimentId, cohortId, surveyStageId, {
+          'pub-p1': {q1: {kind: SurveyQuestionKind.SCALE, value: 8}},
+          'pub-p2': {q1: {kind: SurveyQuestionKind.SCALE, value: 9}},
+        });
+
+        // Try to transfer with only 2 participants - should wait
+        const result1 = await firestore.runTransaction(async (transaction) => {
+          return handleAutomaticTransfer(
+            transaction,
+            experimentId,
+            transferStage,
+            p1,
+          );
+        });
+
+        expect(result1.response).toBeNull();
+        expect(result1.directTransferInstructions).toBeNull();
+
+        // Add third participant
+        const p3 = await createTestParticipant(experimentId, 'p3', cohortId, {
+          stageId: transferStageId,
+          publicId: 'pub-p3',
+          connected: true,
+        });
+        await createTestSurveyData(experimentId, cohortId, surveyStageId, {
+          'pub-p1': {q1: {kind: SurveyQuestionKind.SCALE, value: 8}},
+          'pub-p2': {q1: {kind: SurveyQuestionKind.SCALE, value: 9}},
+          'pub-p3': {q1: {kind: SurveyQuestionKind.SCALE, value: 7}},
+        });
+
+        // Now should form cohort (TRANSFER_PENDING since no targetCohortAlias)
+        const result2 = await firestore.runTransaction(async (transaction) => {
+          return handleAutomaticTransfer(
+            transaction,
+            experimentId,
+            transferStage,
+            p3,
+          );
+        });
+
+        expect(result2.response).not.toBeNull();
+        expect(result2.response?.currentStageId).toBe(transferStageId);
+      });
+    });
+
+    describe('Multiple composition entries (mixed-composition)', () => {
+      it('should wait until ALL composition entries meet minCount', async () => {
+        const experimentId = generateId();
+        const cohortId = generateId(true);
+        const surveyStageId = 'survey-stage';
+        const transferStageId = 'transfer-stage';
+
+        await createTestExperiment(experimentId, {
+          stageIds: [surveyStageId, transferStageId],
+        });
+        await createTestCohort(experimentId, cohortId, 'Source Cohort');
+
+        // Create transfer stage requiring 2 high scorers AND 2 low scorers
+        const transferStage = createTransferStage({
+          id: transferStageId,
+          autoTransferConfig: createConditionAutoTransferConfig({
+            autoCohortParticipantConfig: createCohortParticipantConfig(),
+            transferGroups: [
+              createTransferGroup({
+                name: 'Mixed Group',
+                composition: [
+                  createGroupComposition({
+                    id: 'high-score',
+                    condition: {
+                      id: 'cond-high',
+                      type: 'comparison',
+                      target: {stageId: surveyStageId, questionId: 'q1'},
+                      operator: ComparisonOperator.GREATER_THAN_OR_EQUAL,
+                      value: 7,
+                    },
+                    minCount: 2,
+                    maxCount: 2,
+                  }),
+                  createGroupComposition({
+                    id: 'low-score',
+                    condition: {
+                      id: 'cond-low',
+                      type: 'comparison',
+                      target: {stageId: surveyStageId, questionId: 'q1'},
+                      operator: ComparisonOperator.LESS_THAN,
+                      value: 5,
+                    },
+                    minCount: 2,
+                    maxCount: 2,
+                  }),
+                ],
+              }),
+            ],
+          }),
+        });
+        await createTestTransferStage(experimentId, transferStage);
+
+        // Create 2 high scorers but only 1 low scorer
+        const p1 = await createTestParticipant(experimentId, 'p1', cohortId, {
+          stageId: transferStageId,
+          publicId: 'pub-p1',
+          connected: true,
+        });
+        await createTestParticipant(experimentId, 'p2', cohortId, {
+          stageId: transferStageId,
+          publicId: 'pub-p2',
+          connected: true,
+        });
+        await createTestParticipant(experimentId, 'p3', cohortId, {
+          stageId: transferStageId,
+          publicId: 'pub-p3',
+          connected: true,
+        });
+
+        await createTestSurveyData(experimentId, cohortId, surveyStageId, {
+          'pub-p1': {q1: {kind: SurveyQuestionKind.SCALE, value: 8}}, // high
+          'pub-p2': {q1: {kind: SurveyQuestionKind.SCALE, value: 9}}, // high
+          'pub-p3': {q1: {kind: SurveyQuestionKind.SCALE, value: 3}}, // low
+        });
+
+        // Should wait - have 2 high but only 1 low
+        const result1 = await firestore.runTransaction(async (transaction) => {
+          return handleAutomaticTransfer(
+            transaction,
+            experimentId,
+            transferStage,
+            p1,
+          );
+        });
+
+        expect(result1.response).toBeNull();
+
+        // Add second low scorer
+        const p4 = await createTestParticipant(experimentId, 'p4', cohortId, {
+          stageId: transferStageId,
+          publicId: 'pub-p4',
+          connected: true,
+        });
+        await createTestSurveyData(experimentId, cohortId, surveyStageId, {
+          'pub-p1': {q1: {kind: SurveyQuestionKind.SCALE, value: 8}},
+          'pub-p2': {q1: {kind: SurveyQuestionKind.SCALE, value: 9}},
+          'pub-p3': {q1: {kind: SurveyQuestionKind.SCALE, value: 3}},
+          'pub-p4': {q1: {kind: SurveyQuestionKind.SCALE, value: 2}}, // low
+        });
+
+        // Now should form cohort
+        const result2 = await firestore.runTransaction(async (transaction) => {
+          return handleAutomaticTransfer(
+            transaction,
+            experimentId,
+            transferStage,
+            p4,
+          );
+        });
+
+        expect(result2.response).not.toBeNull();
+      });
+
+      it('should respect maxCount when forming cohort', async () => {
+        const experimentId = generateId();
+        const cohortId = generateId(true);
+        const surveyStageId = 'survey-stage';
+        const transferStageId = 'transfer-stage';
+
+        await createTestExperiment(experimentId, {
+          stageIds: [surveyStageId, transferStageId],
+        });
+        await createTestCohort(experimentId, cohortId, 'Source Cohort');
+
+        // Create transfer stage: need 1-2 high, 1-2 low
+        const transferStage = createTransferStage({
+          id: transferStageId,
+          autoTransferConfig: createConditionAutoTransferConfig({
+            autoCohortParticipantConfig: createCohortParticipantConfig(),
+            transferGroups: [
+              createTransferGroup({
+                name: 'Limited Group',
+                composition: [
+                  createGroupComposition({
+                    id: 'high-score',
+                    condition: {
+                      id: 'cond-high',
+                      type: 'comparison',
+                      target: {stageId: surveyStageId, questionId: 'q1'},
+                      operator: ComparisonOperator.GREATER_THAN_OR_EQUAL,
+                      value: 7,
+                    },
+                    minCount: 1,
+                    maxCount: 2, // At most 2 high scorers
+                  }),
+                  createGroupComposition({
+                    id: 'low-score',
+                    condition: {
+                      id: 'cond-low',
+                      type: 'comparison',
+                      target: {stageId: surveyStageId, questionId: 'q1'},
+                      operator: ComparisonOperator.LESS_THAN,
+                      value: 5,
+                    },
+                    minCount: 1,
+                    maxCount: 2, // At most 2 low scorers
+                  }),
+                ],
+              }),
+            ],
+          }),
+        });
+        await createTestTransferStage(experimentId, transferStage);
+
+        // Create 4 high scorers and 3 low scorers (more than maxCount)
+        for (let i = 1; i <= 4; i++) {
+          await createTestParticipant(experimentId, `high-${i}`, cohortId, {
+            stageId: transferStageId,
+            publicId: `pub-high-${i}`,
+            connected: true,
+          });
+        }
+        for (let i = 1; i <= 3; i++) {
+          await createTestParticipant(experimentId, `low-${i}`, cohortId, {
+            stageId: transferStageId,
+            publicId: `pub-low-${i}`,
+            connected: true,
+          });
+        }
+
+        const answers: Record<
+          string,
+          Record<string, {kind: SurveyQuestionKind; value: number}>
+        > = {};
+        for (let i = 1; i <= 4; i++) {
+          answers[`pub-high-${i}`] = {
+            q1: {kind: SurveyQuestionKind.SCALE, value: 8 + i},
+          };
+        }
+        for (let i = 1; i <= 3; i++) {
+          answers[`pub-low-${i}`] = {
+            q1: {kind: SurveyQuestionKind.SCALE, value: i},
+          };
+        }
+        await createTestSurveyData(
+          experimentId,
+          cohortId,
+          surveyStageId,
+          answers,
+        );
+
+        // Trigger participant
+        const triggerParticipant = await createTestParticipant(
+          experimentId,
+          'trigger',
+          cohortId,
+          {stageId: transferStageId, publicId: 'pub-trigger', connected: true},
+        );
+        answers['pub-trigger'] = {
+          q1: {kind: SurveyQuestionKind.SCALE, value: 10},
+        };
+        await createTestSurveyData(
+          experimentId,
+          cohortId,
+          surveyStageId,
+          answers,
+        );
+
+        const result = await firestore.runTransaction(async (transaction) => {
+          return handleAutomaticTransfer(
+            transaction,
+            experimentId,
+            transferStage,
+            triggerParticipant,
+          );
+        });
+
+        // Should form cohort (TRANSFER_PENDING)
+        expect(result.response).not.toBeNull();
+
+        // Verify the number of participants marked for transfer
+        const pendingParticipants = await firestore
+          .collection(`experiments/${experimentId}/participants`)
+          .where('currentStatus', '==', ParticipantStatus.TRANSFER_PENDING)
+          .get();
+
+        // Should be maxCount from each: 2 high + 2 low = 4 total
+        expect(pendingParticipants.size).toBe(4);
+      });
+    });
+
+    describe('Participant not matching any condition', () => {
+      it('should not transfer participant who matches no conditions', async () => {
+        const experimentId = generateId();
+        const cohortId = generateId(true);
+        const surveyStageId = 'survey-stage';
+        const transferStageId = 'transfer-stage';
+
+        await createTestExperiment(experimentId, {
+          stageIds: [surveyStageId, transferStageId],
+        });
+        await createTestCohort(experimentId, cohortId, 'Source Cohort');
+
+        // Require high score (>= 7)
+        const transferStage = createTransferStage({
+          id: transferStageId,
+          autoTransferConfig: createConditionAutoTransferConfig({
+            autoCohortParticipantConfig: createCohortParticipantConfig(),
+            transferGroups: [
+              createTransferGroup({
+                name: 'High Scorers Only',
+                composition: [
+                  createGroupComposition({
+                    id: 'high-score',
+                    condition: {
+                      id: 'cond-1',
+                      type: 'comparison',
+                      target: {stageId: surveyStageId, questionId: 'q1'},
+                      operator: ComparisonOperator.GREATER_THAN_OR_EQUAL,
+                      value: 7,
+                    },
+                    minCount: 1,
+                    maxCount: 5,
+                  }),
+                ],
+              }),
+            ],
+          }),
+        });
+        await createTestTransferStage(experimentId, transferStage);
+
+        // Create participant with low score (doesn't match)
+        const p1 = await createTestParticipant(experimentId, 'p1', cohortId, {
+          stageId: transferStageId,
+          publicId: 'pub-p1',
+          connected: true,
+        });
+        await createTestSurveyData(experimentId, cohortId, surveyStageId, {
+          'pub-p1': {q1: {kind: SurveyQuestionKind.SCALE, value: 3}}, // Low score
+        });
+
+        const result = await firestore.runTransaction(async (transaction) => {
+          return handleAutomaticTransfer(
+            transaction,
+            experimentId,
+            transferStage,
+            p1,
+          );
+        });
+
+        // Should not transfer
+        expect(result.response).toBeNull();
+        expect(result.directTransferInstructions).toBeNull();
+      });
+    });
+
+    describe('Multiple choice conditions', () => {
+      it('should work with multiple choice survey answers', async () => {
+        const experimentId = generateId();
+        const cohortId = generateId(true);
+        const surveyStageId = 'survey-stage';
+        const transferStageId = 'transfer-stage';
+
+        await createTestExperiment(experimentId, {
+          stageIds: [surveyStageId, transferStageId],
+        });
+        await createTestCohort(experimentId, cohortId, 'Source Cohort');
+
+        // Require participants who answered "yes"
+        const transferStage = createTransferStage({
+          id: transferStageId,
+          autoTransferConfig: createConditionAutoTransferConfig({
+            autoCohortParticipantConfig: createCohortParticipantConfig(),
+            transferGroups: [
+              createTransferGroup({
+                name: 'Yes Responders',
+                composition: [
+                  createGroupComposition({
+                    id: 'yes-answer',
+                    condition: {
+                      id: 'cond-1',
+                      type: 'comparison',
+                      target: {stageId: surveyStageId, questionId: 'q1'},
+                      operator: ComparisonOperator.EQUALS,
+                      value: 'yes',
+                    },
+                    minCount: 2,
+                    maxCount: 3,
+                  }),
+                ],
+              }),
+            ],
+          }),
+        });
+        await createTestTransferStage(experimentId, transferStage);
+
+        // Create 2 participants who answered "yes"
+        const p1 = await createTestParticipant(experimentId, 'p1', cohortId, {
+          stageId: transferStageId,
+          publicId: 'pub-p1',
+          connected: true,
+        });
+        await createTestParticipant(experimentId, 'p2', cohortId, {
+          stageId: transferStageId,
+          publicId: 'pub-p2',
+          connected: true,
+        });
+
+        await createTestSurveyData(experimentId, cohortId, surveyStageId, {
+          'pub-p1': {
+            q1: {kind: SurveyQuestionKind.MULTIPLE_CHOICE, choiceId: 'yes'},
+          },
+          'pub-p2': {
+            q1: {kind: SurveyQuestionKind.MULTIPLE_CHOICE, choiceId: 'yes'},
+          },
+        });
+
+        const result = await firestore.runTransaction(async (transaction) => {
+          return handleAutomaticTransfer(
+            transaction,
+            experimentId,
+            transferStage,
+            p1,
+          );
+        });
+
+        expect(result.response).not.toBeNull();
+      });
     });
   });
 });
