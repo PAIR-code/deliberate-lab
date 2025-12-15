@@ -132,12 +132,13 @@ export const updateExperiment = onCall(async (request) => {
   if (!oldExperiment.exists) {
     return {success: false};
   }
-  // Verify that the experimenter is the creator
-  // TODO: Enable admins to update experiment?
-  if (
-    request.auth?.token.email?.toLowerCase() !==
-    oldExperiment.data()?.metadata.creator
-  ) {
+  // Verify that the experimenter is the creator or an admin
+  const canUpdate = await AuthGuard.isCreatorOrAdmin(
+    request,
+    oldExperiment.data()?.metadata.creator,
+  );
+
+  if (!canUpdate) {
     return {success: false};
   }
 
@@ -197,8 +198,6 @@ export const deleteExperiment = onCall(async (request) => {
     throw new HttpsError('invalid-argument', 'Invalid data');
   }
 
-  // Verify that experimenter is the creator before enabling delete
-  // TODO: Enable admins to delete?
   const experiment = (
     await app
       .firestore()
@@ -212,10 +211,16 @@ export const deleteExperiment = onCall(async (request) => {
       `Experiment ${data.experimentId} not found in collection ${data.collectionName}`,
     );
   }
-  if (request.auth?.token.email?.toLowerCase() !== experiment.metadata.creator)
-    return {success: false};
 
-  // Delete document
+  // Verify that experimenter is the creator or an admin before enabling delete
+  const canDelete = await AuthGuard.isCreatorOrAdmin(
+    request,
+    experiment.metadata.creator,
+  );
+
+  if (!canDelete) {
+    return {success: false};
+  }
   const doc = app
     .firestore()
     .doc(`${data.collectionName}/${data.experimentId}`);

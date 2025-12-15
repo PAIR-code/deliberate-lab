@@ -94,18 +94,12 @@ export const updateCohortMetadata = onCall(async (request) => {
 
     // Verify that the experimenter is the creator or an admin
     // before updating.
-    const allowlistRef = app
-      .firestore()
-      .collection('allowlist')
-      .doc(request.auth?.token.email?.toLowerCase() || '');
-    const allowlistDoc = await transaction.get(allowlistRef);
-    const isAdmin =
-      allowlistDoc.exists && allowlistDoc.data()?.isAdmin === true;
+    const canUpdate = await AuthGuard.isCreatorOrAdmin(
+      request,
+      cohortConfig.metadata.creator,
+    );
 
-    if (
-      cohortConfig.metadata.creator !== request.auth?.token.email &&
-      !isAdmin
-    ) {
+    if (!canUpdate) {
       success = false;
       return;
     }
@@ -139,7 +133,7 @@ export const deleteCohort = onCall(async (request) => {
     return {success: false};
   }
 
-  // Verify that experimenter is the creator before enabling delete
+  // Verify that experimenter is the creator or an admin before enabling delete
   const experiment = (
     await app.firestore().collection('experiments').doc(data.experimentId).get()
   ).data();
@@ -150,8 +144,13 @@ export const deleteCohort = onCall(async (request) => {
     );
   }
 
-  if (request.auth?.token.email?.toLowerCase() !== experiment.metadata.creator)
-    return;
+  const canDelete = await AuthGuard.isCreatorOrAdmin(
+    request,
+    experiment.metadata.creator,
+  );
+  if (!canDelete) {
+    return {success: false};
+  }
 
   // Delete document
   const doc = app

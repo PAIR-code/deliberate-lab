@@ -48,4 +48,20 @@ export class AuthGuard {
 
     throwUnauthIfNot(isAdmin);
   }
+
+  public static async isCreatorOrAdmin(
+    request: CallableRequest,
+    creatorEmail: string,
+  ) {
+    const email = request.auth?.token.email?.toLowerCase();
+    if (email === creatorEmail) return true;
+
+    const allowlistDoc = await app
+      .firestore()
+      .collection('allowlist')
+      .doc(email || '')
+      .get();
+
+    return allowlistDoc.exists && allowlistDoc.data()?.isAdmin === true;
+  }
 }
