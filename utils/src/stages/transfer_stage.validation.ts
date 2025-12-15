@@ -5,7 +5,7 @@ import {
   StageProgressConfigSchema,
   StageTextConfigSchema,
 } from './stage.validation';
-import {CohortParticipantConfigSchema} from '../experiment.validation';
+import {CohortParticipantConfigSchema} from '../shared.validation';
 import {ConditionSchema} from '../utils/condition.validation';
 
 /** Shorthand for strict TypeBox object validation */
@@ -20,10 +20,10 @@ export const DefaultAutoTransferConfigSchema = Type.Object(
   {
     type: Type.Literal(AutoTransferType.DEFAULT),
     autoCohortParticipantConfig: CohortParticipantConfigSchema,
-    minParticipants: Type.Number({minimum: 1}),
-    maxParticipants: Type.Number({minimum: 1}),
+    minParticipants: Type.Integer({minimum: 1}),
+    maxParticipants: Type.Integer({minimum: 1}),
   },
-  strict,
+  {...strict, $id: 'DefaultAutoTransferConfig'},
 );
 
 /** SurveyAutoTransferConfig validation */
@@ -33,9 +33,9 @@ export const SurveyAutoTransferConfigSchema = Type.Object(
     autoCohortParticipantConfig: CohortParticipantConfigSchema,
     surveyStageId: Type.String({minLength: 1}),
     surveyQuestionId: Type.String({minLength: 1}),
-    participantCounts: Type.Record(Type.String(), Type.Number({minimum: 1})),
+    participantCounts: Type.Record(Type.String(), Type.Integer({minimum: 1})),
   },
-  strict,
+  {...strict, $id: 'SurveyAutoTransferConfig'},
 );
 
 /** GroupComposition validation */
@@ -43,10 +43,10 @@ export const GroupCompositionSchema = Type.Object(
   {
     id: Type.String({minLength: 1}),
     condition: ConditionSchema,
-    minCount: Type.Number({minimum: 1}),
-    maxCount: Type.Number({minimum: 1}),
+    minCount: Type.Integer({minimum: 1}),
+    maxCount: Type.Integer({minimum: 1}),
   },
-  strict,
+  {...strict, $id: 'GroupComposition'},
 );
 
 /** TransferGroup validation */
@@ -57,7 +57,7 @@ export const TransferGroupSchema = Type.Object(
     composition: Type.Array(GroupCompositionSchema, {minItems: 1}),
     targetCohortAlias: Type.Optional(Type.String({minLength: 1})),
   },
-  strict,
+  {...strict, $id: 'TransferGroup'},
 );
 
 /** ConditionAutoTransferConfig validation */
@@ -67,7 +67,7 @@ export const ConditionAutoTransferConfigSchema = Type.Object(
     autoCohortParticipantConfig: CohortParticipantConfigSchema,
     transferGroups: Type.Array(TransferGroupSchema, {minItems: 1}),
   },
-  strict,
+  {...strict, $id: 'ConditionAutoTransferConfig'},
 );
 
 /** Union of all AutoTransferConfig types */
@@ -93,5 +93,5 @@ export const TransferStageConfigData = Type.Object(
     timeoutSeconds: Type.Number(),
     autoTransferConfig: Type.Union([AutoTransferConfigSchema, Type.Null()]),
   },
-  strict,
+  {...strict, $id: 'TransferStageConfig'},
 );

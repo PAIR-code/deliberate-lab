@@ -27,3 +27,20 @@ export const PermissionsConfigSchema = Type.Object({
   ]),
   readers: Type.Array(Type.String()),
 });
+
+/** CohortParticipantConfig input validation. */
+export const CohortParticipantConfigSchema = Type.Object(
+  {
+    minParticipantsPerCohort: Type.Union([
+      Type.Null(),
+      Type.Integer({minimum: 0}),
+    ]),
+    maxParticipantsPerCohort: Type.Union([
+      Type.Null(),
+      Type.Integer({minimum: 1}),
+    ]),
+    includeAllParticipantsInCohortCount: Type.Boolean(),
+    botProtection: Type.Boolean(),
+  },
+  {$id: 'CohortParticipantConfig'},
+);
