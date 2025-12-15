@@ -1178,6 +1178,95 @@
         }
       }
     },
+    "TransferStageConfig": {
+      "additionalProperties": false,
+      "title": "TransferStageConfig",
+      "type": "object",
+      "required": [
+        "id",
+        "kind",
+        "name",
+        "descriptions",
+        "progress",
+        "enableTimeout",
+        "timeoutSeconds",
+        "autoTransferConfig"
+      ],
+      "properties": {
+        "id": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "kind": {
+          "const": "transfer",
+          "type": "string"
+        },
+        "name": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "descriptions": {
+          "$ref": "#/$defs/StageTextConfig"
+        },
+        "progress": {
+          "$ref": "#/$defs/StageProgressConfig"
+        },
+        "enableTimeout": {
+          "type": "boolean"
+        },
+        "timeoutSeconds": {
+          "type": "number"
+        },
+        "autoTransferConfig": {
+          "anyOf": [
+            {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/DefaultAutoTransferConfig"
+                },
+                {
+                  "$ref": "#/$defs/SurveyAutoTransferConfig"
+                },
+                {
+                  "$ref": "#/$defs/ConditionAutoTransferConfig"
+                }
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "DefaultAutoTransferConfig": {
+      "additionalProperties": false,
+      "title": "DefaultAutoTransferConfig",
+      "type": "object",
+      "required": [
+        "type",
+        "autoCohortParticipantConfig",
+        "minParticipants",
+        "maxParticipants"
+      ],
+      "properties": {
+        "type": {
+          "const": "default",
+          "type": "string"
+        },
+        "autoCohortParticipantConfig": {
+          "$ref": "#/$defs/CohortParticipantConfig"
+        },
+        "minParticipants": {
+          "minimum": 1,
+          "type": "number"
+        },
+        "maxParticipants": {
+          "minimum": 1,
+          "type": "number"
+        }
+      }
+    },
     "CohortParticipantConfig": {
       "title": "CohortParticipantConfig",
       "type": "object",
@@ -1218,6 +1307,125 @@
         }
       }
     },
+    "SurveyAutoTransferConfig": {
+      "additionalProperties": false,
+      "title": "SurveyAutoTransferConfig",
+      "type": "object",
+      "required": [
+        "type",
+        "autoCohortParticipantConfig",
+        "surveyStageId",
+        "surveyQuestionId",
+        "participantCounts"
+      ],
+      "properties": {
+        "type": {
+          "const": "survey",
+          "type": "string"
+        },
+        "autoCohortParticipantConfig": {
+          "$ref": "#/$defs/CohortParticipantConfig"
+        },
+        "surveyStageId": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "surveyQuestionId": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "participantCounts": {
+          "type": "object",
+          "patternProperties": {
+            "^(.*)$": {
+              "minimum": 1,
+              "type": "number"
+            }
+          },
+          "title": "ParticipantCounts"
+        }
+      }
+    },
+    "ConditionAutoTransferConfig": {
+      "additionalProperties": false,
+      "title": "ConditionAutoTransferConfig",
+      "type": "object",
+      "required": ["type", "autoCohortParticipantConfig", "transferGroups"],
+      "properties": {
+        "type": {
+          "const": "condition",
+          "type": "string"
+        },
+        "autoCohortParticipantConfig": {
+          "$ref": "#/$defs/CohortParticipantConfig"
+        },
+        "transferGroups": {
+          "minItems": 1,
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/TransferGroup"
+          }
+        }
+      }
+    },
+    "TransferGroup": {
+      "additionalProperties": false,
+      "title": "TransferGroup",
+      "type": "object",
+      "required": ["id", "name", "composition"],
+      "properties": {
+        "id": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "name": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "composition": {
+          "minItems": 1,
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/GroupComposition"
+          }
+        },
+        "targetCohortAlias": {
+          "minLength": 1,
+          "type": "string"
+        }
+      }
+    },
+    "GroupComposition": {
+      "additionalProperties": false,
+      "title": "GroupComposition",
+      "type": "object",
+      "required": ["id", "condition", "minCount", "maxCount"],
+      "properties": {
+        "id": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "condition": {
+          "title": "Condition",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ComparisonCondition"
+            },
+            {
+              "$ref": "#/$defs/ConditionGroup"
+            }
+          ]
+        },
+        "minCount": {
+          "minimum": 1,
+          "type": "number"
+        },
+        "maxCount": {
+          "minimum": 1,
+          "type": "number"
+        }
+      }
+    },
     "StaticVariableConfig": {
       "title": "StaticVariableConfig",
       "type": "object",
@@ -1253,6 +1461,15 @@
         },
         "value": {
           "type": "string"
+        },
+        "cohortValues": {
+          "type": "object",
+          "patternProperties": {
+            "^(.*)$": {
+              "type": "string"
+            }
+          },
+          "title": "CohortValues"
         }
       }
     },
@@ -2260,46 +2477,6 @@
         }
       },
       "title": "TosStageConfig"
-    },
-    "TransferStageConfig": {
-      "additionalProperties": false,
-      "type": "object",
-      "required": [
-        "id",
-        "kind",
-        "name",
-        "descriptions",
-        "progress",
-        "enableTimeout",
-        "timeoutSeconds"
-      ],
-      "properties": {
-        "id": {
-          "minLength": 1,
-          "type": "string"
-        },
-        "kind": {
-          "const": "transfer",
-          "type": "string"
-        },
-        "name": {
-          "minLength": 1,
-          "type": "string"
-        },
-        "descriptions": {
-          "$ref": "#/$defs/StageTextConfig"
-        },
-        "progress": {
-          "$ref": "#/$defs/StageProgressConfig"
-        },
-        "enableTimeout": {
-          "type": "boolean"
-        },
-        "timeoutSeconds": {
-          "type": "number"
-        }
-      },
-      "title": "TransferStageConfig"
     }
   },
   "type": "object",
@@ -2537,6 +2714,35 @@
                     }
                   },
                   "title": "VariableMap"
+                },
+                "cohortDefinitions": {
+                  "type": "array",
+                  "items": {
+                    "additionalProperties": false,
+                    "type": "object",
+                    "required": ["id", "alias", "name"],
+                    "properties": {
+                      "id": {
+                        "minLength": 1,
+                        "type": "string"
+                      },
+                      "alias": {
+                        "minLength": 1,
+                        "type": "string"
+                      },
+                      "name": {
+                        "minLength": 1,
+                        "type": "string"
+                      },
+                      "description": {
+                        "type": "string"
+                      },
+                      "generatedCohortId": {
+                        "type": "string"
+                      }
+                    },
+                    "title": "CohortDefinition"
+                  }
                 }
               },
               "title": "Experiment"
@@ -2646,6 +2852,9 @@
           "required": ["id", "metadata", "participantConfig", "stageUnlockMap"],
           "properties": {
             "id": {
+              "type": "string"
+            },
+            "alias": {
               "type": "string"
             },
             "metadata": {
