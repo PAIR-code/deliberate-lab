@@ -682,8 +682,11 @@ async function handleConditionAutoTransfer(
       (d) => d.alias === readyGroup!.targetCohortAlias,
     );
     if (!definition?.generatedCohortId) {
+      const availableAliases =
+        experiment.cohortDefinitions?.map((d) => d.alias).join(', ') || 'none';
       throw new Error(
-        `No cohort found for alias "${readyGroup.targetCohortAlias}"`,
+        `No cohort found for alias "${readyGroup.targetCohortAlias}" in experiment ${experimentId}. ` +
+          `Available aliases: ${availableAliases}`,
       );
     }
     const targetCohortId = definition.generatedCohortId;
@@ -786,6 +789,14 @@ export async function executeDirectTransfers(
       if (!participant) {
         console.error(
           `[DIRECT_TRANSFER] Participant ${participantPrivateId} not found, skipping`,
+        );
+        return;
+      }
+
+      // Skip if participant is already in target cohort (e.g., concurrent transfer completed first)
+      if (participant.currentCohortId === instructions.targetCohortId) {
+        console.log(
+          `[DIRECT_TRANSFER] Participant ${participantPrivateId} already in target cohort, skipping`,
         );
         return;
       }
@@ -914,7 +925,7 @@ async function migrateParticipantStageData(
     switch (stage.kind) {
       case StageKind.SURVEY:
         const publicSurveyData = (
-          await publicDocument.get()
+          await transaction.get(publicDocument)
         ).data() as SurveyStagePublicData;
         if (publicSurveyData) {
           publicSurveyData.participantAnswerMap[publicId] = stage.answerMap;
@@ -923,7 +934,7 @@ async function migrateParticipantStageData(
         break;
       case StageKind.CHIP:
         const publicChipData = (
-          await publicDocument.get()
+          await transaction.get(publicDocument)
         ).data() as ChipStagePublicData;
         if (publicChipData) {
           publicChipData.participantChipMap[publicId] = stage.chipMap;
@@ -933,7 +944,7 @@ async function migrateParticipantStageData(
         break;
       case StageKind.ROLE:
         const publicRoleData = (
-          await publicDocument.get()
+          await transaction.get(publicDocument)
         ).data() as RoleStagePublicData;
         if (publicRoleData) {
           // TODO: Assign new role to participant (or move role over)
