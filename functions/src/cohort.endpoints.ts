@@ -92,9 +92,20 @@ export const updateCohortMetadata = onCall(async (request) => {
   await app.firestore().runTransaction(async (transaction) => {
     const cohortConfig = (await document.get()).data() as CohortConfig;
 
-    // Verify that the experimenter is the creator
+    // Verify that the experimenter is the creator or an admin
     // before updating.
-    if (cohortConfig.metadata.creator !== request.auth?.token.email) {
+    const allowlistRef = app
+      .firestore()
+      .collection('allowlist')
+      .doc(request.auth?.token.email?.toLowerCase() || '');
+    const allowlistDoc = await transaction.get(allowlistRef);
+    const isAdmin =
+      allowlistDoc.exists && allowlistDoc.data()?.isAdmin === true;
+
+    if (
+      cohortConfig.metadata.creator !== request.auth?.token.email &&
+      !isAdmin
+    ) {
       success = false;
       return;
     }
