@@ -223,7 +223,6 @@ export class SurveyEditor extends MobxLitElement {
     return renderConditionEditor({
       condition: question.condition,
       targets,
-      showAlphaFeatures: this.authService.showAlphaFeatures,
       canEdit: this.experimentEditor.canEditStages,
       onConditionChange,
     });

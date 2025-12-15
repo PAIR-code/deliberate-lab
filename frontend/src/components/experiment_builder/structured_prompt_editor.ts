@@ -8,7 +8,6 @@ import {CSSResultGroup, html, nothing, TemplateResult} from 'lit';
 import {customElement, property} from 'lit/decorators.js';
 
 import {core} from '../../core/core';
-import {AuthService} from '../../services/auth.service';
 import {ExperimentEditor} from '../../services/experiment.editor';
 import {renderConditionEditor} from '../../shared/condition_editor.utils';
 
@@ -36,7 +35,6 @@ import {styles} from './structured_prompt_editor.scss';
 export class EditorComponent extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
 
-  private readonly authService = core.getService(AuthService);
   private readonly experimentEditor = core.getService(ExperimentEditor);
 
   @property() prompt: PromptItem[] = [];
@@ -273,7 +271,6 @@ export class EditorComponent extends MobxLitElement {
     const conditionEditor = renderConditionEditor({
       condition: item.condition,
       targets: conditionTargets,
-      showAlphaFeatures: this.authService.showAlphaFeatures,
       canEdit: this.experimentEditor.canEditStages,
       onConditionChange,
     });
