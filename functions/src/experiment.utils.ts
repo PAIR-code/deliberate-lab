@@ -15,6 +15,7 @@ import {
 } from '@deliberation-lab/utils';
 import {getExperimentDownload} from './data';
 import {generateVariablesForScope} from './variables.utils';
+import {AuthGuard} from './utils/auth-guard';
 
 /**
  * Options for writing an experiment from a template
@@ -286,12 +287,16 @@ export async function updateExperimentFromTemplate(
     return {success: false, error: 'not-found'};
   }
 
-  // Verify that the experimenter is the creator
+  // Verify that the experimenter is the creator or an admin
   if (
     !skipOwnershipCheck &&
     experimenterId !== oldExperiment.data()?.metadata.creator
   ) {
-    return {success: false, error: 'not-owner'};
+    const isAdmin = await AuthGuard.isAdminEmail(firestore, experimenterId);
+
+    if (!isAdmin) {
+      return {success: false, error: 'not-owner'};
+    }
   }
 
   // Regenerate variable values based on current variable configs
@@ -391,10 +396,14 @@ export async function deleteExperimentById(
     return {success: false, error: 'not-found'};
   }
 
-  // Verify ownership
+  // Verify ownership or admin status
   const experiment = experimentDoc.data();
   if (!skipOwnershipCheck && experimenterId !== experiment?.metadata?.creator) {
-    return {success: false, error: 'not-owner'};
+    const isAdmin = await AuthGuard.isAdminEmail(firestore, experimenterId);
+
+    if (!isAdmin) {
+      return {success: false, error: 'not-owner'};
+    }
   }
 
   // Delete experiment and all subcollections

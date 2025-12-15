@@ -65,4 +65,17 @@ export class AuthGuard {
 
     return allowlistDoc.exists && allowlistDoc.data()?.isAdmin === true;
   }
+
+  public static async isAdminEmail(
+    firestore: FirebaseFirestore.Firestore,
+    email: string,
+  ) {
+    if (!email) return false;
+    const allowlistDoc = await firestore
+      .collection('allowlist')
+      .doc(email)
+      .get();
+
+    return allowlistDoc.exists && allowlistDoc.data()?.isAdmin === true;
+  }
 }

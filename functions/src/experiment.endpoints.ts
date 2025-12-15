@@ -80,12 +80,7 @@ export const updateExperiment = onCall(async (request) => {
   if (!oldExperiment.exists) {
     return {success: false};
   }
-  const canUpdate = await AuthGuard.isCreatorOrAdmin(
-    request,
-    oldExperiment.data()?.metadata.creator,
-  );
-
-  if (!canUpdate) {
+  if (!oldExperiment.exists) {
     return {success: false};
   }
 
@@ -94,7 +89,7 @@ export const updateExperiment = onCall(async (request) => {
     app.firestore(),
     data.experimentTemplate,
     experimenterId,
-    {collectionName: data.collectionName, skipOwnershipCheck: true},
+    {collectionName: data.collectionName},
   );
 
   return {success: result.success};
@@ -133,21 +128,12 @@ export const deleteExperiment = onCall(async (request) => {
     );
   }
 
-  const canDelete = await AuthGuard.isCreatorOrAdmin(
-    request,
-    experiment.metadata.creator,
-  );
-
-  if (!canDelete) {
-    return {success: false};
-  }
-
   // Use shared utility to delete experiment
   const result = await deleteExperimentById(
     app.firestore(),
     data.experimentId,
     experimenterId,
-    {collectionName: data.collectionName, skipOwnershipCheck: true},
+    {collectionName: data.collectionName},
   );
 
   if (!result.success && result.error === 'not-found') {
