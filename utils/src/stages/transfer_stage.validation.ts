@@ -5,7 +5,7 @@ import {
   StageProgressConfigSchema,
   StageTextConfigSchema,
 } from './stage.validation';
-import {CohortParticipantConfigSchema} from '../experiment.validation';
+import {CohortParticipantConfigSchema} from '../shared.validation';
 import {ConditionSchema} from '../utils/condition.validation';
 
 /** Shorthand for strict TypeBox object validation */

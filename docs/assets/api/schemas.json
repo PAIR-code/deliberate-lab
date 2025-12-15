@@ -1049,6 +1049,15 @@
         },
         "value": {
           "type": "string"
+        },
+        "cohortValues": {
+          "type": "object",
+          "patternProperties": {
+            "^(.*)$": {
+              "type": "string"
+            }
+          },
+          "title": "CohortValues"
         }
       },
       "required": ["id", "type", "scope", "definition", "value"]
@@ -2197,6 +2206,131 @@
         },
         "timeoutSeconds": {
           "type": "number"
+        },
+        "autoTransferConfig": {
+          "anyOf": [
+            {
+              "anyOf": [
+                {
+                  "additionalProperties": false,
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "const": "default",
+                      "type": "string"
+                    },
+                    "autoCohortParticipantConfig": {
+                      "$ref": "#/$defs/CohortParticipantConfig"
+                    },
+                    "minParticipants": {
+                      "minimum": 1,
+                      "type": "number"
+                    },
+                    "maxParticipants": {
+                      "minimum": 1,
+                      "type": "number"
+                    }
+                  },
+                  "required": [
+                    "type",
+                    "autoCohortParticipantConfig",
+                    "minParticipants",
+                    "maxParticipants"
+                  ],
+                  "title": "DefaultStageConfig"
+                },
+                {
+                  "$ref": "#/$defs/SurveyStageConfig"
+                },
+                {
+                  "additionalProperties": false,
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "const": "condition",
+                      "type": "string"
+                    },
+                    "autoCohortParticipantConfig": {
+                      "$ref": "#/$defs/CohortParticipantConfig"
+                    },
+                    "transferGroups": {
+                      "minItems": 1,
+                      "type": "array",
+                      "items": {
+                        "additionalProperties": false,
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "minLength": 1,
+                            "type": "string"
+                          },
+                          "name": {
+                            "minLength": 1,
+                            "type": "string"
+                          },
+                          "composition": {
+                            "minItems": 1,
+                            "type": "array",
+                            "items": {
+                              "additionalProperties": false,
+                              "type": "object",
+                              "properties": {
+                                "id": {
+                                  "minLength": 1,
+                                  "type": "string"
+                                },
+                                "condition": {
+                                  "title": "Condition",
+                                  "anyOf": [
+                                    {
+                                      "$ref": "#/$defs/ComparisonCondition"
+                                    },
+                                    {
+                                      "$ref": "#/$defs/ConditionGroup"
+                                    }
+                                  ]
+                                },
+                                "minCount": {
+                                  "minimum": 1,
+                                  "type": "number"
+                                },
+                                "maxCount": {
+                                  "minimum": 1,
+                                  "type": "number"
+                                }
+                              },
+                              "required": [
+                                "id",
+                                "condition",
+                                "minCount",
+                                "maxCount"
+                              ],
+                              "title": "Composition"
+                            }
+                          },
+                          "targetCohortAlias": {
+                            "minLength": 1,
+                            "type": "string"
+                          }
+                        },
+                        "required": ["id", "name", "composition"],
+                        "title": "TransferGroup"
+                      }
+                    }
+                  },
+                  "required": [
+                    "type",
+                    "autoCohortParticipantConfig",
+                    "transferGroups"
+                  ],
+                  "title": "ConditionStageConfig"
+                }
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
         }
       },
       "required": [
@@ -2206,7 +2340,8 @@
         "descriptions",
         "progress",
         "enableTimeout",
-        "timeoutSeconds"
+        "timeoutSeconds",
+        "autoTransferConfig"
       ],
       "title": "TransferStageConfig"
     }
@@ -2427,6 +2562,35 @@
                     }
                   },
                   "title": "VariableMap"
+                },
+                "cohortDefinitions": {
+                  "type": "array",
+                  "items": {
+                    "additionalProperties": false,
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "minLength": 1,
+                        "type": "string"
+                      },
+                      "alias": {
+                        "minLength": 1,
+                        "type": "string"
+                      },
+                      "name": {
+                        "minLength": 1,
+                        "type": "string"
+                      },
+                      "description": {
+                        "type": "string"
+                      },
+                      "generatedCohortId": {
+                        "type": "string"
+                      }
+                    },
+                    "required": ["id", "alias", "name"],
+                    "title": "CohortDefinition"
+                  }
                 }
               },
               "required": [
@@ -2552,6 +2716,9 @@
           "type": "object",
           "properties": {
             "id": {
+              "type": "string"
+            },
+            "alias": {
               "type": "string"
             },
             "metadata": {

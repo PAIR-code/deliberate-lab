@@ -2,7 +2,11 @@ import {Type, type Static} from '@sinclair/typebox';
 import {
   MetadataConfigSchema,
   PermissionsConfigSchema,
+  CohortParticipantConfigSchema,
 } from './shared.validation';
+
+// Re-export for backwards compatibility
+export {CohortParticipantConfigSchema};
 import {StageConfigData} from './stages/stage.validation';
 import {
   AgentDataObjectData,
@@ -52,21 +56,6 @@ export type ExperimentDeletionData = Static<typeof ExperimentDeletionData>;
 // ************************************************************************* //
 // writeExperiment endpoint                                                  //
 // ************************************************************************* //
-export const CohortParticipantConfigSchema = Type.Object(
-  {
-    minParticipantsPerCohort: Type.Union([
-      Type.Null(),
-      Type.Number({minimum: 0}),
-    ]),
-    maxParticipantsPerCohort: Type.Union([
-      Type.Null(),
-      Type.Number({minimum: 1}),
-    ]),
-    includeAllParticipantsInCohortCount: Type.Boolean(),
-    botProtection: Type.Boolean(),
-  },
-  {$id: 'CohortParticipantConfig'},
-);
 
 export const ProlificConfigSchema = Type.Object({
   enableProlificIntegration: Type.Boolean(),
