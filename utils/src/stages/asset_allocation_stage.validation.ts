@@ -21,7 +21,7 @@ export const StockAllocationData = Type.Object(
     name: Type.String({minLength: 1}),
     percentage: Type.Number({minimum: 0, maximum: 100}),
   },
-  strict,
+  {$id: 'StockAllocation', ...strict},
 );
 
 /** Asset allocation validation. */

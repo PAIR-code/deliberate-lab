@@ -5,3 +5,9 @@ node_modules/
 
 # Packed shared utils package
 *deliberation-lab-utils-*.tgz
+
+# Python scripts
+.venv
+*.pyc
+__pycache__
+*.egg-info/

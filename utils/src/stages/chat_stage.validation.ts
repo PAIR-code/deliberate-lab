@@ -13,17 +13,20 @@ const strict = {additionalProperties: false} as const;
 // ************************************************************************* //
 // updateChatStageConfig endpoint                                            //
 // ************************************************************************* //
-export const ChatStageConfigData = Type.Object({
-  id: Type.String(),
-  kind: Type.Literal(StageKind.CHAT),
-  name: Type.String(),
-  descriptions: Type.Ref(StageTextConfigSchema),
-  progress: Type.Ref(StageProgressConfigSchema),
-  timeLimitInMinutes: Type.Union([Type.Number(), Type.Null()]),
-  requireFullTime: Type.Union([Type.Boolean(), Type.Null()]),
-  // discussions
-  // agents
-});
+export const ChatStageConfigData = Type.Object(
+  {
+    id: Type.String(),
+    kind: Type.Literal(StageKind.CHAT),
+    name: Type.String(),
+    descriptions: Type.Ref(StageTextConfigSchema),
+    progress: Type.Ref(StageProgressConfigSchema),
+    timeLimitInMinutes: Type.Union([Type.Number(), Type.Null()]),
+    requireFullTime: Type.Union([Type.Boolean(), Type.Null()]),
+    // discussions
+    // agents
+  },
+  {$id: 'ChatStageConfig'},
+);
 
 // ************************************************************************* //
 // updateChatMessage endpoint                                                //
@@ -40,21 +43,24 @@ export const UserTypeData = Type.Union([
 ]);
 
 /** ChatMessage input validation. */
-export const ChatMessageData = Type.Object({
-  id: Type.String({minLength: 1}),
-  discussionId: Type.Union([Type.Null(), Type.String()]),
-  type: UserTypeData,
-  message: Type.String(),
-  profile: Type.Object(
-    {
-      name: Type.Union([Type.Null(), Type.String()]),
-      avatar: Type.Union([Type.Null(), Type.String()]),
-      pronouns: Type.Union([Type.Null(), Type.String()]),
-    },
-    strict,
-  ),
-  // timestamp
-});
+export const ChatMessageData = Type.Object(
+  {
+    id: Type.String({minLength: 1}),
+    discussionId: Type.Union([Type.Null(), Type.String()]),
+    type: UserTypeData,
+    message: Type.String(),
+    profile: Type.Object(
+      {
+        name: Type.Union([Type.Null(), Type.String()]),
+        avatar: Type.Union([Type.Null(), Type.String()]),
+        pronouns: Type.Union([Type.Null(), Type.String()]),
+      },
+      {$id: 'ChatMessageProfile', ...strict},
+    ),
+    // timestamp
+  },
+  {$id: 'ChatMessage'},
+);
 
 /** CreateChatMessageData. */
 export const CreateChatMessageData = Type.Object(

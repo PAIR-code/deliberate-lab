@@ -17,6 +17,7 @@ import {
   ApiKeyType,
   AgentPersonaType,
   createAgentModelSettings,
+  DEFAULT_AGENT_PARTICIPANT_ID,
 } from '@deliberation-lab/utils';
 
 import {styles} from './cohort_settings_dialog.scss';
@@ -86,7 +87,7 @@ export class AgentParticipantDialog extends MobxLitElement {
             );
             if (this.cohort && this.model) {
               this.experimentEditor.addAgentParticipant();
-              this.agentId = ''; //Make agent ID blank for agents added from cohort panel that use default prompts
+              this.agentId = DEFAULT_AGENT_PARTICIPANT_ID;
               const modelSettings = createAgentModelSettings({
                 apiType: ApiKeyType.GEMINI_API_KEY,
                 modelName: this.model,

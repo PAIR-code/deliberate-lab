@@ -151,8 +151,8 @@ export function createRandomPermutationVariableConfig(
 /**
  * Create a balanced assignment variable config.
  * Always PARTICIPANT-scoped since it assigns per-participant.
- * Schema is stored as Array(ItemType),
- * but each value in values[] is a single item (not an array).
+ * Schema is stored as Array(ItemType) from the UI; ItemType directly is also handled.
+ * Each value in values[] is a single item (the type assigned to each participant).
  *
  * If weights are provided, they must match the length of values.
  * If weights are omitted, equal weights are assumed.

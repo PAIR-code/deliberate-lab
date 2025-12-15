@@ -1,39 +1,7 @@
-openapi: 3.0.3
+openapi: 3.1.0
 info:
   title: Deliberate Lab API
-  description: |
-    REST API for programmatic access to Deliberate Lab experiment management.
-
-    ## Authentication
-
-    All API requests require an API key in the Authorization header:
-    ```
-    Authorization: Bearer YOUR_API_KEY
-    ```
-
-    ### Creating an API Key
-
-    1. Log into the Deliberate Lab web interface
-    2. Navigate to **Settings** (top right menu)
-    3. Scroll to the **API Keys** section
-    4. Click **Create New API Key**
-    5. Enter a descriptive name for your key
-    6. Copy the generated key immediately - it will only be shown once
-
-    **Important:** Store your API key securely. You cannot retrieve it after closing the creation dialog.
-
-    ### Managing API Keys
-
-    In the Settings page API Keys section, you can:
-    - View all your API keys
-    - See when each key was created and last used
-    - Revoke keys you no longer need
-
-    ## Rate Limiting
-
-    - **Limit:** 100 requests per 15-minute window per API key
-    - **Response:** HTTP 429 when exceeded
-
+  description: REST API for programmatic access to Deliberate Lab experiment management.
   version: 1.0.0
 servers:
   - url: https://us-central1-deliberate-lab.cloudfunctions.net/api/v1
@@ -44,6 +12,8 @@ servers:
 tags:
   - name: experiments
     description: Experiment management operations
+  - name: cohorts
+    description: Cohort management operations
   - name: health
     description: API health check
 
@@ -112,7 +82,17 @@ paths:
       tags:
         - experiments
       summary: Create experiment
-      description: Create a new experiment with specified configuration
+      description: |
+        Create a new experiment with specified configuration.
+
+        Supports two modes:
+
+        **1. Simple creation:** Provide `name` (required), `description`, `stages`, `prolificConfig`.
+        This is the easiest way to create a basic experiment.
+
+        **2. Full template creation:** Provide a complete `template` object (ExperimentTemplate).
+        This creates the experiment with all stages and agents, using the same logic as the UI.
+        Other fields are ignored when template is provided.
       operationId: createExperiment
       requestBody:
         required: true
@@ -120,34 +100,55 @@ paths:
           application/json:
             schema:
               type: object
-              required:
-                - name
               properties:
                 name:
                   type: string
-                  description: Experiment name
+                  description: (Simple creation) Experiment name - required unless template provided
                   example: My Experiment
                 description:
                   type: string
-                  description: Experiment description
+                  description: (Simple creation) Experiment description
                   example: Research on decision making
                 prolificRedirectCode:
                   type: string
-                  description: Prolific completion redirect code (optional)
+                  description: (Simple creation) Prolific completion redirect code
                   example: C1234ABC
                 stages:
                   type: array
-                  description: Array of stage configurations (optional)
+                  description: (Simple creation) Array of stage configurations
                   items:
                     $ref: '#/components/schemas/Stage'
                   default: []
+                agentMediators:
+                  type: array
+                  description: |
+                    (Simple creation) Array of agent mediator templates.
+                    Each agent includes persona config and a promptMap with stage-specific prompts.
+                  items:
+                    type: object
+                agentParticipants:
+                  type: array
+                  description: |
+                    (Simple creation) Array of agent participant templates.
+                    Each agent includes persona config and a promptMap with stage-specific prompts.
+                  items:
+                    type: object
+                template:
+                  type: object
+                  description: |
+                    (Full template creation) Complete ExperimentTemplate object.
+                    When provided, creates experiment with all stages and agents.
+                    All other fields are ignored.
       responses:
         '201':
           description: Experiment created successfully
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Experiment'
+                type: object
+                properties:
+                  experiment:
+                    $ref: '#/components/schemas/Experiment'
         '400':
           $ref: '#/components/responses/BadRequestError'
         '401':
@@ -192,9 +193,17 @@ paths:
       description: |
         Update an existing experiment's configuration.
 
-        **Partial updates:** Only provided fields are updated. Omit fields you don't want to change.
+        Supports two modes:
 
-        **Stages replacement:** If `stages` is provided, it completely replaces all existing stages. To modify a single stage, first GET the experiment, modify the stages array, then PUT the full array back.
+        **1. Partial updates:** Provide individual fields (name, description, stages, prolificConfig).
+        Only provided fields are updated. Omit fields you don't want to change.
+
+        **2. Full template update:** Provide a complete `template` object (ExperimentTemplate).
+        This replaces the entire experiment including all stages and agents.
+        Other fields are ignored when template is provided.
+
+        **Stages replacement (partial mode):** If `stages` is provided, it completely replaces all existing stages.
+        To modify a single stage, first GET the experiment, modify the stages array, then PUT the full array back.
       operationId: updateExperiment
       parameters:
         - $ref: '#/components/parameters/ExperimentId'
@@ -207,20 +216,43 @@ paths:
               properties:
                 name:
                   type: string
-                  description: Updated experiment name
+                  description: (Partial update) Updated experiment name
                 description:
                   type: string
-                  description: Updated description
+                  description: (Partial update) Updated description
                 prolificRedirectCode:
                   type: string
-                  description: Updated Prolific completion redirect code
+                  description: (Partial update) Updated Prolific completion redirect code
                 stages:
                   type: array
                   description: |
-                    Complete array of stage configurations. If provided, **replaces all existing stages**.
+                    (Partial update) Complete array of stage configurations. If provided, **replaces all existing stages**.
                     Omit this field to leave stages unchanged.
                   items:
                     $ref: '#/components/schemas/Stage'
+                agentMediators:
+                  type: array
+                  description: |
+                    (Partial update) Complete array of agent mediator templates. If provided, **replaces all existing agent mediators**.
+                    Each agent includes persona config and a promptMap with stage-specific prompts.
+                    Omit this field to leave agent mediators unchanged.
+                  items:
+                    type: object
+                agentParticipants:
+                  type: array
+                  description: |
+                    (Partial update) Complete array of agent participant templates. If provided, **replaces all existing agent participants**.
+                    Each agent includes persona config and a promptMap with stage-specific prompts.
+                    Omit this field to leave agent participants unchanged.
+                  items:
+                    type: object
+                template:
+                  type: object
+                  description: |
+                    (Full template update) Complete ExperimentTemplate object.
+                    When provided, replaces the entire experiment including all stages and agents.
+                    All other fields (name, description, stages, agentMediators, agentParticipants) are ignored.
+                    Use this mode when you need atomic replacement of the entire experiment.
             examples:
               updateNameOnly:
                 summary: Update name only
@@ -361,6 +393,278 @@ paths:
         '429':
           $ref: '#/components/responses/RateLimitError'
 
+  /experiments/{id}/fork:
+    post:
+      tags:
+        - experiments
+      summary: Fork experiment
+      description: |
+        Create a copy of an experiment with all its stages and agents.
+
+        **Access Control:** You can only fork an experiment if:
+        - The experiment's visibility is set to `PUBLIC`, OR
+        - You are the owner/creator of the experiment
+
+        The forked experiment will have:
+        - A new unique ID
+        - Name set to "Copy of [original name]" (or custom name if provided)
+        - The current user as creator
+        - All stages copied
+        - All agent mediators and agent participants copied
+
+        The forked experiment will NOT include:
+        - Cohorts
+        - Participants
+        - Any collected data
+      operationId: forkExperiment
+      parameters:
+        - $ref: '#/components/parameters/ExperimentId'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  description: Optional custom name for the forked experiment
+                  example: My Forked Experiment
+      responses:
+        '201':
+          description: Experiment forked successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  experiment:
+                    $ref: '#/components/schemas/Experiment'
+                  sourceExperimentId:
+                    type: string
+                    description: ID of the original experiment that was forked
+                    example: exp123
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '429':
+          $ref: '#/components/responses/RateLimitError'
+
+  /experiments/{experimentId}/cohorts:
+    get:
+      tags:
+        - cohorts
+      summary: List cohorts
+      description: Retrieve all cohorts for a specific experiment
+      operationId: listCohorts
+      parameters:
+        - $ref: '#/components/parameters/ExperimentIdPath'
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  cohorts:
+                    type: array
+                    description: Array of cohort configurations
+                    items:
+                      $ref: '#/components/schemas/Cohort'
+                  total:
+                    type: integer
+                    description: Total number of cohorts
+                    example: 2
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '429':
+          $ref: '#/components/responses/RateLimitError'
+
+    post:
+      tags:
+        - cohorts
+      summary: Create cohort
+      description: |
+        Create a new cohort within an experiment.
+
+        The cohort will be initialized with:
+        - Public stage data for all stages
+        - Generated variables based on experiment's variableConfigs
+        - Stage unlock map based on stage progression requirements
+        - Mediators assigned to the cohort
+      operationId: createCohort
+      parameters:
+        - $ref: '#/components/parameters/ExperimentIdPath'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+              properties:
+                name:
+                  type: string
+                  description: Cohort name
+                  example: Cohort A
+                description:
+                  type: string
+                  description: Cohort description
+                  example: Control group
+                participantConfig:
+                  $ref: '#/components/schemas/CohortParticipantConfig'
+      responses:
+        '201':
+          description: Cohort created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  cohort:
+                    $ref: '#/components/schemas/Cohort'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '429':
+          $ref: '#/components/responses/RateLimitError'
+
+  /experiments/{experimentId}/cohorts/{cohortId}:
+    get:
+      tags:
+        - cohorts
+      summary: Get cohort
+      description: Retrieve detailed information about a specific cohort
+      operationId: getCohort
+      parameters:
+        - $ref: '#/components/parameters/ExperimentIdPath'
+        - $ref: '#/components/parameters/CohortId'
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  cohort:
+                    $ref: '#/components/schemas/Cohort'
+                  participantCount:
+                    type: integer
+                    description: Number of participants in this cohort
+                    example: 5
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '429':
+          $ref: '#/components/responses/RateLimitError'
+
+    put:
+      tags:
+        - cohorts
+      summary: Update cohort
+      description: |
+        Update an existing cohort's metadata and participant configuration.
+
+        **Partial updates:** Only provided fields are updated. Omit fields you don't want to change.
+
+        **Note:** The `variableMap` and `stageUnlockMap` cannot be modified via API - they are managed internally.
+      operationId: updateCohort
+      parameters:
+        - $ref: '#/components/parameters/ExperimentIdPath'
+        - $ref: '#/components/parameters/CohortId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  description: Updated cohort name
+                description:
+                  type: string
+                  description: Updated description
+                participantConfig:
+                  $ref: '#/components/schemas/CohortParticipantConfig'
+      responses:
+        '200':
+          description: Cohort updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  updated:
+                    type: boolean
+                    example: true
+                  id:
+                    type: string
+                    example: cohort123
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '429':
+          $ref: '#/components/responses/RateLimitError'
+
+    delete:
+      tags:
+        - cohorts
+      summary: Delete cohort
+      description: |
+        Delete a cohort and mark all its participants as deleted.
+
+        **Warning:** This operation is permanent. All participants in the cohort will be marked as DELETED status.
+      operationId: deleteCohort
+      parameters:
+        - $ref: '#/components/parameters/ExperimentIdPath'
+        - $ref: '#/components/parameters/CohortId'
+      responses:
+        '200':
+          description: Cohort deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    example: cohort123
+                  deleted:
+                    type: boolean
+                    example: true
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '429':
+          $ref: '#/components/responses/RateLimitError'
+
 components:
   securitySchemes:
     BearerAuth:
@@ -382,6 +686,24 @@ components:
       schema:
         type: string
       example: exp123
+
+    ExperimentIdPath:
+      name: experimentId
+      in: path
+      description: Experiment ID
+      required: true
+      schema:
+        type: string
+      example: exp123
+
+    CohortId:
+      name: cohortId
+      in: path
+      description: Cohort ID
+      required: true
+      schema:
+        type: string
+      example: cohort123
 
   schemas:
     Metadata:
@@ -473,62 +795,62 @@ components:
             type: boolean
 
     Stage:
+      description: |
+        Stage configuration. This is a discriminated union - the `kind` field determines the stage type and its required fields.
+      $ref: 'schemas.json#/properties/stage'
+
+    Cohort:
       type: object
-      required:
-        - id
-        - kind
-        - name
-        - descriptions
-        - progress
+      description: Cohort configuration
       properties:
         id:
           type: string
-          description: Stage identifier
-          example: stage1
-        kind:
-          type: string
-          description: Stage type
-          example: survey
-          enum: [info, tos, profile, chat, chip, comprehension, flipcard, ranking, payout, privateChat, reveal, salesperson, stockinfo, assetAllocation, multiAssetAllocation, role, survey, surveyPerParticipant, transfer]
-        name:
-          type: string
-          description: Stage name
-          example: Pre-study Survey
-        descriptions:
+          description: Unique cohort identifier
+          example: cohort123
+        metadata:
+          $ref: '#/components/schemas/Metadata'
+        participantConfig:
+          $ref: '#/components/schemas/CohortParticipantConfig'
+        stageUnlockMap:
           type: object
-          required:
-            - primaryText
-          description: Stage text configuration
-          properties:
-            primaryText:
-              type: string
-              description: Text shown at top of screen under header
-              example: Please complete this survey
-            infoText:
-              type: string
-              description: Text for info popup
-              example: This survey collects demographic information
-            helpText:
-              type: string
-              description: Text for help popup
-              example: Select one option for each question
-        progress:
+          description: Maps stage ID to unlock status (managed internally)
+          additionalProperties:
+            type: boolean
+          example:
+            stage1: true
+            stage2: false
+        variableMap:
           type: object
-          description: Stage progress configuration
-          properties:
-            minParticipants:
-              type: integer
-              description: Minimum participants required for stage
-              example: 1
-            waitForAllParticipants:
-              type: boolean
-              description: Wait for all participants to reach stage
-              example: false
-            showParticipantProgress:
-              type: boolean
-              description: Show participants who completed stage
-              example: false
-      description: Stage configuration (extends BaseStageConfig with kind-specific fields). Note that each stage kind has additional required fields beyond the base fields shown here.
+          description: Generated cohort-level variables (managed internally based on experiment's variableConfigs)
+          additionalProperties:
+            type: string
+          example:
+            condition: "control"
+
+    CohortParticipantConfig:
+      type: object
+      description: Configuration for participants within a cohort
+      properties:
+        minParticipantsPerCohort:
+          type: integer
+          description: Minimum number of participants required
+          example: 1
+        maxParticipantsPerCohort:
+          type: integer
+          description: Maximum number of participants allowed
+          example: 10
+        includeAllStagesInProgressBar:
+          type: boolean
+          description: Whether to show all stages in the progress bar
+          example: false
+        enableParticipantStageReset:
+          type: boolean
+          description: Whether participants can reset stages
+          example: false
+        showStageDescriptions:
+          type: boolean
+          description: Whether to show stage descriptions to participants
+          example: true
 
     ParticipantProfile:
       type: object
@@ -547,8 +869,7 @@ components:
           description: Private participant identifier (only in extended profile)
           example: private123
         prolificId:
-          type: string
-          nullable: true
+          type: ['string', 'null']
           description: Prolific participant ID (if applicable)
           example: abc123
         currentStageId:
@@ -560,8 +881,7 @@ components:
           description: Current cohort the participant is in
           example: cohort1
         transferCohortId:
-          type: string
-          nullable: true
+          type: ['string', 'null']
           description: Cohort ID if pending transfer
         currentStatus:
           type: string
@@ -569,16 +889,13 @@ components:
           description: Current participant status
           example: IN_PROGRESS
         pronouns:
-          type: string
-          nullable: true
+          type: ['string', 'null']
           description: Participant's pronouns
         avatar:
-          type: string
-          nullable: true
+          type: ['string', 'null']
           description: Emoji used as avatar
         name:
-          type: string
-          nullable: true
+          type: ['string', 'null']
           description: Participant's name
         timestamps:
           type: object
@@ -589,12 +906,10 @@ components:
           description: Anonymous profile metadata by profile set ID
           additionalProperties: true
         connected:
-          type: boolean
-          nullable: true
+          type: ['boolean', 'null']
           description: Connection status
         agentConfig:
-          type: object
-          nullable: true
+          type: ['object', 'null']
           description: Agent configuration if participant is AI-controlled
           additionalProperties: true
 

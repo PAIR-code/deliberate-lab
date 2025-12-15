@@ -55,7 +55,7 @@ describe('log.utils', () => {
         rules: RULES,
         ...(!process.env.FIRESTORE_EMULATOR_HOST && {
           host: 'localhost',
-          port: 8080,
+          port: 8081,
         }),
       },
     });

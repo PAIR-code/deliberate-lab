@@ -35,7 +35,7 @@ export class BaseStageHandler {
       variableDefinitions,
       valueMap,
     );
-    const descriptions = {...stage.descriptions, primaryText};
+    const descriptions = {...stage.descriptions, primaryText, infoText};
     return {...stage, descriptions};
   }
 
