@@ -179,6 +179,9 @@ export const DEFAULT_AGENT_MODEL_SETTINGS: AgentModelSettings = {
   modelName: DEFAULT_AGENT_API_MODEL,
 };
 
+// Use this ID when defining agent participants in experiment dashboard
+export const DEFAULT_AGENT_PARTICIPANT_ID = '';
+
 // ************************************************************************* //
 // FUNCTIONS                                                                 //
 // ************************************************************************* //

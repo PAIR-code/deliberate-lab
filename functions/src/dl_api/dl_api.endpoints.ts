@@ -21,7 +21,15 @@ import {
   updateExperiment,
   deleteExperiment,
   exportExperimentData,
+  forkExperiment,
 } from './experiments.dl_api';
+import {
+  listCohorts,
+  createCohort,
+  getCohort,
+  updateCohort,
+  deleteCohort,
+} from './cohorts.dl_api';
 
 // Create Express app
 const app = express();
@@ -57,13 +65,21 @@ app.use(rejectBrowserRequestsForDeliberateLabAPI);
 // 3. Authenticate API key
 app.use(authenticateDeliberateLabAPIKey);
 
-// API Routes
+// API Routes - Experiments
 app.get('/v1/experiments', listExperiments);
 app.post('/v1/experiments', createExperiment);
 app.get('/v1/experiments/:id', getExperiment);
 app.put('/v1/experiments/:id', updateExperiment);
 app.delete('/v1/experiments/:id', deleteExperiment);
 app.get('/v1/experiments/:id/export', exportExperimentData);
+app.post('/v1/experiments/:id/fork', forkExperiment);
+
+// API Routes - Cohorts (nested under experiments)
+app.get('/v1/experiments/:experimentId/cohorts', listCohorts);
+app.post('/v1/experiments/:experimentId/cohorts', createCohort);
+app.get('/v1/experiments/:experimentId/cohorts/:cohortId', getCohort);
+app.put('/v1/experiments/:experimentId/cohorts/:cohortId', updateCohort);
+app.delete('/v1/experiments/:experimentId/cohorts/:cohortId', deleteCohort);
 
 // Health check endpoint (also requires authentication)
 app.get('/v1/health', (_req, res) => {

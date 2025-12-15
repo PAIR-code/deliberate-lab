@@ -1,8 +1,5 @@
 import {Type, type Static} from '@sinclair/typebox';
 
-/** Shorthand for strict TypeBox object validation */
-const strict = {additionalProperties: false} as const;
-
 // ****************************************************************************
 // testAgentConfig
 // ****************************************************************************
@@ -37,12 +34,18 @@ export const AgentDataObjectData = Type.Object({
   chatPromptMap: Type.Record(Type.String(), PromptConfigData),
 });
 
-export const AgentMediatorTemplateData = Type.Object({
-  persona: AgentConfigData,
-  promptMap: Type.Record(Type.String(), Type.Object({})),
-});
+export const AgentMediatorTemplateData = Type.Object(
+  {
+    persona: AgentConfigData,
+    promptMap: Type.Record(Type.String(), Type.Object({})),
+  },
+  {$id: 'AgentMediatorTemplate'},
+);
 
-export const AgentParticipantTemplateData = Type.Object({
-  persona: AgentConfigData,
-  promptMap: Type.Record(Type.String(), Type.Object({})),
-});
+export const AgentParticipantTemplateData = Type.Object(
+  {
+    persona: AgentConfigData,
+    promptMap: Type.Record(Type.String(), Type.Object({})),
+  },
+  {$id: 'AgentParticipantTemplate'},
+);
