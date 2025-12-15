@@ -46,6 +46,7 @@ export const TransferGroupSchema = Type.Object(
     condition: ConditionSchema,
     minParticipants: Type.Number({minimum: 1}),
     maxParticipants: Type.Number({minimum: 1}),
+    targetCohortAlias: Type.Optional(Type.String({minLength: 1})),
   },
   strict,
 );
