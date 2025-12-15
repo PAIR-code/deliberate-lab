@@ -92,8 +92,6 @@ export const updateCohortMetadata = onCall(async (request) => {
   await app.firestore().runTransaction(async (transaction) => {
     const cohortConfig = (await document.get()).data() as CohortConfig;
 
-    // Verify that the experimenter is the creator or an admin
-    // before updating.
     const canUpdate = await AuthGuard.isCreatorOrAdmin(
       request,
       cohortConfig.metadata.creator,
@@ -133,7 +131,6 @@ export const deleteCohort = onCall(async (request) => {
     return {success: false};
   }
 
-  // Verify that experimenter is the creator or an admin before enabling delete
   const experiment = (
     await app.firestore().collection('experiments').doc(data.experimentId).get()
   ).data();

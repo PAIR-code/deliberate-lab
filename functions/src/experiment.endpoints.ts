@@ -132,7 +132,6 @@ export const updateExperiment = onCall(async (request) => {
   if (!oldExperiment.exists) {
     return {success: false};
   }
-  // Verify that the experimenter is the creator or an admin
   const canUpdate = await AuthGuard.isCreatorOrAdmin(
     request,
     oldExperiment.data()?.metadata.creator,
@@ -212,7 +211,6 @@ export const deleteExperiment = onCall(async (request) => {
     );
   }
 
-  // Verify that experimenter is the creator or an admin before enabling delete
   const canDelete = await AuthGuard.isCreatorOrAdmin(
     request,
     experiment.metadata.creator,
