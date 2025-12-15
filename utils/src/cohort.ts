@@ -18,6 +18,10 @@ import {
 /** Cohort. */
 export interface CohortConfig {
   id: string;
+  // Optional alias linking to CohortDefinition.id for pre-defined cohorts.
+  // Used for variable resolution (cohortValues) and routing lookups.
+  // Only set for cohorts created from cohortDefinitions.
+  alias?: string;
   metadata: MetadataConfig;
   participantConfig: CohortParticipantConfig;
   // Maps stage ID to whether stage is unlocked (i.e., participants are ready)
@@ -37,6 +41,7 @@ export function createCohortConfig(
 ): CohortConfig {
   return {
     id: config.id ?? generateId(true), // Alphanumeric sorting.
+    alias: config.alias,
     metadata: config.metadata ?? createMetadataConfig(),
     participantConfig:
       config.participantConfig ?? createCohortParticipantConfig(),
