@@ -313,10 +313,6 @@ export function getConditionTargetsFromStages(
   return targets;
 }
 
-// ============================================================================
-// Condition Sanitization Utilities
-// ============================================================================
-
 /**
  * Sanitize survey question conditions to ensure they only reference valid targets.
  *
