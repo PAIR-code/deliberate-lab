@@ -74,6 +74,18 @@ export const ProlificConfigSchema = Type.Object({
   bootedRedirectCode: Type.String(),
 });
 
+/** CohortDefinition validation schema */
+export const CohortDefinitionSchema = Type.Object(
+  {
+    id: Type.String({minLength: 1}),
+    alias: Type.String({minLength: 1}),
+    name: Type.String({minLength: 1}),
+    description: Type.Optional(Type.String()),
+    generatedCohortId: Type.Optional(Type.String()),
+  },
+  strict,
+);
+
 export const ExperimentCreationData = Type.Object(
   {
     // Firestore collection name to save experiment under
@@ -94,6 +106,7 @@ export const ExperimentCreationData = Type.Object(
           cohortLockMap: Type.Record(Type.String(), Type.Boolean()),
           variableConfigs: Type.Optional(Type.Array(VariableConfigData)),
           variableMap: Type.Optional(Type.Record(Type.String(), Type.String())),
+          cohortDefinitions: Type.Optional(Type.Array(CohortDefinitionSchema)),
         },
         strict,
       ),

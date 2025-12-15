@@ -1,17 +1,13 @@
 import {Timestamp} from 'firebase-admin/firestore';
 import {Value} from '@sinclair/typebox/value';
 import {
-  ChipStagePublicData,
   CreateParticipantData,
   Experiment,
   ParticipantProfileExtended,
   ParticipantStatus,
   ProfileStageConfig,
   ProfileType,
-  RoleStagePublicData,
-  SeedStrategy,
   StageKind,
-  SurveyStagePublicData,
   StageConfig,
   TransferStageConfig,
   createParticipantProfileExtended,
@@ -22,6 +18,9 @@ import {
   updateCohortStageUnlocked,
   updateParticipantNextStage,
   handleAutomaticTransfer,
+  completeParticipantTransfer,
+  executeDirectTransfers,
+  DirectTransferInstructions,
 } from './participant.utils';
 import {generateVariablesForScope} from './variables.utils';
 
@@ -340,6 +339,7 @@ export const updateParticipantToNextStage = onCall(async (request) => {
     currentStageId: null,
     endExperiment: false,
   };
+  let directTransferInstructions: DirectTransferInstructions | null = null;
 
   // Run document write as transaction to ensure consistency
   await app.firestore().runTransaction(async (transaction) => {
@@ -366,20 +366,28 @@ export const updateParticipantToNextStage = onCall(async (request) => {
     ).data() as StageConfig;
 
     if (nextStageConfig?.kind === StageKind.TRANSFER) {
-      const automaticTransferResponse = await handleAutomaticTransfer(
+      const automaticTransferResult = await handleAutomaticTransfer(
         transaction,
         data.experimentId,
         nextStageConfig as TransferStageConfig,
         participant,
       );
 
-      if (automaticTransferResponse) {
-        response = automaticTransferResponse;
+      if (automaticTransferResult.response) {
+        response = automaticTransferResult.response;
       }
+      directTransferInstructions =
+        automaticTransferResult.directTransferInstructions;
     }
 
     transaction.set(participantDoc, participant);
   });
+
+  // Execute direct transfers after transaction commits (sequential, one transaction per participant)
+  // Use the response from the triggering participant's transfer
+  if (directTransferInstructions) {
+    response = await executeDirectTransfers(directTransferInstructions);
+  }
 
   return response;
 });
@@ -478,7 +486,7 @@ export const acceptParticipantTransfer = onCall(async (request) => {
   const privateId = data.participantId;
 
   // Define document reference
-  const document = app
+  const participantDoc = app
     .firestore()
     .collection('experiments')
     .doc(data.experimentId)
@@ -498,91 +506,25 @@ export const acceptParticipantTransfer = onCall(async (request) => {
   // Run document write as transaction to ensure consistency
   await app.firestore().runTransaction(async (transaction) => {
     const participant = (
-      await document.get()
+      await participantDoc.get()
     ).data() as ParticipantProfileExtended;
     if (!participant.transferCohortId) {
       return {success: false};
     }
 
-    // Update cohort ID
-    // TODO: Validate cohort ID?
-    const timestamp = Timestamp.now();
-    participant.timestamps.cohortTransfers[participant.currentCohortId] =
-      timestamp;
-    participant.currentCohortId = participant.transferCohortId;
-    participant.transferCohortId = null;
-    participant.currentStatus = ParticipantStatus.IN_PROGRESS;
+    const experiment = (await experimentDoc.get()).data() as Experiment;
 
-    // If participant is currently on a transfer stage,
-    // proceed to the next stage
-    const currentStage = (
-      await app
-        .firestore()
-        .doc(
-          `experiments/${data.experimentId}/stages/${participant.currentStageId}`,
-        )
-        .get()
-    ).data() as StageConfig;
-    if (currentStage.kind === StageKind.TRANSFER) {
-      const experiment = (await experimentDoc.get()).data() as Experiment;
-      response = await updateParticipantNextStage(
-        data.experimentId,
-        participant,
-        experiment.stageIds,
-      );
-    }
+    // Use shared transfer completion logic
+    response = await completeParticipantTransfer(
+      transaction,
+      app.firestore(),
+      data.experimentId,
+      participantDoc,
+      participant,
+      participant.transferCohortId,
+      experiment.stageIds,
+    );
 
-    // Set document
-    transaction.set(document, participant);
-
-    // Migrate shared cohort data
-    const publicId = participant.publicId;
-    const stageData = await app
-      .firestore()
-      .collection(
-        `experiments/${data.experimentId}/participants/${privateId}/stageData`,
-      )
-      .get();
-
-    const stageAnswers = stageData.docs.map((stage) => stage.data());
-    // For each relevant answer, add to current cohort's public stage data
-    for (const stage of stageAnswers) {
-      const publicDocument = app
-        .firestore()
-        .collection('experiments')
-        .doc(data.experimentId)
-        .collection('cohorts')
-        .doc(participant.currentCohortId)
-        .collection('publicStageData')
-        .doc(stage.id);
-
-      switch (stage.kind) {
-        case StageKind.SURVEY:
-          const publicSurveyData = (
-            await publicDocument.get()
-          ).data() as SurveyStagePublicData;
-          publicSurveyData.participantAnswerMap[publicId] = stage.answerMap;
-          transaction.set(publicDocument, publicSurveyData);
-          break;
-        case StageKind.CHIP:
-          const publicChipData = (
-            await publicDocument.get()
-          ).data() as ChipStagePublicData;
-          publicChipData.participantChipMap[publicId] = stage.chipMap;
-          publicChipData.participantChipValueMap[publicId] = stage.chipValueMap;
-          transaction.set(publicDocument, publicChipData);
-          break;
-        case StageKind.ROLE:
-          const publicRoleData = (
-            await publicDocument.get()
-          ).data() as RoleStagePublicData;
-          // TODO: Assign new role to participant (or move role over)
-          transaction.set(publicDocument, publicRoleData);
-          break;
-        default:
-          break;
-      }
-    }
     return {success: true};
   });
 

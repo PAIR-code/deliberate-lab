@@ -148,7 +148,7 @@ export async function generateVariablesForScope(
 
     switch (config.type) {
       case VariableConfigType.STATIC:
-        generatedVariables = generateStaticVariables(config);
+        generatedVariables = generateStaticVariables(config, context);
         break;
 
       case VariableConfigType.RANDOM_PERMUTATION:
