@@ -100,6 +100,7 @@ export function createStaticVariableConfig(
       schema: VariableType.STRING,
     },
     value: config.value ?? '',
+    cohortValues: config.cohortValues,
   };
 }
 
@@ -264,11 +265,23 @@ function generateRandomPermutationValue(
 /**
  * Generate variables for a Static config.
  * Returns a map of variable name to JSON string value.
+ *
+ * If context is provided and the config has cohortValues, uses the cohort-specific
+ * value (if available). The cohortValues keys should already be transformed from
+ * aliases to cohortIds at the call site (cohort creation).
  */
 export function generateStaticVariables(
   config: StaticVariableConfig,
+  context?: ScopeContext,
 ): Record<string, string> {
-  const value = parseJsonValue(config.value);
+  let valueToUse = config.value;
+
+  // Use cohort-specific value if available (keys transformed to cohortId at call site)
+  if (config.cohortValues && context && 'cohortId' in context) {
+    valueToUse = config.cohortValues[context.cohortId] ?? config.value;
+  }
+
+  const value = parseJsonValue(valueToUse);
 
   // Validate against schema
   validateParsedVariableValue(

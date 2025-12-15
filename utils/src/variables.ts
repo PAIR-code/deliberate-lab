@@ -57,10 +57,16 @@ export interface BaseVariableConfig {
  * Static variable config.
  * Assigns a single fixed value to all participants/cohorts.
  * Value is used as-is without array wrapping.
+ *
+ * For cohort-specific values, use cohortValues to map cohort aliases to values.
+ * At cohort creation, keys are transformed from alias to cohortId.
  */
 export interface StaticVariableConfig extends BaseVariableConfig {
   type: VariableConfigType.STATIC;
-  value: string; // JSON string of the value
+  value: string; // JSON string of the default value
+  // Maps cohort alias to JSON string value for cohort-specific overrides.
+  // Keys are aliases (CohortDefinition.alias), transformed to cohortIds at cohort creation.
+  cohortValues?: Record<string, string>;
 }
 
 /**

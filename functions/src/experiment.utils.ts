@@ -19,6 +19,7 @@ import {
 import {getExperimentDownload} from './data';
 import {generateVariablesForScope} from './variables.utils';
 import {AuthGuard} from './utils/auth-guard';
+import {createCohortFromDefinition} from './cohort.utils';
 
 /**
  * Options for writing an experiment from a template
@@ -86,7 +87,7 @@ export async function writeExperimentFromTemplate(
 
   // Run document write as transaction to ensure consistency
   await firestore.runTransaction(async (transaction: Transaction) => {
-    // Set the experiment document
+    // Set the experiment document first (cohort creation depends on it existing)
     transaction.set(document, experimentConfig);
 
     // Add collection of stages
@@ -112,6 +113,22 @@ export async function writeExperimentFromTemplate(
       for (const prompt of Object.values(agent.promptMap)) {
         transaction.set(doc.collection('prompts').doc(prompt.id), prompt);
       }
+    }
+
+    // Create cohorts from cohort definitions (eager creation)
+    if (experimentConfig.cohortDefinitions) {
+      for (const definition of experimentConfig.cohortDefinitions) {
+        const cohortConfig = await createCohortFromDefinition(
+          transaction,
+          experimentConfig.id,
+          definition,
+          experimentConfig.defaultCohortConfig,
+        );
+        // Store the generated cohort ID back on the definition
+        definition.generatedCohortId = cohortConfig.id;
+      }
+      // Update experiment with generatedCohortIds
+      transaction.set(document, experimentConfig);
     }
   });
 

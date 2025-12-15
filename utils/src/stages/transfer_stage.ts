@@ -68,6 +68,8 @@ export interface TransferGroup {
   condition: Condition; // Condition that must be met to join this group
   minParticipants: number; // Minimum participants needed before transfer
   maxParticipants: number; // Maximum participants per cohort
+  // If set, route to existing cohort instead of creating a new one
+  targetCohortAlias?: string;
 }
 
 /**
@@ -132,6 +134,7 @@ export function createTransferGroup(
     condition: config.condition,
     minParticipants: config.minParticipants ?? 1,
     maxParticipants: config.maxParticipants ?? 1,
+    targetCohortAlias: config.targetCohortAlias,
   };
 }
 

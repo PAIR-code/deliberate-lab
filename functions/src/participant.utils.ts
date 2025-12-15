@@ -18,6 +18,7 @@ import {
   createChipStageParticipantAnswer,
   createPayoutStageParticipantAnswer,
   ChipStagePublicData,
+  RoleStagePublicData,
   evaluateCondition,
   extractMultipleConditionDependencies,
   getConditionTargetKey,
@@ -26,6 +27,7 @@ import {
 import {completeStageAsAgentParticipant} from './agent_participant.utils';
 import {
   getFirestoreActiveParticipants,
+  getFirestoreExperiment,
   getFirestoreStage,
 } from './utils/firestore';
 import {generateId} from '@deliberation-lab/utils';
@@ -33,6 +35,25 @@ import {createCohortInternal} from './cohort.utils';
 import {sendSystemChatMessage} from './chat/chat.utils';
 
 import {app} from './app';
+
+/**
+ * Instructions for executing direct transfers after a transaction commits.
+ * Used for sequential transfer pattern (matching TRANSFER_PENDING behavior).
+ */
+export interface DirectTransferInstructions {
+  experimentId: string;
+  targetCohortId: string;
+  stageIds: string[];
+  participantPrivateIds: string[];
+}
+
+/**
+ * Result from handleAutomaticTransfer that may include pending direct transfers.
+ */
+export interface AutomaticTransferResult {
+  response: {currentStageId: string; endExperiment: boolean} | null;
+  directTransferInstructions: DirectTransferInstructions | null;
+}
 
 /** Update participant's current stage to next stage (or end experiment). */
 export async function updateParticipantNextStage(
@@ -219,19 +240,27 @@ export async function handleAutomaticTransfer(
   experimentId: string,
   stageConfig: TransferStageConfig,
   participant: ParticipantProfileExtended,
-): Promise<{currentStageId: string; endExperiment: boolean} | null> {
+): Promise<AutomaticTransferResult> {
+  const emptyResult: AutomaticTransferResult = {
+    response: null,
+    directTransferInstructions: null,
+  };
+
   if (!stageConfig.autoTransferConfig) {
-    return null;
+    return emptyResult;
   }
 
   switch (stageConfig.autoTransferConfig.type) {
     case AutoTransferType.SURVEY:
-      return handleSurveyAutoTransfer(
-        transaction,
-        experimentId,
-        stageConfig,
-        participant,
-      );
+      return {
+        response: await handleSurveyAutoTransfer(
+          transaction,
+          experimentId,
+          stageConfig,
+          participant,
+        ),
+        directTransferInstructions: null,
+      };
     case AutoTransferType.CONDITION:
       return handleConditionAutoTransfer(
         transaction,
@@ -242,7 +271,7 @@ export async function handleAutomaticTransfer(
     case AutoTransferType.DEFAULT:
     default:
       // DEFAULT type not yet implemented
-      return null;
+      return emptyResult;
   }
 }
 
@@ -437,13 +466,21 @@ async function handleSurveyAutoTransfer(
 /**
  * Handle CONDITION type auto-transfer.
  * Uses the Condition system for flexible routing based on any survey question type.
+ *
+ * For direct transfers (targetCohortAlias set), returns transfer instructions
+ * to be executed after the transaction commits (sequential pattern).
+ * For TRANSFER_PENDING (new cohort), sets status and returns response.
  */
 async function handleConditionAutoTransfer(
   transaction: FirebaseFirestore.Transaction,
   experimentId: string,
   stageConfig: TransferStageConfig,
   participant: ParticipantProfileExtended,
-): Promise<{currentStageId: string; endExperiment: boolean} | null> {
+): Promise<AutomaticTransferResult> {
+  const emptyResult: AutomaticTransferResult = {
+    response: null,
+    directTransferInstructions: null,
+  };
   const firestore = app.firestore();
   const autoTransferConfig =
     stageConfig.autoTransferConfig as ConditionAutoTransferConfig;
@@ -548,7 +585,7 @@ async function handleConditionAutoTransfer(
     console.log(
       `[CONDITION] Current participant ${participant.publicId} did not match any transfer group`,
     );
-    return null;
+    return emptyResult;
   }
 
   // Check if we have enough participants in the current participant's group
@@ -559,7 +596,7 @@ async function handleConditionAutoTransfer(
       `[CONDITION] Not enough participants for group "${currentParticipantGroup.name}": ` +
         `expected ${currentParticipantGroup.minParticipants}, found ${groupParticipants.length}`,
     );
-    return null;
+    return emptyResult;
   }
 
   // Sort by waiting time (oldest first)
@@ -582,46 +619,282 @@ async function handleConditionAutoTransfer(
     currentParticipantGroup.maxParticipants,
   );
 
-  // Create a new cohort and transfer participants
-  const cohortConfig = createCohortConfig({
-    id: generateId(),
-    metadata: createMetadataConfig({
-      creator: 'system',
-      dateCreated: Timestamp.now(),
-      dateModified: Timestamp.now(),
-    }),
-    participantConfig: autoTransferConfig.autoCohortParticipantConfig,
-  });
+  // Check if routing to existing cohort or creating new one
+  if (currentParticipantGroup.targetCohortAlias) {
+    // Route to existing cohort - return instructions for sequential transfers
+    // (transfers will be executed after this transaction commits)
+    const experiment = await getFirestoreExperiment(experimentId);
+    if (!experiment) {
+      throw new Error(`Experiment ${experimentId} not found`);
+    }
 
-  console.log(
-    `[CONDITION] Creating cohort ${cohortConfig.id} for group "${currentParticipantGroup.name}" ` +
-      `with participants: ${cohortParticipants.map((p) => p.publicId).join(', ')}`,
-  );
+    const definition = experiment.cohortDefinitions?.find(
+      (d) => d.alias === currentParticipantGroup.targetCohortAlias,
+    );
+    if (!definition?.generatedCohortId) {
+      throw new Error(
+        `No cohort found for alias "${currentParticipantGroup.targetCohortAlias}"`,
+      );
+    }
+    const targetCohortId = definition.generatedCohortId;
 
-  await createCohortInternal(transaction, experimentId, cohortConfig);
+    console.log(
+      `[CONDITION] Preparing direct transfer to cohort ${targetCohortId} (alias: ${currentParticipantGroup.targetCohortAlias}) ` +
+        `for group "${currentParticipantGroup.name}" ` +
+        `with participants: ${cohortParticipants.map((p) => p.publicId).join(', ')}`,
+    );
 
-  for (const p of cohortParticipants) {
-    const participantDoc = firestore
-      .collection('experiments')
-      .doc(experimentId)
-      .collection('participants')
-      .doc(p.privateId);
-
-    transaction.update(participantDoc, {
-      transferCohortId: cohortConfig.id,
-      currentStatus: ParticipantStatus.TRANSFER_PENDING,
+    // Return instructions for sequential transfers (executed after transaction commits)
+    return {
+      response: {currentStageId: stageConfig.id, endExperiment: false},
+      directTransferInstructions: {
+        experimentId,
+        targetCohortId,
+        stageIds: experiment.stageIds,
+        participantPrivateIds: cohortParticipants.map((p) => p.privateId),
+      },
+    };
+  } else {
+    // Create a new cohort and transfer participants (existing TRANSFER_PENDING behavior)
+    const cohortConfig = createCohortConfig({
+      id: generateId(),
+      metadata: createMetadataConfig({
+        creator: 'system',
+        dateCreated: Timestamp.now(),
+        dateModified: Timestamp.now(),
+      }),
+      participantConfig: autoTransferConfig.autoCohortParticipantConfig,
     });
 
     console.log(
-      `[CONDITION] Transferring participant ${p.publicId} to cohort ${cohortConfig.id}`,
+      `[CONDITION] Creating cohort ${cohortConfig.id} for group "${currentParticipantGroup.name}" ` +
+        `with participants: ${cohortParticipants.map((p) => p.publicId).join(', ')}`,
+    );
+
+    await createCohortInternal(transaction, experimentId, cohortConfig);
+
+    // Set TRANSFER_PENDING for all participants (frontend calls acceptParticipantTransfer)
+    for (const p of cohortParticipants) {
+      const participantDoc = firestore
+        .collection('experiments')
+        .doc(experimentId)
+        .collection('participants')
+        .doc(p.privateId);
+
+      transaction.update(participantDoc, {
+        transferCohortId: cohortConfig.id,
+        currentStatus: ParticipantStatus.TRANSFER_PENDING,
+      });
+
+      console.log(
+        `[CONDITION] Transferring participant ${p.publicId} to cohort ${cohortConfig.id}`,
+      );
+    }
+
+    // Update the passed-in participant as a side-effect
+    participant.currentStatus = ParticipantStatus.TRANSFER_PENDING;
+    participant.transferCohortId = cohortConfig.id;
+
+    return {
+      response: {currentStageId: stageConfig.id, endExperiment: false},
+      directTransferInstructions: null,
+    };
+  }
+}
+
+/**
+ * Execute direct transfers sequentially after the main transaction commits.
+ * Each participant is transferred in their own transaction, matching TRANSFER_PENDING behavior.
+ * Returns the response from the first participant (the triggering participant).
+ */
+export async function executeDirectTransfers(
+  instructions: DirectTransferInstructions,
+): Promise<{currentStageId: string | null; endExperiment: boolean}> {
+  const firestore = app.firestore();
+  let triggerResponse: {currentStageId: string | null; endExperiment: boolean} =
+    {
+      currentStageId: null,
+      endExperiment: false,
+    };
+
+  for (const participantPrivateId of instructions.participantPrivateIds) {
+    console.log(
+      `[DIRECT_TRANSFER] Starting transfer for participant ${participantPrivateId} to cohort ${instructions.targetCohortId}`,
+    );
+
+    // Each participant gets their own transaction (matches TRANSFER_PENDING pattern)
+    await firestore.runTransaction(async (transaction) => {
+      const participantDoc = firestore
+        .collection('experiments')
+        .doc(instructions.experimentId)
+        .collection('participants')
+        .doc(participantPrivateId);
+
+      const participant = (
+        await transaction.get(participantDoc)
+      ).data() as ParticipantProfileExtended;
+
+      if (!participant) {
+        console.error(
+          `[DIRECT_TRANSFER] Participant ${participantPrivateId} not found, skipping`,
+        );
+        return;
+      }
+
+      const result = await completeParticipantTransfer(
+        transaction,
+        firestore,
+        instructions.experimentId,
+        participantDoc,
+        participant,
+        instructions.targetCohortId,
+        instructions.stageIds,
+      );
+
+      // Capture response from first participant (the trigger)
+      if (participantPrivateId === instructions.participantPrivateIds[0]) {
+        triggerResponse = result;
+      }
+
+      console.log(
+        `[DIRECT_TRANSFER] Completed transfer for participant ${participant.publicId} to cohort ${instructions.targetCohortId}`,
+      );
+    });
+  }
+
+  return triggerResponse;
+}
+
+/**
+ * Complete a participant's transfer to a new cohort.
+ * This is the shared logic used by both:
+ * - acceptParticipantTransfer endpoint (user-initiated via popup)
+ * - executeDirectTransfers (backend-initiated, sequential)
+ *
+ * Handles: timestamp recording, cohort update, status update, stage progression,
+ * participant save, and stage data migration.
+ */
+export async function completeParticipantTransfer(
+  transaction: FirebaseFirestore.Transaction,
+  firestore: FirebaseFirestore.Firestore,
+  experimentId: string,
+  participantDoc: FirebaseFirestore.DocumentReference,
+  participant: ParticipantProfileExtended,
+  targetCohortId: string,
+  stageIds: string[],
+): Promise<{currentStageId: string | null; endExperiment: boolean}> {
+  let response: {currentStageId: string | null; endExperiment: boolean} = {
+    currentStageId: null,
+    endExperiment: false,
+  };
+
+  // 1. Record transfer timestamp
+  const timestamp = Timestamp.now();
+  participant.timestamps.cohortTransfers[participant.currentCohortId] =
+    timestamp;
+
+  // 2. Update cohort ID
+  participant.currentCohortId = targetCohortId;
+
+  // 3. Clear transfer cohort ID (if it was set)
+  participant.transferCohortId = null;
+
+  // 4. Set status to IN_PROGRESS
+  participant.currentStatus = ParticipantStatus.IN_PROGRESS;
+
+  // 5. If on a transfer stage, proceed to next stage
+  const currentStage = await getFirestoreStage(
+    experimentId,
+    participant.currentStageId,
+  );
+  if (currentStage?.kind === StageKind.TRANSFER) {
+    response = await updateParticipantNextStage(
+      experimentId,
+      participant,
+      stageIds,
     );
   }
 
-  // Update the passed-in participant as a side-effect
-  participant.currentStatus = ParticipantStatus.TRANSFER_PENDING;
-  participant.transferCohortId = cohortConfig.id;
+  // 6. Save participant
+  transaction.set(participantDoc, participant);
 
-  return {currentStageId: stageConfig.id, endExperiment: false};
+  // 7. Migrate stage data to new cohort's publicStageData
+  await migrateParticipantStageData(
+    transaction,
+    firestore,
+    experimentId,
+    participant,
+    targetCohortId,
+  );
+
+  return response;
+}
+
+/**
+ * Migrate participant's stage data to a new cohort's publicStageData.
+ * This copies the participant's answers (survey, chip, role) to the target cohort.
+ */
+async function migrateParticipantStageData(
+  transaction: FirebaseFirestore.Transaction,
+  firestore: FirebaseFirestore.Firestore,
+  experimentId: string,
+  participant: ParticipantProfileExtended,
+  targetCohortId: string,
+): Promise<void> {
+  const publicId = participant.publicId;
+
+  // Get participant's stage data
+  const stageData = await firestore
+    .collection(
+      `experiments/${experimentId}/participants/${participant.privateId}/stageData`,
+    )
+    .get();
+
+  const stageAnswers = stageData.docs.map((stage) => stage.data());
+
+  // For each relevant answer, add to target cohort's public stage data
+  for (const stage of stageAnswers) {
+    const publicDocument = firestore
+      .collection('experiments')
+      .doc(experimentId)
+      .collection('cohorts')
+      .doc(targetCohortId)
+      .collection('publicStageData')
+      .doc(stage.id);
+
+    switch (stage.kind) {
+      case StageKind.SURVEY:
+        const publicSurveyData = (
+          await publicDocument.get()
+        ).data() as SurveyStagePublicData;
+        if (publicSurveyData) {
+          publicSurveyData.participantAnswerMap[publicId] = stage.answerMap;
+          transaction.set(publicDocument, publicSurveyData);
+        }
+        break;
+      case StageKind.CHIP:
+        const publicChipData = (
+          await publicDocument.get()
+        ).data() as ChipStagePublicData;
+        if (publicChipData) {
+          publicChipData.participantChipMap[publicId] = stage.chipMap;
+          publicChipData.participantChipValueMap[publicId] = stage.chipValueMap;
+          transaction.set(publicDocument, publicChipData);
+        }
+        break;
+      case StageKind.ROLE:
+        const publicRoleData = (
+          await publicDocument.get()
+        ).data() as RoleStagePublicData;
+        if (publicRoleData) {
+          // TODO: Assign new role to participant (or move role over)
+          transaction.set(publicDocument, publicRoleData);
+        }
+        break;
+      default:
+        break;
+    }
+  }
 }
 
 /**
