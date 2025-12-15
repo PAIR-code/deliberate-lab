@@ -18,8 +18,8 @@ export const RoleItemData = Type.Object(
     id: Type.String({minLength: 1}),
     name: Type.String(),
     displayLines: Type.Array(Type.String()),
-    minParticipants: Type.Number(),
-    maxParticipants: Type.Union([Type.Number(), Type.Null()]),
+    minParticipants: Type.Integer(),
+    maxParticipants: Type.Union([Type.Integer(), Type.Null()]),
   },
   strict,
 );
