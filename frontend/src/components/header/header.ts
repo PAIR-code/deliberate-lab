@@ -533,27 +533,23 @@ export class Header extends MobxLitElement {
             </div>
           `}
       ${this.renderTemplateButtons(errors.some((e) => !e.isApiError))}
-      ${this.renderLoadTemplateButton()}
-      ${!isTemplateCreate
-        ? html`
-            <pr-button
-              ?loading=${this.experimentEditor.isWritingExperiment}
-              ?disabled=${errors.length > 0}
-              @click=${async () => {
-                this.analyticsService.trackButtonClick(
-                  ButtonClick.EXPERIMENT_SAVE_NEW,
-                );
-                const response = await this.experimentEditor.writeExperiment();
-                this.experimentEditor.resetExperiment();
-                this.routerService.navigate(Pages.EXPERIMENT, {
-                  experiment: response.id,
-                });
-              }}
-            >
-              Save experiment
-            </pr-button>
-          `
-        : nothing}
+      ${!isTemplateCreate ? this.renderLoadTemplateButton() : nothing}
+      <pr-button
+        ?loading=${this.experimentEditor.isWritingExperiment}
+        ?disabled=${errors.length > 0}
+        @click=${async () => {
+          this.analyticsService.trackButtonClick(
+            ButtonClick.EXPERIMENT_SAVE_NEW,
+          );
+          const response = await this.experimentEditor.writeExperiment();
+          this.experimentEditor.resetExperiment();
+          this.routerService.navigate(Pages.EXPERIMENT, {
+            experiment: response.id,
+          });
+        }}
+      >
+        ${isTemplateCreate ? 'Create experiment' : 'Save experiment'}
+      </pr-button>
     `;
   }
 
