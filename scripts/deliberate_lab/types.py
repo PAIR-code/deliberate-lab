@@ -380,6 +380,7 @@ class InfoStageConfig(BaseModel):
     descriptions: Any
     progress: Any
     infoLines: List[str]
+    youtubeVideoId: str | None = None
 
 
 class ItemRankingStageConfig(BaseModel):
@@ -464,6 +465,11 @@ class PrivateChatStageConfig(BaseModel):
     name: str
     descriptions: Any
     progress: Any
+    timeLimitInMinutes: float | None = None
+    requireFullTime: bool | None = None
+    isTurnBasedChat: bool | None = None
+    minNumberOfTurns: float | None = None
+    maxNumberOfTurns: float | None = None
 
 
 class ProfileStageConfig(BaseModel):

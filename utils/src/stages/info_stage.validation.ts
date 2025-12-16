@@ -21,6 +21,8 @@ export const InfoStageConfigData = Type.Object(
     descriptions: Type.Ref(StageTextConfigSchema),
     progress: Type.Ref(StageProgressConfigSchema),
     infoLines: Type.Array(Type.String()),
+    // Optional YouTube video ID to display
+    youtubeVideoId: Type.Optional(Type.String()),
   },
   {$id: 'InfoStageConfig', ...strict},
 );

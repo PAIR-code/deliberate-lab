@@ -341,6 +341,9 @@
           "items": {
             "type": "string"
           }
+        },
+        "youtubeVideoId": {
+          "type": "string"
         }
       },
       "required": [
@@ -1894,9 +1897,45 @@
         },
         "progress": {
           "$ref": "#/$defs/StageProgressConfig"
+        },
+        "timeLimitInMinutes": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "requireFullTime": {
+          "type": "boolean"
+        },
+        "isTurnBasedChat": {
+          "type": "boolean"
+        },
+        "minNumberOfTurns": {
+          "type": "number"
+        },
+        "maxNumberOfTurns": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
         }
       },
-      "required": ["id", "kind", "name", "descriptions", "progress"],
+      "required": [
+        "id",
+        "kind",
+        "name",
+        "descriptions",
+        "progress",
+        "timeLimitInMinutes"
+      ],
       "title": "PrivateChatStageConfig"
     },
     "ProfileStageConfig": {
