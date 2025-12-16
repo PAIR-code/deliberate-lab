@@ -110,12 +110,6 @@ export class HomeGallery extends MobxLitElement {
   override render() {
     const renderExperiment = (experiment: Experiment) => {
       const item = convertExperimentToGalleryItem(experiment);
-      const isTemplate = this.homeService.activeTab === HomeTab.TEMPLATES;
-
-      if (isTemplate) {
-        return this.renderTemplateCard(experiment, item);
-      }
-
       const href = `#/e/${experiment.id}`;
 
       return html`<a href=${href} class="gallery-link">
@@ -179,65 +173,8 @@ export class HomeGallery extends MobxLitElement {
           this.authService.isViewedExperiment(e.id),
       );
     } else {
-      // Templates
-      // Note: homeService.experimentTemplates is typed as Experiment[] in service but is actually Template items
-      // We need to cast or fix service type. Assuming it contains template objects with .experiment property
-      let templates = [
-        ...this.homeService.experimentTemplates,
-      ] as unknown as ExperimentTemplate[];
-
-      if (this.homeService.searchQuery.trim()) {
-        const q = this.homeService.searchQuery.toLowerCase();
-        templates = templates.filter(
-          (t) =>
-            t.experiment.metadata.name?.toLowerCase().includes(q) ||
-            t.experiment.metadata.description?.toLowerCase().includes(q),
-        );
-      }
-
-      // Sort templates (using experiment metadata)
-      // We can reuse sortExperiments if we map them or write custom sort
-      // For simplicity, just sort by date modified desc
-      templates.sort((a, b) => {
-        const getDate = (e: ExperimentTemplate) => {
-          const d = e.experiment.metadata.dateModified;
-          if (typeof d === 'object' && 'seconds' in d) {
-            return (d as {seconds: number}).seconds;
-          }
-          return Number(d) || 0;
-        };
-        return getDate(b) - getDate(a);
-      });
-
-      // Map to Experiment structure for rendering
-      // OVERRIDE id with template ID so navigation works (load template by ID)
-      // OVERRIDE visibility with template visibility
-      return templates.map((t) => ({
-        ...t.experiment,
-        id: t.id,
-        permissions: {
-          ...t.experiment.permissions,
-          visibility:
-            t.visibility === 'public' ? Visibility.PUBLIC : Visibility.PRIVATE,
-        },
-      }));
+      return [];
     }
-  }
-
-  private renderTemplateCard(experiment: Experiment, item: GalleryItem) {
-    const isCreator =
-      this.authService.userEmail === experiment.metadata.creator ||
-      this.authService.isAdmin;
-
-    const createHref = `#/templates/new_template?template=${experiment.id}`;
-
-    return html`
-      <div class="template-card-wrapper">
-        <a href=${createHref} class="gallery-link" title="Use template">
-          <gallery-card .item=${item}></gallery-card>
-        </a>
-      </div>
-    `;
   }
 
   private renderEmptyMessage(list: Experiment[]) {
@@ -275,15 +212,6 @@ export class HomeGalleryTabs extends MobxLitElement {
           >
             Shared with me
           </div>
-          <div
-            class="gallery-tab ${this.homeService.activeTab ===
-            HomeTab.TEMPLATES
-              ? 'active'
-              : ''}"
-            @click=${() => this.homeService.setActiveTab(HomeTab.TEMPLATES)}
-          >
-            Templates
-          </div>
         </div>
 
         <slot name="gallery-controls"></slot>
@@ -299,6 +227,7 @@ export class QuickStartGallery extends MobxLitElement {
 
   private readonly experimentEditor = core.getService(ExperimentEditor);
   private readonly routerService = core.getService(RouterService);
+  public readonly homeService: HomeService = core.getService(HomeService);
 
   override render() {
     return html`
@@ -348,6 +277,15 @@ export class QuickStartGallery extends MobxLitElement {
           >
             <pr-icon icon="groups" color="neutral" size="large"></pr-icon>
             <div>Group chat with<br />no agents</div>
+          </div>
+          <div
+            class="quick-start-card outlined"
+            @click=${() => {
+              this.homeService.setTemplatesOpen(true);
+            }}
+          >
+            <pr-icon icon="dataset" color="neutral" size="large"></pr-icon>
+            <div>Browse all<br />templates</div>
           </div>
         </div>
       </div>

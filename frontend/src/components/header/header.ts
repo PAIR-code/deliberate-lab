@@ -12,6 +12,7 @@ import {core} from '../../core/core';
 import {ButtonClick, AnalyticsService} from '../../services/analytics.service';
 import {AuthService} from '../../services/auth.service';
 import {CohortService} from '../../services/cohort.service';
+import {HomeService} from '../../services/home.service';
 import {ExperimentService} from '../../services/experiment.service';
 import {ExperimentEditor} from '../../services/experiment.editor';
 import {ExperimentManager} from '../../services/experiment.manager';
@@ -235,6 +236,18 @@ export class Header extends MobxLitElement {
               @click=${() => {
                 // TODO: Add Analytics tracking for bug report click
                 window.open(BUG_REPORT_URL, '_blank');
+              }}
+            >
+            </pr-icon-button>
+          </pr-tooltip>
+          <pr-tooltip text="View templates" position="BOTTOM_END">
+            <pr-icon-button
+              icon="dataset"
+              color="secondary"
+              variant="default"
+              @click=${() => {
+                const homeService = core.getService(HomeService);
+                homeService.setTemplatesOpen(true);
               }}
             >
             </pr-icon-button>

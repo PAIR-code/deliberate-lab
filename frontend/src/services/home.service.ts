@@ -39,7 +39,6 @@ interface ServiceProvider {
 export enum HomeTab {
   MY_EXPERIMENTS = 'my_experiments',
   SHARED_WITH_ME = 'shared_with_me',
-  TEMPLATES = 'experiment_templates',
 }
 
 export class HomeService extends Service {
@@ -212,6 +211,12 @@ export class HomeService extends Service {
     this.activeTab = showMyExperiments
       ? HomeTab.MY_EXPERIMENTS
       : HomeTab.SHARED_WITH_ME;
+  }
+
+  @observable isTemplatesOpen = false;
+
+  setTemplatesOpen(isOpen: boolean) {
+    this.isTemplatesOpen = isOpen;
   }
 
   setSearchQuery(searchQuery: string) {

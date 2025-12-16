@@ -43,6 +43,7 @@ export class RouterService extends Service {
       name: Pages.SETTINGS,
       path: '/settings',
     },
+
     {
       name: Pages.EXPERIMENT,
       path: '/e/:experiment',
@@ -247,6 +248,7 @@ export const NAV_ITEMS: NavItem[] = [
     isParticipantPage: false,
     isPrimaryPage: true,
   },
+
   {
     page: Pages.EXPERIMENT_CREATE,
     title: 'New experiment',

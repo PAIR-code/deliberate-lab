@@ -133,16 +133,18 @@ h1 {
     border-style: dashed;
   }
 
-  &:focus,
-  &:hover,
-  &:focus.blank,
-  &:hover.blank {
-    border-color: var(--md-sys-color-secondary);
+  &.outlined {
+    background: none;
+    border-color: transparent;
+    border-style: solid;
   }
+
   &:focus,
   &:hover,
   &:focus.blank,
-  &:hover.blank {
+  &:hover.blank,
+  &:focus.outlined,
+  &:hover.outlined {
     border-color: var(--md-sys-color-secondary);
   }
 }

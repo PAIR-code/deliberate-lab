@@ -51,6 +51,11 @@ import {
   validateTemplateVariables,
 } from '@deliberation-lab/utils';
 
+import {
+  DEFAULT_TEMPLATES,
+  RESEARCH_TEMPLATES,
+} from '../../shared/default_templates';
+
 import {styles} from './experiment_builder.scss';
 
 enum PanelView {
@@ -88,9 +93,21 @@ export class ExperimentBuilder extends MobxLitElement {
         await this.experimentEditor.loadTemplates();
       }
 
-      const template = this.experimentEditor.savedTemplates.find(
+      let template = this.experimentEditor.savedTemplates.find(
         (t) => t.id === templateId,
       );
+
+      if (!template) {
+        const defaultTemplate = [
+          ...DEFAULT_TEMPLATES,
+          ...RESEARCH_TEMPLATES,
+        ].find((t) => t.id === templateId);
+
+        if (defaultTemplate) {
+          template = defaultTemplate.factory();
+        }
+      }
+
       if (template) {
         this.experimentEditor.loadTemplate(template);
         if (isTemplateEdit) {

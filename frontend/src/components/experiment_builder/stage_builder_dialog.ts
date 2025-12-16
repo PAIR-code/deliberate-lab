@@ -37,57 +37,25 @@ import {
   createComprehensionStage,
 } from '@deliberation-lab/utils';
 import {
-  LAS_METADATA,
-  ANON_LAS_METADATA,
-  getLASStageConfigs,
-  getAnonLASStageConfigs,
-} from '../../shared/templates/lost_at_sea';
-import {
-  getChipMetadata,
-  getChipNegotiationStageConfigs,
-} from '../../shared/templates/chip_negotiation';
-import {
-  getCharityDebateTemplate,
   CharityDebateConfig,
-  createCharityDebateConfig,
   CHARITY_DEBATE_METADATA,
+  createCharityDebateConfig,
+  getCharityDebateTemplate,
 } from '../../shared/templates/charity_allocations';
 import {
-  getOOTBCharityDebateTemplate,
   OOTB_CHARITY_DEBATE_METADATA,
+  getOOTBCharityDebateTemplate,
 } from '../../shared/templates/charity_allocations_ootb';
 import {
   CONSENSUS_METADATA,
   getConsensusTopicTemplate,
 } from '../../shared/templates/debate_topics';
+
 import {
-  FRUIT_TEST_METADATA,
-  getFruitTestExperimentTemplate,
-} from '../../shared/templates/fruit_test';
-import {
-  STOCKINFO_GAME_METADATA,
-  getStockInfoGameStageConfigs,
-} from '../../shared/templates/stockinfo_template';
-import {
-  FLIPCARD_TEMPLATE_METADATA,
-  getFlipCardExperimentTemplate,
-} from '../../shared/templates/flipcard';
-import {
-  ASSET_ALLOCATION_TEMPLATE_METADATA,
-  getAssetAllocationTemplate,
-} from '../../shared/templates/asset_allocation_template';
-import {
-  CONDITIONAL_SURVEY_TEMPLATE_METADATA,
-  getConditionalSurveyTemplate,
-} from '../../shared/templates/conditional_survey_template';
-import {
-  POLICY_METADATA,
-  getPolicyExperimentTemplate,
-} from '../../shared/templates/policy';
-import {
-  INTEGRATION_METADATA,
-  getAgentParticipantIntegrationTemplate,
-} from '../../shared/templates/agent_participant_integration_template';
+  DEFAULT_TEMPLATES,
+  RESEARCH_TEMPLATES,
+  CodeBasedTemplate,
+} from '../../shared/default_templates';
 
 import {styles} from './stage_builder_dialog.scss';
 
@@ -227,49 +195,22 @@ export class StageBuilderDialog extends MobxLitElement {
     const q = this.searchText.toLowerCase();
     const matches = (text: string) => text.toLowerCase().includes(q);
 
-    const templates = [
-      {
-        render: () => this.renderFlipCardTemplateCard(),
-        text:
-          FLIPCARD_TEMPLATE_METADATA.name +
-          FLIPCARD_TEMPLATE_METADATA.description,
-      },
-      {
-        render: () => this.renderFruitTestTemplateCard(),
-        text: FRUIT_TEST_METADATA.name + FRUIT_TEST_METADATA.description,
-      },
-      {
-        render: () => this.renderConditionalSurveyTemplateCard(),
-        text:
-          CONDITIONAL_SURVEY_TEMPLATE_METADATA.name +
-          CONDITIONAL_SURVEY_TEMPLATE_METADATA.description,
-      },
-      {
-        render: () => this.renderStockInfoGameCard(),
-        text:
-          STOCKINFO_GAME_METADATA.name + STOCKINFO_GAME_METADATA.description,
-      },
-      {
-        render: () => this.renderAssetAllocationTemplateCard(),
-        text:
-          ASSET_ALLOCATION_TEMPLATE_METADATA.name +
-          ASSET_ALLOCATION_TEMPLATE_METADATA.description,
-      },
-      {
-        render: () => this.renderPolicyTemplateCard(),
-        text: POLICY_METADATA.name + POLICY_METADATA.description,
-      },
-      {
-        render: () => this.renderAgentIntegrationCard(),
-        text: INTEGRATION_METADATA.name + INTEGRATION_METADATA.description,
-      },
-    ];
-
-    const filtered = templates.filter((t) => !q || matches(t.text));
+    const filtered = DEFAULT_TEMPLATES.filter(
+      (t) => !q || matches(t.name + t.description),
+    );
 
     if (filtered.length === 0) return nothing;
 
-    return html`${filtered.map((t) => t.render())}`;
+    return html`${filtered.map((t) => this.renderCodeBasedTemplateCard(t))}`;
+  }
+
+  private renderCodeBasedTemplateCard(t: CodeBasedTemplate) {
+    return html`
+      <div class="card" @click=${() => this.addTemplate(t.factory())}>
+        <div class="title">${t.name}</div>
+        <div>${t.description}</div>
+      </div>
+    `;
   }
 
   // This is a temporary set of hardcoded templates defined in the frontend
@@ -277,25 +218,25 @@ export class StageBuilderDialog extends MobxLitElement {
   // Eventually, all these templates should be migrated such that they
   // are completely created in the UI and stored in the backend.
   private renderResearchTemplateGallery() {
+    const simpleResearchTemplates = RESEARCH_TEMPLATES.filter(
+      (t) => !['consensus_debate', 'charity_debate'].includes(t.id),
+    );
+
     return html`
       <div class="banner">
         Note: Only specific experimenters have access to the following research
         templates! This list is controlled by the deployment owners.
       </div>
       <div class="gallery-section">
-        <div class="gallery-title">Lost at Sea experiments</div>
+        <div class="gallery-title">Research Templates</div>
         <div class="card-gallery-wrapper">
-          ${this.renderLASCard()} ${this.renderLASCard(true)}
+          ${simpleResearchTemplates.map((t) =>
+            this.renderCodeBasedTemplateCard(t),
+          )}
         </div>
       </div>
       <div class="gallery-section">
-        <div class="gallery-title">Negotiation games</div>
-        <div class="card-gallery-wrapper">
-          ${this.renderChipNegotiationCard()}
-        </div>
-      </div>
-      <div class="gallery-section">
-        <div class="gallery-title">Debate experiments</div>
+        <div class="gallery-title">Debate experiments (Customizable)</div>
         <div class="card-gallery-wrapper">
           ${this.renderConsensusDebateCard()}
           ${this.renderCharityDebateTemplateCard()}
@@ -421,74 +362,6 @@ export class StageBuilderDialog extends MobxLitElement {
     this.experimentEditor.updateMetadata(metadata);
     this.experimentEditor.setStages(stages);
     this.experimentEditor.toggleStageBuilderDialog();
-  }
-
-  private renderLASCard(isAnon: boolean = false) {
-    const metadata = isAnon ? ANON_LAS_METADATA : LAS_METADATA;
-    const configs = isAnon ? getAnonLASStageConfigs() : getLASStageConfigs();
-
-    const addGame = () => {
-      this.addGame(metadata, configs);
-    };
-
-    return html`
-      <div class="card" @click=${addGame}>
-        <div class="title">${metadata.name}</div>
-        <div>
-          ${metadata.description}
-          <div></div>
-        </div>
-      </div>
-    `;
-  }
-
-  private renderAgentIntegrationCard() {
-    const addTemplate = () => {
-      this.addTemplate(getAgentParticipantIntegrationTemplate());
-    };
-    return html`
-      <div class="card" @click=${addTemplate}>
-        <div class="title">${INTEGRATION_METADATA.name}</div>
-        <div>${INTEGRATION_METADATA.description}</div>
-      </div>
-    `;
-  }
-
-  private renderChipNegotiationCard() {
-    const addGame = (numChips: number) => {
-      this.addGame(
-        getChipMetadata(numChips),
-        getChipNegotiationStageConfigs(numChips),
-      );
-    };
-
-    return html`
-      <div class="card" @click=${() => addGame(2)}>
-        <div class="title">${getChipMetadata(2).name}</div>
-        <div>${getChipMetadata(2).description}</div>
-      </div>
-      <div class="card" @click=${() => addGame(3)}>
-        <div class="title">${getChipMetadata(3).name}</div>
-        <div>${getChipMetadata(3).description}</div>
-      </div>
-      <div class="card" @click=${() => addGame(4)}>
-        <div class="title">${getChipMetadata(4).name}</div>
-        <div>${getChipMetadata(4).description}</div>
-      </div>
-    `;
-  }
-
-  private renderFruitTestTemplateCard() {
-    const addTemplate = () => {
-      this.addTemplate(getFruitTestExperimentTemplate());
-    };
-
-    return html`
-      <div class="card" @click=${addTemplate}>
-        <div class="title">${FRUIT_TEST_METADATA.name}</div>
-        <div>${FRUIT_TEST_METADATA.description}</div>
-      </div>
-    `;
   }
 
   private renderInfoCard() {
@@ -782,34 +655,6 @@ export class StageBuilderDialog extends MobxLitElement {
     `;
   }
 
-  private renderFlipCardTemplateCard() {
-    const addTemplate = () => {
-      this.addTemplate(getFlipCardExperimentTemplate());
-    };
-
-    return html`
-      <div class="card" @click=${addTemplate}>
-        <div class="title">${FLIPCARD_TEMPLATE_METADATA.name}</div>
-        <div>${FLIPCARD_TEMPLATE_METADATA.description}</div>
-      </div>
-    `;
-  }
-
-  private renderStockInfoGameCard() {
-    const addGame = () => {
-      this.addGame(STOCKINFO_GAME_METADATA, getStockInfoGameStageConfigs());
-    };
-
-    return html`
-      <div class="card" @click=${addGame}>
-        <div class="title">📈 Stock Analysis Game</div>
-        <div>
-          A demonstration of the StockInfo stage with financial data analysis.
-        </div>
-      </div>
-    `;
-  }
-
   private renderCharityCheckbox(
     field: keyof CharityDebateConfig,
     labelText: string,
@@ -956,57 +801,6 @@ export class StageBuilderDialog extends MobxLitElement {
         </div>
 
         <pr-button @click=${loadTemplate}> Load Template </pr-button>
-      </div>
-    `;
-  }
-
-  private renderAssetAllocationTemplateCard() {
-    const addGame = () => {
-      this.addGame(
-        ASSET_ALLOCATION_TEMPLATE_METADATA,
-        getAssetAllocationTemplate(),
-      );
-    };
-
-    return html`
-      <div class="card" @click=${addGame}>
-        <div class="title">💰 Investment Portfolio Game</div>
-        <div>
-          A complete investment study with stock analysis and portfolio
-          allocation decisions.
-        </div>
-      </div>
-    `;
-  }
-
-  private renderConditionalSurveyTemplateCard() {
-    const addGame = () => {
-      this.addGame(
-        CONDITIONAL_SURVEY_TEMPLATE_METADATA,
-        getConditionalSurveyTemplate(),
-      );
-    };
-
-    return html`
-      <div class="card" @click=${addGame}>
-        <div class="title">🔀 Conditional Survey Demo</div>
-        <div>
-          Advanced survey with complex conditional logic, demonstrating AND/OR
-          operators and nested conditions.
-        </div>
-      </div>
-    `;
-  }
-
-  private renderPolicyTemplateCard() {
-    const addTemplate = () => {
-      this.addTemplate(getPolicyExperimentTemplate());
-    };
-
-    return html`
-      <div class="card" @click=${addTemplate}>
-        <div class="title">${POLICY_METADATA.name}</div>
-        <div>${POLICY_METADATA.description}</div>
       </div>
     `;
   }
