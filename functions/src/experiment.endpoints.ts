@@ -80,9 +80,6 @@ export const updateExperiment = onCall(async (request) => {
   if (!oldExperiment.exists) {
     return {success: false};
   }
-  if (!oldExperiment.exists) {
-    return {success: false};
-  }
 
   // Use shared utility to update experiment
   const result = await updateExperimentFromTemplate(

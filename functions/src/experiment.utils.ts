@@ -237,8 +237,6 @@ export async function forkExperimentById(
 export interface UpdateExperimentOptions {
   /** Firestore collection to update in. Defaults to 'experiments' */
   collectionName?: string;
-  /** If true, skips the ownership check (use if caller has already verified permissions) */
-  skipOwnershipCheck?: boolean;
 }
 
 /**
@@ -268,7 +266,7 @@ export async function updateExperimentFromTemplate(
   experimenterId: string,
   options: UpdateExperimentOptions = {},
 ): Promise<UpdateExperimentResult> {
-  const {collectionName = 'experiments', skipOwnershipCheck = false} = options;
+  const {collectionName = 'experiments'} = options;
 
   // Set up experiment config with stageIds
   const experimentConfig = createExperimentConfig(
@@ -288,10 +286,7 @@ export async function updateExperimentFromTemplate(
   }
 
   // Verify that the experimenter is the creator or an admin
-  if (
-    !skipOwnershipCheck &&
-    experimenterId !== oldExperiment.data()?.metadata.creator
-  ) {
+  if (experimenterId !== oldExperiment.data()?.metadata.creator) {
     const isAdmin = await AuthGuard.isAdminEmail(firestore, experimenterId);
 
     if (!isAdmin) {
@@ -354,8 +349,6 @@ export async function updateExperimentFromTemplate(
 export interface DeleteExperimentOptions {
   /** Firestore collection to delete from. Defaults to 'experiments' */
   collectionName?: string;
-  /** If true, skips the ownership check (use if caller has already verified permissions) */
-  skipOwnershipCheck?: boolean;
 }
 
 /**
@@ -385,7 +378,7 @@ export async function deleteExperimentById(
   experimenterId: string,
   options: DeleteExperimentOptions = {},
 ): Promise<DeleteExperimentResult> {
-  const {collectionName = 'experiments', skipOwnershipCheck = false} = options;
+  const {collectionName = 'experiments'} = options;
 
   // Get experiment document
   const document = firestore.collection(collectionName).doc(experimentId);
@@ -398,7 +391,7 @@ export async function deleteExperimentById(
 
   // Verify ownership or admin status
   const experiment = experimentDoc.data();
-  if (!skipOwnershipCheck && experimenterId !== experiment?.metadata?.creator) {
+  if (experimenterId !== experiment?.metadata?.creator) {
     const isAdmin = await AuthGuard.isAdminEmail(firestore, experimenterId);
 
     if (!isAdmin) {
