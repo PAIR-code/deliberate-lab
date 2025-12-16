@@ -240,18 +240,7 @@ export class Header extends MobxLitElement {
             >
             </pr-icon-button>
           </pr-tooltip>
-          <pr-tooltip text="View templates" position="BOTTOM_END">
-            <pr-icon-button
-              icon="dataset"
-              color="secondary"
-              variant="default"
-              @click=${() => {
-                const homeService = core.getService(HomeService);
-                homeService.setTemplatesOpen(true);
-              }}
-            >
-            </pr-icon-button>
-          </pr-tooltip>
+
           <pr-tooltip text="View experimenter settings" position="BOTTOM_END">
             <pr-icon-button
               icon="settings"
