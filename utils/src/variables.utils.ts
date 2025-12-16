@@ -6,6 +6,7 @@ import {
   BalancedAssignmentVariableConfig,
   BalanceAcross,
   BalanceStrategy,
+  MultiValueVariableConfigType,
   RandomPermutationVariableConfig,
   ScopeContext,
   StaticVariableConfig,
@@ -41,10 +42,7 @@ export function extractVariablesFromVariableConfigs(
           const numToSelect = config.numToSelect ?? config.values.length;
 
           // Extract item schema (the schema for each individual item)
-          const itemSchema =
-            'items' in config.definition.schema
-              ? (config.definition.schema.items as TSchema)
-              : config.definition.schema;
+          const itemSchema = getItemSchemaIfArray(config.definition.schema);
 
           // Create definitions for indexed variables: name_1, name_2, etc.
           for (let i = 1; i <= numToSelect; i++) {
@@ -63,14 +61,10 @@ export function extractVariablesFromVariableConfigs(
       case VariableConfigType.BALANCED_ASSIGNMENT:
         // Balanced assignment produces a single variable with one value from the pool
         // Schema is stored as Array(ItemType), so extract the item schema
-        const itemSchema =
-          'items' in config.definition.schema
-            ? (config.definition.schema.items as TSchema)
-            : config.definition.schema;
         variableDefinitions[config.definition.name] = {
           name: config.definition.name,
           description: config.definition.description,
-          schema: itemSchema,
+          schema: getItemSchemaIfArray(config.definition.schema),
         };
         break;
       default:
@@ -107,6 +101,43 @@ export function createStaticVariableConfig(
     },
     value: config.value ?? '',
   };
+}
+
+/**
+ * Type guard that returns true if the config has multiple values to choose from.
+ * Multi-value configs have a `values: string[]` array representing a pool of items.
+ *
+ * This affects the schema editor behavior:
+ * - Schema editor: skips showing array type at root, shows item type directly
+ * - Schema/value updates: navigates into array items automatically
+ *
+ * When passed a VariableConfig, narrows the type to MultiValueVariableConfigType.
+ * When passed a VariableConfigType, returns a boolean.
+ */
+export function isMultiValueConfig(
+  config: VariableConfig,
+): config is MultiValueVariableConfigType;
+export function isMultiValueConfig(configType: VariableConfigType): boolean;
+export function isMultiValueConfig(
+  configOrType: VariableConfig | VariableConfigType,
+): boolean {
+  const configType =
+    typeof configOrType === 'string' ? configOrType : configOrType.type;
+  return (
+    configType === VariableConfigType.RANDOM_PERMUTATION ||
+    configType === VariableConfigType.BALANCED_ASSIGNMENT
+  );
+}
+
+/**
+ * Extracts the item schema from an array schema, or returns the schema as-is.
+ * Used for multi-value configs where the schema is Array(ItemType) but we need the item type.
+ */
+export function getItemSchemaIfArray(schema: TSchema): TSchema {
+  if ('items' in schema && schema.items) {
+    return schema.items as TSchema;
+  }
+  return schema;
 }
 
 export function mapScopeToSeedStrategy(scope: VariableScope): SeedStrategy {
@@ -266,10 +297,7 @@ export function generateRandomPermutationVariables(
   // Check if we should flatten the array into indexed variables
   if (config.expandListToSeparateVariables && Array.isArray(value)) {
     // Extract item schema for validation
-    const itemSchema =
-      'items' in config.definition.schema
-        ? (config.definition.schema.items as TSchema)
-        : config.definition.schema;
+    const itemSchema = getItemSchemaIfArray(config.definition.schema);
 
     // Create indexed variables: name_1, name_2, etc.
     value.forEach((item, index) => {

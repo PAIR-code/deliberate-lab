@@ -20,7 +20,7 @@ import {ExperimentEditor} from '../../services/experiment.editor';
 
 import {
   type BalancedAssignmentVariableConfig,
-  type RandomPermutationVariableConfig,
+  type MultiValueVariableConfigType,
   type StaticVariableConfig,
   type VariableConfig,
   BalanceAcross,
@@ -35,18 +35,20 @@ import {
   sanitizeVariableName,
   createShuffleConfig,
   mapScopeToSeedStrategy,
+  isMultiValueConfig,
   addPropertyToSchema,
   createSchemaForType,
   getDefaultValue,
   removePropertyFromSchema,
-  renamePropertyInObject,
   safeParseJson,
   serializeForInput,
   setValueAtPath,
   updateArrayItem,
   updateObjectProperty,
   updatePropertyInSchema,
-  updateSchemaAtPath,
+  updateSchemaForConfig,
+  setValueForConfig,
+  renamePropertyForConfig,
   extractVariablesFromVariableConfigs,
   findUnusedVariables,
 } from '@deliberation-lab/utils';
@@ -687,15 +689,25 @@ export class VariableEditor extends MobxLitElement {
     path: string,
     config: VariableConfig,
     configIndex: number,
+    /** Set to true after unwrapping the root array for multi-value configs */
+    rootArrayUnwrapped = false,
   ): TemplateResult {
-    const type = schema.type as string;
-    const isRandomPermutationRoot =
-      config.type === VariableConfigType.RANDOM_PERMUTATION && path === '';
+    const isMultiValueAtRoot = isMultiValueConfig(config.type) && path === '';
 
-    // For RandomPermutation at root, skip showing the array type and go straight to items
-    if (isRandomPermutationRoot && type === 'array') {
-      return this.renderArraySchema(schema, path, config, configIndex);
+    // For multi-value configs at root, extract item schema and show it directly.
+    // Users work with individual items, not the array wrapper.
+    // Only do this once (check rootArrayUnwrapped to prevent over-extraction for nested arrays).
+    if (
+      isMultiValueAtRoot &&
+      !rootArrayUnwrapped &&
+      'items' in schema &&
+      schema.items
+    ) {
+      const itemSchema = schema.items as TSchema;
+      return this.renderSchemaType(itemSchema, path, config, configIndex, true);
     }
+
+    const type = schema.type as string;
 
     return html`
       <div class="schema-type-editor ${path ? 'nested' : ''}">
@@ -707,8 +719,8 @@ export class VariableEditor extends MobxLitElement {
               const newLocalSchema = createSchemaForType(
                 (e.target as HTMLSelectElement).value,
               );
-              const newFullSchema = updateSchemaAtPath(
-                toJS(config.definition.schema) as unknown as TSchema,
+              const newFullSchema = updateSchemaForConfig(
+                config,
                 path,
                 newLocalSchema,
               );
@@ -801,8 +813,8 @@ export class VariableEditor extends MobxLitElement {
                 (e.target as HTMLSelectElement).value,
               );
               const newArraySchema = Type.Array(newItemSchema);
-              const newFullSchema = updateSchemaAtPath(
-                toJS(config.definition.schema) as unknown as TSchema,
+              const newFullSchema = updateSchemaForConfig(
+                config,
                 path,
                 newArraySchema,
               );
@@ -811,7 +823,7 @@ export class VariableEditor extends MobxLitElement {
                 configIndex,
                 newFullSchema,
                 path,
-                getDefaultValue(newArraySchema),
+                getDefaultValue(newItemSchema),
               );
             }}
           >
@@ -825,6 +837,12 @@ export class VariableEditor extends MobxLitElement {
         ${itemType === 'object'
           ? this.renderObjectSchema(items, path, config, configIndex)
           : nothing}
+        ${
+          /* NOTE: Deeply nested arrays (3+ levels) may not update correctly
+            because path doesn't change when entering array items. If needed,
+            add [] notation to paths (e.g., 'prop.[].[].field') and handle
+            in updateSchemaAtPath. */ ''
+        }
         ${itemType === 'array'
           ? this.renderArraySchema(items, path, config, configIndex)
           : nothing}
@@ -849,12 +867,13 @@ export class VariableEditor extends MobxLitElement {
       };
     }
 
-    // Handle multi-value configs (RandomPermutation)
+    // Handle multi-value configs (RandomPermutation, BalancedAssignment)
+    // Each value is a single item, so we use the helper which operates on item schema
     if ('values' in config && Array.isArray(config.values)) {
       const updatedValues = config.values.map((jsonValue: string) => {
         const parsed = safeParseJson(jsonValue, {});
         const updatedValue = path
-          ? setValueAtPath(parsed, newFullSchema, path, defaultValue)
+          ? setValueForConfig(parsed, config, path, defaultValue)
           : defaultValue;
         return JSON.stringify(updatedValue);
       });
@@ -933,11 +952,7 @@ export class VariableEditor extends MobxLitElement {
     const newObjSchema = Type.Object(newProps);
 
     // Update schema at the right path
-    const updatedFullSchema = updateSchemaAtPath(
-      toJS(config.definition.schema) as unknown as TSchema,
-      path,
-      newObjSchema,
-    );
+    const updatedFullSchema = updateSchemaForConfig(config, path, newObjSchema);
 
     // Rename property in values
     const oldPropPath = path ? `${path}.${oldName}` : oldName;
@@ -945,9 +960,9 @@ export class VariableEditor extends MobxLitElement {
     // Update both schema and values in a single call
     if (config.type === VariableConfigType.STATIC) {
       const parsed = safeParseJson(config.value, {});
-      const updated = renamePropertyInObject(
+      const updated = renamePropertyForConfig(
         parsed,
-        toJS(config.definition.schema) as unknown as TSchema,
+        config,
         oldPropPath,
         newName,
       );
@@ -959,12 +974,13 @@ export class VariableEditor extends MobxLitElement {
         },
         value: JSON.stringify(updated),
       });
-    } else if (config.type === VariableConfigType.RANDOM_PERMUTATION) {
+    } else if (isMultiValueConfig(config)) {
+      // Type guard narrows config to MultiValueVariableConfig
       const updatedValues = config.values.map((jsonValue: string) => {
         const parsed = safeParseJson(jsonValue, {});
-        const updated = renamePropertyInObject(
+        const updated = renamePropertyForConfig(
           parsed,
-          toJS(config.definition.schema) as unknown as TSchema,
+          config,
           oldPropPath,
           newName,
         );
@@ -1025,8 +1041,8 @@ export class VariableEditor extends MobxLitElement {
               name,
               newPropSchema,
             );
-            const newFullSchema = updateSchemaAtPath(
-              toJS(config.definition.schema) as unknown as TSchema,
+            const newFullSchema = updateSchemaForConfig(
+              config,
               path,
               newObjSchema,
             );
@@ -1062,8 +1078,8 @@ export class VariableEditor extends MobxLitElement {
               @click=${() => {
                 if (!confirm(`Remove property "${name}"?`)) return;
                 const newObjSchema = removePropertyFromSchema(props, name);
-                const newFullSchema = updateSchemaAtPath(
-                  toJS(config.definition.schema) as unknown as TSchema,
+                const newFullSchema = updateSchemaForConfig(
+                  config,
                   path,
                   newObjSchema,
                 );
@@ -1103,11 +1119,7 @@ export class VariableEditor extends MobxLitElement {
       () => {
         if (!confirm(`Remove property "${name}"?`)) return;
         const newObjSchema = removePropertyFromSchema(props, name);
-        const newFullSchema = updateSchemaAtPath(
-          toJS(config.definition.schema) as unknown as TSchema,
-          path,
-          newObjSchema,
-        );
+        const newFullSchema = updateSchemaForConfig(config, path, newObjSchema);
         this.updateDefinition(config, configIndex, {
           schema: newFullSchema as unknown as typeof config.definition.schema,
         });
@@ -1133,11 +1145,7 @@ export class VariableEditor extends MobxLitElement {
       alert('Property already exists');
       return;
     }
-    const newFullSchema = updateSchemaAtPath(
-      toJS(config.definition.schema) as unknown as TSchema,
-      path,
-      newObjSchema,
-    );
+    const newFullSchema = updateSchemaForConfig(config, path, newObjSchema);
     // New properties default to string type with empty string value
     const propPath = path ? `${path}.${name}` : name;
     this.updateSchemaAndResetValues(
@@ -1172,17 +1180,17 @@ export class VariableEditor extends MobxLitElement {
     `;
   }
 
-  // ===== Value Editor (for RandomPermutation and BalancedAssignment values) =====
+  // ===== Value Editor (for multi-value configs) =====
 
   private renderValueEditor(
-    config: RandomPermutationVariableConfig | BalancedAssignmentVariableConfig,
+    config: MultiValueVariableConfigType,
     configIndex: number,
     jsonValue: string,
     valueIndex: number,
   ) {
     // Strip MobX observability to prevent stack overflow (see renderSchemaEditor for details)
     const arraySchema = toJS(config.definition.schema) as unknown as TSchema;
-    // Both RandomPermutation and BalancedAssignment store schema as Array(ItemType),
+    // Multi-value configs store schema as Array(ItemType),
     // so extract the item schema for validation
     const itemSchema =
       'items' in arraySchema ? (arraySchema.items as TSchema) : arraySchema;

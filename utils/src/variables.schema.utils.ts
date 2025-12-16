@@ -1,5 +1,10 @@
 import {Type, type TSchema, type TObject, type TArray} from '@sinclair/typebox';
-import {parseVariableValue} from './variables.utils';
+import {VariableConfig} from './variables';
+import {
+  parseVariableValue,
+  isMultiValueConfig,
+  getItemSchemaIfArray,
+} from './variables.utils';
 
 type TProperties = Record<string, TSchema>;
 
@@ -89,27 +94,40 @@ export function updateSchemaAtPath(
     if (objSchema.properties && first in objSchema.properties) {
       const propSchema = objSchema.properties[first];
 
-      // Check if this property is an array schema and we need to navigate deeper
-      if (
-        'type' in propSchema &&
-        propSchema.type === 'array' &&
-        rest.length > 0
-      ) {
+      // Check if this property is an array schema
+      if ('type' in propSchema && propSchema.type === 'array') {
         const arrayPropSchema = propSchema as TArray;
-        // Navigate deeper into the items schema
         const itemsSchema = arrayPropSchema.items || Type.String();
-        const updatedItems = updateSchemaAtPath(
-          itemsSchema,
-          rest.join('.'),
-          newValue,
-        );
-        return Type.Object({
-          ...objSchema.properties,
-          [first]: Type.Array(updatedItems),
-        }) as TSchema;
+
+        if (rest.length > 0) {
+          // Navigate deeper into the items schema
+          const updatedItems = updateSchemaAtPath(
+            itemsSchema,
+            rest.join('.'),
+            newValue,
+          );
+          return Type.Object({
+            ...objSchema.properties,
+            [first]: Type.Array(updatedItems),
+          }) as TSchema;
+        }
+
+        // At the array property itself (rest.length === 0)
+        // If newValue is not an array, assume we're updating the items schema
+        // If newValue IS an array, we're replacing the entire array schema
+        const isReplacingWithArray =
+          'type' in newValue && newValue.type === 'array';
+        if (!isReplacingWithArray) {
+          // Update items schema, preserve array wrapper
+          return Type.Object({
+            ...objSchema.properties,
+            [first]: Type.Array(newValue),
+          }) as TSchema;
+        }
+        // Fall through to replace the property entirely with the new array
       }
 
-      // Regular property update (non-array)
+      // Regular property update
       const updatedProp =
         rest.length > 0
           ? updateSchemaAtPath(propSchema, rest.join('.'), newValue)
@@ -186,7 +204,7 @@ export function setValueAtPath(
       return newValue;
     }
 
-    // If obj is not an object, we can't navigate further
+    // If obj is not an object/array, we can't navigate further
     if (!obj || typeof obj !== 'object') return obj;
 
     const o = obj as Record<string, unknown>;
@@ -307,4 +325,71 @@ export function renamePropertyInObject(
   };
 
   return renameAtLevel(obj, schema, parentPath);
+}
+
+// ===== Multi-Value Config Helpers =====
+// These functions handle the implicit array wrapper for multi-value configs
+// (RandomPermutation, BalancedAssignment). The schema is Array(ItemType) but
+// users work with individual items directly in the editor.
+
+/**
+ * Updates the schema at a path, handling multi-value config implicit array wrapper.
+ * For multi-value configs, unwraps the root array, updates the item schema, then rewraps.
+ */
+export function updateSchemaForConfig(
+  config: VariableConfig,
+  path: string,
+  newSchema: TSchema,
+): TSchema {
+  const fullSchema = config.definition.schema as unknown as TSchema;
+
+  if (isMultiValueConfig(config) && 'items' in fullSchema) {
+    // Multi-value configs: unwrap array → update item schema → rewrap
+    const itemSchema = getItemSchemaIfArray(fullSchema);
+    const updatedItemSchema = updateSchemaAtPath(itemSchema, path, newSchema);
+    return Type.Array(updatedItemSchema) as TSchema;
+  }
+  return updateSchemaAtPath(fullSchema, path, newSchema);
+}
+
+/**
+ * Sets a value at a path, handling multi-value config implicit array wrapper.
+ * For multi-value configs, the value is a single item (not an array), so we
+ * operate on the item schema directly.
+ */
+export function setValueForConfig(
+  value: unknown,
+  config: VariableConfig,
+  path: string,
+  newValue: unknown,
+): unknown {
+  const fullSchema = config.definition.schema as unknown as TSchema;
+
+  if (isMultiValueConfig(config) && 'items' in fullSchema) {
+    // Multi-value configs: operate on item schema directly
+    const itemSchema = getItemSchemaIfArray(fullSchema);
+    return setValueAtPath(value, itemSchema, path, newValue);
+  }
+  return setValueAtPath(value, fullSchema, path, newValue);
+}
+
+/**
+ * Renames a property in a value, handling multi-value config implicit array wrapper.
+ * For multi-value configs, the value is a single item (not an array), so we
+ * operate on the item schema directly.
+ */
+export function renamePropertyForConfig(
+  value: unknown,
+  config: VariableConfig,
+  path: string,
+  newName: string,
+): unknown {
+  const fullSchema = config.definition.schema as unknown as TSchema;
+
+  if (isMultiValueConfig(config) && 'items' in fullSchema) {
+    // Multi-value configs: operate on item schema directly
+    const itemSchema = getItemSchemaIfArray(fullSchema);
+    return renamePropertyInObject(value, itemSchema, path, newName);
+  }
+  return renamePropertyInObject(value, fullSchema, path, newName);
 }

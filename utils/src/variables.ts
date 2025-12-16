@@ -7,6 +7,19 @@ export type VariableConfig =
   | RandomPermutationVariableConfig
   | BalancedAssignmentVariableConfig;
 
+/**
+ * Union of config types that have multiple values to choose from or assign.
+ * These configs have a `values: string[]` array where each value
+ * represents one item from the pool.
+ *
+ * Note: This is a type union for type-checking, not a config to instantiate.
+ * The schema for these types is stored as Array(ItemType), but users
+ * work with individual items directly in the editor.
+ */
+export type MultiValueVariableConfigType =
+  | RandomPermutationVariableConfig
+  | BalancedAssignmentVariableConfig;
+
 export enum VariableScope {
   EXPERIMENT = 'experiment',
   COHORT = 'cohort',
