@@ -199,6 +199,7 @@ export function defaultModelName(apiType: ApiKeyType) {
 export function createAgentModelSettings(
   config: Partial<AgentModelSettings> = {},
 ): AgentModelSettings {
+  // TODO: pick first API that has a valid key?
   const apiType = config.apiType ?? DEFAULT_AGENT_API_TYPE;
   return {
     apiType,
