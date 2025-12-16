@@ -141,10 +141,6 @@ class CohortParticipantConfig(BaseModel):
     botProtection: bool
 
 
-class Type(BaseModel):
-    pass
-
-
 class Scope(Enum):
     experiment = "experiment"
     cohort = "cohort"
@@ -155,28 +151,28 @@ class String(BaseModel):
     model_config = ConfigDict(
         extra="allow",
     )
-    type: Literal["string"]
+    type: Literal["string"] = "string"
 
 
 class Number(BaseModel):
     model_config = ConfigDict(
         extra="allow",
     )
-    type: Literal["number"]
+    type: Literal["number"] = "number"
 
 
 class Integer(BaseModel):
     model_config = ConfigDict(
         extra="allow",
     )
-    type: Literal["integer"]
+    type: Literal["integer"] = "integer"
 
 
 class Boolean(BaseModel):
     model_config = ConfigDict(
         extra="allow",
     )
-    type: Literal["boolean"]
+    type: Literal["boolean"] = "boolean"
 
 
 class Seed(Enum):
@@ -234,7 +230,7 @@ class TextQuestion(BaseModel):
         extra="forbid",
     )
     id: constr(min_length=1)
-    kind: Literal["text"]
+    kind: Literal["text"] = "text"
     questionTitle: str
     correctAnswer: str
 
@@ -244,7 +240,7 @@ class McQuestion(BaseModel):
         extra="forbid",
     )
     id: constr(min_length=1)
-    kind: Literal["mc"]
+    kind: Literal["mc"] = "mc"
     questionTitle: str
     options: List[MultipleChoiceItem]
     correctAnswerId: str
@@ -261,7 +257,7 @@ class DefaultStageConfig(BaseModel):
         extra="forbid",
     )
     id: constr(min_length=1)
-    type: Literal["DEFAULT"]
+    type: Literal["DEFAULT"] = "DEFAULT"
     name: str
     description: str
     isActive: bool
@@ -331,7 +327,7 @@ class CohortUpdate(BaseModel):
 
 class ChatStageConfig(BaseModel):
     id: str
-    kind: Literal["chat"]
+    kind: Literal["chat"] = "chat"
     name: str
     descriptions: Any
     progress: Any
@@ -344,7 +340,7 @@ class ChipStageConfig(BaseModel):
         extra="forbid",
     )
     id: str
-    kind: Literal["chip"]
+    kind: Literal["chip"] = "chip"
     name: str
     descriptions: Any
     progress: Any
@@ -358,7 +354,7 @@ class FlipCardStageConfig(BaseModel):
         extra="forbid",
     )
     id: constr(min_length=1)
-    kind: Literal["flipcard"]
+    kind: Literal["flipcard"] = "flipcard"
     name: constr(min_length=1)
     descriptions: Any
     progress: Any
@@ -375,7 +371,7 @@ class InfoStageConfig(BaseModel):
         extra="forbid",
     )
     id: constr(min_length=1)
-    kind: Literal["info"]
+    kind: Literal["info"] = "info"
     name: constr(min_length=1)
     descriptions: Any
     progress: Any
@@ -388,11 +384,11 @@ class ItemRankingStageConfig(BaseModel):
         extra="forbid",
     )
     id: constr(min_length=1)
-    kind: Literal["ranking"]
+    kind: Literal["ranking"] = "ranking"
     name: constr(min_length=1)
     descriptions: Any
     progress: Any
-    rankingType: Literal["items"]
+    rankingType: Literal["items"] = "items"
     strategy: Strategy
     rankingItems: List[RankingItem]
 
@@ -402,11 +398,11 @@ class ParticipantRankingStageConfig(BaseModel):
         extra="forbid",
     )
     id: constr(min_length=1)
-    kind: Literal["ranking"]
+    kind: Literal["ranking"] = "ranking"
     name: constr(min_length=1)
     descriptions: Any
     progress: Any
-    rankingType: Literal["participants"]
+    rankingType: Literal["participants"] = "participants"
     strategy: Strategy
     enableSelfVoting: bool
 
@@ -416,7 +412,7 @@ class ComparisonCondition(BaseModel):
         extra="forbid",
     )
     id: constr(min_length=1)
-    type: Literal["comparison"]
+    type: Literal["comparison"] = "comparison"
     target: ConditionTargetReference
     operator: ComparisonOperator = Field(..., title="ComparisonOperator")
     value: str | float | bool
@@ -427,7 +423,7 @@ class AssetAllocationStageConfig(BaseModel):
         extra="forbid",
     )
     id: constr(min_length=1)
-    kind: Literal["assetAllocation"]
+    kind: Literal["assetAllocation"] = "assetAllocation"
     name: constr(min_length=1)
     descriptions: Any
     progress: Any
@@ -439,7 +435,7 @@ class MultiAssetAllocationStageConfig(BaseModel):
         extra="forbid",
     )
     id: constr(min_length=1)
-    kind: Literal["multiAssetAllocation"]
+    kind: Literal["multiAssetAllocation"] = "multiAssetAllocation"
     name: constr(min_length=1)
     descriptions: Any
     progress: Any
@@ -452,7 +448,7 @@ class ComprehensionStageConfig(BaseModel):
         extra="forbid",
     )
     id: constr(min_length=1)
-    kind: Literal["comprehension"]
+    kind: Literal["comprehension"] = "comprehension"
     name: constr(min_length=1)
     descriptions: Any
     progress: Any
@@ -461,7 +457,7 @@ class ComprehensionStageConfig(BaseModel):
 
 class PrivateChatStageConfig(BaseModel):
     id: str
-    kind: Literal["privateChat"]
+    kind: Literal["privateChat"] = "privateChat"
     name: str
     descriptions: Any
     progress: Any
@@ -477,7 +473,7 @@ class ProfileStageConfig(BaseModel):
         extra="forbid",
     )
     id: constr(min_length=1)
-    kind: Literal["profile"]
+    kind: Literal["profile"] = "profile"
     name: constr(min_length=1)
     descriptions: Any
     progress: Any
@@ -489,7 +485,7 @@ class RevealStageConfig(BaseModel):
         extra="forbid",
     )
     id: constr(min_length=1)
-    kind: Literal["reveal"]
+    kind: Literal["reveal"] = "reveal"
     name: constr(min_length=1)
     descriptions: Any
     progress: Any
@@ -501,7 +497,7 @@ class RoleStageConfig(BaseModel):
         extra="forbid",
     )
     id: constr(min_length=1)
-    kind: Literal["role"]
+    kind: Literal["role"] = "role"
     name: constr(min_length=1)
     descriptions: Any
     progress: Any
@@ -510,7 +506,7 @@ class RoleStageConfig(BaseModel):
 
 class SalespersonStageConfig(BaseModel):
     id: str
-    kind: Literal["salesperson"]
+    kind: Literal["salesperson"] = "salesperson"
     name: str
     descriptions: Any
     progress: Any
@@ -521,7 +517,7 @@ class StockinfoStageConfig(BaseModel):
         extra="forbid",
     )
     id: constr(min_length=1)
-    kind: Literal["stockinfo"]
+    kind: Literal["stockinfo"] = "stockinfo"
     name: constr(min_length=1)
     descriptions: Any
     progress: Any
@@ -536,7 +532,7 @@ class TosStageConfig(BaseModel):
         extra="forbid",
     )
     id: constr(min_length=1)
-    kind: Literal["tos"]
+    kind: Literal["tos"] = "tos"
     name: constr(min_length=1)
     descriptions: Any
     progress: Any
@@ -548,7 +544,7 @@ class TransferStageConfig(BaseModel):
         extra="forbid",
     )
     id: constr(min_length=1)
-    kind: Literal["transfer"]
+    kind: Literal["transfer"] = "transfer"
     name: constr(min_length=1)
     descriptions: Any
     progress: Any
@@ -661,7 +657,7 @@ class SurveyPerParticipantStageConfig(BaseModel):
         extra="forbid",
     )
     id: constr(min_length=1)
-    kind: Literal["surveyPerParticipant"]
+    kind: Literal["surveyPerParticipant"] = "surveyPerParticipant"
     name: constr(min_length=1)
     descriptions: Any
     progress: Any
@@ -679,7 +675,7 @@ class TextSurveyQuestion(BaseModel):
         extra="forbid",
     )
     id: constr(min_length=1)
-    kind: Literal["text"]
+    kind: Literal["text"] = "text"
     questionTitle: str
     condition: ComparisonCondition | ConditionGroup | None = Field(
         None, title="Condition"
@@ -693,7 +689,7 @@ class ConditionGroup(BaseModel):
         extra="forbid",
     )
     id: constr(min_length=1)
-    type: Literal["group"]
+    type: Literal["group"] = "group"
     operator: ConditionOperator = Field(..., title="ConditionOperator")
     conditions: List[ComparisonCondition | ConditionGroup]
 
@@ -703,7 +699,7 @@ class CheckSurveyQuestion(BaseModel):
         extra="forbid",
     )
     id: constr(min_length=1)
-    kind: Literal["check"]
+    kind: Literal["check"] = "check"
     questionTitle: str
     isRequired: bool
     condition: ComparisonCondition | ConditionGroup | None = Field(
@@ -716,7 +712,7 @@ class MultipleChoiceSurveyQuestion(BaseModel):
         extra="forbid",
     )
     id: constr(min_length=1)
-    kind: Literal["mc"]
+    kind: Literal["mc"] = "mc"
     questionTitle: str
     options: List[MultipleChoiceItem]
     correctAnswerId: str | None = None
@@ -730,7 +726,7 @@ class ScaleSurveyQuestion(BaseModel):
         extra="forbid",
     )
     id: constr(min_length=1)
-    kind: Literal["scale"]
+    kind: Literal["scale"] = "scale"
     questionTitle: str
     upperValue: float
     upperText: str
@@ -749,7 +745,7 @@ class SurveyStageConfig(BaseModel):
         extra="forbid",
     )
     id: constr(min_length=1)
-    kind: Literal["survey"]
+    kind: Literal["survey"] = "survey"
     name: constr(min_length=1)
     descriptions: Any
     progress: Any
@@ -763,7 +759,7 @@ class SurveyStageConfig(BaseModel):
 
 class StaticVariableConfig(BaseModel):
     id: constr(min_length=1)
-    type: Type
+    type: Literal["static"] = "static"
     scope: Scope
     definition: VariableDefinition
     value: str
@@ -773,7 +769,7 @@ class Object(BaseModel):
     model_config = ConfigDict(
         extra="allow",
     )
-    type: Literal["object"]
+    type: Literal["object"] = "object"
     properties: (
         Dict[
             constr(pattern=r"^(.*)$"),
@@ -787,7 +783,7 @@ class Array(BaseModel):
     model_config = ConfigDict(
         extra="allow",
     )
-    type: Literal["array"]
+    type: Literal["array"] = "array"
     items: String | Number | Integer | Boolean | Object | Array | None = Field(
         None, title="JSONSchemaDefinition"
     )
@@ -806,7 +802,7 @@ class VariableDefinition(BaseModel):
 
 class RandomPermutationVariableConfig(BaseModel):
     id: constr(min_length=1)
-    type: Type
+    type: Literal["random_permutation"] = "random_permutation"
     scope: Scope
     definition: VariableDefinition
     shuffleConfig: ShuffleConfig = Field(..., title="ShuffleConfig")
@@ -817,7 +813,7 @@ class RandomPermutationVariableConfig(BaseModel):
 
 class BalancedAssignmentVariableConfig(BaseModel):
     id: constr(min_length=1)
-    type: Type
+    type: Literal["balanced_assignment"] = "balanced_assignment"
     scope: Scope
     definition: VariableDefinition
     values: List[str]
@@ -831,7 +827,7 @@ class PayoutStageConfig(BaseModel):
         extra="forbid",
     )
     id: constr(min_length=1)
-    kind: Literal["payout"]
+    kind: Literal["payout"] = "payout"
     name: constr(min_length=1)
     descriptions: Any
     progress: Any

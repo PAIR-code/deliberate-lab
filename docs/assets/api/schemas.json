@@ -1008,28 +1008,9 @@
           "type": "string"
         },
         "type": {
-          "allOf": [
-            {
-              "anyOf": [
-                {
-                  "const": "static",
-                  "type": "string"
-                },
-                {
-                  "const": "random_permutation",
-                  "type": "string"
-                },
-                {
-                  "const": "balanced_assignment",
-                  "type": "string"
-                }
-              ]
-            },
-            {
-              "const": "static",
-              "type": "string"
-            }
-          ]
+          "default": "static",
+          "const": "static",
+          "type": "string"
         },
         "scope": {
           "anyOf": [
@@ -1258,28 +1239,9 @@
           "type": "string"
         },
         "type": {
-          "allOf": [
-            {
-              "anyOf": [
-                {
-                  "const": "static",
-                  "type": "string"
-                },
-                {
-                  "const": "random_permutation",
-                  "type": "string"
-                },
-                {
-                  "const": "balanced_assignment",
-                  "type": "string"
-                }
-              ]
-            },
-            {
-              "const": "random_permutation",
-              "type": "string"
-            }
-          ]
+          "default": "random_permutation",
+          "const": "random_permutation",
+          "type": "string"
         },
         "scope": {
           "anyOf": [
@@ -1366,28 +1328,9 @@
           "type": "string"
         },
         "type": {
-          "allOf": [
-            {
-              "anyOf": [
-                {
-                  "const": "static",
-                  "type": "string"
-                },
-                {
-                  "const": "random_permutation",
-                  "type": "string"
-                },
-                {
-                  "const": "balanced_assignment",
-                  "type": "string"
-                }
-              ]
-            },
-            {
-              "const": "balanced_assignment",
-              "type": "string"
-            }
-          ]
+          "default": "balanced_assignment",
+          "const": "balanced_assignment",
+          "type": "string"
         },
         "scope": {
           "anyOf": [

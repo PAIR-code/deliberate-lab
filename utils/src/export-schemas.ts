@@ -233,6 +233,55 @@ const fixedSchema = fixRefs(combinedSchema) as Record<string, unknown>;
 fixedSchema.$id = 'DeliberateLabSchemas';
 
 /**
+ * Simplify allOf structures created by Type.Composite.
+ *
+ * When Type.Composite combines a base schema (with anyOf for multiple type options)
+ * and a specific schema (with const for one specific type), it creates:
+ *   { allOf: [{ anyOf: [...] }, { const: "specific", default: "specific" }] }
+ *
+ * This is semantically correct but too complex for datamodel-codegen to parse.
+ * We simplify it to just the const schema since it's the more specific constraint.
+ */
+function simplifyAllOf(obj: unknown): unknown {
+  if (obj === null || typeof obj !== 'object') {
+    return obj;
+  }
+
+  if (Array.isArray(obj)) {
+    return obj.map((item) => simplifyAllOf(item));
+  }
+
+  const record = obj as Record<string, unknown>;
+
+  // Check if this is an allOf that can be simplified
+  if (Array.isArray(record.allOf) && record.allOf.length === 2) {
+    const [first, second] = record.allOf as [
+      Record<string, unknown>,
+      Record<string, unknown>,
+    ];
+
+    // Pattern: allOf with anyOf (union) + const (specific value)
+    // Keep only the const schema since it's more specific
+    if (first.anyOf && second.const !== undefined) {
+      return simplifyAllOf(second);
+    }
+    if (second.anyOf && first.const !== undefined) {
+      return simplifyAllOf(first);
+    }
+  }
+
+  // Recursively process all properties
+  const result: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(record)) {
+    result[key] = simplifyAllOf(value);
+  }
+  return result;
+}
+
+const simplifiedSchema = simplifyAllOf(fixedSchema) as Record<string, unknown>;
+simplifiedSchema.$id = 'DeliberateLabSchemas';
+
+/**
  * Second pass: replace inline schemas that have the same title as a $defs entry with $refs.
  * This deduplicates schemas that appear multiple times inline.
  */
@@ -292,13 +341,13 @@ function deduplicateWithRefs(
 }
 
 // Get $defs from the schema
-const defs = (fixedSchema.$defs || {}) as Record<string, unknown>;
+const defs = (simplifiedSchema.$defs || {}) as Record<string, unknown>;
 
 // Deduplicate inline schemas
-const deduplicatedSchema = deduplicateWithRefs(fixedSchema, defs) as Record<
-  string,
-  unknown
->;
+const deduplicatedSchema = deduplicateWithRefs(
+  simplifiedSchema,
+  defs,
+) as Record<string, unknown>;
 deduplicatedSchema.$id = 'DeliberateLabSchemas';
 
 // Write to docs/assets/api for public access
