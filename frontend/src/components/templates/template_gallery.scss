@@ -1,0 +1,76 @@
+@use '../../sass/colors';
+@use '../../sass/common';
+@use '../../sass/typescale';
+
+// Include home gallery styles as base
+@use '../gallery/home_gallery.scss';
+
+:host {
+  @include common.flex-column;
+  align-items: center;
+  width: 100%;
+}
+
+.card {
+  @include common.flex-column;
+  background: var(--md-sys-color-surface);
+  border: 1px solid var(--md-sys-color-outline);
+  border-radius: common.$spacing-medium;
+  cursor: pointer;
+  gap: common.$spacing-medium;
+  padding: common.$spacing-large;
+  width: 280px;
+  transition:
+    background 120ms ease,
+    border-color 120ms ease;
+
+  &:focus,
+  &:hover {
+    background: var(--md-sys-color-surface-variant);
+    border-color: var(--md-sys-color-secondary);
+  }
+
+  &.template-card {
+    min-height: 150px;
+  }
+
+  .card-content {
+    @include common.flex-column;
+    height: 100%;
+    gap: common.$spacing-medium;
+  }
+
+  .title {
+    @include typescale.title-small;
+    color: var(--md-sys-color-on-surface);
+  }
+
+  .description {
+    @include typescale.body-small;
+    color: var(--md-sys-color-on-surface-variant);
+    // Remove flex-grow from description if we want footer at bottom regardless of description height
+    // But description has valid clamp.
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .template-footer {
+    @include common.flex-row;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: auto;
+
+    .creator {
+      @include typescale.label-small;
+      color: var(--md-sys-color-outline);
+    }
+  }
+}
+
+.gallery-link {
+  text-decoration: none;
+  color: inherit;
+  display: contents;
+}

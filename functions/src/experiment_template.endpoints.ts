@@ -42,23 +42,6 @@ export const saveExperimentTemplate = onCall(async (request) => {
       .filter((email) => email.length > 0);
   }
 
-  // Check for existing template with same name
-  const existingTemplates = await app
-    .firestore()
-    .collection(EXPERIMENT_TEMPLATES_COLLECTION)
-    .where('experiment.metadata.name', '==', template.experiment.metadata.name)
-    .get();
-
-  const duplicate = existingTemplates.docs.find(
-    (doc) => doc.id !== template.id,
-  );
-  if (duplicate) {
-    throw new HttpsError(
-      'already-exists',
-      'A template with this name already exists.',
-    );
-  }
-
   // Run document write as transaction to ensure consistency
   await app.firestore().runTransaction(async (transaction) => {
     transaction.set(document, template);
@@ -135,9 +118,26 @@ export const deleteExperimentTemplate = onCall(async (request) => {
   }
 
   // Delete document
-  const doc = app
+  const docRef = app
     .firestore()
     .doc(`${EXPERIMENT_TEMPLATES_COLLECTION}/${data.templateId}`);
-  await doc.delete();
+
+  const snapshot = await docRef.get();
+  if (!snapshot.exists) {
+    throw new HttpsError('not-found', 'Template not found');
+  }
+
+  const template = snapshot.data() as ExperimentTemplate;
+  const userEmail = request.auth?.token.email?.toLowerCase();
+
+  // strict creator check
+  if (template.experiment.metadata.creator !== userEmail) {
+    throw new HttpsError(
+      'permission-denied',
+      'Only the creator can delete this template',
+    );
+  }
+
+  await docRef.delete();
   return {success: true};
 });

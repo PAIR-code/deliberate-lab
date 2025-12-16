@@ -1,9 +1,6 @@
 import {
-  createAgentChatSettings,
   createAgentMediatorPersonaConfig,
-  createAgentParticipantPersonaConfig,
   createChatPromptConfig,
-  createChatStage,
   createExperimentConfig,
   createExperimentTemplate,
   createMetadataConfig,
@@ -12,12 +9,8 @@ import {
   createProfileStage,
   createDefaultPromptFromText,
   AgentMediatorTemplate,
-  AgentParticipantTemplate,
-  AgentPersonaType,
   ExperimentTemplate,
   MediatorPromptConfig,
-  ParticipantPromptConfig,
-  ProfileType,
   StageConfig,
   StageKind,
 } from '@deliberation-lab/utils';
@@ -25,13 +18,15 @@ import {
 // ****************************************************************************
 // Experiment config
 // ****************************************************************************
+export const QUICKSTART_PRIVATE_CHAT_METADATA = createMetadataConfig({
+  name: 'Private Chat Experiment',
+  publicName: 'Private Chat',
+  description: 'Template experiment with private chat between user and agent',
+});
+
 export function getQuickstartPrivateChatTemplate(): ExperimentTemplate {
   const stageConfigs = getStageConfigs();
-  const metadata = createMetadataConfig({
-    name: 'Private Chat Experiment',
-    publicName: 'Private Chat',
-    description: 'Template experiment with private chat between user and agent',
-  });
+  const metadata = QUICKSTART_PRIVATE_CHAT_METADATA;
 
   return createExperimentTemplate({
     experiment: createExperimentConfig(stageConfigs, {metadata}),

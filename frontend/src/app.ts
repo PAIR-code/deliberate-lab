@@ -9,6 +9,7 @@ import './components/login/login';
 import './components/participant_view/cohort_landing';
 import './components/participant_view/participant_view';
 import './components/settings/settings';
+import './components/templates/templates_dialog';
 
 import {MobxLitElement} from '@adobe/lit-mobx';
 import {CSSResultGroup, html, nothing, TemplateResult} from 'lit';
@@ -55,6 +56,7 @@ export class App extends MobxLitElement {
           <page-header></page-header>
           <quick-start-gallery></quick-start-gallery>
           <home-gallery></home-gallery>
+          <templates-dialog></templates-dialog>
         `;
       case Pages.ADMIN:
         return html`
@@ -63,6 +65,7 @@ export class App extends MobxLitElement {
             <admin-dashboard></admin-dashboard>
           </div>
         `;
+
       case Pages.SETTINGS:
         return html`
           <page-header></page-header>
@@ -71,6 +74,7 @@ export class App extends MobxLitElement {
           </div>
         `;
       case Pages.EXPERIMENT:
+      case Pages.EXPERIMENT_EDIT:
         if (!this.authService.isExperimenter) {
           return this.render403();
         }
@@ -79,6 +83,8 @@ export class App extends MobxLitElement {
 
         return html` <experiment-dashboard></experiment-dashboard> `;
       case Pages.EXPERIMENT_CREATE:
+      case Pages.TEMPLATE_CREATE:
+      case Pages.TEMPLATE_EDIT:
         if (!this.authService.isExperimenter) {
           return this.render403();
         }
