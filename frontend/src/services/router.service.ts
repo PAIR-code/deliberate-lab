@@ -126,14 +126,11 @@ export class RouterService extends Service {
   private loadDataForRoute() {
     const params = this.activeRoute.params;
 
-    // Reset services first if needed (though some might need to persist, usually better to update)
-    // For now, let's keep the logic simple: update if params exist.
-
     if (params['experiment'] && params['participant']) {
       this.sp.participantService.updateForRoute(
         params['experiment'],
         params['participant'],
-        params['stage'], // if defined, this sets current stage viewed
+        params['stage'],
       );
       this.sp.experimentManager.updateForRoute(params['experiment']);
       this.sp.experimentService.updateForRoute(params['experiment']);
@@ -142,18 +139,9 @@ export class RouterService extends Service {
       this.sp.experimentService.updateForRoute(params['experiment']);
       this.sp.participantService.reset();
 
-      // Handle Edit Mode
       if (this.activePage === Pages.EXPERIMENT_EDIT) {
         this.sp.experimentManager.setIsEditing(true);
       }
-    } else if (this.activePage === Pages.TEMPLATE_EDIT && params['template']) {
-      // Template Edit Route
-      // We don't have a dedicated "TemplateManager" yet, so we likely use ExperimentEditor
-      // Logic for this will be handled in ExperimentBuilder (or we adding a method here?)
-      // Use ExperimentService/Manager reset to be safe
-      this.sp.experimentManager.reset();
-      this.sp.experimentService.reset();
-      this.sp.participantService.reset();
     } else {
       this.sp.experimentManager.reset();
       this.sp.experimentService.reset();
