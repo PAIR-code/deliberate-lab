@@ -1,10 +1,11 @@
 import {
-  Experiment,
   ExperimentTemplate,
   MetadataConfig,
   StageConfig,
   Visibility,
   createExperimentTemplate,
+  createExperimentConfig,
+  createMetadataConfig,
 } from '@deliberation-lab/utils';
 
 import {
@@ -59,8 +60,13 @@ import {
 import {
   getQuickstartAgentGroupChatTemplate,
   getQuickstartGroupChatTemplate,
+  QUICKSTART_AGENT_CHAT_METADATA,
+  QUICKSTART_GROUP_CHAT_METADATA,
 } from './templates/quickstart_group_chat';
-import {getQuickstartPrivateChatTemplate} from './templates/quickstart_private_chat';
+import {
+  getQuickstartPrivateChatTemplate,
+  QUICKSTART_PRIVATE_CHAT_METADATA,
+} from './templates/quickstart_private_chat';
 
 // Interface for code-based templates to be displayed in the gallery
 export interface CodeBasedTemplate {
@@ -78,52 +84,22 @@ function createTemplate(
   metadata: Partial<MetadataConfig>,
   stages: StageConfig[],
 ): ExperimentTemplate {
-  return {
-    id: '', // Placeholder, logic usually allows empty ID for new templates or code templates don't track ID
+  return createExperimentTemplate({
     visibility: Visibility.PUBLIC,
     stageConfigs: stages,
-    agentMediators: [],
-    // cast to unknown to avoid strict Experiment interface checks for fields we don't care about in templates (like IDs that get regenerated)
-    // or better, fill defaults.
-    experiment: {
-      id: '',
-      versionId: 19,
+    experiment: createExperimentConfig(stages, {
       metadata: {
-        creator: 'system',
-        dateCreated: new Date().toISOString(),
-        dateModified: new Date().toISOString(),
-        publicMetadata: {},
-        starred: {},
-        tags: [],
+        ...createMetadataConfig(),
         ...metadata,
       },
-      permissions: {
-        visibility: Visibility.PUBLIC,
-        readers: [],
-        editors: [],
-      },
-      stageIds: stages.map((s) => s.id),
       defaultCohortConfig: {
-        minParticipantsPerCohort: 1, // Default to 1 to compile, logic might overwrite
+        minParticipantsPerCohort: 1,
         maxParticipantsPerCohort: 100,
         includeAllParticipantsInCohortCount: false,
         botProtection: false,
       },
-      prolificConfig: {
-        enableProlificIntegration: false,
-        attentionFailRedirectCode: '',
-        defaultRedirectCode: '',
-        bootedRedirectCode: '',
-      },
-      agentConfig: {
-        agentEndpoints: {},
-      },
-      cohortLockMap: {},
-      variableConfigs: [],
-      variableMap: {},
-    } as unknown as Experiment,
-    agentParticipants: [],
-  };
+    }),
+  });
 }
 
 export const DEFAULT_TEMPLATES: CodeBasedTemplate[] = [
@@ -135,20 +111,20 @@ export const DEFAULT_TEMPLATES: CodeBasedTemplate[] = [
   },
   {
     id: 'quickstart_agent_chat',
-    name: 'Group chat with agent mediator',
-    description: 'A group chat facilitated by an LLM agent.',
+    name: QUICKSTART_AGENT_CHAT_METADATA.name,
+    description: QUICKSTART_AGENT_CHAT_METADATA.description,
     factory: getQuickstartAgentGroupChatTemplate,
   },
   {
     id: 'quickstart_private_chat',
-    name: 'Private chat with agent',
-    description: '1:1 chat between a participant and an agent.',
+    name: QUICKSTART_PRIVATE_CHAT_METADATA.name,
+    description: QUICKSTART_PRIVATE_CHAT_METADATA.description,
     factory: getQuickstartPrivateChatTemplate,
   },
   {
     id: 'quickstart_group_chat',
-    name: 'Group chat with no agents',
-    description: 'A standard group chat without AI mediation.',
+    name: QUICKSTART_GROUP_CHAT_METADATA.name,
+    description: QUICKSTART_GROUP_CHAT_METADATA.description,
     factory: getQuickstartGroupChatTemplate,
   },
   {

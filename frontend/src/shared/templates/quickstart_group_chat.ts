@@ -1,7 +1,5 @@
 import {
-  createAgentChatSettings,
   createAgentMediatorPersonaConfig,
-  createAgentParticipantPersonaConfig,
   createChatPromptConfig,
   createChatStage,
   createExperimentConfig,
@@ -11,11 +9,8 @@ import {
   createProfileStage,
   createDefaultMediatorGroupChatPrompt,
   AgentMediatorTemplate,
-  AgentParticipantTemplate,
-  AgentPersonaType,
   ExperimentTemplate,
   MediatorPromptConfig,
-  ParticipantPromptConfig,
   ProfileType,
   StageConfig,
   StageKind,
@@ -24,13 +19,15 @@ import {
 // ****************************************************************************
 // Experiment config
 // ****************************************************************************
+export const QUICKSTART_GROUP_CHAT_METADATA = createMetadataConfig({
+  name: 'Group Chat Experiment',
+  publicName: 'Group Chat',
+  description: 'Template experiment: group chat, no agents.',
+});
+
 export function getQuickstartGroupChatTemplate(): ExperimentTemplate {
   const stageConfigs = getStageConfigs(false);
-  const metadata = createMetadataConfig({
-    name: 'Group Chat Experiment',
-    publicName: 'Group Chat',
-    description: 'Template experiment: group chat, no agents.',
-  });
+  const metadata = QUICKSTART_GROUP_CHAT_METADATA;
 
   return createExperimentTemplate({
     experiment: createExperimentConfig(stageConfigs, {metadata}),
@@ -40,13 +37,15 @@ export function getQuickstartGroupChatTemplate(): ExperimentTemplate {
   });
 }
 
+export const QUICKSTART_AGENT_CHAT_METADATA = createMetadataConfig({
+  name: 'Mediated Group Chat Experiment',
+  publicName: 'Group Chat',
+  description: 'Template experiment with agent-mediated group chat',
+});
+
 export function getQuickstartAgentGroupChatTemplate(): ExperimentTemplate {
   const stageConfigs = getStageConfigs(true);
-  const metadata = createMetadataConfig({
-    name: 'Mediated Group Chat Experiment',
-    publicName: 'Group Chat',
-    description: 'Template experiment with agent-mediated group chat',
-  });
+  const metadata = QUICKSTART_AGENT_CHAT_METADATA;
 
   return createExperimentTemplate({
     experiment: createExperimentConfig(stageConfigs, {metadata}),
