@@ -68,6 +68,20 @@ export const updateExperiment = onCall(async (request) => {
 
   // Use shared utility to update experiment
   // TODO: Enable admins to update experiment?
+
+  // Define document reference
+  const document = app
+    .firestore()
+    .collection(data.collectionName)
+    .doc(data.experimentTemplate.id);
+
+  // If experiment does not exist, return false
+  const oldExperiment = await document.get();
+  if (!oldExperiment.exists) {
+    return {success: false};
+  }
+
+  // Use shared utility to update experiment
   const result = await updateExperimentFromTemplate(
     app.firestore(),
     data.experimentTemplate,
@@ -97,8 +111,21 @@ export const deleteExperiment = onCall(async (request) => {
 
   const experimenterId = request.auth?.token.email?.toLowerCase() || '';
 
+  const experiment = (
+    await app
+      .firestore()
+      .collection(data.collectionName)
+      .doc(data.experimentId)
+      .get()
+  ).data();
+  if (!experiment) {
+    throw new HttpsError(
+      'not-found',
+      `Experiment ${data.experimentId} not found in collection ${data.collectionName}`,
+    );
+  }
+
   // Use shared utility to delete experiment
-  // TODO: Enable admins to delete?
   const result = await deleteExperimentById(
     app.firestore(),
     data.experimentId,
