@@ -99,6 +99,8 @@ export class Header extends MobxLitElement {
           }
           break;
         case Pages.EXPERIMENT_CREATE:
+        case Pages.TEMPLATE_CREATE:
+        case Pages.TEMPLATE_EDIT:
           this.routerService.navigate(Pages.HOME);
           break;
         case Pages.PARTICIPANT_JOIN_COHORT:
