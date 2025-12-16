@@ -230,23 +230,12 @@ export class HomeGallery extends MobxLitElement {
       this.authService.isAdmin;
 
     const createHref = `#/templates/new_template?template=${experiment.id}`;
-    const editHref = `#/templates/${experiment.id}/edit`;
 
     return html`
       <div class="template-card-wrapper">
         <a href=${createHref} class="gallery-link" title="Use template">
           <gallery-card .item=${item}></gallery-card>
         </a>
-        ${isCreator
-          ? html`
-              <div class="template-actions">
-                <a href=${editHref} class="edit-button">
-                  <pr-icon icon="edit" size="small"></pr-icon>
-                  Edit template
-                </a>
-              </div>
-            `
-          : nothing}
       </div>
     `;
   }
