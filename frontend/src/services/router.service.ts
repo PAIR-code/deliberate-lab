@@ -52,6 +52,18 @@ export class RouterService extends Service {
       path: '/new_experiment',
     },
     {
+      name: Pages.TEMPLATE_CREATE,
+      path: '/templates/new_template',
+    },
+    {
+      name: Pages.TEMPLATE_EDIT,
+      path: '/templates/:template/edit',
+    },
+    {
+      name: Pages.EXPERIMENT_EDIT,
+      path: '/e/:experiment/edit',
+    },
+    {
       name: Pages.PARTICIPANT,
       path: '/e/:experiment/p/:participant',
     },
@@ -113,6 +125,9 @@ export class RouterService extends Service {
   private loadDataForRoute() {
     const params = this.activeRoute.params;
 
+    // Reset services first if needed (though some might need to persist, usually better to update)
+    // For now, let's keep the logic simple: update if params exist.
+
     if (params['experiment'] && params['participant']) {
       this.sp.participantService.updateForRoute(
         params['experiment'],
@@ -124,6 +139,19 @@ export class RouterService extends Service {
     } else if (params['experiment']) {
       this.sp.experimentManager.updateForRoute(params['experiment']);
       this.sp.experimentService.updateForRoute(params['experiment']);
+      this.sp.participantService.reset();
+
+      // Handle Edit Mode
+      if (this.activePage === Pages.EXPERIMENT_EDIT) {
+        this.sp.experimentManager.setIsEditing(true);
+      }
+    } else if (this.activePage === Pages.TEMPLATE_EDIT && params['template']) {
+      // Template Edit Route
+      // We don't have a dedicated "TemplateManager" yet, so we likely use ExperimentEditor
+      // Logic for this will be handled in ExperimentBuilder (or we adding a method here?)
+      // Use ExperimentService/Manager reset to be safe
+      this.sp.experimentManager.reset();
+      this.sp.experimentService.reset();
       this.sp.participantService.reset();
     } else {
       this.sp.experimentManager.reset();
@@ -183,7 +211,10 @@ export enum Pages {
   ADMIN = 'ADMIN',
   HOME = 'HOME',
   EXPERIMENT = 'EXPERIMENT',
+  EXPERIMENT_EDIT = 'EXPERIMENT_EDIT',
   EXPERIMENT_CREATE = 'EXPERIMENT_CREATE',
+  TEMPLATE_CREATE = 'TEMPLATE_CREATE',
+  TEMPLATE_EDIT = 'TEMPLATE_EDIT',
   PARTICIPANT = 'PARTICIPANT',
   PARTICIPANT_JOIN_COHORT = 'PARTICIPANT_JOIN_COHORT',
   // Deprecated (but included for backwards compatibility):

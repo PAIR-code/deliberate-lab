@@ -212,6 +212,10 @@ export class ExperimentEditor extends Service {
     this.loadedTemplateId = template.id;
   }
 
+  setLoadedTemplateId(id: string | undefined) {
+    this.loadedTemplateId = id;
+  }
+
   async saveTemplate(
     name?: string,
     description?: string,

@@ -250,33 +250,10 @@ export class Header extends MobxLitElement {
           </pr-tooltip>
         `;
       case Pages.EXPERIMENT_CREATE:
-        const errors = this.experimentEditor.getExperimentConfigErrors();
-        return html`
-          ${errors.length === 0
-            ? nothing
-            : html`
-                <div class="error">
-                  ⚠️ ${errors.map((e) => e.message).join(', ')}
-                </div>
-              `}
-          ${this.renderTemplateButtons(errors.some((e) => !e.isApiError))}
-          <pr-button
-            ?loading=${this.experimentEditor.isWritingExperiment}
-            ?disabled=${errors.length > 0}
-            @click=${async () => {
-              this.analyticsService.trackButtonClick(
-                ButtonClick.EXPERIMENT_SAVE_NEW,
-              );
-              const response = await this.experimentEditor.writeExperiment();
-              this.experimentEditor.resetExperiment();
-              this.routerService.navigate(Pages.EXPERIMENT, {
-                experiment: response.id,
-              });
-            }}
-          >
-            Save experiment
-          </pr-button>
-        `;
+      case Pages.TEMPLATE_CREATE:
+        return this.renderExperimentCreateActions();
+      case Pages.TEMPLATE_EDIT:
+        return this.renderTemplateEditActions();
       case Pages.EXPERIMENT:
         if (this.experimentManager.isEditingFull) {
           if (!this.experimentManager.isCreator) return nothing;
@@ -295,6 +272,7 @@ export class Header extends MobxLitElement {
                 // API errors shouldn't affect the ability to save as template - everything else is fair game.
                 errors.some((e) => !e.isApiError),
             )}
+            ${this.renderLoadTemplateButton()}
             <pr-button
               color="tertiary"
               variant="tonal"
@@ -322,6 +300,22 @@ export class Header extends MobxLitElement {
       default:
         return nothing;
     }
+  }
+
+  private renderLoadTemplateButton() {
+    return html`
+      <pr-button
+        icon="input"
+        color="neutral"
+        variant="default"
+        ?disabled=${!this.experimentEditor.canEditStages}
+        @click=${() => {
+          this.experimentEditor.toggleStageBuilderDialog(true);
+        }}
+      >
+        Load template
+      </pr-button>
+    `;
   }
 
   private renderTemplateButtons(disabled: boolean) {
@@ -379,7 +373,7 @@ export class Header extends MobxLitElement {
 
     return html`
       <pr-tooltip
-        text="This template will be shared with all experimenters."
+        text="Save the current experiment configuration as a template."
         position="BOTTOM_END"
       >
         <pr-button
@@ -520,6 +514,72 @@ export class Header extends MobxLitElement {
         >
         </pr-icon-button>
       </pr-tooltip>
+    `;
+  }
+
+  private renderExperimentCreateActions() {
+    const errors = this.experimentEditor.getExperimentConfigErrors();
+    const isTemplateCreate =
+      this.routerService.activePage === Pages.TEMPLATE_CREATE;
+
+    return html`
+      ${errors.length === 0
+        ? nothing
+        : html`
+            <div class="error">
+              ⚠️ ${errors.map((e) => e.message).join(', ')}
+            </div>
+          `}
+      ${this.renderTemplateButtons(errors.some((e) => !e.isApiError))}
+      ${this.renderLoadTemplateButton()}
+      ${!isTemplateCreate
+        ? html`
+            <pr-button
+              ?loading=${this.experimentEditor.isWritingExperiment}
+              ?disabled=${errors.length > 0}
+              @click=${async () => {
+                this.analyticsService.trackButtonClick(
+                  ButtonClick.EXPERIMENT_SAVE_NEW,
+                );
+                const response = await this.experimentEditor.writeExperiment();
+                this.experimentEditor.resetExperiment();
+                this.routerService.navigate(Pages.EXPERIMENT, {
+                  experiment: response.id,
+                });
+              }}
+            >
+              Save experiment
+            </pr-button>
+          `
+        : nothing}
+    `;
+  }
+
+  private renderTemplateEditActions() {
+    const errors = this.experimentEditor.getExperimentConfigErrors();
+    const disabled = errors.some((e) => !e.isApiError);
+
+    return html`
+      ${
+        errors.length === 0
+          ? nothing
+          : html`
+              <div class="error">
+                ⚠️ ${errors.map((e) => e.message).join(', ')}
+              </div>
+            `
+      }
+      <pr-button
+        icon="save"
+        color="primary" // distinct color for template update
+        variant="default"
+        ?disabled=${disabled}
+        @click=${() => {
+          this.experimentEditor.setShowSaveTemplateDialog(true, 'update');
+        }}
+      >
+        Update template
+      </pr-button>
     `;
   }
 }

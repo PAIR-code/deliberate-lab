@@ -10,6 +10,7 @@ import {core} from '../../core/core';
 import {AnalyticsService, ButtonClick} from '../../services/analytics.service';
 import {AuthService} from '../../services/auth.service';
 import {ExperimentEditor} from '../../services/experiment.editor';
+import {HomeService} from '../../services/home.service';
 
 import {
   AgentPersonaType,
@@ -98,6 +99,7 @@ export class StageBuilderDialog extends MobxLitElement {
   private readonly analyticsService = core.getService(AnalyticsService);
   private readonly authService = core.getService(AuthService);
   private readonly experimentEditor = core.getService(ExperimentEditor);
+  private readonly homeService = core.getService(HomeService);
 
   @property({type: Boolean})
   showTemplates: boolean = false;
@@ -107,6 +109,8 @@ export class StageBuilderDialog extends MobxLitElement {
     createCharityDebateConfig();
   // Used to populate resource allocation template
   @state() private consensusTopics: string = 'Climate Change';
+
+  @state() private searchText: string = '';
 
   override connectedCallback() {
     super.connectedCallback();
@@ -171,13 +175,36 @@ export class StageBuilderDialog extends MobxLitElement {
     `;
   }
 
+  private renderSearchBar() {
+    return html`
+      <div class="search-container">
+        <pr-icon icon="search" size="small"></pr-icon>
+        <pr-textarea
+          placeholder="Search templates"
+          variant="outlined"
+          .value=${this.searchText}
+          @input=${(e: InputEvent) => {
+            this.searchText = (e.target as HTMLTextAreaElement).value;
+          }}
+        ></pr-textarea>
+      </div>
+    `;
+  }
+
   private renderTemplateCards() {
     return html`
       <div class="banner error">
         ⚠️ Loading a template will override all existing stages in your
         configuration!
       </div>
+      ${this.renderSearchBar()}
       <div class="card-gallery-wrapper">
+        <div class="gallery-section">
+          <div class="gallery-title">Pre-defined Templates</div>
+          <div class="card-gallery-wrapper">
+            ${this.renderPredefinedTemplates()}
+          </div>
+        </div>
         ${this.experimentEditor.savedTemplates.length > 0
           ? html`
               <div class="gallery-section">
@@ -188,23 +215,61 @@ export class StageBuilderDialog extends MobxLitElement {
               </div>
             `
           : nothing}
-        <div class="gallery-section">
-          <div class="gallery-title">Pre-defined Templates</div>
-          <div class="card-gallery-wrapper">
-            ${this.renderFlipCardTemplateCard()}
-            ${this.renderFruitTestTemplateCard()}
-            ${this.renderConditionalSurveyTemplateCard()}
-            ${this.renderStockInfoGameCard()}
-            ${this.renderAssetAllocationTemplateCard()}
-            ${this.renderPolicyTemplateCard()}
-            ${this.renderAgentIntegrationCard()}
-          </div>
-        </div>
       </div>
       ${this.authService.hasResearchTemplateAccess
         ? this.renderResearchTemplateGallery()
         : nothing}
     `;
+  }
+
+  // Refactored to allow search filtering on pre-defined templates
+  private renderPredefinedTemplates() {
+    const q = this.searchText.toLowerCase();
+    const matches = (text: string) => text.toLowerCase().includes(q);
+
+    const templates = [
+      {
+        render: () => this.renderFlipCardTemplateCard(),
+        text:
+          FLIPCARD_TEMPLATE_METADATA.name +
+          FLIPCARD_TEMPLATE_METADATA.description,
+      },
+      {
+        render: () => this.renderFruitTestTemplateCard(),
+        text: FRUIT_TEST_METADATA.name + FRUIT_TEST_METADATA.description,
+      },
+      {
+        render: () => this.renderConditionalSurveyTemplateCard(),
+        text:
+          CONDITIONAL_SURVEY_TEMPLATE_METADATA.name +
+          CONDITIONAL_SURVEY_TEMPLATE_METADATA.description,
+      },
+      {
+        render: () => this.renderStockInfoGameCard(),
+        text:
+          STOCKINFO_GAME_METADATA.name + STOCKINFO_GAME_METADATA.description,
+      },
+      {
+        render: () => this.renderAssetAllocationTemplateCard(),
+        text:
+          ASSET_ALLOCATION_TEMPLATE_METADATA.name +
+          ASSET_ALLOCATION_TEMPLATE_METADATA.description,
+      },
+      {
+        render: () => this.renderPolicyTemplateCard(),
+        text: POLICY_METADATA.name + POLICY_METADATA.description,
+      },
+      {
+        render: () => this.renderAgentIntegrationCard(),
+        text: INTEGRATION_METADATA.name + INTEGRATION_METADATA.description,
+      },
+    ];
+
+    const filtered = templates.filter((t) => !q || matches(t.text));
+
+    if (filtered.length === 0) return nothing;
+
+    return html`${filtered.map((t) => t.render())}`;
   }
 
   // This is a temporary set of hardcoded templates defined in the frontend
@@ -241,8 +306,21 @@ export class StageBuilderDialog extends MobxLitElement {
   }
 
   private renderSavedTemplates() {
+    const q = this.searchText.toLowerCase();
+    const filtered = this.experimentEditor.savedTemplates.filter(
+      (t) =>
+        !q ||
+        t.experiment.metadata.name.toLowerCase().includes(q) ||
+        t.experiment.metadata.description.toLowerCase().includes(q),
+    );
+
+    if (filtered.length === 0) {
+      if (this.searchText) return html`<div>No matching saved templates</div>`;
+      return nothing;
+    }
+
     return html`
-      ${this.experimentEditor.savedTemplates.map(
+      ${filtered.map(
         (template) => html`
           <div class="card saved-template">
             <div
@@ -253,7 +331,10 @@ export class StageBuilderDialog extends MobxLitElement {
               <div>${template.experiment.metadata.description}</div>
               <div class="template-footer">
                 <div class="creator">
-                  By ${template.experiment.metadata.creator}
+                  By
+                  ${this.homeService.getExperimenterName(
+                    template.experiment.metadata.creator,
+                  )}
                 </div>
               </div>
             </div>

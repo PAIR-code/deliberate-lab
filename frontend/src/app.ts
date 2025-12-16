@@ -71,6 +71,7 @@ export class App extends MobxLitElement {
           </div>
         `;
       case Pages.EXPERIMENT:
+      case Pages.EXPERIMENT_EDIT:
         if (!this.authService.isExperimenter) {
           return this.render403();
         }
@@ -79,6 +80,8 @@ export class App extends MobxLitElement {
 
         return html` <experiment-dashboard></experiment-dashboard> `;
       case Pages.EXPERIMENT_CREATE:
+      case Pages.TEMPLATE_CREATE:
+      case Pages.TEMPLATE_EDIT:
         if (!this.authService.isExperimenter) {
           return this.render403();
         }

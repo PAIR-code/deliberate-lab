@@ -31,7 +31,7 @@ import './variable_editor';
 
 import {MobxLitElement} from '@adobe/lit-mobx';
 import {CSSResultGroup, html, nothing} from 'lit';
-import {customElement, property, state} from 'lit/decorators.js';
+import {customElement, state} from 'lit/decorators.js';
 
 import '@material/web/checkbox/checkbox.js';
 
@@ -76,6 +76,37 @@ export class ExperimentBuilder extends MobxLitElement {
   private readonly routerService = core.getService(RouterService);
 
   @state() panelView: PanelView = PanelView.STAGES;
+
+  override async firstUpdated() {
+    const params = this.routerService.activeRoute.params;
+    const isTemplateEdit =
+      this.routerService.activePage === Pages.TEMPLATE_EDIT;
+    const templateId = params['template'];
+
+    if (templateId) {
+      if (this.experimentEditor.savedTemplates.length === 0) {
+        await this.experimentEditor.loadTemplates();
+      }
+
+      const template = this.experimentEditor.savedTemplates.find(
+        (t) => t.id === templateId,
+      );
+      if (template) {
+        this.experimentEditor.loadTemplate(template);
+        if (isTemplateEdit) {
+          // TODO: Set a flag in experimentEditor to indicate we are directly editing a template
+          // For now, we just load it. The save button logic needs to know this.
+          this.experimentEditor.setLoadedTemplateId(template.id);
+        }
+
+        if (this.experimentEditor.stages.length > 0) {
+          this.experimentEditor.setCurrentStageId(
+            this.experimentEditor.stages[0].id,
+          );
+        }
+      }
+    }
+  }
 
   override render() {
     return html`

@@ -11,15 +11,18 @@ import {repeat} from 'lit/directives/repeat.js';
 import {core} from '../../core/core';
 import {AuthService} from '../../services/auth.service';
 import {ExperimentEditor} from '../../services/experiment.editor';
-import {HomeService} from '../../services/home.service';
+import {HomeService, HomeTab} from '../../services/home.service';
 import {Pages, RouterService} from '../../services/router.service';
 
 import {
   Experiment,
+  ExperimentTemplate,
   SortMode,
   sortLabel,
   sortExperiments,
+  Visibility,
 } from '@deliberation-lab/utils';
+import {GalleryItem} from '../../shared/types';
 import {convertExperimentToGalleryItem} from '../../shared/experiment.utils';
 import {
   getQuickstartAgentGroupChatTemplate,
@@ -107,45 +110,31 @@ export class HomeGallery extends MobxLitElement {
   override render() {
     const renderExperiment = (experiment: Experiment) => {
       const item = convertExperimentToGalleryItem(experiment);
+      const isTemplate = this.homeService.activeTab === HomeTab.TEMPLATES;
+
+      if (isTemplate) {
+        return this.renderTemplateCard(experiment, item);
+      }
+
       const href = `#/e/${experiment.id}`;
+
       return html`<a href=${href} class="gallery-link">
         <gallery-card .item=${item}></gallery-card>
       </a>`;
     };
 
-    let experiments = [...this.homeService.experiments];
+    const list = this.getList();
 
-    if (this.homeService.searchQuery.trim()) {
-      const q = this.homeService.searchQuery.toLowerCase();
-      experiments = experiments.filter((e) =>
-        e.metadata.name?.toLowerCase().includes(q),
-      );
-    }
-
-    experiments = sortExperiments(experiments, this.sortMode);
-
-    const yourExperiments = experiments.filter(
-      (e) => e.metadata.creator === this.authService.userEmail,
-    );
-    const otherExperiments = experiments.filter(
-      (e) =>
-        e.metadata.creator !== this.authService.userEmail &&
-        this.authService.isViewedExperiment(e.id),
-    );
-
-    const list = this.homeService.showMyExperiments
-      ? yourExperiments
-      : otherExperiments;
-
-    const banner = this.homeService.showMyExperiments
-      ? nothing
-      : html`
-          <div class="banner">
-            Experiments by others will only be shown in this tab if they are
-            shared publicly and have been viewed by you before. Ask the creator
-            to share the link with you.
-          </div>
-        `;
+    const banner =
+      this.homeService.activeTab !== HomeTab.SHARED_WITH_ME
+        ? nothing
+        : html`
+            <div class="banner">
+              Experiments by others will only be shown in this tab if they are
+              shared publicly and have been viewed by you before. Ask the
+              creator to share the link with you.
+            </div>
+          `;
 
     return html`
       <home-gallery-tabs>
@@ -156,7 +145,7 @@ export class HomeGallery extends MobxLitElement {
         ${repeat(
           list,
           (e) => e.id,
-          (e) => renderExperiment(e),
+          (e: Experiment) => renderExperiment(e),
         )}
       </div>
 
@@ -164,9 +153,107 @@ export class HomeGallery extends MobxLitElement {
     `;
   }
 
-  private renderEmptyMessage(experiments: Experiment[]) {
-    if (experiments.length > 0) return nothing;
-    return html`<div class="empty-message">No experiments yet</div>`;
+  private getList() {
+    let experiments = [...this.homeService.experiments];
+
+    // 1. Filter by search
+    if (this.homeService.searchQuery.trim()) {
+      const q = this.homeService.searchQuery.toLowerCase();
+      experiments = experiments.filter((e) =>
+        e.metadata.name?.toLowerCase().includes(q),
+      );
+    }
+
+    // 2. Sort
+    experiments = sortExperiments(experiments, this.sortMode);
+
+    // 3. Filter by tab
+    if (this.homeService.activeTab === HomeTab.MY_EXPERIMENTS) {
+      return experiments.filter(
+        (e) => e.metadata.creator === this.authService.userEmail,
+      );
+    } else if (this.homeService.activeTab === HomeTab.SHARED_WITH_ME) {
+      return experiments.filter(
+        (e) =>
+          e.metadata.creator !== this.authService.userEmail &&
+          this.authService.isViewedExperiment(e.id),
+      );
+    } else {
+      // Templates
+      // Note: homeService.experimentTemplates is typed as Experiment[] in service but is actually Template items
+      // We need to cast or fix service type. Assuming it contains template objects with .experiment property
+      let templates = [
+        ...this.homeService.experimentTemplates,
+      ] as unknown as ExperimentTemplate[];
+
+      if (this.homeService.searchQuery.trim()) {
+        const q = this.homeService.searchQuery.toLowerCase();
+        templates = templates.filter(
+          (t) =>
+            t.experiment.metadata.name?.toLowerCase().includes(q) ||
+            t.experiment.metadata.description?.toLowerCase().includes(q),
+        );
+      }
+
+      // Sort templates (using experiment metadata)
+      // We can reuse sortExperiments if we map them or write custom sort
+      // For simplicity, just sort by date modified desc
+      templates.sort((a, b) => {
+        const getDate = (e: ExperimentTemplate) => {
+          const d = e.experiment.metadata.dateModified;
+          if (typeof d === 'object' && 'seconds' in d) {
+            return (d as {seconds: number}).seconds;
+          }
+          return Number(d) || 0;
+        };
+        return getDate(b) - getDate(a);
+      });
+
+      // Map to Experiment structure for rendering
+      // OVERRIDE id with template ID so navigation works (load template by ID)
+      // OVERRIDE visibility with template visibility
+      return templates.map((t) => ({
+        ...t.experiment,
+        id: t.id,
+        permissions: {
+          ...t.experiment.permissions,
+          visibility:
+            t.visibility === 'public' ? Visibility.PUBLIC : Visibility.PRIVATE,
+        },
+      }));
+    }
+  }
+
+  private renderTemplateCard(experiment: Experiment, item: GalleryItem) {
+    const isCreator =
+      this.authService.userEmail === experiment.metadata.creator ||
+      this.authService.isAdmin;
+
+    const createHref = `#/templates/new_template?template=${experiment.id}`;
+    const editHref = `#/templates/${experiment.id}/edit`;
+
+    return html`
+      <div class="template-card-wrapper">
+        <a href=${createHref} class="gallery-link" title="Use template">
+          <gallery-card .item=${item}></gallery-card>
+        </a>
+        ${isCreator
+          ? html`
+              <div class="template-actions">
+                <a href=${editHref} class="edit-button">
+                  <pr-icon icon="edit" size="small"></pr-icon>
+                  Edit template
+                </a>
+              </div>
+            `
+          : nothing}
+      </div>
+    `;
+  }
+
+  private renderEmptyMessage(list: Experiment[]) {
+    if (list.length > 0) return nothing;
+    return html`<div class="empty-message">No items found</div>`;
   }
 }
 
@@ -180,20 +267,33 @@ export class HomeGalleryTabs extends MobxLitElement {
       <div class="gallery-header-row">
         <div class="gallery-tabs">
           <div
-            class="gallery-tab ${this.homeService.showMyExperiments
+            class="gallery-tab ${this.homeService.activeTab ===
+            HomeTab.MY_EXPERIMENTS
               ? 'active'
               : ''}"
-            @click=${() => this.homeService.setShowMyExperiments(true)}
+            @click=${() =>
+              this.homeService.setActiveTab(HomeTab.MY_EXPERIMENTS)}
           >
             My experiments
           </div>
           <div
-            class="gallery-tab ${!this.homeService.showMyExperiments
+            class="gallery-tab ${this.homeService.activeTab ===
+            HomeTab.SHARED_WITH_ME
               ? 'active'
               : ''}"
-            @click=${() => this.homeService.setShowMyExperiments(false)}
+            @click=${() =>
+              this.homeService.setActiveTab(HomeTab.SHARED_WITH_ME)}
           >
             Shared with me
+          </div>
+          <div
+            class="gallery-tab ${this.homeService.activeTab ===
+            HomeTab.TEMPLATES
+              ? 'active'
+              : ''}"
+            @click=${() => this.homeService.setActiveTab(HomeTab.TEMPLATES)}
+          >
+            Templates
           </div>
         </div>
 

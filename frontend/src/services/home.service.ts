@@ -1,5 +1,6 @@
 import {
   Experiment,
+  ExperimentTemplate,
   ExperimenterProfile,
   StageConfig,
 } from '@deliberation-lab/utils';
@@ -35,6 +36,12 @@ interface ServiceProvider {
  * - List experiment templates
  * - List agent templates
  */
+export enum HomeTab {
+  MY_EXPERIMENTS = 'my_experiments',
+  SHARED_WITH_ME = 'shared_with_me',
+  TEMPLATES = 'experiment_templates',
+}
+
 export class HomeService extends Service {
   constructor(private readonly sp: ServiceProvider) {
     super();
@@ -43,10 +50,23 @@ export class HomeService extends Service {
 
   @observable experiments: Experiment[] = [];
   @observable experimenterMap: Record<string, ExperimenterProfile> = {};
-  @observable experimentTemplates: Experiment[] = [];
+  @observable private myTemplates: ExperimentTemplate[] = [];
+  @observable private publicTemplates: ExperimentTemplate[] = [];
+  @observable private sharedTemplates: ExperimentTemplate[] = [];
+
+  @computed get experimentTemplates(): ExperimentTemplate[] {
+    const all = [
+      ...this.myTemplates,
+      ...this.publicTemplates,
+      ...this.sharedTemplates,
+    ];
+    const map = new Map<string, ExperimentTemplate>();
+    all.forEach((t) => map.set(t.id, t));
+    return Array.from(map.values());
+  }
 
   // Home tabs
-  @observable showMyExperiments = true;
+  @observable activeTab: HomeTab = HomeTab.MY_EXPERIMENTS;
   @observable searchQuery = '';
 
   // Loading
@@ -56,6 +76,11 @@ export class HomeService extends Service {
 
   @computed get isLoading() {
     return this.areExperimentsLoading || this.areExperimentTemplatesLoading;
+  }
+
+  // Deprecated compatibility getter if needed, but better to just fix usages
+  @computed get showMyExperiments() {
+    return this.activeTab === HomeTab.MY_EXPERIMENTS;
   }
 
   subscribe() {
@@ -94,19 +119,62 @@ export class HomeService extends Service {
       }),
     );
 
-    // Subscribe to all experiment template documents
-    const experimentTemplateQuery = query(
+    // Subscribe to my templates
+    const myTemplatesQuery = query(
       collection(this.sp.firebaseService.firestore, 'experimentTemplates'),
-      where('metadata.creator', '==', this.sp.authService.userEmail),
+      where('experiment.metadata.creator', '==', this.sp.authService.userEmail),
     );
     this.unsubscribe.push(
-      onSnapshot(experimentTemplateQuery, (snapshot) => {
-        this.experimentTemplates = collectSnapshotWithId<Experiment>(
+      onSnapshot(myTemplatesQuery, (snapshot) => {
+        this.myTemplates = collectSnapshotWithId<ExperimentTemplate>(
           snapshot,
           'id',
         );
-        this.areExperimentTemplatesLoading = false;
+        this.updateLoadingState('my', false);
       }),
+    );
+
+    // Subscribe to public templates
+    const publicTemplatesQuery = query(
+      collection(this.sp.firebaseService.firestore, 'experimentTemplates'),
+      where('visibility', '==', 'public'),
+    );
+    this.unsubscribe.push(
+      onSnapshot(publicTemplatesQuery, (snapshot) => {
+        this.publicTemplates = collectSnapshotWithId<ExperimentTemplate>(
+          snapshot,
+          'id',
+        );
+        this.updateLoadingState('public', false);
+      }),
+    );
+
+    // Subscribe to shared templates
+    const sharedWithQuery = query(
+      collection(this.sp.firebaseService.firestore, 'experimentTemplates'),
+      where('sharedWith', 'array-contains', this.sp.authService.userEmail),
+    );
+    this.unsubscribe.push(
+      onSnapshot(sharedWithQuery, (snapshot) => {
+        this.sharedTemplates = collectSnapshotWithId<ExperimentTemplate>(
+          snapshot,
+          'id',
+        );
+        this.updateLoadingState('shared', false);
+      }),
+    );
+  }
+
+  private loadingState = {
+    my: true,
+    public: true,
+    shared: true,
+  };
+
+  private updateLoadingState(key: 'my' | 'public' | 'shared', value: boolean) {
+    this.loadingState[key] = value;
+    this.areExperimentTemplatesLoading = Object.values(this.loadingState).some(
+      (v) => v,
     );
   }
 
@@ -117,7 +185,10 @@ export class HomeService extends Service {
     // Reset observables
     this.experiments = [];
     this.experimenterMap = {};
-    this.experimentTemplates = [];
+    this.myTemplates = [];
+    this.publicTemplates = [];
+    this.sharedTemplates = [];
+    this.loadingState = {my: true, public: true, shared: true};
   }
 
   getExperiment(experimentId: string) {
@@ -132,8 +203,15 @@ export class HomeService extends Service {
     return this.experimenterMap[experimenterId]?.name ?? experimenterId;
   }
 
+  setActiveTab(tab: HomeTab) {
+    this.activeTab = tab;
+  }
+
+  // Deprecated
   setShowMyExperiments(showMyExperiments: boolean) {
-    this.showMyExperiments = showMyExperiments;
+    this.activeTab = showMyExperiments
+      ? HomeTab.MY_EXPERIMENTS
+      : HomeTab.SHARED_WITH_ME;
   }
 
   setSearchQuery(searchQuery: string) {
