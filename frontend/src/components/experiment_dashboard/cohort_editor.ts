@@ -17,7 +17,6 @@ import {classMap} from 'lit/directives/class-map.js';
 
 import {core} from '../../core/core';
 import {AnalyticsService, ButtonClick} from '../../services/analytics.service';
-import {AuthService} from '../../services/auth.service';
 import {ExperimentEditor} from '../../services/experiment.editor';
 import {ExperimentManager} from '../../services/experiment.manager';
 import {ExperimentService} from '../../services/experiment.service';
@@ -42,7 +41,6 @@ export class Component extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
 
   private readonly analyticsService = core.getService(AnalyticsService);
-  private readonly authService = core.getService(AuthService);
   private readonly experimentEditor = core.getService(ExperimentEditor);
   private readonly experimentManager = core.getService(ExperimentManager);
   private readonly experimentService = core.getService(ExperimentService);
@@ -182,13 +180,11 @@ export class Component extends MobxLitElement {
           this.experimentManager.getCohortHumanParticipants(this.cohort.id),
           html`${this.renderAddHumanParticipant()}`,
         )}
-        ${this.authService.showAlphaFeatures
-          ? this.renderParticipantTable(
-              'Agent participants',
-              this.experimentManager.getCohortAgentParticipants(this.cohort.id),
-              html`${this.renderAddAgentParticipant()}`,
-            )
-          : nothing}
+        ${this.renderParticipantTable(
+          'Agent participants',
+          this.experimentManager.getCohortAgentParticipants(this.cohort.id),
+          html`${this.renderAddAgentParticipant()}`,
+        )}
         ${this.renderMediatorTable(
           'Agent mediators',
           this.experimentManager.getCohortAgentMediators(this.cohort.id),
