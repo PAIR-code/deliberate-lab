@@ -341,6 +341,9 @@
           "items": {
             "type": "string"
           }
+        },
+        "youtubeVideoId": {
+          "type": "string"
         }
       },
       "required": [
@@ -1005,28 +1008,9 @@
           "type": "string"
         },
         "type": {
-          "allOf": [
-            {
-              "anyOf": [
-                {
-                  "const": "static",
-                  "type": "string"
-                },
-                {
-                  "const": "random_permutation",
-                  "type": "string"
-                },
-                {
-                  "const": "balanced_assignment",
-                  "type": "string"
-                }
-              ]
-            },
-            {
-              "const": "static",
-              "type": "string"
-            }
-          ]
+          "default": "static",
+          "const": "static",
+          "type": "string"
         },
         "scope": {
           "anyOf": [
@@ -1255,28 +1239,9 @@
           "type": "string"
         },
         "type": {
-          "allOf": [
-            {
-              "anyOf": [
-                {
-                  "const": "static",
-                  "type": "string"
-                },
-                {
-                  "const": "random_permutation",
-                  "type": "string"
-                },
-                {
-                  "const": "balanced_assignment",
-                  "type": "string"
-                }
-              ]
-            },
-            {
-              "const": "random_permutation",
-              "type": "string"
-            }
-          ]
+          "default": "random_permutation",
+          "const": "random_permutation",
+          "type": "string"
         },
         "scope": {
           "anyOf": [
@@ -1363,28 +1328,9 @@
           "type": "string"
         },
         "type": {
-          "allOf": [
-            {
-              "anyOf": [
-                {
-                  "const": "static",
-                  "type": "string"
-                },
-                {
-                  "const": "random_permutation",
-                  "type": "string"
-                },
-                {
-                  "const": "balanced_assignment",
-                  "type": "string"
-                }
-              ]
-            },
-            {
-              "const": "balanced_assignment",
-              "type": "string"
-            }
-          ]
+          "default": "balanced_assignment",
+          "const": "balanced_assignment",
+          "type": "string"
         },
         "scope": {
           "anyOf": [
@@ -1894,9 +1840,45 @@
         },
         "progress": {
           "$ref": "#/$defs/StageProgressConfig"
+        },
+        "timeLimitInMinutes": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "requireFullTime": {
+          "type": "boolean"
+        },
+        "isTurnBasedChat": {
+          "type": "boolean"
+        },
+        "minNumberOfTurns": {
+          "type": "number"
+        },
+        "maxNumberOfTurns": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
         }
       },
-      "required": ["id", "kind", "name", "descriptions", "progress"],
+      "required": [
+        "id",
+        "kind",
+        "name",
+        "descriptions",
+        "progress",
+        "timeLimitInMinutes"
+      ],
       "title": "PrivateChatStageConfig"
     },
     "ProfileStageConfig": {
