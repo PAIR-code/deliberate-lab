@@ -6,7 +6,6 @@ import '@material/web/checkbox/checkbox.js';
 import '../../pair-components/textarea_template';
 
 import {core} from '../../core/core';
-import {AuthService} from '../../services/auth.service';
 import {ExperimentEditor} from '../../services/experiment.editor';
 import {renderConditionEditor} from '../../shared/condition_editor.utils';
 import {
@@ -32,7 +31,6 @@ import {styles} from './survey_editor.scss';
 export class SurveyEditor extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
 
-  private readonly authService = core.getService(AuthService);
   private readonly experimentEditor = core.getService(ExperimentEditor);
 
   @property() stage:
