@@ -138,6 +138,7 @@ class CohortParticipantConfig(BaseModel):
     minParticipantsPerCohort: confloat(ge=0.0) | None = None
     maxParticipantsPerCohort: confloat(ge=1.0) | None = None
     includeAllParticipantsInCohortCount: bool
+    botProtection: bool
 
 
 class Type(BaseModel):
