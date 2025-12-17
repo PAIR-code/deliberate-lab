@@ -1,6 +1,6 @@
 /* Tooltip */
 :host {
-  --z-index: var(--pr-tooltip-z-index, 1);
+  --z-index: var(--pr-tooltip-z-index, 30);
   --anchor-display-mode: var(--pr-tooltip-display, inline-block);
 }
 
