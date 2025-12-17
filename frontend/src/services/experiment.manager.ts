@@ -464,14 +464,13 @@ export class ExperimentManager extends Service {
           'alerts',
         ),
         (snapshot) => {
-          let changedDocs = snapshot.docChanges().map((change) => change.doc);
-          if (changedDocs.length === 0) {
-            changedDocs = snapshot.docs;
-          }
-
-          changedDocs.forEach((doc) => {
-            const data = doc.data() as AlertMessage;
-            this.alertMap[data.id] = data;
+          snapshot.docChanges().forEach((change) => {
+            if (change.type === 'removed') {
+              delete this.alertMap[change.doc.id];
+            } else {
+              const data = change.doc.data() as AlertMessage;
+              this.alertMap[data.id] = data;
+            }
           });
         },
       ),
@@ -487,21 +486,25 @@ export class ExperimentManager extends Service {
           'cohorts',
         ),
         (snapshot) => {
-          let changedDocs = snapshot.docChanges().map((change) => change.doc);
-          if (changedDocs.length === 0) {
-            changedDocs = snapshot.docs;
-          }
-
-          changedDocs.forEach((doc) => {
-            const data = doc.data() as CohortConfig;
-            this.cohortMap[doc.id] = data;
-            this.currentCohortId = doc.id;
+          snapshot.docChanges().forEach((change) => {
+            if (change.type === 'removed') {
+              delete this.cohortMap[change.doc.id];
+              if (this.currentCohortId === change.doc.id) {
+                this.currentCohortId = undefined;
+              }
+            } else {
+              const data = change.doc.data() as CohortConfig;
+              this.cohortMap[change.doc.id] = data;
+              if (!this.currentCohortId) {
+                this.currentCohortId = change.doc.id;
+              }
+            }
           });
 
           // If multiple cohorts, show cohort list
-          if (changedDocs.length > 1) {
+          if (Object.keys(this.cohortMap).length > 1) {
             this.setShowCohortList(true, true);
-          } else if (changedDocs.length === 0) {
+          } else if (Object.keys(this.cohortMap).length === 0) {
             this.setShowCohortEditor(true, true);
           }
 
@@ -523,17 +526,16 @@ export class ExperimentManager extends Service {
           where('currentStatus', '!=', ParticipantStatus.DELETED),
         ),
         (snapshot) => {
-          let changedDocs = snapshot.docChanges().map((change) => change.doc);
-          if (changedDocs.length === 0) {
-            changedDocs = snapshot.docs;
-          }
-
-          changedDocs.forEach((doc) => {
-            const data = {
-              agentConfig: null,
-              ...doc.data(),
-            } as ParticipantProfileExtended;
-            this.participantMap[doc.id] = data;
+          snapshot.docChanges().forEach((change) => {
+            if (change.type === 'removed') {
+              delete this.participantMap[change.doc.id];
+            } else {
+              const data = {
+                agentConfig: null,
+                ...change.doc.data(),
+              } as ParticipantProfileExtended;
+              this.participantMap[change.doc.id] = data;
+            }
           });
 
           this.isParticipantsLoading = false;
@@ -554,17 +556,16 @@ export class ExperimentManager extends Service {
           where('currentStatus', '!=', ParticipantStatus.DELETED),
         ),
         (snapshot) => {
-          let changedDocs = snapshot.docChanges().map((change) => change.doc);
-          if (changedDocs.length === 0) {
-            changedDocs = snapshot.docs;
-          }
-
-          changedDocs.forEach((doc) => {
-            const data = {
-              agentConfig: null,
-              ...doc.data(),
-            } as MediatorProfileExtended;
-            this.mediatorMap[doc.id] = data;
+          snapshot.docChanges().forEach((change) => {
+            if (change.type === 'removed') {
+              delete this.mediatorMap[change.doc.id];
+            } else {
+              const data = {
+                agentConfig: null,
+                ...change.doc.data(),
+              } as MediatorProfileExtended;
+              this.mediatorMap[change.doc.id] = data;
+            }
           });
 
           this.isMediatorsLoading = false;
@@ -586,14 +587,13 @@ export class ExperimentManager extends Service {
           ),
         ),
         (snapshot) => {
-          let changedDocs = snapshot.docChanges().map((change) => change.doc);
-          if (changedDocs.length === 0) {
-            changedDocs = snapshot.docs;
-          }
-
-          changedDocs.forEach((doc) => {
-            const data = doc.data() as AgentPersonaConfig;
-            this.agentPersonaMap[doc.id] = data;
+          snapshot.docChanges().forEach((change) => {
+            if (change.type === 'removed') {
+              delete this.agentPersonaMap[change.doc.id];
+            } else {
+              const data = change.doc.data() as AgentPersonaConfig;
+              this.agentPersonaMap[change.doc.id] = data;
+            }
           });
 
           this.isAgentsLoading = false;
@@ -710,7 +710,7 @@ export class ExperimentManager extends Service {
         cohortId,
       },
     );
-    this.loadExperimentData(this.experimentId);
+
     this.cohortEditing = undefined;
     return response;
   }
