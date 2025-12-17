@@ -64,6 +64,17 @@ export const updateExperiment = onCall(async (request) => {
   await AuthGuard.isExperimenter(request);
   const {data} = request;
 
+  // Validate input
+  const templateId =
+    data.experimentTemplate?.id || data.experimentTemplate?.experiment?.id;
+
+  if (!data.collectionName || !templateId) {
+    throw new HttpsError(
+      'invalid-argument',
+      'collectionName and experimentTemplate.id (or experiment.id) are required',
+    );
+  }
+
   const experimenterId = request.auth?.token.email?.toLowerCase() || '';
 
   // Use shared utility to update experiment
@@ -73,7 +84,7 @@ export const updateExperiment = onCall(async (request) => {
   const document = app
     .firestore()
     .collection(data.collectionName)
-    .doc(data.experimentTemplate.id);
+    .doc(templateId);
 
   // If experiment does not exist, return false
   const oldExperiment = await document.get();
@@ -212,7 +223,7 @@ export const getExperimentTemplate = onCall(async (request) => {
   }
 
   const template = createExperimentTemplate({
-    id: '',
+    id: data.experimentId,
     experiment,
   });
 
