@@ -42,10 +42,7 @@ export class ConditionEditor extends MobxLitElement {
     return html`
       <div class="condition-editor ${this.disabled ? 'disabled' : ''}">
         <div class="header">
-          <div class="title">
-            Display Condition
-            <span class="alpha">alpha</span>
-          </div>
+          <div class="title">Display Condition</div>
           ${hasCondition
             ? html`
                 <md-text-button @click=${this.removeCondition}>
