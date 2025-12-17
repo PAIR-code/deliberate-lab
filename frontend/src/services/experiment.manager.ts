@@ -369,14 +369,27 @@ export class ExperimentManager extends Service {
   }
 
   // Return name for next cohort based on number of cohorts
-  getNextCohortName(numCohorts = this.cohortList.length) {
+  getNextCohortName(offset = 0) {
     const hasTransfer = this.sp.experimentService.stages.find(
       (stage) => stage.kind === StageKind.TRANSFER,
     );
-    if (numCohorts > 0 || !hasTransfer) {
-      return `Cohort ${String(numCohorts).padStart(2, '0')}`;
+
+    if (this.cohortList.length === 0 && hasTransfer) {
+      return 'Lobby';
     }
-    return 'Lobby';
+
+    let maxNum = -1;
+    this.cohortList.forEach((cohort) => {
+      const match = cohort.metadata.name.match(/^Cohort (\d+)$/);
+      if (match) {
+        const num = parseInt(match[1], 10);
+        if (!isNaN(num) && num > maxNum) {
+          maxNum = num;
+        }
+      }
+    });
+
+    return `Cohort ${String(maxNum + 1 + offset).padStart(2, '0')}`;
   }
 
   isFullCohort(cohort: CohortConfig) {
