@@ -304,7 +304,7 @@ pr-button pr-icon {
   padding: common.$spacing-medium;
   position: fixed;
   right: common.$spacing-large;
-  z-index: 1000;
+  z-index: 40;
 
   .content {
     @include common.flex-row-align-center;
