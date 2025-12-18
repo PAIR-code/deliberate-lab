@@ -1,10 +1,13 @@
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 import nock = require('nock');
 
-import {ModelGenerationConfig} from '@deliberation-lab/utils';
+import {
+  ModelGenerationConfig,
+  OLLAMA_DEFAULT_MODEL,
+} from '@deliberation-lab/utils';
 import {ollamaChat} from './ollama.api';
 
-const MODEL_NAME = 'llama3.2';
+const MODEL_NAME = OLLAMA_DEFAULT_MODEL;
 const LLM_SERVER_ENDPOINT = 'http://localhost:11434/api/chat';
 const LLM_SERVER_HOST = 'http://localhost:11434';
 const LLM_SERVER_PATH = '/api/chat';
