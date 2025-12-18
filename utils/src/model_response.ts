@@ -29,6 +29,24 @@ export enum ModelResponseStatus {
 }
 
 /**
+ * Token usage information from the model response.
+ */
+export interface ModelUsage {
+  promptTokens: number;
+  completionTokens: number;
+  totalTokens: number;
+}
+
+/**
+ * File data from model response (images, audio, etc.).
+ * Uses AI SDK naming conventions (mediaType, base64).
+ */
+export interface ModelFile {
+  mediaType: string;
+  base64: string;
+}
+
+/**
  * Common interface for all model responses.
  */
 export interface ModelResponse {
@@ -44,8 +62,10 @@ export interface ModelResponse {
   errorMessage?: string;
   // Reasoning/thought blocks (concatenated if multiple)
   reasoning?: string;
-  // List of images (excludes images from thought blocks)
-  imageDataList?: Array<{mimeType: string; data: string}>;
+  // List of files from response (images, etc.) - excludes files from thought blocks
+  files?: ModelFile[];
+  // Token usage information
+  usage?: ModelUsage;
 }
 
 /**
@@ -124,4 +144,39 @@ export function addParsedModelResponse(response: ModelResponse) {
       error instanceof Error ? error.message : String(error);
     return response;
   }
+}
+
+/**
+ * Parse structured output from text using regex.
+ * Looks for ```json {...} ``` blocks.
+ */
+export function parseStructuredOutputFromText(
+  text: string,
+): Record<string, unknown> | null {
+  const jsonMatch = text.match(/```json\n(\{[\s\S]*\})\n```/);
+  if (jsonMatch && jsonMatch[1]) {
+    try {
+      return JSON.parse(jsonMatch[1]) as Record<string, unknown>;
+    } catch {
+      return null;
+    }
+  }
+  return null;
+}
+
+/**
+ * Get structured output from ModelResponse.
+ * Prefers native parsedResponse (from AI SDK's Output.object()),
+ * falls back to regex parsing from text.
+ */
+export function getStructuredOutput(
+  response: ModelResponse,
+): Record<string, unknown> | null {
+  if (response.parsedResponse) {
+    return response.parsedResponse as Record<string, unknown>;
+  }
+  if (response.text) {
+    return parseStructuredOutputFromText(response.text);
+  }
+  return null;
 }
