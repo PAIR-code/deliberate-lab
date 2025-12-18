@@ -18,11 +18,12 @@ import {
   StructuredOutputConfig,
   StructuredOutputType,
   createModelLogEntry,
+  GEMINI_DEFAULT_MODEL,
 } from '@deliberation-lab/utils';
 import {writeModelLogEntry} from './log.utils';
 import {getGeminiAPIResponse} from './api/gemini.api';
 
-const MODEL_NAME = 'gemini-2.5-flash';
+const MODEL_NAME = GEMINI_DEFAULT_MODEL;
 
 const RULES = `
 rules_version = '2';

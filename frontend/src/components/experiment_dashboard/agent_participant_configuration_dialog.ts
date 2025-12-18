@@ -14,10 +14,10 @@ import {ExperimentManager} from '../../services/experiment.manager';
 import {
   AgentPersonaConfig,
   CohortConfig,
-  ApiKeyType,
-  AgentPersonaType,
   createAgentModelSettings,
   DEFAULT_AGENT_PARTICIPANT_ID,
+  GEMINI_MODELS,
+  ModelOption,
 } from '@deliberation-lab/utils';
 
 import {styles} from './cohort_settings_dialog.scss';
@@ -38,7 +38,7 @@ export class AgentParticipantDialog extends MobxLitElement {
   @property() agentId = '';
   @property() promptContext = '';
   @property() agent: AgentPersonaConfig | undefined = undefined;
-  @property() model: string = '';
+  @property() selectedModel: ModelOption | null = null;
 
   private close() {
     this.dispatchEvent(new CustomEvent('close'));
@@ -78,19 +78,19 @@ export class AgentParticipantDialog extends MobxLitElement {
       ${this.renderAgentModel()} ${this.renderPromptContext()}
       <div class="buttons-wrapper">
         <pr-button
-          ?disabled=${this.model === ''}
+          ?disabled=${this.selectedModel === null}
           ?loading=${this.isLoading}
           @click=${() => {
             this.isLoading = true;
             this.analyticsService.trackButtonClick(
               ButtonClick.AGENT_PARTICIPANT_ADD,
             );
-            if (this.cohort && this.model) {
+            if (this.cohort && this.selectedModel) {
               this.experimentEditor.addAgentParticipant();
               this.agentId = DEFAULT_AGENT_PARTICIPANT_ID;
               const modelSettings = createAgentModelSettings({
-                apiType: ApiKeyType.GEMINI_API_KEY,
-                modelName: this.model,
+                apiType: this.selectedModel.apiType,
+                modelName: this.selectedModel.id,
               });
 
               this.experimentManager.createAgentParticipant(this.cohort.id, {
@@ -130,38 +130,25 @@ export class AgentParticipantDialog extends MobxLitElement {
       <div class="selections">
         <div>Model to use for this specific agent participant:</div>
         <div class="model-selector">
-          ${this.renderModelButton(
-            'gemini-2.5-flash',
-            'Gemini 2.5 Flash',
-            ApiKeyType.GEMINI_API_KEY,
-          )}
-          ${this.renderModelButton(
-            'gemini-2.5-pro',
-            'Gemini 2.5 Pro',
-            ApiKeyType.GEMINI_API_KEY,
-          )}
+          ${GEMINI_MODELS.map((model) => this.renderModelButton(model))}
         </div>
       </div>
     `;
   }
 
-  private renderModelButton(
-    modelId: string,
-    modelName: string,
-    apiType: ApiKeyType,
-  ) {
-    const updateModel = () => {
-      this.model = modelId;
+  private renderModelButton(model: ModelOption) {
+    const selectModel = () => {
+      this.selectedModel = model;
     };
 
-    const isActive = modelId == this.model;
+    const isActive = this.selectedModel?.id === model.id;
     return html`
       <pr-button
         color="${isActive ? 'primary' : 'neutral'}"
         variant=${isActive ? 'tonal' : 'default'}
-        @click=${updateModel}
+        @click=${selectModel}
       >
-        ${modelName}
+        ${model.displayName}
       </pr-button>
     `;
   }
