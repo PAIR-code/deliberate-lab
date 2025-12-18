@@ -134,8 +134,8 @@ export class Component extends MobxLitElement {
   }
 
   private renderHeader() {
-    const getCohortName = (length: number) => {
-      return this.experimentManager.getNextCohortName(length);
+    const getCohortName = (offset: number) => {
+      return this.experimentManager.getNextCohortName(offset);
     };
 
     return html`
@@ -155,9 +155,7 @@ export class Component extends MobxLitElement {
               ?loading=${this.experimentManager.isWritingCohort}
               @click=${() => {
                 this.analyticsService.trackButtonClick(ButtonClick.COHORT_ADD);
-                const name = getCohortName(
-                  this.experimentManager.cohortList.length,
-                );
+                const name = getCohortName(0);
                 this.experimentManager.createCohort({}, name);
               }}
             >
@@ -170,12 +168,11 @@ export class Component extends MobxLitElement {
               variant="tonal"
               ?loading=${this.experimentManager.isWritingCohort}
               @click=${() => {
-                const numCohorts = this.experimentManager.cohortList.length;
                 [...Array(5).keys()].forEach((key) => {
                   this.analyticsService.trackButtonClick(
                     ButtonClick.COHORT_ADD,
                   );
-                  const name = getCohortName(numCohorts + key);
+                  const name = getCohortName(key);
                   this.experimentManager.createCohort({}, name);
                 });
               }}
@@ -189,12 +186,11 @@ export class Component extends MobxLitElement {
               variant="tonal"
               ?loading=${this.experimentManager.isWritingCohort}
               @click=${() => {
-                const numCohorts = this.experimentManager.cohortList.length;
                 [...Array(10).keys()].forEach((key) => {
                   this.analyticsService.trackButtonClick(
                     ButtonClick.COHORT_ADD,
                   );
-                  const name = getCohortName(numCohorts + key);
+                  const name = getCohortName(key);
                   this.experimentManager.createCohort({}, name);
                 });
               }}
