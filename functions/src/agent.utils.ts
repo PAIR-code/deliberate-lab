@@ -2,7 +2,6 @@ import {Timestamp} from 'firebase-admin/firestore';
 import {
   AgentModelSettings,
   APIKeyConfig,
-  ApiKeyType,
   ModelGenerationConfig,
   ModelResponse,
   ModelResponseStatus,
@@ -11,12 +10,8 @@ import {
   createModelLogEntry,
 } from '@deliberation-lab/utils';
 
-import {getGeminiAPIResponse} from './api/gemini.api';
-import {getOpenAIAPIChatCompletionResponse} from './api/openai.api';
-import {getClaudeAPIChatCompletionResponse} from './api/claude.api';
-import {ollamaChat} from './api/ollama.api';
-
-import {writeModelLogEntry} from './log.utils';
+import {generateAIResponse, ModelMessage} from './api/ai-sdk.api';
+import {formatPromptForLog, writeModelLogEntry} from './log.utils';
 
 /** Calls API and writes ModelLogEntry to experiment. */
 export async function processModelResponse(
@@ -29,29 +24,20 @@ export async function processModelResponse(
   privateId: string,
   description: string,
   apiKeyConfig: APIKeyConfig,
-  prompt: string | Array<{role: string; content: string; name?: string}>,
+  prompt: string | ModelMessage[],
   modelSettings: AgentModelSettings,
   generationConfig: ModelGenerationConfig,
   structuredOutputConfig?: StructuredOutputConfig,
   numRetries: number = 0,
 ): Promise<{response: ModelResponse; logId: string}> {
-  // Convert prompt to string for logging
-  const promptText =
-    typeof prompt === 'string'
-      ? prompt
-      : prompt
-          .map(
-            (m) =>
-              `${m.role.toUpperCase()}${m.name ? `(${m.name})` : ''}: ${m.content}`,
-          )
-          .join('\n');
-
   let response = {status: ModelResponseStatus.NONE};
   let lastError: Error | undefined;
   const maxRetries = numRetries;
   const initialDelay = 1000; // 1 second initial delay
   let logId = '';
 
+  // Convert prompt to string for logging (reused across retries)
+  const promptForLog = formatPromptForLog(prompt);
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
     // Create a new log entry for each attempt
     const log = createModelLogEntry({
@@ -64,7 +50,7 @@ export async function processModelResponse(
       privateId,
       description:
         attempt > 0 ? `${description} (retry ${attempt})` : description,
-      prompt: promptText,
+      prompt: promptForLog,
       createdTimestamp: Timestamp.now(),
     });
 
@@ -127,54 +113,24 @@ export async function processModelResponse(
   return {response, logId};
 }
 
-// TODO: Rename to getAPIResponse?
+/**
+ * Unified API call using AI SDK.
+ * Routes to the appropriate provider based on modelSettings.apiType.
+ */
 export async function getAgentResponse(
   apiKeyConfig: APIKeyConfig,
-  prompt: string | Array<{role: string; content: string; name?: string}>,
+  prompt: string | ModelMessage[],
   modelSettings: AgentModelSettings,
   generationConfig: ModelGenerationConfig,
   structuredOutputConfig?: StructuredOutputConfig,
 ): Promise<ModelResponse> {
-  let response;
-
-  if (modelSettings.apiType === ApiKeyType.GEMINI_API_KEY) {
-    response = await getGeminiResponse(
-      apiKeyConfig,
-      modelSettings.modelName,
-      prompt,
-      generationConfig,
-      structuredOutputConfig,
-    );
-  } else if (modelSettings.apiType === ApiKeyType.OPENAI_API_KEY) {
-    response = await getOpenAIAPIResponse(
-      apiKeyConfig,
-      modelSettings.modelName,
-      prompt,
-      generationConfig,
-      structuredOutputConfig,
-    );
-  } else if (modelSettings.apiType === ApiKeyType.CLAUDE_API_KEY) {
-    response = await getClaudeAPIResponse(
-      apiKeyConfig,
-      modelSettings.modelName,
-      prompt,
-      generationConfig,
-      structuredOutputConfig,
-    );
-  } else if (modelSettings.apiType === ApiKeyType.OLLAMA_CUSTOM_URL) {
-    response = await getOllamaResponse(
-      apiKeyConfig,
-      modelSettings.modelName,
-      prompt,
-      generationConfig,
-    );
-  } else {
-    response = {
-      status: ModelResponseStatus.CONFIG_ERROR,
-      generationConfig,
-      errorMessage: `Error: invalid apiKey type`,
-    };
-  }
+  const response = await generateAIResponse(
+    apiKeyConfig,
+    prompt,
+    modelSettings,
+    generationConfig,
+    structuredOutputConfig,
+  );
 
   if (response.status !== ModelResponseStatus.OK) {
     console.error(
@@ -183,70 +139,4 @@ export async function getAgentResponse(
   }
 
   return response;
-}
-
-export async function getGeminiResponse(
-  apiKeyConfig: APIKeyConfig,
-  modelName: string,
-  prompt: string | Array<{role: string; content: string; name?: string}>,
-  generationConfig: ModelGenerationConfig,
-  structuredOutputConfig?: StructuredOutputConfig,
-): Promise<ModelResponse> {
-  return await getGeminiAPIResponse(
-    apiKeyConfig.geminiApiKey,
-    modelName,
-    prompt,
-    generationConfig,
-    structuredOutputConfig,
-  );
-}
-
-export async function getOpenAIAPIResponse(
-  apiKeyConfig: APIKeyConfig,
-  model: string,
-  prompt: string | Array<{role: string; content: string; name?: string}>,
-  generationConfig: ModelGenerationConfig,
-  structuredOutputConfig?: StructuredOutputConfig,
-): Promise<ModelResponse> {
-  return await getOpenAIAPIChatCompletionResponse(
-    apiKeyConfig.openAIApiKey?.apiKey || '',
-    apiKeyConfig.openAIApiKey?.baseUrl || null,
-    model,
-    prompt,
-    generationConfig,
-    structuredOutputConfig,
-  );
-}
-
-export async function getClaudeAPIResponse(
-  apiKeyConfig: APIKeyConfig,
-  model: string,
-  prompt: string | Array<{role: string; content: string; name?: string}>,
-  generationConfig: ModelGenerationConfig,
-  structuredOutputConfig?: StructuredOutputConfig,
-): Promise<ModelResponse> {
-  return await getClaudeAPIChatCompletionResponse(
-    apiKeyConfig.claudeApiKey?.apiKey || '',
-    apiKeyConfig.claudeApiKey?.baseUrl || null,
-    model,
-    prompt,
-    generationConfig,
-    structuredOutputConfig,
-  );
-}
-
-export async function getOllamaResponse(
-  apiKeyConfig: APIKeyConfig,
-  modelName: string,
-  prompt: string | Array<{role: string; content: string; name?: string}>,
-  generationConfig: ModelGenerationConfig,
-): Promise<ModelResponse> {
-  // Convert string to array format for ollamaChat
-  const messages = typeof prompt === 'string' ? [prompt] : prompt;
-  return await ollamaChat(
-    messages,
-    modelName,
-    apiKeyConfig.ollamaApiKey,
-    generationConfig,
-  );
 }
