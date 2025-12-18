@@ -204,6 +204,148 @@ export function filterRankingsByCandidates(
   return participantRankings;
 }
 
+export function getApplicationsFromLRApplyStage(
+  applyData: SurveyStagePublicData,
+): Record<string, boolean> {
+  const applications: Record<string, boolean> = {};
+  const answerMap = applyData.participantAnswerMap || {};
+
+  for (const publicId of Object.keys(answerMap)) {
+    const participantAnswer = answerMap[publicId];
+    if (!participantAnswer || typeof participantAnswer !== 'object') {
+      applications[publicId] = false;
+      continue;
+    }
+
+    const applyAnswer =
+      participantAnswer['apply_r1'] ?? participantAnswer['apply_r2'];
+
+    if (!applyAnswer) {
+      applications[publicId] = false;
+      continue;
+    }
+
+    // DL multiple choice stores answers in various ways depending on template
+    let answerValue = undefined;
+    if (applyAnswer.kind === SurveyQuestionKind.MULTIPLE_CHOICE) {
+      answerValue = applyAnswer.choiceId;
+    } else if (applyAnswer.kind === SurveyQuestionKind.CHECK) {
+      answerValue = applyAnswer.isChecked;
+    } else if (applyAnswer.kind === SurveyQuestionKind.SCALE) {
+      answerValue = applyAnswer.value;
+    } else if (applyAnswer.kind === SurveyQuestionKind.TEXT) {
+      answerValue = applyAnswer.answer;
+    }
+
+    applications[publicId] = answerValue === 'yes';
+  }
+
+  return applications;
+}
+
+/* ============================================================================
+   Backend-safe correct answer helpers for LAS and SD baseline scoring
+   (duplicate of frontend logic but minimal; no images, no template imports)
+   ========================================================================== */
+
+// ---- LAS survival items ----
+interface LASItemMini {
+  ranking: number;
+}
+
+const LAS_ITEMS_MINI: Record<string, LASItemMini> = {
+  mirror: {ranking: 1},
+  oil: {ranking: 2},
+  water: {ranking: 3},
+  rations: {ranking: 4},
+  sheeting: {ranking: 5},
+  chocolate: {ranking: 6},
+  fishing: {ranking: 7},
+  rope: {ranking: 8},
+  cushion: {ranking: 9},
+  repellent: {ranking: 10},
+  rubbing_alcohol: {ranking: 11},
+  radio: {ranking: 12},
+  map: {ranking: 13},
+  netting: {ranking: 14},
+};
+
+function getCorrectLASAnswer_mini(id1: string, id2: string): string {
+  const a = LAS_ITEMS_MINI[id1];
+  const b = LAS_ITEMS_MINI[id2];
+  if (!a || !b) return '';
+  return a.ranking < b.ranking ? id1 : id2;
+}
+
+// ---- SD survival items ----
+interface SDItemMini {
+  ranking: number;
+}
+
+const SD_ITEMS_MINI: Record<string, SDItemMini> = {
+  mirror: {ranking: 1},
+  raincoat: {ranking: 2},
+  water: {ranking: 3},
+  flashlight: {ranking: 4},
+  parachute: {ranking: 5},
+  knife: {ranking: 6},
+  pistol: {ranking: 7},
+  aid: {ranking: 8},
+  book: {ranking: 9},
+  salt: {ranking: 10},
+};
+
+function getCorrectSDAnswer_mini(id1: string, id2: string): string {
+  const a = SD_ITEMS_MINI[id1];
+  const b = SD_ITEMS_MINI[id2];
+  if (!a || !b) return '';
+  return a.ranking < b.ranking ? id1 : id2;
+}
+
+export function getBaselineScoresFromStage(
+  baselineData: SurveyStagePublicData,
+  type: 'LAS' | 'SD',
+): Record<string, number> {
+  const scores: Record<string, number> = {};
+  const answerMap = baselineData.participantAnswerMap || {};
+
+  for (const publicId of Object.keys(answerMap)) {
+    const participantAnswers = answerMap[publicId];
+    if (!participantAnswers || typeof participantAnswers !== 'object') {
+      scores[publicId] = 0;
+      continue;
+    }
+
+    let score = 0;
+
+    for (const qid of Object.keys(participantAnswers)) {
+      // Look at MultipleChoiceSurveyAnswer answers
+      const ans = participantAnswers[qid];
+      if (!ans || ans.kind !== SurveyQuestionKind.MULTIPLE_CHOICE) continue;
+
+      const chosen = ans.choiceId ?? false;
+
+      if (!chosen) continue;
+
+      const parts = qid.split('-');
+      if (parts.length !== 3) continue;
+
+      const [, id1, id2] = parts;
+
+      const correct =
+        type === 'LAS'
+          ? getCorrectLASAnswer_mini(id1, id2)
+          : getCorrectSDAnswer_mini(id1, id2);
+
+      if (chosen === correct) score++;
+    }
+
+    scores[publicId] = score;
+  }
+
+  return scores;
+}
+
 export function getTimeElapsed(
   timestamp: {seconds: number; nanoseconds: number},
   unit: 's' | 'm' | 'h' | 'd' = 'm',

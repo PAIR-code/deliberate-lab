@@ -35,6 +35,7 @@ export interface BaseRevealItem {
 export type RevealItem =
   | ChipRevealItem
   | RankingRevealItem
+  | LRRankingRevealItem
   | SurveyRevealItem
   | MultiAssetAllocationRevealItem;
 
@@ -46,6 +47,11 @@ export interface ChipRevealItem extends BaseRevealItem {
 /** Reveal settings for ranking stage. */
 export interface RankingRevealItem extends BaseRevealItem {
   kind: StageKind.RANKING;
+}
+
+/** Reveal settings for LR survey stage. */
+export interface LRRankingRevealItem extends RankingRevealItem {
+  customRender?: string;
 }
 
 /** Reveal settings for survey stage. */
@@ -113,15 +119,26 @@ export function createChipRevealItem(
   };
 }
 
-/** Create ranking reveal item. */
+/** Create ranking reveal item (standard or Leadership Rejection custom). */
 export function createRankingRevealItem(
-  config: Partial<RankingRevealItem> = {},
-): RankingRevealItem {
-  return {
+  config: Partial<RankingRevealItem> | Partial<LRRankingRevealItem> = {},
+): RankingRevealItem | LRRankingRevealItem {
+  const base = {
     id: config.id ?? generateId(),
     kind: StageKind.RANKING,
     revealAudience: config.revealAudience ?? RevealAudience.CURRENT_PARTICIPANT,
   };
+
+  // Leadership Rejection custom reveal
+  if ('customRender' in config && config.customRender === 'leaderStatus') {
+    return {
+      ...base,
+      customRender: 'leaderStatus',
+    } as LRRankingRevealItem;
+  }
+
+  // Default ranking reveal
+  return base as RankingRevealItem;
 }
 
 /** Create survey reveal item. */
