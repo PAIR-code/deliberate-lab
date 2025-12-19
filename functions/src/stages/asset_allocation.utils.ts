@@ -3,7 +3,6 @@ import {
   AssetAllocationStageParticipantAnswer,
   AssetAllocationStagePublicData,
   ParticipantProfileExtended,
-  createAssetAllocationStagePublicData,
 } from '@deliberation-lab/utils';
 
 import * as admin from 'firebase-admin';
@@ -27,15 +26,16 @@ export async function addParticipantAnswerToAssetAllocationStagePublicData(
 
     // Read current public data first (all reads must come before writes)
     const publicDoc = await transaction.get(publicDocument);
-    let publicData = publicDoc.data() as
+    const publicData = publicDoc.data() as
       | AssetAllocationStagePublicData
       | undefined;
 
-    // Create initial public data if it doesn't exist
+    // Public stage data should be initialized on cohort creation
     if (!publicData) {
-      publicData = createAssetAllocationStagePublicData({
-        id: stage.id,
-      });
+      console.warn(
+        `Public stage data not found for stage ${stage.id} in cohort ${participant.currentCohortId}. This should have been initialized on cohort creation.`,
+      );
+      return;
     }
 
     // Update public data with participant's allocation
