@@ -146,10 +146,33 @@ $bubble-width: 400px;
   }
 }
 
+.debug-container {
+  @include common.flex-column;
+  gap: common.$spacing-xs;
+  max-width: $bubble-width;
+}
+
 .debug {
   @include typescale.label-small;
-  color: var(--md-sys-color-tertiary);
   max-width: $bubble-width;
+  padding: common.$spacing-xs common.$spacing-small;
+  border-radius: common.$spacing-xs;
+
+  &.explanation {
+    color: var(--md-sys-color-tertiary);
+    background: var(--md-sys-color-tertiary-container);
+  }
+
+  &.reasoning {
+    color: var(--md-sys-color-secondary);
+    background: var(--md-sys-color-secondary-container);
+    font-style: italic;
+  }
+}
+
+.debug-label {
+  font-weight: 500;
+  margin-right: common.$spacing-xs;
 }
 
 .generated-image {
