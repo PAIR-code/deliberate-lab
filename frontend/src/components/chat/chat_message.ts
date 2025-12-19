@@ -12,7 +12,14 @@ import {AuthService} from '../../services/auth.service';
 import {ExperimentService} from '../../services/experiment.service';
 import {ParticipantService} from '../../services/participant.service';
 
-import {ChatMessage, UserType} from '@deliberation-lab/utils';
+import {
+  ChatMessage,
+  FileCategory,
+  getFileCategory,
+  getFileExtension,
+  StoredFile,
+  UserType,
+} from '@deliberation-lab/utils';
 import {
   convertMarkdownToHTML,
   convertUnifiedTimestampToDate,
@@ -88,16 +95,7 @@ export class ChatMessageComponent extends MobxLitElement {
             ${unsafeHTML(convertMarkdownToHTML(chatMessage.message))}
           </div>
           ${this.renderDebuggingExplanation(chatMessage)}
-          ${chatMessage.imageUrls && chatMessage.imageUrls.length > 0
-            ? chatMessage.imageUrls.map(
-                (imageUrl) =>
-                  html`<img
-                    src="${imageUrl}"
-                    alt="Generated Image"
-                    class="generated-image"
-                  />`,
-              )
-            : nothing}
+          ${this.renderFiles(chatMessage.files)}
         </div>
       </div>
     `;
@@ -127,16 +125,7 @@ export class ChatMessageComponent extends MobxLitElement {
             ${unsafeHTML(convertMarkdownToHTML(chatMessage.message))}
           </div>
           ${this.renderDebuggingExplanation(chatMessage)}
-          ${chatMessage.imageUrls && chatMessage.imageUrls.length > 0
-            ? chatMessage.imageUrls.map(
-                (imageUrl) =>
-                  html`<img
-                    src="${imageUrl}"
-                    alt="Generated Image"
-                    class="generated-image"
-                  />`,
-              )
-            : nothing}
+          ${this.renderFiles(chatMessage.files)}
         </div>
       </div>
     `;
@@ -150,6 +139,45 @@ export class ChatMessageComponent extends MobxLitElement {
         </div>
       </div>
     `;
+  }
+
+  renderFiles(files?: StoredFile[]) {
+    if (!files || files.length === 0) {
+      return nothing;
+    }
+
+    return files.map((file) => {
+      switch (getFileCategory(file)) {
+        case FileCategory.IMAGE:
+          return html`<img
+            src="${file.url}"
+            alt="Generated image"
+            class="generated-image"
+          />`;
+        case FileCategory.VIDEO:
+          return html`<video
+            src="${file.url}"
+            controls
+            class="generated-video"
+          ></video>`;
+        case FileCategory.AUDIO:
+          return html`<audio
+            src="${file.url}"
+            controls
+            class="generated-audio"
+          ></audio>`;
+        default:
+          // Documents and other files: render as download link
+          return html`<a
+            href="${file.url}"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="generated-file"
+          >
+            📎 Download ${getFileExtension(file)} file
+          </a>`;
+      }
+    });
   }
 
   renderDebuggingExplanation(chatMessage: ChatMessage) {

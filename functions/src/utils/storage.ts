@@ -1,16 +1,25 @@
 import {app} from '../app';
-import {generateId} from '@deliberation-lab/utils';
+import {generateId, ModelFile, StoredFile} from '@deliberation-lab/utils';
+
+/** Generate storage path for chat message files */
+export function getChatMessageStoragePath(
+  experimentId: string,
+  stageId: string,
+  chatMessageId: string,
+): string {
+  return `experiments/${experimentId}/chats/${stageId}/${chatMessageId}`;
+}
 
 /**
- * Uploads a base64 encoded image to Google Cloud Storage.
- * @param base64Data The base64 encoded image string.
- * @param mimeType The MIME type of the image.
+ * Uploads a base64 encoded file to Google Cloud Storage.
+ * @param base64Data The base64 encoded file string.
+ * @param mimeType The MIME type of the file.
  * @param prefix A prefix for the file name in the bucket.
- * @returns A URL for the uploaded image.
+ * @returns A URL for the uploaded file.
  *   - In production: signed URL valid for 7 days
  *   - In emulator: public URL (emulator can't sign)
  */
-export async function uploadBase64ImageToGCS(
+export async function uploadBase64FileToGCS(
   base64Data: string,
   mimeType: string,
   prefix = 'generated-images',
@@ -48,4 +57,33 @@ export async function uploadBase64ImageToGCS(
 
     return signedUrl;
   }
+}
+
+/**
+ * Uploads model response files to GCS.
+ * @param files Array of files from model response
+ * @param basePath Base path for storage (e.g., 'experiments/{id}/chats/{id}')
+ * @returns Array of StoredFile objects with URLs and mediaTypes
+ */
+export async function uploadModelResponseFiles(
+  files: ModelFile[],
+  basePath: string,
+): Promise<StoredFile[]> {
+  if (!files || files.length === 0) {
+    return [];
+  }
+
+  const uploadPromises = files.map(async (file, index) => {
+    const url = await uploadBase64FileToGCS(
+      file.base64,
+      file.mediaType,
+      `${basePath}/${index}`,
+    );
+    return {
+      mediaType: file.mediaType,
+      url,
+    };
+  });
+
+  return Promise.all(uploadPromises);
 }
