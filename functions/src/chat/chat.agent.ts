@@ -44,8 +44,11 @@ import {
   getFirestoreParticipantAnswerRef,
 } from '../utils/firestore';
 import {app} from '../app';
-import {uploadBase64ImageToGCS} from '../utils/storage';
-import {updateModelLogImageUrls} from '../log.utils';
+import {
+  getChatMessageStoragePath,
+  uploadModelResponseFiles,
+} from '../utils/storage';
+import {updateModelLogFiles} from '../log.utils';
 
 // ****************************************************************************
 // Functions for preparing, querying, and organizing agent chat responses.
@@ -410,29 +413,22 @@ export async function getAgentChatMessage(
     timestamp: Timestamp.now(),
   });
 
-  // Upload all files (including images) using the chat message ID in the path
-  let imageUrls: string[] | undefined = undefined;
+  // Upload files to GCS
   if (response.files && response.files.length > 0) {
     try {
-      // Upload all files in parallel with index numbers
-      const uploadPromises = response.files.map((file, index) =>
-        uploadBase64ImageToGCS(
-          file.base64,
-          file.mediaType,
-          `experiments/${experimentId}/chats/${stage.id}/${chatMessage.id}/${index}`,
-        ),
+      const storagePath = getChatMessageStoragePath(
+        experimentId,
+        stageId,
+        chatMessage.id,
       );
-      imageUrls = await Promise.all(uploadPromises);
-      // Add the uploaded URLs to the chat message
-      chatMessage.imageUrls = imageUrls;
-
-      // Update the log with the image URLs for dashboard display
-      if (imageUrls) {
-        await updateModelLogImageUrls(experimentId, logId, imageUrls);
-      }
+      const storedFiles = await uploadModelResponseFiles(
+        response.files,
+        storagePath,
+      );
+      chatMessage.files = storedFiles;
+      await updateModelLogFiles(experimentId, logId, storedFiles);
     } catch (error) {
       console.error('Error uploading files to GCS:', error);
-      // Optionally handle error, e.g., send an error message to chat
     }
   }
 

@@ -6,6 +6,7 @@ import {
   createParticipantProfileBase,
 } from './participant';
 import {AgentChatPromptConfig} from './agent';
+import {StoredFile} from './model_response';
 
 /** Chat message types and functions (used in chat stages). */
 
@@ -33,8 +34,7 @@ export interface ChatMessage {
   explanation: string; // agent's explicit decision explanation from structured output
   reasoning?: string; // model's internal chain-of-thought (from thinking/reasoning features)
   isError: boolean; // is error message (used for private chats)
-  imageUrls?: string[]; // URLs for image files (backward compatible)
-  fileUrls?: string[]; // URLs for any file type
+  files?: StoredFile[]; // uploaded files (images, documents, etc.)
 }
 
 /** Format for LLM API chat message output. */
@@ -76,7 +76,7 @@ export function createChatMessage(
     explanation: config.explanation ?? '',
     reasoning: config.reasoning ?? undefined,
     isError: config.isError ?? false,
-    imageUrls: config.imageUrls ?? undefined,
+    files: config.files ?? undefined,
   };
 }
 
@@ -96,7 +96,7 @@ export function createParticipantChatMessage(
     explanation: config.explanation ?? '',
     reasoning: config.reasoning ?? undefined,
     isError: config.isError ?? false,
-    imageUrls: config.imageUrls ?? undefined,
+    files: config.files ?? undefined,
   };
 }
 
@@ -116,7 +116,7 @@ export function createMediatorChatMessage(
     explanation: config.explanation ?? '',
     reasoning: config.reasoning ?? undefined,
     isError: config.isError ?? false,
-    imageUrls: config.imageUrls ?? undefined,
+    files: config.files ?? undefined,
   };
 }
 
@@ -136,7 +136,7 @@ export function createExperimenterChatMessage(
     explanation: config.explanation ?? '',
     reasoning: config.reasoning ?? undefined,
     isError: config.isError ?? false,
-    imageUrls: config.imageUrls ?? undefined,
+    files: config.files ?? undefined,
   };
 }
 
@@ -156,5 +156,6 @@ export function createSystemChatMessage(
     explanation: config.explanation ?? '',
     reasoning: config.reasoning ?? undefined,
     isError: false,
+    files: config.files ?? undefined,
   };
 }

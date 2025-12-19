@@ -47,6 +47,70 @@ export interface ModelFile {
 }
 
 /**
+ * File that has been uploaded to storage.
+ * The stored version of ModelFile, with URL instead of base64.
+ */
+export interface StoredFile {
+  mediaType: string;
+  url: string;
+}
+
+/** Categories of file types for rendering decisions */
+export enum FileCategory {
+  IMAGE = 'image',
+  VIDEO = 'video',
+  AUDIO = 'audio',
+  DOCUMENT = 'document',
+  OTHER = 'other',
+}
+
+/** Get the category of a file based on its mediaType */
+export function getFileCategory(file: StoredFile | ModelFile): FileCategory {
+  const type = file.mediaType.split('/')[0];
+  switch (type) {
+    case 'image':
+      return FileCategory.IMAGE;
+    case 'video':
+      return FileCategory.VIDEO;
+    case 'audio':
+      return FileCategory.AUDIO;
+    case 'application':
+      // PDFs, documents, etc.
+      return FileCategory.DOCUMENT;
+    default:
+      return FileCategory.OTHER;
+  }
+}
+
+/** Check if a file is a media file (image, video, or audio) */
+export function isMediaFile(file: StoredFile | ModelFile): boolean {
+  const category = getFileCategory(file);
+  return (
+    category === FileCategory.IMAGE ||
+    category === FileCategory.VIDEO ||
+    category === FileCategory.AUDIO
+  );
+}
+
+/** Check if a file is an image */
+export function isImageFile(file: StoredFile | ModelFile): boolean {
+  return getFileCategory(file) === FileCategory.IMAGE;
+}
+
+/** Get file extension from mediaType (e.g., 'image/png' -> 'png') */
+export function getFileExtension(file: StoredFile | ModelFile): string {
+  return file.mediaType.split('/')[1] || 'file';
+}
+
+/** Filter files by category */
+export function getFilesByCategory<T extends StoredFile | ModelFile>(
+  files: T[],
+  category: FileCategory,
+): T[] {
+  return files.filter((f) => getFileCategory(f) === category);
+}
+
+/**
  * Common interface for all model responses.
  */
 export interface ModelResponse {

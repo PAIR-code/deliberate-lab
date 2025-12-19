@@ -12,17 +12,20 @@ import {ExperimentService} from '../../services/experiment.service';
 
 import {
   convertUnifiedTimestampToDateTime,
-  LogEntry,
-  LogEntryType,
-  ModelLogEntry,
-  ModelResponseStatus,
+  FileCategory,
+  FilterState,
   filterLogs,
   getCohortOptions,
+  getFileCategory,
+  getFileExtension,
   getParticipantOptions,
   getStageOptions,
   getStatusOptions,
   getUnifiedDurationSeconds,
-  FilterState,
+  LogEntry,
+  LogEntryType,
+  ModelLogEntry,
+  ModelResponseStatus,
 } from '@deliberation-lab/utils';
 
 import {styles} from './log_dashboard.scss';
@@ -154,19 +157,42 @@ export class Component extends MobxLitElement {
             </details>
           `
         : nothing}
-      ${log.imageUrls && log.imageUrls.length > 0
+      ${log.files && log.files.length > 0
         ? html`
             <details>
-              <summary>Generated images (${log.imageUrls.length})</summary>
-              <div class="image-gallery">
-                ${log.imageUrls.map(
-                  (url) =>
-                    html`<img
-                      src="${url}"
-                      alt="Generated image"
-                      class="log-image"
-                    />`,
-                )}
+              <summary>Generated files (${log.files.length})</summary>
+              <div class="file-gallery">
+                ${log.files.map((file) => {
+                  switch (getFileCategory(file)) {
+                    case FileCategory.IMAGE:
+                      return html`<img
+                        src="${file.url}"
+                        alt="Generated image"
+                        class="log-image"
+                      />`;
+                    case FileCategory.VIDEO:
+                      return html`<video
+                        src="${file.url}"
+                        controls
+                        class="log-video"
+                      ></video>`;
+                    case FileCategory.AUDIO:
+                      return html`<audio
+                        src="${file.url}"
+                        controls
+                        class="log-audio"
+                      ></audio>`;
+                    default:
+                      return html`<a
+                        href="${file.url}"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        class="log-file"
+                      >
+                        📎 ${getFileExtension(file)}
+                      </a>`;
+                  }
+                })}
               </div>
             </details>
           `

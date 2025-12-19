@@ -1,6 +1,7 @@
 import {
   ModelLogEntry,
   sanitizeRawResponseForLogging,
+  StoredFile,
 } from '@deliberation-lab/utils';
 
 import {ModelMessage} from './api/ai-sdk.api';
@@ -55,7 +56,7 @@ export async function writeModelLogEntry(
       : log.response,
   };
 
-  const logDoc = await app
+  const logDoc = app
     .firestore()
     .collection('experiments')
     .doc(experimentId)
@@ -67,13 +68,17 @@ export async function writeModelLogEntry(
   });
 }
 
-/** Update model log entry with image URLs after upload. */
-export async function updateModelLogImageUrls(
+/** Update model log entry with uploaded files. */
+export async function updateModelLogFiles(
   experimentId: string,
   logId: string,
-  imageUrls: string[],
+  files: StoredFile[],
 ) {
-  const logDoc = await app
+  if (!files || files.length === 0) {
+    return;
+  }
+
+  const logDoc = app
     .firestore()
     .collection('experiments')
     .doc(experimentId)
@@ -81,6 +86,6 @@ export async function updateModelLogImageUrls(
     .doc(logId);
 
   await app.firestore().runTransaction(async (transaction) => {
-    transaction.update(logDoc, {imageUrls});
+    transaction.update(logDoc, {files});
   });
 }
