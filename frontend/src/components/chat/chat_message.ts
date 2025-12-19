@@ -94,7 +94,7 @@ export class ChatMessageComponent extends MobxLitElement {
           <div class="chat-bubble">
             ${unsafeHTML(convertMarkdownToHTML(chatMessage.message))}
           </div>
-          ${this.renderDebuggingExplanation(chatMessage)}
+          ${this.renderDebuggingInfo(chatMessage)}
           ${this.renderFiles(chatMessage.files)}
         </div>
       </div>
@@ -124,7 +124,7 @@ export class ChatMessageComponent extends MobxLitElement {
           <div class="chat-bubble">
             ${unsafeHTML(convertMarkdownToHTML(chatMessage.message))}
           </div>
-          ${this.renderDebuggingExplanation(chatMessage)}
+          ${this.renderDebuggingInfo(chatMessage)}
           ${this.renderFiles(chatMessage.files)}
         </div>
       </div>
@@ -180,12 +180,36 @@ export class ChatMessageComponent extends MobxLitElement {
     });
   }
 
-  renderDebuggingExplanation(chatMessage: ChatMessage) {
-    if (!this.authService.isDebugMode || !chatMessage.explanation) {
+  renderDebuggingInfo(chatMessage: ChatMessage) {
+    if (!this.authService.isDebugMode) {
       return nothing;
     }
 
-    return html` <div class="debug">${chatMessage.explanation}</div> `;
+    const hasExplanation =
+      chatMessage.explanation && chatMessage.explanation.length > 0;
+    const hasReasoning =
+      chatMessage.reasoning && chatMessage.reasoning.length > 0;
+
+    if (!hasExplanation && !hasReasoning) {
+      return nothing;
+    }
+
+    return html`
+      <div class="debug-container">
+        ${hasExplanation
+          ? html`<div class="debug explanation">
+              <span class="debug-label">📝 Explanation:</span>
+              ${chatMessage.explanation}
+            </div>`
+          : nothing}
+        ${hasReasoning
+          ? html`<div class="debug reasoning">
+              <span class="debug-label">🧠 Reasoning:</span>
+              ${chatMessage.reasoning}
+            </div>`
+          : nothing}
+      </div>
+    `;
   }
 }
 
