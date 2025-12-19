@@ -126,6 +126,6 @@ export default (
       port: 4201,
     },
     // enable external sourcemaps in prod, for debugging
-    devtool: isProd ? 'source-map' : 'eval-source-map',
+    devtool: isProd ? 'hidden-source-map' : 'eval-source-map',
   };
 };
