@@ -833,7 +833,12 @@ export class EditorComponent extends MobxLitElement {
     const updateType = (e: Event) => {
       const type = (e.target as HTMLSelectElement)
         .value as StructuredOutputType;
-      updateConfig({type});
+      // For JSON_FORMAT, appendToPrompt is enforced (must be true)
+      if (type === StructuredOutputType.JSON_FORMAT) {
+        updateConfig({type, appendToPrompt: true});
+      } else {
+        updateConfig({type});
+      }
     };
 
     const mainSettings = () => {
@@ -844,8 +849,7 @@ export class EditorComponent extends MobxLitElement {
         <div class="field">
           <label for="structuredOutputType">Structured Output Type</label>
           <div class="description">
-            Constrain the sampler to produce valid JSON. Only supported for
-            Gemini.
+            Controls how JSON output is requested from the model.
           </div>
           <select
             id="structuredOutputType"
@@ -856,38 +860,42 @@ export class EditorComponent extends MobxLitElement {
               value="${StructuredOutputType.NONE}"
               ?selected=${config.type === StructuredOutputType.NONE}
             >
-              No output forcing
+              None (plain text response)
             </option>
             <option
               value="${StructuredOutputType.JSON_FORMAT}"
               ?selected=${config.type === StructuredOutputType.JSON_FORMAT}
             >
-              Force JSON output
+              JSON Format (prompt-based parsing)
             </option>
             <option
               value="${StructuredOutputType.JSON_SCHEMA}"
               ?selected=${config.type === StructuredOutputType.JSON_SCHEMA}
             >
-              Force JSON output with schema
+              JSON Schema (native API enforcement)
             </option>
           </select>
         </div>
-        <div class="checkbox-wrapper">
-          <md-checkbox
-            touch-target="wrapper"
-            ?checked=${config.appendToPrompt}
-            ?disabled=${!this.experimentEditor.canEditStages}
-            @click=${updateAppendToPrompt}
-          >
-          </md-checkbox>
-          <div>
-            Include explanation of structured output format in prompt
-            <span class="small">
-              (e.g., "Return only valid JSON according to the following
-              schema...")
-            </span>
-          </div>
-        </div>
+        ${config.type === StructuredOutputType.JSON_SCHEMA
+          ? html`
+              <div class="checkbox-wrapper">
+                <md-checkbox
+                  touch-target="wrapper"
+                  ?checked=${config.appendToPrompt}
+                  ?disabled=${!this.experimentEditor.canEditStages}
+                  @click=${updateAppendToPrompt}
+                >
+                </md-checkbox>
+                <div>
+                  Include schema instructions in prompt
+                  <span class="small">
+                    (Optional for JSON_SCHEMA - the API enforces the schema
+                    natively, but prompt instructions can help reinforce)
+                  </span>
+                </div>
+              </div>
+            `
+          : nothing}
         ${this.renderAgentStructuredOutputSchemaFields(
           agent,
           agentPromptConfig,

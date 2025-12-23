@@ -1,4 +1,4 @@
-import {ModelResponse, ModelResponseStatus} from './model_response';
+import {ModelResponse, ModelResponseStatus, StoredFile} from './model_response';
 import {UserProfile} from './participant';
 import {UnifiedTimestamp, generateId} from './shared';
 import {Timestamp} from 'firebase/firestore';
@@ -32,8 +32,8 @@ export interface ModelLogEntry extends BaseLogEntry {
   queryTimestamp: UnifiedTimestamp | null;
   // Time API response was received
   responseTimestamp: UnifiedTimestamp | null;
-  // URLs of uploaded images (if any)
-  imageUrls?: string[];
+  // Uploaded files (images, documents, etc.)
+  files?: StoredFile[];
 }
 
 export function createModelLogEntry(

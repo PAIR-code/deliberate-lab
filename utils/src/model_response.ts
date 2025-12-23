@@ -29,6 +29,88 @@ export enum ModelResponseStatus {
 }
 
 /**
+ * Token usage information from the model response.
+ */
+export interface ModelUsage {
+  promptTokens: number;
+  completionTokens: number;
+  totalTokens: number;
+}
+
+/**
+ * File data from model response (images, audio, etc.).
+ * Uses AI SDK naming conventions (mediaType, base64).
+ */
+export interface ModelFile {
+  mediaType: string;
+  base64: string;
+}
+
+/**
+ * File that has been uploaded to storage.
+ * The stored version of ModelFile, with URL instead of base64.
+ */
+export interface StoredFile {
+  mediaType: string;
+  url: string;
+}
+
+/** Categories of file types for rendering decisions */
+export enum FileCategory {
+  IMAGE = 'image',
+  VIDEO = 'video',
+  AUDIO = 'audio',
+  DOCUMENT = 'document',
+  OTHER = 'other',
+}
+
+/** Get the category of a file based on its mediaType */
+export function getFileCategory(file: StoredFile | ModelFile): FileCategory {
+  const type = file.mediaType.split('/')[0];
+  switch (type) {
+    case 'image':
+      return FileCategory.IMAGE;
+    case 'video':
+      return FileCategory.VIDEO;
+    case 'audio':
+      return FileCategory.AUDIO;
+    case 'application':
+      // PDFs, documents, etc.
+      return FileCategory.DOCUMENT;
+    default:
+      return FileCategory.OTHER;
+  }
+}
+
+/** Check if a file is a media file (image, video, or audio) */
+export function isMediaFile(file: StoredFile | ModelFile): boolean {
+  const category = getFileCategory(file);
+  return (
+    category === FileCategory.IMAGE ||
+    category === FileCategory.VIDEO ||
+    category === FileCategory.AUDIO
+  );
+}
+
+/** Check if a file is an image */
+export function isImageFile(file: StoredFile | ModelFile): boolean {
+  return getFileCategory(file) === FileCategory.IMAGE;
+}
+
+/** Get file extension from mediaType (e.g., 'image/png' -> 'png') */
+export function getFileExtension(file: StoredFile | ModelFile): string {
+  return file.mediaType.split('/')[1] || 'file';
+}
+
+/** Filter files by category */
+export function getFilesByCategory<T extends StoredFile | ModelFile>(
+  files: T[],
+  category: FileCategory,
+): T[] {
+  return files.filter((f) => getFileCategory(f) === category);
+}
+
+/**
  * Common interface for all model responses.
  */
 export interface ModelResponse {
@@ -44,8 +126,10 @@ export interface ModelResponse {
   errorMessage?: string;
   // Reasoning/thought blocks (concatenated if multiple)
   reasoning?: string;
-  // List of images (excludes images from thought blocks)
-  imageDataList?: Array<{mimeType: string; data: string}>;
+  // List of files from response (images, etc.) - excludes files from thought blocks
+  files?: ModelFile[];
+  // Token usage information
+  usage?: ModelUsage;
 }
 
 /**
@@ -124,4 +208,39 @@ export function addParsedModelResponse(response: ModelResponse) {
       error instanceof Error ? error.message : String(error);
     return response;
   }
+}
+
+/**
+ * Parse structured output from text using regex.
+ * Looks for ```json {...} ``` blocks.
+ */
+export function parseStructuredOutputFromText(
+  text: string,
+): Record<string, unknown> | null {
+  const jsonMatch = text.match(/```json\n(\{[\s\S]*\})\n```/);
+  if (jsonMatch && jsonMatch[1]) {
+    try {
+      return JSON.parse(jsonMatch[1]) as Record<string, unknown>;
+    } catch {
+      return null;
+    }
+  }
+  return null;
+}
+
+/**
+ * Get structured output from ModelResponse.
+ * Prefers native parsedResponse (from AI SDK's Output.object()),
+ * falls back to regex parsing from text.
+ */
+export function getStructuredOutput(
+  response: ModelResponse,
+): Record<string, unknown> | null {
+  if (response.parsedResponse) {
+    return response.parsedResponse as Record<string, unknown>;
+  }
+  if (response.text) {
+    return parseStructuredOutputFromText(response.text);
+  }
+  return null;
 }
