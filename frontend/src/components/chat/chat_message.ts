@@ -91,9 +91,11 @@ export class ChatMessageComponent extends MobxLitElement {
               )}</span
             >
           </div>
-          <div class="chat-bubble">
-            ${unsafeHTML(convertMarkdownToHTML(chatMessage.message))}
-          </div>
+          ${chatMessage.message
+            ? html`<div class="chat-bubble">
+                ${unsafeHTML(convertMarkdownToHTML(chatMessage.message))}
+              </div>`
+            : nothing}
           ${this.renderDebuggingInfo(chatMessage)}
           ${this.renderFiles(chatMessage.files)}
         </div>
@@ -121,9 +123,11 @@ export class ChatMessageComponent extends MobxLitElement {
               )}</span
             >
           </div>
-          <div class="chat-bubble">
-            ${unsafeHTML(convertMarkdownToHTML(chatMessage.message))}
-          </div>
+          ${chatMessage.message
+            ? html`<div class="chat-bubble">
+                ${unsafeHTML(convertMarkdownToHTML(chatMessage.message))}
+              </div>`
+            : nothing}
           ${this.renderDebuggingInfo(chatMessage)}
           ${this.renderFiles(chatMessage.files)}
         </div>
