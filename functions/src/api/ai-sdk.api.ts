@@ -254,8 +254,10 @@ function buildGoogleOptions(config: ModelGenerationConfig): object {
     config.includeReasoning === true || hasValidBudget || hasReasoningLevel;
 
   if (wantsThinking) {
+    // Default to including thoughts if thinking is configured, unless explicitly disabled
+    const includeThoughts = config.includeReasoning !== false;
     const thinkingConfig: Record<string, unknown> = {
-      includeThoughts: config.includeReasoning ?? false,
+      includeThoughts,
     };
     if (hasValidBudget) {
       thinkingConfig.thinkingBudget = config.reasoningBudget;
@@ -295,10 +297,10 @@ function buildAnthropicOptions(config: ModelGenerationConfig): object {
       type: 'enabled' as const,
       ...(hasValidBudget && {budgetTokens: config.reasoningBudget}),
     };
-  }
-
-  if (config.includeReasoning) {
-    options.sendReasoning = true;
+    // Default to sending reasoning if thinking is configured, unless explicitly disabled
+    if (config.includeReasoning !== false) {
+      options.sendReasoning = true;
+    }
   }
 
   return options;

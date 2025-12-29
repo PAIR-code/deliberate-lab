@@ -24,6 +24,7 @@ import {
   PromptItem,
   PromptItemGroup,
   PromptItemType,
+  ReasoningLevel,
   StageConfig,
   StageKind,
   StructuredOutputType,
@@ -479,6 +480,18 @@ export class EditorComponent extends MobxLitElement {
   ) {
     const modelGenerationConfig = agentPromptConfig.generationConfig;
 
+    const updateReasoningLevel = (e: Event) => {
+      const value = (e.target as HTMLSelectElement).value;
+      const reasoningLevel =
+        value === '' ? undefined : (value as ReasoningLevel);
+      this.updatePrompt({
+        generationConfig: {
+          ...agentPromptConfig.generationConfig,
+          reasoningLevel,
+        },
+      });
+    };
+
     const updateReasoningBudget = (e: InputEvent) => {
       const reasoningBudget = Number((e.target as HTMLInputElement).value);
       if (!isNaN(reasoningBudget)) {
@@ -501,28 +514,70 @@ export class EditorComponent extends MobxLitElement {
       });
     };
 
+    // See https://ai.google.dev/gemini-api/docs/thinking
+    const reasoningLevelOptions: {value: ReasoningLevel | ''; label: string}[] =
+      [
+        {value: '', label: 'Default'},
+        {value: 'off', label: 'Off'},
+        {value: 'minimal', label: 'Minimal (Gemini 3 Flash only)'},
+        {value: 'low', label: 'Low'},
+        {value: 'medium', label: 'Medium'},
+        {value: 'high', label: 'High'},
+      ];
+
     return html`
       <div class="section">
         <div class="section-header">
           <div class="section-title">Model Reasoning Parameters</div>
           <div class="description">
-            Currently only used for Gemini 2.5 APIs.
+            Controls reasoning/thinking for supported models.
+            <a
+              href="https://ai.google.dev/gemini-api/docs/thinking"
+              target="_blank"
+              >Gemini</a
+            >
+            |
+            <a
+              href="https://docs.anthropic.com/en/docs/build-with-claude/extended-thinking"
+              target="_blank"
+              >Claude</a
+            >
           </div>
         </div>
-        <div class="checkbox-wrapper">
-          <md-checkbox
-            touch-target="wrapper"
-            ?checked=${modelGenerationConfig.includeReasoning ?? false}
+
+        <div class="field">
+          <label for="reasoning-level">Reasoning Level</label>
+          <div class="description">
+            Gemini 3: thinkingLevel. Claude: effort (token efficiency). OpenAI:
+            reasoningEffort.
+          </div>
+          <select
+            id="reasoning-level"
+            @change=${updateReasoningLevel}
             ?disabled=${!this.experimentEditor.isCreator}
-            @click=${updateIncludeReasoning}
           >
-          </md-checkbox>
-          <div>Include model reasoning</div>
+            ${reasoningLevelOptions.map(
+              (option) => html`
+                <option
+                  value=${option.value}
+                  ?selected=${modelGenerationConfig.reasoningLevel ===
+                    option.value ||
+                  (option.value === '' &&
+                    !modelGenerationConfig.reasoningLevel)}
+                >
+                  ${option.label}
+                </option>
+              `,
+            )}
+          </select>
         </div>
 
         <div class="field">
           <label for="reasoning-budget">Reasoning Budget</label>
-          <div class="description">Reasoning budget for Gemini 2.5</div>
+          <div class="description">
+            Max thinking tokens. Gemini 2.5: thinkingBudget (-1 = dynamic, 0 =
+            off). Claude: budgetTokens.
+          </div>
           <div class="number-input">
             <input
               .disabled=${!this.experimentEditor.isCreator}
@@ -532,8 +587,42 @@ export class EditorComponent extends MobxLitElement {
             />
           </div>
         </div>
+
+        <div class="checkbox-wrapper">
+          <md-checkbox
+            touch-target="wrapper"
+            ?checked=${this.getIncludeReasoningValue(modelGenerationConfig)}
+            ?disabled=${!this.experimentEditor.isCreator}
+            @click=${updateIncludeReasoning}
+          >
+          </md-checkbox>
+          <div>
+            Include model reasoning in response
+            <span class="small"
+              >(auto-enabled when thinking is configured)</span
+            >
+          </div>
+        </div>
       </div>
     `;
+  }
+
+  /** Returns effective includeReasoning value - true by default if thinking is configured */
+  private getIncludeReasoningValue(config: {
+    includeReasoning?: boolean;
+    reasoningLevel?: ReasoningLevel;
+    reasoningBudget?: number;
+  }): boolean {
+    // If explicitly set, use that value
+    if (config.includeReasoning !== undefined) {
+      return config.includeReasoning;
+    }
+    // Default to true if thinking is configured
+    const hasReasoningLevel =
+      config.reasoningLevel && config.reasoningLevel !== 'off';
+    const hasValidBudget =
+      typeof config.reasoningBudget === 'number' && config.reasoningBudget > 0;
+    return hasReasoningLevel || hasValidBudget;
   }
 
   private renderAgentSamplingParameters(
