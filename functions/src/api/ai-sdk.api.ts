@@ -99,7 +99,10 @@ function getCredentials(
         baseURL: apiKeyConfig.claudeApiKey?.baseUrl || undefined,
       };
     case ApiKeyType.OLLAMA_CUSTOM_URL:
-      return {baseURL: apiKeyConfig.ollamaApiKey?.url};
+      return {
+        apiKey: apiKeyConfig.ollamaApiKey?.apiKey || undefined,
+        baseURL: apiKeyConfig.ollamaApiKey?.url,
+      };
     default:
       return {};
   }
@@ -189,6 +192,8 @@ function convertPromptToMessages(prompt: string | ModelMessage[]): {
 
 // ============================================================================
 // PROVIDER OPTIONS
+// Maps universal fields (reasoningLevel, reasoningBudget, includeReasoning)
+// to provider-specific options, then merges with any providerOptions overrides.
 // ============================================================================
 
 type GoogleSafetyCategory =
@@ -200,12 +205,32 @@ type GoogleSafetyCategory =
 type GoogleSafetyThreshold = 'BLOCK_NONE' | 'BLOCK_ONLY_HIGH';
 
 /**
- * Builds Google-specific provider options including safety settings.
+ * Maps reasoningLevel to provider effort level.
+ * 'off' and 'minimal' map to undefined (default behavior).
  */
-function getGoogleProviderOptions(
-  generationConfig: ModelGenerationConfig,
-): object {
-  const threshold: GoogleSafetyThreshold = generationConfig.disableSafetyFilters
+function mapReasoningLevelToEffort(
+  reasoningLevel?: string,
+): 'low' | 'medium' | 'high' | undefined {
+  switch (reasoningLevel) {
+    case 'low':
+      return 'low';
+    case 'medium':
+      return 'medium';
+    case 'high':
+      return 'high';
+    default:
+      return undefined;
+  }
+}
+
+/**
+ * Builds Google/Gemini provider options from universal fields.
+ * See: https://ai.google.dev/gemini-api/docs/thinking
+ *   - Gemini 3: use thinkingLevel ('minimal', 'low', 'medium', 'high')
+ *   - Gemini 2.5: use thinkingBudget (token count, -1 for dynamic, 0 to disable)
+ */
+function buildGoogleOptions(config: ModelGenerationConfig): object {
+  const threshold: GoogleSafetyThreshold = config.disableSafetyFilters
     ? 'BLOCK_NONE'
     : 'BLOCK_ONLY_HIGH';
 
@@ -216,39 +241,118 @@ function getGoogleProviderOptions(
     'HARM_CATEGORY_SEXUALLY_EXPLICIT',
   ];
 
-  const safetySettings = safetyCategories.map((category) => ({
-    category,
-    threshold,
-  }));
-
   const options: Record<string, unknown> = {
-    safetySettings,
+    safetySettings: safetyCategories.map((category) => ({category, threshold})),
   };
 
-  // Add thinking config if specified
-  if (
-    generationConfig.reasoningBudget !== undefined ||
-    generationConfig.includeReasoning
-  ) {
-    options.thinkingConfig = {
-      thinkingBudget: generationConfig.reasoningBudget,
-      includeThoughts: generationConfig.includeReasoning,
+  // Build thinkingConfig from universal fields
+  const hasValidBudget =
+    typeof config.reasoningBudget === 'number' && config.reasoningBudget > 0;
+  const hasReasoningLevel =
+    config.reasoningLevel && config.reasoningLevel !== 'off';
+  const wantsThinking =
+    config.includeReasoning === true || hasValidBudget || hasReasoningLevel;
+
+  if (wantsThinking) {
+    const thinkingConfig: Record<string, unknown> = {
+      includeThoughts: config.includeReasoning ?? false,
     };
+    if (hasValidBudget) {
+      thinkingConfig.thinkingBudget = config.reasoningBudget;
+    }
+    if (hasReasoningLevel) {
+      // Map our reasoningLevel to Google's thinkingLevel
+      thinkingConfig.thinkingLevel = config.reasoningLevel;
+    }
+    options.thinkingConfig = thinkingConfig;
   }
 
-  return {google: options};
+  return options;
 }
 
 /**
- * Builds provider-specific options based on API type.
+ * Builds Anthropic/Claude provider options from universal fields.
+ */
+function buildAnthropicOptions(config: ModelGenerationConfig): object {
+  const options: Record<string, unknown> = {};
+
+  // Map reasoningLevel to effort
+  const effort = mapReasoningLevelToEffort(config.reasoningLevel);
+  if (effort) {
+    options.effort = effort;
+  }
+
+  // Map reasoningBudget and includeReasoning to thinking config
+  const hasValidBudget =
+    typeof config.reasoningBudget === 'number' && config.reasoningBudget > 0;
+  const wantsThinking =
+    config.includeReasoning === true ||
+    hasValidBudget ||
+    (config.reasoningLevel && config.reasoningLevel !== 'off');
+
+  if (wantsThinking) {
+    options.thinking = {
+      type: 'enabled' as const,
+      ...(hasValidBudget && {budgetTokens: config.reasoningBudget}),
+    };
+  }
+
+  if (config.includeReasoning) {
+    options.sendReasoning = true;
+  }
+
+  return options;
+}
+
+/**
+ * Builds OpenAI provider options from universal fields.
+ */
+function buildOpenAIOptions(config: ModelGenerationConfig): object {
+  const options: Record<string, unknown> = {};
+
+  // Map reasoningLevel to reasoningEffort (for o1/o3 models)
+  const effort = mapReasoningLevelToEffort(config.reasoningLevel);
+  if (effort) {
+    options.reasoningEffort = effort;
+  }
+
+  return options;
+}
+
+/**
+ * Builds provider-specific options from universal fields, then merges with
+ * any explicit providerOptions overrides.
  */
 function getProviderOptions(
   apiType: ApiKeyType,
   generationConfig: ModelGenerationConfig,
 ): object {
+  const overrides = generationConfig.providerOptions;
+
   switch (apiType) {
-    case ApiKeyType.GEMINI_API_KEY:
-      return getGoogleProviderOptions(generationConfig);
+    case ApiKeyType.GEMINI_API_KEY: {
+      const mapped = buildGoogleOptions(generationConfig);
+      const merged = {...mapped, ...overrides?.google};
+      return {google: merged};
+    }
+
+    case ApiKeyType.CLAUDE_API_KEY: {
+      const mapped = buildAnthropicOptions(generationConfig);
+      const merged = {...mapped, ...overrides?.anthropic};
+      return Object.keys(merged).length > 0 ? {anthropic: merged} : {};
+    }
+
+    case ApiKeyType.OPENAI_API_KEY: {
+      const mapped = buildOpenAIOptions(generationConfig);
+      const merged = {...mapped, ...overrides?.openai};
+      return Object.keys(merged).length > 0 ? {openai: merged} : {};
+    }
+
+    case ApiKeyType.OLLAMA_CUSTOM_URL: {
+      // Ollama doesn't have universal field mappings, just use overrides
+      return overrides?.ollama ? {ollama: overrides.ollama} : {};
+    }
+
     default:
       return {};
   }
