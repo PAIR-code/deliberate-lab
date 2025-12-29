@@ -477,8 +477,14 @@ function mapResultToModelResponse(
     response.text = result.text;
   }
 
-  // Handle structured output
-  if (structuredOutputConfig?.enabled && result.output) {
+  // Handle structured output - only if result.output is an actual parsed object
+  // (not a string, which can happen when Output.object() wasn't used)
+  if (
+    structuredOutputConfig?.enabled &&
+    result.output &&
+    typeof result.output === 'object' &&
+    result.output !== null
+  ) {
     response.parsedResponse = result.output as object;
     response.text = JSON.stringify(result.output);
   }

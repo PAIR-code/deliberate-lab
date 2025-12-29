@@ -211,20 +211,47 @@ export function addParsedModelResponse(response: ModelResponse) {
 }
 
 /**
- * Parse structured output from text using regex.
- * Looks for ```json {...} ``` blocks.
+ * Parse structured output from text using multiple strategies.
+ * Handles various response formats from different providers/SDKs:
+ * 1. Markdown code block: ```json\n{...}\n```
+ * 2. Code block with varied whitespace: ```json {...} ```
+ * 3. Just "json\n{...}" prefix (no backticks)
+ * 4. Raw JSON object: {...}
  */
 export function parseStructuredOutputFromText(
   text: string,
 ): Record<string, unknown> | null {
-  const jsonMatch = text.match(/```json\n(\{[\s\S]*\})\n```/);
-  if (jsonMatch && jsonMatch[1]) {
+  const trimmed = text.trim();
+
+  // Strategy 1: Full markdown code block with newlines
+  const markdownMatch = trimmed.match(/```json\s*\n?([\s\S]*?)\n?\s*```/);
+  if (markdownMatch && markdownMatch[1]) {
     try {
-      return JSON.parse(jsonMatch[1]) as Record<string, unknown>;
+      return JSON.parse(markdownMatch[1].trim()) as Record<string, unknown>;
     } catch {
-      return null;
+      // Continue to next strategy
     }
   }
+
+  // Strategy 2: "json\n{...}" prefix without backticks (AI SDK format)
+  const jsonPrefixMatch = trimmed.match(/^json\s*\n(\{[\s\S]*\})$/);
+  if (jsonPrefixMatch && jsonPrefixMatch[1]) {
+    try {
+      return JSON.parse(jsonPrefixMatch[1]) as Record<string, unknown>;
+    } catch {
+      // Continue to next strategy
+    }
+  }
+
+  // Strategy 3: Raw JSON object (starts with { and ends with })
+  if (trimmed.startsWith('{') && trimmed.endsWith('}')) {
+    try {
+      return JSON.parse(trimmed) as Record<string, unknown>;
+    } catch {
+      // Parsing failed
+    }
+  }
+
   return null;
 }
 
@@ -236,7 +263,12 @@ export function parseStructuredOutputFromText(
 export function getStructuredOutput(
   response: ModelResponse,
 ): Record<string, unknown> | null {
-  if (response.parsedResponse) {
+  // Only use parsedResponse if it's an actual object (not a string)
+  if (
+    response.parsedResponse &&
+    typeof response.parsedResponse === 'object' &&
+    response.parsedResponse !== null
+  ) {
     return response.parsedResponse as Record<string, unknown>;
   }
   if (response.text) {
