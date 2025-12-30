@@ -605,7 +605,7 @@ export class EditorComponent extends MobxLitElement {
               agent.defaultModelSettings.modelName,
             )}
             ?disabled=${!this.experimentEditor.isCreator}
-            @click=${updateIncludeReasoning}
+            @change=${updateIncludeReasoning}
           >
           </md-checkbox>
           <div>
