@@ -27,6 +27,7 @@ import {
   APIKeyConfig,
   AgentModelSettings,
   ApiKeyType,
+  isAlwaysThinkingModel,
   schemaToObject,
 } from '@deliberation-lab/utils';
 
@@ -229,7 +230,10 @@ function mapReasoningLevelToEffort(
  *   - Gemini 3: use thinkingLevel ('minimal', 'low', 'medium', 'high')
  *   - Gemini 2.5: use thinkingBudget (token count, -1 for dynamic, 0 to disable)
  */
-function buildGoogleOptions(config: ModelGenerationConfig): object {
+function buildGoogleOptions(
+  config: ModelGenerationConfig,
+  modelName?: string,
+): object {
   const threshold: GoogleSafetyThreshold = config.disableSafetyFilters
     ? 'BLOCK_NONE'
     : 'BLOCK_ONLY_HIGH';
@@ -267,6 +271,14 @@ function buildGoogleOptions(config: ModelGenerationConfig): object {
       thinkingConfig.thinkingLevel = config.reasoningLevel;
     }
     options.thinkingConfig = thinkingConfig;
+  }
+
+  // Auto-enable includeThoughts for always-thinking models (e.g., Gemini 3)
+  // This ensures we get the thought text in the response
+  if (isAlwaysThinkingModel(modelName) && !options.thinkingConfig) {
+    options.thinkingConfig = {
+      includeThoughts: true,
+    };
   }
 
   return options;
@@ -328,12 +340,13 @@ function buildOpenAIOptions(config: ModelGenerationConfig): object {
 function getProviderOptions(
   apiType: ApiKeyType,
   generationConfig: ModelGenerationConfig,
+  modelName?: string,
 ): object {
   const overrides = generationConfig.providerOptions;
 
   switch (apiType) {
     case ApiKeyType.GEMINI_API_KEY: {
-      const mapped = buildGoogleOptions(generationConfig);
+      const mapped = buildGoogleOptions(generationConfig, modelName);
       const merged = {...mapped, ...overrides?.google};
       return {google: merged};
     }
@@ -621,6 +634,7 @@ export async function generateAIResponse(
     const providerOptions = getProviderOptions(
       modelSettings.apiType,
       generationConfig,
+      modelSettings.modelName,
     );
 
     // Build the generateText options

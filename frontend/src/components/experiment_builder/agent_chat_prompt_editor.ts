@@ -31,6 +31,8 @@ import {
   StructuredOutputDataType,
   StructuredOutputSchema,
   createDefaultPromptFromText,
+  isAlwaysThinkingModel,
+  isJsonSchemaUnsupportedModel,
   makeStructuredOutputPrompt,
   structuredOutputEnabled,
   TextPromptItem,
@@ -93,7 +95,7 @@ export class EditorComponent extends MobxLitElement {
           </div>
           ${promptConfig ? this.renderDialogButton() : nothing}
         </div>
-        ${this.renderFlashImageWarning(stageConfig, this.agent)}
+        ${this.renderStructuredOutputWarning(this.agent)}
         ${promptConfig?.type === StageKind.CHAT ||
         promptConfig?.type === StageKind.PRIVATE_CHAT
           ? html`
@@ -105,18 +107,25 @@ export class EditorComponent extends MobxLitElement {
     `;
   }
 
-  private renderFlashImageWarning(
-    stageConfig: StageConfig,
-    agent: AgentPersonaConfig,
-  ) {
+  private renderStructuredOutputWarning(agent: AgentPersonaConfig) {
     const modelName = agent.defaultModelSettings.modelName;
-    if (
-      stageConfig.kind === StageKind.PRIVATE_CHAT &&
-      modelName?.includes('gemini-2.5-flash-image')
-    ) {
+
+    // Get the prompt config and check if it's a chat config with structuredOutputConfig
+    const promptConfig = this.getPrompt();
+    const structuredOutputConfig =
+      promptConfig &&
+      'structuredOutputConfig' in promptConfig &&
+      promptConfig.structuredOutputConfig;
+    const usesJsonSchema =
+      structuredOutputConfig &&
+      structuredOutputConfig.type === StructuredOutputType.JSON_SCHEMA;
+
+    // Only warn if using JSON_SCHEMA mode with a model that doesn't support it
+    if (isJsonSchemaUnsupportedModel(modelName) && usesJsonSchema) {
       return html`
         <div class="warning">
-          Warning: This model is not compatible with structured output.
+          Warning: This model does not support native JSON Schema mode. Switch
+          to JSON Format mode for structured output.
         </div>
       `;
     }
@@ -591,7 +600,10 @@ export class EditorComponent extends MobxLitElement {
         <div class="checkbox-wrapper">
           <md-checkbox
             touch-target="wrapper"
-            ?checked=${this.getIncludeReasoningValue(modelGenerationConfig)}
+            ?checked=${this.getIncludeReasoningValue(
+              modelGenerationConfig,
+              agent.defaultModelSettings.modelName,
+            )}
             ?disabled=${!this.experimentEditor.isCreator}
             @click=${updateIncludeReasoning}
           >
@@ -599,7 +611,8 @@ export class EditorComponent extends MobxLitElement {
           <div>
             Include model reasoning in response
             <span class="small"
-              >(auto-enabled when thinking is configured)</span
+              >(auto-enabled for always-thinking models and when thinking is
+              configured)</span
             >
           </div>
         </div>
@@ -607,15 +620,22 @@ export class EditorComponent extends MobxLitElement {
     `;
   }
 
-  /** Returns effective includeReasoning value - true by default if thinking is configured */
-  private getIncludeReasoningValue(config: {
-    includeReasoning?: boolean;
-    reasoningLevel?: ReasoningLevel;
-    reasoningBudget?: number;
-  }): boolean {
+  /** Returns effective includeReasoning value - true by default for always-thinking models or when thinking is configured */
+  private getIncludeReasoningValue(
+    config: {
+      includeReasoning?: boolean;
+      reasoningLevel?: ReasoningLevel;
+      reasoningBudget?: number;
+    },
+    modelName?: string,
+  ): boolean {
     // If explicitly set, use that value
     if (config.includeReasoning !== undefined) {
       return config.includeReasoning;
+    }
+    // Some models (e.g., Gemini 3) are always thinking.
+    if (isAlwaysThinkingModel(modelName)) {
+      return true;
     }
     // Default to true if thinking is configured
     const hasReasoningLevel =

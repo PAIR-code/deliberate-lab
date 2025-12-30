@@ -102,3 +102,27 @@ export interface ProviderOptionsMap {
   openai?: OpenAIProviderOptions;
   ollama?: OllamaProviderOptions;
 }
+
+// ============================================================================
+// MODEL CAPABILITY UTILITIES
+// ============================================================================
+
+/**
+ * Returns true if the model always uses thinking/reasoning regardless of config.
+ */
+export function isAlwaysThinkingModel(modelName?: string): boolean {
+  if (!modelName) return false;
+  // Gemini 3 models do not have a non-thinking mode.
+  return modelName.includes('gemini-3');
+}
+
+/**
+ * Returns true if the model does not support native JSON Schema structured output.
+ * These models should use JSON_FORMAT mode instead of JSON_SCHEMA.
+ */
+export function isJsonSchemaUnsupportedModel(modelName?: string): boolean {
+  if (!modelName) return false;
+  // Known models that don't support JSON Schema (exact match):
+  const unsupportedModels = ['gemini-2.5-flash-image'];
+  return unsupportedModels.includes(modelName);
+}
