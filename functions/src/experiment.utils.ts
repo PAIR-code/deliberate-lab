@@ -8,8 +8,11 @@ import {
   StageConfig,
   UnifiedTimestamp,
   Visibility,
+  createAgentMediatorPersonaConfig,
+  createAgentParticipantPersonaConfig,
   createExperimentConfig,
   createExperimentTemplate,
+  createMetadataConfig,
   generateId,
   VariableScope,
 } from '@deliberation-lab/utils';
@@ -62,8 +65,14 @@ export async function writeExperimentFromTemplate(
     return '';
   }
 
-  // Set creator
-  experimentConfig.metadata.creator = creatorId;
+  // Build metadata with admin SDK Timestamps and set creator
+  const timestamp = Timestamp.now() as UnifiedTimestamp;
+  experimentConfig.metadata = createMetadataConfig({
+    ...experimentConfig.metadata,
+    creator: creatorId,
+    dateCreated: timestamp,
+    dateModified: timestamp,
+  });
 
   // Generate variable values at the experiment level before the transaction
   // so the experimentConfig has the variableMap when it's written
@@ -87,8 +96,9 @@ export async function writeExperimentFromTemplate(
 
     // Add agent mediators under `agentMediators` collection
     for (const agent of template.agentMediators) {
-      const doc = document.collection('agentMediators').doc(agent.persona.id);
-      transaction.set(doc, agent.persona);
+      const persona = createAgentMediatorPersonaConfig(agent.persona);
+      const doc = document.collection('agentMediators').doc(persona.id);
+      transaction.set(doc, persona);
       for (const prompt of Object.values(agent.promptMap)) {
         transaction.set(doc.collection('prompts').doc(prompt.id), prompt);
       }
@@ -96,10 +106,9 @@ export async function writeExperimentFromTemplate(
 
     // Add agent participants under `agentParticipants` collection
     for (const agent of template.agentParticipants) {
-      const doc = document
-        .collection('agentParticipants')
-        .doc(agent.persona.id);
-      transaction.set(doc, agent.persona);
+      const persona = createAgentParticipantPersonaConfig(agent.persona);
+      const doc = document.collection('agentParticipants').doc(persona.id);
+      transaction.set(doc, persona);
       for (const prompt of Object.values(agent.promptMap)) {
         transaction.set(doc.collection('prompts').doc(prompt.id), prompt);
       }
@@ -294,6 +303,15 @@ export async function updateExperimentFromTemplate(
     }
   }
 
+  // Preserve original dateCreated and creator, always update dateModified
+  const oldData = oldExperiment.data();
+  experimentConfig.metadata = createMetadataConfig({
+    ...experimentConfig.metadata,
+    creator: oldData?.metadata.creator,
+    dateCreated: oldData?.metadata.dateCreated,
+    dateModified: Timestamp.now() as UnifiedTimestamp,
+  });
+
   // Regenerate variable values based on current variable configs
   experimentConfig.variableMap = await generateVariablesForScope(
     experimentConfig.variableConfigs ?? [],
@@ -321,8 +339,9 @@ export async function updateExperimentFromTemplate(
 
     // Add agent mediators under `agentMediators` collection
     for (const agent of template.agentMediators) {
-      const doc = document.collection('agentMediators').doc(agent.persona.id);
-      transaction.set(doc, agent.persona);
+      const persona = createAgentMediatorPersonaConfig(agent.persona);
+      const doc = document.collection('agentMediators').doc(persona.id);
+      transaction.set(doc, persona);
       for (const prompt of Object.values(agent.promptMap)) {
         transaction.set(doc.collection('prompts').doc(prompt.id), prompt);
       }
@@ -330,10 +349,9 @@ export async function updateExperimentFromTemplate(
 
     // Add agent participants under `agentParticipants` collection
     for (const agent of template.agentParticipants) {
-      const doc = document
-        .collection('agentParticipants')
-        .doc(agent.persona.id);
-      transaction.set(doc, agent.persona);
+      const persona = createAgentParticipantPersonaConfig(agent.persona);
+      const doc = document.collection('agentParticipants').doc(persona.id);
+      transaction.set(doc, persona);
       for (const prompt of Object.values(agent.promptMap)) {
         transaction.set(doc.collection('prompts').doc(prompt.id), prompt);
       }

@@ -96,12 +96,13 @@ export function createExperimentConfig(
   config: Partial<Experiment> = {},
 ): Experiment {
   return {
-    id: config.id ?? generateId(),
+    id: config.id || generateId(),
     versionId: EXPERIMENT_VERSION_ID,
     metadata: config.metadata ?? createMetadataConfig(),
     permissions: config.permissions ?? createPermissionsConfig(),
-    defaultCohortConfig:
-      config.defaultCohortConfig ?? createCohortParticipantConfig(),
+    defaultCohortConfig: createCohortParticipantConfig(
+      config.defaultCohortConfig,
+    ),
     prolificConfig: config.prolificConfig ?? createProlificConfig(),
     stageIds: stages.map((stage) => stage.id),
     cohortLockMap: config.cohortLockMap ?? {},
@@ -115,7 +116,7 @@ export function createExperimentTemplate(
   config: Partial<ExperimentTemplate>,
 ): ExperimentTemplate {
   return {
-    id: config.id ?? generateId(),
+    id: config.id || generateId(),
     experiment: config.experiment ?? createExperimentConfig(),
     stageConfigs: config.stageConfigs ?? [],
     agentMediators: config.agentMediators ?? [],
