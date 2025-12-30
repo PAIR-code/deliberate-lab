@@ -2,7 +2,8 @@
  * One-time migration script to convert old variable configs (pre-v19) to new format.
  *
  * This script:
- * 1. Queries all experiments from Firestore
+ * 1. Queries experiments created on or after Nov 3, 2025 (when the variable feature
+ *    was introduced in commit c6a19676)
  * 2. Checks if any have old-format variable configs
  * 3. Migrates them to the new format
  * 4. Updates the documents in Firestore
@@ -42,6 +43,15 @@ if (!admin.apps.length) {
 }
 
 const db = admin.firestore();
+
+// ************************************************************************* //
+// DATE FILTER FOR VARIABLE FEATURE                                          //
+// ************************************************************************* //
+
+// The RandomPermutationVariableConfig feature was introduced on Nov 3, 2025
+// (commit c6a19676). Only experiments created on or after this date could
+// have variable configs that need migration.
+const VARIABLE_FEATURE_START_DATE = new Date('2025-11-03T00:00:00Z');
 
 // ************************************************************************* //
 // OLD FORMAT TYPES                                                          //
@@ -143,6 +153,7 @@ interface MigrationResult {
   experimentId: string;
   experimentName: string;
   versionId: number;
+  dateCreated: string;
   hadOldConfigs: boolean;
   configCount: number;
   migratedCount: number;
@@ -157,21 +168,39 @@ async function migrateExperiments(dryRun: boolean): Promise<MigrationResult[]> {
   );
   console.log(`${'='.repeat(60)}\n`);
 
+  // Convert start date to Firestore Timestamp
+  const startTimestamp = admin.firestore.Timestamp.fromDate(
+    VARIABLE_FEATURE_START_DATE,
+  );
+
+  console.log(
+    `Filtering experiments created on or after: ${VARIABLE_FEATURE_START_DATE.toISOString()}\n`,
+  );
+
   const results: MigrationResult[] = [];
 
-  // Query all experiments
-  const experimentsSnapshot = await db.collection('experiments').get();
+  // Query experiments created on or after the variable feature was introduced
+  const experimentsSnapshot = await db
+    .collection('experiments')
+    .where('metadata.dateCreated', '>=', startTimestamp)
+    .get();
   console.log(`Found ${experimentsSnapshot.size} experiments to check.\n`);
 
   for (const doc of experimentsSnapshot.docs) {
     const experiment = doc.data() as Experiment;
     const experimentId = doc.id;
     const experimentName = experiment.metadata?.name || 'Unnamed';
+    const dateCreated = experiment.metadata?.dateCreated
+      ? new Date(experiment.metadata.dateCreated.seconds * 1000)
+          .toISOString()
+          .split('T')[0]
+      : 'unknown';
 
     const result: MigrationResult = {
       experimentId,
       experimentName,
       versionId: experiment.versionId || 0,
+      dateCreated,
       hadOldConfigs: false,
       configCount: 0,
       migratedCount: 0,
@@ -273,7 +302,7 @@ function printSummary(results: MigrationResult[], dryRun: boolean) {
           ? 'would migrate'
           : 'migrated';
       console.log(
-        `  - [${result.experimentId}] "${result.experimentName}" (v${result.versionId}) - ${status}`,
+        `  - [${result.experimentId}] "${result.experimentName}" (v${result.versionId}, created ${result.dateCreated}) - ${status}`,
       );
     }
   }
