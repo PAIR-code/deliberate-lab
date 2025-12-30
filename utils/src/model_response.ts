@@ -1,3 +1,5 @@
+import {jsonrepair} from 'jsonrepair';
+
 export enum ModelResponseStatus {
   // A successful response.
   OK = 'ok',
@@ -211,45 +213,79 @@ export function addParsedModelResponse(response: ModelResponse) {
 }
 
 /**
- * Parse structured output from text using multiple strategies.
- * Handles various response formats from different providers/SDKs:
- * 1. Markdown code block: ```json\n{...}\n```
- * 2. Code block with varied whitespace: ```json {...} ```
- * 3. Just "json\n{...}" prefix (no backticks)
- * 4. Raw JSON object: {...}
+ * Extract known fields from corrupted JSON using regex.
+ * This is a fallback when jsonrepair fails, e.g., when Gemini inserts
+ * images in the middle of JSON output, corrupting the structure.
+ */
+function extractFieldsFromCorruptedJson(
+  text: string,
+): Record<string, unknown> | null {
+  const result: Record<string, unknown> = {};
+
+  // Extract common structured output fields using regex
+  // Pattern: "fieldName": "value" or "fieldName": value (for booleans/numbers)
+
+  // Extract string fields (handles escaped quotes and newlines)
+  const stringFieldPattern =
+    /"(explanation|response|message)":\s*"((?:[^"\\]|\\.)*)"/g;
+  let match;
+  while ((match = stringFieldPattern.exec(text)) !== null) {
+    const [, fieldName, value] = match;
+    // Unescape the value
+    result[fieldName] = value
+      .replace(/\\n/g, '\n')
+      .replace(/\\"/g, '"')
+      .replace(/\\\\/g, '\\');
+  }
+
+  // Extract boolean fields
+  const boolFieldPattern = /"(shouldRespond|readyToEndChat)":\s*(true|false)/g;
+  while ((match = boolFieldPattern.exec(text)) !== null) {
+    const [, fieldName, value] = match;
+    result[fieldName] = value === 'true';
+  }
+
+  return Object.keys(result).length > 0 ? result : null;
+}
+
+/**
+ * Parse structured output from text.
+ * Uses jsonrepair to handle markdown code blocks, malformed JSON, etc.
  */
 export function parseStructuredOutputFromText(
   text: string,
 ): Record<string, unknown> | null {
   const trimmed = text.trim();
 
-  // Strategy 1: Full markdown code block with newlines
-  const markdownMatch = trimmed.match(/```json\s*\n?([\s\S]*?)\n?\s*```/);
-  if (markdownMatch && markdownMatch[1]) {
-    try {
-      return JSON.parse(markdownMatch[1].trim()) as Record<string, unknown>;
-    } catch {
-      // Continue to next strategy
-    }
-  }
-
-  // Strategy 2: "json\n{...}" prefix without backticks (AI SDK format)
+  // Strategy 1: Handle "json\n{...}" prefix (jsonrepair misinterprets this as array)
   const jsonPrefixMatch = trimmed.match(/^json\s*\n(\{[\s\S]*\})$/);
   if (jsonPrefixMatch && jsonPrefixMatch[1]) {
     try {
-      return JSON.parse(jsonPrefixMatch[1]) as Record<string, unknown>;
-    } catch {
-      // Continue to next strategy
+      return JSON.parse(jsonrepair(jsonPrefixMatch[1])) as Record<
+        string,
+        unknown
+      >;
+    } catch (e) {
+      console.error('Strategy 1 (json prefix) JSON parse error:', e);
     }
   }
 
-  // Strategy 3: Raw JSON object (starts with { and ends with })
-  if (trimmed.startsWith('{') && trimmed.endsWith('}')) {
-    try {
-      return JSON.parse(trimmed) as Record<string, unknown>;
-    } catch {
-      // Parsing failed
-    }
+  // Strategy 2: Let jsonrepair handle everything else (markdown, raw JSON, malformed)
+  try {
+    return JSON.parse(jsonrepair(trimmed)) as Record<string, unknown>;
+  } catch (e) {
+    console.error('Strategy 2 (jsonrepair) JSON parse error:', e);
+  }
+
+  // Strategy 3: Extract fields via regex when JSON is especially corrupted
+  // (e.g., when Gemini inserts images in the middle of JSON output)
+  const extractedFields = extractFieldsFromCorruptedJson(trimmed);
+  if (extractedFields && Object.keys(extractedFields).length > 0) {
+    console.log(
+      'Strategy 3 (regex extraction) recovered fields:',
+      Object.keys(extractedFields),
+    );
+    return extractedFields;
   }
 
   return null;
