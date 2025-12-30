@@ -12,7 +12,9 @@
     "test": "npm run test:unit && npm run test:firestore",
     "test:firestore": "firebase -c ../firebase-test.json emulators:exec --only firestore,functions --project=demo-deliberate-lab \"npx jest --runInBand $npm_package_config_firestore_tests\"",
     "test:unit": "npx jest --testPathIgnorePatterns=$npm_package_config_firestore_tests",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "migrate:variable-configs": "npx tsx src/migrations/migrate-variable-configs.ts",
+    "migrate:variable-configs:dry-run": "npx tsx src/migrations/migrate-variable-configs.ts --dry-run"
   },
   "engines": {
     "node": "22"
