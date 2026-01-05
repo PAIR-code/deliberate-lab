@@ -21,7 +21,7 @@ export const ChipItemData = Type.Object(
     lowerValue: Type.Number(),
     upperValue: Type.Number(),
   },
-  strict,
+  {$id: 'ChipItem', ...strict},
 );
 
 /** Chip stage config data. */
@@ -36,7 +36,7 @@ export const ChipStageConfigData = Type.Object(
     numRounds: Type.Number(),
     chips: Type.Array(ChipItemData),
   },
-  strict,
+  {$id: 'ChipStageConfig', ...strict},
 );
 
 /** Chip offer data. */

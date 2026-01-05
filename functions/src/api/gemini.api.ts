@@ -15,6 +15,7 @@ import {
   StructuredOutputSchema,
   ModelResponseStatus,
   ModelResponse,
+  addParsedModelResponse,
 } from '@deliberation-lab/utils';
 
 const GEMINI_DEFAULT_MODEL = 'gemini-2.5-flash';
@@ -164,6 +165,7 @@ export async function callGemini(
   prompt: string | Array<{role: string; content: string; name?: string}>,
   generationConfig: GenerationConfig,
   modelName = GEMINI_DEFAULT_MODEL,
+  parseResponse = false, // parse if structured output
   safetySettings?: SafetySetting[],
 ): Promise<ModelResponse> {
   const genAI = new GoogleGenAI({apiKey});
@@ -253,6 +255,10 @@ export async function callGemini(
     imageDataList: imageDataList.length > 0 ? imageDataList : undefined,
   };
 
+  if (parseResponse) {
+    return addParsedModelResponse(modelResponse);
+  }
+
   return modelResponse;
 }
 
@@ -318,6 +324,7 @@ export async function getGeminiAPIResponse(
       promptText,
       geminiConfig,
       modelName,
+      structuredOutputConfig?.enabled,
       safetySettings,
     );
     // eslint-disable-next-line @typescript-eslint/no-explicit-any

@@ -1,0 +1,422 @@
+@use '../../sass/colors';
+@use '../../sass/common';
+@use '../../sass/typescale';
+
+:host {
+  @include common.flex-column;
+  flex-grow: 1;
+  overflow: auto;
+}
+
+a {
+  color: var(--md-sys-color-primary);
+  text-decoration: underline;
+}
+
+p {
+  margin: 0;
+}
+
+.inner-wrapper {
+  @include common.flex-column;
+  gap: common.$spacing-xxl;
+  max-width: common.$info-content-max-width;
+  padding: common.$main-content-padding;
+  padding-bottom: calc(common.$main-content-padding * 2);
+}
+
+.title {
+  @include typescale.title-medium;
+  color: var(--md-sys-color-secondary);
+}
+
+.description {
+  color: var(--md-sys-color-outline);
+  font-style: italic;
+  @include typescale.body-small;
+}
+
+.divider {
+  border-bottom: 1px solid var(--md-sys-color-outline-variant);
+}
+
+// Variable Config
+.variable-config {
+  @include common.flex-column;
+  border: 2px solid var(--md-sys-color-outline);
+  border-radius: common.$spacing-medium;
+  overflow: hidden;
+}
+
+.config-header {
+  @include common.flex-row-align-center;
+  background: var(--md-sys-color-secondary-container);
+  color: var(--md-sys-color-on-secondary-container);
+  gap: common.$spacing-medium;
+  padding: common.$spacing-medium common.$spacing-large;
+  justify-content: space-between;
+}
+
+.config-title {
+  @include typescale.title-small;
+}
+
+.config-content {
+  @include common.flex-column;
+  background: var(--md-sys-color-surface-variant);
+  gap: common.$spacing-medium;
+  padding: common.$spacing-xl;
+}
+
+.config-section {
+  @include common.flex-column;
+  gap: common.$spacing-medium;
+}
+
+.section-title {
+  @include typescale.label-large;
+  color: var(--md-sys-color-on-surface-variant);
+  font-weight: 600;
+}
+
+.items-list {
+  @include common.flex-column;
+  gap: common.$spacing-medium;
+}
+
+// List Item (for variable names)
+.list-item {
+  @include common.flex-row-align-center;
+  gap: common.$spacing-small;
+
+  pr-textarea {
+    flex: 1;
+  }
+}
+
+// Schema Editor
+.schema-editor {
+  @include common.flex-column;
+  gap: common.$spacing-medium;
+  background: var(--md-sys-color-surface);
+  border-radius: common.$spacing-small;
+  padding: common.$spacing-medium;
+}
+
+.schema-type-editor {
+  @include common.flex-column;
+  gap: common.$spacing-medium;
+
+  &.nested {
+    background: var(--md-sys-color-surface-variant);
+    border-radius: common.$spacing-small;
+    padding: common.$spacing-medium;
+  }
+}
+
+.type-selector {
+  @include common.flex-row-align-center;
+  gap: common.$spacing-medium;
+
+  label {
+    @include typescale.body-medium;
+    color: var(--md-sys-color-on-surface);
+    font-weight: 500;
+  }
+
+  select {
+    flex: 1;
+    max-width: 200px;
+  }
+
+  .locked-type {
+    @include common.flex-row-align-center;
+    gap: common.$spacing-small;
+    color: var(--md-sys-color-outline);
+    background: var(--md-sys-color-surface-variant);
+    padding: common.$spacing-small common.$spacing-medium;
+    border-radius: common.$spacing-xs;
+
+    pr-icon {
+      --pr-icon-size: 18px;
+    }
+  }
+}
+
+.static-scope {
+  @include common.flex-row-align-center;
+  gap: common.$spacing-small;
+  color: var(--md-sys-color-outline);
+  background: var(--md-sys-color-surface-variant);
+  padding: common.$spacing-small common.$spacing-medium;
+  border-radius: common.$spacing-xs;
+
+  pr-icon {
+    --pr-icon-size: 18px;
+  }
+}
+
+.add-button {
+  @include common.flex-row-align-center;
+  gap: common.$spacing-small;
+  padding: common.$spacing-small common.$spacing-medium;
+  border: 1px solid var(--md-sys-color-outline);
+  border-radius: common.$spacing-xs;
+  background-color: var(--md-sys-color-surface);
+  color: var(--md-sys-color-on-surface);
+  font-family: inherit;
+  font-size: inherit;
+  cursor: pointer;
+
+  &:hover {
+    background-color: var(--md-sys-color-surface-container-high);
+  }
+
+  &:active {
+    background-color: var(--md-sys-color-surface-container-highest);
+  }
+
+  pr-icon {
+    --pr-icon-size: 18px;
+  }
+
+  span {
+    @include typescale.body-small;
+  }
+}
+
+// Nested Editor (for object properties and arrays)
+.nested-editor {
+  @include common.flex-column;
+  gap: common.$spacing-medium;
+  margin-left: common.$spacing-large;
+  padding-left: common.$spacing-medium;
+  border-left: 2px solid var(--md-sys-color-outline-variant);
+}
+
+.nested-header {
+  @include common.flex-row-align-center;
+  gap: common.$spacing-medium;
+  justify-content: space-between;
+
+  select {
+    max-width: 120px;
+  }
+}
+
+.nested-item-content {
+  padding: common.$spacing-medium;
+  border-top: 1px solid var(--md-sys-color-outline-variant);
+}
+
+.property-name {
+  @include typescale.body-medium;
+  font-family: monospace;
+  color: var(--md-sys-color-primary);
+  font-weight: 600;
+}
+
+.property-name-input {
+  @include typescale.body-medium;
+  font-family: monospace;
+  color: var(--md-sys-color-primary);
+  font-weight: 600;
+  padding: common.$spacing-xs common.$spacing-small;
+  border: 1px solid var(--md-sys-color-outline-variant);
+  border-radius: common.$spacing-xs;
+  background-color: var(--md-sys-color-surface);
+  min-width: 120px;
+  max-width: 200px;
+
+  &:hover {
+    border-color: var(--md-sys-color-outline);
+  }
+
+  &:focus {
+    outline: 2px solid var(--md-sys-color-primary);
+    border-color: var(--md-sys-color-primary);
+  }
+}
+
+// Property Item (for primitive types that don't need to expand)
+.property-item {
+  border: 1px solid var(--md-sys-color-outline-variant);
+  border-radius: common.$spacing-small;
+  background: var(--md-sys-color-surface);
+}
+
+.property-header {
+  @include common.flex-row-align-center;
+  gap: common.$spacing-medium;
+  justify-content: space-between;
+  padding: common.$spacing-small common.$spacing-medium;
+}
+
+.property-header-content {
+  @include common.flex-row-align-center;
+  gap: common.$spacing-medium;
+  flex: 1;
+
+  select {
+    max-width: 120px;
+  }
+}
+
+// Collapsible Item (reusable for values, properties, array items)
+.collapsible-item {
+  border: 1px solid var(--md-sys-color-outline-variant);
+  border-radius: common.$spacing-small;
+  background: var(--md-sys-color-surface);
+}
+
+.collapsible-summary {
+  @include common.flex-row-align-center;
+  gap: common.$spacing-medium;
+  padding: common.$spacing-small common.$spacing-medium;
+  cursor: pointer;
+  user-select: none;
+  list-style: none;
+
+  &::-webkit-details-marker {
+    display: none;
+  }
+
+  &::marker {
+    display: none;
+  }
+
+  &:hover {
+    background: var(--md-sys-color-surface-container-high);
+  }
+
+  select {
+    max-width: 120px;
+    cursor: pointer;
+  }
+
+  > div:first-child {
+    display: flex;
+    align-items: center;
+    gap: common.$spacing-medium;
+    flex: 1;
+  }
+}
+
+.collapsible-content {
+  @include common.flex-column;
+  gap: common.$spacing-medium;
+  padding: common.$spacing-medium;
+  border-top: 1px solid var(--md-sys-color-outline-variant);
+}
+
+// Validation
+.validation-error {
+  @include typescale.body-small;
+  color: var(--md-sys-color-error);
+  background: var(--md-sys-color-error-container);
+  padding: common.$spacing-small common.$spacing-medium;
+  border-radius: common.$spacing-xs;
+}
+
+// Object Value Editor
+.object-value-editor {
+  @include common.flex-column;
+  gap: common.$spacing-medium;
+}
+
+.property-editor {
+  @include common.flex-column;
+  gap: common.$spacing-small;
+}
+
+.property-label {
+  @include typescale.body-medium;
+  color: var(--md-sys-color-on-surface);
+  font-weight: 500;
+}
+
+// Array Value Editor
+.array-value-editor {
+  @include common.flex-column;
+  gap: common.$spacing-medium;
+}
+
+.array-header {
+  @include common.flex-row-align-center;
+  gap: common.$spacing-medium;
+  justify-content: space-between;
+}
+
+// Empty States
+.empty-message {
+  @include typescale.body-small;
+  color: var(--md-sys-color-outline);
+  font-style: italic;
+  padding: common.$spacing-medium;
+  text-align: center;
+}
+
+// Select elements
+select {
+  padding: common.$spacing-small;
+  border: 1px solid var(--md-sys-color-outline);
+  border-radius: common.$spacing-xs;
+  background-color: var(--md-sys-color-surface);
+  color: var(--md-sys-color-on-surface);
+  font-family: inherit;
+  font-size: inherit;
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+.number-input {
+  @include common.number-input;
+}
+
+pr-textarea {
+  width: 100%;
+}
+
+pr-button {
+  width: max-content;
+}
+
+// Checkbox Label
+.checkbox-label {
+  @include common.flex-row-align-center;
+  gap: common.$spacing-small;
+  cursor: pointer;
+  user-select: none;
+
+  input[type='checkbox'] {
+    cursor: pointer;
+  }
+
+  span {
+    @include typescale.body-medium;
+    color: var(--md-sys-color-on-surface);
+
+    code {
+      font-family: monospace;
+      background: var(--md-sys-color-surface);
+      padding: 2px 6px;
+      border-radius: common.$spacing-xs;
+      font-size: 0.9em;
+    }
+  }
+}
+
+// Boolean Switch
+.boolean-switch {
+  @include common.flex-row-align-center;
+  gap: common.$spacing-small;
+}
+
+.switch-label {
+  @include typescale.label-medium;
+  color: var(--md-sys-color-on-surface);
+  font-family: monospace;
+}

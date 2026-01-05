@@ -2,12 +2,14 @@
 
 import {
   CONFIG_DATA,
+  CohortParticipantConfig,
+  CohortParticipantConfigSchema,
   Index,
   StageConfigData,
   StageTextConfigSchema,
   StageProgressConfigSchema,
 } from '@deliberation-lab/utils';
-import {TSchema} from '@sinclair/typebox';
+import {type TSchema} from '@sinclair/typebox';
 import {
   ValueError,
   ValueErrorIterator,
@@ -52,6 +54,27 @@ export const accessNestedValue = (obj: any, path: string, sep = '/') => {
 // ************************************************************************* //
 // VALIDATION                                                                //
 // ************************************************************************* //
+
+type ValidationResult = {valid: true} | {valid: false; error: string};
+
+/**
+ * Generic schema validation using TypeBox
+ * @param schema - TypeBox schema to validate against
+ * @param data - Data to validate
+ * @returns Object with valid: true if valid, or valid: false with error string
+ */
+export function validateSchema(
+  schema: TSchema,
+  data: unknown,
+): ValidationResult {
+  if (Value.Check(schema, data)) {
+    return {valid: true};
+  }
+  const error = [...Value.Errors(schema, data)]
+    .map((e) => `${e.path || '/'}: ${e.message}`)
+    .join('; ');
+  return {valid: false, error};
+}
 
 /** Check if a typebox validation error is a union error */
 export const isUnionError = (error: ValueError) => error.type === 62;
@@ -103,11 +126,11 @@ export const checkConfigDataUnionOnPath = (
  * Validate an array of stage configurations using TypeBox runtime validation
  * Uses existing validation utilities to handle union errors properly
  * @param stages - Array of stage objects to validate
- * @returns Error message string if invalid, null if all stages are valid
+ * @returns ValidationResult object
  */
-export function validateStages(stages: unknown[]): string | null {
+export function validateStages(stages: unknown[]): ValidationResult {
   if (!Array.isArray(stages)) {
-    return 'Invalid stages: must be an array';
+    return {valid: false, error: 'Invalid stages: must be an array'};
   }
 
   const errorMessages: string[] = [];
@@ -167,5 +190,40 @@ export function validateStages(stages: unknown[]): string | null {
     }
   }
 
-  return errorMessages.length > 0 ? errorMessages.join('\n') : null;
+  if (errorMessages.length > 0) {
+    return {valid: false, error: errorMessages.join('\n')};
+  }
+  return {valid: true};
+}
+
+// ************************************************************************* //
+// COHORT VALIDATION                                                         //
+// ************************************************************************* //
+
+/**
+ * Validate cohort participant configuration
+ * Uses schema validation plus business logic (min <= max)
+ */
+export function validateCohortParticipantConfig(
+  config: CohortParticipantConfig,
+): ValidationResult {
+  // Schema validation
+  const schemaResult = validateSchema(CohortParticipantConfigSchema, config);
+  if (!schemaResult.valid) {
+    return schemaResult;
+  }
+
+  // Business logic: min <= max
+  if (
+    typeof config.minParticipantsPerCohort === 'number' &&
+    typeof config.maxParticipantsPerCohort === 'number' &&
+    config.minParticipantsPerCohort > config.maxParticipantsPerCohort
+  ) {
+    return {
+      valid: false,
+      error: 'minParticipantsPerCohort cannot exceed maxParticipantsPerCohort',
+    };
+  }
+
+  return {valid: true};
 }

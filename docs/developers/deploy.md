@@ -20,12 +20,10 @@ npx firebase deploy
 or use one of the following commands to only deploy part(s) of the backend:
 
 ```bash
-```bash
 npx firebase deploy --only functions
 npx firebase deploy --only firestore
 npx firebase deploy --only firestore:indexes
 npx firebase deploy --only firestore:rules
-```
 ```
 
 See [Firebase documentation](https://firebase.google.com/docs/functions/get-started?gen=2nd#deploy-functions-to-a-production-environment)

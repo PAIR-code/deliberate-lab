@@ -199,7 +199,7 @@
   justify-content: center;
   padding: calc($main-content-padding * 2);
   position: absolute;
-  z-index: 2; // above app header
+  z-index: 20; // above app header
 }
 
 @mixin dialog {

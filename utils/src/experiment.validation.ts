@@ -52,17 +52,21 @@ export type ExperimentDeletionData = Static<typeof ExperimentDeletionData>;
 // ************************************************************************* //
 // writeExperiment endpoint                                                  //
 // ************************************************************************* //
-export const CohortParticipantConfigSchema = Type.Object({
-  minParticipantsPerCohort: Type.Union([
-    Type.Null(),
-    Type.Number({minimum: 0}),
-  ]),
-  maxParticipantsPerCohort: Type.Union([
-    Type.Null(),
-    Type.Number({minimum: 1}),
-  ]),
-  includeAllParticipantsInCohortCount: Type.Boolean(),
-});
+export const CohortParticipantConfigSchema = Type.Object(
+  {
+    minParticipantsPerCohort: Type.Union([
+      Type.Null(),
+      Type.Number({minimum: 0}),
+    ]),
+    maxParticipantsPerCohort: Type.Union([
+      Type.Null(),
+      Type.Number({minimum: 1}),
+    ]),
+    includeAllParticipantsInCohortCount: Type.Boolean(),
+    botProtection: Type.Boolean(),
+  },
+  {$id: 'CohortParticipantConfig'},
+);
 
 export const ProlificConfigSchema = Type.Object({
   enableProlificIntegration: Type.Boolean(),

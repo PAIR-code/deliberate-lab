@@ -9,13 +9,16 @@ import {
   ExperimentDownloadResponse,
   MediatorPromptConfig,
   ParticipantPromptConfig,
-  SeedStrategy,
   StageConfig,
-  createExperimentConfig,
   createExperimentTemplate,
-  createVariableToValueMapForSeed,
 } from '@deliberation-lab/utils';
 import {getExperimentDownload} from './data';
+import {
+  deleteExperimentById,
+  forkExperimentById,
+  updateExperimentFromTemplate,
+  writeExperimentFromTemplate,
+} from './experiment.utils';
 
 import {onCall, HttpsError} from 'firebase-functions/v2/https';
 
@@ -36,70 +39,18 @@ export const writeExperiment = onCall(async (request) => {
   const {data} = request;
   const template = data.experimentTemplate;
 
-  // Set up experiment config with stageIds
-  const experimentConfig = createExperimentConfig(
-    template.stageConfigs,
-    template.experiment,
+  // Get creator from authenticated user
+  const creatorId = request.auth?.token.email?.toLowerCase() || '';
+
+  // Use shared utility to write experiment
+  const experimentId = await writeExperimentFromTemplate(
+    app.firestore(),
+    template,
+    creatorId,
+    {collectionName: data.collectionName},
   );
 
-  // Define document reference
-  const document = app
-    .firestore()
-    .collection(data.collectionName)
-    .doc(experimentConfig.id);
-
-  // If experiment exists, do not allow creation.
-  if ((await document.get()).exists) {
-    return {id: ''};
-  }
-
-  // Use current experimenter as creator
-  if (request.auth) {
-    experimentConfig.metadata.creator = request.auth.token.email || '';
-    experimentConfig.metadata.creator =
-      experimentConfig.metadata.creator.toLowerCase();
-  }
-
-  // Run document write as transaction to ensure consistency
-  await app.firestore().runTransaction(async (transaction) => {
-    transaction.set(document, experimentConfig);
-
-    // Add collection of stages
-    for (const stage of template.stageConfigs) {
-      transaction.set(document.collection('stages').doc(stage.id), stage);
-    }
-
-    // Add variable values at the experiment level
-    experimentConfig.variableMap = createVariableToValueMapForSeed(
-      experimentConfig.variableConfigs ?? [],
-      SeedStrategy.EXPERIMENT,
-    );
-
-    // Add agent mediators under `agentMediators` collection
-    template.agentMediators.forEach((agent) => {
-      const doc = document.collection('agentMediators').doc(agent.persona.id);
-      transaction.set(doc, agent.persona);
-      for (const prompt of Object.values(agent.promptMap)) {
-        transaction.set(doc.collection('prompts').doc(prompt.id), prompt);
-      }
-    });
-
-    // Add agent participants under `agentParticipants` collection
-    // NOTE: We don't currently allow agent participant persona setup
-    // in the experiment editor, so the list of agentParticipants
-    // is expected to be length 0.
-    template.agentParticipants.forEach((agent) => {
-      const doc = document
-        .collection('agentParticipants')
-        .doc(agent.persona.id);
-      transaction.set(doc, agent.persona);
-      for (const prompt of Object.values(agent.promptMap)) {
-        transaction.set(doc.collection('prompts').doc(prompt.id), prompt);
-      }
-    });
-  });
-
-  return {id: document.id};
+  return {id: experimentId};
 });
 
 // ************************************************************************* //
@@ -112,71 +63,44 @@ export const writeExperiment = onCall(async (request) => {
 export const updateExperiment = onCall(async (request) => {
   await AuthGuard.isExperimenter(request);
   const {data} = request;
-  const template = data.experimentTemplate;
 
-  // Set up experiment config with stageIds
-  const experimentConfig = createExperimentConfig(
-    template.stageConfigs,
-    template.experiment,
-  );
+  // Validate input
+  const templateId =
+    data.experimentTemplate?.id || data.experimentTemplate?.experiment?.id;
+
+  if (!data.collectionName || !templateId) {
+    throw new HttpsError(
+      'invalid-argument',
+      'collectionName and experimentTemplate.id (or experiment.id) are required',
+    );
+  }
+
+  const experimenterId = request.auth?.token.email?.toLowerCase() || '';
+
+  // Use shared utility to update experiment
+  // TODO: Enable admins to update experiment?
 
   // Define document reference
   const document = app
     .firestore()
     .collection(data.collectionName)
-    .doc(experimentConfig.id);
+    .doc(templateId);
 
   // If experiment does not exist, return false
   const oldExperiment = await document.get();
   if (!oldExperiment.exists) {
     return {success: false};
   }
-  // Verify that the experimenter is the creator
-  // TODO: Enable admins to update experiment?
-  if (
-    request.auth?.token.email?.toLowerCase() !==
-    oldExperiment.data()?.metadata.creator
-  ) {
-    return {success: false};
-  }
 
-  // Run document write as transaction to ensure consistency
-  await app.firestore().runTransaction(async (transaction) => {
-    transaction.set(document, experimentConfig);
+  // Use shared utility to update experiment
+  const result = await updateExperimentFromTemplate(
+    app.firestore(),
+    data.experimentTemplate,
+    experimenterId,
+    {collectionName: data.collectionName},
+  );
 
-    // Clean up obsolete docs in stages, agents collections.
-    const oldStageCollection = document.collection('stages');
-    const oldAgentCollection = document.collection('agents');
-    await app.firestore().recursiveDelete(oldStageCollection);
-    await app.firestore().recursiveDelete(oldAgentCollection);
-
-    // Add updated collection of stages
-    for (const stage of template.stageConfigs) {
-      transaction.set(document.collection('stages').doc(stage.id), stage);
-    }
-
-    // Add agent mediators under `agentMediators` collection
-    template.agentMediators.forEach((agent) => {
-      const doc = document.collection('agentMediators').doc(agent.persona.id);
-      transaction.set(doc, agent.persona);
-      for (const prompt of Object.values(agent.promptMap)) {
-        transaction.set(doc.collection('prompts').doc(prompt.id), prompt);
-      }
-    });
-
-    // Add agent participants under `agentParticipants` collection
-    template.agentParticipants.forEach((agent) => {
-      const doc = document
-        .collection('agentParticipants')
-        .doc(agent.persona.id);
-      transaction.set(doc, agent.persona);
-      for (const prompt of Object.values(agent.promptMap)) {
-        transaction.set(doc.collection('prompts').doc(prompt.id), prompt);
-      }
-    });
-  });
-
-  return {success: true};
+  return {success: result.success};
 });
 
 // ************************************************************************* //
@@ -196,8 +120,8 @@ export const deleteExperiment = onCall(async (request) => {
     throw new HttpsError('invalid-argument', 'Invalid data');
   }
 
-  // Verify that experimenter is the creator before enabling delete
-  // TODO: Enable admins to delete?
+  const experimenterId = request.auth?.token.email?.toLowerCase() || '';
+
   const experiment = (
     await app
       .firestore()
@@ -211,15 +135,66 @@ export const deleteExperiment = onCall(async (request) => {
       `Experiment ${data.experimentId} not found in collection ${data.collectionName}`,
     );
   }
-  if (request.auth?.token.email?.toLowerCase() !== experiment.metadata.creator)
-    return {success: false};
 
-  // Delete document
-  const doc = app
-    .firestore()
-    .doc(`${data.collectionName}/${data.experimentId}`);
-  app.firestore().recursiveDelete(doc);
-  return {success: true};
+  // Use shared utility to delete experiment
+  const result = await deleteExperimentById(
+    app.firestore(),
+    data.experimentId,
+    experimenterId,
+    {collectionName: data.collectionName},
+  );
+
+  if (!result.success && result.error === 'not-found') {
+    throw new HttpsError(
+      'not-found',
+      `Experiment ${data.experimentId} not found in collection ${data.collectionName}`,
+    );
+  }
+
+  return {success: result.success};
+});
+
+// ************************************************************************* //
+// forkExperiment endpoint                                                   //
+// (create a copy of an experiment with all stages and agents)               //
+//                                                                           //
+// Input structure: { collectionName, experimentId, newName? }               //
+// Access: Only public experiments or experiments owned by the requester     //
+// ************************************************************************* //
+export const forkExperiment = onCall(async (request) => {
+  await AuthGuard.isExperimenter(request);
+  const {data} = request;
+
+  const {collectionName, experimentId, newName} = data;
+
+  if (!collectionName || !experimentId) {
+    throw new HttpsError(
+      'invalid-argument',
+      'collectionName and experimentId are required',
+    );
+  }
+
+  const experimenterId = request.auth?.token.email?.toLowerCase() || '';
+
+  const result = await forkExperimentById(
+    app.firestore(),
+    experimentId,
+    experimenterId,
+    {collectionName, newName},
+  );
+
+  if (!result.success) {
+    if (result.error === 'not-found') {
+      throw new HttpsError('not-found', `Experiment ${experimentId} not found`);
+    } else if (result.error === 'access-denied') {
+      throw new HttpsError(
+        'permission-denied',
+        'Cannot fork this experiment. Only public experiments or your own experiments can be forked.',
+      );
+    }
+  }
+
+  return {id: result.id};
 });
 
 // ************************************************************************* //
@@ -238,7 +213,7 @@ export const getExperimentTemplate = onCall(async (request) => {
       .collection(data.collectionName)
       .doc(data.experimentId)
       .get()
-  ).data();
+  ).data() as Experiment | undefined;
 
   if (!experiment) {
     throw new HttpsError(
@@ -248,7 +223,7 @@ export const getExperimentTemplate = onCall(async (request) => {
   }
 
   const template = createExperimentTemplate({
-    id: '',
+    id: data.experimentId,
     experiment,
   });
 
@@ -377,6 +352,10 @@ export const downloadExperiment = onCall(async (request) => {
       app.firestore(),
       data.experimentId,
     );
+
+    if (!experimentDownload) {
+      return {data: null};
+    }
 
     const response: ExperimentDownloadResponse = {
       data: experimentDownload,

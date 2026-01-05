@@ -1,6 +1,7 @@
 import '../../pair-components/icon_button';
 import '../../pair-components/menu';
 import '../../pair-components/textarea';
+import '../../pair-components/textarea_template';
 
 import {MobxLitElement} from '@adobe/lit-mobx';
 import {CSSResultGroup, html, nothing, TemplateResult} from 'lit';
@@ -8,17 +9,25 @@ import {customElement, property} from 'lit/decorators.js';
 
 import {core} from '../../core/core';
 import {ExperimentEditor} from '../../services/experiment.editor';
+import {renderConditionEditor} from '../../shared/condition_editor.utils';
 
 import {
-  PromptItem,
-  PromptItemType,
-  PromptItemGroup,
-  StageContextPromptItem,
-  TextPromptItem,
-  createDefaultStageContextPromptItem,
+  Condition,
+  ConditionOperator,
+  ConditionTarget,
+  createConditionGroup,
   createDefaultPromptItemGroup,
-  ShuffleConfig,
+  createDefaultStageContextPromptItem,
+  createShuffleConfig,
+  getConditionTargetsFromStages,
+  PromptItem,
+  PromptItemGroup,
+  PromptItemType,
   SeedStrategy,
+  ShuffleConfig,
+  StageContextPromptItem,
+  StageKind,
+  TextPromptItem,
 } from '@deliberation-lab/utils';
 
 import {styles} from './structured_prompt_editor.scss';
@@ -35,6 +44,21 @@ export class EditorComponent extends MobxLitElement {
   @property() onUpdate: (prompt: PromptItem[]) => void = (
     prompt: PromptItem[],
   ) => {};
+
+  /** Get condition targets from all survey stages before (and including) the current stage. */
+  private getConditionTargets() {
+    return getConditionTargetsFromStages(
+      this.experimentEditor.stages,
+      this.stageId,
+      {includeCurrentStage: true},
+    );
+  }
+
+  /** Check if the current stage supports conditions (only private chat, not group chat). */
+  private supportsConditions(): boolean {
+    const stage = this.experimentEditor.getStage(this.stageId);
+    return stage?.kind === StageKind.PRIVATE_CHAT;
+  }
 
   override render() {
     return this.renderPromptPreview();
@@ -188,39 +212,97 @@ export class EditorComponent extends MobxLitElement {
       </div>`;
     }
 
-    return items.map(
-      (item, index) => html`
+    const conditionTargets = this.getConditionTargets();
+    const supportsConditions =
+      this.supportsConditions() && conditionTargets.length > 0;
+
+    return items.map((item, index) => {
+      const hasCondition = item.condition !== undefined;
+
+      return html`
         <div class="prompt-item-wrapper ${isNested ? 'nested' : ''}">
-          <div class="prompt-item-editor">${this.renderItemEditor(item)}</div>
-          <div class="prompt-item-actions">
-            <pr-icon-button
-              icon="arrow_upward"
-              color="neutral"
-              variant="default"
-              size="small"
-              @click=${() => this.movePromptItem(items, index, -1)}
-            >
-            </pr-icon-button>
-            <pr-icon-button
-              icon="arrow_downward"
-              color="neutral"
-              variant="default"
-              size="small"
-              @click=${() => this.movePromptItem(items, index, 1)}
-            >
-            </pr-icon-button>
-            <pr-icon-button
-              icon="close"
-              color="neutral"
-              variant="default"
-              size="small"
-              @click=${() => this.deletePromptItem(items, index)}
-            >
-            </pr-icon-button>
+          <div class="prompt-item-row">
+            <div class="prompt-item-editor">${this.renderItemEditor(item)}</div>
+            <div class="prompt-item-actions">
+              ${supportsConditions && item.type !== PromptItemType.GROUP
+                ? html`
+                    <pr-icon-button
+                      icon="rule"
+                      color=${hasCondition ? 'primary' : 'neutral'}
+                      variant="default"
+                      size="small"
+                      title=${hasCondition
+                        ? 'Remove display condition'
+                        : 'Add display condition'}
+                      @click=${() => this.toggleCondition(item)}
+                    >
+                    </pr-icon-button>
+                  `
+                : nothing}
+              <pr-icon-button
+                icon="arrow_upward"
+                color="neutral"
+                variant="default"
+                size="small"
+                @click=${() => this.movePromptItem(items, index, -1)}
+              >
+              </pr-icon-button>
+              <pr-icon-button
+                icon="arrow_downward"
+                color="neutral"
+                variant="default"
+                size="small"
+                @click=${() => this.movePromptItem(items, index, 1)}
+              >
+              </pr-icon-button>
+              <pr-icon-button
+                icon="close"
+                color="neutral"
+                variant="default"
+                size="small"
+                @click=${() => this.deletePromptItem(items, index)}
+              >
+              </pr-icon-button>
+            </div>
           </div>
+          ${hasCondition
+            ? this.renderPromptItemCondition(item, conditionTargets)
+            : nothing}
         </div>
-      `,
-    );
+      `;
+    });
+  }
+
+  private toggleCondition(item: PromptItem) {
+    if (item.condition !== undefined) {
+      // Remove condition
+      this.updatePromptItem(item, {condition: undefined});
+    } else {
+      // Add an empty condition group - user will add conditions via the editor
+      this.updatePromptItem(item, {
+        condition: createConditionGroup(ConditionOperator.AND, []),
+      });
+    }
+  }
+
+  private renderPromptItemCondition(
+    item: PromptItem,
+    conditionTargets: ConditionTarget[],
+  ) {
+    const onConditionChange = (condition: Condition | undefined) => {
+      this.updatePromptItem(item, {condition});
+    };
+
+    return html`
+      <div class="prompt-item-condition">
+        ${renderConditionEditor({
+          condition: item.condition,
+          targets: conditionTargets,
+          canEdit: this.experimentEditor.canEditStages,
+          onConditionChange,
+        })}
+      </div>
+    `;
   }
 
   private renderTextPromptItemEditor(item: TextPromptItem) {
@@ -229,12 +311,12 @@ export class EditorComponent extends MobxLitElement {
       this.updatePromptItem(item, {text: text});
     };
     return html`
-      <pr-textarea
+      <pr-textarea-template
         placeholder="Add freeform text here"
         .value=${item.text}
         @input=${onInput}
       >
-      </pr-textarea>
+      </pr-textarea-template>
     `;
   }
 
@@ -389,10 +471,10 @@ export class EditorComponent extends MobxLitElement {
             .checked=${shuffleConfig.shuffle}
             @change=${() =>
               this.updatePromptItem(group, {
-                shuffleConfig: {
+                shuffleConfig: createShuffleConfig({
                   ...shuffleConfig,
                   shuffle: !shuffleConfig.shuffle,
-                },
+                }),
               })}
           />
           <div>Shuffle items in this group</div>
@@ -405,11 +487,11 @@ export class EditorComponent extends MobxLitElement {
                 .value=${shuffleConfig.seed}
                 @change=${(e: Event) =>
                   this.updatePromptItem(group, {
-                    shuffleConfig: {
+                    shuffleConfig: createShuffleConfig({
                       ...shuffleConfig,
                       seed: ((e.target as HTMLSelectElement).value ||
                         '') as SeedStrategy,
-                    },
+                    }),
                   })}
               >
                 <option
@@ -446,10 +528,10 @@ export class EditorComponent extends MobxLitElement {
                       .value=${shuffleConfig.customSeed}
                       @input=${(e: Event) =>
                         this.updatePromptItem(group, {
-                          shuffleConfig: {
+                          shuffleConfig: createShuffleConfig({
                             ...shuffleConfig,
                             customSeed: (e.target as HTMLInputElement).value,
-                          },
+                          }),
                         })}
                     />
                   `

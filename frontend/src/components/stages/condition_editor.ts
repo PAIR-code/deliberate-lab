@@ -16,24 +16,14 @@ import {
   ComparisonCondition,
   ConditionOperator,
   ComparisonOperator,
+  ConditionTarget,
+  ConditionTargetReference,
   createConditionGroup,
   createComparisonCondition,
   getComparisonOperatorLabel,
-  ConditionTargetReference,
-  SurveyQuestion,
-  SurveyQuestionKind,
-  MultipleChoiceSurveyQuestion,
 } from '@deliberation-lab/utils';
 
 import {styles} from './condition_editor.scss';
-
-export interface ConditionTarget {
-  ref: ConditionTargetReference; // Structured reference
-  label: string;
-  type: 'text' | 'number' | 'boolean' | 'choice';
-  choices?: Array<{id: string; label: string}>;
-  stageName?: string; // Optional stage name for display
-}
 
 /** Reusable condition editor component */
 @customElement('condition-editor')
@@ -52,10 +42,7 @@ export class ConditionEditor extends MobxLitElement {
     return html`
       <div class="condition-editor ${this.disabled ? 'disabled' : ''}">
         <div class="header">
-          <div class="title">
-            Display Condition
-            <span class="alpha">alpha</span>
-          </div>
+          <div class="title">Display Condition</div>
           ${hasCondition
             ? html`
                 <md-text-button @click=${this.removeCondition}>
@@ -445,52 +432,4 @@ export class ConditionEditor extends MobxLitElement {
     condition.value = value;
     this.onConditionChange(this.condition);
   }
-}
-
-/** Helper to convert survey questions to condition targets */
-export function surveyQuestionsToConditionTargets(
-  questions: SurveyQuestion[],
-  stageId: string,
-  stageName?: string,
-): ConditionTarget[] {
-  return questions.map((q) => {
-    let type: ConditionTarget['type'] = 'text';
-    let choices: ConditionTarget['choices'] = undefined;
-
-    switch (q.kind) {
-      case SurveyQuestionKind.TEXT:
-        type = 'text';
-        break;
-      case SurveyQuestionKind.CHECK:
-        type = 'boolean';
-        break;
-      case SurveyQuestionKind.SCALE:
-        type = 'number';
-        break;
-      case SurveyQuestionKind.MULTIPLE_CHOICE:
-        type = 'choice';
-        const mcQuestion = q as MultipleChoiceSurveyQuestion;
-        choices = mcQuestion.options.map((opt) => ({
-          id: opt.id,
-          label: opt.text || `Option ${opt.id}`,
-        }));
-        break;
-    }
-
-    // Create structured reference
-    const ref: ConditionTargetReference = {
-      stageId: stageId,
-      questionId: q.id,
-    };
-
-    const label = q.questionTitle || `Question ${q.id}`;
-
-    return {
-      ref,
-      label,
-      type,
-      choices,
-      stageName,
-    };
-  });
 }
