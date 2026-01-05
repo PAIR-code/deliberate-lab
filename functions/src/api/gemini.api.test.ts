@@ -7,10 +7,11 @@ import {
   ModelResponseStatus,
   StructuredOutputType,
   StructuredOutputDataType,
+  GEMINI_DEFAULT_MODEL,
 } from '@deliberation-lab/utils';
 import {getGeminiAPIResponse} from './gemini.api';
 
-const MODEL_NAME = 'gemini-2.5-flash';
+const MODEL_NAME = GEMINI_DEFAULT_MODEL;
 
 describe('Gemini API', () => {
   beforeEach(() => {

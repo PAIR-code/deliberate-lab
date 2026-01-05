@@ -7,10 +7,11 @@ import {
   ModelGenerationConfig,
   ModelResponse,
   ModelResponseStatus,
+  CLAUDE_DEFAULT_MODEL,
 } from '@deliberation-lab/utils';
 import {getClaudeAPIChatCompletionResponse} from './claude.api';
 
-const MODEL_NAME = 'claude-haiku-4-5';
+const MODEL_NAME = CLAUDE_DEFAULT_MODEL;
 const CLAUDE_API_HOST = 'https://api.anthropic.com';
 const CLAUDE_API_PATH = '/v1/messages';
 

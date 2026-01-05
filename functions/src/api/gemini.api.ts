@@ -16,9 +16,9 @@ import {
   ModelResponseStatus,
   ModelResponse,
   addParsedModelResponse,
+  GEMINI_DEFAULT_MODEL,
 } from '@deliberation-lab/utils';
 
-const GEMINI_DEFAULT_MODEL = 'gemini-2.5-flash';
 const MAX_TOKENS_FINISH_REASON = 'MAX_TOKENS';
 const AUTHENTICATION_FAILURE_ERROR_CODE = 403;
 const QUOTA_ERROR_CODE = 429;
