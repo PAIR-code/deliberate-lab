@@ -355,6 +355,225 @@
         }
       }
     },
+    "PayoutStageConfig": {
+      "additionalProperties": false,
+      "title": "PayoutStageConfig",
+      "type": "object",
+      "required": [
+        "id",
+        "kind",
+        "name",
+        "descriptions",
+        "progress",
+        "currency",
+        "payoutItems",
+        "averageAllPayoutItems"
+      ],
+      "properties": {
+        "id": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "kind": {
+          "const": "payout",
+          "type": "string"
+        },
+        "name": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "descriptions": {
+          "$ref": "#/$defs/StageTextConfig"
+        },
+        "progress": {
+          "$ref": "#/$defs/StageProgressConfig"
+        },
+        "currency": {
+          "anyOf": [
+            {
+              "const": "EUR",
+              "type": "string"
+            },
+            {
+              "const": "GBP",
+              "type": "string"
+            },
+            {
+              "const": "USD",
+              "type": "string"
+            }
+          ]
+        },
+        "payoutItems": {
+          "type": "array",
+          "items": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/DefaultPayoutItem"
+              },
+              {
+                "$ref": "#/$defs/ChipPayoutItem"
+              },
+              {
+                "$ref": "#/$defs/SurveyPayoutItem"
+              }
+            ]
+          }
+        },
+        "averageAllPayoutItems": {
+          "type": "boolean"
+        }
+      }
+    },
+    "DefaultPayoutItem": {
+      "additionalProperties": false,
+      "title": "DefaultPayoutItem",
+      "type": "object",
+      "required": [
+        "id",
+        "type",
+        "name",
+        "description",
+        "isActive",
+        "stageId",
+        "baseCurrencyAmount",
+        "randomSelectionId"
+      ],
+      "properties": {
+        "id": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "type": {
+          "const": "DEFAULT",
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "isActive": {
+          "type": "boolean"
+        },
+        "stageId": {
+          "type": "string"
+        },
+        "baseCurrencyAmount": {
+          "type": "number"
+        },
+        "randomSelectionId": {
+          "type": "string"
+        }
+      }
+    },
+    "ChipPayoutItem": {
+      "additionalProperties": false,
+      "title": "ChipPayoutItem",
+      "type": "object",
+      "required": [
+        "id",
+        "type",
+        "name",
+        "description",
+        "isActive",
+        "stageId",
+        "baseCurrencyAmount"
+      ],
+      "properties": {
+        "id": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "type": {
+          "const": "CHIP",
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "isActive": {
+          "type": "boolean"
+        },
+        "stageId": {
+          "type": "string"
+        },
+        "baseCurrencyAmount": {
+          "type": "number"
+        }
+      }
+    },
+    "SurveyPayoutItem": {
+      "additionalProperties": false,
+      "title": "SurveyPayoutItem",
+      "type": "object",
+      "required": [
+        "id",
+        "type",
+        "name",
+        "description",
+        "isActive",
+        "stageId",
+        "baseCurrencyAmount",
+        "rankingStageId",
+        "questionMap"
+      ],
+      "properties": {
+        "id": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "type": {
+          "const": "SURVEY",
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "isActive": {
+          "type": "boolean"
+        },
+        "stageId": {
+          "type": "string"
+        },
+        "baseCurrencyAmount": {
+          "type": "number"
+        },
+        "rankingStageId": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "string"
+            }
+          ]
+        },
+        "questionMap": {
+          "type": "object",
+          "patternProperties": {
+            "^(.*)$": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "title": "QuestionMap"
+        }
+      }
+    },
     "RankingStageConfig": {
       "title": "RankingStageConfig",
       "anyOf": [
@@ -1711,116 +1930,6 @@
           "type": "boolean"
         }
       }
-    },
-    "PayoutStageConfig": {
-      "additionalProperties": false,
-      "type": "object",
-      "required": [
-        "id",
-        "kind",
-        "name",
-        "descriptions",
-        "progress",
-        "currency",
-        "payoutItems",
-        "averageAllPayoutItems"
-      ],
-      "properties": {
-        "id": {
-          "minLength": 1,
-          "type": "string"
-        },
-        "kind": {
-          "const": "payout",
-          "type": "string"
-        },
-        "name": {
-          "minLength": 1,
-          "type": "string"
-        },
-        "descriptions": {
-          "$ref": "#/$defs/StageTextConfig"
-        },
-        "progress": {
-          "$ref": "#/$defs/StageProgressConfig"
-        },
-        "currency": {
-          "anyOf": [
-            {
-              "const": "EUR",
-              "type": "string"
-            },
-            {
-              "const": "GBP",
-              "type": "string"
-            },
-            {
-              "const": "USD",
-              "type": "string"
-            }
-          ]
-        },
-        "payoutItems": {
-          "type": "array",
-          "items": {
-            "anyOf": [
-              {
-                "additionalProperties": false,
-                "type": "object",
-                "required": [
-                  "id",
-                  "type",
-                  "name",
-                  "description",
-                  "isActive",
-                  "stageId",
-                  "baseCurrencyAmount",
-                  "randomSelectionId"
-                ],
-                "properties": {
-                  "id": {
-                    "minLength": 1,
-                    "type": "string"
-                  },
-                  "type": {
-                    "const": "DEFAULT",
-                    "type": "string"
-                  },
-                  "name": {
-                    "type": "string"
-                  },
-                  "description": {
-                    "type": "string"
-                  },
-                  "isActive": {
-                    "type": "boolean"
-                  },
-                  "stageId": {
-                    "type": "string"
-                  },
-                  "baseCurrencyAmount": {
-                    "type": "number"
-                  },
-                  "randomSelectionId": {
-                    "type": "string"
-                  }
-                },
-                "title": "DefaultStageConfig"
-              },
-              {
-                "$ref": "#/$defs/ChipStageConfig"
-              },
-              {
-                "$ref": "#/$defs/SurveyStageConfig"
-              }
-            ]
-          }
-        },
-        "averageAllPayoutItems": {
-          "type": "boolean"
-        }
-      },
-      "title": "PayoutStageConfig"
     },
     "PrivateChatStageConfig": {
       "type": "object",

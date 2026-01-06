@@ -102,6 +102,56 @@ class FlipCard(BaseModel):
     backContent: constr(min_length=1)
 
 
+class Currency(Enum):
+    EUR = "EUR"
+    GBP = "GBP"
+    USD = "USD"
+
+
+class DefaultPayoutItem(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    id: constr(min_length=1)
+    type: Literal["DEFAULT"] = "DEFAULT"
+    name: str
+    description: str
+    isActive: bool
+    stageId: str
+    baseCurrencyAmount: float
+    randomSelectionId: str
+
+
+class ChipPayoutItem(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    id: constr(min_length=1)
+    type: Literal["CHIP"] = "CHIP"
+    name: str
+    description: str
+    isActive: bool
+    stageId: str
+    baseCurrencyAmount: float
+
+
+class SurveyPayoutItem(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    id: constr(min_length=1)
+    type: Literal["SURVEY"] = "SURVEY"
+    name: str
+    description: str
+    isActive: bool
+    stageId: str
+    baseCurrencyAmount: float
+    rankingStageId: str | None = None
+    questionMap: Dict[constr(pattern=r"^(.*)$"), float | None] = Field(
+        ..., title="QuestionMap"
+    )
+
+
 class Strategy(Enum):
     none = "none"
     condorcet = "condorcet"
@@ -246,26 +296,6 @@ class McQuestion(BaseModel):
     correctAnswerId: str
 
 
-class Currency(Enum):
-    EUR = "EUR"
-    GBP = "GBP"
-    USD = "USD"
-
-
-class DefaultStageConfig(BaseModel):
-    model_config = ConfigDict(
-        extra="forbid",
-    )
-    id: constr(min_length=1)
-    type: Literal["DEFAULT"] = "DEFAULT"
-    name: str
-    description: str
-    isActive: bool
-    stageId: str
-    baseCurrencyAmount: float
-    randomSelectionId: str
-
-
 class ProfileType(Enum):
     DEFAULT = "DEFAULT"
     DEFAULT_GENDERED = "DEFAULT_GENDERED"
@@ -377,6 +407,20 @@ class InfoStageConfig(BaseModel):
     progress: Any
     infoLines: List[str]
     youtubeVideoId: str | None = None
+
+
+class PayoutStageConfig(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    id: constr(min_length=1)
+    kind: Literal["payout"] = "payout"
+    name: constr(min_length=1)
+    descriptions: Any
+    progress: Any
+    currency: Currency
+    payoutItems: List[DefaultPayoutItem | ChipPayoutItem | SurveyPayoutItem]
+    averageAllPayoutItems: bool
 
 
 class ItemRankingStageConfig(BaseModel):
@@ -820,20 +864,6 @@ class BalancedAssignmentVariableConfig(BaseModel):
     weights: List[confloat(ge=1.0)] | None = None
     balanceStrategy: BalanceStrategy
     balanceAcross: BalanceAcross
-
-
-class PayoutStageConfig(BaseModel):
-    model_config = ConfigDict(
-        extra="forbid",
-    )
-    id: constr(min_length=1)
-    kind: Literal["payout"] = "payout"
-    name: constr(min_length=1)
-    descriptions: Any
-    progress: Any
-    currency: Currency
-    payoutItems: List[DefaultStageConfig | ChipStageConfig | SurveyStageConfig]
-    averageAllPayoutItems: bool
 
 
 class JSONSchemaDefinition(
