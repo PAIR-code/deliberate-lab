@@ -935,3 +935,27 @@ export async function generateAIResponse(
     return mapErrorToModelResponse(error);
   }
 }
+
+// ============================================================================
+// TESTING EXPORTS
+// These functions are exported for unit testing purposes.
+// ============================================================================
+
+export const _testing = {
+  convertPromptToMessages,
+  extractTextFromMessage,
+  mapGenerationConfig,
+  buildGoogleOptions,
+  buildAnthropicOptions,
+  buildOpenAIOptions,
+  getProviderOptions,
+  mapReasoningLevelToEffort,
+  shouldUseNativeStructuredOutput,
+  mapFinishReason,
+  getBlockReason,
+  mapResultToModelResponse,
+  extractContentFromMessages,
+  mapErrorToModelResponse,
+  getCredentials,
+  API_TYPE_TO_PROVIDER,
+};
