@@ -17,7 +17,7 @@
     "dist/**/*"
   ],
   "peerDependencies": {
-    "@sinclair/typebox": "^0.34.46",
+    "@sinclair/typebox": "^0.34.47",
     "firebase": "^12.7.0"
   },
   "devDependencies": {
