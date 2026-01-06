@@ -4,6 +4,7 @@ import {
   BaseStageParticipantAnswer,
   BaseStagePublicData,
   StageKind,
+  StagePublicData,
   createStageProgressConfig,
   createStageTextConfig,
 } from './stage';
@@ -27,6 +28,7 @@ export enum ElectionStrategy {
 export enum RankingType {
   ITEMS = 'items', // Item ranking.
   PARTICIPANTS = 'participants', // Participant ranking.
+  LR = 'LR', // Leader Rejection
 }
 
 export interface BaseRankingStage extends BaseStageConfig {
@@ -40,6 +42,12 @@ export interface ParticipantRankingStage extends BaseRankingStage {
   enableSelfVoting: boolean; // Whether to allow voting for oneself.
 }
 
+export interface LRRankingStage extends BaseRankingStage {
+  rankingType: RankingType.LR;
+  enableSelfVoting: false; // Whether to allow voting for oneself.
+  strategy: ElectionStrategy.NONE;
+}
+
 export interface RankingItem {
   id: string;
   imageId: string; // image URL, or empty if no image provided
@@ -51,7 +59,10 @@ export interface ItemRankingStage extends BaseRankingStage {
   rankingItems: RankingItem[];
 }
 
-export type RankingStageConfig = ParticipantRankingStage | ItemRankingStage;
+export type RankingStageConfig =
+  | ParticipantRankingStage
+  | ItemRankingStage
+  | LRRankingStage;
 
 /**
  * RankingStageParticipantAnswer.
@@ -77,6 +88,10 @@ export interface RankingStagePublicData extends BaseStagePublicData {
   winnerId: string;
   // Maps from participant to participant's rankings (question ID to answer)
   participantAnswerMap: Record<string, string[]>;
+}
+
+export interface LRRankingStagePublicData extends RankingStagePublicData {
+  leaderStatusMap?: Record<string, string>; // e.g. participant -> status
 }
 
 // ************************************************************************* //
@@ -119,6 +134,31 @@ export function createRankingStage(
   }
 }
 
+export function createLRRankingStage(
+  config: Partial<RankingStageConfig> = {},
+): RankingStageConfig {
+  console.debug('[LR] createLRRankingStage');
+  const baseStageConfig = {
+    id: config.id ?? generateId(),
+    kind: StageKind.RANKING,
+    name: config.name ?? 'LRRanking',
+    descriptions:
+      config.descriptions ??
+      createStageTextConfig({
+        helpText: ``,
+      }),
+    progress:
+      config.progress ??
+      createStageProgressConfig({waitForAllParticipants: true}),
+    strategy: config.strategy ?? ElectionStrategy.NONE,
+  };
+
+  return {
+    ...baseStageConfig,
+    rankingType: RankingType.LR,
+  } as LRRankingStage; // Assert as LRRankingStage
+}
+
 /** Create item for ranking. */
 export function createRankingItem(
   config: Partial<RankingItem> = {},
@@ -151,4 +191,28 @@ export function createRankingStagePublicData(
     winnerId: '',
     participantAnswerMap: {},
   };
+}
+
+/** Create LR ranking stage public data (Leadership Rejection version). */
+export function createLRRankingStagePublicData(
+  id: string, // stage ID
+): LRRankingStagePublicData {
+  return {
+    id,
+    kind: StageKind.RANKING,
+    winnerId: '',
+    participantAnswerMap: {},
+    leaderStatusMap: {}, // 👈 critical addition
+    // debugLeaderSelection: {},    // optional
+  };
+}
+
+export function isLRRankingStagePublicData(
+  obj: StagePublicData,
+): obj is LRRankingStagePublicData {
+  return (
+    obj &&
+    obj.kind === StageKind.RANKING &&
+    ('leaderStatusMap' in obj || 'debugLeaderSelection' in obj)
+  );
 }
