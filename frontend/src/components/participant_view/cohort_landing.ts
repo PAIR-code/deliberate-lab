@@ -55,7 +55,7 @@ export class CohortLanding extends MobxLitElement {
         ${renderText()}
         <div class="action-buttons">
           <pr-button
-            ?loading=${this.isLoading}
+            ?loading=${this.isLoading || this.experimentService.isLoading}
             ?disabled=${isLockedCohort()}
             @click=${this.joinExperiment}
           >
@@ -80,8 +80,8 @@ export class CohortLanding extends MobxLitElement {
     );
     const prolificId = prolificIdMatch ? prolificIdMatch[1] : null;
     if (
-      this.experimentService.experiment!.prolificConfig!
-        .enableProlificIntegration &&
+      this.experimentService.experiment?.prolificConfig
+        ?.enableProlificIntegration &&
       !prolificIdMatch
     ) {
       console.warn(
