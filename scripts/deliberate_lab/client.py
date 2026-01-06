@@ -184,7 +184,9 @@ class Client:
 
         # Full template creation takes precedence
         if template is not None:
-            data["template"] = template.model_dump(by_alias=True, exclude_none=True)
+            data["template"] = template.model_dump(
+                mode="json", by_alias=True, exclude_none=True
+            )
         else:
             # Simple creation mode
             if name is None:
@@ -197,20 +199,21 @@ class Client:
             if stages is not None:
                 # Convert Pydantic models to dicts for JSON serialization
                 data["stages"] = [
-                    s.model_dump(by_alias=True, exclude_none=True) for s in stages
+                    s.model_dump(mode="json", by_alias=True, exclude_none=True)
+                    for s in stages
                 ]
             if prolific_config is not None:
                 data["prolificConfig"] = prolific_config.model_dump(
-                    by_alias=True, exclude_none=True
+                    mode="json", by_alias=True, exclude_none=True
                 )
             if agent_mediators is not None:
                 data["agentMediators"] = [
-                    a.model_dump(by_alias=True, exclude_none=True)
+                    a.model_dump(mode="json", by_alias=True, exclude_none=True)
                     for a in agent_mediators
                 ]
             if agent_participants is not None:
                 data["agentParticipants"] = [
-                    a.model_dump(by_alias=True, exclude_none=True)
+                    a.model_dump(mode="json", by_alias=True, exclude_none=True)
                     for a in agent_participants
                 ]
 
@@ -271,7 +274,9 @@ class Client:
 
         # Full template update takes precedence
         if template is not None:
-            data["template"] = template.model_dump(by_alias=True, exclude_none=True)
+            data["template"] = template.model_dump(
+                mode="json", by_alias=True, exclude_none=True
+            )
         else:
             # Partial update mode
             if name is not None:
@@ -280,20 +285,21 @@ class Client:
                 data["description"] = description
             if stages is not None:
                 data["stages"] = [
-                    s.model_dump(by_alias=True, exclude_none=True) for s in stages
+                    s.model_dump(mode="json", by_alias=True, exclude_none=True)
+                    for s in stages
                 ]
             if prolific_config is not None:
                 data["prolificConfig"] = prolific_config.model_dump(
-                    by_alias=True, exclude_none=True
+                    mode="json", by_alias=True, exclude_none=True
                 )
             if agent_mediators is not None:
                 data["agentMediators"] = [
-                    a.model_dump(by_alias=True, exclude_none=True)
+                    a.model_dump(mode="json", by_alias=True, exclude_none=True)
                     for a in agent_mediators
                 ]
             if agent_participants is not None:
                 data["agentParticipants"] = [
-                    a.model_dump(by_alias=True, exclude_none=True)
+                    a.model_dump(mode="json", by_alias=True, exclude_none=True)
                     for a in agent_participants
                 ]
 
@@ -435,7 +441,7 @@ class Client:
             data["description"] = description
         if participant_config is not None:
             data["participantConfig"] = participant_config.model_dump(
-                by_alias=True, exclude_none=True
+                mode="json", by_alias=True, exclude_none=True
             )
 
         response = self._session.post(
@@ -473,7 +479,7 @@ class Client:
             data["description"] = description
         if participant_config is not None:
             data["participantConfig"] = participant_config.model_dump(
-                by_alias=True, exclude_none=True
+                mode="json", by_alias=True, exclude_none=True
             )
 
         response = self._session.put(
