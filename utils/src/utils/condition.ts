@@ -126,6 +126,7 @@ export function createAggregationCondition(
   aggregator: AggregationOperator = AggregationOperator.ANY,
   operator: ComparisonOperator = ComparisonOperator.EQUALS,
   value: string | number | boolean = '',
+  filterComparison?: ComparisonSpec,
 ): AggregationCondition {
   return {
     id: generateId(),
@@ -134,6 +135,7 @@ export function createAggregationCondition(
     aggregator,
     operator,
     value,
+    filterComparison,
   };
 }
 
