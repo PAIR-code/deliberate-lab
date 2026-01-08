@@ -639,7 +639,7 @@ export class EditorComponent extends MobxLitElement {
     }
     // Default to true if thinking is configured
     const hasReasoningLevel =
-      config.reasoningLevel && config.reasoningLevel !== 'off';
+      config.reasoningLevel !== undefined && config.reasoningLevel !== 'off';
     const hasValidBudget =
       typeof config.reasoningBudget === 'number' && config.reasoningBudget > 0;
     return hasReasoningLevel || hasValidBudget;
