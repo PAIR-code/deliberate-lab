@@ -1,9 +1,11 @@
 import '../participant_profile/avatar_icon';
+import '../fullscreen_image/fullscreen_image';
+import type {FullscreenImage} from '../fullscreen_image/fullscreen_image';
 
 import {MobxLitElement} from '@adobe/lit-mobx';
 
 import {CSSResultGroup, html, nothing} from 'lit';
-import {customElement, property} from 'lit/decorators.js';
+import {customElement, property, state} from 'lit/decorators.js';
 import {classMap} from 'lit/directives/class-map.js';
 import {unsafeHTML} from 'lit/directives/unsafe-html.js';
 
@@ -32,6 +34,52 @@ export class ChatMessageComponent extends MobxLitElement {
   private readonly participantService = core.getService(ParticipantService);
 
   @property() chat: ChatMessage | undefined = undefined;
+  @state() private maximizedImageUrl: string | null = null;
+  private modalElement: HTMLElement | null = null;
+
+  private openImageModal(imageUrl: string) {
+    this.maximizedImageUrl = imageUrl;
+  }
+
+  private closeImageModal() {
+    this.maximizedImageUrl = null;
+  }
+
+  override disconnectedCallback() {
+    super.disconnectedCallback();
+    this.removeModalFromBody();
+  }
+
+  override updated(changedProperties: Map<string, unknown>) {
+    super.updated(changedProperties);
+
+    if (changedProperties.has('maximizedImageUrl')) {
+      if (this.maximizedImageUrl) {
+        this.renderModalToBody();
+      } else {
+        this.removeModalFromBody();
+      }
+    }
+  }
+
+  private renderModalToBody() {
+    this.removeModalFromBody();
+
+    const modal = document.createElement(
+      'fullscreen-image',
+    ) as unknown as FullscreenImage;
+    modal.imageUrl = this.maximizedImageUrl!;
+    modal.addEventListener('close', () => this.closeImageModal());
+    document.body.appendChild(modal);
+    this.modalElement = modal;
+  }
+
+  private removeModalFromBody() {
+    if (this.modalElement) {
+      this.modalElement.remove();
+      this.modalElement = null;
+    }
+  }
 
   override render() {
     if (!this.chat) {
@@ -95,6 +143,7 @@ export class ChatMessageComponent extends MobxLitElement {
                     src="${imageUrl}"
                     alt="Generated Image"
                     class="generated-image"
+                    @click=${() => this.openImageModal(imageUrl)}
                   />`,
               )
             : nothing}
@@ -134,6 +183,7 @@ export class ChatMessageComponent extends MobxLitElement {
                     src="${imageUrl}"
                     alt="Generated Image"
                     class="generated-image"
+                    @click=${() => this.openImageModal(imageUrl)}
                   />`,
               )
             : nothing}
