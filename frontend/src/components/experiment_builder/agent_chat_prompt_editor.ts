@@ -523,6 +523,10 @@ export class EditorComponent extends MobxLitElement {
       });
     };
 
+    // TODO(rasmi): Extract reasoning level selector
+    // and other shared parameters into a component
+    // that refreshes options based on provider and
+    // displays ProviderOptions appropriately.
     // See https://ai.google.dev/gemini-api/docs/thinking
     const reasoningLevelOptions: {value: ReasoningLevel | ''; label: string}[] =
       [
