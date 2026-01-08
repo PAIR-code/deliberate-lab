@@ -24,6 +24,10 @@ import {
   ScaleSurveyQuestion,
   SurveyQuestionKind,
   SurveyStageConfig,
+  SurveyStagePublicData,
+  StageKind,
+  StageParticipantAnswer,
+  SurveyStageParticipantAnswer,
   TextSurveyAnswer,
   TextSurveyQuestion,
   isMultipleChoiceImageQuestion,
@@ -36,6 +40,7 @@ import {
 import {unsafeHTML} from 'lit/directives/unsafe-html.js';
 import {convertMarkdownToHTML} from '../../shared/utils';
 import {core} from '../../core/core';
+import {CohortService} from '../../services/cohort.service';
 import {ParticipantService} from '../../services/participant.service';
 import {ParticipantAnswerService} from '../../services/participant.answer';
 
@@ -46,12 +51,53 @@ import {styles} from './survey_view.scss';
 export class SurveyView extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
 
+  private readonly cohortService = core.getService(CohortService);
   private readonly participantService = core.getService(ParticipantService);
   private readonly participantAnswerService = core.getService(
     ParticipantAnswerService,
   );
 
   @property() stage: SurveyStageConfig | undefined = undefined;
+
+  /**
+   * Build multi-participant answers from the cohort's public stage data.
+   * Used for evaluating aggregation conditions.
+   */
+  private getAllParticipantAnswers(): Record<
+    string,
+    Record<string, StageParticipantAnswer>
+  > {
+    const result: Record<string, Record<string, StageParticipantAnswer>> = {};
+
+    // Iterate over all public stage data in the cohort
+    for (const [stageId, publicData] of Object.entries(
+      this.cohortService.stagePublicDataMap,
+    )) {
+      if (publicData.kind === StageKind.SURVEY) {
+        const surveyPublicData = publicData as SurveyStagePublicData;
+
+        // For each participant in this stage's public data
+        for (const [participantId, answerMap] of Object.entries(
+          surveyPublicData.participantAnswerMap,
+        )) {
+          // Initialize participant's answer record if needed
+          if (!result[participantId]) {
+            result[participantId] = {};
+          }
+
+          // Create a SurveyStageParticipantAnswer from the answer map
+          const stageAnswer: SurveyStageParticipantAnswer = {
+            id: stageId,
+            kind: StageKind.SURVEY,
+            answerMap: answerMap,
+          };
+          result[participantId][stageId] = stageAnswer;
+        }
+      }
+    }
+
+    return result;
+  }
 
   override render() {
     if (!this.stage) {
@@ -64,11 +110,15 @@ export class SurveyView extends MobxLitElement {
       const currentSurveyAnswers =
         this.participantAnswerService.getSurveyAnswerMap(this.stage.id);
       const allStageAnswers = this.participantAnswerService.answerMap;
+      const allParticipantAnswers = this.getAllParticipantAnswers();
+      const currentParticipantId = this.participantService.profile?.publicId;
       const visibleQuestions = getVisibleSurveyQuestions(
         this.stage.questions,
         this.stage.id,
         currentSurveyAnswers,
         allStageAnswers,
+        currentParticipantId,
+        allParticipantAnswers,
       );
 
       return isSurveyComplete(visibleQuestions, currentSurveyAnswers);
@@ -110,11 +160,16 @@ export class SurveyView extends MobxLitElement {
       this.participantAnswerService.getSurveyAnswerMap(this.stage.id);
     const allStageAnswers = this.participantAnswerService.answerMap;
 
+    const allParticipantAnswers = this.getAllParticipantAnswers();
+    const currentParticipantId = this.participantService.profile?.publicId;
+
     return isQuestionVisible(
       question,
       this.stage.id,
       currentSurveyAnswers,
       allStageAnswers,
+      currentParticipantId,
+      allParticipantAnswers,
     );
   }
 

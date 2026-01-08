@@ -143,41 +143,41 @@ export function createAggregationCondition(
  * Evaluate a condition against target values.
  *
  * @param condition - The condition to evaluate
- * @param targetValues - Map of target keys to values. Values can be:
- *   - Single values (for comparison conditions)
- *   - Arrays of values (for aggregation conditions)
+ * @param targetValues - Map of target keys to values (for comparison conditions)
+ * @param allValues - Map of target keys to arrays of values (for aggregation conditions).
+ *   Only needed if the condition contains aggregation conditions.
  */
 export function evaluateCondition(
   condition: Condition | undefined,
-  targetValues: Record<string, unknown> | Record<string, unknown[]>,
+  targetValues: Record<string, unknown>,
+  allValues?: Record<string, unknown[]>,
 ): boolean {
   if (!condition) return true;
 
   if (condition.type === 'group') {
-    return evaluateConditionGroup(condition, targetValues);
+    return evaluateConditionGroup(condition, targetValues, allValues);
   } else if (condition.type === 'aggregation') {
-    return evaluateAggregationCondition(
-      condition,
-      targetValues as Record<string, unknown[]>,
-    );
+    return evaluateAggregationCondition(condition, allValues ?? {});
   } else {
-    return evaluateComparisonCondition(
-      condition,
-      targetValues as Record<string, unknown>,
-    );
+    return evaluateComparisonCondition(condition, targetValues);
   }
 }
 
 function evaluateConditionGroup(
   group: ConditionGroup,
-  targetValues: Record<string, unknown> | Record<string, unknown[]>,
+  targetValues: Record<string, unknown>,
+  allValues?: Record<string, unknown[]>,
 ): boolean {
   if (group.conditions.length === 0) return true;
 
   if (group.operator === ConditionOperator.AND) {
-    return group.conditions.every((c) => evaluateCondition(c, targetValues));
+    return group.conditions.every((c) =>
+      evaluateCondition(c, targetValues, allValues),
+    );
   } else {
-    return group.conditions.some((c) => evaluateCondition(c, targetValues));
+    return group.conditions.some((c) =>
+      evaluateCondition(c, targetValues, allValues),
+    );
   }
 }
 
@@ -232,16 +232,16 @@ function sumValues(values: unknown[]): number {
 }
 
 /**
- * Evaluate an aggregation condition against multiple values.
+ * Evaluate an aggregation condition against an array of values.
  */
 function evaluateAggregationCondition(
   condition: AggregationCondition,
-  targetValues: Record<string, unknown[]>,
+  allValues: Record<string, unknown[]>,
 ): boolean {
   const targetKey = getConditionTargetKey(condition.target);
-  const values = targetValues[targetKey];
+  const values = allValues[targetKey] ?? [];
 
-  if (!values || values.length === 0) return false;
+  if (values.length === 0) return false;
 
   // Helper to compare result against condition's operator/value
   const compareResult = (result: unknown) =>

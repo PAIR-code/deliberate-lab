@@ -171,6 +171,7 @@ describe('condition utilities', () => {
   });
 
   describe('evaluateCondition', () => {
+    // Flat target values for comparison tests
     const targetValues = {
       'stage1::q1': 'apple',
       'stage1::q2': 5,
@@ -491,13 +492,16 @@ describe('condition utilities', () => {
     });
 
     describe('aggregation conditions', () => {
-      // Multi-value target data for aggregation tests
-      const multiValues = {
-        'stage1::q1': ['yes', 'yes', 'no', 'yes'],
-        'stage1::q2': [5, 10, 15, 20],
-        'stage1::q3': ['a', 'b', 'c'],
-        'stage1::empty': [],
+      // Aggregated values: arrays of values for each target key
+      // Represents 4 participants with different values
+      const allValues: Record<string, unknown[]> = {
+        'stage1::q1': ['yes', 'yes', 'no', 'yes'], // 3 yes, 1 no
+        'stage1::q2': [5, 10, 15, 20], // sum=50, avg=12.5
+        'stage1::q3': ['a', 'b', 'c'], // only 3 values (p4 didn't answer)
       };
+
+      // Empty values for testing empty scenarios
+      const emptyValues: Record<string, unknown[]> = {};
 
       describe('ANY aggregator', () => {
         test('returns true if any value matches', () => {
@@ -509,7 +513,8 @@ describe('condition utilities', () => {
             operator: ComparisonOperator.EQUALS,
             value: 'yes',
           };
-          expect(evaluateCondition(condition, multiValues)).toBe(true);
+          // 3 out of 4 values are 'yes'
+          expect(evaluateCondition(condition, {}, allValues)).toBe(true);
         });
 
         test('returns false if no value matches', () => {
@@ -521,19 +526,19 @@ describe('condition utilities', () => {
             operator: ComparisonOperator.EQUALS,
             value: 'maybe',
           };
-          expect(evaluateCondition(condition, multiValues)).toBe(false);
+          expect(evaluateCondition(condition, {}, allValues)).toBe(false);
         });
 
-        test('returns false for empty array', () => {
+        test('returns false for empty values', () => {
           const condition: AggregationCondition = {
             id: '1',
             type: 'aggregation',
-            target: {stageId: 'stage1', questionId: 'empty'},
+            target: {stageId: 'stage1', questionId: 'q1'},
             aggregator: AggregationOperator.ANY,
             operator: ComparisonOperator.EQUALS,
             value: 'test',
           };
-          expect(evaluateCondition(condition, multiValues)).toBe(false);
+          expect(evaluateCondition(condition, {}, emptyValues)).toBe(false);
         });
 
         test('works with numeric comparisons', () => {
@@ -545,10 +550,11 @@ describe('condition utilities', () => {
             operator: ComparisonOperator.GREATER_THAN,
             value: 15,
           };
-          expect(evaluateCondition(condition, multiValues)).toBe(true);
+          // value 20 is > 15
+          expect(evaluateCondition(condition, {}, allValues)).toBe(true);
 
           condition.value = 25;
-          expect(evaluateCondition(condition, multiValues)).toBe(false);
+          expect(evaluateCondition(condition, {}, allValues)).toBe(false);
         });
       });
 
@@ -562,7 +568,8 @@ describe('condition utilities', () => {
             operator: ComparisonOperator.GREATER_THAN,
             value: 0,
           };
-          expect(evaluateCondition(condition, multiValues)).toBe(true);
+          // All values (5, 10, 15, 20) are > 0
+          expect(evaluateCondition(condition, {}, allValues)).toBe(true);
         });
 
         test('returns false if any value does not match', () => {
@@ -574,19 +581,20 @@ describe('condition utilities', () => {
             operator: ComparisonOperator.EQUALS,
             value: 'yes',
           };
-          expect(evaluateCondition(condition, multiValues)).toBe(false);
+          // one value is 'no', so not all are 'yes'
+          expect(evaluateCondition(condition, {}, allValues)).toBe(false);
         });
 
-        test('returns false for empty array', () => {
+        test('returns false for empty values', () => {
           const condition: AggregationCondition = {
             id: '1',
             type: 'aggregation',
-            target: {stageId: 'stage1', questionId: 'empty'},
+            target: {stageId: 'stage1', questionId: 'q1'},
             aggregator: AggregationOperator.ALL,
             operator: ComparisonOperator.EQUALS,
             value: 'test',
           };
-          expect(evaluateCondition(condition, multiValues)).toBe(false);
+          expect(evaluateCondition(condition, {}, emptyValues)).toBe(false);
         });
       });
 
@@ -600,7 +608,7 @@ describe('condition utilities', () => {
             operator: ComparisonOperator.EQUALS,
             value: 'maybe',
           };
-          expect(evaluateCondition(condition, multiValues)).toBe(true);
+          expect(evaluateCondition(condition, {}, allValues)).toBe(true);
         });
 
         test('returns false if any value matches', () => {
@@ -612,19 +620,19 @@ describe('condition utilities', () => {
             operator: ComparisonOperator.EQUALS,
             value: 'yes',
           };
-          expect(evaluateCondition(condition, multiValues)).toBe(false);
+          expect(evaluateCondition(condition, {}, allValues)).toBe(false);
         });
 
-        test('returns false for empty array', () => {
+        test('returns false for empty values', () => {
           const condition: AggregationCondition = {
             id: '1',
             type: 'aggregation',
-            target: {stageId: 'stage1', questionId: 'empty'},
+            target: {stageId: 'stage1', questionId: 'q1'},
             aggregator: AggregationOperator.NONE,
             operator: ComparisonOperator.EQUALS,
             value: 'test',
           };
-          expect(evaluateCondition(condition, multiValues)).toBe(false);
+          expect(evaluateCondition(condition, {}, emptyValues)).toBe(false);
         });
       });
 
@@ -638,10 +646,11 @@ describe('condition utilities', () => {
             operator: ComparisonOperator.EQUALS,
             value: 4,
           };
-          expect(evaluateCondition(condition, multiValues)).toBe(true);
+          // All 4 values for q1
+          expect(evaluateCondition(condition, {}, allValues)).toBe(true);
 
           condition.value = 3;
-          expect(evaluateCondition(condition, multiValues)).toBe(false);
+          expect(evaluateCondition(condition, {}, allValues)).toBe(false);
         });
 
         test('counts filtered values with filterComparison', () => {
@@ -657,8 +666,8 @@ describe('condition utilities', () => {
               value: 'yes',
             },
           };
-          // 3 values equal 'yes'
-          expect(evaluateCondition(condition, multiValues)).toBe(true);
+          // 3 values are 'yes'
+          expect(evaluateCondition(condition, {}, allValues)).toBe(true);
         });
 
         test('count with GREATER_THAN_OR_EQUAL comparison', () => {
@@ -674,11 +683,11 @@ describe('condition utilities', () => {
               value: 'yes',
             },
           };
-          // 3 values equal 'yes', >= 3
-          expect(evaluateCondition(condition, multiValues)).toBe(true);
+          // 3 values are 'yes', >= 3
+          expect(evaluateCondition(condition, {}, allValues)).toBe(true);
 
           condition.value = 4;
-          expect(evaluateCondition(condition, multiValues)).toBe(false);
+          expect(evaluateCondition(condition, {}, allValues)).toBe(false);
         });
 
         test('count with numeric filterComparison', () => {
@@ -694,20 +703,21 @@ describe('condition utilities', () => {
               value: 10,
             },
           };
-          // Values > 10: [15, 20] = 2
-          expect(evaluateCondition(condition, multiValues)).toBe(true);
+          // Values > 10: 15, 20 = 2 values
+          expect(evaluateCondition(condition, {}, allValues)).toBe(true);
         });
 
-        test('returns zero count for empty array', () => {
+        test('returns false for empty values', () => {
           const condition: AggregationCondition = {
             id: '1',
             type: 'aggregation',
-            target: {stageId: 'stage1', questionId: 'empty'},
+            target: {stageId: 'stage1', questionId: 'q1'},
             aggregator: AggregationOperator.COUNT,
             operator: ComparisonOperator.EQUALS,
             value: 0,
           };
-          expect(evaluateCondition(condition, multiValues)).toBe(false);
+          // No values to count
+          expect(evaluateCondition(condition, {}, emptyValues)).toBe(false);
         });
       });
 
@@ -721,7 +731,7 @@ describe('condition utilities', () => {
             operator: ComparisonOperator.EQUALS,
             value: 50, // 5 + 10 + 15 + 20 = 50
           };
-          expect(evaluateCondition(condition, multiValues)).toBe(true);
+          expect(evaluateCondition(condition, {}, allValues)).toBe(true);
         });
 
         test('sums filtered values with filterComparison', () => {
@@ -737,7 +747,7 @@ describe('condition utilities', () => {
               value: 10,
             },
           };
-          expect(evaluateCondition(condition, multiValues)).toBe(true);
+          expect(evaluateCondition(condition, {}, allValues)).toBe(true);
         });
 
         test('sum with GREATER_THAN comparison', () => {
@@ -749,22 +759,22 @@ describe('condition utilities', () => {
             operator: ComparisonOperator.GREATER_THAN,
             value: 40,
           };
-          expect(evaluateCondition(condition, multiValues)).toBe(true);
+          expect(evaluateCondition(condition, {}, allValues)).toBe(true);
 
           condition.value = 50;
-          expect(evaluateCondition(condition, multiValues)).toBe(false);
+          expect(evaluateCondition(condition, {}, allValues)).toBe(false);
         });
 
-        test('returns false for empty array', () => {
+        test('returns false for empty values', () => {
           const condition: AggregationCondition = {
             id: '1',
             type: 'aggregation',
-            target: {stageId: 'stage1', questionId: 'empty'},
+            target: {stageId: 'stage1', questionId: 'q2'},
             aggregator: AggregationOperator.SUM,
             operator: ComparisonOperator.EQUALS,
             value: 0,
           };
-          expect(evaluateCondition(condition, multiValues)).toBe(false);
+          expect(evaluateCondition(condition, {}, emptyValues)).toBe(false);
         });
       });
 
@@ -778,7 +788,7 @@ describe('condition utilities', () => {
             operator: ComparisonOperator.EQUALS,
             value: 12.5, // (5 + 10 + 15 + 20) / 4 = 12.5
           };
-          expect(evaluateCondition(condition, multiValues)).toBe(true);
+          expect(evaluateCondition(condition, {}, allValues)).toBe(true);
         });
 
         test('averages filtered values with filterComparison', () => {
@@ -794,7 +804,7 @@ describe('condition utilities', () => {
               value: 10,
             },
           };
-          expect(evaluateCondition(condition, multiValues)).toBe(true);
+          expect(evaluateCondition(condition, {}, allValues)).toBe(true);
         });
 
         test('average with GREATER_THAN_OR_EQUAL comparison', () => {
@@ -806,22 +816,22 @@ describe('condition utilities', () => {
             operator: ComparisonOperator.GREATER_THAN_OR_EQUAL,
             value: 12.5,
           };
-          expect(evaluateCondition(condition, multiValues)).toBe(true);
+          expect(evaluateCondition(condition, {}, allValues)).toBe(true);
 
           condition.value = 13;
-          expect(evaluateCondition(condition, multiValues)).toBe(false);
+          expect(evaluateCondition(condition, {}, allValues)).toBe(false);
         });
 
-        test('returns false for empty array', () => {
+        test('returns false for empty values', () => {
           const condition: AggregationCondition = {
             id: '1',
             type: 'aggregation',
-            target: {stageId: 'stage1', questionId: 'empty'},
+            target: {stageId: 'stage1', questionId: 'q2'},
             aggregator: AggregationOperator.AVERAGE,
             operator: ComparisonOperator.EQUALS,
             value: 0,
           };
-          expect(evaluateCondition(condition, multiValues)).toBe(false);
+          expect(evaluateCondition(condition, {}, emptyValues)).toBe(false);
         });
 
         test('returns false when filter leaves no values', () => {
@@ -837,7 +847,7 @@ describe('condition utilities', () => {
               value: 100, // No values > 100
             },
           };
-          expect(evaluateCondition(condition, multiValues)).toBe(false);
+          expect(evaluateCondition(condition, {}, allValues)).toBe(false);
         });
       });
 
@@ -851,12 +861,12 @@ describe('condition utilities', () => {
             operator: ComparisonOperator.EQUALS,
             value: 'test',
           };
-          expect(evaluateCondition(condition, multiValues)).toBe(false);
+          expect(evaluateCondition(condition, {}, allValues)).toBe(false);
         });
       });
 
       describe('aggregation in condition groups', () => {
-        test('combines aggregation with comparison conditions', () => {
+        test('combines aggregation conditions', () => {
           const group: ConditionGroup = {
             id: '1',
             type: 'group',
@@ -885,7 +895,7 @@ describe('condition utilities', () => {
             ],
           };
           // 3 'yes' values >= 3, and average 12.5 > 10
-          expect(evaluateCondition(group, multiValues)).toBe(true);
+          expect(evaluateCondition(group, {}, allValues)).toBe(true);
         });
 
         test('OR group with aggregation conditions', () => {
@@ -912,7 +922,7 @@ describe('condition utilities', () => {
               },
             ],
           };
-          expect(evaluateCondition(group, multiValues)).toBe(true);
+          expect(evaluateCondition(group, {}, allValues)).toBe(true);
         });
       });
     });

@@ -223,7 +223,6 @@ export class SurveyEditor extends MobxLitElement {
       targets,
       canEdit: this.experimentEditor.canEditStages,
       onConditionChange,
-      allowAggregation: false, // Survey conditions are per-participant
     });
   }
 
