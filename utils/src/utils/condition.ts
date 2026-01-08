@@ -316,6 +316,28 @@ export function getConditionOperatorLabel(operator: ConditionOperator): string {
   }
 }
 
+/** Get human-readable label for aggregation operator */
+export function getAggregationOperatorLabel(
+  operator: AggregationOperator,
+): string {
+  switch (operator) {
+    case AggregationOperator.ANY:
+      return 'ANY value';
+    case AggregationOperator.ALL:
+      return 'ALL values';
+    case AggregationOperator.NONE:
+      return 'NO value';
+    case AggregationOperator.COUNT:
+      return 'COUNT of values';
+    case AggregationOperator.SUM:
+      return 'SUM of values';
+    case AggregationOperator.AVERAGE:
+      return 'AVERAGE of values';
+    default:
+      return operator;
+  }
+}
+
 /** Build the key string for a condition target reference */
 export function getConditionTargetKey(
   target: ConditionTargetReference,
