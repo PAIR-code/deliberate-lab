@@ -1,4 +1,5 @@
 import '../participant_profile/avatar_icon';
+import '../shared/media_preview';
 
 import {MobxLitElement} from '@adobe/lit-mobx';
 
@@ -12,14 +13,7 @@ import {AuthService} from '../../services/auth.service';
 import {ExperimentService} from '../../services/experiment.service';
 import {ParticipantService} from '../../services/participant.service';
 
-import {
-  ChatMessage,
-  FileCategory,
-  getFileCategory,
-  getFileExtension,
-  StoredFile,
-  UserType,
-} from '@deliberation-lab/utils';
+import {ChatMessage, StoredFile, UserType} from '@deliberation-lab/utils';
 import {
   convertMarkdownToHTML,
   convertUnifiedTimestampToDate,
@@ -150,38 +144,9 @@ export class ChatMessageComponent extends MobxLitElement {
       return nothing;
     }
 
-    return files.map((file) => {
-      switch (getFileCategory(file)) {
-        case FileCategory.IMAGE:
-          return html`<img
-            src="${file.url}"
-            alt="Generated image"
-            class="generated-image"
-          />`;
-        case FileCategory.VIDEO:
-          return html`<video
-            src="${file.url}"
-            controls
-            class="generated-video"
-          ></video>`;
-        case FileCategory.AUDIO:
-          return html`<audio
-            src="${file.url}"
-            controls
-            class="generated-audio"
-          ></audio>`;
-        default:
-          // Documents and other files: render as download link
-          return html`<a
-            href="${file.url}"
-            target="_blank"
-            rel="noopener noreferrer"
-            class="generated-file"
-          >
-            📎 Download ${getFileExtension(file)} file
-          </a>`;
-      }
-    });
+    return files.map(
+      (file) => html`<media-preview .file=${file}></media-preview>`,
+    );
   }
 
   renderDebuggingInfo(chatMessage: ChatMessage) {

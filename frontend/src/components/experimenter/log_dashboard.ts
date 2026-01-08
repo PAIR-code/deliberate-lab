@@ -1,6 +1,7 @@
 import '../../pair-components/button';
 import '../../pair-components/icon_button';
 import '../../pair-components/icon';
+import '../shared/media_preview';
 
 import {MobxLitElement} from '@adobe/lit-mobx';
 import {CSSResultGroup, html, nothing} from 'lit';
@@ -12,12 +13,9 @@ import {ExperimentService} from '../../services/experiment.service';
 
 import {
   convertUnifiedTimestampToDateTime,
-  FileCategory,
   FilterState,
   filterLogs,
   getCohortOptions,
-  getFileCategory,
-  getFileExtension,
   getParticipantOptions,
   getStageOptions,
   getStatusOptions,
@@ -162,37 +160,9 @@ export class Component extends MobxLitElement {
             <details>
               <summary>Generated files (${log.files.length})</summary>
               <div class="file-gallery">
-                ${log.files.map((file) => {
-                  switch (getFileCategory(file)) {
-                    case FileCategory.IMAGE:
-                      return html`<img
-                        src="${file.url}"
-                        alt="Generated image"
-                        class="log-image"
-                      />`;
-                    case FileCategory.VIDEO:
-                      return html`<video
-                        src="${file.url}"
-                        controls
-                        class="log-video"
-                      ></video>`;
-                    case FileCategory.AUDIO:
-                      return html`<audio
-                        src="${file.url}"
-                        controls
-                        class="log-audio"
-                      ></audio>`;
-                    default:
-                      return html`<a
-                        href="${file.url}"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        class="log-file"
-                      >
-                        📎 ${getFileExtension(file)}
-                      </a>`;
-                  }
-                })}
+                ${log.files.map(
+                  (file) => html`<media-preview .file=${file}></media-preview>`,
+                )}
               </div>
             </details>
           `
