@@ -47,33 +47,40 @@ export function convertChatToMessages(
 
   // For private chats, convert to user/assistant format
   for (const msg of chatHistory) {
-    let role: MessageRole.USER | MessageRole.ASSISTANT;
-    let content = msg.message;
-
-    // Determine role based on who sent the message
-    if (msg.type === UserType.PARTICIPANT) {
-      // Participant messages are "user" from the mediator's perspective
-      role =
-        currentUserType === UserType.MEDIATOR
-          ? MessageRole.USER
-          : MessageRole.ASSISTANT;
-    } else if (msg.type === UserType.MEDIATOR) {
-      // Mediator messages are "assistant" from the participant's perspective
-      role =
-        currentUserType === UserType.MEDIATOR
-          ? MessageRole.ASSISTANT
-          : MessageRole.USER;
-    } else if (msg.type === UserType.SYSTEM) {
-      // System messages are treated as "user" messages for the AI to see them
-      role = MessageRole.USER;
-      // Prefix content to distinguish from regular user messages
-      content = `[SYSTEM NOTIFICATION]: ${msg.message}`;
-    } else {
-      // Skip other message types for now
-      continue;
+    switch (msg.type) {
+      case UserType.PARTICIPANT: {
+        // Participant messages are "user" from the mediator's perspective
+        const role =
+          currentUserType === UserType.MEDIATOR
+            ? MessageRole.USER
+            : MessageRole.ASSISTANT;
+        messages.push({role, content: msg.message});
+        break;
+      }
+      case UserType.MEDIATOR: {
+        // Mediator messages are "assistant" from the participant's perspective
+        const role =
+          currentUserType === UserType.MEDIATOR
+            ? MessageRole.ASSISTANT
+            : MessageRole.USER;
+        messages.push({role, content: msg.message});
+        break;
+      }
+      case UserType.SYSTEM:
+        // System messages are treated as "user" messages for the AI to see them
+        messages.push({
+          role: MessageRole.USER,
+          content: `[SYSTEM NOTIFICATION]: ${msg.message}`,
+        });
+        break;
+      case UserType.EXPERIMENTER:
+        // Experimenter messages not yet supported in message format
+        console.log(`Skipping experimenter message: ${msg.message}`);
+        break;
+      case UserType.UNKNOWN:
+        console.warn(`Unknown message type encountered: ${msg.message}`);
+        break;
     }
-
-    messages.push({role, content});
   }
 
   return messages;
