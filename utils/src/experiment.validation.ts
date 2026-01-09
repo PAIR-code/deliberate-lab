@@ -2,6 +2,7 @@ import {Type, type Static} from '@sinclair/typebox';
 import {
   MetadataConfigSchema,
   PermissionsConfigSchema,
+  CohortParticipantConfigSchema,
 } from './shared.validation';
 import {StageConfigData} from './stages/stage.validation';
 import {
@@ -52,21 +53,6 @@ export type ExperimentDeletionData = Static<typeof ExperimentDeletionData>;
 // ************************************************************************* //
 // writeExperiment endpoint                                                  //
 // ************************************************************************* //
-export const CohortParticipantConfigSchema = Type.Object(
-  {
-    minParticipantsPerCohort: Type.Union([
-      Type.Null(),
-      Type.Number({minimum: 0}),
-    ]),
-    maxParticipantsPerCohort: Type.Union([
-      Type.Null(),
-      Type.Number({minimum: 1}),
-    ]),
-    includeAllParticipantsInCohortCount: Type.Boolean(),
-    botProtection: Type.Boolean(),
-  },
-  {$id: 'CohortParticipantConfig'},
-);
 
 export const ProlificConfigSchema = Type.Object({
   enableProlificIntegration: Type.Boolean(),
@@ -74,6 +60,18 @@ export const ProlificConfigSchema = Type.Object({
   attentionFailRedirectCode: Type.String(),
   bootedRedirectCode: Type.String(),
 });
+
+/** CohortDefinition validation schema */
+export const CohortDefinitionSchema = Type.Object(
+  {
+    id: Type.String({minLength: 1}),
+    alias: Type.String({minLength: 1}),
+    name: Type.String({minLength: 1}),
+    description: Type.Optional(Type.String()),
+    generatedCohortId: Type.Optional(Type.String()),
+  },
+  strict,
+);
 
 export const ExperimentCreationData = Type.Object(
   {
@@ -95,6 +93,7 @@ export const ExperimentCreationData = Type.Object(
           cohortLockMap: Type.Record(Type.String(), Type.Boolean()),
           variableConfigs: Type.Optional(Type.Array(VariableConfigData)),
           variableMap: Type.Optional(Type.Record(Type.String(), Type.String())),
+          cohortDefinitions: Type.Optional(Type.Array(CohortDefinitionSchema)),
         },
         strict,
       ),

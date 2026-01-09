@@ -38,6 +38,17 @@ class ProlificConfig(BaseModel):
     bootedRedirectCode: str
 
 
+class CohortDefinition(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    id: constr(min_length=1)
+    alias: constr(min_length=1)
+    name: constr(min_length=1)
+    description: str | None = None
+    generatedCohortId: str | None = None
+
+
 class ParsedItem(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
@@ -191,6 +202,19 @@ class CohortParticipantConfig(BaseModel):
     botProtection: bool
 
 
+class SurveyAutoTransferConfig(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    type: Literal["survey"] = "survey"
+    autoCohortParticipantConfig: CohortParticipantConfig
+    surveyStageId: constr(min_length=1)
+    surveyQuestionId: constr(min_length=1)
+    participantCounts: Dict[constr(pattern=r"^(.*)$"), confloat(ge=1.0)] = Field(
+        ..., title="ParticipantCounts"
+    )
+
+
 class Scope(Enum):
     experiment = "experiment"
     cohort = "cohort"
@@ -327,6 +351,7 @@ class CohortConfig(BaseModel):
         extra="forbid",
     )
     id: str
+    alias: str | None = None
     metadata: Metadata = Field(..., title="Metadata")
     participantConfig: CohortParticipantConfig
     stageUnlockMap: Dict[constr(pattern=r"^(.*)$"), bool] = Field(
@@ -462,6 +487,16 @@ class ComparisonCondition(BaseModel):
     value: str | float | bool
 
 
+class DefaultAutoTransferConfig(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    type: Literal["default"] = "default"
+    autoCohortParticipantConfig: CohortParticipantConfig
+    minParticipants: confloat(ge=1.0)
+    maxParticipants: confloat(ge=1.0)
+
+
 class AssetAllocationStageConfig(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
@@ -583,19 +618,6 @@ class TosStageConfig(BaseModel):
     tosLines: List[str]
 
 
-class TransferStageConfig(BaseModel):
-    model_config = ConfigDict(
-        extra="forbid",
-    )
-    id: constr(min_length=1)
-    kind: Literal["transfer"] = "transfer"
-    name: constr(min_length=1)
-    descriptions: Any
-    progress: Any
-    enableTimeout: bool
-    timeoutSeconds: float
-
-
 class RankingStageConfig(
     RootModel[ItemRankingStageConfig | ParticipantRankingStageConfig]
 ):
@@ -629,6 +651,7 @@ class Experiment(BaseModel):
     variableMap: Dict[constr(pattern=r"^(.*)$"), str] | None = Field(
         None, title="VariableMap"
     )
+    cohortDefinitions: List[CohortDefinition] | None = None
 
 
 class ExperimentTemplate(BaseModel):
@@ -801,12 +824,63 @@ class SurveyStageConfig(BaseModel):
     ]
 
 
+class TransferStageConfig(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    id: constr(min_length=1)
+    kind: Literal["transfer"] = "transfer"
+    name: constr(min_length=1)
+    descriptions: Any
+    progress: Any
+    enableTimeout: bool
+    timeoutSeconds: float
+    autoTransferConfig: (
+        DefaultAutoTransferConfig
+        | SurveyAutoTransferConfig
+        | ConditionAutoTransferConfig
+        | None
+    ) = None
+
+
+class ConditionAutoTransferConfig(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    type: Literal["condition"] = "condition"
+    autoCohortParticipantConfig: CohortParticipantConfig
+    transferGroups: List[TransferGroup] = Field(..., min_length=1)
+
+
+class TransferGroup(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    id: constr(min_length=1)
+    name: constr(min_length=1)
+    composition: List[GroupComposition] = Field(..., min_length=1)
+    targetCohortAlias: constr(min_length=1) | None = None
+
+
+class GroupComposition(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    id: constr(min_length=1)
+    condition: ComparisonCondition | ConditionGroup = Field(..., title="Condition")
+    minCount: confloat(ge=1.0)
+    maxCount: confloat(ge=1.0)
+
+
 class StaticVariableConfig(BaseModel):
     id: constr(min_length=1)
     type: Literal["static"] = "static"
     scope: Scope
     definition: VariableDefinition
     value: str
+    cohortValues: Dict[constr(pattern=r"^(.*)$"), str] | None = Field(
+        None, title="CohortValues"
+    )
 
 
 class Object(BaseModel):
@@ -880,6 +954,9 @@ DeliberateLabAPISchemas.model_rebuild()
 SurveyPerParticipantStageConfig.model_rebuild()
 TextSurveyQuestion.model_rebuild()
 ConditionGroup.model_rebuild()
+TransferStageConfig.model_rebuild()
+ConditionAutoTransferConfig.model_rebuild()
+TransferGroup.model_rebuild()
 StaticVariableConfig.model_rebuild()
 Object.model_rebuild()
 Array.model_rebuild()
