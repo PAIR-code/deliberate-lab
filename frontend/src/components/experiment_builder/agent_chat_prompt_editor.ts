@@ -24,12 +24,15 @@ import {
   PromptItem,
   PromptItemGroup,
   PromptItemType,
+  ReasoningLevel,
   StageConfig,
   StageKind,
   StructuredOutputType,
   StructuredOutputDataType,
   StructuredOutputSchema,
   createDefaultPromptFromText,
+  isAlwaysThinkingModel,
+  isJsonSchemaUnsupportedModel,
   makeStructuredOutputPrompt,
   structuredOutputEnabled,
   TextPromptItem,
@@ -92,7 +95,7 @@ export class EditorComponent extends MobxLitElement {
           </div>
           ${promptConfig ? this.renderDialogButton() : nothing}
         </div>
-        ${this.renderFlashImageWarning(stageConfig, this.agent)}
+        ${this.renderStructuredOutputWarning(this.agent)}
         ${promptConfig?.type === StageKind.CHAT ||
         promptConfig?.type === StageKind.PRIVATE_CHAT
           ? html`
@@ -104,18 +107,25 @@ export class EditorComponent extends MobxLitElement {
     `;
   }
 
-  private renderFlashImageWarning(
-    stageConfig: StageConfig,
-    agent: AgentPersonaConfig,
-  ) {
+  private renderStructuredOutputWarning(agent: AgentPersonaConfig) {
     const modelName = agent.defaultModelSettings.modelName;
-    if (
-      stageConfig.kind === StageKind.PRIVATE_CHAT &&
-      modelName?.includes('gemini-2.5-flash-image')
-    ) {
+
+    // Get the prompt config and check if it's a chat config with structuredOutputConfig
+    const promptConfig = this.getPrompt();
+    const structuredOutputConfig =
+      promptConfig &&
+      'structuredOutputConfig' in promptConfig &&
+      promptConfig.structuredOutputConfig;
+    const usesJsonSchema =
+      structuredOutputConfig &&
+      structuredOutputConfig.type === StructuredOutputType.JSON_SCHEMA;
+
+    // Only warn if using JSON_SCHEMA mode with a model that doesn't support it
+    if (isJsonSchemaUnsupportedModel(modelName) && usesJsonSchema) {
       return html`
         <div class="warning">
-          Warning: This model is not compatible with structured output.
+          Warning: This model does not support native JSON Schema mode. Switch
+          to JSON Format mode for structured output.
         </div>
       `;
     }
@@ -479,6 +489,18 @@ export class EditorComponent extends MobxLitElement {
   ) {
     const modelGenerationConfig = agentPromptConfig.generationConfig;
 
+    const updateReasoningLevel = (e: Event) => {
+      const value = (e.target as HTMLSelectElement).value;
+      const reasoningLevel =
+        value === '' ? undefined : (value as ReasoningLevel);
+      this.updatePrompt({
+        generationConfig: {
+          ...agentPromptConfig.generationConfig,
+          reasoningLevel,
+        },
+      });
+    };
+
     const updateReasoningBudget = (e: InputEvent) => {
       const reasoningBudget = Number((e.target as HTMLInputElement).value);
       if (!isNaN(reasoningBudget)) {
@@ -501,28 +523,74 @@ export class EditorComponent extends MobxLitElement {
       });
     };
 
+    // TODO(rasmi): Extract reasoning level selector
+    // and other shared parameters into a component
+    // that refreshes options based on provider and
+    // displays ProviderOptions appropriately.
+    // See https://ai.google.dev/gemini-api/docs/thinking
+    const reasoningLevelOptions: {value: ReasoningLevel | ''; label: string}[] =
+      [
+        {value: '', label: 'Default'},
+        {value: 'off', label: 'Off'},
+        {value: 'minimal', label: 'Minimal (Gemini 3 Flash only)'},
+        {value: 'low', label: 'Low'},
+        {value: 'medium', label: 'Medium'},
+        {value: 'high', label: 'High'},
+      ];
+
     return html`
       <div class="section">
         <div class="section-header">
           <div class="section-title">Model Reasoning Parameters</div>
           <div class="description">
-            Currently only used for Gemini 2.5 APIs.
+            Controls reasoning/thinking for supported models.
+            <a
+              href="https://ai.google.dev/gemini-api/docs/thinking"
+              target="_blank"
+              >Gemini</a
+            >
+            |
+            <a
+              href="https://docs.anthropic.com/en/docs/build-with-claude/extended-thinking"
+              target="_blank"
+              >Claude</a
+            >
           </div>
         </div>
-        <div class="checkbox-wrapper">
-          <md-checkbox
-            touch-target="wrapper"
-            ?checked=${modelGenerationConfig.includeReasoning ?? false}
+
+        <div class="field">
+          <label for="reasoning-level">Reasoning Level</label>
+          <div class="description">
+            Gemini 3: thinkingLevel. Claude: effort (token efficiency). OpenAI:
+            reasoningEffort.
+          </div>
+          <select
+            id="reasoning-level"
+            @change=${updateReasoningLevel}
             ?disabled=${!this.experimentEditor.isCreator}
-            @click=${updateIncludeReasoning}
           >
-          </md-checkbox>
-          <div>Include model reasoning</div>
+            ${reasoningLevelOptions.map(
+              (option) => html`
+                <option
+                  value=${option.value}
+                  ?selected=${modelGenerationConfig.reasoningLevel ===
+                    option.value ||
+                  (option.value === '' &&
+                    !modelGenerationConfig.reasoningLevel)}
+                >
+                  ${option.label}
+                </option>
+              `,
+            )}
+          </select>
         </div>
 
         <div class="field">
           <label for="reasoning-budget">Reasoning Budget</label>
-          <div class="description">Reasoning budget for Gemini 2.5</div>
+          <div class="description">
+            Max thinking tokens. Gemini 2.5: thinkingBudget (-1 = dynamic, 0 =
+            off). Claude: budgetTokens.
+          </div>
           <div class="number-input">
             <input
               .disabled=${!this.experimentEditor.isCreator}
@@ -532,8 +600,53 @@ export class EditorComponent extends MobxLitElement {
             />
           </div>
         </div>
+
+        <div class="checkbox-wrapper">
+          <md-checkbox
+            touch-target="wrapper"
+            ?checked=${this.getIncludeReasoningValue(
+              modelGenerationConfig,
+              agent.defaultModelSettings.modelName,
+            )}
+            ?disabled=${!this.experimentEditor.isCreator}
+            @change=${updateIncludeReasoning}
+          >
+          </md-checkbox>
+          <div>
+            Include model reasoning in response
+            <span class="small"
+              >(auto-enabled for always-thinking models and when thinking is
+              configured)</span
+            >
+          </div>
+        </div>
       </div>
     `;
+  }
+
+  /** Returns effective includeReasoning value - true by default for always-thinking models or when thinking is configured */
+  private getIncludeReasoningValue(
+    config: {
+      includeReasoning?: boolean;
+      reasoningLevel?: ReasoningLevel;
+      reasoningBudget?: number;
+    },
+    modelName?: string,
+  ): boolean {
+    // If explicitly set, use that value
+    if (config.includeReasoning !== undefined) {
+      return config.includeReasoning;
+    }
+    // Some models (e.g., Gemini 3) are always thinking.
+    if (isAlwaysThinkingModel(modelName)) {
+      return true;
+    }
+    // Default to true if thinking is configured
+    const hasReasoningLevel =
+      config.reasoningLevel !== undefined && config.reasoningLevel !== 'off';
+    const hasValidBudget =
+      typeof config.reasoningBudget === 'number' && config.reasoningBudget > 0;
+    return hasReasoningLevel || hasValidBudget;
   }
 
   private renderAgentSamplingParameters(
@@ -833,7 +946,12 @@ export class EditorComponent extends MobxLitElement {
     const updateType = (e: Event) => {
       const type = (e.target as HTMLSelectElement)
         .value as StructuredOutputType;
-      updateConfig({type});
+      // For JSON_FORMAT, appendToPrompt is enforced (must be true)
+      if (type === StructuredOutputType.JSON_FORMAT) {
+        updateConfig({type, appendToPrompt: true});
+      } else {
+        updateConfig({type});
+      }
     };
 
     const mainSettings = () => {
@@ -844,8 +962,7 @@ export class EditorComponent extends MobxLitElement {
         <div class="field">
           <label for="structuredOutputType">Structured Output Type</label>
           <div class="description">
-            Constrain the sampler to produce valid JSON. Only supported for
-            Gemini.
+            Controls how JSON output is requested from the model.
           </div>
           <select
             id="structuredOutputType"
@@ -856,38 +973,42 @@ export class EditorComponent extends MobxLitElement {
               value="${StructuredOutputType.NONE}"
               ?selected=${config.type === StructuredOutputType.NONE}
             >
-              No output forcing
+              None (plain text response)
             </option>
             <option
               value="${StructuredOutputType.JSON_FORMAT}"
               ?selected=${config.type === StructuredOutputType.JSON_FORMAT}
             >
-              Force JSON output
+              JSON Format (prompt-based parsing)
             </option>
             <option
               value="${StructuredOutputType.JSON_SCHEMA}"
               ?selected=${config.type === StructuredOutputType.JSON_SCHEMA}
             >
-              Force JSON output with schema
+              JSON Schema (native API enforcement)
             </option>
           </select>
         </div>
-        <div class="checkbox-wrapper">
-          <md-checkbox
-            touch-target="wrapper"
-            ?checked=${config.appendToPrompt}
-            ?disabled=${!this.experimentEditor.canEditStages}
-            @click=${updateAppendToPrompt}
-          >
-          </md-checkbox>
-          <div>
-            Include explanation of structured output format in prompt
-            <span class="small">
-              (e.g., "Return only valid JSON according to the following
-              schema...")
-            </span>
-          </div>
-        </div>
+        ${config.type === StructuredOutputType.JSON_SCHEMA
+          ? html`
+              <div class="checkbox-wrapper">
+                <md-checkbox
+                  touch-target="wrapper"
+                  ?checked=${config.appendToPrompt}
+                  ?disabled=${!this.experimentEditor.canEditStages}
+                  @click=${updateAppendToPrompt}
+                >
+                </md-checkbox>
+                <div>
+                  Include schema instructions in prompt
+                  <span class="small">
+                    (Optional for JSON_SCHEMA - the API enforces the schema
+                    natively, but prompt instructions can help reinforce)
+                  </span>
+                </div>
+              </div>
+            `
+          : nothing}
         ${this.renderAgentStructuredOutputSchemaFields(
           agent,
           agentPromptConfig,

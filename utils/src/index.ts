@@ -55,6 +55,7 @@ export * from './profile_sets';
 export * from './agent';
 export * from './agent.validation';
 export * from './model_response';
+export * from './providers';
 export * from './structured_output';
 export * from './structured_prompt';
 

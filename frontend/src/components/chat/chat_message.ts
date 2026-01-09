@@ -1,4 +1,5 @@
 import '../participant_profile/avatar_icon';
+import '../shared/media_preview';
 
 import {MobxLitElement} from '@adobe/lit-mobx';
 
@@ -12,7 +13,7 @@ import {AuthService} from '../../services/auth.service';
 import {ExperimentService} from '../../services/experiment.service';
 import {ParticipantService} from '../../services/participant.service';
 
-import {ChatMessage, UserType} from '@deliberation-lab/utils';
+import {ChatMessage, StoredFile, UserType} from '@deliberation-lab/utils';
 import {
   convertMarkdownToHTML,
   convertUnifiedTimestampToDate,
@@ -84,20 +85,13 @@ export class ChatMessageComponent extends MobxLitElement {
               )}</span
             >
           </div>
-          <div class="chat-bubble">
-            ${unsafeHTML(convertMarkdownToHTML(chatMessage.message))}
-          </div>
-          ${this.renderDebuggingExplanation(chatMessage)}
-          ${chatMessage.imageUrls && chatMessage.imageUrls.length > 0
-            ? chatMessage.imageUrls.map(
-                (imageUrl) =>
-                  html`<img
-                    src="${imageUrl}"
-                    alt="Generated Image"
-                    class="generated-image"
-                  />`,
-              )
+          ${chatMessage.message
+            ? html`<div class="chat-bubble">
+                ${unsafeHTML(convertMarkdownToHTML(chatMessage.message))}
+              </div>`
             : nothing}
+          ${this.renderDebuggingInfo(chatMessage)}
+          ${this.renderFiles(chatMessage.files)}
         </div>
       </div>
     `;
@@ -123,20 +117,13 @@ export class ChatMessageComponent extends MobxLitElement {
               )}</span
             >
           </div>
-          <div class="chat-bubble">
-            ${unsafeHTML(convertMarkdownToHTML(chatMessage.message))}
-          </div>
-          ${this.renderDebuggingExplanation(chatMessage)}
-          ${chatMessage.imageUrls && chatMessage.imageUrls.length > 0
-            ? chatMessage.imageUrls.map(
-                (imageUrl) =>
-                  html`<img
-                    src="${imageUrl}"
-                    alt="Generated Image"
-                    class="generated-image"
-                  />`,
-              )
+          ${chatMessage.message
+            ? html`<div class="chat-bubble">
+                ${unsafeHTML(convertMarkdownToHTML(chatMessage.message))}
+              </div>`
             : nothing}
+          ${this.renderDebuggingInfo(chatMessage)}
+          ${this.renderFiles(chatMessage.files)}
         </div>
       </div>
     `;
@@ -152,12 +139,46 @@ export class ChatMessageComponent extends MobxLitElement {
     `;
   }
 
-  renderDebuggingExplanation(chatMessage: ChatMessage) {
-    if (!this.authService.isDebugMode || !chatMessage.explanation) {
+  renderFiles(files?: StoredFile[]) {
+    if (!files || files.length === 0) {
       return nothing;
     }
 
-    return html` <div class="debug">${chatMessage.explanation}</div> `;
+    return files.map(
+      (file) => html`<media-preview .file=${file}></media-preview>`,
+    );
+  }
+
+  renderDebuggingInfo(chatMessage: ChatMessage) {
+    if (!this.authService.isDebugMode) {
+      return nothing;
+    }
+
+    const hasExplanation =
+      chatMessage.explanation && chatMessage.explanation.length > 0;
+    const hasReasoning =
+      chatMessage.reasoning && chatMessage.reasoning.length > 0;
+
+    if (!hasExplanation && !hasReasoning) {
+      return nothing;
+    }
+
+    return html`
+      <div class="debug-container">
+        ${hasExplanation
+          ? html`<div class="debug explanation">
+              <span class="debug-label">📝 Explanation:</span>
+              ${chatMessage.explanation}
+            </div>`
+          : nothing}
+        ${hasReasoning
+          ? html`<div class="debug reasoning">
+              <span class="debug-label">🧠 Reasoning:</span>
+              ${chatMessage.reasoning}
+            </div>`
+          : nothing}
+      </div>
+    `;
   }
 }
 

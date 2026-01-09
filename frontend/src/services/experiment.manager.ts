@@ -627,14 +627,7 @@ export class ExperimentManager extends Service {
           orderBy('createdTimestamp', 'desc'),
         ),
         (snapshot) => {
-          let changedDocs = snapshot.docChanges().map((change) => change.doc);
-          if (changedDocs.length === 0) {
-            changedDocs = snapshot.docs;
-          }
-
-          changedDocs.forEach((doc) => {
-            this.logs.push(doc.data() as LogEntry);
-          });
+          this.logs = snapshot.docs.map((doc) => doc.data() as LogEntry);
           this.isLogsLoading = false;
         },
       ),

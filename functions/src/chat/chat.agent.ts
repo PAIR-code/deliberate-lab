@@ -1,8 +1,11 @@
 import {
   AgentChatSettings,
+  ChatMediatorStructuredOutputConfig,
   ChatMessage,
   ChatPromptConfig,
   ChatStagePublicData,
+  extractChatMediatorStructuredFields,
+  getStructuredOutput,
   MediatorProfileExtended,
   ModelResponseStatus,
   ParticipantProfileExtended,
@@ -21,10 +24,10 @@ import {
   getStructuredPromptConfig,
 } from '../structured_prompt.utils';
 import {resolveStringWithVariables} from '../variables.utils';
+import {ModelMessage} from '../api/ai-sdk.api';
 import {
   convertChatToMessages,
   shouldUseMessageFormat,
-  ConversationMessage,
   MessageRole,
 } from './message_converter.utils';
 import {updateParticipantReadyToEndChat} from '../chat/chat.utils';
@@ -41,8 +44,11 @@ import {
   getFirestoreParticipantAnswerRef,
 } from '../utils/firestore';
 import {app} from '../app';
-import {uploadBase64ImageToGCS} from '../utils/storage';
-import {updateModelLogImageUrls} from '../log.utils';
+import {
+  getChatMessageStoragePath,
+  uploadModelResponseFiles,
+} from '../utils/storage';
+import {updateModelLogFiles} from '../log.utils';
 
 // ****************************************************************************
 // Functions for preparing, querying, and organizing agent chat responses.
@@ -142,7 +148,6 @@ export async function createAgentChatMessageFromPrompt(
       user,
       promptConfig,
     );
-    message = response.message;
     message = response.message;
     if (!message) {
       return response.success;
@@ -256,7 +261,7 @@ export async function getAgentChatMessage(
   );
 
   // Prepare prompt - either message-based or traditional string
-  let prompt: string | ConversationMessage[];
+  let prompt: string | ModelMessage[];
   if (useMessageFormat && isPrivateChat) {
     prompt = await convertToMessageFormat(
       experimentId,
@@ -286,16 +291,16 @@ export async function getAgentChatMessage(
     promptConfig.numRetries ?? 0, // Pass numRetries from config
   );
 
-  // Log response with sanitized rawResponse and imageDataList to avoid overwhelming console with image data
+  // Log response with sanitized rawResponse and files to avoid overwhelming console with file/image data
   const loggableResponse = {
     ...response,
     rawResponse: response.rawResponse
       ? sanitizeRawResponseForLogging(response.rawResponse)
       : undefined,
-    imageDataList: response.imageDataList
-      ? response.imageDataList.map((img) => ({
-          mimeType: img.mimeType,
-          data: '[IMAGE DATA]',
+    files: response.files
+      ? response.files.map((file) => ({
+          mediaType: file.mediaType,
+          base64: '[FILE DATA]',
         }))
       : undefined,
   };
@@ -309,48 +314,34 @@ export async function getAgentChatMessage(
     return {message: null, success: false};
   }
 
-  const structured = promptConfig.structuredOutputConfig;
+  const structured = promptConfig.structuredOutputConfig as
+    | ChatMediatorStructuredOutputConfig
+    | undefined;
 
   let message = response.text || ''; // Use response.text as the default message
-  let explanation: string | undefined = response.reasoning || undefined;
+  let explanation = ''; // From structured output schema field only
+  const reasoning = response.reasoning || undefined; // From model's internal thinking
   let shouldRespond = true;
   let readyToEndChat = false;
 
-  if (structured?.enabled && response.text) {
-    const jsonMatch = response.text.match(/```json\n(\{[\s\S]*\})\n```/);
-    if (jsonMatch && jsonMatch[1]) {
-      try {
-        const parsed = JSON.parse(jsonMatch[1]) as Record<string, unknown>;
-
-        const shouldRespondValue = structured.shouldRespondField
-          ? parsed[structured.shouldRespondField]
-          : undefined;
-        shouldRespond = shouldRespondValue === false ? false : true;
-
-        const messageField = structured.messageField || 'response';
-        if (typeof parsed[messageField] === 'string') {
-          message = parsed[messageField] as string;
-        }
-
-        const explanationField = structured.explanationField || 'explanation';
-        if (typeof parsed[explanationField] === 'string') {
-          explanation = parsed[explanationField] as string;
-        }
-
-        readyToEndChat = structured.readyToEndField
-          ? Boolean(parsed[structured.readyToEndField])
-          : false;
-      } catch (error) {
-        console.error('getAgentChatMessage JSON parse error in text:', error);
-        // message remains response.text
+  // Extract fields from structured output if enabled
+  if (structured?.enabled) {
+    const parsed = getStructuredOutput(response);
+    if (parsed) {
+      const fields = extractChatMediatorStructuredFields(parsed, structured);
+      shouldRespond = fields.shouldRespond;
+      if (fields.message !== null) {
+        message = fields.message;
       }
-    } else {
-      // JSON block not found, message remains response.text
+      if (fields.explanation !== null) {
+        explanation = fields.explanation;
+      }
+      readyToEndChat = fields.readyToEndChat;
     }
-  } else if (
-    !response.text &&
-    (!response.imageDataList || response.imageDataList.length === 0)
-  ) {
+  }
+
+  // No text and no files = failure
+  if (!response.text && (!response.files || response.files.length === 0)) {
     return {message: null, success: false};
   }
 
@@ -415,33 +406,29 @@ export async function getAgentChatMessage(
     discussionId,
     message,
     explanation,
+    reasoning,
     profile: createParticipantProfileBase(user),
     senderId: user.publicId,
     agentId: user.agentConfig.agentId,
     timestamp: Timestamp.now(),
   });
 
-  // Upload all images from imageDataList using the chat message ID in the path
-  let imageUrls: string[] | undefined = undefined;
-  if (response.imageDataList && response.imageDataList.length > 0) {
+  // Upload files to GCS
+  if (response.files && response.files.length > 0) {
     try {
-      // Upload all images in parallel with index numbers
-      const uploadPromises = response.imageDataList.map((imageData, index) =>
-        uploadBase64ImageToGCS(
-          imageData.data,
-          imageData.mimeType,
-          `experiments/${experimentId}/chats/${stage.id}/${chatMessage.id}/${index}`,
-        ),
+      const storagePath = getChatMessageStoragePath(
+        experimentId,
+        stageId,
+        chatMessage.id,
       );
-      imageUrls = await Promise.all(uploadPromises);
-      // Add the uploaded URLs to the chat message
-      chatMessage.imageUrls = imageUrls;
-
-      // Update the log with the image URLs for dashboard display
-      await updateModelLogImageUrls(experimentId, logId, imageUrls);
+      const storedFiles = await uploadModelResponseFiles(
+        response.files,
+        storagePath,
+      );
+      chatMessage.files = storedFiles;
+      await updateModelLogFiles(experimentId, logId, storedFiles);
     } catch (error) {
-      console.error('Error uploading images to GCS:', error);
-      // Optionally handle error, e.g., send an error message to chat
+      console.error('Error uploading files to GCS:', error);
     }
   }
 
@@ -602,7 +589,7 @@ async function convertToMessageFormat(
   stageId: string,
   user: ParticipantProfileExtended | MediatorProfileExtended,
   systemPrompt: string,
-): Promise<ConversationMessage[]> {
+): Promise<ModelMessage[]> {
   // Get chat history for private chat
   const chatHistory = await getFirestorePrivateChatMessages(
     experimentId,
@@ -611,17 +598,12 @@ async function convertToMessageFormat(
   );
 
   // Convert chat history to message format
-  const messages = convertChatToMessages(
-    chatHistory,
-    user.type,
-    user.publicId,
-    {
-      isPrivateChat: true,
-      mediatorId: user.type === UserType.MEDIATOR ? user.publicId : undefined,
-      participantId: participantIds[0],
-      includeSystemPrompt: true,
-    },
-  );
+  const messages = convertChatToMessages(chatHistory, user.type, {
+    isPrivateChat: true,
+    mediatorId: user.type === UserType.MEDIATOR ? user.publicId : undefined,
+    participantId: participantIds[0],
+    includeSystemPrompt: true,
+  });
 
   // Add system prompt as first message
   if (systemPrompt) {

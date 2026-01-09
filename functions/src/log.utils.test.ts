@@ -10,19 +10,13 @@ import {
   assertSucceeds,
   RulesTestEnvironment,
 } from '@firebase/rules-unit-testing';
-import nock from 'nock';
 import {
-  ModelGenerationConfig,
   ModelLogEntry,
-  StructuredOutputDataType,
-  StructuredOutputConfig,
-  StructuredOutputType,
+  ModelResponse,
+  ModelResponseStatus,
   createModelLogEntry,
 } from '@deliberation-lab/utils';
 import {writeModelLogEntry} from './log.utils';
-import {getGeminiAPIResponse} from './api/gemini.api';
-
-const MODEL_NAME = 'gemini-2.5-flash';
 
 const RULES = `
 rules_version = '2';
@@ -35,7 +29,8 @@ allow read, write: if true;
 }
 `;
 
-let mockFirestore;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let mockFirestore: any;
 
 jest.mock('./app', () => ({
   app: {
@@ -64,7 +59,6 @@ describe('log.utils', () => {
   });
 
   afterAll(async () => {
-    nock.cleanAll();
     await testEnv.cleanup();
   });
 
@@ -72,66 +66,25 @@ describe('log.utils', () => {
     await testEnv.clearFirestore();
   });
 
-  it('should write a model log entry from a json_schema API response to Firestore', async () => {
+  it('should write a model log entry to Firestore', async () => {
     const experimentId = 'test-experiment';
     const logId = 'test-log';
 
-    nock('https://generativelanguage.googleapis.com')
-      .post(`/v1beta/models/${MODEL_NAME}:generateContent`)
-      .reply(200, (uri, requestBody) => {
-        return {
-          candidates: [
-            {
-              content: {
-                parts: [
-                  {
-                    text: JSON.stringify({
-                      output: 'test output',
-                    }),
-                  },
-                ],
-              },
-            },
-          ],
-        };
-      });
-
-    const generationConfig: ModelGenerationConfig = {
-      maxTokens: 300,
-      stopSequences: [],
-      temperature: 0.4,
-      topP: 0.9,
-      frequencyPenalty: 0,
-      presencePenalty: 0,
-      customRequestBodyFields: [],
-    };
-
-    const structuredOutputConfig: StructuredOutputConfig = {
-      enabled: true,
-      appendToPrompt: true,
-      explanationField: 'explanation',
-      type: StructuredOutputType.JSON_SCHEMA,
-      schema: {
-        type: StructuredOutputDataType.OBJECT,
-        properties: [
-          {
-            name: 'stringProperty',
-            schema: {
-              type: StructuredOutputDataType.STRING,
-              description: 'description',
-            },
-          },
-        ],
+    // Create a mock ModelResponse for testing log writing
+    const response: ModelResponse = {
+      status: ModelResponseStatus.OK,
+      text: JSON.stringify({output: 'test output'}),
+      parsedResponse: {output: 'test output'},
+      generationConfig: {
+        maxTokens: 300,
+        temperature: 0.4,
+      },
+      usage: {
+        promptTokens: 10,
+        completionTokens: 20,
+        totalTokens: 30,
       },
     };
-
-    const response = await getGeminiAPIResponse(
-      'testapikey',
-      MODEL_NAME,
-      'This is a test prompt.',
-      generationConfig,
-      structuredOutputConfig,
-    );
 
     const logEntry: ModelLogEntry = createModelLogEntry({
       id: logId,
@@ -154,10 +107,10 @@ describe('log.utils', () => {
     const logDoc = await assertSucceeds(logDocRef.get());
     const data = logDoc.data();
     expect(data).toBeDefined();
-    expect(data!.response.generationConfig).toBeDefined();
-    expect(data!.response.generationConfig.responseSchema).toBeDefined();
-    expect(
-      data!.response.generationConfig.responseSchema.properties.stringProperty,
-    ).toBeDefined();
+    expect(data!.response.status).toBe(ModelResponseStatus.OK);
+    expect(data!.response.text).toBeDefined();
+    expect(data!.response.parsedResponse).toBeDefined();
+    expect(data!.response.usage).toBeDefined();
+    expect(data!.response.usage.totalTokens).toBe(30);
   });
 });
