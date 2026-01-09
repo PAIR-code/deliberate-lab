@@ -16,10 +16,13 @@ import {
   VariableScope,
   VariableType,
 } from './variables';
+import {migrateVariableConfigs} from './variables.legacy.utils';
 
 /**
  * Extract variable definitions from variable configs.
  * Returns a map of variable name to definition.
+ *
+ * Automatically migrates old-format configs (pre-v19) to the new format.
  *
  * For RandomPermutation configs with expandListToSeparateVariables:
  * Creates definitions for indexed variables (name_1, name_2, etc.)
@@ -28,9 +31,11 @@ import {
 export function extractVariablesFromVariableConfigs(
   configs: VariableConfig[],
 ): Record<string, VariableDefinition> {
+  // Migrate any old-format configs to new format
+  const migratedConfigs = migrateVariableConfigs(configs);
   const variableDefinitions: Record<string, VariableDefinition> = {};
 
-  for (const config of configs) {
+  for (const config of migratedConfigs) {
     switch (config.type) {
       case VariableConfigType.STATIC:
         variableDefinitions[config.definition.name] = config.definition;
