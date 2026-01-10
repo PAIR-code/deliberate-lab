@@ -4,17 +4,84 @@
 # Script to run Deliberate Lab locally following the developer guide.
 # https://pair-code.github.io/deliberate-lab/developers/run-locally
 #
-# Assumes 'npm install' has been run in the root directory,
-# and that 'firebase-tools' is installed globally or available in the path.
-# 
 # This script will kill any processes running on the ports used by the emulators.
 
 # Exit immediately if a command exits with a non-zero status.
 set -e
 
+# Suggest running doctor on unexpected errors
+trap 'echo ""; echo "Something went wrong. Try running '\''npm run doctor'\'' to diagnose issues."' ERR
+
 # Directory of the script
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 cd "$DIR"
+
+# --- Helper functions ---
+
+# Install dependencies, with retry on failure
+install_dependencies() {
+    echo "Running npm ci..."
+    if npm ci; then
+        return 0
+    fi
+
+    echo ""
+    echo "npm ci failed."
+    read -p "Would you like to clean up and retry? (y/n) " -n 1 -r
+    echo ""
+    if [[ $REPLY =~ ^[Yy]$ ]]; then
+        echo ""
+        echo "Cleaning up node_modules..."
+        rm -rf node_modules frontend/node_modules functions/node_modules utils/node_modules
+        npm cache clean --force
+        echo ""
+        echo "Retrying npm ci..."
+        npm ci
+    else
+        exit 1
+    fi
+}
+
+# Kill process on a specific port
+kill_port() {
+    local port=$1
+    local pid=$(lsof -ti tcp:$port)
+    if [ -n "$pid" ]; then
+        echo "Killing process $pid on port $port"
+        kill -9 $pid
+    fi
+}
+
+# Wait for a port to be ready
+wait_for_port() {
+    local port=$1
+    local label=$2
+    local timeout=120
+    local counter=0
+    echo "Waiting for $label (port $port) to be ready..."
+    while ! nc -z 127.0.0.1 $port >/dev/null 2>&1; do
+        sleep 1
+        counter=$((counter+1))
+        if [ $counter -ge $timeout ]; then
+            echo "Timed out waiting for $label (port $port)"
+            return 1
+        fi
+    done
+    echo "$label (port $port) is ready."
+}
+
+# Handle cleanup on exit
+cleanup() {
+    echo ""
+    echo "Stopping all services..."
+    trap - SIGINT SIGTERM
+    kill -- -$$ 2>/dev/null
+    exit 0
+}
+
+# --- Pre-flight checks ---
+
+echo "=== Checking prerequisites ==="
 
 # Check for required tools
 if ! command -v npm &> /dev/null; then
@@ -22,10 +89,40 @@ if ! command -v npm &> /dev/null; then
     exit 1
 fi
 
-if ! npx firebase --version &> /dev/null; then
-    echo "Error: 'firebase' command not found. Please run 'npm install' first."
+NODE_VERSION=$(node -v | cut -d'v' -f2 | cut -d'.' -f1)
+if [ "$NODE_VERSION" -lt 22 ]; then
+    echo ""
+    echo "Error: Node.js v22 or higher is required (found v$(node -v | cut -d'v' -f2))."
+    echo ""
+    echo "If using nvm, run:"
+    echo "  nvm install 22"
+    echo "  nvm use 22"
+    echo ""
     exit 1
 fi
+echo "Node.js version: $(node -v)"
+
+if [ ! -d "node_modules" ]; then
+    echo ""
+    echo "node_modules not found."
+    read -p "Would you like to run 'npm ci' now? (y/n) " -n 1 -r
+    echo ""
+    if [[ $REPLY =~ ^[Yy]$ ]]; then
+        echo ""
+        install_dependencies
+        echo ""
+    else
+        echo "Please run 'npm ci' from the repository root first."
+        exit 1
+    fi
+fi
+
+if ! npx firebase --version &> /dev/null; then
+    echo "Error: 'firebase' command not found. Please run 'npm ci' first."
+    exit 1
+fi
+
+# --- Configuration files ---
 
 echo "=== Checking configuration files ==="
 
@@ -54,34 +151,11 @@ else
     echo "frontend/index.html already exists"
 fi
 
-# Function to kill process on a specific port
-kill_port() {
-    local port=$1
-    local pid=$(lsof -ti tcp:$port)
-    if [ -n "$pid" ]; then
-        echo "Killing process $pid on port $port"
-        kill -9 $pid
-    fi
-}
+# --- Clean up ports ---
 
-wait_for_port() {
-    local port=$1
-    local label=$2
-    local timeout=120
-    local counter=0
-    echo "Waiting for $label (port $port) to be ready..."
-    while ! nc -z 127.0.0.1 $port >/dev/null 2>&1; do
-        sleep 1
-        counter=$((counter+1))
-        if [ $counter -ge $timeout ]; then
-            echo "Timed out waiting for $label (port $port)"
-            return 1
-        fi
-    done
-    echo "$label (port $port) is ready."
-}
-
+echo ""
 echo "=== Cleaning up ports ==="
+
 # Ports from firebase.json and webpack.config.ts
 # 4000: Emulator UI
 # 4201: Frontend
@@ -91,23 +165,14 @@ echo "=== Cleaning up ports ==="
 # 9099: Auth
 # 9199: Storage
 PORTS=(4000 4201 5001 8080 9000 9099 9199)
-
 for port in "${PORTS[@]}"; do
     kill_port $port
 done
 
+# --- Start services ---
+
 echo ""
 echo "=== Building and Starting Services ==="
-
-# Function to handle cleanup on exit
-cleanup() {
-    echo ""
-    echo "Stopping all services..."
-    # Kill all child processes in the same process group
-    trap - SIGINT SIGTERM # Clear the trap
-    kill -- -$$ 2>/dev/null
-    exit 0
-}
 
 # Trap SIGINT (Ctrl+C) and SIGTERM
 trap cleanup SIGINT SIGTERM
@@ -135,7 +200,7 @@ cd ..
 
 # 3. Start Firebase emulators
 echo "--- [3/4] Starting Firebase emulators ---"
-# Using --import ./emulator_test_config as per instructions
+# Load test config with experimenter@ and not-experimenter@ profiles
 tail -f /dev/null | npx firebase emulators:start --import ./emulator_test_config &
 EMULATORS_PID=$!
 

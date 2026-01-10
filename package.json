@@ -8,6 +8,9 @@
     "type": "git",
     "url": "git+https://github.com/PAIR-code/deliberate-lab.git"
   },
+  "engines": {
+    "node": ">=22"
+  },
   "devDependencies": {
     "@eslint/js": "^9.39.2",
     "eslint": "^9.39.2",
@@ -25,6 +28,7 @@
     ]
   },
   "scripts": {
+    "doctor": "node scripts/doctor.js",
     "prepare": "husky",
     "update-schemas": "npm run build --workspace=utils && npx tsx utils/src/export-schemas.ts && npx prettier --write docs/assets/api/schemas.json && cd scripts && uv run datamodel-codegen --input ../docs/assets/api/schemas.json --output deliberate_lab/types.py --input-file-type jsonschema --reuse-model --collapse-root-models --use-union-operator --use-title-as-name --use-one-literal-as-default --output-model-type pydantic_v2.BaseModel --custom-file-header '# pyright: reportInvalidTypeForm=false\n# pylint: disable=missing-module-docstring,missing-class-docstring,invalid-name,too-few-public-methods' && uv run black deliberate_lab/ && uv run pyright deliberate_lab/"
   },
