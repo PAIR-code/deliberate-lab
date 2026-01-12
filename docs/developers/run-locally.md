@@ -126,10 +126,8 @@ npx firebase login
 
 Finally, to run the emulators:
 ```bash
-```bash
 # Start the emulators and load the `emulator_test_config` settings
 npx firebase emulators:start --import ./emulator_test_config
-```
 ```
 
 > Note: The emulator test config sets up two profiles (experimenter@
