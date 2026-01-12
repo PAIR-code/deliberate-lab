@@ -296,8 +296,9 @@ export class PayoutView extends MobxLitElement {
           <div class="row">
             <div>
               ${rankingWinner !== null
-                ? `Election winner's answer:`
-                : 'Your answer:'}
+                ? `Leader's answer:`
+                : //? `Election winner's answer:`
+                  'Your answer:'}
             </div>
             <div class="chip secondary">${participantAnswer?.text ?? ''}</div>
           </div>
