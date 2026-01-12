@@ -41,7 +41,8 @@ export function createCohortConfig(
 ): CohortConfig {
   return {
     id: config.id ?? generateId(true), // Alphanumeric sorting.
-    alias: config.alias,
+    // Only include alias if defined (TypeBox Optional expects absent or string, not undefined)
+    ...(config.alias !== undefined && {alias: config.alias}),
     metadata: config.metadata ?? createMetadataConfig(),
     participantConfig:
       config.participantConfig ?? createCohortParticipantConfig(),

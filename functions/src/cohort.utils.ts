@@ -1,3 +1,4 @@
+import {Timestamp} from 'firebase-admin/firestore';
 import {
   CohortConfig,
   CohortDefinition,
@@ -6,6 +7,7 @@ import {
   MediatorProfileExtended,
   ParticipantStatus,
   StageConfig,
+  UnifiedTimestamp,
   VariableConfig,
   VariableConfigType,
   createCohortConfig,
@@ -232,11 +234,18 @@ export async function createCohortFromDefinition(
   definition: CohortDefinition,
   defaultCohortConfig: CohortParticipantConfig,
 ): Promise<CohortConfig> {
+  // Use Admin SDK Timestamp for Firestore compatibility
+  const timestamp = Timestamp.now() as UnifiedTimestamp;
+
   // Create cohort config with generated UUID and alias
   const cohortConfig = createCohortConfig({
     id: generateId(true), // Alphanumeric for sorting
     alias: definition.alias,
-    metadata: createMetadataConfig({name: definition.name}),
+    metadata: createMetadataConfig({
+      name: definition.name,
+      dateCreated: timestamp,
+      dateModified: timestamp,
+    }),
     participantConfig: defaultCohortConfig,
   });
 
