@@ -879,10 +879,8 @@ export async function completeParticipantTransfer(
     );
   }
 
-  // 6. Save participant
-  transaction.set(participantDoc, participant);
-
-  // 7. Migrate stage data to new cohort's publicStageData
+  // 6. Migrate stage data to new cohort's publicStageData
+  // (must happen before writes since it uses transaction.get())
   await migrateParticipantStageData(
     transaction,
     firestore,
@@ -890,6 +888,9 @@ export async function completeParticipantTransfer(
     participant,
     targetCohortId,
   );
+
+  // 7. Save participant
+  transaction.set(participantDoc, participant);
 
   return response;
 }

@@ -87,7 +87,6 @@ export async function writeExperimentFromTemplate(
 
   // Run document write as transaction to ensure consistency
   await firestore.runTransaction(async (transaction: Transaction) => {
-    // Set the experiment document first (cohort creation depends on it existing)
     transaction.set(document, experimentConfig);
 
     // Add collection of stages
@@ -114,10 +113,16 @@ export async function writeExperimentFromTemplate(
         transaction.set(doc.collection('prompts').doc(prompt.id), prompt);
       }
     }
+  });
 
-    // Create cohorts from cohort definitions (eager creation)
-    if (experimentConfig.cohortDefinitions) {
-      for (const definition of experimentConfig.cohortDefinitions) {
+  // Create cohorts from cohort definitions AFTER main transaction commits
+  // (so createCohortInternal can read the experiment normally)
+  if (
+    experimentConfig.cohortDefinitions &&
+    experimentConfig.cohortDefinitions.length > 0
+  ) {
+    for (const definition of experimentConfig.cohortDefinitions) {
+      await firestore.runTransaction(async (transaction: Transaction) => {
         const cohortConfig = await createCohortFromDefinition(
           transaction,
           experimentConfig.id,
@@ -126,11 +131,13 @@ export async function writeExperimentFromTemplate(
         );
         // Store the generated cohort ID back on the definition
         definition.generatedCohortId = cohortConfig.id;
-      }
-      // Update experiment with generatedCohortIds
-      transaction.set(document, experimentConfig);
+      });
     }
-  });
+    // Update experiment with generatedCohortIds
+    await document.update({
+      cohortDefinitions: experimentConfig.cohortDefinitions,
+    });
+  }
 
   return document.id;
 }
