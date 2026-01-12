@@ -673,6 +673,12 @@ async function handleConditionAutoTransfer(
   // Check if routing to existing cohort or creating new one
   if (readyGroup.targetCohortAlias) {
     // Route to existing cohort - return instructions for sequential transfers
+    // TODO(rasmi): Check cohort capacity before transferring. If the target cohort's
+    // current participant count + new participants would exceed maxParticipantsPerCohort,
+    // fall back to creating a new cohort instead (same as TRANSFER_PENDING path below).
+    // This would prevent unbounded growth of pre-defined cohorts.
+    // Note: The fallback cohort should be created WITH the same alias so it inherits
+    // the same cohortValues (variable overrides). Multiple cohorts can share an alias.
     const experiment = await getFirestoreExperiment(experimentId);
     if (!experiment) {
       throw new Error(`Experiment ${experimentId} not found`);
