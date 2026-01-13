@@ -270,9 +270,34 @@ export function parseStructuredOutputFromText(
     }
   }
 
-  // Strategy 2: Let jsonrepair handle everything else (markdown, raw JSON, malformed)
+  // Strategy 2: Let jsonrepair handle everything (markdown, raw JSON, NDJSON, malformed)
+  // jsonrepair converts newline-delimited JSON into an array, which we handle below
   try {
-    return JSON.parse(jsonrepair(trimmed)) as Record<string, unknown>;
+    const repaired = JSON.parse(jsonrepair(trimmed));
+
+    // If jsonrepair returned an array (from NDJSON), check for schema echo pattern
+    // Some models (Gemini) echo the JSON schema before the actual response:
+    // { "type": "object", "properties": { ... } }
+    // { "explanation": "...", "shouldRespond": true, ... }
+    if (Array.isArray(repaired) && repaired.length >= 2) {
+      const first = repaired[0];
+
+      // If first element looks like a schema, drop it and use the next one
+      const firstIsSchema =
+        first &&
+        typeof first === 'object' &&
+        'type' in first &&
+        'properties' in first;
+
+      if (firstIsSchema) {
+        console.log(
+          'Strategy 2 (jsonrepair array) dropped echoed schema, using next element',
+        );
+        return repaired[1] as Record<string, unknown>;
+      }
+    }
+
+    return repaired as Record<string, unknown>;
   } catch (e) {
     console.error('Strategy 2 (jsonrepair) JSON parse error:', e);
   }
