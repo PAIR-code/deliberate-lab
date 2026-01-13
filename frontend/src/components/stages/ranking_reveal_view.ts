@@ -128,9 +128,11 @@ export class RankingReveal extends MobxLitElement {
       participantMap = {[currentId]: participantMap[currentId]};
     }
 
-    const maxOptions = Math.max(
-      ...Object.values(participantMap).map((lst) => lst.length),
-    );
+    const participantAnswers = Object.values(participantMap);
+    const maxOptions =
+      participantAnswers.length > 0
+        ? Math.max(...participantAnswers.map((lst) => lst.length))
+        : 0;
 
     return html`
       <div>${headerText}</div>
@@ -183,6 +185,7 @@ export class RankingReveal extends MobxLitElement {
       </h2>
       ${this.renderWinner()}
       <div class="divider"></div>
+      ${this.renderResultsTable()}
     `;
   }
 }
