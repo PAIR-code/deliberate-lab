@@ -87,6 +87,12 @@ import {
   INTEGRATION_METADATA,
   getAgentParticipantIntegrationTemplate,
 } from '../../shared/templates/agent_participant_integration_template';
+import {
+  TRANSFER_CONDITIONS_TEMPLATE_METADATA,
+  getTransferConditionsTemplate,
+  BookClubConfig,
+  createBookClubConfig,
+} from '../../shared/templates/transfer_conditions_template';
 
 import {styles} from './stage_builder_dialog.scss';
 
@@ -107,6 +113,8 @@ export class StageBuilderDialog extends MobxLitElement {
     createCharityDebateConfig();
   // Used to populate resource allocation template
   @state() private consensusTopics: string = 'Climate Change';
+  // Used to populate book club template
+  @state() private bookClubConfig: BookClubConfig = createBookClubConfig();
 
   override render() {
     return html`
@@ -179,6 +187,7 @@ export class StageBuilderDialog extends MobxLitElement {
         ${this.renderStockInfoGameCard()}
         ${this.renderAssetAllocationTemplateCard()}
         ${this.renderPolicyTemplateCard()} ${this.renderAgentIntegrationCard()}
+        ${this.renderBookClubTemplateCard()}
       </div>
       ${this.authService.hasResearchTemplateAccess
         ? this.renderResearchTemplateGallery()
@@ -309,6 +318,40 @@ export class StageBuilderDialog extends MobxLitElement {
       <div class="card" @click=${addTemplate}>
         <div class="title">${INTEGRATION_METADATA.name}</div>
         <div>${INTEGRATION_METADATA.description}</div>
+      </div>
+    `;
+  }
+
+  private renderBookClubTemplateCard() {
+    const loadTemplate = () => {
+      this.addTemplate(getTransferConditionsTemplate(this.bookClubConfig));
+    };
+
+    return html`
+      <div class="card">
+        <div class="title">
+          📚 ${TRANSFER_CONDITIONS_TEMPLATE_METADATA.name}
+        </div>
+        <div>${TRANSFER_CONDITIONS_TEMPLATE_METADATA.description}</div>
+        <div class="template-controls">
+          <label class="custom-checkbox">
+            <input
+              type="checkbox"
+              .checked=${!this.bookClubConfig.routeImmediately}
+              @change=${(e: Event) => {
+                this.bookClubConfig = {
+                  ...this.bookClubConfig,
+                  routeImmediately: !(e.target as HTMLInputElement).checked,
+                };
+              }}
+            />
+            <span class="checkmark"></span>
+            <span class="label-text"
+              >Group participants before transfer (2-4 per group)</span
+            >
+          </label>
+        </div>
+        <pr-button @click=${loadTemplate}>Load Template</pr-button>
       </div>
     `;
   }
