@@ -40,12 +40,12 @@ export type ReasoningLevel = 'off' | 'minimal' | 'low' | 'medium' | 'high';
 // TODO: Move to structured_prompt.ts
 export interface ModelGenerationConfig {
   // === Universal settings (work across all providers) ===
-  maxTokens: number; // Max tokens per model call response
-  stopSequences: string[];
-  temperature: number;
-  topP: number;
-  frequencyPenalty: number;
-  presencePenalty: number;
+  maxTokens?: number; // Max tokens per model call response
+  stopSequences?: string[];
+  temperature?: number;
+  topP?: number;
+  frequencyPenalty?: number;
+  presencePenalty?: number;
 
   // === Universal reasoning settings ===
   // These are mapped to provider-specific options by the backend.
@@ -215,13 +215,13 @@ export function createModelGenerationConfig(
   config: Partial<ModelGenerationConfig> = {},
 ): ModelGenerationConfig {
   return {
-    // Universal settings
-    maxTokens: config.maxTokens ?? 8192,
-    stopSequences: config.stopSequences ?? [],
-    temperature: config.temperature ?? 1.0,
-    topP: config.topP ?? 1.0,
-    frequencyPenalty: config.frequencyPenalty ?? 0.0,
-    presencePenalty: config.presencePenalty ?? 0.0,
+    // Universal settings (optional - let API use defaults if not specified)
+    maxTokens: config.maxTokens,
+    stopSequences: config.stopSequences,
+    temperature: config.temperature,
+    topP: config.topP,
+    frequencyPenalty: config.frequencyPenalty,
+    presencePenalty: config.presencePenalty,
     // Universal reasoning settings
     reasoningLevel: config.reasoningLevel,
     reasoningBudget: config.reasoningBudget,
