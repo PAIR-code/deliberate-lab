@@ -815,20 +815,18 @@ export class EditorComponent extends MobxLitElement {
     agent: AgentPersonaConfig,
     agentPromptConfig: ChatPromptConfig,
   ) {
+    const generationConfig = agentPromptConfig.generationConfig;
+    const customFields = generationConfig.customRequestBodyFields ?? [];
+
     const addField = () => {
-      const customRequestBodyFields = [
-        ...agentPromptConfig.generationConfig.customRequestBodyFields,
-        {name: '', value: ''},
-      ];
+      const customRequestBodyFields = [...customFields, {name: '', value: ''}];
       this.updatePrompt({
         generationConfig: {
-          ...agentPromptConfig.generationConfig,
+          ...generationConfig,
           customRequestBodyFields,
         },
       });
     };
-
-    const generationConfig = agentPromptConfig.generationConfig;
 
     return html`
       <div class="section">
@@ -836,7 +834,7 @@ export class EditorComponent extends MobxLitElement {
           <div class="section-title">Custom request body fields</div>
           <div class="description">Add custom fields to the request body.</div>
         </div>
-        ${generationConfig.customRequestBodyFields.map((field, fieldIndex) =>
+        ${customFields.map((field, fieldIndex) =>
           this.renderAgentCustomRequestBodyField(
             agent,
             agentPromptConfig,
@@ -858,10 +856,11 @@ export class EditorComponent extends MobxLitElement {
     const updateName = (e: InputEvent) => {
       const name = (e.target as HTMLTextAreaElement).value;
       const genConfig = agentPromptConfig.generationConfig;
+      const customFields = genConfig.customRequestBodyFields ?? [];
       const customRequestBodyFields = [
-        ...genConfig.customRequestBodyFields.slice(0, fieldIndex),
-        {...genConfig.customRequestBodyFields[fieldIndex], name},
-        ...genConfig.customRequestBodyFields.slice(fieldIndex + 1),
+        ...customFields.slice(0, fieldIndex),
+        {...customFields[fieldIndex], name},
+        ...customFields.slice(fieldIndex + 1),
       ];
       this.updatePrompt({
         generationConfig: {...genConfig, customRequestBodyFields},
@@ -871,10 +870,11 @@ export class EditorComponent extends MobxLitElement {
     const updateValue = (e: InputEvent) => {
       const value = (e.target as HTMLTextAreaElement).value;
       const genConfig = agentPromptConfig.generationConfig;
+      const customFields = genConfig.customRequestBodyFields ?? [];
       const customRequestBodyFields = [
-        ...genConfig.customRequestBodyFields.slice(0, fieldIndex),
-        {...genConfig.customRequestBodyFields[fieldIndex], value},
-        ...genConfig.customRequestBodyFields.slice(fieldIndex + 1),
+        ...customFields.slice(0, fieldIndex),
+        {...customFields[fieldIndex], value},
+        ...customFields.slice(fieldIndex + 1),
       ];
       this.updatePrompt({
         generationConfig: {...genConfig, customRequestBodyFields},
@@ -883,9 +883,10 @@ export class EditorComponent extends MobxLitElement {
 
     const deleteField = () => {
       const genConfig = agentPromptConfig.generationConfig;
+      const customFields = genConfig.customRequestBodyFields ?? [];
       const customRequestBodyFields = [
-        ...genConfig.customRequestBodyFields.slice(0, fieldIndex),
-        ...genConfig.customRequestBodyFields.slice(fieldIndex + 1),
+        ...customFields.slice(0, fieldIndex),
+        ...customFields.slice(fieldIndex + 1),
       ];
       this.updatePrompt({
         generationConfig: {...genConfig, customRequestBodyFields},
