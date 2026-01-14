@@ -1585,9 +1585,14 @@
           "type": "object",
           "patternProperties": {
             "^(.*)$": {
-              "type": "object",
-              "properties": {},
-              "title": "^(.*)$"
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/ChatPromptConfig"
+                },
+                {
+                  "$ref": "#/$defs/GenericPromptConfig"
+                }
+              ]
             }
           },
           "title": "PromptMap"
@@ -1664,646 +1669,6 @@
           "type": "string"
         }
       ]
-    },
-    "AgentParticipantTemplate": {
-      "title": "AgentParticipantTemplate",
-      "type": "object",
-      "required": ["persona", "promptMap"],
-      "properties": {
-        "persona": {
-          "$ref": "#/$defs/Persona"
-        },
-        "promptMap": {
-          "type": "object",
-          "patternProperties": {
-            "^(.*)$": {
-              "type": "object",
-              "properties": {},
-              "title": "^(.*)$"
-            }
-          },
-          "title": "PromptMap"
-        }
-      }
-    },
-    "AssetAllocationStageConfig": {
-      "additionalProperties": false,
-      "type": "object",
-      "required": [
-        "id",
-        "kind",
-        "name",
-        "descriptions",
-        "progress",
-        "stockConfig"
-      ],
-      "properties": {
-        "id": {
-          "minLength": 1,
-          "type": "string"
-        },
-        "kind": {
-          "const": "assetAllocation",
-          "type": "string"
-        },
-        "name": {
-          "minLength": 1,
-          "type": "string"
-        },
-        "descriptions": {
-          "$ref": "#/$defs/StageTextConfig"
-        },
-        "progress": {
-          "$ref": "#/$defs/StageProgressConfig"
-        },
-        "stockConfig": {
-          "additionalProperties": false,
-          "type": "object",
-          "required": ["stockA", "stockB"],
-          "properties": {
-            "stockInfoStageId": {
-              "minLength": 1,
-              "type": "string"
-            },
-            "stockA": {
-              "$ref": "#/$defs/Stock"
-            },
-            "stockB": {
-              "$ref": "#/$defs/Stock"
-            }
-          },
-          "title": "StockConfig"
-        }
-      },
-      "title": "AssetAllocationStageConfig"
-    },
-    "MultiAssetAllocationStageConfig": {
-      "additionalProperties": false,
-      "type": "object",
-      "required": [
-        "id",
-        "kind",
-        "name",
-        "descriptions",
-        "progress",
-        "stockOptions",
-        "stockInfoStageId"
-      ],
-      "properties": {
-        "id": {
-          "minLength": 1,
-          "type": "string"
-        },
-        "kind": {
-          "const": "multiAssetAllocation",
-          "type": "string"
-        },
-        "name": {
-          "minLength": 1,
-          "type": "string"
-        },
-        "descriptions": {
-          "$ref": "#/$defs/StageTextConfig"
-        },
-        "progress": {
-          "$ref": "#/$defs/StageProgressConfig"
-        },
-        "stockOptions": {
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/Stock"
-          }
-        },
-        "stockInfoStageId": {
-          "type": "string"
-        }
-      },
-      "title": "MultiAssetAllocationStageConfig"
-    },
-    "ComprehensionStageConfig": {
-      "additionalProperties": false,
-      "type": "object",
-      "required": [
-        "id",
-        "kind",
-        "name",
-        "descriptions",
-        "progress",
-        "questions"
-      ],
-      "properties": {
-        "id": {
-          "minLength": 1,
-          "type": "string"
-        },
-        "kind": {
-          "const": "comprehension",
-          "type": "string"
-        },
-        "name": {
-          "minLength": 1,
-          "type": "string"
-        },
-        "descriptions": {
-          "$ref": "#/$defs/StageTextConfig"
-        },
-        "progress": {
-          "$ref": "#/$defs/StageProgressConfig"
-        },
-        "questions": {
-          "type": "array",
-          "items": {
-            "anyOf": [
-              {
-                "additionalProperties": false,
-                "type": "object",
-                "required": ["id", "kind", "questionTitle", "correctAnswer"],
-                "properties": {
-                  "id": {
-                    "minLength": 1,
-                    "type": "string"
-                  },
-                  "kind": {
-                    "const": "text",
-                    "type": "string"
-                  },
-                  "questionTitle": {
-                    "type": "string"
-                  },
-                  "correctAnswer": {
-                    "type": "string"
-                  }
-                },
-                "title": "TextQuestion"
-              },
-              {
-                "additionalProperties": false,
-                "type": "object",
-                "required": [
-                  "id",
-                  "kind",
-                  "questionTitle",
-                  "options",
-                  "correctAnswerId"
-                ],
-                "properties": {
-                  "id": {
-                    "minLength": 1,
-                    "type": "string"
-                  },
-                  "kind": {
-                    "const": "mc",
-                    "type": "string"
-                  },
-                  "questionTitle": {
-                    "type": "string"
-                  },
-                  "options": {
-                    "type": "array",
-                    "items": {
-                      "$ref": "#/$defs/MultipleChoiceItem"
-                    }
-                  },
-                  "correctAnswerId": {
-                    "type": "string"
-                  }
-                },
-                "title": "McQuestion"
-              }
-            ]
-          }
-        }
-      },
-      "title": "ComprehensionStageConfig"
-    },
-    "FlipcardStageConfig": {
-      "title": "FlipCardStageConfig",
-      "additionalProperties": false,
-      "type": "object",
-      "required": [
-        "id",
-        "kind",
-        "name",
-        "descriptions",
-        "progress",
-        "cards",
-        "enableSelection",
-        "allowMultipleSelections",
-        "requireConfirmation",
-        "minUniqueCardsFlippedRequirement",
-        "shuffleCards"
-      ],
-      "properties": {
-        "id": {
-          "minLength": 1,
-          "type": "string"
-        },
-        "kind": {
-          "const": "flipcard",
-          "type": "string"
-        },
-        "name": {
-          "minLength": 1,
-          "type": "string"
-        },
-        "descriptions": {
-          "$ref": "#/$defs/StageTextConfig"
-        },
-        "progress": {
-          "$ref": "#/$defs/StageProgressConfig"
-        },
-        "cards": {
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/FlipCard"
-          }
-        },
-        "enableSelection": {
-          "type": "boolean"
-        },
-        "allowMultipleSelections": {
-          "type": "boolean"
-        },
-        "requireConfirmation": {
-          "type": "boolean"
-        },
-        "minUniqueCardsFlippedRequirement": {
-          "type": "number"
-        },
-        "shuffleCards": {
-          "type": "boolean"
-        }
-      }
-    },
-    "PrivateChatStageConfig": {
-      "type": "object",
-      "required": [
-        "id",
-        "kind",
-        "name",
-        "descriptions",
-        "progress",
-        "timeLimitInMinutes"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        },
-        "kind": {
-          "const": "privateChat",
-          "type": "string"
-        },
-        "name": {
-          "type": "string"
-        },
-        "descriptions": {
-          "$ref": "#/$defs/StageTextConfig"
-        },
-        "progress": {
-          "$ref": "#/$defs/StageProgressConfig"
-        },
-        "timeLimitInMinutes": {
-          "anyOf": [
-            {
-              "type": "number"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "requireFullTime": {
-          "type": "boolean"
-        },
-        "isTurnBasedChat": {
-          "type": "boolean"
-        },
-        "minNumberOfTurns": {
-          "type": "number"
-        },
-        "maxNumberOfTurns": {
-          "anyOf": [
-            {
-              "type": "number"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        }
-      },
-      "title": "PrivateChatStageConfig"
-    },
-    "ProfileStageConfig": {
-      "additionalProperties": false,
-      "type": "object",
-      "required": [
-        "id",
-        "kind",
-        "name",
-        "descriptions",
-        "progress",
-        "profileType"
-      ],
-      "properties": {
-        "id": {
-          "minLength": 1,
-          "type": "string"
-        },
-        "kind": {
-          "const": "profile",
-          "type": "string"
-        },
-        "name": {
-          "minLength": 1,
-          "type": "string"
-        },
-        "descriptions": {
-          "$ref": "#/$defs/StageTextConfig"
-        },
-        "progress": {
-          "$ref": "#/$defs/StageProgressConfig"
-        },
-        "profileType": {
-          "anyOf": [
-            {
-              "const": "DEFAULT",
-              "type": "string"
-            },
-            {
-              "const": "DEFAULT_GENDERED",
-              "type": "string"
-            },
-            {
-              "const": "ANONYMOUS_ANIMAL",
-              "type": "string"
-            },
-            {
-              "const": "ANONYMOUS_PARTICIPANT",
-              "type": "string"
-            }
-          ]
-        }
-      },
-      "title": "ProfileStageConfig"
-    },
-    "RevealStageConfig": {
-      "additionalProperties": false,
-      "type": "object",
-      "required": ["id", "kind", "name", "descriptions", "progress", "items"],
-      "properties": {
-        "id": {
-          "minLength": 1,
-          "type": "string"
-        },
-        "kind": {
-          "const": "reveal",
-          "type": "string"
-        },
-        "name": {
-          "minLength": 1,
-          "type": "string"
-        },
-        "descriptions": {
-          "$ref": "#/$defs/StageTextConfig"
-        },
-        "progress": {
-          "$ref": "#/$defs/StageProgressConfig"
-        },
-        "items": {
-          "type": "array",
-          "items": {
-            "0": {
-              "$ref": "#/$defs/RevealStageConfig"
-            },
-            "1": {
-              "$ref": "#/$defs/SurveyStageConfig"
-            }
-          }
-        }
-      },
-      "title": "RevealStageConfig"
-    },
-    "RoleStageConfig": {
-      "additionalProperties": false,
-      "type": "object",
-      "required": ["id", "kind", "name", "descriptions", "progress", "roles"],
-      "properties": {
-        "id": {
-          "minLength": 1,
-          "type": "string"
-        },
-        "kind": {
-          "const": "role",
-          "type": "string"
-        },
-        "name": {
-          "minLength": 1,
-          "type": "string"
-        },
-        "descriptions": {
-          "$ref": "#/$defs/StageTextConfig"
-        },
-        "progress": {
-          "$ref": "#/$defs/StageProgressConfig"
-        },
-        "roles": {
-          "type": "array",
-          "items": {
-            "additionalProperties": false,
-            "type": "object",
-            "required": [
-              "id",
-              "name",
-              "displayLines",
-              "minParticipants",
-              "maxParticipants"
-            ],
-            "properties": {
-              "id": {
-                "minLength": 1,
-                "type": "string"
-              },
-              "name": {
-                "type": "string"
-              },
-              "displayLines": {
-                "type": "array",
-                "items": {
-                  "type": "string"
-                }
-              },
-              "minParticipants": {
-                "type": "number"
-              },
-              "maxParticipants": {
-                "anyOf": [
-                  {
-                    "type": "number"
-                  },
-                  {
-                    "type": "null"
-                  }
-                ]
-              }
-            },
-            "title": "Role"
-          }
-        }
-      },
-      "title": "RoleStageConfig"
-    },
-    "SalespersonStageConfig": {
-      "type": "object",
-      "required": ["id", "kind", "name", "descriptions", "progress"],
-      "properties": {
-        "id": {
-          "type": "string"
-        },
-        "kind": {
-          "const": "salesperson",
-          "type": "string"
-        },
-        "name": {
-          "type": "string"
-        },
-        "descriptions": {
-          "$ref": "#/$defs/StageTextConfig"
-        },
-        "progress": {
-          "$ref": "#/$defs/StageProgressConfig"
-        }
-      },
-      "title": "SalespersonStageConfig"
-    },
-    "StockinfoStageConfig": {
-      "additionalProperties": false,
-      "type": "object",
-      "required": [
-        "id",
-        "kind",
-        "name",
-        "descriptions",
-        "progress",
-        "stocks",
-        "showBestYearCard",
-        "showWorstYearCard"
-      ],
-      "properties": {
-        "id": {
-          "minLength": 1,
-          "type": "string"
-        },
-        "kind": {
-          "const": "stockinfo",
-          "type": "string"
-        },
-        "name": {
-          "minLength": 1,
-          "type": "string"
-        },
-        "descriptions": {
-          "$ref": "#/$defs/StageTextConfig"
-        },
-        "progress": {
-          "$ref": "#/$defs/StageProgressConfig"
-        },
-        "stocks": {
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/Stock"
-          }
-        },
-        "showBestYearCard": {
-          "type": "boolean"
-        },
-        "showWorstYearCard": {
-          "type": "boolean"
-        },
-        "introText": {
-          "type": "string"
-        }
-      },
-      "title": "StockinfoStageConfig"
-    },
-    "TosStageConfig": {
-      "additionalProperties": false,
-      "type": "object",
-      "required": [
-        "id",
-        "kind",
-        "name",
-        "descriptions",
-        "progress",
-        "tosLines"
-      ],
-      "properties": {
-        "id": {
-          "minLength": 1,
-          "type": "string"
-        },
-        "kind": {
-          "const": "tos",
-          "type": "string"
-        },
-        "name": {
-          "minLength": 1,
-          "type": "string"
-        },
-        "descriptions": {
-          "$ref": "#/$defs/StageTextConfig"
-        },
-        "progress": {
-          "$ref": "#/$defs/StageProgressConfig"
-        },
-        "tosLines": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        }
-      },
-      "title": "TosStageConfig"
-    },
-    "TransferStageConfig": {
-      "additionalProperties": false,
-      "type": "object",
-      "required": [
-        "id",
-        "kind",
-        "name",
-        "descriptions",
-        "progress",
-        "enableTimeout",
-        "timeoutSeconds"
-      ],
-      "properties": {
-        "id": {
-          "minLength": 1,
-          "type": "string"
-        },
-        "kind": {
-          "const": "transfer",
-          "type": "string"
-        },
-        "name": {
-          "minLength": 1,
-          "type": "string"
-        },
-        "descriptions": {
-          "$ref": "#/$defs/StageTextConfig"
-        },
-        "progress": {
-          "$ref": "#/$defs/StageProgressConfig"
-        },
-        "enableTimeout": {
-          "type": "boolean"
-        },
-        "timeoutSeconds": {
-          "type": "number"
-        }
-      },
-      "title": "TransferStageConfig"
     },
     "ChatPromptConfig": {
       "title": "ChatPromptConfig",
@@ -3138,6 +2503,651 @@
           "type": "string"
         }
       ]
+    },
+    "AgentParticipantTemplate": {
+      "title": "AgentParticipantTemplate",
+      "type": "object",
+      "required": ["persona", "promptMap"],
+      "properties": {
+        "persona": {
+          "$ref": "#/$defs/Persona"
+        },
+        "promptMap": {
+          "type": "object",
+          "patternProperties": {
+            "^(.*)$": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/ChatPromptConfig"
+                },
+                {
+                  "$ref": "#/$defs/GenericPromptConfig"
+                }
+              ]
+            }
+          },
+          "title": "PromptMap"
+        }
+      }
+    },
+    "AssetAllocationStageConfig": {
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "id",
+        "kind",
+        "name",
+        "descriptions",
+        "progress",
+        "stockConfig"
+      ],
+      "properties": {
+        "id": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "kind": {
+          "const": "assetAllocation",
+          "type": "string"
+        },
+        "name": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "descriptions": {
+          "$ref": "#/$defs/StageTextConfig"
+        },
+        "progress": {
+          "$ref": "#/$defs/StageProgressConfig"
+        },
+        "stockConfig": {
+          "additionalProperties": false,
+          "type": "object",
+          "required": ["stockA", "stockB"],
+          "properties": {
+            "stockInfoStageId": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "stockA": {
+              "$ref": "#/$defs/Stock"
+            },
+            "stockB": {
+              "$ref": "#/$defs/Stock"
+            }
+          },
+          "title": "StockConfig"
+        }
+      },
+      "title": "AssetAllocationStageConfig"
+    },
+    "MultiAssetAllocationStageConfig": {
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "id",
+        "kind",
+        "name",
+        "descriptions",
+        "progress",
+        "stockOptions",
+        "stockInfoStageId"
+      ],
+      "properties": {
+        "id": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "kind": {
+          "const": "multiAssetAllocation",
+          "type": "string"
+        },
+        "name": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "descriptions": {
+          "$ref": "#/$defs/StageTextConfig"
+        },
+        "progress": {
+          "$ref": "#/$defs/StageProgressConfig"
+        },
+        "stockOptions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Stock"
+          }
+        },
+        "stockInfoStageId": {
+          "type": "string"
+        }
+      },
+      "title": "MultiAssetAllocationStageConfig"
+    },
+    "ComprehensionStageConfig": {
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "id",
+        "kind",
+        "name",
+        "descriptions",
+        "progress",
+        "questions"
+      ],
+      "properties": {
+        "id": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "kind": {
+          "const": "comprehension",
+          "type": "string"
+        },
+        "name": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "descriptions": {
+          "$ref": "#/$defs/StageTextConfig"
+        },
+        "progress": {
+          "$ref": "#/$defs/StageProgressConfig"
+        },
+        "questions": {
+          "type": "array",
+          "items": {
+            "anyOf": [
+              {
+                "additionalProperties": false,
+                "type": "object",
+                "required": ["id", "kind", "questionTitle", "correctAnswer"],
+                "properties": {
+                  "id": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "kind": {
+                    "const": "text",
+                    "type": "string"
+                  },
+                  "questionTitle": {
+                    "type": "string"
+                  },
+                  "correctAnswer": {
+                    "type": "string"
+                  }
+                },
+                "title": "TextQuestion"
+              },
+              {
+                "additionalProperties": false,
+                "type": "object",
+                "required": [
+                  "id",
+                  "kind",
+                  "questionTitle",
+                  "options",
+                  "correctAnswerId"
+                ],
+                "properties": {
+                  "id": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "kind": {
+                    "const": "mc",
+                    "type": "string"
+                  },
+                  "questionTitle": {
+                    "type": "string"
+                  },
+                  "options": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/$defs/MultipleChoiceItem"
+                    }
+                  },
+                  "correctAnswerId": {
+                    "type": "string"
+                  }
+                },
+                "title": "McQuestion"
+              }
+            ]
+          }
+        }
+      },
+      "title": "ComprehensionStageConfig"
+    },
+    "FlipcardStageConfig": {
+      "title": "FlipCardStageConfig",
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "id",
+        "kind",
+        "name",
+        "descriptions",
+        "progress",
+        "cards",
+        "enableSelection",
+        "allowMultipleSelections",
+        "requireConfirmation",
+        "minUniqueCardsFlippedRequirement",
+        "shuffleCards"
+      ],
+      "properties": {
+        "id": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "kind": {
+          "const": "flipcard",
+          "type": "string"
+        },
+        "name": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "descriptions": {
+          "$ref": "#/$defs/StageTextConfig"
+        },
+        "progress": {
+          "$ref": "#/$defs/StageProgressConfig"
+        },
+        "cards": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/FlipCard"
+          }
+        },
+        "enableSelection": {
+          "type": "boolean"
+        },
+        "allowMultipleSelections": {
+          "type": "boolean"
+        },
+        "requireConfirmation": {
+          "type": "boolean"
+        },
+        "minUniqueCardsFlippedRequirement": {
+          "type": "number"
+        },
+        "shuffleCards": {
+          "type": "boolean"
+        }
+      }
+    },
+    "PrivateChatStageConfig": {
+      "type": "object",
+      "required": [
+        "id",
+        "kind",
+        "name",
+        "descriptions",
+        "progress",
+        "timeLimitInMinutes"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "kind": {
+          "const": "privateChat",
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "descriptions": {
+          "$ref": "#/$defs/StageTextConfig"
+        },
+        "progress": {
+          "$ref": "#/$defs/StageProgressConfig"
+        },
+        "timeLimitInMinutes": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "requireFullTime": {
+          "type": "boolean"
+        },
+        "isTurnBasedChat": {
+          "type": "boolean"
+        },
+        "minNumberOfTurns": {
+          "type": "number"
+        },
+        "maxNumberOfTurns": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "title": "PrivateChatStageConfig"
+    },
+    "ProfileStageConfig": {
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "id",
+        "kind",
+        "name",
+        "descriptions",
+        "progress",
+        "profileType"
+      ],
+      "properties": {
+        "id": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "kind": {
+          "const": "profile",
+          "type": "string"
+        },
+        "name": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "descriptions": {
+          "$ref": "#/$defs/StageTextConfig"
+        },
+        "progress": {
+          "$ref": "#/$defs/StageProgressConfig"
+        },
+        "profileType": {
+          "anyOf": [
+            {
+              "const": "DEFAULT",
+              "type": "string"
+            },
+            {
+              "const": "DEFAULT_GENDERED",
+              "type": "string"
+            },
+            {
+              "const": "ANONYMOUS_ANIMAL",
+              "type": "string"
+            },
+            {
+              "const": "ANONYMOUS_PARTICIPANT",
+              "type": "string"
+            }
+          ]
+        }
+      },
+      "title": "ProfileStageConfig"
+    },
+    "RevealStageConfig": {
+      "additionalProperties": false,
+      "type": "object",
+      "required": ["id", "kind", "name", "descriptions", "progress", "items"],
+      "properties": {
+        "id": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "kind": {
+          "const": "reveal",
+          "type": "string"
+        },
+        "name": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "descriptions": {
+          "$ref": "#/$defs/StageTextConfig"
+        },
+        "progress": {
+          "$ref": "#/$defs/StageProgressConfig"
+        },
+        "items": {
+          "type": "array",
+          "items": {
+            "0": {
+              "$ref": "#/$defs/RevealStageConfig"
+            },
+            "1": {
+              "$ref": "#/$defs/SurveyStageConfig"
+            }
+          }
+        }
+      },
+      "title": "RevealStageConfig"
+    },
+    "RoleStageConfig": {
+      "additionalProperties": false,
+      "type": "object",
+      "required": ["id", "kind", "name", "descriptions", "progress", "roles"],
+      "properties": {
+        "id": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "kind": {
+          "const": "role",
+          "type": "string"
+        },
+        "name": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "descriptions": {
+          "$ref": "#/$defs/StageTextConfig"
+        },
+        "progress": {
+          "$ref": "#/$defs/StageProgressConfig"
+        },
+        "roles": {
+          "type": "array",
+          "items": {
+            "additionalProperties": false,
+            "type": "object",
+            "required": [
+              "id",
+              "name",
+              "displayLines",
+              "minParticipants",
+              "maxParticipants"
+            ],
+            "properties": {
+              "id": {
+                "minLength": 1,
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "displayLines": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "minParticipants": {
+                "type": "number"
+              },
+              "maxParticipants": {
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "title": "Role"
+          }
+        }
+      },
+      "title": "RoleStageConfig"
+    },
+    "SalespersonStageConfig": {
+      "type": "object",
+      "required": ["id", "kind", "name", "descriptions", "progress"],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "kind": {
+          "const": "salesperson",
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "descriptions": {
+          "$ref": "#/$defs/StageTextConfig"
+        },
+        "progress": {
+          "$ref": "#/$defs/StageProgressConfig"
+        }
+      },
+      "title": "SalespersonStageConfig"
+    },
+    "StockinfoStageConfig": {
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "id",
+        "kind",
+        "name",
+        "descriptions",
+        "progress",
+        "stocks",
+        "showBestYearCard",
+        "showWorstYearCard"
+      ],
+      "properties": {
+        "id": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "kind": {
+          "const": "stockinfo",
+          "type": "string"
+        },
+        "name": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "descriptions": {
+          "$ref": "#/$defs/StageTextConfig"
+        },
+        "progress": {
+          "$ref": "#/$defs/StageProgressConfig"
+        },
+        "stocks": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Stock"
+          }
+        },
+        "showBestYearCard": {
+          "type": "boolean"
+        },
+        "showWorstYearCard": {
+          "type": "boolean"
+        },
+        "introText": {
+          "type": "string"
+        }
+      },
+      "title": "StockinfoStageConfig"
+    },
+    "TosStageConfig": {
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "id",
+        "kind",
+        "name",
+        "descriptions",
+        "progress",
+        "tosLines"
+      ],
+      "properties": {
+        "id": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "kind": {
+          "const": "tos",
+          "type": "string"
+        },
+        "name": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "descriptions": {
+          "$ref": "#/$defs/StageTextConfig"
+        },
+        "progress": {
+          "$ref": "#/$defs/StageProgressConfig"
+        },
+        "tosLines": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "title": "TosStageConfig"
+    },
+    "TransferStageConfig": {
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "id",
+        "kind",
+        "name",
+        "descriptions",
+        "progress",
+        "enableTimeout",
+        "timeoutSeconds"
+      ],
+      "properties": {
+        "id": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "kind": {
+          "const": "transfer",
+          "type": "string"
+        },
+        "name": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "descriptions": {
+          "$ref": "#/$defs/StageTextConfig"
+        },
+        "progress": {
+          "$ref": "#/$defs/StageProgressConfig"
+        },
+        "enableTimeout": {
+          "type": "boolean"
+        },
+        "timeoutSeconds": {
+          "type": "number"
+        }
+      },
+      "title": "TransferStageConfig"
     }
   },
   "type": "object",

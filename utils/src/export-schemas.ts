@@ -19,9 +19,7 @@ import {
   CohortCreationData,
   UpdateCohortMetadataData,
 } from './cohort.validation';
-
-// Import agent schema collection (not reachable from top-level due to permissive templates)
-import {AGENT_SCHEMAS} from './agent.validation';
+import {AgentMediatorTemplateData} from './agent.validation';
 
 /**
  * Recursively collect all schemas with $id from a schema tree.
@@ -87,10 +85,8 @@ for (const [key, schema] of Object.entries(CONFIG_DATA)) {
   collectSchemasWithId(schema, collectedSchemas);
 }
 
-// Collect agent validation schemas (not reachable from top-level due to permissive templates)
-for (const schema of AGENT_SCHEMAS) {
-  collectSchemasWithId(schema, collectedSchemas);
-}
+// Collect agent schemas (reachable via AgentMediatorTemplateData.promptMap -> PromptConfigData)
+collectSchemasWithId(AgentMediatorTemplateData, collectedSchemas);
 
 // Build $defs from collected schemas (excluding the root schema)
 const $defs: Record<string, unknown> = {};

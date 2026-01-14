@@ -5,27 +5,8 @@
  * for JSON Schema export and Python type generation.
  */
 import {Type, type Static} from '@sinclair/typebox';
-import {
-  PromptItemData,
-  PromptItemGroupData,
-  TextPromptItemData,
-  ProfileInfoPromptItemData,
-  ProfileContextPromptItemData,
-  StageContextPromptItemData,
-  PromptConfigData,
-  ChatPromptConfigData,
-  GenericPromptConfigData,
-  AgentChatSettingsData,
-} from './prompt.validation';
-import {
-  ApiKeyTypeData,
-  ModelGenerationConfigData,
-} from './providers.validation';
-import {
-  StructuredOutputConfigData,
-  ChatMediatorStructuredOutputConfigData,
-  StructuredOutputSchemaData,
-} from './structured_output.validation';
+import {PromptConfigData} from './prompt.validation';
+import {ApiKeyTypeData} from './providers.validation';
 
 /** Shorthand for strict TypeBox object validation */
 const strict = {additionalProperties: false} as const;
@@ -57,26 +38,20 @@ export const AgentConfigData = Type.Object(
   {$id: 'Persona', ...strict},
 );
 
-/** Agent mediator template.
- * NOTE: promptMap uses permissive Type.Object({}) to maintain compatibility
- * with TypeScript interfaces. Detailed prompt validation is done separately.
- */
+/** Agent mediator template. */
 export const AgentMediatorTemplateData = Type.Object(
   {
     persona: AgentConfigData,
-    promptMap: Type.Record(Type.String(), Type.Object({})),
+    promptMap: Type.Record(Type.String(), PromptConfigData),
   },
   {$id: 'AgentMediatorTemplate'},
 );
 
-/** Agent participant template.
- * NOTE: promptMap uses permissive Type.Object({}) to maintain compatibility
- * with TypeScript interfaces. Detailed prompt validation is done separately.
- */
+/** Agent participant template. */
 export const AgentParticipantTemplateData = Type.Object(
   {
     persona: AgentConfigData,
-    promptMap: Type.Record(Type.String(), Type.Object({})),
+    promptMap: Type.Record(Type.String(), PromptConfigData),
   },
   {$id: 'AgentParticipantTemplate'},
 );
@@ -85,14 +60,11 @@ export const AgentParticipantTemplateData = Type.Object(
 // Test and data object schemas
 // ****************************************************************************
 
-/** Schema for testAgentConfig endpoint.
- * NOTE: promptConfig uses permissive Type.Object({}) to maintain compatibility
- * with the legacy BaseAgentPromptConfig interface used by the frontend.
- */
+/** Schema for testAgentConfig endpoint. */
 export const AgentConfigTestData = Type.Object({
   creatorId: Type.String({minLength: 1}),
   agentConfig: AgentConfigData,
-  promptConfig: Type.Object({}),
+  promptConfig: PromptConfigData,
 });
 
 export type AgentConfigTestData = Static<typeof AgentConfigTestData>;
@@ -103,26 +75,3 @@ export const AgentDataObjectData = Type.Object({
   participantPromptMap: Type.Record(Type.String(), PromptConfigData),
   chatPromptMap: Type.Record(Type.String(), PromptConfigData),
 });
-
-/**
- * Collection of agent schemas for export-schemas.ts to collect.
- * These schemas are not reachable from the top-level ExperimentCreationData
- * because AgentMediatorTemplateData.promptMap uses Type.Object({}) for
- * TypeScript compatibility. This collection ensures they're still exported.
- */
-export const AGENT_SCHEMAS = [
-  PromptConfigData,
-  ChatPromptConfigData,
-  GenericPromptConfigData,
-  StructuredOutputConfigData,
-  ChatMediatorStructuredOutputConfigData,
-  AgentChatSettingsData,
-  ModelGenerationConfigData,
-  PromptItemData,
-  TextPromptItemData,
-  ProfileInfoPromptItemData,
-  ProfileContextPromptItemData,
-  StageContextPromptItemData,
-  PromptItemGroupData,
-  StructuredOutputSchemaData,
-];
