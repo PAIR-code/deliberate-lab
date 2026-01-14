@@ -12,7 +12,6 @@ import {
   ParticipantProfileBase,
   createParticipantProfileBase,
 } from '../participant';
-import {AgentChatPromptConfig} from '../agent';
 
 /** Group chat stage types and functions. */
 // TODO: Rename file to group_chat_stage.ts

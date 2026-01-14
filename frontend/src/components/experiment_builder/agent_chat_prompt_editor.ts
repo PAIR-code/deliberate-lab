@@ -18,7 +18,6 @@ import {
   AgentPersonaConfig,
   AgentPersonaType,
   ApiKeyType,
-  BaseAgentPromptConfig,
   ChatMediatorStructuredOutputConfig,
   ChatPromptConfig,
   PromptItem,

@@ -3,11 +3,6 @@ import {
   createParticipantProfileBase,
 } from './participant';
 import {generateId} from './shared';
-import {StageKind} from './stages/stage';
-import {
-  ChatMediatorStructuredOutputConfig,
-  createStructuredOutputConfig,
-} from './structured_output';
 import {
   MediatorPromptConfig,
   ParticipantPromptConfig,
@@ -81,18 +76,6 @@ export interface AgentModelSettings {
   modelName: string;
 }
 
-// TODO: Move to structured_prompt.ts
-export interface AgentPromptSettings {
-  // Number of times to retry prompt call if it fails
-  numRetries: number;
-  // Whether or not to include context from all previously completed
-  // stages
-  includeStageHistory: boolean;
-  // Whether or not to include information (stage description/info/help)
-  // shown to users
-  includeStageInfo: boolean;
-}
-
 /** Model settings for agent in a chat discussion. */
 export interface AgentChatSettings {
   // Agent's "typing speed" during the chat conversation
@@ -108,23 +91,6 @@ export interface AgentChatSettings {
   maxResponses: number | null;
   // Initial message to send when the conversation begins
   initialMessage: string;
-}
-
-/** Specifies how prompt should be sent to API. */
-export interface BaseAgentPromptConfig {
-  id: string; // stage ID
-  type: StageKind; // stage type
-  promptContext: string; // custom prompt content
-  generationConfig: ModelGenerationConfig;
-  promptSettings: AgentPromptSettings;
-  structuredOutputConfig: ChatMediatorStructuredOutputConfig;
-}
-
-/** Prompt config for sending chat messages
- * (sent to specified API on stage's chat trigger)
- */
-export interface AgentChatPromptConfig extends BaseAgentPromptConfig {
-  chatSettings: AgentChatSettings;
 }
 
 export enum AgentPersonaType {
@@ -159,16 +125,6 @@ export interface AgentMediatorPersonaConfig extends BaseAgentPersonaConfig {
   type: AgentPersonaType.MEDIATOR;
 }
 
-/** Format used to send agent data from frontend to backend. */
-export interface AgentDataObject {
-  persona: AgentPersonaConfig;
-  // Maps from stage ID to prompt for completing stage
-  participantPromptMap: Record<string, ParticipantPromptConfig>;
-  // Maps from stage ID to prompt for sending chat messages
-  chatPromptMap: Record<string, AgentChatPromptConfig>;
-}
-
-// TODO: Refactor to support new mediator and participant prompt configs
 export interface AgentMediatorTemplate {
   persona: AgentMediatorPersonaConfig;
   // Maps from stage ID to prompt
@@ -243,16 +199,6 @@ export function createAgentChatSettings(
     canSelfTriggerCalls: config.canSelfTriggerCalls ?? false,
     maxResponses: config.maxResponses ?? 100,
     initialMessage: config.initialMessage ?? '',
-  };
-}
-
-export function createAgentPromptSettings(
-  config: Partial<AgentPromptSettings> = {},
-): AgentPromptSettings {
-  return {
-    numRetries: config.numRetries ?? 0,
-    includeStageHistory: config.includeStageHistory ?? true,
-    includeStageInfo: config.includeStageInfo ?? true,
   };
 }
 

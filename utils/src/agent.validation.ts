@@ -4,10 +4,15 @@
  * These TypeBox schemas define the structure of agent-related types
  * for JSON Schema export and Python type generation.
  */
-import {Type} from '@sinclair/typebox';
+import {Type, type Static} from '@sinclair/typebox';
 import {PromptConfigData} from './prompt.validation';
 import {ApiKeyTypeData} from './providers.validation';
-import {AgentPersonaConfig, BaseAgentPromptConfig} from './agent';
+import {ModelGenerationConfigData} from './providers.validation';
+import {
+  StructuredOutputConfigData,
+  ChatMediatorStructuredOutputConfigData,
+} from './structured_output.validation';
+import {StageKindData} from './stages/stage.validation';
 
 /** Shorthand for strict TypeBox object validation */
 const strict = {additionalProperties: false} as const;
@@ -58,30 +63,34 @@ export const AgentParticipantTemplateData = Type.Object(
 );
 
 // ****************************************************************************
-// Test and data object schemas
+// Test endpoint schemas
 // ****************************************************************************
 
-/** Schema for testAgentConfig endpoint. */
-export const AgentConfigTestData = Type.Object({
-  creatorId: Type.String({minLength: 1}),
-  agentConfig: AgentConfigData,
-  promptConfig: PromptConfigData,
-});
-
-/** TypeScript type for AgentConfigTestData.
- * Uses hand-written interfaces because the frontend passes BaseAgentPromptConfig
- * (simple promptContext string) rather than the structured PromptConfigData
- * (array of PromptItems). These are different data models.
+/** Test agent prompt config for testAgentConfig endpoint.
+ * Uses the standard PromptConfigData (array of PromptItems) format.
  */
-export interface AgentConfigTestData {
-  creatorId: string;
-  agentConfig: AgentPersonaConfig;
-  promptConfig: BaseAgentPromptConfig;
-}
+export const TestAgentPromptConfigData = Type.Object(
+  {
+    id: Type.String(),
+    type: StageKindData,
+    prompt: PromptConfigData,
+    generationConfig: ModelGenerationConfigData,
+    structuredOutputConfig: Type.Union([
+      StructuredOutputConfigData,
+      ChatMediatorStructuredOutputConfigData,
+    ]),
+  },
+  {$id: 'TestAgentPromptConfig', ...strict},
+);
 
-/** Schema for agent data objects */
-export const AgentDataObjectData = Type.Object({
-  persona: AgentConfigData,
-  participantPromptMap: Type.Record(Type.String(), PromptConfigData),
-  chatPromptMap: Type.Record(Type.String(), PromptConfigData),
-});
+/** Schema for testAgentConfig endpoint. */
+export const AgentConfigTestData = Type.Object(
+  {
+    creatorId: Type.String({minLength: 1}),
+    agentConfig: AgentConfigData,
+    promptConfig: TestAgentPromptConfigData,
+  },
+  {$id: 'AgentConfigTestData', ...strict},
+);
+
+export type AgentConfigTestData = Static<typeof AgentConfigTestData>;

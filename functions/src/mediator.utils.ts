@@ -1,9 +1,9 @@
 import {
-  AgentChatPromptConfig,
   AgentPersonaConfig,
   AgentPersonaType,
   MediatorProfile,
   MediatorProfileExtended,
+  MediatorPromptConfig,
   createMediatorProfileFromAgentPersona,
 } from '@deliberation-lab/utils';
 import {getAgentMediatorPersonas} from './utils/firestore';
@@ -48,7 +48,7 @@ export async function createMediatorProfileForPersona(
       .doc(persona.id)
       .collection('prompts')
       .get()
-  ).docs.map((doc) => doc.data() as AgentChatPromptConfig);
+  ).docs.map((doc) => doc.data() as MediatorPromptConfig);
 
   return createMediatorProfileFromAgentPersona(
     cohortId,

@@ -1,6 +1,5 @@
 import {UnifiedTimestamp} from '../shared';
 import {
-  BaseAgentPromptConfig,
   ProfileAgentConfig,
   createAgentChatSettings,
   createModelGenerationConfig,
