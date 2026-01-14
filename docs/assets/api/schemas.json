@@ -1633,6 +1633,9 @@
             },
             "name": {
               "type": "string"
+            },
+            "defaultModelSettings": {
+              "$ref": "#/$defs/AgentModelSettings"
             }
           },
           "title": "Persona"
@@ -1647,6 +1650,36 @@
             }
           },
           "title": "PromptMap"
+        }
+      }
+    },
+    "AgentModelSettings": {
+      "title": "AgentModelSettings",
+      "type": "object",
+      "required": ["apiType", "modelName"],
+      "properties": {
+        "apiType": {
+          "anyOf": [
+            {
+              "const": "GEMINI",
+              "type": "string"
+            },
+            {
+              "const": "OPENAI",
+              "type": "string"
+            },
+            {
+              "const": "CLAUDE",
+              "type": "string"
+            },
+            {
+              "const": "OLLAMA",
+              "type": "string"
+            }
+          ]
+        },
+        "modelName": {
+          "type": "string"
         }
       }
     },
@@ -1665,6 +1698,9 @@
             },
             "name": {
               "type": "string"
+            },
+            "defaultModelSettings": {
+              "$ref": "#/$defs/AgentModelSettings"
             }
           },
           "title": "Persona"

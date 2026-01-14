@@ -251,19 +251,29 @@ class BalanceAcross(Enum):
     cohort = "cohort"
 
 
+class ApiType(Enum):
+    GEMINI = "GEMINI"
+    OPENAI = "OPENAI"
+    CLAUDE = "CLAUDE"
+    OLLAMA = "OLLAMA"
+
+
+class AgentModelSettings(BaseModel):
+    apiType: ApiType
+    modelName: str
+
+
 class Persona(BaseModel):
     id: constr(min_length=1)
     name: str
+    defaultModelSettings: AgentModelSettings | None = None
 
 
-class AgentMediatorTemplate(BaseModel):
+class AgentParticipantTemplate(BaseModel):
     persona: Persona = Field(..., title="Persona")
     promptMap: Dict[constr(pattern=r"^(.*)$"), Dict[str, Any]] = Field(
         ..., title="PromptMap"
     )
-
-
-AgentParticipantTemplate = AgentMediatorTemplate
 
 
 class StockConfig(BaseModel):
@@ -460,6 +470,9 @@ class ComparisonCondition(BaseModel):
     target: ConditionTargetReference
     operator: ComparisonOperator = Field(..., title="ComparisonOperator")
     value: str | float | bool
+
+
+AgentMediatorTemplate = AgentParticipantTemplate
 
 
 class AssetAllocationStageConfig(BaseModel):
