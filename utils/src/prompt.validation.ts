@@ -8,6 +8,7 @@ import {Type, type Static} from '@sinclair/typebox';
 import {ShuffleConfigData} from './variables.validation';
 import {ConditionSchema} from './utils/condition.validation';
 import {ModelGenerationConfigData} from './providers.validation';
+import {StageKind} from './stages/stage';
 import {StageKindData} from './stages/stage.validation';
 import {
   StructuredOutputConfigData,
@@ -141,6 +142,12 @@ const BasePromptConfigFields = {
   structuredOutputConfig: Type.Optional(StructuredOutputConfigData),
 };
 
+/** Chat stage type - chat or privateChat */
+export const ChatStageTypeData = Type.Union(
+  [Type.Literal(StageKind.CHAT), Type.Literal(StageKind.PRIVATE_CHAT)],
+  {$id: 'ChatStageType'},
+);
+
 /** Prompt config for chat and privateChat stages.
  * structuredOutputConfig accepts either:
  * - StructuredOutputConfig: for generic/disabled structured output
@@ -149,7 +156,7 @@ const BasePromptConfigFields = {
 export const ChatPromptConfigData = Type.Object(
   {
     ...BasePromptConfigFields,
-    type: Type.Union([Type.Literal('chat'), Type.Literal('privateChat')]),
+    type: ChatStageTypeData,
     structuredOutputConfig: Type.Optional(
       Type.Union([
         StructuredOutputConfigData,

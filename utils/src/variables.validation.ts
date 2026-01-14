@@ -15,15 +15,21 @@ const JSONSchemaData: TSchema = Type.Recursive(
   (Self) =>
     Type.Union([
       // Primitive types
-      Type.Object({type: Type.Literal('string')}, {additionalProperties: true}),
-      Type.Object({type: Type.Literal('number')}, {additionalProperties: true}),
+      Type.Object(
+        {type: Type.Literal('string')},
+        {$id: 'JSONSchemaString', additionalProperties: true},
+      ),
+      Type.Object(
+        {type: Type.Literal('number')},
+        {$id: 'JSONSchemaNumber', additionalProperties: true},
+      ),
       Type.Object(
         {type: Type.Literal('integer')},
-        {additionalProperties: true},
+        {$id: 'JSONSchemaInteger', additionalProperties: true},
       ),
       Type.Object(
         {type: Type.Literal('boolean')},
-        {additionalProperties: true},
+        {$id: 'JSONSchemaBoolean', additionalProperties: true},
       ),
 
       // Complex types
@@ -32,7 +38,7 @@ const JSONSchemaData: TSchema = Type.Recursive(
           type: Type.Literal('object'),
           properties: Type.Optional(Type.Record(Type.String(), Self)),
         },
-        {additionalProperties: true},
+        {$id: 'JSONSchemaObject', additionalProperties: true},
       ),
 
       Type.Object(
@@ -40,7 +46,7 @@ const JSONSchemaData: TSchema = Type.Recursive(
           type: Type.Literal('array'),
           items: Type.Optional(Self),
         },
-        {additionalProperties: true},
+        {$id: 'JSONSchemaArray', additionalProperties: true},
       ),
     ]),
   {$id: 'JSONSchemaDefinition'},
@@ -84,7 +90,7 @@ export const ShuffleConfigData = Type.Object(
     ]),
     customSeed: Type.String(),
   },
-  strict,
+  {$id: 'ShuffleConfig', ...strict},
 );
 
 /** StaticVariableConfig. */

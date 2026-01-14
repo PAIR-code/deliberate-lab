@@ -197,28 +197,28 @@ class Scope(Enum):
     participant = "participant"
 
 
-class String(BaseModel):
+class JSONSchemaString(BaseModel):
     model_config = ConfigDict(
         extra="allow",
     )
     type: Literal["string"] = "string"
 
 
-class Number(BaseModel):
+class JSONSchemaNumber(BaseModel):
     model_config = ConfigDict(
         extra="allow",
     )
     type: Literal["number"] = "number"
 
 
-class Integer(BaseModel):
+class JSONSchemaInteger(BaseModel):
     model_config = ConfigDict(
         extra="allow",
     )
     type: Literal["integer"] = "integer"
 
 
-class Boolean(BaseModel):
+class JSONSchemaBoolean(BaseModel):
     model_config = ConfigDict(
         extra="allow",
     )
@@ -314,12 +314,9 @@ class Role(BaseModel):
     maxParticipants: float | None = None
 
 
-class Type(Enum):
+class ChatStageType(Enum):
     chat = "chat"
     privateChat = "privateChat"
-
-
-ShuffleConfig1 = ShuffleConfig
 
 
 class ReasoningLevel(Enum):
@@ -921,7 +918,23 @@ class StaticVariableConfig(BaseModel):
     value: str
 
 
-class Object(BaseModel):
+class VariableDefinition(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    name: constr(min_length=1)
+    description: str
+    schema_: (
+        JSONSchemaString
+        | JSONSchemaNumber
+        | JSONSchemaInteger
+        | JSONSchemaBoolean
+        | JSONSchemaObject
+        | JSONSchemaArray
+    ) = Field(..., alias="schema", title="JSONSchemaDefinition")
+
+
+class JSONSchemaObject(BaseModel):
     model_config = ConfigDict(
         extra="allow",
     )
@@ -929,31 +942,31 @@ class Object(BaseModel):
     properties: (
         Dict[
             constr(pattern=r"^(.*)$"),
-            String | Number | Integer | Boolean | Object | Array,
+            JSONSchemaString
+            | JSONSchemaNumber
+            | JSONSchemaInteger
+            | JSONSchemaBoolean
+            | JSONSchemaObject
+            | JSONSchemaArray,
         ]
         | None
     ) = Field(None, title="Properties")
 
 
-class Array(BaseModel):
+class JSONSchemaArray(BaseModel):
     model_config = ConfigDict(
         extra="allow",
     )
     type: Literal["array"] = "array"
-    items: String | Number | Integer | Boolean | Object | Array | None = Field(
-        None, title="JSONSchemaDefinition"
-    )
-
-
-class VariableDefinition(BaseModel):
-    model_config = ConfigDict(
-        extra="forbid",
-    )
-    name: constr(min_length=1)
-    description: str
-    schema_: String | Number | Integer | Boolean | Object | Array = Field(
-        ..., alias="schema", title="JSONSchemaDefinition"
-    )
+    items: (
+        JSONSchemaString
+        | JSONSchemaNumber
+        | JSONSchemaInteger
+        | JSONSchemaBoolean
+        | JSONSchemaObject
+        | JSONSchemaArray
+        | None
+    ) = Field(None, title="JSONSchemaDefinition")
 
 
 class RandomPermutationVariableConfig(BaseModel):
@@ -961,7 +974,7 @@ class RandomPermutationVariableConfig(BaseModel):
     type: Literal["random_permutation"] = "random_permutation"
     scope: Scope
     definition: VariableDefinition
-    shuffleConfig: ShuffleConfig = Field(..., title="ShuffleConfig")
+    shuffleConfig: ShuffleConfig
     values: List[str]
     numToSelect: confloat(ge=1.0) | None = None
     expandListToSeparateVariables: bool | None = None
@@ -983,7 +996,7 @@ class ChatPromptConfig(BaseModel):
         extra="forbid",
     )
     id: constr(min_length=1)
-    type: Type
+    type: ChatStageType = Field(..., title="ChatStageType")
     prompt: List[
         TextPromptItem
         | ProfileInfoPromptItem
@@ -1060,7 +1073,7 @@ class PromptItemGroup(BaseModel):
         | StageContextPromptItem
         | PromptItemGroup
     ]
-    shuffleConfig: ShuffleConfig1 | None = Field(None, title="ShuffleConfig")
+    shuffleConfig: ShuffleConfig | None = None
     condition: ComparisonCondition | ConditionGroup | None = Field(
         None, title="Condition"
     )
@@ -1128,14 +1141,6 @@ class GenericPromptConfig(BaseModel):
     structuredOutputConfig: StructuredOutputConfig | None = None
 
 
-class JSONSchemaDefinition(
-    RootModel[String | Number | Integer | Boolean | Object | Array]
-):
-    root: String | Number | Integer | Boolean | Object | Array = Field(
-        ..., title="JSONSchemaDefinition"
-    )
-
-
 Experiment.model_rebuild()
 ExperimentTemplate.model_rebuild()
 DeliberateLabAPISchemas.model_rebuild()
@@ -1143,8 +1148,9 @@ SurveyPerParticipantStageConfig.model_rebuild()
 TextSurveyQuestion.model_rebuild()
 ConditionGroup.model_rebuild()
 StaticVariableConfig.model_rebuild()
-Object.model_rebuild()
-Array.model_rebuild()
+VariableDefinition.model_rebuild()
+JSONSchemaObject.model_rebuild()
+JSONSchemaArray.model_rebuild()
 ChatPromptConfig.model_rebuild()
 StructuredOutputConfig.model_rebuild()
 StructuredOutputSchema.model_rebuild()

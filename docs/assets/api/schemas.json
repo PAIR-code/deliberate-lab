@@ -1273,88 +1273,22 @@
           "title": "JSONSchemaDefinition",
           "anyOf": [
             {
-              "additionalProperties": true,
-              "type": "object",
-              "required": ["type"],
-              "properties": {
-                "type": {
-                  "const": "string",
-                  "type": "string"
-                }
-              },
-              "title": "String"
+              "$ref": "#/$defs/JSONSchemaString"
             },
             {
-              "additionalProperties": true,
-              "type": "object",
-              "required": ["type"],
-              "properties": {
-                "type": {
-                  "const": "number",
-                  "type": "string"
-                }
-              },
-              "title": "Number"
+              "$ref": "#/$defs/JSONSchemaNumber"
             },
             {
-              "additionalProperties": true,
-              "type": "object",
-              "required": ["type"],
-              "properties": {
-                "type": {
-                  "const": "integer",
-                  "type": "string"
-                }
-              },
-              "title": "Integer"
+              "$ref": "#/$defs/JSONSchemaInteger"
             },
             {
-              "additionalProperties": true,
-              "type": "object",
-              "required": ["type"],
-              "properties": {
-                "type": {
-                  "const": "boolean",
-                  "type": "string"
-                }
-              },
-              "title": "Boolean"
+              "$ref": "#/$defs/JSONSchemaBoolean"
             },
             {
-              "additionalProperties": true,
-              "type": "object",
-              "required": ["type"],
-              "properties": {
-                "type": {
-                  "const": "object",
-                  "type": "string"
-                },
-                "properties": {
-                  "type": "object",
-                  "patternProperties": {
-                    "^(.*)$": {
-                      "$ref": "#/$defs/JSONSchemaDefinition"
-                    }
-                  },
-                  "title": "Properties"
-                }
-              },
-              "title": "Object"
+              "$ref": "#/$defs/JSONSchemaObject"
             },
             {
-              "additionalProperties": true,
-              "type": "object",
-              "required": ["type"],
-              "properties": {
-                "type": {
-                  "const": "array",
-                  "type": "string"
-                },
-                "items": {
-                  "$ref": "#/$defs/JSONSchemaDefinition"
-                }
-              },
-              "title": "Array"
+              "$ref": "#/$defs/JSONSchemaArray"
             }
           ]
         }
@@ -1364,90 +1298,108 @@
       "title": "JSONSchemaDefinition",
       "anyOf": [
         {
-          "additionalProperties": true,
-          "type": "object",
-          "required": ["type"],
-          "properties": {
-            "type": {
-              "const": "string",
-              "type": "string"
-            }
-          },
-          "title": "String"
+          "$ref": "#/$defs/JSONSchemaString"
         },
         {
-          "additionalProperties": true,
-          "type": "object",
-          "required": ["type"],
-          "properties": {
-            "type": {
-              "const": "number",
-              "type": "string"
-            }
-          },
-          "title": "Number"
+          "$ref": "#/$defs/JSONSchemaNumber"
         },
         {
-          "additionalProperties": true,
-          "type": "object",
-          "required": ["type"],
-          "properties": {
-            "type": {
-              "const": "integer",
-              "type": "string"
-            }
-          },
-          "title": "Integer"
+          "$ref": "#/$defs/JSONSchemaInteger"
         },
         {
-          "additionalProperties": true,
-          "type": "object",
-          "required": ["type"],
-          "properties": {
-            "type": {
-              "const": "boolean",
-              "type": "string"
-            }
-          },
-          "title": "Boolean"
+          "$ref": "#/$defs/JSONSchemaBoolean"
         },
         {
-          "additionalProperties": true,
-          "type": "object",
-          "required": ["type"],
-          "properties": {
-            "type": {
-              "const": "object",
-              "type": "string"
-            },
-            "properties": {
-              "type": "object",
-              "patternProperties": {
-                "^(.*)$": {
-                  "$ref": "#/$defs/JSONSchemaDefinition"
-                }
-              },
-              "title": "Properties"
-            }
-          },
-          "title": "Object"
+          "$ref": "#/$defs/JSONSchemaObject"
         },
         {
-          "additionalProperties": true,
+          "$ref": "#/$defs/JSONSchemaArray"
+        }
+      ]
+    },
+    "JSONSchemaString": {
+      "title": "JSONSchemaString",
+      "additionalProperties": true,
+      "type": "object",
+      "required": ["type"],
+      "properties": {
+        "type": {
+          "const": "string",
+          "type": "string"
+        }
+      }
+    },
+    "JSONSchemaNumber": {
+      "title": "JSONSchemaNumber",
+      "additionalProperties": true,
+      "type": "object",
+      "required": ["type"],
+      "properties": {
+        "type": {
+          "const": "number",
+          "type": "string"
+        }
+      }
+    },
+    "JSONSchemaInteger": {
+      "title": "JSONSchemaInteger",
+      "additionalProperties": true,
+      "type": "object",
+      "required": ["type"],
+      "properties": {
+        "type": {
+          "const": "integer",
+          "type": "string"
+        }
+      }
+    },
+    "JSONSchemaBoolean": {
+      "title": "JSONSchemaBoolean",
+      "additionalProperties": true,
+      "type": "object",
+      "required": ["type"],
+      "properties": {
+        "type": {
+          "const": "boolean",
+          "type": "string"
+        }
+      }
+    },
+    "JSONSchemaObject": {
+      "title": "JSONSchemaObject",
+      "additionalProperties": true,
+      "type": "object",
+      "required": ["type"],
+      "properties": {
+        "type": {
+          "const": "object",
+          "type": "string"
+        },
+        "properties": {
           "type": "object",
-          "required": ["type"],
-          "properties": {
-            "type": {
-              "const": "array",
-              "type": "string"
-            },
-            "items": {
+          "patternProperties": {
+            "^(.*)$": {
               "$ref": "#/$defs/JSONSchemaDefinition"
             }
           },
-          "title": "Array"
+          "title": "Properties"
         }
-      ]
+      }
+    },
+    "JSONSchemaArray": {
+      "title": "JSONSchemaArray",
+      "additionalProperties": true,
+      "type": "object",
+      "required": ["type"],
+      "properties": {
+        "type": {
+          "const": "array",
+          "type": "string"
+        },
+        "items": {
+          "$ref": "#/$defs/JSONSchemaDefinition"
+        }
+      }
     },
     "RandomPermutationVariableConfig": {
       "title": "RandomPermutationVariableConfig",
@@ -1490,38 +1442,7 @@
           "$ref": "#/$defs/VariableDefinition"
         },
         "shuffleConfig": {
-          "additionalProperties": false,
-          "type": "object",
-          "required": ["shuffle", "seed", "customSeed"],
-          "properties": {
-            "shuffle": {
-              "type": "boolean"
-            },
-            "seed": {
-              "anyOf": [
-                {
-                  "const": "experiment",
-                  "type": "string"
-                },
-                {
-                  "const": "cohort",
-                  "type": "string"
-                },
-                {
-                  "const": "participant",
-                  "type": "string"
-                },
-                {
-                  "const": "custom",
-                  "type": "string"
-                }
-              ]
-            },
-            "customSeed": {
-              "type": "string"
-            }
-          },
-          "title": "ShuffleConfig"
+          "$ref": "#/$defs/ShuffleConfig"
         },
         "values": {
           "type": "array",
@@ -1535,6 +1456,40 @@
         },
         "expandListToSeparateVariables": {
           "type": "boolean"
+        }
+      }
+    },
+    "ShuffleConfig": {
+      "title": "ShuffleConfig",
+      "additionalProperties": false,
+      "type": "object",
+      "required": ["shuffle", "seed", "customSeed"],
+      "properties": {
+        "shuffle": {
+          "type": "boolean"
+        },
+        "seed": {
+          "anyOf": [
+            {
+              "const": "experiment",
+              "type": "string"
+            },
+            {
+              "const": "cohort",
+              "type": "string"
+            },
+            {
+              "const": "participant",
+              "type": "string"
+            },
+            {
+              "const": "custom",
+              "type": "string"
+            }
+          ]
+        },
+        "customSeed": {
+          "type": "string"
         }
       }
     },
@@ -2361,6 +2316,7 @@
           "type": "string"
         },
         "type": {
+          "title": "ChatStageType",
           "anyOf": [
             {
               "const": "chat",
@@ -2417,6 +2373,19 @@
           "$ref": "#/$defs/AgentChatSettings"
         }
       }
+    },
+    "ChatStageType": {
+      "title": "ChatStageType",
+      "anyOf": [
+        {
+          "const": "chat",
+          "type": "string"
+        },
+        {
+          "const": "privateChat",
+          "type": "string"
+        }
+      ]
     },
     "TextPromptItem": {
       "title": "TextPromptItem",
@@ -2575,38 +2544,7 @@
           }
         },
         "shuffleConfig": {
-          "additionalProperties": false,
-          "type": "object",
-          "required": ["shuffle", "seed", "customSeed"],
-          "properties": {
-            "shuffle": {
-              "type": "boolean"
-            },
-            "seed": {
-              "anyOf": [
-                {
-                  "const": "experiment",
-                  "type": "string"
-                },
-                {
-                  "const": "cohort",
-                  "type": "string"
-                },
-                {
-                  "const": "participant",
-                  "type": "string"
-                },
-                {
-                  "const": "custom",
-                  "type": "string"
-                }
-              ]
-            },
-            "customSeed": {
-              "type": "string"
-            }
-          },
-          "title": "ShuffleConfig"
+          "$ref": "#/$defs/ShuffleConfig"
         },
         "condition": {
           "title": "Condition",
