@@ -25,13 +25,13 @@ export interface ModelOption {
  */
 export const GEMINI_MODELS: ModelOption[] = [
   {
-    id: 'gemini-2.5-flash',
-    displayName: 'Gemini 2.5 Flash',
+    id: 'gemini-3-flash-preview',
+    displayName: 'Gemini 3 Flash Preview',
     apiType: ApiKeyType.GEMINI_API_KEY,
   },
   {
-    id: 'gemini-2.5-pro',
-    displayName: 'Gemini 2.5 Pro',
+    id: 'gemini-3-pro-preview',
+    displayName: 'Gemini 3 Pro Preview',
     apiType: ApiKeyType.GEMINI_API_KEY,
   },
 ];
