@@ -54,6 +54,7 @@ export * from './profile_sets';
 // TODO: Organize these files into 'agent' subdirectory
 export * from './agent';
 export * from './agent.validation';
+export * from './model_config';
 export * from './model_response';
 export * from './providers';
 export * from './structured_output';
