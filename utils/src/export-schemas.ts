@@ -20,6 +20,9 @@ import {
   UpdateCohortMetadataData,
 } from './cohort.validation';
 
+// Import agent schema collection (not reachable from top-level due to permissive templates)
+import {AGENT_SCHEMAS} from './agent.validation';
+
 /**
  * Recursively collect all schemas with $id from a schema tree.
  * These will be added to $defs for deduplication.
@@ -81,6 +84,11 @@ collectSchemasWithId(baseSchema, collectedSchemas);
 for (const [key, schema] of Object.entries(CONFIG_DATA)) {
   const stageName = `${key.charAt(0).toUpperCase() + key.slice(1)}StageConfig`;
   collectedSchemas.set(stageName, schema);
+  collectSchemasWithId(schema, collectedSchemas);
+}
+
+// Collect agent validation schemas (not reachable from top-level due to permissive templates)
+for (const schema of AGENT_SCHEMAS) {
   collectSchemasWithId(schema, collectedSchemas);
 }
 
@@ -156,12 +164,14 @@ function discriminatorToClassName(value: string): string {
  * @param parentKey - The key this object is stored under in its parent
  * @param typeContext - Context like 'Question', 'StageConfig' for discriminated unions
  * @param arrayContext - The property name if this is inside an array's items
+ * @param currentSchemaId - The $id of the current schema being processed (for self-references)
  */
 function fixRefs(
   obj: unknown,
   parentKey?: string,
   typeContext?: string,
   arrayContext?: string,
+  currentSchemaId?: string,
 ): unknown {
   if (obj === null || typeof obj !== 'object') {
     return obj;
@@ -169,12 +179,16 @@ function fixRefs(
 
   if (Array.isArray(obj)) {
     return obj.map((item) =>
-      fixRefs(item, parentKey, typeContext, arrayContext),
+      fixRefs(item, parentKey, typeContext, arrayContext, currentSchemaId),
     );
   }
 
   const result: Record<string, unknown> = {};
   const record = obj as Record<string, unknown>;
+
+  // Track the current schema's $id for self-references
+  const schemaId =
+    typeof record.$id === 'string' ? record.$id : currentSchemaId;
 
   // Determine type context for discriminated unions
   let newTypeContext = typeContext;
@@ -191,16 +205,31 @@ function fixRefs(
   const newArrayContext = arrayContext;
 
   for (const [key, value] of Object.entries(record)) {
-    if (key === '$ref' && typeof value === 'string' && !value.startsWith('#')) {
-      result[key] = `#/$defs/${value}`;
+    if (key === '$ref' && typeof value === 'string') {
+      if (value === '#' && schemaId) {
+        // Self-reference: replace "#" with "#/$defs/{schemaId}"
+        result[key] = `#/$defs/${schemaId}`;
+      } else if (!value.startsWith('#')) {
+        // Named reference: add #/$defs/ prefix
+        result[key] = `#/$defs/${value}`;
+      } else {
+        // Already a proper $ref, keep as-is
+        result[key] = value;
+      }
     } else if (key === '$id' && typeof value === 'string') {
       // Convert $id to title for better Python class naming
       result.title = value;
     } else if (key === 'items' && typeof value === 'object') {
       // This is an array items schema - pass the parent key as array context
-      result[key] = fixRefs(value, key, newTypeContext, parentKey);
+      result[key] = fixRefs(value, key, newTypeContext, parentKey, schemaId);
     } else {
-      result[key] = fixRefs(value, key, newTypeContext, newArrayContext);
+      result[key] = fixRefs(
+        value,
+        key,
+        newTypeContext,
+        newArrayContext,
+        schemaId,
+      );
     }
   }
 

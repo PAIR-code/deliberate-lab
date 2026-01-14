@@ -266,6 +266,54 @@ class AgentModelSettings(BaseModel):
     modelName: str
 
 
+class StockConfig(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    stockInfoStageId: constr(min_length=1) | None = None
+    stockA: Stock
+    stockB: Stock
+
+
+class TextQuestion(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    id: constr(min_length=1)
+    kind: Literal["text"] = "text"
+    questionTitle: str
+    correctAnswer: str
+
+
+class McQuestion(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    id: constr(min_length=1)
+    kind: Literal["mc"] = "mc"
+    questionTitle: str
+    options: List[MultipleChoiceItem]
+    correctAnswerId: str
+
+
+class ProfileType(Enum):
+    DEFAULT = "DEFAULT"
+    DEFAULT_GENDERED = "DEFAULT_GENDERED"
+    ANONYMOUS_ANIMAL = "ANONYMOUS_ANIMAL"
+    ANONYMOUS_PARTICIPANT = "ANONYMOUS_PARTICIPANT"
+
+
+class Role(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    id: constr(min_length=1)
+    name: str
+    displayLines: List[str]
+    minParticipants: float
+    maxParticipants: float | None = None
+
+
 class Type(Enum):
     chat = "chat"
     privateChat = "privateChat"
@@ -357,54 +405,6 @@ class StageKind(Enum):
     survey = "survey"
     surveyPerParticipant = "surveyPerParticipant"
     transfer = "transfer"
-
-
-class StockConfig(BaseModel):
-    model_config = ConfigDict(
-        extra="forbid",
-    )
-    stockInfoStageId: constr(min_length=1) | None = None
-    stockA: Stock
-    stockB: Stock
-
-
-class TextQuestion(BaseModel):
-    model_config = ConfigDict(
-        extra="forbid",
-    )
-    id: constr(min_length=1)
-    kind: Literal["text"] = "text"
-    questionTitle: str
-    correctAnswer: str
-
-
-class McQuestion(BaseModel):
-    model_config = ConfigDict(
-        extra="forbid",
-    )
-    id: constr(min_length=1)
-    kind: Literal["mc"] = "mc"
-    questionTitle: str
-    options: List[MultipleChoiceItem]
-    correctAnswerId: str
-
-
-class ProfileType(Enum):
-    DEFAULT = "DEFAULT"
-    DEFAULT_GENDERED = "DEFAULT_GENDERED"
-    ANONYMOUS_ANIMAL = "ANONYMOUS_ANIMAL"
-    ANONYMOUS_PARTICIPANT = "ANONYMOUS_PARTICIPANT"
-
-
-class Role(BaseModel):
-    model_config = ConfigDict(
-        extra="forbid",
-    )
-    id: constr(min_length=1)
-    name: str
-    displayLines: List[str]
-    minParticipants: float
-    maxParticipants: float | None = None
 
 
 class StageProgressConfig(RootModel[Any]):
@@ -564,6 +564,13 @@ class Persona(BaseModel):
     defaultModelSettings: AgentModelSettings | None = None
 
 
+class AgentParticipantTemplate(BaseModel):
+    persona: Persona
+    promptMap: Dict[constr(pattern=r"^(.*)$"), Dict[str, Any]] = Field(
+        ..., title="PromptMap"
+    )
+
+
 class AssetAllocationStageConfig(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
@@ -704,6 +711,9 @@ class RankingStageConfig(
     root: ItemRankingStageConfig | ParticipantRankingStageConfig = Field(
         ..., title="RankingStageConfig"
     )
+
+
+AgentMediatorTemplate = AgentParticipantTemplate
 
 
 class Experiment(BaseModel):
@@ -968,16 +978,6 @@ class BalancedAssignmentVariableConfig(BaseModel):
     balanceAcross: BalanceAcross
 
 
-class AgentMediatorTemplate(BaseModel):
-    model_config = ConfigDict(
-        extra="forbid",
-    )
-    persona: Persona
-    promptMap: Dict[
-        constr(pattern=r"^(.*)$"), ChatPromptConfig | GenericPromptConfig
-    ] = Field(..., title="PromptMap")
-
-
 class ChatPromptConfig(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
@@ -1006,7 +1006,9 @@ class TextPromptItem(BaseModel):
     )
     type: Literal["TEXT"] = "TEXT"
     text: str
-    condition: ConditionGroup | ComparisonCondition | None = None
+    condition: ComparisonCondition | ConditionGroup | None = Field(
+        None, title="Condition"
+    )
 
 
 class ProfileInfoPromptItem(BaseModel):
@@ -1014,7 +1016,9 @@ class ProfileInfoPromptItem(BaseModel):
         extra="forbid",
     )
     type: Literal["PROFILE_INFO"] = "PROFILE_INFO"
-    condition: ConditionGroup | ComparisonCondition | None = None
+    condition: ComparisonCondition | ConditionGroup | None = Field(
+        None, title="Condition"
+    )
 
 
 class ProfileContextPromptItem(BaseModel):
@@ -1022,7 +1026,9 @@ class ProfileContextPromptItem(BaseModel):
         extra="forbid",
     )
     type: Literal["PROFILE_CONTEXT"] = "PROFILE_CONTEXT"
-    condition: ConditionGroup | ComparisonCondition | None = None
+    condition: ComparisonCondition | ConditionGroup | None = Field(
+        None, title="Condition"
+    )
 
 
 class StageContextPromptItem(BaseModel):
@@ -1036,7 +1042,9 @@ class StageContextPromptItem(BaseModel):
     includeHelpText: bool
     includeStageDisplay: bool
     includeParticipantAnswers: bool
-    condition: ConditionGroup | ComparisonCondition | None = None
+    condition: ComparisonCondition | ConditionGroup | None = Field(
+        None, title="Condition"
+    )
 
 
 class PromptItemGroup(BaseModel):
@@ -1050,10 +1058,12 @@ class PromptItemGroup(BaseModel):
         | ProfileInfoPromptItem
         | ProfileContextPromptItem
         | StageContextPromptItem
-        | DeliberateLabAPISchemas
+        | PromptItemGroup
     ]
     shuffleConfig: ShuffleConfig1 | None = Field(None, title="ShuffleConfig")
-    condition: ConditionGroup | ComparisonCondition | None = None
+    condition: ComparisonCondition | ConditionGroup | None = Field(
+        None, title="Condition"
+    )
 
 
 class StructuredOutputConfig(BaseModel):
@@ -1073,7 +1083,7 @@ class StructuredOutputSchema(BaseModel):
     type: StructuredOutputDataType = Field(..., title="StructuredOutputDataType")
     description: str | None = None
     properties: List[StructuredOutputSchemaProperty] | None = None
-    arrayItems: DeliberateLabAPISchemas | None = None
+    arrayItems: StructuredOutputSchema | None = None
     enumItems: List[str] | None = None
 
 
@@ -1082,7 +1092,7 @@ class StructuredOutputSchemaProperty(BaseModel):
         extra="forbid",
     )
     name: str
-    schema_: DeliberateLabAPISchemas = Field(..., alias="schema")
+    schema_: StructuredOutputSchema = Field(..., alias="schema")
 
 
 class ChatMediatorStructuredOutputConfig(BaseModel):
@@ -1118,9 +1128,6 @@ class GenericPromptConfig(BaseModel):
     structuredOutputConfig: StructuredOutputConfig | None = None
 
 
-AgentParticipantTemplate = AgentMediatorTemplate
-
-
 class JSONSchemaDefinition(
     RootModel[String | Number | Integer | Boolean | Object | Array]
 ):
@@ -1138,8 +1145,6 @@ ConditionGroup.model_rebuild()
 StaticVariableConfig.model_rebuild()
 Object.model_rebuild()
 Array.model_rebuild()
-AgentMediatorTemplate.model_rebuild()
 ChatPromptConfig.model_rebuild()
 StructuredOutputConfig.model_rebuild()
 StructuredOutputSchema.model_rebuild()
-AgentParticipantTemplate.model_rebuild()

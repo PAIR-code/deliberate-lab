@@ -1,5 +1,6 @@
 import {Type, type Static} from '@sinclair/typebox';
 import {ShuffleConfigData} from './variables.validation';
+import {ConditionSchema} from './utils/condition.validation';
 
 /** Shorthand for strict TypeBox object validation */
 const strict = {additionalProperties: false} as const;
@@ -127,56 +128,13 @@ export const AgentModelSettingsData = Type.Object(
   {$id: 'AgentModelSettings', ...strict},
 );
 
-/** Condition target reference */
-export const ConditionTargetReferenceData = Type.Object(
-  {
-    stageId: Type.String(),
-    questionId: Type.String(),
-  },
-  {$id: 'ConditionTargetReference', ...strict},
-);
-
-/** Comparison condition */
-export const ComparisonConditionData = Type.Object(
-  {
-    id: Type.String(),
-    type: Type.Literal('comparison'),
-    target: ConditionTargetReferenceData,
-    operator: ComparisonOperatorData,
-    value: Type.Union([Type.String(), Type.Number(), Type.Boolean()]),
-  },
-  {$id: 'ComparisonCondition', ...strict},
-);
-
-/** Condition group (recursive via Type.Unsafe for self-reference) */
-export const ConditionGroupData: ReturnType<typeof Type.Object> = Type.Object(
-  {
-    id: Type.String(),
-    type: Type.Literal('group'),
-    operator: ConditionOperatorData,
-    conditions: Type.Array(
-      Type.Union([
-        ComparisonConditionData,
-        Type.Unsafe<Static<typeof ConditionGroupData>>({$ref: '#'}),
-      ]),
-    ),
-  },
-  {$id: 'ConditionGroup', ...strict},
-);
-
-/** Condition - either a group or comparison */
-export const ConditionData = Type.Union([
-  ConditionGroupData,
-  ComparisonConditionData,
-]);
-
 // ****************************************************************************
 // Prompt items
 // ****************************************************************************
 
 /** Base prompt item fields */
 const BasePromptItemFields = {
-  condition: Type.Optional(ConditionData),
+  condition: Type.Optional(ConditionSchema),
 };
 
 /** Text prompt item */
@@ -295,8 +253,9 @@ export const StructuredOutputSchemaPropertyData: ReturnType<
 > = Type.Object(
   {
     name: Type.String(),
+    // Reference StructuredOutputSchema by $id (not '#' which would be self-reference)
     schema: Type.Unsafe<Static<typeof StructuredOutputSchemaData>>({
-      $ref: '#',
+      $ref: 'StructuredOutputSchema',
     }),
   },
   {$id: 'StructuredOutputSchemaProperty', ...strict},
@@ -434,33 +393,42 @@ export const AgentConfigData = Type.Object(
   {$id: 'Persona', ...strict},
 );
 
-/** Agent mediator template */
+/** Agent mediator template.
+ * NOTE: promptMap uses permissive Type.Object({}) to maintain compatibility
+ * with TypeScript interfaces. Detailed prompt validation is done separately.
+ */
 export const AgentMediatorTemplateData = Type.Object(
   {
     persona: AgentConfigData,
-    promptMap: Type.Record(Type.String(), PromptConfigData),
+    promptMap: Type.Record(Type.String(), Type.Object({})),
   },
-  {$id: 'AgentMediatorTemplate', ...strict},
+  {$id: 'AgentMediatorTemplate'},
 );
 
-/** Agent participant template */
+/** Agent participant template.
+ * NOTE: promptMap uses permissive Type.Object({}) to maintain compatibility
+ * with TypeScript interfaces. Detailed prompt validation is done separately.
+ */
 export const AgentParticipantTemplateData = Type.Object(
   {
     persona: AgentConfigData,
-    promptMap: Type.Record(Type.String(), PromptConfigData),
+    promptMap: Type.Record(Type.String(), Type.Object({})),
   },
-  {$id: 'AgentParticipantTemplate', ...strict},
+  {$id: 'AgentParticipantTemplate'},
 );
 
 // ****************************************************************************
 // Test and data object schemas
 // ****************************************************************************
 
-/** Schema for testAgentConfig endpoint */
+/** Schema for testAgentConfig endpoint.
+ * NOTE: promptConfig uses permissive Type.Object({}) to maintain compatibility
+ * with the legacy BaseAgentPromptConfig interface used by the frontend.
+ */
 export const AgentConfigTestData = Type.Object({
   creatorId: Type.String({minLength: 1}),
   agentConfig: AgentConfigData,
-  promptConfig: PromptConfigData,
+  promptConfig: Type.Object({}),
 });
 
 export type AgentConfigTestData = Static<typeof AgentConfigTestData>;
@@ -471,3 +439,26 @@ export const AgentDataObjectData = Type.Object({
   participantPromptMap: Type.Record(Type.String(), PromptConfigData),
   chatPromptMap: Type.Record(Type.String(), PromptConfigData),
 });
+
+/**
+ * Collection of agent schemas for export-schemas.ts to collect.
+ * These schemas are not reachable from the top-level ExperimentCreationData
+ * because AgentMediatorTemplateData.promptMap uses Type.Object({}) for
+ * TypeScript compatibility. This collection ensures they're still exported.
+ */
+export const AGENT_SCHEMAS = [
+  PromptConfigData,
+  ChatPromptConfigData,
+  GenericPromptConfigData,
+  StructuredOutputConfigData,
+  ChatMediatorStructuredOutputConfigData,
+  AgentChatSettingsData,
+  ModelGenerationConfigData,
+  PromptItemData,
+  TextPromptItemData,
+  ProfileInfoPromptItemData,
+  ProfileContextPromptItemData,
+  StageContextPromptItemData,
+  PromptItemGroupData,
+  StructuredOutputSchemaData,
+];
