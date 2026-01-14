@@ -4,9 +4,10 @@
  * These TypeBox schemas define the structure of agent-related types
  * for JSON Schema export and Python type generation.
  */
-import {Type, type Static} from '@sinclair/typebox';
+import {Type} from '@sinclair/typebox';
 import {PromptConfigData} from './prompt.validation';
 import {ApiKeyTypeData} from './providers.validation';
+import {AgentPersonaConfig, BaseAgentPromptConfig} from './agent';
 
 /** Shorthand for strict TypeBox object validation */
 const strict = {additionalProperties: false} as const;
@@ -67,7 +68,16 @@ export const AgentConfigTestData = Type.Object({
   promptConfig: PromptConfigData,
 });
 
-export type AgentConfigTestData = Static<typeof AgentConfigTestData>;
+/** TypeScript type for AgentConfigTestData.
+ * Uses hand-written interfaces because the frontend passes BaseAgentPromptConfig
+ * (simple promptContext string) rather than the structured PromptConfigData
+ * (array of PromptItems). These are different data models.
+ */
+export interface AgentConfigTestData {
+  creatorId: string;
+  agentConfig: AgentPersonaConfig;
+  promptConfig: BaseAgentPromptConfig;
+}
 
 /** Schema for agent data objects */
 export const AgentDataObjectData = Type.Object({

@@ -1992,11 +1992,7 @@
           "type": "boolean"
         },
         "providerOptions": {
-          "type": "object",
-          "patternProperties": {
-            "^(.*)$": {}
-          },
-          "title": "ProviderOptions"
+          "$ref": "#/$defs/ProviderOptionsMap"
         },
         "customRequestBodyFields": {
           "type": "array",
@@ -2041,6 +2037,369 @@
           "type": "string"
         }
       ]
+    },
+    "ProviderOptionsMap": {
+      "title": "ProviderOptionsMap",
+      "additionalProperties": false,
+      "type": "object",
+      "properties": {
+        "google": {
+          "$ref": "#/$defs/GoogleProviderOptions"
+        },
+        "anthropic": {
+          "$ref": "#/$defs/AnthropicProviderOptions"
+        },
+        "openai": {
+          "$ref": "#/$defs/OpenAIProviderOptions"
+        },
+        "ollama": {
+          "$ref": "#/$defs/OllamaProviderOptions"
+        }
+      }
+    },
+    "GoogleProviderOptions": {
+      "title": "GoogleProviderOptions",
+      "additionalProperties": false,
+      "type": "object",
+      "properties": {
+        "thinkingConfig": {
+          "$ref": "#/$defs/GoogleThinkingConfig"
+        },
+        "safetySettings": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/GoogleSafetySetting"
+          }
+        }
+      }
+    },
+    "GoogleThinkingConfig": {
+      "title": "GoogleThinkingConfig",
+      "additionalProperties": false,
+      "type": "object",
+      "properties": {
+        "thinkingBudget": {
+          "type": "number"
+        },
+        "includeThoughts": {
+          "type": "boolean"
+        },
+        "thinkingLevel": {
+          "title": "GoogleThinkingLevel",
+          "anyOf": [
+            {
+              "const": "minimal",
+              "type": "string"
+            },
+            {
+              "const": "low",
+              "type": "string"
+            },
+            {
+              "const": "medium",
+              "type": "string"
+            },
+            {
+              "const": "high",
+              "type": "string"
+            }
+          ]
+        }
+      }
+    },
+    "GoogleThinkingLevel": {
+      "title": "GoogleThinkingLevel",
+      "anyOf": [
+        {
+          "const": "minimal",
+          "type": "string"
+        },
+        {
+          "const": "low",
+          "type": "string"
+        },
+        {
+          "const": "medium",
+          "type": "string"
+        },
+        {
+          "const": "high",
+          "type": "string"
+        }
+      ]
+    },
+    "GoogleSafetySetting": {
+      "title": "GoogleSafetySetting",
+      "additionalProperties": false,
+      "type": "object",
+      "required": ["category", "threshold"],
+      "properties": {
+        "category": {
+          "title": "GoogleSafetyCategory",
+          "anyOf": [
+            {
+              "const": "HARM_CATEGORY_HARASSMENT",
+              "type": "string"
+            },
+            {
+              "const": "HARM_CATEGORY_DANGEROUS_CONTENT",
+              "type": "string"
+            },
+            {
+              "const": "HARM_CATEGORY_HATE_SPEECH",
+              "type": "string"
+            },
+            {
+              "const": "HARM_CATEGORY_SEXUALLY_EXPLICIT",
+              "type": "string"
+            },
+            {
+              "const": "HARM_CATEGORY_CIVIC_INTEGRITY",
+              "type": "string"
+            }
+          ]
+        },
+        "threshold": {
+          "title": "GoogleSafetyThreshold",
+          "anyOf": [
+            {
+              "const": "BLOCK_NONE",
+              "type": "string"
+            },
+            {
+              "const": "BLOCK_ONLY_HIGH",
+              "type": "string"
+            },
+            {
+              "const": "BLOCK_MEDIUM_AND_ABOVE",
+              "type": "string"
+            },
+            {
+              "const": "BLOCK_LOW_AND_ABOVE",
+              "type": "string"
+            },
+            {
+              "const": "HARM_BLOCK_THRESHOLD_UNSPECIFIED",
+              "type": "string"
+            }
+          ]
+        }
+      }
+    },
+    "GoogleSafetyCategory": {
+      "title": "GoogleSafetyCategory",
+      "anyOf": [
+        {
+          "const": "HARM_CATEGORY_HARASSMENT",
+          "type": "string"
+        },
+        {
+          "const": "HARM_CATEGORY_DANGEROUS_CONTENT",
+          "type": "string"
+        },
+        {
+          "const": "HARM_CATEGORY_HATE_SPEECH",
+          "type": "string"
+        },
+        {
+          "const": "HARM_CATEGORY_SEXUALLY_EXPLICIT",
+          "type": "string"
+        },
+        {
+          "const": "HARM_CATEGORY_CIVIC_INTEGRITY",
+          "type": "string"
+        }
+      ]
+    },
+    "GoogleSafetyThreshold": {
+      "title": "GoogleSafetyThreshold",
+      "anyOf": [
+        {
+          "const": "BLOCK_NONE",
+          "type": "string"
+        },
+        {
+          "const": "BLOCK_ONLY_HIGH",
+          "type": "string"
+        },
+        {
+          "const": "BLOCK_MEDIUM_AND_ABOVE",
+          "type": "string"
+        },
+        {
+          "const": "BLOCK_LOW_AND_ABOVE",
+          "type": "string"
+        },
+        {
+          "const": "HARM_BLOCK_THRESHOLD_UNSPECIFIED",
+          "type": "string"
+        }
+      ]
+    },
+    "AnthropicProviderOptions": {
+      "title": "AnthropicProviderOptions",
+      "additionalProperties": false,
+      "type": "object",
+      "properties": {
+        "thinking": {
+          "$ref": "#/$defs/AnthropicThinkingConfig"
+        },
+        "effort": {
+          "title": "ReasoningEffort",
+          "anyOf": [
+            {
+              "const": "low",
+              "type": "string"
+            },
+            {
+              "const": "medium",
+              "type": "string"
+            },
+            {
+              "const": "high",
+              "type": "string"
+            }
+          ]
+        },
+        "cacheControl": {
+          "$ref": "#/$defs/AnthropicCacheControl"
+        },
+        "sendReasoning": {
+          "type": "boolean"
+        }
+      }
+    },
+    "AnthropicThinkingConfig": {
+      "title": "AnthropicThinkingConfig",
+      "additionalProperties": false,
+      "type": "object",
+      "required": ["type"],
+      "properties": {
+        "type": {
+          "title": "AnthropicThinkingType",
+          "anyOf": [
+            {
+              "const": "enabled",
+              "type": "string"
+            },
+            {
+              "const": "disabled",
+              "type": "string"
+            }
+          ]
+        },
+        "budgetTokens": {
+          "type": "number"
+        }
+      }
+    },
+    "AnthropicThinkingType": {
+      "title": "AnthropicThinkingType",
+      "anyOf": [
+        {
+          "const": "enabled",
+          "type": "string"
+        },
+        {
+          "const": "disabled",
+          "type": "string"
+        }
+      ]
+    },
+    "ReasoningEffort": {
+      "title": "ReasoningEffort",
+      "anyOf": [
+        {
+          "const": "low",
+          "type": "string"
+        },
+        {
+          "const": "medium",
+          "type": "string"
+        },
+        {
+          "const": "high",
+          "type": "string"
+        }
+      ]
+    },
+    "AnthropicCacheControl": {
+      "title": "AnthropicCacheControl",
+      "additionalProperties": false,
+      "type": "object",
+      "required": ["type"],
+      "properties": {
+        "type": {
+          "const": "ephemeral",
+          "type": "string"
+        },
+        "ttl": {
+          "title": "AnthropicCacheTtl",
+          "anyOf": [
+            {
+              "const": "5m",
+              "type": "string"
+            },
+            {
+              "const": "1h",
+              "type": "string"
+            }
+          ]
+        }
+      }
+    },
+    "AnthropicCacheTtl": {
+      "title": "AnthropicCacheTtl",
+      "anyOf": [
+        {
+          "const": "5m",
+          "type": "string"
+        },
+        {
+          "const": "1h",
+          "type": "string"
+        }
+      ]
+    },
+    "OpenAIProviderOptions": {
+      "title": "OpenAIProviderOptions",
+      "additionalProperties": false,
+      "type": "object",
+      "properties": {
+        "reasoningEffort": {
+          "title": "ReasoningEffort",
+          "anyOf": [
+            {
+              "const": "low",
+              "type": "string"
+            },
+            {
+              "const": "medium",
+              "type": "string"
+            },
+            {
+              "const": "high",
+              "type": "string"
+            }
+          ]
+        },
+        "parallelToolCalls": {
+          "type": "boolean"
+        }
+      }
+    },
+    "OllamaProviderOptions": {
+      "title": "OllamaProviderOptions",
+      "additionalProperties": false,
+      "type": "object",
+      "properties": {
+        "numCtx": {
+          "type": "number"
+        },
+        "numPredict": {
+          "type": "number"
+        }
+      }
     },
     "StructuredOutputConfig": {
       "title": "StructuredOutputConfig",

@@ -4,7 +4,7 @@
  * These TypeBox schemas define the structure of structured output configs
  * for JSON Schema export and Python type generation.
  */
-import {Type, type Static} from '@sinclair/typebox';
+import {Type} from '@sinclair/typebox';
 
 /** Shorthand for strict TypeBox object validation */
 const strict = {additionalProperties: false} as const;
@@ -41,34 +41,35 @@ export const StructuredOutputDataTypeData = Type.Union(
 // Schemas
 // ****************************************************************************
 
-/** Structured output schema property */
-export const StructuredOutputSchemaPropertyData: ReturnType<
-  typeof Type.Object
-> = Type.Object(
-  {
-    name: Type.String(),
-    // Reference StructuredOutputSchema by $id (not '#' which would be self-reference)
-    schema: Type.Unsafe<Static<typeof StructuredOutputSchemaData>>({
-      $ref: 'StructuredOutputSchema',
-    }),
-  },
-  {$id: 'StructuredOutputSchemaProperty', ...strict},
+/** Structured output schema (recursive).
+ * Uses Type.Recursive to properly handle self-references in:
+ * - properties[].schema (nested object properties)
+ * - arrayItems (array element type)
+ */
+export const StructuredOutputSchemaData = Type.Recursive(
+  (This) =>
+    Type.Object(
+      {
+        type: StructuredOutputDataTypeData,
+        description: Type.Optional(Type.String()),
+        properties: Type.Optional(
+          Type.Array(
+            Type.Object(
+              {
+                name: Type.String(),
+                schema: This,
+              },
+              {$id: 'StructuredOutputSchemaProperty', ...strict},
+            ),
+          ),
+        ),
+        arrayItems: Type.Optional(This),
+        enumItems: Type.Optional(Type.Array(Type.String())),
+      },
+      strict,
+    ),
+  {$id: 'StructuredOutputSchema'},
 );
-
-/** Structured output schema (recursive) */
-export const StructuredOutputSchemaData: ReturnType<typeof Type.Object> =
-  Type.Object(
-    {
-      type: StructuredOutputDataTypeData,
-      description: Type.Optional(Type.String()),
-      properties: Type.Optional(Type.Array(StructuredOutputSchemaPropertyData)),
-      arrayItems: Type.Optional(
-        Type.Unsafe<Static<typeof StructuredOutputSchemaData>>({$ref: '#'}),
-      ),
-      enumItems: Type.Optional(Type.Array(Type.String())),
-    },
-    {$id: 'StructuredOutputSchema', ...strict},
-  );
 
 /** Generic structured output config.
  * Defines a schema for the model to return JSON, which can be extracted as needed.

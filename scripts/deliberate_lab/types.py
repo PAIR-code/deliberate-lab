@@ -287,24 +287,92 @@ class CustomRequestBodyField(BaseModel):
     value: str
 
 
-class ModelGenerationConfig(BaseModel):
+class GoogleThinkingLevel(Enum):
+    minimal = "minimal"
+    low = "low"
+    medium = "medium"
+    high = "high"
+
+
+class GoogleThinkingConfig(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )
-    maxTokens: float | None = None
-    stopSequences: List[str] | None = None
-    temperature: float | None = None
-    topP: float | None = None
-    frequencyPenalty: float | None = None
-    presencePenalty: float | None = None
-    reasoningLevel: ReasoningLevel | None = Field(None, title="ReasoningLevel")
-    reasoningBudget: float | None = None
-    includeReasoning: bool | None = None
-    disableSafetyFilters: bool | None = None
-    providerOptions: Dict[constr(pattern=r"^(.*)$"), Any] | None = Field(
-        None, title="ProviderOptions"
+    thinkingBudget: float | None = None
+    includeThoughts: bool | None = None
+    thinkingLevel: GoogleThinkingLevel | None = Field(None, title="GoogleThinkingLevel")
+
+
+class GoogleSafetyCategory(Enum):
+    HARM_CATEGORY_HARASSMENT = "HARM_CATEGORY_HARASSMENT"
+    HARM_CATEGORY_DANGEROUS_CONTENT = "HARM_CATEGORY_DANGEROUS_CONTENT"
+    HARM_CATEGORY_HATE_SPEECH = "HARM_CATEGORY_HATE_SPEECH"
+    HARM_CATEGORY_SEXUALLY_EXPLICIT = "HARM_CATEGORY_SEXUALLY_EXPLICIT"
+    HARM_CATEGORY_CIVIC_INTEGRITY = "HARM_CATEGORY_CIVIC_INTEGRITY"
+
+
+class GoogleSafetyThreshold(Enum):
+    BLOCK_NONE = "BLOCK_NONE"
+    BLOCK_ONLY_HIGH = "BLOCK_ONLY_HIGH"
+    BLOCK_MEDIUM_AND_ABOVE = "BLOCK_MEDIUM_AND_ABOVE"
+    BLOCK_LOW_AND_ABOVE = "BLOCK_LOW_AND_ABOVE"
+    HARM_BLOCK_THRESHOLD_UNSPECIFIED = "HARM_BLOCK_THRESHOLD_UNSPECIFIED"
+
+
+class GoogleSafetySetting(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
     )
-    customRequestBodyFields: List[CustomRequestBodyField] | None = None
+    category: GoogleSafetyCategory = Field(..., title="GoogleSafetyCategory")
+    threshold: GoogleSafetyThreshold = Field(..., title="GoogleSafetyThreshold")
+
+
+class ReasoningEffort(Enum):
+    low = "low"
+    medium = "medium"
+    high = "high"
+
+
+class AnthropicThinkingType(Enum):
+    enabled = "enabled"
+    disabled = "disabled"
+
+
+class AnthropicThinkingConfig(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    type: AnthropicThinkingType = Field(..., title="AnthropicThinkingType")
+    budgetTokens: float | None = None
+
+
+class AnthropicCacheTtl(Enum):
+    field_5m = "5m"
+    field_1h = "1h"
+
+
+class AnthropicCacheControl(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    type: Literal["ephemeral"] = "ephemeral"
+    ttl: AnthropicCacheTtl | None = Field(None, title="AnthropicCacheTtl")
+
+
+class OpenAIProviderOptions(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    reasoningEffort: ReasoningEffort | None = Field(None, title="ReasoningEffort")
+    parallelToolCalls: bool | None = None
+
+
+class OllamaProviderOptions(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    numCtx: float | None = None
+    numPredict: float | None = None
 
 
 class StructuredOutputType(Enum):
@@ -561,6 +629,24 @@ class Persona(BaseModel):
     defaultModelSettings: AgentModelSettings | None = None
 
 
+class GoogleProviderOptions(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    thinkingConfig: GoogleThinkingConfig | None = None
+    safetySettings: List[GoogleSafetySetting] | None = None
+
+
+class AnthropicProviderOptions(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    thinking: AnthropicThinkingConfig | None = None
+    effort: ReasoningEffort | None = Field(None, title="ReasoningEffort")
+    cacheControl: AnthropicCacheControl | None = None
+    sendReasoning: bool | None = None
+
+
 class AssetAllocationStageConfig(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
@@ -701,6 +787,34 @@ class RankingStageConfig(
     root: ItemRankingStageConfig | ParticipantRankingStageConfig = Field(
         ..., title="RankingStageConfig"
     )
+
+
+class ProviderOptionsMap(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    google: GoogleProviderOptions | None = None
+    anthropic: AnthropicProviderOptions | None = None
+    openai: OpenAIProviderOptions | None = None
+    ollama: OllamaProviderOptions | None = None
+
+
+class ModelGenerationConfig(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    maxTokens: float | None = None
+    stopSequences: List[str] | None = None
+    temperature: float | None = None
+    topP: float | None = None
+    frequencyPenalty: float | None = None
+    presencePenalty: float | None = None
+    reasoningLevel: ReasoningLevel | None = Field(None, title="ReasoningLevel")
+    reasoningBudget: float | None = None
+    includeReasoning: bool | None = None
+    disableSafetyFilters: bool | None = None
+    providerOptions: ProviderOptionsMap | None = None
+    customRequestBodyFields: List[CustomRequestBodyField] | None = None
 
 
 class Experiment(BaseModel):

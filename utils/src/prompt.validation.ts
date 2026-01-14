@@ -4,7 +4,7 @@
  * These TypeBox schemas define the structure of prompt items and configs
  * for JSON Schema export and Python type generation.
  */
-import {Type, type Static} from '@sinclair/typebox';
+import {Type} from '@sinclair/typebox';
 import {ShuffleConfigData} from './variables.validation';
 import {ConditionSchema} from './utils/condition.validation';
 import {ModelGenerationConfigData} from './providers.validation';
@@ -86,24 +86,30 @@ export const StageContextPromptItemData = Type.Object(
   {$id: 'StageContextPromptItem', ...strict},
 );
 
-/** Prompt item group (recursive) */
-export const PromptItemGroupData: ReturnType<typeof Type.Object> = Type.Object(
-  {
-    type: Type.Literal('GROUP'),
-    title: Type.String(),
-    items: Type.Array(
-      Type.Union([
-        TextPromptItemData,
-        ProfileInfoPromptItemData,
-        ProfileContextPromptItemData,
-        StageContextPromptItemData,
-        Type.Unsafe<Static<typeof PromptItemGroupData>>({$ref: '#'}),
-      ]),
+/** Prompt item group (recursive).
+ * Uses Type.Recursive to properly handle nested groups in items array.
+ */
+export const PromptItemGroupData = Type.Recursive(
+  (This) =>
+    Type.Object(
+      {
+        type: Type.Literal('GROUP'),
+        title: Type.String(),
+        items: Type.Array(
+          Type.Union([
+            TextPromptItemData,
+            ProfileInfoPromptItemData,
+            ProfileContextPromptItemData,
+            StageContextPromptItemData,
+            This,
+          ]),
+        ),
+        shuffleConfig: Type.Optional(ShuffleConfigData),
+        ...BasePromptItemFields,
+      },
+      strict,
     ),
-    shuffleConfig: Type.Optional(ShuffleConfigData),
-    ...BasePromptItemFields,
-  },
-  {$id: 'PromptItemGroup', ...strict},
+  {$id: 'PromptItemGroup'},
 );
 
 /** Union of all prompt item types */
