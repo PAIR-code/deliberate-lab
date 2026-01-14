@@ -251,7 +251,7 @@ class BalanceAcross(Enum):
     cohort = "cohort"
 
 
-class ApiType(Enum):
+class ApiKeyType(Enum):
     GEMINI = "GEMINI"
     OPENAI = "OPENAI"
     CLAUDE = "CLAUDE"
@@ -259,21 +259,104 @@ class ApiType(Enum):
 
 
 class AgentModelSettings(BaseModel):
-    apiType: ApiType
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    apiType: ApiKeyType = Field(..., title="ApiKeyType")
     modelName: str
 
 
-class Persona(BaseModel):
-    id: constr(min_length=1)
-    name: str
-    defaultModelSettings: AgentModelSettings | None = None
+class Type(Enum):
+    chat = "chat"
+    privateChat = "privateChat"
 
 
-class AgentParticipantTemplate(BaseModel):
-    persona: Persona = Field(..., title="Persona")
-    promptMap: Dict[constr(pattern=r"^(.*)$"), Dict[str, Any]] = Field(
-        ..., title="PromptMap"
+ShuffleConfig1 = ShuffleConfig
+
+
+class ReasoningLevel(Enum):
+    off = "off"
+    minimal = "minimal"
+    low = "low"
+    medium = "medium"
+    high = "high"
+
+
+class CustomRequestBodyField(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
     )
+    name: str
+    value: str
+
+
+class ModelGenerationConfig(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    maxTokens: float | None = None
+    stopSequences: List[str] | None = None
+    temperature: float | None = None
+    topP: float | None = None
+    frequencyPenalty: float | None = None
+    presencePenalty: float | None = None
+    reasoningLevel: ReasoningLevel | None = Field(None, title="ReasoningLevel")
+    reasoningBudget: float | None = None
+    includeReasoning: bool | None = None
+    disableSafetyFilters: bool | None = None
+    providerOptions: Dict[constr(pattern=r"^(.*)$"), Any] | None = Field(
+        None, title="ProviderOptions"
+    )
+    customRequestBodyFields: List[CustomRequestBodyField] | None = None
+
+
+class StructuredOutputType(Enum):
+    NONE = "NONE"
+    JSON_FORMAT = "JSON_FORMAT"
+    JSON_SCHEMA = "JSON_SCHEMA"
+
+
+class StructuredOutputDataType(Enum):
+    STRING = "STRING"
+    NUMBER = "NUMBER"
+    INTEGER = "INTEGER"
+    BOOLEAN = "BOOLEAN"
+    ARRAY = "ARRAY"
+    OBJECT = "OBJECT"
+    ENUM = "ENUM"
+
+
+class AgentChatSettings(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    wordsPerMinute: float | None = None
+    minMessagesBeforeResponding: float
+    canSelfTriggerCalls: bool
+    maxResponses: float | None = None
+    initialMessage: str
+
+
+class StageKind(Enum):
+    info = "info"
+    tos = "tos"
+    profile = "profile"
+    chat = "chat"
+    chip = "chip"
+    comprehension = "comprehension"
+    flipcard = "flipcard"
+    ranking = "ranking"
+    payout = "payout"
+    privateChat = "privateChat"
+    reveal = "reveal"
+    salesperson = "salesperson"
+    stockinfo = "stockinfo"
+    assetAllocation = "assetAllocation"
+    multiAssetAllocation = "multiAssetAllocation"
+    role = "role"
+    survey = "survey"
+    surveyPerParticipant = "surveyPerParticipant"
+    transfer = "transfer"
 
 
 class StockConfig(BaseModel):
@@ -472,7 +555,13 @@ class ComparisonCondition(BaseModel):
     value: str | float | bool
 
 
-AgentMediatorTemplate = AgentParticipantTemplate
+class Persona(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    id: constr(min_length=1)
+    name: str
+    defaultModelSettings: AgentModelSettings | None = None
 
 
 class AssetAllocationStageConfig(BaseModel):
@@ -879,6 +968,157 @@ class BalancedAssignmentVariableConfig(BaseModel):
     balanceAcross: BalanceAcross
 
 
+class AgentMediatorTemplate(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    persona: Persona
+    promptMap: Dict[
+        constr(pattern=r"^(.*)$"), ChatPromptConfig | GenericPromptConfig
+    ] = Field(..., title="PromptMap")
+
+
+class ChatPromptConfig(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    id: constr(min_length=1)
+    type: Type
+    prompt: List[
+        TextPromptItem
+        | ProfileInfoPromptItem
+        | ProfileContextPromptItem
+        | StageContextPromptItem
+        | PromptItemGroup
+    ]
+    includeScaffoldingInPrompt: bool | None = None
+    numRetries: float | None = None
+    generationConfig: ModelGenerationConfig | None = None
+    structuredOutputConfig: ChatMediatorStructuredOutputConfig | None = None
+    chatSettings: AgentChatSettings | None = None
+
+
+class TextPromptItem(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    type: Literal["TEXT"] = "TEXT"
+    text: str
+    condition: ConditionGroup | ComparisonCondition | None = None
+
+
+class ProfileInfoPromptItem(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    type: Literal["PROFILE_INFO"] = "PROFILE_INFO"
+    condition: ConditionGroup | ComparisonCondition | None = None
+
+
+class ProfileContextPromptItem(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    type: Literal["PROFILE_CONTEXT"] = "PROFILE_CONTEXT"
+    condition: ConditionGroup | ComparisonCondition | None = None
+
+
+class StageContextPromptItem(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    type: Literal["STAGE_CONTEXT"] = "STAGE_CONTEXT"
+    stageId: str
+    includePrimaryText: bool
+    includeInfoText: bool
+    includeHelpText: bool
+    includeStageDisplay: bool
+    includeParticipantAnswers: bool
+    condition: ConditionGroup | ComparisonCondition | None = None
+
+
+class PromptItemGroup(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    type: Literal["GROUP"] = "GROUP"
+    title: str
+    items: List[
+        TextPromptItem
+        | ProfileInfoPromptItem
+        | ProfileContextPromptItem
+        | StageContextPromptItem
+        | DeliberateLabAPISchemas
+    ]
+    shuffleConfig: ShuffleConfig1 | None = Field(None, title="ShuffleConfig")
+    condition: ConditionGroup | ComparisonCondition | None = None
+
+
+class ChatMediatorStructuredOutputConfig(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    enabled: bool
+    type: StructuredOutputType = Field(..., title="StructuredOutputType")
+    schema_: StructuredOutputSchema | None = Field(None, alias="schema")
+    appendToPrompt: bool
+    shouldRespondField: str
+    messageField: str
+    explanationField: str
+    readyToEndField: str
+
+
+class StructuredOutputSchema(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    type: StructuredOutputDataType = Field(..., title="StructuredOutputDataType")
+    description: str | None = None
+    properties: List[StructuredOutputSchemaProperty] | None = None
+    arrayItems: DeliberateLabAPISchemas | None = None
+    enumItems: List[str] | None = None
+
+
+class StructuredOutputSchemaProperty(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    name: str
+    schema_: DeliberateLabAPISchemas = Field(..., alias="schema")
+
+
+class GenericPromptConfig(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    id: constr(min_length=1)
+    type: StageKind = Field(..., title="StageKind")
+    prompt: List[
+        TextPromptItem
+        | ProfileInfoPromptItem
+        | ProfileContextPromptItem
+        | StageContextPromptItem
+        | PromptItemGroup
+    ]
+    includeScaffoldingInPrompt: bool | None = None
+    numRetries: float | None = None
+    generationConfig: ModelGenerationConfig | None = None
+    structuredOutputConfig: StructuredOutputConfig | None = None
+
+
+class StructuredOutputConfig(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    enabled: bool
+    type: StructuredOutputType = Field(..., title="StructuredOutputType")
+    schema_: StructuredOutputSchema | None = Field(None, alias="schema")
+    appendToPrompt: bool
+
+
+AgentParticipantTemplate = AgentMediatorTemplate
+
+
 class JSONSchemaDefinition(
     RootModel[String | Number | Integer | Boolean | Object | Array]
 ):
@@ -896,3 +1136,9 @@ ConditionGroup.model_rebuild()
 StaticVariableConfig.model_rebuild()
 Object.model_rebuild()
 Array.model_rebuild()
+AgentMediatorTemplate.model_rebuild()
+ChatPromptConfig.model_rebuild()
+ChatMediatorStructuredOutputConfig.model_rebuild()
+StructuredOutputSchema.model_rebuild()
+GenericPromptConfig.model_rebuild()
+AgentParticipantTemplate.model_rebuild()
