@@ -514,6 +514,9 @@ class CohortUpdate(BaseModel):
 
 
 class ChatStageConfig(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
     id: str
     kind: Literal["chat"] = "chat"
     name: str
@@ -581,6 +584,22 @@ class PayoutStageConfig(BaseModel):
     averageAllPayoutItems: bool
 
 
+class PrivateChatStageConfig(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    id: str
+    kind: Literal["privateChat"] = "privateChat"
+    name: str
+    descriptions: Any
+    progress: Any
+    timeLimitInMinutes: float | None = None
+    requireFullTime: bool | None = None
+    isTurnBasedChat: bool | None = None
+    minNumberOfTurns: float | None = None
+    maxNumberOfTurns: float | None = None
+
+
 class ItemRankingStageConfig(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
@@ -607,6 +626,17 @@ class ParticipantRankingStageConfig(BaseModel):
     rankingType: Literal["participants"] = "participants"
     strategy: Strategy
     enableSelfVoting: bool
+
+
+class SalespersonStageConfig(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    id: str
+    kind: Literal["salesperson"] = "salesperson"
+    name: str
+    descriptions: Any
+    progress: Any
 
 
 class ComparisonCondition(BaseModel):
@@ -684,19 +714,6 @@ class ComprehensionStageConfig(BaseModel):
     questions: List[TextQuestion | McQuestion]
 
 
-class PrivateChatStageConfig(BaseModel):
-    id: str
-    kind: Literal["privateChat"] = "privateChat"
-    name: str
-    descriptions: Any
-    progress: Any
-    timeLimitInMinutes: float | None = None
-    requireFullTime: bool | None = None
-    isTurnBasedChat: bool | None = None
-    minNumberOfTurns: float | None = None
-    maxNumberOfTurns: float | None = None
-
-
 class ProfileStageConfig(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
@@ -731,14 +748,6 @@ class RoleStageConfig(BaseModel):
     descriptions: Any
     progress: Any
     roles: List[Role]
-
-
-class SalespersonStageConfig(BaseModel):
-    id: str
-    kind: Literal["salesperson"] = "salesperson"
-    name: str
-    descriptions: Any
-    progress: Any
 
 
 class StockinfoStageConfig(BaseModel):

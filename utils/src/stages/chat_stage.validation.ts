@@ -25,7 +25,7 @@ export const ChatStageConfigData = Type.Object(
     // discussions
     // agents
   },
-  {$id: 'ChatStageConfig'},
+  {$id: 'ChatStageConfig', ...strict},
 );
 
 // ************************************************************************* //

@@ -78,6 +78,7 @@
     },
     "ChatStageConfig": {
       "title": "ChatStageConfig",
+      "additionalProperties": false,
       "type": "object",
       "required": [
         "id",
@@ -574,6 +575,66 @@
         }
       }
     },
+    "PrivateChatStageConfig": {
+      "title": "PrivateChatStageConfig",
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "id",
+        "kind",
+        "name",
+        "descriptions",
+        "progress",
+        "timeLimitInMinutes"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "kind": {
+          "const": "privateChat",
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "descriptions": {
+          "$ref": "#/$defs/StageTextConfig"
+        },
+        "progress": {
+          "$ref": "#/$defs/StageProgressConfig"
+        },
+        "timeLimitInMinutes": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "requireFullTime": {
+          "type": "boolean"
+        },
+        "isTurnBasedChat": {
+          "type": "boolean"
+        },
+        "minNumberOfTurns": {
+          "type": "number"
+        },
+        "maxNumberOfTurns": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
     "RankingStageConfig": {
       "title": "RankingStageConfig",
       "anyOf": [
@@ -711,6 +772,30 @@
         },
         "enableSelfVoting": {
           "type": "boolean"
+        }
+      }
+    },
+    "SalespersonStageConfig": {
+      "title": "SalespersonStageConfig",
+      "additionalProperties": false,
+      "type": "object",
+      "required": ["id", "kind", "name", "descriptions", "progress"],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "kind": {
+          "const": "salesperson",
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "descriptions": {
+          "$ref": "#/$defs/StageTextConfig"
+        },
+        "progress": {
+          "$ref": "#/$defs/StageProgressConfig"
         }
       }
     },
@@ -3138,65 +3223,6 @@
         }
       }
     },
-    "PrivateChatStageConfig": {
-      "type": "object",
-      "required": [
-        "id",
-        "kind",
-        "name",
-        "descriptions",
-        "progress",
-        "timeLimitInMinutes"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        },
-        "kind": {
-          "const": "privateChat",
-          "type": "string"
-        },
-        "name": {
-          "type": "string"
-        },
-        "descriptions": {
-          "$ref": "#/$defs/StageTextConfig"
-        },
-        "progress": {
-          "$ref": "#/$defs/StageProgressConfig"
-        },
-        "timeLimitInMinutes": {
-          "anyOf": [
-            {
-              "type": "number"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "requireFullTime": {
-          "type": "boolean"
-        },
-        "isTurnBasedChat": {
-          "type": "boolean"
-        },
-        "minNumberOfTurns": {
-          "type": "number"
-        },
-        "maxNumberOfTurns": {
-          "anyOf": [
-            {
-              "type": "number"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        }
-      },
-      "title": "PrivateChatStageConfig"
-    },
     "ProfileStageConfig": {
       "additionalProperties": false,
       "type": "object",
@@ -3355,29 +3381,6 @@
         }
       },
       "title": "RoleStageConfig"
-    },
-    "SalespersonStageConfig": {
-      "type": "object",
-      "required": ["id", "kind", "name", "descriptions", "progress"],
-      "properties": {
-        "id": {
-          "type": "string"
-        },
-        "kind": {
-          "const": "salesperson",
-          "type": "string"
-        },
-        "name": {
-          "type": "string"
-        },
-        "descriptions": {
-          "$ref": "#/$defs/StageTextConfig"
-        },
-        "progress": {
-          "$ref": "#/$defs/StageProgressConfig"
-        }
-      },
-      "title": "SalespersonStageConfig"
     },
     "StockinfoStageConfig": {
       "additionalProperties": false,
