@@ -98,6 +98,19 @@ describe('parseStructuredOutputFromText', () => {
     const result = parseStructuredOutputFromText(input);
     expect(result).toEqual({explanation: 'test', shouldRespond: true});
   });
+
+  it('handles literal backslash-n escape sequences in markdown code blocks', () => {
+    // When LLM response contains literal \n characters instead of actual newlines
+    // This can happen due to double-serialization or escaping issues
+    const input =
+      '```json\\n{\\n  "name": "Brian",\\n  "emoji": "👋",\\n  "pronouns": "he/him"\\n}\\n```';
+    const result = parseStructuredOutputFromText(input);
+    expect(result).toEqual({
+      name: 'Brian',
+      emoji: '👋',
+      pronouns: 'he/him',
+    });
+  });
 });
 
 describe('getStructuredOutput', () => {
