@@ -1770,7 +1770,14 @@
           "$ref": "#/$defs/ModelGenerationConfig"
         },
         "structuredOutputConfig": {
-          "$ref": "#/$defs/ChatMediatorStructuredOutputConfig"
+          "anyOf": [
+            {
+              "$ref": "#/$defs/StructuredOutputConfig"
+            },
+            {
+              "$ref": "#/$defs/ChatMediatorStructuredOutputConfig"
+            }
+          ]
         },
         "chatSettings": {
           "$ref": "#/$defs/AgentChatSettings"
@@ -2093,19 +2100,11 @@
         }
       ]
     },
-    "ChatMediatorStructuredOutputConfig": {
-      "title": "ChatMediatorStructuredOutputConfig",
+    "StructuredOutputConfig": {
+      "title": "StructuredOutputConfig",
       "additionalProperties": false,
       "type": "object",
-      "required": [
-        "enabled",
-        "type",
-        "appendToPrompt",
-        "shouldRespondField",
-        "messageField",
-        "explanationField",
-        "readyToEndField"
-      ],
+      "required": ["enabled", "type", "appendToPrompt"],
       "properties": {
         "enabled": {
           "type": "boolean"
@@ -2132,18 +2131,6 @@
         },
         "appendToPrompt": {
           "type": "boolean"
-        },
-        "shouldRespondField": {
-          "type": "string"
-        },
-        "messageField": {
-          "type": "string"
-        },
-        "explanationField": {
-          "type": "string"
-        },
-        "readyToEndField": {
-          "type": "string"
         }
       }
     },
@@ -2267,6 +2254,60 @@
         },
         "schema": {
           "$ref": "#"
+        }
+      }
+    },
+    "ChatMediatorStructuredOutputConfig": {
+      "title": "ChatMediatorStructuredOutputConfig",
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "enabled",
+        "type",
+        "appendToPrompt",
+        "shouldRespondField",
+        "messageField",
+        "explanationField",
+        "readyToEndField"
+      ],
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "type": {
+          "title": "StructuredOutputType",
+          "anyOf": [
+            {
+              "const": "NONE",
+              "type": "string"
+            },
+            {
+              "const": "JSON_FORMAT",
+              "type": "string"
+            },
+            {
+              "const": "JSON_SCHEMA",
+              "type": "string"
+            }
+          ]
+        },
+        "schema": {
+          "$ref": "#/$defs/StructuredOutputSchema"
+        },
+        "appendToPrompt": {
+          "type": "boolean"
+        },
+        "shouldRespondField": {
+          "type": "string"
+        },
+        "messageField": {
+          "type": "string"
+        },
+        "explanationField": {
+          "type": "string"
+        },
+        "readyToEndField": {
+          "type": "string"
         }
       }
     },
@@ -2520,40 +2561,6 @@
           "type": "string"
         }
       ]
-    },
-    "StructuredOutputConfig": {
-      "title": "StructuredOutputConfig",
-      "additionalProperties": false,
-      "type": "object",
-      "required": ["enabled", "type", "appendToPrompt"],
-      "properties": {
-        "enabled": {
-          "type": "boolean"
-        },
-        "type": {
-          "title": "StructuredOutputType",
-          "anyOf": [
-            {
-              "const": "NONE",
-              "type": "string"
-            },
-            {
-              "const": "JSON_FORMAT",
-              "type": "string"
-            },
-            {
-              "const": "JSON_SCHEMA",
-              "type": "string"
-            }
-          ]
-        },
-        "schema": {
-          "$ref": "#/$defs/StructuredOutputSchema"
-        },
-        "appendToPrompt": {
-          "type": "boolean"
-        }
-      }
     },
     "AgentParticipantTemplate": {
       "title": "AgentParticipantTemplate",

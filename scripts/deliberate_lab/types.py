@@ -994,7 +994,9 @@ class ChatPromptConfig(BaseModel):
     includeScaffoldingInPrompt: bool | None = None
     numRetries: float | None = None
     generationConfig: ModelGenerationConfig | None = None
-    structuredOutputConfig: ChatMediatorStructuredOutputConfig | None = None
+    structuredOutputConfig: (
+        StructuredOutputConfig | ChatMediatorStructuredOutputConfig | None
+    ) = None
     chatSettings: AgentChatSettings | None = None
 
 
@@ -1054,7 +1056,7 @@ class PromptItemGroup(BaseModel):
     condition: ConditionGroup | ComparisonCondition | None = None
 
 
-class ChatMediatorStructuredOutputConfig(BaseModel):
+class StructuredOutputConfig(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )
@@ -1062,10 +1064,6 @@ class ChatMediatorStructuredOutputConfig(BaseModel):
     type: StructuredOutputType = Field(..., title="StructuredOutputType")
     schema_: StructuredOutputSchema | None = Field(None, alias="schema")
     appendToPrompt: bool
-    shouldRespondField: str
-    messageField: str
-    explanationField: str
-    readyToEndField: str
 
 
 class StructuredOutputSchema(BaseModel):
@@ -1087,6 +1085,20 @@ class StructuredOutputSchemaProperty(BaseModel):
     schema_: DeliberateLabAPISchemas = Field(..., alias="schema")
 
 
+class ChatMediatorStructuredOutputConfig(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    enabled: bool
+    type: StructuredOutputType = Field(..., title="StructuredOutputType")
+    schema_: StructuredOutputSchema | None = Field(None, alias="schema")
+    appendToPrompt: bool
+    shouldRespondField: str
+    messageField: str
+    explanationField: str
+    readyToEndField: str
+
+
 class GenericPromptConfig(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
@@ -1104,16 +1116,6 @@ class GenericPromptConfig(BaseModel):
     numRetries: float | None = None
     generationConfig: ModelGenerationConfig | None = None
     structuredOutputConfig: StructuredOutputConfig | None = None
-
-
-class StructuredOutputConfig(BaseModel):
-    model_config = ConfigDict(
-        extra="forbid",
-    )
-    enabled: bool
-    type: StructuredOutputType = Field(..., title="StructuredOutputType")
-    schema_: StructuredOutputSchema | None = Field(None, alias="schema")
-    appendToPrompt: bool
 
 
 AgentParticipantTemplate = AgentMediatorTemplate
@@ -1138,7 +1140,6 @@ Object.model_rebuild()
 Array.model_rebuild()
 AgentMediatorTemplate.model_rebuild()
 ChatPromptConfig.model_rebuild()
-ChatMediatorStructuredOutputConfig.model_rebuild()
+StructuredOutputConfig.model_rebuild()
 StructuredOutputSchema.model_rebuild()
-GenericPromptConfig.model_rebuild()
 AgentParticipantTemplate.model_rebuild()

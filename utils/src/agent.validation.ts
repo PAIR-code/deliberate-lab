@@ -317,7 +317,10 @@ export const StructuredOutputSchemaData: ReturnType<typeof Type.Object> =
     {$id: 'StructuredOutputSchema', ...strict},
   );
 
-/** Base structured output config */
+/** Generic structured output config.
+ * Defines a schema for the model to return JSON, which can be extracted as needed.
+ * Use this for general-purpose structured output or when structured output is disabled.
+ */
 export const StructuredOutputConfigData = Type.Object(
   {
     enabled: Type.Boolean(),
@@ -328,7 +331,16 @@ export const StructuredOutputConfigData = Type.Object(
   {$id: 'StructuredOutputConfig', ...strict},
 );
 
-/** Chat mediator structured output config (extends base) */
+/** Specialized structured output config for chat mediators.
+ * Extends base config with pre-baked field mappings that the chat agent code
+ * uses to control mediator behavior:
+ * - shouldRespondField: which JSON field indicates if the mediator wants to respond
+ * - messageField: which JSON field contains the message content
+ * - explanationField: which JSON field contains the decision explanation
+ * - readyToEndField: which JSON field indicates if the mediator is done
+ *
+ * See extractChatMediatorStructuredFields() in structured_output.ts for usage.
+ */
 export const ChatMediatorStructuredOutputConfigData = Type.Object(
   {
     enabled: Type.Boolean(),
@@ -374,13 +386,20 @@ const BasePromptConfigFields = {
   structuredOutputConfig: Type.Optional(StructuredOutputConfigData),
 };
 
-/** Chat prompt config (for chat and privateChat stages) */
+/** Prompt config for chat and privateChat stages.
+ * structuredOutputConfig accepts either:
+ * - StructuredOutputConfig: for generic/disabled structured output
+ * - ChatMediatorStructuredOutputConfig: for pre-baked mediator behavior extraction
+ */
 export const ChatPromptConfigData = Type.Object(
   {
     ...BasePromptConfigFields,
     type: Type.Union([Type.Literal('chat'), Type.Literal('privateChat')]),
     structuredOutputConfig: Type.Optional(
-      ChatMediatorStructuredOutputConfigData,
+      Type.Union([
+        StructuredOutputConfigData,
+        ChatMediatorStructuredOutputConfigData,
+      ]),
     ),
     chatSettings: Type.Optional(AgentChatSettingsData),
   },
