@@ -12,12 +12,15 @@ import {
   ProfileInfoPromptItemData,
   ProfileContextPromptItemData,
   StageContextPromptItemData,
+  PromptConfigData,
+  ChatPromptConfigData,
+  GenericPromptConfigData,
+  AgentChatSettingsData,
 } from './prompt.validation';
 import {
   ApiKeyTypeData,
   ModelGenerationConfigData,
 } from './providers.validation';
-import {StageKindData} from './stages/stage.validation';
 import {
   StructuredOutputConfigData,
   ChatMediatorStructuredOutputConfigData,
@@ -39,71 +42,6 @@ export const AgentModelSettingsData = Type.Object(
   },
   {$id: 'AgentModelSettings', ...strict},
 );
-
-// ****************************************************************************
-// Agent chat settings
-// ****************************************************************************
-
-/** Agent chat settings */
-export const AgentChatSettingsData = Type.Object(
-  {
-    wordsPerMinute: Type.Union([Type.Number(), Type.Null()]),
-    minMessagesBeforeResponding: Type.Number(),
-    canSelfTriggerCalls: Type.Boolean(),
-    maxResponses: Type.Union([Type.Number(), Type.Null()]),
-    initialMessage: Type.String(),
-  },
-  {$id: 'AgentChatSettings', ...strict},
-);
-
-// ****************************************************************************
-// Prompt configs
-// ****************************************************************************
-
-/** Base prompt config fields */
-const BasePromptConfigFields = {
-  id: Type.String({minLength: 1}),
-  type: StageKindData,
-  prompt: Type.Array(PromptItemData),
-  includeScaffoldingInPrompt: Type.Optional(Type.Boolean()),
-  numRetries: Type.Optional(Type.Number()),
-  generationConfig: Type.Optional(ModelGenerationConfigData),
-  structuredOutputConfig: Type.Optional(StructuredOutputConfigData),
-};
-
-/** Prompt config for chat and privateChat stages.
- * structuredOutputConfig accepts either:
- * - StructuredOutputConfig: for generic/disabled structured output
- * - ChatMediatorStructuredOutputConfig: for pre-baked mediator behavior extraction
- */
-export const ChatPromptConfigData = Type.Object(
-  {
-    ...BasePromptConfigFields,
-    type: Type.Union([Type.Literal('chat'), Type.Literal('privateChat')]),
-    structuredOutputConfig: Type.Optional(
-      Type.Union([
-        StructuredOutputConfigData,
-        ChatMediatorStructuredOutputConfigData,
-      ]),
-    ),
-    chatSettings: Type.Optional(AgentChatSettingsData),
-  },
-  {$id: 'ChatPromptConfig', ...strict},
-);
-
-/** Generic prompt config (for non-chat stages) */
-export const GenericPromptConfigData = Type.Object(
-  {
-    ...BasePromptConfigFields,
-  },
-  {$id: 'GenericPromptConfig', ...strict},
-);
-
-/** Union of all prompt config types */
-export const PromptConfigData = Type.Union([
-  ChatPromptConfigData,
-  GenericPromptConfigData,
-]);
 
 // ****************************************************************************
 // Agent persona and templates

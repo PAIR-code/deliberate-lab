@@ -1,12 +1,18 @@
 /**
- * Prompt item validation schemas.
+ * Prompt validation schemas.
  *
- * These TypeBox schemas define the structure of prompt items for JSON Schema
- * export and Python type generation.
+ * These TypeBox schemas define the structure of prompt items and configs
+ * for JSON Schema export and Python type generation.
  */
 import {Type, type Static} from '@sinclair/typebox';
 import {ShuffleConfigData} from './variables.validation';
 import {ConditionSchema} from './utils/condition.validation';
+import {ModelGenerationConfigData} from './providers.validation';
+import {StageKindData} from './stages/stage.validation';
+import {
+  StructuredOutputConfigData,
+  ChatMediatorStructuredOutputConfigData,
+} from './structured_output.validation';
 
 /** Shorthand for strict TypeBox object validation */
 const strict = {additionalProperties: false} as const;
@@ -106,4 +112,65 @@ export const PromptItemData = Type.Union([
   ProfileContextPromptItemData,
   StageContextPromptItemData,
   PromptItemGroupData,
+]);
+
+// ****************************************************************************
+// Prompt configs
+// ****************************************************************************
+
+/** Agent chat settings - defined here to avoid circular imports with agent.validation.ts */
+export const AgentChatSettingsData = Type.Object(
+  {
+    wordsPerMinute: Type.Union([Type.Number(), Type.Null()]),
+    minMessagesBeforeResponding: Type.Number(),
+    canSelfTriggerCalls: Type.Boolean(),
+    maxResponses: Type.Union([Type.Number(), Type.Null()]),
+    initialMessage: Type.String(),
+  },
+  {$id: 'AgentChatSettings', ...strict},
+);
+
+/** Base prompt config fields */
+const BasePromptConfigFields = {
+  id: Type.String({minLength: 1}),
+  type: StageKindData,
+  prompt: Type.Array(PromptItemData),
+  includeScaffoldingInPrompt: Type.Optional(Type.Boolean()),
+  numRetries: Type.Optional(Type.Number()),
+  generationConfig: Type.Optional(ModelGenerationConfigData),
+  structuredOutputConfig: Type.Optional(StructuredOutputConfigData),
+};
+
+/** Prompt config for chat and privateChat stages.
+ * structuredOutputConfig accepts either:
+ * - StructuredOutputConfig: for generic/disabled structured output
+ * - ChatMediatorStructuredOutputConfig: for pre-baked mediator behavior extraction
+ */
+export const ChatPromptConfigData = Type.Object(
+  {
+    ...BasePromptConfigFields,
+    type: Type.Union([Type.Literal('chat'), Type.Literal('privateChat')]),
+    structuredOutputConfig: Type.Optional(
+      Type.Union([
+        StructuredOutputConfigData,
+        ChatMediatorStructuredOutputConfigData,
+      ]),
+    ),
+    chatSettings: Type.Optional(AgentChatSettingsData),
+  },
+  {$id: 'ChatPromptConfig', ...strict},
+);
+
+/** Generic prompt config (for non-chat stages) */
+export const GenericPromptConfigData = Type.Object(
+  {
+    ...BasePromptConfigFields,
+  },
+  {$id: 'GenericPromptConfig', ...strict},
+);
+
+/** Union of all prompt config types */
+export const PromptConfigData = Type.Union([
+  ChatPromptConfigData,
+  GenericPromptConfigData,
 ]);
