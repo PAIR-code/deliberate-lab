@@ -159,7 +159,7 @@ export function createStructuredOutputConfig(
   };
   return {
     enabled: config.enabled ?? true,
-    type: config.type ?? StructuredOutputType.JSON_FORMAT,
+    type: config.type ?? StructuredOutputType.JSON_SCHEMA,
     schema: schema,
     appendToPrompt: config.appendToPrompt ?? true,
     shouldRespondField:
