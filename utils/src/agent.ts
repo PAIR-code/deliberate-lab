@@ -13,6 +13,7 @@ import {
   ParticipantPromptConfig,
 } from './structured_prompt';
 import {ApiKeyType, ProviderOptionsMap} from './providers';
+import {GEMINI_DEFAULT_MODEL} from './model_config';
 
 /** Agent types and functions. */
 
@@ -185,7 +186,7 @@ export interface AgentParticipantTemplate {
 // ************************************************************************* //
 export const DEFAULT_AGENT_API_TYPE = ApiKeyType.GEMINI_API_KEY;
 
-export const DEFAULT_AGENT_API_MODEL = 'gemini-2.5-flash';
+export const DEFAULT_AGENT_API_MODEL = GEMINI_DEFAULT_MODEL;
 
 export const DEFAULT_AGENT_MODEL_SETTINGS: AgentModelSettings = {
   apiType: DEFAULT_AGENT_API_TYPE,
