@@ -517,7 +517,6 @@ export const acceptParticipantTransfer = onCall(async (request) => {
     // Use shared transfer completion logic
     response = await completeParticipantTransfer(
       transaction,
-      app.firestore(),
       data.experimentId,
       participantDoc,
       participant,
