@@ -18,7 +18,7 @@ export const StageTextConfigSchema = Type.Object(
 /** StageProgressConfig input validation. */
 export const StageProgressConfigSchema = Type.Object(
   {
-    minParticipants: Type.Number(),
+    minParticipants: Type.Integer(),
     waitForAllParticipants: Type.Boolean(),
     showParticipantProgress: Type.Boolean(),
   },

@@ -300,6 +300,11 @@ export async function updateExperiment(
           403,
           'Only the creator can update the experiment',
         );
+      } else if (result.error === 'cohort-definitions-locked') {
+        throw createHttpError(
+          400,
+          'Cannot modify cohort definitions after participants have joined',
+        );
       }
     }
 
@@ -392,6 +397,11 @@ export async function updateExperiment(
       throw createHttpError(404, 'Experiment not found');
     } else if (result.error === 'not-owner') {
       throw createHttpError(403, 'Only the creator can update the experiment');
+    } else if (result.error === 'cohort-definitions-locked') {
+      throw createHttpError(
+        400,
+        'Cannot modify cohort definitions after participants have joined',
+      );
     }
   }
 

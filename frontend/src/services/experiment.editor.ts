@@ -157,6 +157,7 @@ export class ExperimentEditor extends Service {
       defaultCohortConfig: template.experiment.defaultCohortConfig,
       prolificConfig: template.experiment.prolificConfig,
       variableConfigs: template.experiment.variableConfigs,
+      cohortDefinitions: template.experiment.cohortDefinitions,
     });
     this.setStages(template.stageConfigs);
     this.setAgentMediators(template.agentMediators);

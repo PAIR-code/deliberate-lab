@@ -225,6 +225,165 @@ describe('generateStaticVariables', () => {
     expect(consoleSpy).not.toHaveBeenCalled();
     expect(JSON.parse(result['static_var'])).toEqual({foo: 'bar'});
   });
+
+  describe('cohortValues support', () => {
+    it('should use default value when cohortValues not provided', () => {
+      const config = createStaticVariableConfig({
+        scope: VariableScope.COHORT,
+        definition: {
+          name: 'treatment',
+          description: '',
+          schema: Type.String(),
+        },
+        value: JSON.stringify('control'),
+      });
+
+      const result = generateStaticVariables(config, {
+        scope: VariableScope.COHORT,
+        experimentId: 'exp-1',
+        cohortId: 'cohort-1',
+      });
+
+      expect(JSON.parse(result['treatment'])).toBe('control');
+    });
+
+    it('should use cohort-specific value when cohortId matches', () => {
+      const config = createStaticVariableConfig({
+        scope: VariableScope.COHORT,
+        definition: {
+          name: 'treatment',
+          description: '',
+          schema: Type.String(),
+        },
+        value: JSON.stringify('control'),
+        cohortValues: {
+          'cohort-pro-ai': JSON.stringify('pro_ai'),
+          'cohort-skeptic': JSON.stringify('skeptic'),
+        },
+      });
+
+      const result = generateStaticVariables(config, {
+        scope: VariableScope.COHORT,
+        experimentId: 'exp-1',
+        cohortId: 'cohort-pro-ai',
+      });
+
+      expect(JSON.parse(result['treatment'])).toBe('pro_ai');
+    });
+
+    it('should fall back to default value when cohortId not in cohortValues', () => {
+      const config = createStaticVariableConfig({
+        scope: VariableScope.COHORT,
+        definition: {
+          name: 'treatment',
+          description: '',
+          schema: Type.String(),
+        },
+        value: JSON.stringify('control'),
+        cohortValues: {
+          'cohort-pro-ai': JSON.stringify('pro_ai'),
+        },
+      });
+
+      const result = generateStaticVariables(config, {
+        scope: VariableScope.COHORT,
+        experimentId: 'exp-1',
+        cohortId: 'cohort-other',
+      });
+
+      expect(JSON.parse(result['treatment'])).toBe('control');
+    });
+
+    it('should ignore cohortValues when context has no cohortId', () => {
+      const config = createStaticVariableConfig({
+        scope: VariableScope.EXPERIMENT,
+        definition: {
+          name: 'treatment',
+          description: '',
+          schema: Type.String(),
+        },
+        value: JSON.stringify('default'),
+        cohortValues: {
+          'cohort-1': JSON.stringify('cohort_specific'),
+        },
+      });
+
+      // Experiment-level context has no cohortId
+      const result = generateStaticVariables(config, {
+        scope: VariableScope.EXPERIMENT,
+        experimentId: 'exp-1',
+      });
+
+      expect(JSON.parse(result['treatment'])).toBe('default');
+    });
+
+    it('should work with complex values in cohortValues', () => {
+      const config = createStaticVariableConfig({
+        scope: VariableScope.COHORT,
+        definition: {
+          name: 'agent_persona',
+          description: '',
+          schema: Type.Object({
+            name: Type.String(),
+            traits: Type.Array(Type.String()),
+          }),
+        },
+        value: JSON.stringify({name: 'Default Agent', traits: ['neutral']}),
+        cohortValues: {
+          'cohort-a': JSON.stringify({
+            name: 'Pro-AI Agent',
+            traits: ['enthusiastic', 'technical'],
+          }),
+          'cohort-b': JSON.stringify({
+            name: 'Skeptic Agent',
+            traits: ['cautious', 'questioning'],
+          }),
+        },
+      });
+
+      const resultA = generateStaticVariables(config, {
+        scope: VariableScope.COHORT,
+        experimentId: 'exp-1',
+        cohortId: 'cohort-a',
+      });
+
+      expect(JSON.parse(resultA['agent_persona'])).toEqual({
+        name: 'Pro-AI Agent',
+        traits: ['enthusiastic', 'technical'],
+      });
+
+      const resultB = generateStaticVariables(config, {
+        scope: VariableScope.COHORT,
+        experimentId: 'exp-1',
+        cohortId: 'cohort-b',
+      });
+
+      expect(JSON.parse(resultB['agent_persona'])).toEqual({
+        name: 'Skeptic Agent',
+        traits: ['cautious', 'questioning'],
+      });
+    });
+
+    it('should work without context parameter (backwards compatibility)', () => {
+      const config = createStaticVariableConfig({
+        scope: VariableScope.COHORT,
+        definition: {
+          name: 'treatment',
+          description: '',
+          schema: Type.String(),
+        },
+        value: JSON.stringify('default'),
+        cohortValues: {
+          'cohort-1': JSON.stringify('specific'),
+        },
+      });
+
+      // No context provided - should use default
+      const result = generateStaticVariables(config);
+
+      expect(JSON.parse(result['treatment'])).toBe('default');
+    });
+  });
 });
 
 describe('extractVariablesFromVariableConfigs', () => {

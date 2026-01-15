@@ -4,6 +4,8 @@
 
 import {Firestore, Timestamp, Transaction} from 'firebase-admin/firestore';
 import {
+  CohortDefinition,
+  CohortParticipantConfig,
   ExperimentTemplate,
   StageConfig,
   UnifiedTimestamp,
@@ -19,6 +21,35 @@ import {
 import {getExperimentDownload} from './data';
 import {generateVariablesForScope} from './variables.utils';
 import {AuthGuard} from './utils/auth-guard';
+import {createCohortFromDefinition} from './cohort.utils';
+
+/**
+ * Create cohorts from cohort definitions and update the definitions with generated IDs.
+ * Each cohort is created in its own transaction for parallel execution.
+ */
+async function createCohortsFromDefinitions(
+  firestore: Firestore,
+  experimentId: string,
+  definitions: CohortDefinition[],
+  defaultCohortConfig: CohortParticipantConfig,
+): Promise<void> {
+  if (definitions.length === 0) return;
+
+  await Promise.all(
+    definitions.map(async (definition) => {
+      await firestore.runTransaction(async (transaction: Transaction) => {
+        const cohortConfig = await createCohortFromDefinition(
+          transaction,
+          experimentId,
+          definition,
+          defaultCohortConfig,
+        );
+        // Store the generated cohort ID back on the definition
+        definition.generatedCohortId = cohortConfig.id;
+      });
+    }),
+  );
+}
 
 /**
  * Options for writing an experiment from a template
@@ -86,7 +117,6 @@ export async function writeExperimentFromTemplate(
 
   // Run document write as transaction to ensure consistency
   await firestore.runTransaction(async (transaction: Transaction) => {
-    // Set the experiment document
     transaction.set(document, experimentConfig);
 
     // Add collection of stages
@@ -114,6 +144,21 @@ export async function writeExperimentFromTemplate(
       }
     }
   });
+
+  // Create cohorts from cohort definitions AFTER main transaction commits
+  // (so createCohortInternal can read the experiment normally)
+  if (experimentConfig.cohortDefinitions?.length) {
+    await createCohortsFromDefinitions(
+      firestore,
+      experimentConfig.id,
+      experimentConfig.cohortDefinitions,
+      experimentConfig.defaultCohortConfig,
+    );
+    // Update experiment with generatedCohortIds
+    await document.update({
+      cohortDefinitions: experimentConfig.cohortDefinitions,
+    });
+  }
 
   return document.id;
 }
@@ -253,7 +298,7 @@ export interface UpdateExperimentOptions {
  */
 export interface UpdateExperimentResult {
   success: boolean;
-  error?: 'not-found' | 'not-owner';
+  error?: 'not-found' | 'not-owner' | 'cohort-definitions-locked';
 }
 
 /**
@@ -318,6 +363,49 @@ export async function updateExperimentFromTemplate(
     {scope: VariableScope.EXPERIMENT, experimentId: experimentConfig.id},
   );
 
+  // Handle cohortDefinitions updates:
+  // - Compare definitions to see if locked fields changed (id, alias, maxParticipantsPerCohort)
+  // - If participants exist and locked fields changed: error
+  // - If no participants and locked fields changed: regenerate cohorts
+  // - If locked fields unchanged: preserve generatedCohortIds
+  const participantsSnapshot = await document
+    .collection('participants')
+    .limit(1)
+    .get();
+  const hasParticipants = !participantsSnapshot.empty;
+
+  // Check if locked cohortDefinition fields changed
+  const getLockedFields = (d: CohortDefinition) => ({
+    id: d.id,
+    alias: d.alias,
+    maxParticipantsPerCohort: d.maxParticipantsPerCohort,
+  });
+  const oldLocked = (oldData?.cohortDefinitions ?? []).map(getLockedFields);
+  const newLocked = (experimentConfig.cohortDefinitions ?? []).map(
+    getLockedFields,
+  );
+  const lockedFieldsChanged =
+    JSON.stringify(oldLocked) !== JSON.stringify(newLocked);
+
+  if (lockedFieldsChanged && hasParticipants) {
+    // Can't change locked fields after participants join
+    return {success: false, error: 'cohort-definitions-locked'};
+  }
+
+  if (!lockedFieldsChanged) {
+    // Definitions unchanged - preserve generatedCohortIds from old definitions
+    const oldDefMap = new Map<string, string | undefined>(
+      (oldData?.cohortDefinitions ?? []).map((d: CohortDefinition) => [
+        d.id,
+        d.generatedCohortId,
+      ]),
+    );
+    for (const def of experimentConfig.cohortDefinitions ?? []) {
+      def.generatedCohortId = oldDefMap.get(def.id);
+    }
+  }
+  // If lockedFieldsChanged && !hasParticipants: regenerate cohorts after transaction
+
   // NOTE: The recursiveDelete calls below are NOT part of the transaction.
   // They execute immediately and independently. If the transaction fails after
   // deletions occur, data may be lost. This is a known limitation of Firestore -
@@ -357,6 +445,26 @@ export async function updateExperimentFromTemplate(
       }
     }
   });
+
+  // Regenerate cohorts only if definitions changed AND no participants have joined
+  if (lockedFieldsChanged && !hasParticipants) {
+    // Delete old cohorts (including their publicStageData subcollections)
+    await firestore.recursiveDelete(document.collection('cohorts'));
+
+    // Create cohorts from updated definitions
+    if (experimentConfig.cohortDefinitions?.length) {
+      await createCohortsFromDefinitions(
+        firestore,
+        experimentConfig.id,
+        experimentConfig.cohortDefinitions,
+        experimentConfig.defaultCohortConfig,
+      );
+      // Update experiment with new generatedCohortIds
+      await document.update({
+        cohortDefinitions: experimentConfig.cohortDefinitions,
+      });
+    }
+  }
 
   return {success: true};
 }
