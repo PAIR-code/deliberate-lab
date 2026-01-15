@@ -68,6 +68,7 @@ export const CohortDefinitionSchema = Type.Object(
     name: Type.String({minLength: 1}),
     description: Type.Optional(Type.String()),
     generatedCohortId: Type.Optional(Type.String()),
+    maxParticipantsPerCohort: Type.Optional(Type.Integer({minimum: 1})),
   },
   strict,
 );

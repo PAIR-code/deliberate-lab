@@ -56,6 +56,16 @@ async function createTestExperiment(
   config: {
     variableConfigs?: ReturnType<typeof createStaticVariableConfig>[];
     stageIds?: string[];
+    defaultCohortConfig?: Partial<
+      ReturnType<typeof createCohortParticipantConfig>
+    >;
+    cohortDefinitions?: Array<{
+      id: string;
+      alias: string;
+      name: string;
+      generatedCohortId?: string;
+      maxParticipantsPerCohort?: number | null;
+    }>;
   } = {},
 ): Promise<void> {
   await firestore
@@ -66,7 +76,8 @@ async function createTestExperiment(
       metadata: {name: 'Test Experiment'},
       variableConfigs: serializeForFirestore(config.variableConfigs ?? []),
       stageIds: config.stageIds ?? [],
-      defaultCohortConfig: {},
+      defaultCohortConfig: config.defaultCohortConfig ?? {},
+      cohortDefinitions: config.cohortDefinitions ?? [],
     });
 }
 
@@ -1219,6 +1230,281 @@ describe('Cohort Definitions Integration Tests', () => {
         });
 
         expect(result.response).not.toBeNull();
+      });
+    });
+
+    describe('Overflow cohorts', () => {
+      it('should create overflow cohort when target cohort is at capacity', async () => {
+        const experimentId = generateId();
+        const sourceCohortId = generateId(true);
+        const targetCohortId = generateId(true);
+        const surveyStageId = 'survey-stage';
+        const transferStageId = 'transfer-stage';
+
+        // Create experiment with cohortDefinition that has maxParticipantsPerCohort = 2
+        await createTestExperiment(experimentId, {
+          stageIds: [surveyStageId, transferStageId],
+          cohortDefinitions: [
+            {
+              id: 'def-1',
+              alias: 'target-alias',
+              name: 'Target Cohort',
+              generatedCohortId: targetCohortId,
+              maxParticipantsPerCohort: 2,
+            },
+          ],
+        });
+
+        // Create source cohort
+        await firestore.runTransaction(async (transaction) => {
+          const sourceCohort = createTestCohortConfig(
+            sourceCohortId,
+            'Source Cohort',
+          );
+          await createCohortInternal(transaction, experimentId, sourceCohort);
+        });
+
+        // Create target cohort (separate transaction)
+        await firestore.runTransaction(async (transaction) => {
+          const targetCohort = createTestCohortConfig(
+            targetCohortId,
+            'Target Cohort',
+            'target-alias',
+          );
+          await createCohortInternal(transaction, experimentId, targetCohort);
+        });
+
+        // Fill target cohort with 2 existing participants (at capacity)
+        await createTestParticipant(
+          experimentId,
+          'existing-1',
+          targetCohortId,
+          {
+            stageId: transferStageId,
+            publicId: 'pub-existing-1',
+            connected: true,
+          },
+        );
+        await createTestParticipant(
+          experimentId,
+          'existing-2',
+          targetCohortId,
+          {
+            stageId: transferStageId,
+            publicId: 'pub-existing-2',
+            connected: true,
+          },
+        );
+
+        // Create transfer stage routing to target-alias
+        const transferStage = createTransferStage({
+          id: transferStageId,
+          autoTransferConfig: createConditionAutoTransferConfig({
+            autoCohortParticipantConfig: createCohortParticipantConfig(),
+            transferGroups: [
+              createTransferGroup({
+                name: 'Route to target',
+                targetCohortAlias: 'target-alias',
+                composition: [
+                  createGroupComposition({
+                    id: 'anyone',
+                    condition: {
+                      id: 'cond-any',
+                      type: 'comparison',
+                      target: {stageId: surveyStageId, questionId: 'q1'},
+                      operator: ComparisonOperator.GREATER_THAN_OR_EQUAL,
+                      value: 0,
+                    },
+                    minCount: 1,
+                    maxCount: 1,
+                  }),
+                ],
+              }),
+            ],
+          }),
+        });
+        await createTestTransferStage(experimentId, transferStage);
+
+        // Create participant in source cohort who will be transferred
+        const p1 = await createTestParticipant(
+          experimentId,
+          'p1',
+          sourceCohortId,
+          {
+            stageId: transferStageId,
+            publicId: 'pub-p1',
+            connected: true,
+          },
+        );
+
+        // Set up survey data for p1
+        await createTestSurveyData(
+          experimentId,
+          sourceCohortId,
+          surveyStageId,
+          {
+            'pub-p1': {q1: {kind: SurveyQuestionKind.SCALE, value: 5}},
+          },
+        );
+
+        // Execute transfer - should create overflow cohort since target is full
+        const result = await firestore.runTransaction(async (transaction) => {
+          return handleAutomaticTransfer(
+            transaction,
+            experimentId,
+            transferStage,
+            p1,
+          );
+        });
+
+        expect(result.response).not.toBeNull();
+        expect(result.directTransferInstructions).not.toBeNull();
+
+        // The transfer should go to an overflow cohort, not the original target
+        const instructions = result.directTransferInstructions!;
+        expect(instructions.targetCohortId).not.toBe(targetCohortId);
+
+        // Execute the direct transfer
+        await executeDirectTransfers(instructions);
+
+        // Verify overflow cohort was created with same alias
+        const overflowCohortDoc = await firestore
+          .collection(`experiments/${experimentId}/cohorts`)
+          .doc(instructions.targetCohortId)
+          .get();
+        expect(overflowCohortDoc.exists).toBe(true);
+
+        const overflowCohort = overflowCohortDoc.data() as CohortConfig;
+        expect(overflowCohort.alias).toBe('target-alias');
+
+        // Verify participant was transferred to overflow cohort
+        const p1Doc = await firestore
+          .collection(`experiments/${experimentId}/participants`)
+          .doc('p1')
+          .get();
+        const updatedP1 = p1Doc.data() as ParticipantProfileExtended;
+        expect(updatedP1.currentCohortId).toBe(instructions.targetCohortId);
+      });
+
+      it('should use original cohort when under capacity', async () => {
+        const experimentId = generateId();
+        const sourceCohortId = generateId(true);
+        const targetCohortId = generateId(true);
+        const surveyStageId = 'survey-stage';
+        const transferStageId = 'transfer-stage';
+
+        // Create experiment with cohortDefinition that has maxParticipantsPerCohort = 5
+        await createTestExperiment(experimentId, {
+          stageIds: [surveyStageId, transferStageId],
+          cohortDefinitions: [
+            {
+              id: 'def-1',
+              alias: 'target-alias',
+              name: 'Target Cohort',
+              generatedCohortId: targetCohortId,
+              maxParticipantsPerCohort: 5,
+            },
+          ],
+        });
+
+        // Create source cohort
+        await firestore.runTransaction(async (transaction) => {
+          const sourceCohort = createTestCohortConfig(
+            sourceCohortId,
+            'Source Cohort',
+          );
+          await createCohortInternal(transaction, experimentId, sourceCohort);
+        });
+
+        // Create target cohort (separate transaction)
+        await firestore.runTransaction(async (transaction) => {
+          const targetCohort = createTestCohortConfig(
+            targetCohortId,
+            'Target Cohort',
+            'target-alias',
+          );
+          await createCohortInternal(transaction, experimentId, targetCohort);
+        });
+
+        // Only 1 existing participant in target (under capacity of 5)
+        await createTestParticipant(
+          experimentId,
+          'existing-1',
+          targetCohortId,
+          {
+            stageId: transferStageId,
+            publicId: 'pub-existing-1',
+            connected: true,
+          },
+        );
+
+        // Create transfer stage
+        const transferStage = createTransferStage({
+          id: transferStageId,
+          autoTransferConfig: createConditionAutoTransferConfig({
+            autoCohortParticipantConfig: createCohortParticipantConfig(),
+            transferGroups: [
+              createTransferGroup({
+                name: 'Route to target',
+                targetCohortAlias: 'target-alias',
+                composition: [
+                  createGroupComposition({
+                    id: 'anyone',
+                    condition: {
+                      id: 'cond-any',
+                      type: 'comparison',
+                      target: {stageId: surveyStageId, questionId: 'q1'},
+                      operator: ComparisonOperator.GREATER_THAN_OR_EQUAL,
+                      value: 0,
+                    },
+                    minCount: 1,
+                    maxCount: 1,
+                  }),
+                ],
+              }),
+            ],
+          }),
+        });
+        await createTestTransferStage(experimentId, transferStage);
+
+        // Create participant in source cohort
+        const p1 = await createTestParticipant(
+          experimentId,
+          'p1',
+          sourceCohortId,
+          {
+            stageId: transferStageId,
+            publicId: 'pub-p1',
+            connected: true,
+          },
+        );
+
+        await createTestSurveyData(
+          experimentId,
+          sourceCohortId,
+          surveyStageId,
+          {
+            'pub-p1': {q1: {kind: SurveyQuestionKind.SCALE, value: 5}},
+          },
+        );
+
+        // Execute transfer - should use original target since under capacity
+        const result = await firestore.runTransaction(async (transaction) => {
+          return handleAutomaticTransfer(
+            transaction,
+            experimentId,
+            transferStage,
+            p1,
+          );
+        });
+
+        expect(result.response).not.toBeNull();
+        expect(result.directTransferInstructions).not.toBeNull();
+
+        // Should route to original target cohort
+        expect(result.directTransferInstructions!.targetCohortId).toBe(
+          targetCohortId,
+        );
       });
     });
   });
