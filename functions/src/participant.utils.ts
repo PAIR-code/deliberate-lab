@@ -56,6 +56,18 @@ export interface AutomaticTransferResult {
   directTransferInstructions: DirectTransferInstructions | null;
 }
 
+/**
+ * Create a comparator function that sorts participants by waiting time (oldest first).
+ * Used to ensure fair ordering when selecting participants for transfers.
+ */
+function createWaitingTimeComparator(stageId: string) {
+  return (a: ParticipantProfileExtended, b: ParticipantProfileExtended) => {
+    const aTime = a.timestamps.readyStages?.[stageId]?.toMillis?.() ?? 0;
+    const bTime = b.timestamps.readyStages?.[stageId]?.toMillis?.() ?? 0;
+    return aTime - bTime;
+  };
+}
+
 /** Update participant's current stage to next stage (or end experiment). */
 export async function updateParticipantNextStage(
   experimentId: string,
@@ -392,13 +404,9 @@ async function handleSurveyAutoTransfer(
     let matchingParticipants = answerGroups[key] || [];
 
     // Sort by waiting time (oldest first)
-    matchingParticipants = matchingParticipants.sort((a, b) => {
-      const aTime =
-        a.timestamps.readyStages?.[stageConfig.id]?.toMillis?.() ?? 0;
-      const bTime =
-        b.timestamps.readyStages?.[stageConfig.id]?.toMillis?.() ?? 0;
-      return aTime - bTime;
-    });
+    matchingParticipants = matchingParticipants.sort(
+      createWaitingTimeComparator(stageConfig.id),
+    );
 
     // Move the current participant to the front if present
     matchingParticipants = matchingParticipants
@@ -727,13 +735,9 @@ async function handleConditionAutoTransfer(
     let bucketParticipants = readyGroupBuckets[entry.id];
 
     // Sort by waiting time (oldest first)
-    bucketParticipants = bucketParticipants.sort((a, b) => {
-      const aTime =
-        a.timestamps.readyStages?.[stageConfig.id]?.toMillis?.() ?? 0;
-      const bTime =
-        b.timestamps.readyStages?.[stageConfig.id]?.toMillis?.() ?? 0;
-      return aTime - bTime;
-    });
+    bucketParticipants = bucketParticipants.sort(
+      createWaitingTimeComparator(stageConfig.id),
+    );
 
     // Move the current participant to the front if present in this bucket
     bucketParticipants = bucketParticipants
