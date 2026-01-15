@@ -1,28 +1,32 @@
 import {Timestamp} from 'firebase-admin/firestore';
 import {
+  AssetAllocationStagePublicData,
   AutoTransferType,
   ChipItem,
-  ConditionAutoTransferConfig,
-  Experiment,
-  ParticipantProfileExtended,
-  ParticipantStatus,
-  TransferStageConfig,
-  TransferGroup,
-  StageConfig,
-  StageKind,
+  ChipStagePublicData,
   CohortConfig,
+  ConditionAutoTransferConfig,
+  createChipStageParticipantAnswer,
   createCohortConfig,
   createMetadataConfig,
-  SurveyStagePublicData,
-  SurveyQuestionKind,
-  createChipStageParticipantAnswer,
   createPayoutStageParticipantAnswer,
-  ChipStagePublicData,
-  RoleStagePublicData,
   evaluateCondition,
-  extractMultipleConditionDependencies,
-  getConditionTargetKey,
+  Experiment,
   extractAnswerValue,
+  extractMultipleConditionDependencies,
+  FlipCardStagePublicData,
+  getConditionTargetKey,
+  MultiAssetAllocationStagePublicData,
+  ParticipantProfileExtended,
+  ParticipantStatus,
+  RankingStagePublicData,
+  RoleStagePublicData,
+  StageConfig,
+  StageKind,
+  SurveyQuestionKind,
+  SurveyStagePublicData,
+  TransferGroup,
+  TransferStageConfig,
 } from '@deliberation-lab/utils';
 import {completeStageAsAgentParticipant} from './agent_participant.utils';
 import {
@@ -30,6 +34,7 @@ import {
   getFirestoreCohortParticipants,
   getFirestoreExperiment,
   getFirestoreStage,
+  getFirestoreStagePublicDataRef,
 } from './utils/firestore';
 import {generateId, UnifiedTimestamp} from '@deliberation-lab/utils';
 import {createCohortInternal} from './cohort.utils';
@@ -1031,45 +1036,99 @@ async function migrateParticipantStageData(
   const stageAnswers = stageData.docs.map((stage) => stage.data());
 
   // For each relevant answer, add to target cohort's public stage data
+  // TODO: Consider standardizing all stage public data to use `participantAnswerMap`
+  // instead of varying field names (participantAllocations, participantFlipHistory, etc.)
+  // This would allow a more generic migration approach.
   for (const stage of stageAnswers) {
-    const publicDocument = firestore
-      .collection('experiments')
-      .doc(experimentId)
-      .collection('cohorts')
-      .doc(targetCohortId)
-      .collection('publicStageData')
-      .doc(stage.id);
+    const publicDocRef = getFirestoreStagePublicDataRef(
+      experimentId,
+      targetCohortId,
+      stage.id,
+    );
 
     switch (stage.kind) {
-      case StageKind.SURVEY:
-        const publicSurveyData = (
-          await transaction.get(publicDocument)
+      case StageKind.SURVEY: {
+        const publicData = (
+          await transaction.get(publicDocRef)
         ).data() as SurveyStagePublicData;
-        if (publicSurveyData) {
-          publicSurveyData.participantAnswerMap[publicId] = stage.answerMap;
-          transaction.set(publicDocument, publicSurveyData);
+        if (publicData) {
+          publicData.participantAnswerMap[publicId] = stage.answerMap;
+          transaction.set(publicDocRef, publicData);
         }
         break;
-      case StageKind.CHIP:
-        const publicChipData = (
-          await transaction.get(publicDocument)
+      }
+      case StageKind.CHIP: {
+        const publicData = (
+          await transaction.get(publicDocRef)
         ).data() as ChipStagePublicData;
-        if (publicChipData) {
-          publicChipData.participantChipMap[publicId] = stage.chipMap;
-          publicChipData.participantChipValueMap[publicId] = stage.chipValueMap;
-          transaction.set(publicDocument, publicChipData);
+        if (publicData) {
+          publicData.participantChipMap[publicId] = stage.chipMap;
+          publicData.participantChipValueMap[publicId] = stage.chipValueMap;
+          transaction.set(publicDocRef, publicData);
         }
         break;
-      case StageKind.ROLE:
-        const publicRoleData = (
-          await transaction.get(publicDocument)
+      }
+      case StageKind.RANKING: {
+        const publicData = (
+          await transaction.get(publicDocRef)
+        ).data() as RankingStagePublicData;
+        if (publicData) {
+          publicData.participantAnswerMap[publicId] = stage.rankingList;
+          transaction.set(publicDocRef, publicData);
+        }
+        break;
+      }
+      case StageKind.ASSET_ALLOCATION: {
+        const publicData = (
+          await transaction.get(publicDocRef)
+        ).data() as AssetAllocationStagePublicData;
+        if (publicData) {
+          publicData.participantAllocations[publicId] = stage.allocation;
+          transaction.set(publicDocRef, publicData);
+        }
+        break;
+      }
+      case StageKind.MULTI_ASSET_ALLOCATION: {
+        const publicData = (
+          await transaction.get(publicDocRef)
+        ).data() as MultiAssetAllocationStagePublicData;
+        if (publicData) {
+          // Store the participant's answer (allocationMap, isConfirmed, etc.)
+          publicData.participantAnswerMap[publicId] = {
+            kind: StageKind.MULTI_ASSET_ALLOCATION,
+            id: stage.id,
+            allocationMap: stage.allocationMap,
+            isConfirmed: stage.isConfirmed,
+            confirmedTimestamp: stage.confirmedTimestamp,
+          };
+          transaction.set(publicDocRef, publicData);
+        }
+        break;
+      }
+      case StageKind.FLIPCARD: {
+        const publicData = (
+          await transaction.get(publicDocRef)
+        ).data() as FlipCardStagePublicData;
+        if (publicData) {
+          publicData.participantFlipHistory[publicId] = stage.flipHistory ?? [];
+          publicData.participantSelections[publicId] =
+            stage.selectedCardIds ?? [];
+          transaction.set(publicDocRef, publicData);
+        }
+        break;
+      }
+      case StageKind.ROLE: {
+        const publicData = (
+          await transaction.get(publicDocRef)
         ).data() as RoleStagePublicData;
-        if (publicRoleData) {
+        if (publicData) {
           // TODO: Assign new role to participant (or move role over)
-          transaction.set(publicDocument, publicRoleData);
+          transaction.set(publicDocRef, publicData);
         }
         break;
+      }
       default:
+        // Other stage types don't have participant-keyed public data
         break;
     }
   }
