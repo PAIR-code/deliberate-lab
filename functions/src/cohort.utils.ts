@@ -193,27 +193,6 @@ export function transformCohortValuesKeys(
 }
 
 /**
- * Find a cohort by its alias.
- *
- * @param experimentId - The experiment ID
- * @param alias - The cohort alias to find
- * @returns The cohort config if found, null otherwise
- */
-export async function findCohortByAlias(
-  experimentId: string,
-  alias: string,
-): Promise<CohortConfig | null> {
-  const firestore = app.firestore();
-  const snapshot = await firestore
-    .collection(`experiments/${experimentId}/cohorts`)
-    .where('alias', '==', alias)
-    .limit(1)
-    .get();
-
-  return snapshot.empty ? null : (snapshot.docs[0].data() as CohortConfig);
-}
-
-/**
  * Create a cohort from a cohort definition.
  *
  * This function creates a new cohort config with a generated UUID and the
