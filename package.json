@@ -14,12 +14,12 @@
   "devDependencies": {
     "@eslint/js": "^9.39.2",
     "eslint": "^9.39.2",
-    "firebase-tools": "^15.2.1",
+    "firebase-tools": "^15.3.1",
     "globals": "^17.0.0",
     "husky": "^9.1.7",
     "lint-staged": "^16.2.7",
-    "prettier": "^3.7.4",
-    "typescript-eslint": "^8.52.0"
+    "prettier": "^3.8.0",
+    "typescript-eslint": "^8.53.0"
   },
   "lint-staged": {
     "*.{json,ts,html,scss,css}": [
@@ -36,5 +36,8 @@
     "frontend",
     "utils",
     "functions"
-  ]
+  ],
+  "dependencies": {
+    "crypto-browserify": "^3.12.1"
+  }
 }
