@@ -5,7 +5,7 @@
  * for JSON Schema export and Python type generation.
  */
 import {Type, type Static} from '@sinclair/typebox';
-import {PromptConfigData} from './prompt.validation';
+import {PromptItemData, PromptConfigData} from './prompt.validation';
 import {ApiKeyTypeData} from './providers.validation';
 import {ModelGenerationConfigData} from './providers.validation';
 import {
@@ -73,7 +73,7 @@ export const TestAgentPromptConfigData = Type.Object(
   {
     id: Type.String(),
     type: StageKindData,
-    prompt: PromptConfigData,
+    prompt: Type.Array(PromptItemData),
     generationConfig: ModelGenerationConfigData,
     structuredOutputConfig: Type.Union([
       StructuredOutputConfigData,
