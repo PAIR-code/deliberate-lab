@@ -923,7 +923,6 @@ export async function executeDirectTransfers(
 
       const result = await completeParticipantTransfer(
         transaction,
-        firestore,
         instructions.experimentId,
         participantDoc,
         participant,
@@ -956,7 +955,6 @@ export async function executeDirectTransfers(
  */
 export async function completeParticipantTransfer(
   transaction: FirebaseFirestore.Transaction,
-  firestore: FirebaseFirestore.Firestore,
   experimentId: string,
   participantDoc: FirebaseFirestore.DocumentReference,
   participant: ParticipantProfileExtended,
@@ -999,7 +997,6 @@ export async function completeParticipantTransfer(
   // (must happen before writes since it uses transaction.get())
   await migrateParticipantStageData(
     transaction,
-    firestore,
     experimentId,
     participant,
     targetCohortId,
@@ -1017,11 +1014,11 @@ export async function completeParticipantTransfer(
  */
 async function migrateParticipantStageData(
   transaction: FirebaseFirestore.Transaction,
-  firestore: FirebaseFirestore.Firestore,
   experimentId: string,
   participant: ParticipantProfileExtended,
   targetCohortId: string,
 ): Promise<void> {
+  const firestore = app.firestore();
   const publicId = participant.publicId;
 
   // Get participant's stage data
