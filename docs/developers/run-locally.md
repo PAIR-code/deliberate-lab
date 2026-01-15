@@ -80,6 +80,15 @@ Then, install project dependencies once at the root directory:
 npm install
 ```
 
+> **Important:** This project uses [npm workspaces](https://docs.npmjs.com/cli/using-npm/workspaces). Always run `npm install` from the repository root, not from subdirectories like `frontend/` or `functions/`.
+>
+> To add a package to a specific workspace:
+> ```bash
+> npm install <package-name> -w frontend   # Add to frontend/
+> npm install <package-name> -w functions  # Add to functions/
+> npm install <package-name> -w utils      # Add to utils/
+> ```
+
 ### 2. Build utils (needed for backend and frontend)
 
 NOTE: The `utils` directory builds as the package `@deliberation-lab/utils`,
@@ -158,6 +167,41 @@ npm run start
 Then, view the app at http://localhost:4201.
 
 ## Troubleshooting tips
+
+### Health check
+
+Run the doctor script to verify your setup:
+
+```bash
+npm run doctor
+```
+
+This checks Node.js version, dependencies, config files, and builds.
+
+### ENOTEMPTY or npm install errors
+
+If you see an error like `ENOTEMPTY: directory not empty` when running `npm install` or `npm ci`:
+
+```bash
+# From the root deliberate-lab directory
+# Delete node_modules and reinstall
+rm -rf node_modules frontend/node_modules functions/node_modules utils/node_modules
+npm cache clean --force
+npm ci
+```
+
+### Wrong Node.js version
+
+This project requires Node.js v22 or higher. If you see engine compatibility errors:
+
+```bash
+# Using nvm
+nvm install 22
+nvm use 22
+
+# Verify
+node -v  # Should show v22.x.x
+```
 
 ### Getting and using your Google Analytics ID
 * If you already own a Google Analytics ID, you can [find it via these instructions](https://support.google.com/analytics/answer/9539598?hl=en). 
