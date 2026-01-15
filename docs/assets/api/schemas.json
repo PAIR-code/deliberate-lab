@@ -1358,22 +1358,88 @@
           "title": "JSONSchemaDefinition",
           "anyOf": [
             {
-              "$ref": "#/$defs/JSONSchemaString"
+              "additionalProperties": true,
+              "type": "object",
+              "required": ["type"],
+              "properties": {
+                "type": {
+                  "const": "string",
+                  "type": "string"
+                }
+              },
+              "title": "String"
             },
             {
-              "$ref": "#/$defs/JSONSchemaNumber"
+              "additionalProperties": true,
+              "type": "object",
+              "required": ["type"],
+              "properties": {
+                "type": {
+                  "const": "number",
+                  "type": "string"
+                }
+              },
+              "title": "Number"
             },
             {
-              "$ref": "#/$defs/JSONSchemaInteger"
+              "additionalProperties": true,
+              "type": "object",
+              "required": ["type"],
+              "properties": {
+                "type": {
+                  "const": "integer",
+                  "type": "string"
+                }
+              },
+              "title": "Integer"
             },
             {
-              "$ref": "#/$defs/JSONSchemaBoolean"
+              "additionalProperties": true,
+              "type": "object",
+              "required": ["type"],
+              "properties": {
+                "type": {
+                  "const": "boolean",
+                  "type": "string"
+                }
+              },
+              "title": "Boolean"
             },
             {
-              "$ref": "#/$defs/JSONSchemaObject"
+              "additionalProperties": true,
+              "type": "object",
+              "required": ["type"],
+              "properties": {
+                "type": {
+                  "const": "object",
+                  "type": "string"
+                },
+                "properties": {
+                  "type": "object",
+                  "patternProperties": {
+                    "^(.*)$": {
+                      "$ref": "#/$defs/JSONSchemaDefinition"
+                    }
+                  },
+                  "title": "Properties"
+                }
+              },
+              "title": "Object"
             },
             {
-              "$ref": "#/$defs/JSONSchemaArray"
+              "additionalProperties": true,
+              "type": "object",
+              "required": ["type"],
+              "properties": {
+                "type": {
+                  "const": "array",
+                  "type": "string"
+                },
+                "items": {
+                  "$ref": "#/$defs/JSONSchemaDefinition"
+                }
+              },
+              "title": "Array"
             }
           ]
         }
@@ -1383,108 +1449,90 @@
       "title": "JSONSchemaDefinition",
       "anyOf": [
         {
-          "$ref": "#/$defs/JSONSchemaString"
-        },
-        {
-          "$ref": "#/$defs/JSONSchemaNumber"
-        },
-        {
-          "$ref": "#/$defs/JSONSchemaInteger"
-        },
-        {
-          "$ref": "#/$defs/JSONSchemaBoolean"
-        },
-        {
-          "$ref": "#/$defs/JSONSchemaObject"
-        },
-        {
-          "$ref": "#/$defs/JSONSchemaArray"
-        }
-      ]
-    },
-    "JSONSchemaString": {
-      "title": "JSONSchemaString",
-      "additionalProperties": true,
-      "type": "object",
-      "required": ["type"],
-      "properties": {
-        "type": {
-          "const": "string",
-          "type": "string"
-        }
-      }
-    },
-    "JSONSchemaNumber": {
-      "title": "JSONSchemaNumber",
-      "additionalProperties": true,
-      "type": "object",
-      "required": ["type"],
-      "properties": {
-        "type": {
-          "const": "number",
-          "type": "string"
-        }
-      }
-    },
-    "JSONSchemaInteger": {
-      "title": "JSONSchemaInteger",
-      "additionalProperties": true,
-      "type": "object",
-      "required": ["type"],
-      "properties": {
-        "type": {
-          "const": "integer",
-          "type": "string"
-        }
-      }
-    },
-    "JSONSchemaBoolean": {
-      "title": "JSONSchemaBoolean",
-      "additionalProperties": true,
-      "type": "object",
-      "required": ["type"],
-      "properties": {
-        "type": {
-          "const": "boolean",
-          "type": "string"
-        }
-      }
-    },
-    "JSONSchemaObject": {
-      "title": "JSONSchemaObject",
-      "additionalProperties": true,
-      "type": "object",
-      "required": ["type"],
-      "properties": {
-        "type": {
-          "const": "object",
-          "type": "string"
-        },
-        "properties": {
+          "additionalProperties": true,
           "type": "object",
-          "patternProperties": {
-            "^(.*)$": {
+          "required": ["type"],
+          "properties": {
+            "type": {
+              "const": "string",
+              "type": "string"
+            }
+          },
+          "title": "String"
+        },
+        {
+          "additionalProperties": true,
+          "type": "object",
+          "required": ["type"],
+          "properties": {
+            "type": {
+              "const": "number",
+              "type": "string"
+            }
+          },
+          "title": "Number"
+        },
+        {
+          "additionalProperties": true,
+          "type": "object",
+          "required": ["type"],
+          "properties": {
+            "type": {
+              "const": "integer",
+              "type": "string"
+            }
+          },
+          "title": "Integer"
+        },
+        {
+          "additionalProperties": true,
+          "type": "object",
+          "required": ["type"],
+          "properties": {
+            "type": {
+              "const": "boolean",
+              "type": "string"
+            }
+          },
+          "title": "Boolean"
+        },
+        {
+          "additionalProperties": true,
+          "type": "object",
+          "required": ["type"],
+          "properties": {
+            "type": {
+              "const": "object",
+              "type": "string"
+            },
+            "properties": {
+              "type": "object",
+              "patternProperties": {
+                "^(.*)$": {
+                  "$ref": "#/$defs/JSONSchemaDefinition"
+                }
+              },
+              "title": "Properties"
+            }
+          },
+          "title": "Object"
+        },
+        {
+          "additionalProperties": true,
+          "type": "object",
+          "required": ["type"],
+          "properties": {
+            "type": {
+              "const": "array",
+              "type": "string"
+            },
+            "items": {
               "$ref": "#/$defs/JSONSchemaDefinition"
             }
           },
-          "title": "Properties"
+          "title": "Array"
         }
-      }
-    },
-    "JSONSchemaArray": {
-      "title": "JSONSchemaArray",
-      "additionalProperties": true,
-      "type": "object",
-      "required": ["type"],
-      "properties": {
-        "type": {
-          "const": "array",
-          "type": "string"
-        },
-        "items": {
-          "$ref": "#/$defs/JSONSchemaDefinition"
-        }
-      }
+      ]
     },
     "RandomPermutationVariableConfig": {
       "title": "RandomPermutationVariableConfig",

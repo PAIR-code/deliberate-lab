@@ -197,28 +197,28 @@ class Scope(Enum):
     participant = "participant"
 
 
-class JSONSchemaString(BaseModel):
+class String(BaseModel):
     model_config = ConfigDict(
         extra="allow",
     )
     type: Literal["string"] = "string"
 
 
-class JSONSchemaNumber(BaseModel):
+class Number(BaseModel):
     model_config = ConfigDict(
         extra="allow",
     )
     type: Literal["number"] = "number"
 
 
-class JSONSchemaInteger(BaseModel):
+class Integer(BaseModel):
     model_config = ConfigDict(
         extra="allow",
     )
     type: Literal["integer"] = "integer"
 
 
-class JSONSchemaBoolean(BaseModel):
+class Boolean(BaseModel):
     model_config = ConfigDict(
         extra="allow",
     )
@@ -1031,23 +1031,7 @@ class StaticVariableConfig(BaseModel):
     value: str
 
 
-class VariableDefinition(BaseModel):
-    model_config = ConfigDict(
-        extra="forbid",
-    )
-    name: constr(min_length=1)
-    description: str
-    schema_: (
-        JSONSchemaString
-        | JSONSchemaNumber
-        | JSONSchemaInteger
-        | JSONSchemaBoolean
-        | JSONSchemaObject
-        | JSONSchemaArray
-    ) = Field(..., alias="schema", title="JSONSchemaDefinition")
-
-
-class JSONSchemaObject(BaseModel):
+class Object(BaseModel):
     model_config = ConfigDict(
         extra="allow",
     )
@@ -1055,31 +1039,31 @@ class JSONSchemaObject(BaseModel):
     properties: (
         Dict[
             constr(pattern=r"^(.*)$"),
-            JSONSchemaString
-            | JSONSchemaNumber
-            | JSONSchemaInteger
-            | JSONSchemaBoolean
-            | JSONSchemaObject
-            | JSONSchemaArray,
+            String | Number | Integer | Boolean | Object | Array,
         ]
         | None
     ) = Field(None, title="Properties")
 
 
-class JSONSchemaArray(BaseModel):
+class Array(BaseModel):
     model_config = ConfigDict(
         extra="allow",
     )
     type: Literal["array"] = "array"
-    items: (
-        JSONSchemaString
-        | JSONSchemaNumber
-        | JSONSchemaInteger
-        | JSONSchemaBoolean
-        | JSONSchemaObject
-        | JSONSchemaArray
-        | None
-    ) = Field(None, title="JSONSchemaDefinition")
+    items: String | Number | Integer | Boolean | Object | Array | None = Field(
+        None, title="JSONSchemaDefinition"
+    )
+
+
+class VariableDefinition(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    name: constr(min_length=1)
+    description: str
+    schema_: String | Number | Integer | Boolean | Object | Array = Field(
+        ..., alias="schema", title="JSONSchemaDefinition"
+    )
 
 
 class RandomPermutationVariableConfig(BaseModel):
@@ -1264,6 +1248,14 @@ class GenericPromptConfig(BaseModel):
 AgentParticipantTemplate = AgentMediatorTemplate
 
 
+class JSONSchemaDefinition(
+    RootModel[String | Number | Integer | Boolean | Object | Array]
+):
+    root: String | Number | Integer | Boolean | Object | Array = Field(
+        ..., title="JSONSchemaDefinition"
+    )
+
+
 Experiment.model_rebuild()
 ExperimentTemplate.model_rebuild()
 DeliberateLabAPISchemas.model_rebuild()
@@ -1271,9 +1263,8 @@ SurveyPerParticipantStageConfig.model_rebuild()
 TextSurveyQuestion.model_rebuild()
 ConditionGroup.model_rebuild()
 StaticVariableConfig.model_rebuild()
-VariableDefinition.model_rebuild()
-JSONSchemaObject.model_rebuild()
-JSONSchemaArray.model_rebuild()
+Object.model_rebuild()
+Array.model_rebuild()
 AgentMediatorTemplate.model_rebuild()
 ChatPromptConfig.model_rebuild()
 StructuredOutputConfig.model_rebuild()

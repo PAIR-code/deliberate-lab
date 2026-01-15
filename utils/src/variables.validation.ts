@@ -15,21 +15,15 @@ const JSONSchemaData: TSchema = Type.Recursive(
   (Self) =>
     Type.Union([
       // Primitive types
-      Type.Object(
-        {type: Type.Literal('string')},
-        {$id: 'JSONSchemaString', additionalProperties: true},
-      ),
-      Type.Object(
-        {type: Type.Literal('number')},
-        {$id: 'JSONSchemaNumber', additionalProperties: true},
-      ),
+      Type.Object({type: Type.Literal('string')}, {additionalProperties: true}),
+      Type.Object({type: Type.Literal('number')}, {additionalProperties: true}),
       Type.Object(
         {type: Type.Literal('integer')},
-        {$id: 'JSONSchemaInteger', additionalProperties: true},
+        {additionalProperties: true},
       ),
       Type.Object(
         {type: Type.Literal('boolean')},
-        {$id: 'JSONSchemaBoolean', additionalProperties: true},
+        {additionalProperties: true},
       ),
 
       // Complex types
@@ -38,7 +32,7 @@ const JSONSchemaData: TSchema = Type.Recursive(
           type: Type.Literal('object'),
           properties: Type.Optional(Type.Record(Type.String(), Self)),
         },
-        {$id: 'JSONSchemaObject', additionalProperties: true},
+        {additionalProperties: true},
       ),
 
       Type.Object(
@@ -46,7 +40,7 @@ const JSONSchemaData: TSchema = Type.Recursive(
           type: Type.Literal('array'),
           items: Type.Optional(Self),
         },
-        {$id: 'JSONSchemaArray', additionalProperties: true},
+        {additionalProperties: true},
       ),
     ]),
   {$id: 'JSONSchemaDefinition'},
