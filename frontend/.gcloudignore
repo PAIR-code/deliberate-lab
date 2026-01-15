@@ -1,0 +1,32 @@
+# This file specifies files that are *not* uploaded to Google Cloud Platform
+# using gcloud. It follows the same syntax as .gitignore, with the addition of
+# "#!include" directives (which insert the entries of the given .gitignore-style
+# file at that point).
+#
+# For more information, run:
+#   $ gcloud topic gcloudignore
+#
+.gcloudignore
+.DS_Store
+.eslintrc.json
+.prettierrc.json
+README.md
+declaration.d.ts
+lit-css-loader.js
+package-lock.json
+package.json
+tsconfig.json
+webpack.config.js
+node_modules/
+src/
+
+# If you would like to upload your .git directory, .gitignore file or files
+# from your .gitignore file, remove the corresponding line
+# below:
+.git
+.gitignore
+
+# Python pycache:
+__pycache__/
+# Ignored by the build system
+/setup.cfg

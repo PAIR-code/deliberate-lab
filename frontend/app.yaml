@@ -1,0 +1,24 @@
+runtime: python312
+
+default_expiration: "1m"
+
+handlers:
+  - url: /(.*\.(js|css|scss|md|ico|png|gif|jpg|jpeg|svg|txt|map|json|wav|mp4|mp3|woff|woff2))
+    static_files: dist/\1
+    upload: dist/(.*\.(js|css|scss|md|ico|png|gif|jpg|jpeg|svg|txt|map|json|wav|mp4|mp3|woff|woff2))
+    http_headers:
+      Access-Control-Allow-Origin: "*"
+
+  - url: /(index\.html)?
+    static_files: dist/index.html
+    upload: dist/index.html
+    secure: always
+
+  - url: /(.*\.html)$
+    static_files: dist/\1
+    upload: build/.*\.html$
+
+  # catch-all pattern
+  - url: /(.*)$
+    static_files: dist/index.html
+    upload: dist/index.html
