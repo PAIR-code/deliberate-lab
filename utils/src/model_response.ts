@@ -255,7 +255,9 @@ function extractFieldsFromCorruptedJson(
 export function parseStructuredOutputFromText(
   text: string,
 ): Record<string, unknown> | null {
-  const trimmed = text.trim();
+  // Convert literal \n sequences to actual newlines
+  const preprocessed = text.replace(/\\n/g, '\n');
+  const trimmed = preprocessed.trim();
 
   // Strategy 1: Handle "json\n{...}" prefix (jsonrepair misinterprets this as array)
   const jsonPrefixMatch = trimmed.match(/^json\s*\n(\{[\s\S]*\})$/);
