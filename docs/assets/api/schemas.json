@@ -4000,6 +4000,10 @@
                       },
                       "generatedCohortId": {
                         "type": "string"
+                      },
+                      "maxParticipantsPerCohort": {
+                        "minimum": 1,
+                        "type": "integer"
                       }
                     },
                     "title": "CohortDefinition"

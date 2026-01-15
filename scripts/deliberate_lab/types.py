@@ -47,6 +47,7 @@ class CohortDefinition(BaseModel):
     name: constr(min_length=1)
     description: str | None = None
     generatedCohortId: str | None = None
+    maxParticipantsPerCohort: conint(ge=1) | None = None
 
 
 class ParsedItem(BaseModel):

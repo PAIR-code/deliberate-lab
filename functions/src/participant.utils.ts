@@ -27,10 +27,11 @@ import {
 import {completeStageAsAgentParticipant} from './agent_participant.utils';
 import {
   getFirestoreActiveParticipants,
+  getFirestoreCohortParticipants,
   getFirestoreExperiment,
   getFirestoreStage,
 } from './utils/firestore';
-import {generateId} from '@deliberation-lab/utils';
+import {generateId, UnifiedTimestamp} from '@deliberation-lab/utils';
 import {createCohortInternal} from './cohort.utils';
 import {sendSystemChatMessage} from './chat/chat.utils';
 
@@ -464,6 +465,86 @@ async function handleSurveyAutoTransfer(
 }
 
 /**
+ * Find an existing overflow cohort with available capacity, or create a new one.
+ *
+ * When a pre-defined cohort reaches maxParticipantsPerCohort, this function finds
+ * or creates an overflow cohort with the same alias. This allows the overflow cohort
+ * to inherit the same cohortValues (variable overrides) as the original.
+ *
+ * Uses the provided maxParticipants for all capacity checks (from definition or experiment default).
+ *
+ * @param transaction - Firestore transaction for creating new cohorts
+ * @param experimentId - The experiment ID
+ * @param alias - The cohort alias to find/create overflow for
+ * @param maxParticipants - Maximum participants per cohort (from definition or experiment default)
+ * @param newParticipantCount - Number of new participants being added
+ * @param participantConfig - Config for new cohort if created
+ * @returns The cohort ID to use (either existing overflow or newly created)
+ */
+async function findOrCreateOverflowCohort(
+  transaction: FirebaseFirestore.Transaction,
+  experimentId: string,
+  alias: string,
+  maxParticipants: number,
+  newParticipantCount: number,
+  participantConfig: CohortConfig['participantConfig'],
+): Promise<string> {
+  const firestore = app.firestore();
+
+  // Query all cohorts with this alias
+  const cohortsSnapshot = await firestore
+    .collection(`experiments/${experimentId}/cohorts`)
+    .where('alias', '==', alias)
+    .get();
+
+  // Check each cohort for available capacity using the definition's limit
+  for (const doc of cohortsSnapshot.docs) {
+    const cohort = doc.data() as CohortConfig;
+    const participants = await getFirestoreCohortParticipants(
+      experimentId,
+      cohort.id,
+    );
+    const currentCount = participants.length;
+
+    if (currentCount + newParticipantCount <= maxParticipants) {
+      console.log(
+        `[OVERFLOW] Found cohort ${cohort.id} with capacity: ${currentCount}/${maxParticipants}`,
+      );
+      return cohort.id;
+    }
+  }
+
+  // Warn if transfer group exceeds max capacity (cohort will be over-filled)
+  if (newParticipantCount > maxParticipants) {
+    console.warn(
+      `[OVERFLOW] Transfer group size (${newParticipantCount}) exceeds maxParticipantsPerCohort (${maxParticipants}) for alias "${alias}". ` +
+        `Cohort will exceed capacity limit.`,
+    );
+  }
+
+  // No cohort with capacity found - create new overflow cohort with same alias
+  const timestamp = Timestamp.now() as UnifiedTimestamp;
+  const newCohort = createCohortConfig({
+    id: generateId(true),
+    alias, // Same alias for cohortValues inheritance
+    metadata: createMetadataConfig({
+      creator: 'system',
+      name: `${alias} (overflow)`,
+      dateCreated: timestamp,
+      dateModified: timestamp,
+    }),
+    participantConfig,
+  });
+
+  console.log(
+    `[OVERFLOW] Creating new overflow cohort ${newCohort.id} for alias "${alias}"`,
+  );
+
+  await createCohortInternal(transaction, experimentId, newCohort);
+  return newCohort.id;
+}
+
+/**
  * Handle CONDITION type auto-transfer.
  * Uses the Condition system for flexible routing based on any survey question type.
  *
@@ -672,13 +753,7 @@ async function handleConditionAutoTransfer(
 
   // Check if routing to existing cohort or creating new one
   if (readyGroup.targetCohortAlias) {
-    // Route to existing cohort - return instructions for sequential transfers
-    // TODO(rasmi): Check cohort capacity before transferring. If the target cohort's
-    // current participant count + new participants would exceed maxParticipantsPerCohort,
-    // fall back to creating a new cohort instead (same as TRANSFER_PENDING path below).
-    // This would prevent unbounded growth of pre-defined cohorts.
-    // Note: The fallback cohort should be created WITH the same alias so it inherits
-    // the same cohortValues (variable overrides). Multiple cohorts can share an alias.
+    // Route to existing cohort (or overflow cohort if at capacity)
     const experiment = await getFirestoreExperiment(experimentId);
     if (!experiment) {
       throw new Error(`Experiment ${experimentId} not found`);
@@ -695,7 +770,40 @@ async function handleConditionAutoTransfer(
           `Available aliases: ${availableAliases}`,
       );
     }
-    const targetCohortId = definition.generatedCohortId;
+
+    let targetCohortId = definition.generatedCohortId;
+
+    // Check capacity if maxParticipantsPerCohort is configured.
+    // Use definition override if set, otherwise fall back to experiment default.
+    // If null (no limit configured), skip capacity check entirely - no extra queries.
+    const maxParticipants =
+      definition.maxParticipantsPerCohort !== undefined
+        ? definition.maxParticipantsPerCohort
+        : experiment.defaultCohortConfig.maxParticipantsPerCohort;
+
+    if (maxParticipants !== null) {
+      const participants = await getFirestoreCohortParticipants(
+        experimentId,
+        targetCohortId,
+      );
+      const currentCount = participants.length;
+
+      if (currentCount + cohortParticipants.length > maxParticipants) {
+        console.log(
+          `[CONDITION] Cohort ${targetCohortId} at capacity (${currentCount}/${maxParticipants}), finding overflow`,
+        );
+
+        // Find or create overflow cohort with same alias
+        targetCohortId = await findOrCreateOverflowCohort(
+          transaction,
+          experimentId,
+          readyGroup.targetCohortAlias,
+          maxParticipants,
+          cohortParticipants.length,
+          autoTransferConfig.autoCohortParticipantConfig,
+        );
+      }
+    }
 
     console.log(
       `[CONDITION] Preparing direct transfer to cohort ${targetCohortId} (alias: ${readyGroup.targetCohortAlias}) ` +
@@ -714,12 +822,13 @@ async function handleConditionAutoTransfer(
     };
   } else {
     // Create a new cohort and transfer participants (TRANSFER_PENDING behavior)
+    const timestamp = Timestamp.now() as UnifiedTimestamp;
     const cohortConfig = createCohortConfig({
       id: generateId(),
       metadata: createMetadataConfig({
         creator: 'system',
-        dateCreated: Timestamp.now(),
-        dateModified: Timestamp.now(),
+        dateCreated: timestamp,
+        dateModified: timestamp,
       }),
       participantConfig: autoTransferConfig.autoCohortParticipantConfig,
     });

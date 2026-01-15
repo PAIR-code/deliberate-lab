@@ -46,6 +46,10 @@ export interface CohortDefinition {
   name: string; // Display name for the cohort
   description?: string; // Optional documentation
   generatedCohortId?: string; // Set once when cohort is created from this definition
+  // Override experiment.defaultCohortConfig.maxParticipantsPerCohort for cohorts created from this definition.
+  // If set, enables overflow: when cohort is full, new cohorts with same alias are created.
+  // If undefined, uses experiment.defaultCohortConfig.maxParticipantsPerCohort.
+  maxParticipantsPerCohort?: number;
 }
 
 /** Create a cohort definition. */
@@ -58,6 +62,7 @@ export function createCohortDefinition(
     name: config.name ?? 'New Cohort',
     description: config.description,
     generatedCohortId: config.generatedCohortId,
+    maxParticipantsPerCohort: config.maxParticipantsPerCohort,
   };
 }
 

@@ -237,6 +237,15 @@ export async function createCohortFromDefinition(
   // Use Admin SDK Timestamp for Firestore compatibility
   const timestamp = Timestamp.now() as UnifiedTimestamp;
 
+  // Build participant config, applying definition override if set
+  const participantConfig: CohortParticipantConfig =
+    definition.maxParticipantsPerCohort !== undefined
+      ? {
+          ...defaultCohortConfig,
+          maxParticipantsPerCohort: definition.maxParticipantsPerCohort,
+        }
+      : defaultCohortConfig;
+
   // Create cohort config with generated UUID and alias
   const cohortConfig = createCohortConfig({
     id: generateId(true), // Alphanumeric for sorting
@@ -246,7 +255,7 @@ export async function createCohortFromDefinition(
       dateCreated: timestamp,
       dateModified: timestamp,
     }),
-    participantConfig: defaultCohortConfig,
+    participantConfig,
   });
 
   // Create the cohort - createCohortInternal handles variable transformation
