@@ -121,18 +121,21 @@ export async function writeExperimentFromTemplate(
     experimentConfig.cohortDefinitions &&
     experimentConfig.cohortDefinitions.length > 0
   ) {
-    for (const definition of experimentConfig.cohortDefinitions) {
-      await firestore.runTransaction(async (transaction: Transaction) => {
-        const cohortConfig = await createCohortFromDefinition(
-          transaction,
-          experimentConfig.id,
-          definition,
-          experimentConfig.defaultCohortConfig,
-        );
-        // Store the generated cohort ID back on the definition
-        definition.generatedCohortId = cohortConfig.id;
-      });
-    }
+    // Create cohorts in parallel - each in its own transaction
+    await Promise.all(
+      experimentConfig.cohortDefinitions.map(async (definition) => {
+        await firestore.runTransaction(async (transaction: Transaction) => {
+          const cohortConfig = await createCohortFromDefinition(
+            transaction,
+            experimentConfig.id,
+            definition,
+            experimentConfig.defaultCohortConfig,
+          );
+          // Store the generated cohort ID back on the definition
+          definition.generatedCohortId = cohortConfig.id;
+        });
+      }),
+    );
     // Update experiment with generatedCohortIds
     await document.update({
       cohortDefinitions: experimentConfig.cohortDefinitions,
