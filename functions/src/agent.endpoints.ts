@@ -1,5 +1,7 @@
 import {
   ModelResponseStatus,
+  PromptItemType,
+  TextPromptItem,
   createModelGenerationConfig,
 } from '@deliberation-lab/utils';
 import {getAgentResponse} from './agent.utils';
@@ -27,8 +29,11 @@ export const testAgentConfig = onCall(async (request) => {
   const experimenterData = await getExperimenterData(creatorId);
   if (!experimenterData) return;
 
-  // TODO: Use fake (e.g., chat) data when running prompt?
-  const prompt = promptConfig.promptContext;
+  // Convert PromptItem[] to string for testing
+  const prompt = promptConfig.prompt
+    .filter((item: {type: PromptItemType}) => item.type === PromptItemType.TEXT)
+    .map((item: TextPromptItem) => item.text)
+    .join('\n');
   const generationConfig = createModelGenerationConfig();
 
   const response = await getAgentResponse(

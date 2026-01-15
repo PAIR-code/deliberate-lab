@@ -23,7 +23,6 @@ import {
   AlertStatus,
   AgentPersonaConfig,
   AgentPersonaType,
-  BaseAgentPromptConfig,
   ChatMessage,
   CohortConfig,
   CohortParticipantConfig,
@@ -32,13 +31,25 @@ import {
   MediatorProfileExtended,
   MediatorStatus,
   MetadataConfig,
+  ModelGenerationConfig,
   ParticipantProfileExtended,
   ParticipantStatus,
   ProfileAgentConfig,
+  PromptItem,
   StageKind,
+  StructuredOutputConfig,
   createCohortConfig,
   createExperimenterChatMessage,
 } from '@deliberation-lab/utils';
+
+/** Prompt config for testAgentConfig endpoint */
+interface TestAgentPromptConfig {
+  id: string;
+  type: StageKind;
+  prompt: PromptItem[];
+  generationConfig: ModelGenerationConfig;
+  structuredOutputConfig: StructuredOutputConfig;
+}
 import {
   ackAlertMessageCallable,
   bootParticipantCallable,
@@ -1001,7 +1012,7 @@ export class ExperimentManager extends Service {
   /** Test given agent config. */
   async testAgentConfig(
     agentConfig: AgentPersonaConfig,
-    promptConfig: BaseAgentPromptConfig,
+    promptConfig: TestAgentPromptConfig,
   ) {
     let response = '';
     const creatorId = this.sp.authService.experimenterData?.email;

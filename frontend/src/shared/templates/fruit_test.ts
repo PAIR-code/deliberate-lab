@@ -1,5 +1,4 @@
 import {
-  createAgentPromptSettings,
   createAgentChatSettings,
   createAgentModelSettings,
   createAgentMediatorPersonaConfig,
