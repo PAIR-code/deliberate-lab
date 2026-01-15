@@ -5,7 +5,6 @@ import {
 } from './shared.validation';
 import {StageConfigData} from './stages/stage.validation';
 import {
-  AgentDataObjectData,
   AgentMediatorTemplateData,
   AgentParticipantTemplateData,
 } from './agent.validation';

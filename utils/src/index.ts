@@ -56,8 +56,11 @@ export * from './agent';
 export * from './agent.validation';
 export * from './model_config';
 export * from './model_response';
+export * from './prompt.validation';
 export * from './providers';
+export * from './providers.validation';
 export * from './structured_output';
+export * from './structured_output.validation';
 export * from './structured_prompt';
 
 // Sort

@@ -15,14 +15,12 @@ import {ExperimentService} from '../../services/experiment.service';
 import {styles} from './experimenter_data_editor.scss';
 import {
   ApiKeyType,
-  BaseAgentPromptConfig,
   ExperimenterData,
   StageKind,
   createAgentModelSettings,
   createAgentMediatorPersonaConfig,
-  createAgentPromptSettings,
+  createDefaultPromptFromText,
   createModelGenerationConfig,
-  checkApiKeyExists,
   createClaudeServerConfig,
   createOpenAIServerConfig,
   createStructuredOutputConfig,
@@ -74,12 +72,13 @@ export class ExperimenterDataEditor extends MobxLitElement {
     const agentConfig = createAgentMediatorPersonaConfig({
       defaultModelSettings: createAgentModelSettings({apiType}),
     });
-    const promptConfig: BaseAgentPromptConfig = {
+    const promptConfig = {
       id: '',
       type: StageKind.INFO,
-      promptContext: 'Say "hello world" and tell a unique joke',
+      prompt: createDefaultPromptFromText(
+        'Say "hello world" and tell a unique joke',
+      ),
       generationConfig: createModelGenerationConfig(),
-      promptSettings: createAgentPromptSettings(),
       structuredOutputConfig: createStructuredOutputConfig(),
     };
 

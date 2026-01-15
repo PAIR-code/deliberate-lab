@@ -389,24 +389,34 @@ function getProviderOptions(
 
 /**
  * Maps ModelGenerationConfig to AI SDK settings.
+ * Only includes fields that are explicitly set, letting the API use its defaults otherwise.
  */
 function mapGenerationConfig(config: ModelGenerationConfig): object {
   const settings: Record<string, unknown> = {
-    maxOutputTokens: config.maxTokens,
-    temperature: config.temperature,
-    topP: config.topP,
     maxRetries: 0, // We handle retries in processModelResponse
   };
+
+  if (config.maxTokens !== undefined) {
+    settings.maxOutputTokens = config.maxTokens;
+  }
+
+  if (config.temperature !== undefined) {
+    settings.temperature = config.temperature;
+  }
+
+  if (config.topP !== undefined) {
+    settings.topP = config.topP;
+  }
 
   if (config.stopSequences && config.stopSequences.length > 0) {
     settings.stopSequences = config.stopSequences;
   }
 
-  if (config.frequencyPenalty !== 0) {
+  if (config.frequencyPenalty !== undefined && config.frequencyPenalty !== 0) {
     settings.frequencyPenalty = config.frequencyPenalty;
   }
 
-  if (config.presencePenalty !== 0) {
+  if (config.presencePenalty !== undefined && config.presencePenalty !== 0) {
     settings.presencePenalty = config.presencePenalty;
   }
 

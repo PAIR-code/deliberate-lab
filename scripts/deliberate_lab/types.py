@@ -251,19 +251,177 @@ class BalanceAcross(Enum):
     cohort = "cohort"
 
 
-class Persona(BaseModel):
-    id: constr(min_length=1)
-    name: str
+class ApiKeyType(Enum):
+    GEMINI = "GEMINI"
+    OPENAI = "OPENAI"
+    CLAUDE = "CLAUDE"
+    OLLAMA = "OLLAMA"
 
 
-class AgentMediatorTemplate(BaseModel):
-    persona: Persona = Field(..., title="Persona")
-    promptMap: Dict[constr(pattern=r"^(.*)$"), Dict[str, Any]] = Field(
-        ..., title="PromptMap"
+class AgentModelSettings(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
     )
+    apiType: ApiKeyType = Field(..., title="ApiKeyType")
+    modelName: str
 
 
-AgentParticipantTemplate = AgentMediatorTemplate
+class ChatStageType(Enum):
+    chat = "chat"
+    privateChat = "privateChat"
+
+
+class ReasoningLevel(Enum):
+    off = "off"
+    minimal = "minimal"
+    low = "low"
+    medium = "medium"
+    high = "high"
+
+
+class CustomRequestBodyField(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    name: str
+    value: str
+
+
+class GoogleThinkingLevel(Enum):
+    minimal = "minimal"
+    low = "low"
+    medium = "medium"
+    high = "high"
+
+
+class GoogleThinkingConfig(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    thinkingBudget: int | None = None
+    includeThoughts: bool | None = None
+    thinkingLevel: GoogleThinkingLevel | None = Field(None, title="GoogleThinkingLevel")
+
+
+class GoogleSafetyCategory(Enum):
+    HARM_CATEGORY_HARASSMENT = "HARM_CATEGORY_HARASSMENT"
+    HARM_CATEGORY_DANGEROUS_CONTENT = "HARM_CATEGORY_DANGEROUS_CONTENT"
+    HARM_CATEGORY_HATE_SPEECH = "HARM_CATEGORY_HATE_SPEECH"
+    HARM_CATEGORY_SEXUALLY_EXPLICIT = "HARM_CATEGORY_SEXUALLY_EXPLICIT"
+    HARM_CATEGORY_CIVIC_INTEGRITY = "HARM_CATEGORY_CIVIC_INTEGRITY"
+
+
+class GoogleSafetyThreshold(Enum):
+    BLOCK_NONE = "BLOCK_NONE"
+    BLOCK_ONLY_HIGH = "BLOCK_ONLY_HIGH"
+    BLOCK_MEDIUM_AND_ABOVE = "BLOCK_MEDIUM_AND_ABOVE"
+    BLOCK_LOW_AND_ABOVE = "BLOCK_LOW_AND_ABOVE"
+    HARM_BLOCK_THRESHOLD_UNSPECIFIED = "HARM_BLOCK_THRESHOLD_UNSPECIFIED"
+
+
+class GoogleSafetySetting(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    category: GoogleSafetyCategory = Field(..., title="GoogleSafetyCategory")
+    threshold: GoogleSafetyThreshold = Field(..., title="GoogleSafetyThreshold")
+
+
+class ReasoningEffort(Enum):
+    low = "low"
+    medium = "medium"
+    high = "high"
+
+
+class AnthropicThinkingType(Enum):
+    enabled = "enabled"
+    disabled = "disabled"
+
+
+class AnthropicThinkingConfig(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    type: AnthropicThinkingType = Field(..., title="AnthropicThinkingType")
+    budgetTokens: int | None = None
+
+
+class AnthropicCacheTtl(Enum):
+    field_5m = "5m"
+    field_1h = "1h"
+
+
+class AnthropicCacheControl(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    type: Literal["ephemeral"] = "ephemeral"
+    ttl: AnthropicCacheTtl | None = Field(None, title="AnthropicCacheTtl")
+
+
+class OpenAIProviderOptions(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    reasoningEffort: ReasoningEffort | None = Field(None, title="ReasoningEffort")
+    parallelToolCalls: bool | None = None
+
+
+class OllamaProviderOptions(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    numCtx: int | None = None
+    numPredict: int | None = None
+
+
+class StructuredOutputType(Enum):
+    NONE = "NONE"
+    JSON_FORMAT = "JSON_FORMAT"
+    JSON_SCHEMA = "JSON_SCHEMA"
+
+
+class StructuredOutputDataType(Enum):
+    STRING = "STRING"
+    NUMBER = "NUMBER"
+    INTEGER = "INTEGER"
+    BOOLEAN = "BOOLEAN"
+    ARRAY = "ARRAY"
+    OBJECT = "OBJECT"
+    ENUM = "ENUM"
+
+
+class AgentChatSettings(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    wordsPerMinute: float | None = None
+    minMessagesBeforeResponding: int
+    canSelfTriggerCalls: bool
+    maxResponses: int | None = None
+    initialMessage: str
+
+
+class StageKind(Enum):
+    info = "info"
+    tos = "tos"
+    profile = "profile"
+    chat = "chat"
+    chip = "chip"
+    comprehension = "comprehension"
+    flipcard = "flipcard"
+    ranking = "ranking"
+    payout = "payout"
+    privateChat = "privateChat"
+    reveal = "reveal"
+    salesperson = "salesperson"
+    stockinfo = "stockinfo"
+    assetAllocation = "assetAllocation"
+    multiAssetAllocation = "multiAssetAllocation"
+    role = "role"
+    survey = "survey"
+    surveyPerParticipant = "surveyPerParticipant"
+    transfer = "transfer"
 
 
 class StockConfig(BaseModel):
@@ -356,6 +514,9 @@ class CohortUpdate(BaseModel):
 
 
 class ChatStageConfig(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
     id: str
     kind: Literal["chat"] = "chat"
     name: str
@@ -423,6 +584,22 @@ class PayoutStageConfig(BaseModel):
     averageAllPayoutItems: bool
 
 
+class PrivateChatStageConfig(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    id: str
+    kind: Literal["privateChat"] = "privateChat"
+    name: str
+    descriptions: Any
+    progress: Any
+    timeLimitInMinutes: float | None = None
+    requireFullTime: bool | None = None
+    isTurnBasedChat: bool | None = None
+    minNumberOfTurns: float | None = None
+    maxNumberOfTurns: float | None = None
+
+
 class ItemRankingStageConfig(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
@@ -451,6 +628,17 @@ class ParticipantRankingStageConfig(BaseModel):
     enableSelfVoting: bool
 
 
+class SalespersonStageConfig(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    id: str
+    kind: Literal["salesperson"] = "salesperson"
+    name: str
+    descriptions: Any
+    progress: Any
+
+
 class ComparisonCondition(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
@@ -460,6 +648,33 @@ class ComparisonCondition(BaseModel):
     target: ConditionTargetReference
     operator: ComparisonOperator = Field(..., title="ComparisonOperator")
     value: str | float | bool
+
+
+class Persona(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    id: constr(min_length=1)
+    name: str
+    defaultModelSettings: AgentModelSettings | None = None
+
+
+class GoogleProviderOptions(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    thinkingConfig: GoogleThinkingConfig | None = None
+    safetySettings: List[GoogleSafetySetting] | None = None
+
+
+class AnthropicProviderOptions(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    thinking: AnthropicThinkingConfig | None = None
+    effort: ReasoningEffort | None = Field(None, title="ReasoningEffort")
+    cacheControl: AnthropicCacheControl | None = None
+    sendReasoning: bool | None = None
 
 
 class AssetAllocationStageConfig(BaseModel):
@@ -499,19 +714,6 @@ class ComprehensionStageConfig(BaseModel):
     questions: List[TextQuestion | McQuestion]
 
 
-class PrivateChatStageConfig(BaseModel):
-    id: str
-    kind: Literal["privateChat"] = "privateChat"
-    name: str
-    descriptions: Any
-    progress: Any
-    timeLimitInMinutes: float | None = None
-    requireFullTime: bool | None = None
-    isTurnBasedChat: bool | None = None
-    minNumberOfTurns: float | None = None
-    maxNumberOfTurns: float | None = None
-
-
 class ProfileStageConfig(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
@@ -546,14 +748,6 @@ class RoleStageConfig(BaseModel):
     descriptions: Any
     progress: Any
     roles: List[Role]
-
-
-class SalespersonStageConfig(BaseModel):
-    id: str
-    kind: Literal["salesperson"] = "salesperson"
-    name: str
-    descriptions: Any
-    progress: Any
 
 
 class StockinfoStageConfig(BaseModel):
@@ -602,6 +796,34 @@ class RankingStageConfig(
     root: ItemRankingStageConfig | ParticipantRankingStageConfig = Field(
         ..., title="RankingStageConfig"
     )
+
+
+class ProviderOptionsMap(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    google: GoogleProviderOptions | None = None
+    anthropic: AnthropicProviderOptions | None = None
+    openai: OpenAIProviderOptions | None = None
+    ollama: OllamaProviderOptions | None = None
+
+
+class ModelGenerationConfig(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    maxTokens: int | None = None
+    stopSequences: List[str] | None = None
+    temperature: float | None = None
+    topP: float | None = None
+    frequencyPenalty: float | None = None
+    presencePenalty: float | None = None
+    reasoningLevel: ReasoningLevel | None = Field(None, title="ReasoningLevel")
+    reasoningBudget: int | None = None
+    includeReasoning: bool | None = None
+    disableSafetyFilters: bool | None = None
+    providerOptions: ProviderOptionsMap | None = None
+    customRequestBodyFields: List[CustomRequestBodyField] | None = None
 
 
 class Experiment(BaseModel):
@@ -849,7 +1071,7 @@ class RandomPermutationVariableConfig(BaseModel):
     type: Literal["random_permutation"] = "random_permutation"
     scope: Scope
     definition: VariableDefinition
-    shuffleConfig: ShuffleConfig = Field(..., title="ShuffleConfig")
+    shuffleConfig: ShuffleConfig
     values: List[str]
     numToSelect: confloat(ge=1.0) | None = None
     expandListToSeparateVariables: bool | None = None
@@ -864,6 +1086,166 @@ class BalancedAssignmentVariableConfig(BaseModel):
     weights: List[confloat(ge=1.0)] | None = None
     balanceStrategy: BalanceStrategy
     balanceAcross: BalanceAcross
+
+
+class AgentMediatorTemplate(BaseModel):
+    persona: Persona
+    promptMap: Dict[
+        constr(pattern=r"^(.*)$"), ChatPromptConfig | GenericPromptConfig
+    ] = Field(..., title="PromptMap")
+
+
+class ChatPromptConfig(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    id: constr(min_length=1)
+    type: ChatStageType = Field(..., title="ChatStageType")
+    prompt: List[
+        TextPromptItem
+        | ProfileInfoPromptItem
+        | ProfileContextPromptItem
+        | StageContextPromptItem
+        | PromptItemGroup
+    ]
+    includeScaffoldingInPrompt: bool | None = None
+    numRetries: int | None = None
+    generationConfig: ModelGenerationConfig | None = None
+    structuredOutputConfig: (
+        StructuredOutputConfig | ChatMediatorStructuredOutputConfig | None
+    ) = None
+    chatSettings: AgentChatSettings | None = None
+
+
+class TextPromptItem(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    type: Literal["TEXT"] = "TEXT"
+    text: str
+    condition: ComparisonCondition | ConditionGroup | None = Field(
+        None, title="Condition"
+    )
+
+
+class ProfileInfoPromptItem(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    type: Literal["PROFILE_INFO"] = "PROFILE_INFO"
+    condition: ComparisonCondition | ConditionGroup | None = Field(
+        None, title="Condition"
+    )
+
+
+class ProfileContextPromptItem(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    type: Literal["PROFILE_CONTEXT"] = "PROFILE_CONTEXT"
+    condition: ComparisonCondition | ConditionGroup | None = Field(
+        None, title="Condition"
+    )
+
+
+class StageContextPromptItem(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    type: Literal["STAGE_CONTEXT"] = "STAGE_CONTEXT"
+    stageId: str
+    includePrimaryText: bool
+    includeInfoText: bool
+    includeHelpText: bool
+    includeStageDisplay: bool
+    includeParticipantAnswers: bool
+    condition: ComparisonCondition | ConditionGroup | None = Field(
+        None, title="Condition"
+    )
+
+
+class PromptItemGroup(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    type: Literal["GROUP"] = "GROUP"
+    title: str
+    items: List[
+        TextPromptItem
+        | ProfileInfoPromptItem
+        | ProfileContextPromptItem
+        | StageContextPromptItem
+        | PromptItemGroup
+    ]
+    shuffleConfig: ShuffleConfig | None = None
+    condition: ComparisonCondition | ConditionGroup | None = Field(
+        None, title="Condition"
+    )
+
+
+class StructuredOutputConfig(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    enabled: bool
+    type: StructuredOutputType = Field(..., title="StructuredOutputType")
+    schema_: StructuredOutputSchema | None = Field(None, alias="schema")
+    appendToPrompt: bool
+
+
+class StructuredOutputSchema(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    type: StructuredOutputDataType = Field(..., title="StructuredOutputDataType")
+    description: str | None = None
+    properties: List[StructuredOutputSchemaProperty] | None = None
+    arrayItems: StructuredOutputSchema | None = None
+    enumItems: List[str] | None = None
+
+
+class StructuredOutputSchemaProperty(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    name: str
+    schema_: StructuredOutputSchema = Field(..., alias="schema")
+
+
+class ChatMediatorStructuredOutputConfig(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    enabled: bool
+    type: StructuredOutputType = Field(..., title="StructuredOutputType")
+    schema_: StructuredOutputSchema | None = Field(None, alias="schema")
+    appendToPrompt: bool
+    shouldRespondField: str
+    messageField: str
+    explanationField: str
+    readyToEndField: str
+
+
+class GenericPromptConfig(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    id: constr(min_length=1)
+    type: StageKind = Field(..., title="StageKind")
+    prompt: List[
+        TextPromptItem
+        | ProfileInfoPromptItem
+        | ProfileContextPromptItem
+        | StageContextPromptItem
+        | PromptItemGroup
+    ]
+    includeScaffoldingInPrompt: bool | None = None
+    numRetries: int | None = None
+    generationConfig: ModelGenerationConfig | None = None
+    structuredOutputConfig: StructuredOutputConfig | None = None
+
+
+AgentParticipantTemplate = AgentMediatorTemplate
 
 
 class JSONSchemaDefinition(
@@ -883,3 +1265,8 @@ ConditionGroup.model_rebuild()
 StaticVariableConfig.model_rebuild()
 Object.model_rebuild()
 Array.model_rebuild()
+AgentMediatorTemplate.model_rebuild()
+ChatPromptConfig.model_rebuild()
+StructuredOutputConfig.model_rebuild()
+StructuredOutputSchema.model_rebuild()
+AgentParticipantTemplate.model_rebuild()

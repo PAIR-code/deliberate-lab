@@ -5,7 +5,6 @@ import {
   UserType,
   createParticipantProfileBase,
 } from './participant';
-import {AgentChatPromptConfig} from './agent';
 import {StoredFile} from './model_response';
 
 /** Chat message types and functions (used in chat stages). */
@@ -35,17 +34,6 @@ export interface ChatMessage {
   reasoning?: string; // model's internal chain-of-thought (from thinking/reasoning features)
   isError: boolean; // is error message (used for private chats)
   files?: StoredFile[]; // uploaded files (images, documents, etc.)
-}
-
-/** Format for LLM API chat message output. */
-export interface AgentChatResponse {
-  profile: ParticipantProfileBase;
-  profileId: string; // ID of participant or mediator
-  agentId: string; // ID of agent persona
-  promptConfig: AgentChatPromptConfig;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  parsed: any;
-  message: string;
 }
 
 // ************************************************************************* //

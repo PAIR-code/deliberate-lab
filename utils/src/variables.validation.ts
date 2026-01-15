@@ -84,7 +84,7 @@ export const ShuffleConfigData = Type.Object(
     ]),
     customSeed: Type.String(),
   },
-  strict,
+  {$id: 'ShuffleConfig', ...strict},
 );
 
 /** StaticVariableConfig. */

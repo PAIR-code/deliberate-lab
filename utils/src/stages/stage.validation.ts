@@ -1,4 +1,5 @@
 import {Type} from '@sinclair/typebox';
+import {StageKind} from './stage';
 import {
   StageTextConfigSchema,
   StageProgressConfigSchema,
@@ -29,6 +30,13 @@ import {TOSStageConfigData} from './tos_stage.validation';
 
 // Re-export the schemas for convenience
 export {StageTextConfigSchema, StageProgressConfigSchema};
+
+// ****************************************************************************
+// Enums
+// ****************************************************************************
+
+/** Stage kind enum - uses TypeScript enum for type compatibility */
+export const StageKindData = Type.Enum(StageKind, {$id: 'StageKind'});
 
 // ************************************************************************* //
 // writeExperiment, updateStageConfig endpoints                              //
