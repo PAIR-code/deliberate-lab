@@ -431,12 +431,13 @@ async function handleSurveyAutoTransfer(
   // nb: for transaction purposes, writes begin here and there can be no more reads.
 
   // Create a new cohort and transfer participants
+  const timestamp = Timestamp.now() as UnifiedTimestamp;
   const cohortConfig = createCohortConfig({
     id: generateId(),
     metadata: createMetadataConfig({
       creator: 'system',
-      dateCreated: Timestamp.now(),
-      dateModified: Timestamp.now(),
+      dateCreated: timestamp,
+      dateModified: timestamp,
     }),
     participantConfig: autoTransferConfig.autoCohortParticipantConfig,
   });
