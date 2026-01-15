@@ -19,7 +19,14 @@ export class InfoStageHandler extends BaseStageHandler {
     const infoLines = updatedStage.infoLines.map((line) =>
       resolveTemplateVariables(line, variableDefinitions, valueMap),
     );
-    return {...updatedStage, infoLines};
+    const youtubeVideoId = updatedStage.youtubeVideoId
+      ? resolveTemplateVariables(
+          updatedStage.youtubeVideoId,
+          variableDefinitions,
+          valueMap,
+        )
+      : undefined;
+    return {...updatedStage, infoLines, youtubeVideoId};
   }
 
   getStageDisplayForPrompt(
