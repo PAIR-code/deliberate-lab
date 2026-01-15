@@ -32,7 +32,7 @@ import {
   VariableType,
   generateId,
 } from '@deliberation-lab/utils';
-import {createCohortInternal, findCohortByAlias} from './cohort.utils';
+import {createCohortInternal} from './cohort.utils';
 import {
   executeDirectTransfers,
   DirectTransferInstructions,
@@ -344,62 +344,6 @@ describe('Cohort Definitions Integration Tests', () => {
       expect(savedCohort.variableMap?.treatment).toBe(
         JSON.stringify('default_treatment'),
       );
-    });
-  });
-
-  describe('findCohortByAlias', () => {
-    it('should find cohort by alias', async () => {
-      const experimentId = generateId();
-      const cohortId = generateId(true);
-      await createTestExperiment(experimentId);
-
-      const cohortConfig = createTestCohortConfig(
-        cohortId,
-        'Find Me Cohort',
-        'findme-alias',
-      );
-
-      await firestore.runTransaction(async (transaction) => {
-        await createCohortInternal(transaction, experimentId, cohortConfig);
-      });
-
-      const foundCohort = await findCohortByAlias(experimentId, 'findme-alias');
-
-      expect(foundCohort).not.toBeNull();
-      expect(foundCohort!.alias).toBe('findme-alias');
-      expect(foundCohort!.id).toBe(cohortId);
-    });
-
-    it('should return null for non-existent alias', async () => {
-      const experimentId = generateId();
-      const cohortId = generateId(true);
-      await createTestExperiment(experimentId);
-
-      const cohortConfig = createTestCohortConfig(
-        cohortId,
-        'Existing Cohort',
-        'existing-alias',
-      );
-
-      await firestore.runTransaction(async (transaction) => {
-        await createCohortInternal(transaction, experimentId, cohortConfig);
-      });
-
-      const foundCohort = await findCohortByAlias(
-        experimentId,
-        'non-existent-alias',
-      );
-
-      expect(foundCohort).toBeNull();
-    });
-
-    it('should return null when no cohorts exist', async () => {
-      const experimentId = generateId();
-      await createTestExperiment(experimentId);
-
-      const foundCohort = await findCohortByAlias(experimentId, 'any-alias');
-
-      expect(foundCohort).toBeNull();
     });
   });
 
