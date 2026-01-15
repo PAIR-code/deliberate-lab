@@ -129,9 +129,9 @@ export const PromptItemData = Type.Union([
 export const AgentChatSettingsData = Type.Object(
   {
     wordsPerMinute: Type.Union([Type.Number(), Type.Null()]),
-    minMessagesBeforeResponding: Type.Number(),
+    minMessagesBeforeResponding: Type.Integer(),
     canSelfTriggerCalls: Type.Boolean(),
-    maxResponses: Type.Union([Type.Number(), Type.Null()]),
+    maxResponses: Type.Union([Type.Integer(), Type.Null()]),
     initialMessage: Type.String(),
   },
   {$id: 'AgentChatSettings', ...strict},
@@ -143,7 +143,7 @@ const BasePromptConfigFields = {
   type: StageKindData,
   prompt: Type.Array(PromptItemData),
   includeScaffoldingInPrompt: Type.Optional(Type.Boolean()),
-  numRetries: Type.Optional(Type.Number()),
+  numRetries: Type.Optional(Type.Integer()),
   generationConfig: Type.Optional(ModelGenerationConfigData),
   structuredOutputConfig: Type.Optional(StructuredOutputConfigData),
 };

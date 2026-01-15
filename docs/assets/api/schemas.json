@@ -1852,7 +1852,7 @@
           "type": "boolean"
         },
         "numRetries": {
-          "type": "number"
+          "type": "integer"
         },
         "generationConfig": {
           "$ref": "#/$defs/ModelGenerationConfig"
@@ -2063,7 +2063,7 @@
       "type": "object",
       "properties": {
         "maxTokens": {
-          "type": "number"
+          "type": "integer"
         },
         "stopSequences": {
           "type": "array",
@@ -2111,7 +2111,7 @@
         "reasoningBudget": {
           "anyOf": [
             {
-              "type": "number"
+              "type": "integer"
             },
             {
               "type": "null"
@@ -2212,7 +2212,7 @@
       "type": "object",
       "properties": {
         "thinkingBudget": {
-          "type": "number"
+          "type": "integer"
         },
         "includeThoughts": {
           "type": "boolean"
@@ -2422,7 +2422,7 @@
           ]
         },
         "budgetTokens": {
-          "type": "number"
+          "type": "integer"
         }
       }
     },
@@ -2527,10 +2527,10 @@
       "type": "object",
       "properties": {
         "numCtx": {
-          "type": "number"
+          "type": "integer"
         },
         "numPredict": {
-          "type": "number"
+          "type": "integer"
         }
       }
     },
@@ -2768,7 +2768,7 @@
           ]
         },
         "minMessagesBeforeResponding": {
-          "type": "number"
+          "type": "integer"
         },
         "canSelfTriggerCalls": {
           "type": "boolean"
@@ -2776,7 +2776,7 @@
         "maxResponses": {
           "anyOf": [
             {
-              "type": "number"
+              "type": "integer"
             },
             {
               "type": "null"
@@ -2905,7 +2905,7 @@
           "type": "boolean"
         },
         "numRetries": {
-          "type": "number"
+          "type": "integer"
         },
         "generationConfig": {
           "$ref": "#/$defs/ModelGenerationConfig"

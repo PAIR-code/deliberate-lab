@@ -298,7 +298,7 @@ class GoogleThinkingConfig(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )
-    thinkingBudget: float | None = None
+    thinkingBudget: int | None = None
     includeThoughts: bool | None = None
     thinkingLevel: GoogleThinkingLevel | None = Field(None, title="GoogleThinkingLevel")
 
@@ -343,7 +343,7 @@ class AnthropicThinkingConfig(BaseModel):
         extra="forbid",
     )
     type: AnthropicThinkingType = Field(..., title="AnthropicThinkingType")
-    budgetTokens: float | None = None
+    budgetTokens: int | None = None
 
 
 class AnthropicCacheTtl(Enum):
@@ -371,8 +371,8 @@ class OllamaProviderOptions(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )
-    numCtx: float | None = None
-    numPredict: float | None = None
+    numCtx: int | None = None
+    numPredict: int | None = None
 
 
 class StructuredOutputType(Enum):
@@ -396,9 +396,9 @@ class AgentChatSettings(BaseModel):
         extra="forbid",
     )
     wordsPerMinute: float | None = None
-    minMessagesBeforeResponding: float
+    minMessagesBeforeResponding: int
     canSelfTriggerCalls: bool
-    maxResponses: float | None = None
+    maxResponses: int | None = None
     initialMessage: str
 
 
@@ -812,14 +812,14 @@ class ModelGenerationConfig(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )
-    maxTokens: float | None = None
+    maxTokens: int | None = None
     stopSequences: List[str] | None = None
     temperature: float | None = None
     topP: float | None = None
     frequencyPenalty: float | None = None
     presencePenalty: float | None = None
     reasoningLevel: ReasoningLevel | None = Field(None, title="ReasoningLevel")
-    reasoningBudget: float | None = None
+    reasoningBudget: int | None = None
     includeReasoning: bool | None = None
     disableSafetyFilters: bool | None = None
     providerOptions: ProviderOptionsMap | None = None
@@ -1109,7 +1109,7 @@ class ChatPromptConfig(BaseModel):
         | PromptItemGroup
     ]
     includeScaffoldingInPrompt: bool | None = None
-    numRetries: float | None = None
+    numRetries: int | None = None
     generationConfig: ModelGenerationConfig | None = None
     structuredOutputConfig: (
         StructuredOutputConfig | ChatMediatorStructuredOutputConfig | None
@@ -1240,7 +1240,7 @@ class GenericPromptConfig(BaseModel):
         | PromptItemGroup
     ]
     includeScaffoldingInPrompt: bool | None = None
-    numRetries: float | None = None
+    numRetries: int | None = None
     generationConfig: ModelGenerationConfig | None = None
     structuredOutputConfig: StructuredOutputConfig | None = None
 

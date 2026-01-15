@@ -47,7 +47,7 @@ export const GoogleThinkingLevelData = Type.Union(
 /** Google thinking config */
 export const GoogleThinkingConfigData = Type.Object(
   {
-    thinkingBudget: Type.Optional(Type.Number()),
+    thinkingBudget: Type.Optional(Type.Integer()),
     includeThoughts: Type.Optional(Type.Boolean()),
     thinkingLevel: Type.Optional(GoogleThinkingLevelData),
   },
@@ -106,7 +106,7 @@ export const AnthropicThinkingTypeData = Type.Union(
 export const AnthropicThinkingConfigData = Type.Object(
   {
     type: AnthropicThinkingTypeData,
-    budgetTokens: Type.Optional(Type.Number()),
+    budgetTokens: Type.Optional(Type.Integer()),
   },
   {$id: 'AnthropicThinkingConfig', ...strict},
 );
@@ -155,8 +155,8 @@ export const OpenAIProviderOptionsData = Type.Object(
 /** Ollama provider options */
 export const OllamaProviderOptionsData = Type.Object(
   {
-    numCtx: Type.Optional(Type.Number()),
-    numPredict: Type.Optional(Type.Number()),
+    numCtx: Type.Optional(Type.Integer()),
+    numPredict: Type.Optional(Type.Integer()),
   },
   {$id: 'OllamaProviderOptions', ...strict},
 );
@@ -189,7 +189,7 @@ export const CustomRequestBodyFieldData = Type.Object(
 export const ModelGenerationConfigData = Type.Object(
   {
     // Universal settings
-    maxTokens: Type.Optional(Type.Number()),
+    maxTokens: Type.Optional(Type.Integer()),
     stopSequences: Type.Optional(Type.Array(Type.String())),
     temperature: Type.Optional(Type.Number()),
     topP: Type.Optional(Type.Number()),
@@ -197,7 +197,7 @@ export const ModelGenerationConfigData = Type.Object(
     presencePenalty: Type.Optional(Type.Number()),
     // Reasoning settings
     reasoningLevel: Type.Optional(ReasoningLevelData),
-    reasoningBudget: Type.Optional(Type.Union([Type.Number(), Type.Null()])),
+    reasoningBudget: Type.Optional(Type.Union([Type.Integer(), Type.Null()])),
     includeReasoning: Type.Optional(Type.Boolean()),
     disableSafetyFilters: Type.Optional(Type.Boolean()),
     // Provider-specific options
