@@ -6,7 +6,6 @@
   "module": "dist/index.mjs",
   "types": "dist/index.d.ts",
   "scripts": {
-    "preinstall": "node -e \"if (process.env.INIT_CWD === process.cwd()) { console.error('\\n\\x1b[31mError: Run npm install from the repository root.\\x1b[0m\\nTo add a package to utils/, run:\\n  npm install <pkg> -w utils\\nfrom the root directory.\\n'); process.exit(1); }\"",
     "declarations": "tsc --declaration --emitDeclarationOnly",
     "build": "tsup --onSuccess \"npm run declarations\"",
     "build:watch": "tsup --watch --onSuccess \"npm run declarations\"",
