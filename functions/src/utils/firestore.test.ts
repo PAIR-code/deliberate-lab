@@ -94,6 +94,29 @@ describe('getFirestoreActiveParticipants', () => {
         ],
       ]);
     });
+
+    it('should query by stageId when provided', async () => {
+      mockGet.mockResolvedValue({docs: []});
+
+      await getFirestoreActiveParticipants(experimentId, cohortId, stageId);
+
+      // Verify stageId where clause is added
+      const whereCalls = mockWhere.mock.calls;
+      expect(whereCalls).toContainEqual(['currentStageId', '==', stageId]);
+    });
+
+    it('should not query by stageId when null', async () => {
+      mockGet.mockResolvedValue({docs: []});
+
+      await getFirestoreActiveParticipants(experimentId, cohortId, null);
+
+      // Verify stageId where clause is NOT added
+      const whereCalls = mockWhere.mock.calls;
+      const stageIdCalls = whereCalls.filter(
+        (call) => call[0] === 'currentStageId',
+      );
+      expect(stageIdCalls).toHaveLength(0);
+    });
   });
 
   describe('filtering behavior', () => {
@@ -146,32 +169,55 @@ describe('getFirestoreActiveParticipants', () => {
       expect(result).toHaveLength(1);
     });
 
-    it('should filter by stageId when provided', async () => {
-      const participantInStage = createMockParticipant({
-        privateId: 'in-stage',
+    it('should return only participants matching stageId (filtered by Firestore)', async () => {
+      // stageId filtering is done by Firestore - mock simulates Firestore's filtered response
+      const participantA = createMockParticipant({
+        privateId: 'participant-A',
         currentStageId: stageId,
         currentStatus: ParticipantStatus.IN_PROGRESS,
       });
-      const participantOtherStage = createMockParticipant({
-        privateId: 'other-stage',
-        currentStageId: 'different-stage',
+      const participantB = createMockParticipant({
+        privateId: 'participant-B',
+        currentStageId: 'other-stage',
         currentStatus: ParticipantStatus.IN_PROGRESS,
       });
+
+      // First call: query for stageId - Firestore returns only participantA
       mockGet.mockResolvedValue({
-        docs: [
-          {data: () => participantInStage},
-          {data: () => participantOtherStage},
-        ],
+        docs: [{data: () => participantA}],
       });
 
-      const result = await getFirestoreActiveParticipants(
+      const result1 = await getFirestoreActiveParticipants(
         experimentId,
         cohortId,
         stageId,
       );
 
-      expect(result).toHaveLength(1);
-      expect(result[0].privateId).toBe('in-stage');
+      expect(result1).toHaveLength(1);
+      expect(result1[0].privateId).toBe('participant-A');
+      expect(mockWhere).toHaveBeenCalledWith('currentStageId', '==', stageId);
+
+      // Reset mocks for second call
+      jest.clearAllMocks();
+
+      // Second call: query for 'other-stage' - Firestore returns only participantB
+      mockGet.mockResolvedValue({
+        docs: [{data: () => participantB}],
+      });
+
+      const result2 = await getFirestoreActiveParticipants(
+        experimentId,
+        cohortId,
+        'other-stage',
+      );
+
+      expect(result2).toHaveLength(1);
+      expect(result2[0].privateId).toBe('participant-B');
+      expect(mockWhere).toHaveBeenCalledWith(
+        'currentStageId',
+        '==',
+        'other-stage',
+      );
     });
 
     it('should return all stages when stageId is null', async () => {
@@ -261,7 +307,8 @@ describe('getFirestoreActiveParticipants', () => {
   });
 
   describe('combined filtering', () => {
-    it('should correctly filter by stageId AND agent status', async () => {
+    it('should filter by checkIsAgent in JS after Firestore filters by stageId', async () => {
+      // Four participants: 2 agents (different stages), 2 humans (different stages)
       const agentInStage = createMockParticipant({
         privateId: 'agent-in-stage',
         currentStageId: stageId,
@@ -290,23 +337,54 @@ describe('getFirestoreActiveParticipants', () => {
         currentStatus: ParticipantStatus.IN_PROGRESS,
         agentConfig: null,
       });
-      mockGet.mockResolvedValue({
-        docs: [
-          {data: () => agentInStage},
-          {data: () => agentOtherStage},
-          {data: () => humanInStage},
-        ],
+      const humanOtherStage = createMockParticipant({
+        privateId: 'human-other-stage',
+        currentStageId: 'other-stage',
+        currentStatus: ParticipantStatus.IN_PROGRESS,
+        agentConfig: null,
       });
 
-      const result = await getFirestoreActiveParticipants(
+      // Query 1: stageId + checkIsAgent=true
+      // Firestore returns participants in stageId (agentInStage, humanInStage)
+      // JS filters for agents only → agentInStage
+      mockGet.mockResolvedValue({
+        docs: [{data: () => agentInStage}, {data: () => humanInStage}],
+      });
+
+      const result1 = await getFirestoreActiveParticipants(
         experimentId,
         cohortId,
         stageId,
         true, // checkIsAgent
       );
 
-      expect(result).toHaveLength(1);
-      expect(result[0].privateId).toBe('agent-in-stage');
+      expect(result1).toHaveLength(1);
+      expect(result1[0].privateId).toBe('agent-in-stage');
+      expect(mockWhere).toHaveBeenCalledWith('currentStageId', '==', stageId);
+
+      jest.clearAllMocks();
+
+      // Query 2: 'other-stage' + checkIsAgent=true
+      // Firestore returns participants in other-stage (agentOtherStage, humanOtherStage)
+      // JS filters for agents only → agentOtherStage
+      mockGet.mockResolvedValue({
+        docs: [{data: () => agentOtherStage}, {data: () => humanOtherStage}],
+      });
+
+      const result2 = await getFirestoreActiveParticipants(
+        experimentId,
+        cohortId,
+        'other-stage',
+        true, // checkIsAgent
+      );
+
+      expect(result2).toHaveLength(1);
+      expect(result2[0].privateId).toBe('agent-other-stage');
+      expect(mockWhere).toHaveBeenCalledWith(
+        'currentStageId',
+        '==',
+        'other-stage',
+      );
     });
   });
 });

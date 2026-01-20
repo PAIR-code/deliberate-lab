@@ -12,6 +12,15 @@
       "collectionGroup": "participants",
       "queryScope": "COLLECTION",
       "fields": [
+        {"fieldPath": "currentCohortId", "order": "ASCENDING"},
+        {"fieldPath": "currentStatus", "order": "ASCENDING"},
+        {"fieldPath": "currentStageId", "order": "ASCENDING"}
+      ]
+    },
+    {
+      "collectionGroup": "participants",
+      "queryScope": "COLLECTION",
+      "fields": [
         {"fieldPath": "transferCohortId", "order": "ASCENDING"},
         {"fieldPath": "currentStatus", "order": "ASCENDING"}
       ]
