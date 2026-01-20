@@ -50,6 +50,7 @@ interface TestAgentPromptConfig {
   generationConfig: ModelGenerationConfig;
   structuredOutputConfig: StructuredOutputConfig;
 }
+
 import {
   ackAlertMessageCallable,
   bootParticipantCallable,
@@ -84,6 +85,7 @@ import {
 } from '../shared/file.utils';
 import {
   isObsoleteParticipant,
+  ParticipantStatusFilter,
   requiresAnonymousProfiles,
 } from '../shared/participant.utils';
 
@@ -146,6 +148,9 @@ export class ExperimentManager extends Service {
   @observable expandAllCohorts = true;
   @observable showMediatorsInCohortSummary = false;
   @observable participantSortBy: 'lastActive' | 'name' = 'lastActive';
+  @observable participantSortDirection: 'asc' | 'desc' = 'asc';
+  @observable participantStatusFilters: Set<ParticipantStatusFilter> =
+    new Set();
 
   // Copy of cohort being edited in settings dialog
   @observable cohortEditing: CohortConfig | undefined = undefined;
@@ -277,6 +282,24 @@ export class ExperimentManager extends Service {
 
   setParticipantSortBy(sortBy: 'lastActive' | 'name') {
     this.participantSortBy = sortBy;
+  }
+
+  setParticipantSortDirection(direction: 'asc' | 'desc') {
+    this.participantSortDirection = direction;
+  }
+
+  toggleParticipantStatusFilter(filter: ParticipantStatusFilter) {
+    const newFilters = new Set(this.participantStatusFilters);
+    if (newFilters.has(filter)) {
+      newFilters.delete(filter);
+    } else {
+      newFilters.add(filter);
+    }
+    this.participantStatusFilters = newFilters;
+  }
+
+  clearParticipantStatusFilters() {
+    this.participantStatusFilters = new Set();
   }
 
   setCurrentParticipantId(id: string | undefined) {

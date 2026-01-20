@@ -134,6 +134,115 @@ export function isSuccessParticipant(participant: ParticipantProfile) {
   return participant.currentStatus === ParticipantStatus.SUCCESS;
 }
 
+/** Filter type for participant status in cohort views. */
+export type ParticipantStatusFilter =
+  | 'active'
+  | 'inProgress'
+  | 'completed'
+  | 'attentionCheck'
+  | 'booted'
+  | 'obsolete';
+
+/** Check if participant matches the given status filter. */
+export function matchesStatusFilter(
+  participant: ParticipantProfile,
+  filter: ParticipantStatusFilter,
+): boolean {
+  switch (filter) {
+    case 'active':
+      return isActiveParticipant(participant);
+    case 'inProgress':
+      return (
+        isActiveParticipant(participant) && !isSuccessParticipant(participant)
+      );
+    case 'completed':
+      return isSuccessParticipant(participant);
+    case 'attentionCheck':
+      return participant.currentStatus === ParticipantStatus.ATTENTION_CHECK;
+    case 'booted':
+      return participant.currentStatus === ParticipantStatus.BOOTED_OUT;
+    case 'obsolete':
+      return isObsoleteParticipant(participant);
+  }
+}
+
+/** Filter participants by a set of status filters (OR logic). */
+export function filterParticipantsByStatus<T extends ParticipantProfile>(
+  participants: T[],
+  filters: Set<ParticipantStatusFilter>,
+): T[] {
+  if (filters.size === 0) {
+    return participants;
+  }
+  return participants.filter((participant) =>
+    Array.from(filters).some((filter) =>
+      matchesStatusFilter(participant, filter),
+    ),
+  );
+}
+
+/** Options for sorting participants. */
+export interface SortParticipantsOptions {
+  sortBy: 'lastActive' | 'name';
+  sortDirection: 'asc' | 'desc';
+  stageIds: string[];
+  /** Returns true if participant is on a transfer stage (ready for transfer). */
+  isOnTransferStage?: (participant: ParticipantProfile) => boolean;
+}
+
+/** Sort participants by name or last active time. */
+export function sortParticipants<T extends ParticipantProfile>(
+  participants: T[],
+  options: SortParticipantsOptions,
+): T[] {
+  const {sortBy, sortDirection, stageIds, isOnTransferStage} = options;
+  const dirMultiplier = sortDirection === 'asc' ? 1 : -1;
+
+  const isTransferTimeout = (participant: ParticipantProfile) =>
+    participant.currentStatus === ParticipantStatus.TRANSFER_TIMEOUT;
+
+  return participants.slice().sort((a, b) => {
+    if (sortBy === 'name') {
+      const aName = a.name ? a.name : a.publicId;
+      const bName = b.name ? b.name : b.publicId;
+      return (
+        dirMultiplier *
+        aName.localeCompare(bName, undefined, {sensitivity: 'base'})
+      );
+    }
+
+    // Ready for transfer always at top
+    if (isOnTransferStage) {
+      const aIsReadyForTransfer = isOnTransferStage(a);
+      const bIsReadyForTransfer = isOnTransferStage(b);
+      if (aIsReadyForTransfer !== bIsReadyForTransfer) {
+        return aIsReadyForTransfer ? -1 : 1;
+      }
+    }
+
+    // Timeouts always at bottom
+    if (isTransferTimeout(a) !== isTransferTimeout(b)) {
+      return isTransferTimeout(a) ? 1 : -1;
+    }
+
+    // Sort by last active
+    const aStartTime = getCurrentStageStartTime(a, stageIds);
+    const bStartTime = getCurrentStageStartTime(b, stageIds);
+
+    if (aStartTime && bStartTime) {
+      const diff = aStartTime.seconds - bStartTime.seconds;
+      if (diff !== 0) return dirMultiplier * diff;
+      return dirMultiplier * (aStartTime.nanoseconds - bStartTime.nanoseconds);
+    } else if (aStartTime && !bStartTime) {
+      return -dirMultiplier;
+    } else if (!aStartTime && bStartTime) {
+      return dirMultiplier;
+    }
+
+    return dirMultiplier * a.publicId.localeCompare(b.publicId);
+  });
+}
+
 /** If participant is in a waiting state (and thus not "active")
  * (e.g., while pending transfer, not currently in the experiment but also
  * has not left yet)

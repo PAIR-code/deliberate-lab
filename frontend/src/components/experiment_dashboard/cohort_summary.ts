@@ -31,7 +31,10 @@ import {
   StageKind,
 } from '@deliberation-lab/utils';
 import {getCohortDescription, getCohortName} from '../../shared/cohort.utils';
-import {getCurrentStageStartTime} from '../../shared/participant.utils';
+import {
+  filterParticipantsByStatus,
+  sortParticipants,
+} from '../../shared/participant.utils';
 
 import {styles} from './cohort_summary.scss';
 import {renderMediatorStatusChip} from './mediator_status';
@@ -300,68 +303,37 @@ export class CohortSummary extends MobxLitElement {
     }
 
     // TODO: Refactor into participant-list component
-    const participants = this.experimentManager.getCohortParticipants(
+    const allParticipants = this.experimentManager.getCohortParticipants(
       this.cohort.id,
+    );
+    const participants = filterParticipantsByStatus(
+      allParticipants,
+      this.experimentManager.participantStatusFilters,
     );
     const mediators = this.experimentManager.getCohortAgentMediators(
       this.cohort.id,
     );
 
     if (participants.length === 0 && mediators.length === 0) {
-      return html`
-        <div class="empty-message">No participants or mediators yet.</div>
-      `;
+      const filters = this.experimentManager.participantStatusFilters;
+      const hasParticipants = allParticipants.length > 0;
+      const message =
+        hasParticipants && filters.size > 0
+          ? 'No participants match the current filter.'
+          : 'No participants or mediators yet.';
+      return html` <div class="empty-message">${message}</div> `;
     }
 
-    const isTransferTimeout = (participant: ParticipantProfile) => {
-      return participant.currentStatus == ParticipantStatus.TRANSFER_TIMEOUT;
-    };
-
-    const stageIds = this.experimentService.experiment?.stageIds ?? [];
-
-    const isReadyForTransfer = (participant: ParticipantProfile) => {
+    const isOnTransferStage = (participant: ParticipantProfile) => {
       const stage = this.experimentService.getStage(participant.currentStageId);
       return stage?.kind === StageKind.TRANSFER;
     };
 
-    const sortedParticipants = participants.slice().sort((a, b) => {
-      if (this.experimentManager.participantSortBy === 'name') {
-        const aName = a.name ? a.name : a.publicId;
-        const bName = b.name ? b.name : b.publicId;
-        return aName.localeCompare(bName, undefined, {
-          sensitivity: 'base',
-        });
-      }
-
-      const aIsReadyForTransfer = isReadyForTransfer(a);
-      const bIsReadyForTransfer = isReadyForTransfer(b);
-
-      if (aIsReadyForTransfer !== bIsReadyForTransfer) {
-        return aIsReadyForTransfer ? -1 : 1; // Ready for transfer go to the top
-      }
-
-      const aTimeout = isTransferTimeout(a);
-      const bTimeout = isTransferTimeout(b);
-
-      if (aTimeout !== bTimeout) {
-        return aTimeout ? 1 : -1; // Timeouts go to the bottom
-      }
-
-      // Sort by last active
-      const aStartTime = getCurrentStageStartTime(a, stageIds);
-      const bStartTime = getCurrentStageStartTime(b, stageIds);
-
-      if (aStartTime && bStartTime) {
-        const diff = aStartTime.seconds - bStartTime.seconds;
-        if (diff !== 0) return diff;
-        return aStartTime.nanoseconds - bStartTime.nanoseconds;
-      } else if (aStartTime && !bStartTime) {
-        return -1;
-      } else if (!aStartTime && bStartTime) {
-        return 1;
-      }
-
-      return a.publicId.localeCompare(b.publicId);
+    const sortedParticipants = sortParticipants(participants, {
+      sortBy: this.experimentManager.participantSortBy,
+      sortDirection: this.experimentManager.participantSortDirection,
+      stageIds: this.experimentService.experiment?.stageIds ?? [],
+      isOnTransferStage,
     });
 
     const showMediators = this.experimentManager.showMediatorsInCohortSummary;
@@ -391,7 +363,7 @@ export class CohortSummary extends MobxLitElement {
 
     return html`
       <div class="body">
-        ${participantSection} ${showMediators ? mediatorSection : nothing}
+        ${showMediators ? mediatorSection : nothing} ${participantSection}
       </div>
     `;
   }
