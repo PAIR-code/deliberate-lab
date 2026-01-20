@@ -17,17 +17,12 @@ import {classMap} from 'lit/directives/class-map.js';
 
 import {core} from '../../core/core';
 import {AnalyticsService, ButtonClick} from '../../services/analytics.service';
-import {ExperimentEditor} from '../../services/experiment.editor';
 import {ExperimentManager} from '../../services/experiment.manager';
 import {ExperimentService} from '../../services/experiment.service';
-import {CohortService} from '../../services/cohort.service';
-import {Pages, RouterService} from '../../services/router.service';
 
 import {
   CohortConfig,
   ParticipantProfile,
-  ParticipantProfileExtended,
-  ParticipantStatus,
   StageKind,
 } from '@deliberation-lab/utils';
 import {getCohortDescription, getCohortName} from '../../shared/cohort.utils';
@@ -45,11 +40,8 @@ export class CohortSummary extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
 
   private readonly analyticsService = core.getService(AnalyticsService);
-  private readonly cohortService = core.getService(CohortService);
-  private readonly experimentEditor = core.getService(ExperimentEditor);
   private readonly experimentManager = core.getService(ExperimentManager);
   private readonly experimentService = core.getService(ExperimentService);
-  private readonly routerService = core.getService(RouterService);
 
   @property() cohort: CohortConfig | undefined = undefined;
   @property() isExpanded = true;

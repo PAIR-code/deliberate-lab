@@ -14,15 +14,11 @@ import {renderMediatorStatusChip} from './mediator_status';
 import {MobxLitElement} from '@adobe/lit-mobx';
 import {CSSResultGroup, html, nothing, TemplateResult} from 'lit';
 import {customElement, property, state} from 'lit/decorators.js';
-import {classMap} from 'lit/directives/class-map.js';
-
 import {core} from '../../core/core';
 import {AnalyticsService, ButtonClick} from '../../services/analytics.service';
 import {ExperimentEditor} from '../../services/experiment.editor';
 import {ExperimentManager} from '../../services/experiment.manager';
 import {ExperimentService} from '../../services/experiment.service';
-import {HomeService} from '../../services/home.service';
-import {Pages, RouterService} from '../../services/router.service';
 
 import {
   CohortConfig,
@@ -30,7 +26,6 @@ import {
   MediatorStatus,
   ParticipantProfile,
   ParticipantProfileExtended,
-  ParticipantStatus,
   StageKind,
 } from '@deliberation-lab/utils';
 
