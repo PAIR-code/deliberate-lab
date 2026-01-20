@@ -1,5 +1,22 @@
 {
-  "indexes": [],
+  "indexes": [
+    {
+      "collectionGroup": "participants",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {"fieldPath": "currentCohortId", "order": "ASCENDING"},
+        {"fieldPath": "currentStatus", "order": "ASCENDING"}
+      ]
+    },
+    {
+      "collectionGroup": "participants",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {"fieldPath": "transferCohortId", "order": "ASCENDING"},
+        {"fieldPath": "currentStatus", "order": "ASCENDING"}
+      ]
+    }
+  ],
   "fieldOverrides": [
     {
       "collectionGroup": "apiKeys",

@@ -148,14 +148,14 @@ export async function getFirestoreActiveParticipants(
       .doc(experimentId)
       .collection('participants')
       .where('currentCohortId', '==', cohortId)
+      .where('currentStatus', 'in', activeStatuses)
       .get()
   ).docs
     .map((doc) => doc.data() as ParticipantProfileExtended)
     .filter(
       (participant) =>
         (stageId !== null ? participant.currentStageId === stageId : true) &&
-        (checkIsAgent ? participant.agentConfig : true) &&
-        activeStatuses.find((status) => status === participant.currentStatus),
+        (checkIsAgent ? participant.agentConfig : true),
     );
   return activeParticipants;
 }
