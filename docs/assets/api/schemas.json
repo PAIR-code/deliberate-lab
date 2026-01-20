@@ -632,6 +632,9 @@
               "type": "null"
             }
           ]
+        },
+        "preventCancellation": {
+          "type": "boolean"
         }
       }
     },

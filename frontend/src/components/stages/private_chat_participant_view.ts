@@ -96,18 +96,24 @@ export class PrivateChatView extends MobxLitElement {
       });
     };
 
+    const preventCancellation = this.stage?.preventCancellation ?? false;
+
     return html`
       <div class="description">
         <div>Waiting for a response...</div>
-        <pr-tooltip text="Cancel">
-          <pr-icon-button
-            icon="stop_circle"
-            color="neutral"
-            variant="default"
-            @click=${sendError}
-          >
-          </pr-icon-button>
-        </pr-tooltip>
+        ${preventCancellation
+          ? nothing
+          : html`
+              <pr-tooltip text="Cancel">
+                <pr-icon-button
+                  icon="stop_circle"
+                  color="neutral"
+                  variant="default"
+                  @click=${sendError}
+                >
+                </pr-icon-button>
+              </pr-tooltip>
+            `}
       </div>
     `;
   }
