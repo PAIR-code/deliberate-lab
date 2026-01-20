@@ -21,13 +21,33 @@ or use one of the following commands to only deploy part(s) of the backend:
 
 ```bash
 npx firebase deploy --only functions
-npx firebase deploy --only firestore
-npx firebase deploy --only firestore:indexes
-npx firebase deploy --only firestore:rules
+npx firebase deploy --only firestore          # deploys both rules and indexes
+npx firebase deploy --only firestore:indexes  # indexes only
+npx firebase deploy --only firestore:rules    # rules only
 ```
 
 See [Firebase documentation](https://firebase.google.com/docs/functions/get-started?gen=2nd#deploy-functions-to-a-production-environment)
 for additional information.
+
+### Firestore indexes
+
+Firestore indexes are defined in `firestore/indexes.json` and enable efficient
+queries on multiple fields. Indexes are deployed automatically with
+`npx firebase deploy`, or you can deploy only indexes with:
+
+```bash
+npx firebase deploy --only firestore:indexes
+```
+
+**Important notes:**
+
+- Index creation happens asynchronously and can take several minutes for large collections
+- You can monitor index build status in the Firebase console under Firestore > Indexes
+- New queries that require indexes will fail until the index is fully built
+- Indexes are automatically used by Firestore once available - no code changes needed
+
+If you see an error like `The query requires an index` in your functions logs,
+check that the required index exists in `firestore/indexes.json` and has been deployed.
 
 ### Allowlist setup
 
