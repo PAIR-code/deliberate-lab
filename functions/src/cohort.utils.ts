@@ -2,6 +2,7 @@ import {
   CohortConfig,
   Experiment,
   MediatorProfileExtended,
+  ParticipantStatus,
   StageConfig,
   createPublicDataFromStageConfigs,
   VariableScope,
@@ -9,6 +10,50 @@ import {
 import {generateVariablesForScope} from './variables.utils';
 import {createMediatorsForCohort} from './mediator.utils';
 import {app} from './app';
+
+/**
+ * Mark all participants in a cohort as deleted.
+ * Queries by both currentCohortId and transferCohortId to catch all related participants.
+ */
+export async function markCohortParticipantsAsDeleted(
+  experimentId: string,
+  cohortId: string,
+): Promise<{updatedCount: number}> {
+  const firestore = app.firestore();
+  const participantsCollection = firestore
+    .collection('experiments')
+    .doc(experimentId)
+    .collection('participants');
+
+  // Query participants by currentCohortId and transferCohortId separately
+  // (Firestore doesn't support OR across different fields)
+  const [currentCohortDocs, transferCohortDocs] = await Promise.all([
+    participantsCollection.where('currentCohortId', '==', cohortId).get(),
+    participantsCollection.where('transferCohortId', '==', cohortId).get(),
+  ]);
+
+  // Combine results, avoiding duplicates using Map
+  const participantMap = new Map<string, FirebaseFirestore.DocumentSnapshot>();
+  for (const doc of currentCohortDocs.docs) {
+    participantMap.set(doc.id, doc);
+  }
+  for (const doc of transferCohortDocs.docs) {
+    participantMap.set(doc.id, doc);
+  }
+
+  // Batch updates for efficiency
+  const batch = firestore.batch();
+  for (const doc of participantMap.values()) {
+    const participant = doc.data();
+    batch.set(doc.ref, {
+      ...participant,
+      currentStatus: ParticipantStatus.DELETED,
+    });
+  }
+  await batch.commit();
+
+  return {updatedCount: participantMap.size};
+}
 
 /**
  * Creates a cohort with the given configuration.
