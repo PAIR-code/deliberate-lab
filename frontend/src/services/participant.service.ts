@@ -367,18 +367,9 @@ export class ParticipantService extends Service {
             orderBy('timestamp', 'asc'),
           ),
           (snapshot) => {
-            let changedDocs = snapshot.docChanges().map((change) => change.doc);
-            if (changedDocs.length === 0) {
-              changedDocs = snapshot.docs;
-            }
-
-            changedDocs.forEach((doc) => {
-              if (!this.privateChatMap[stageId]) {
-                this.privateChatMap[stageId] = [];
-              }
-              const message = doc.data() as ChatMessage;
-              this.privateChatMap[stageId].push(message);
-            });
+            this.privateChatMap[stageId] = snapshot.docs.map(
+              (doc) => doc.data() as ChatMessage,
+            );
             this.isPrivateChatLoading = false;
           },
         ),
