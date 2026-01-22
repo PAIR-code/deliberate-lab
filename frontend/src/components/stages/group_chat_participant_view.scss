@@ -88,10 +88,7 @@ stage-footer {
 
 .spinner {
   position: absolute;
-  top: -3px;
-  left: -3px;
-  right: -3px;
-  bottom: -3px;
+  inset: -3px;
   border: 2px solid transparent;
   border-top-color: var(--md-sys-color-primary);
   border-radius: 50%;
