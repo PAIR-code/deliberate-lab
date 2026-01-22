@@ -12,6 +12,19 @@ import {ParticipantStatusFilter} from '../../shared/participant.utils';
 
 import {styles} from './cohort_filter_controls.scss';
 
+/** Icon for the status filter menu. */
+const STATUS_FILTER_ICON = 'filter_list';
+
+/** Display labels for each participant status filter. */
+const STATUS_FILTER_LABELS: Record<ParticipantStatusFilter, string> = {
+  active: 'Active',
+  inProgress: 'In Progress',
+  completed: 'Completed',
+  attentionCheck: 'Attention Check',
+  booted: 'Booted',
+  obsolete: 'Dropped',
+};
+
 /** Shared filter and sort controls for cohort participant lists */
 @customElement('cohort-filter-controls')
 export class CohortFilterControls extends MobxLitElement {
@@ -33,7 +46,7 @@ export class CohortFilterControls extends MobxLitElement {
     return html`
       <pr-menu
         name=${this.getStatusFilterLabel()}
-        icon=${this.getStatusFilterIcon()}
+        icon=${STATUS_FILTER_ICON}
         color="secondary"
         variant="default"
         ?alignStart=${this.alignStart}
@@ -49,12 +62,12 @@ export class CohortFilterControls extends MobxLitElement {
             Show all
           </div>
           <div class="menu-divider"></div>
-          ${this.renderFilterCheckbox('active', 'Active')}
-          ${this.renderFilterCheckbox('inProgress', 'In Progress')}
-          ${this.renderFilterCheckbox('completed', 'Completed')}
-          ${this.renderFilterCheckbox('attentionCheck', 'Attention Check')}
-          ${this.renderFilterCheckbox('booted', 'Booted')}
-          ${this.renderFilterCheckbox('obsolete', 'Dropped')}
+          ${this.renderFilterCheckbox('active')}
+          ${this.renderFilterCheckbox('inProgress')}
+          ${this.renderFilterCheckbox('completed')}
+          ${this.renderFilterCheckbox('attentionCheck')}
+          ${this.renderFilterCheckbox('booted')}
+          ${this.renderFilterCheckbox('obsolete')}
         </div>
       </pr-menu>
     `;
@@ -123,7 +136,7 @@ export class CohortFilterControls extends MobxLitElement {
     `;
   }
 
-  private renderFilterCheckbox(filter: ParticipantStatusFilter, label: string) {
+  private renderFilterCheckbox(filter: ParticipantStatusFilter) {
     const isChecked =
       this.experimentManager.participantStatusFilters.has(filter);
     return html`
@@ -139,7 +152,7 @@ export class CohortFilterControls extends MobxLitElement {
           size="small"
           color=${isChecked ? 'secondary' : 'neutral'}
         ></pr-icon>
-        <span>${label}</span>
+        <span>${STATUS_FILTER_LABELS[filter]}</span>
       </div>
     `;
   }
@@ -151,26 +164,13 @@ export class CohortFilterControls extends MobxLitElement {
     }
     if (filters.size === 1) {
       const filter = Array.from(filters)[0];
-      switch (filter) {
-        case 'active':
-          return 'Active';
-        case 'inProgress':
-          return 'In Progress';
-        case 'completed':
-          return 'Completed';
-        case 'attentionCheck':
-          return 'Attention';
-        case 'booted':
-          return 'Booted';
-        case 'obsolete':
-          return 'Dropped';
+      // Use shorter label for 'attentionCheck' in the menu button
+      if (filter === 'attentionCheck') {
+        return 'Attention';
       }
+      return STATUS_FILTER_LABELS[filter];
     }
     return `${filters.size} filters`;
-  }
-
-  private getStatusFilterIcon() {
-    return 'filter_list';
   }
 }
 
