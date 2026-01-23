@@ -1,10 +1,12 @@
 import '../participant_profile/avatar_icon';
 import '../shared/media_preview';
+import '../shared/media_preview_fullscreen';
+import {MediaPreviewFullscreen} from '../shared/media_preview_fullscreen';
 
 import {MobxLitElement} from '@adobe/lit-mobx';
 
 import {CSSResultGroup, html, nothing} from 'lit';
-import {customElement, property} from 'lit/decorators.js';
+import {customElement, property, state} from 'lit/decorators.js';
 import {classMap} from 'lit/directives/class-map.js';
 import {unsafeHTML} from 'lit/directives/unsafe-html.js';
 
@@ -33,20 +35,65 @@ export class ChatMessageComponent extends MobxLitElement {
   private readonly participantService = core.getService(ParticipantService);
 
   @property() chat: ChatMessage | undefined = undefined;
+  @state() private maximizedFile: StoredFile | null = null;
+  private fullscreenElement: HTMLElement | null = null;
+
+  override disconnectedCallback() {
+    super.disconnectedCallback();
+    this.closeFullscreen();
+  }
+
+  private handleMaximize = (e: CustomEvent) => {
+    const file = e.detail.file as StoredFile;
+    this.maximizedFile = file;
+    this.showFullscreen();
+  };
+
+  private showFullscreen = () => {
+    if (!this.maximizedFile) return;
+
+    // Store file before closeFullscreen clears it
+    const fileToShow = this.maximizedFile;
+
+    this.closeFullscreen();
+
+    const el = document.createElement(
+      'media-preview-fullscreen',
+    ) as MediaPreviewFullscreen;
+    el.addEventListener('close', () => this.closeFullscreen());
+    document.body.appendChild(el);
+    el.file = fileToShow;
+    el.requestUpdate();
+    this.fullscreenElement = el;
+  };
+
+  private closeFullscreen = () => {
+    if (this.fullscreenElement) {
+      this.fullscreenElement.remove();
+      this.fullscreenElement = null;
+    }
+    this.maximizedFile = null;
+  };
 
   override render() {
     if (!this.chat) {
       return nothing;
     }
 
+    let content;
     switch (this.chat.type) {
       case UserType.PARTICIPANT:
-        return this.renderParticipantMessage(this.chat);
+        content = this.renderParticipantMessage(this.chat);
+        break;
       case UserType.SYSTEM:
-        return this.renderSystemMessage(this.chat);
+        content = this.renderSystemMessage(this.chat);
+        break;
       default:
-        return this.renderMediatorMessage(this.chat);
+        content = this.renderMediatorMessage(this.chat);
+        break;
     }
+
+    return html`${content}`;
   }
 
   renderParticipantMessage(chatMessage: ChatMessage) {
@@ -145,7 +192,11 @@ export class ChatMessageComponent extends MobxLitElement {
     }
 
     return files.map(
-      (file) => html`<media-preview .file=${file}></media-preview>`,
+      (file) =>
+        html`<media-preview
+          .file=${file}
+          @maximize=${this.handleMaximize}
+        ></media-preview>`,
     );
   }
 

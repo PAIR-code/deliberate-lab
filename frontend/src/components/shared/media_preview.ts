@@ -19,6 +19,19 @@ export class MediaPreview extends LitElement {
   static override styles: CSSResultGroup = [styles];
 
   @property({type: Object}) file: StoredFile | undefined = undefined;
+  @property({type: Boolean}) allowFullscreen = true;
+
+  private handleImageClick = () => {
+    if (this.allowFullscreen && this.file) {
+      this.dispatchEvent(
+        new CustomEvent('maximize', {
+          detail: {file: this.file},
+          bubbles: true,
+          composed: true,
+        }),
+      );
+    }
+  };
 
   override render() {
     if (!this.file) {
@@ -27,7 +40,12 @@ export class MediaPreview extends LitElement {
 
     switch (getFileCategory(this.file)) {
       case FileCategory.IMAGE:
-        return html`<img src="${this.file.url}" alt="Generated image" />`;
+        return html`<img
+          src="${this.file.url}"
+          alt="Generated image"
+          class="${this.allowFullscreen ? 'clickable' : ''}"
+          @click=${this.handleImageClick}
+        />`;
       case FileCategory.VIDEO:
         return html`<video src="${this.file.url}" controls></video>`;
       case FileCategory.AUDIO:
