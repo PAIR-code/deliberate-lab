@@ -62,12 +62,9 @@ export class CohortFilterControls extends MobxLitElement {
             Show all
           </div>
           <div class="menu-divider"></div>
-          ${this.renderFilterCheckbox('active')}
-          ${this.renderFilterCheckbox('inProgress')}
-          ${this.renderFilterCheckbox('completed')}
-          ${this.renderFilterCheckbox('attentionCheck')}
-          ${this.renderFilterCheckbox('booted')}
-          ${this.renderFilterCheckbox('obsolete')}
+          ${Object.keys(STATUS_FILTER_LABELS).map((filter) =>
+            this.renderFilterCheckbox(filter as ParticipantStatusFilter),
+          )}
         </div>
       </pr-menu>
     `;
