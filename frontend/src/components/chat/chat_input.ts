@@ -48,10 +48,10 @@ export class ChatInputComponent extends MobxLitElement {
       this.isLoading = false;
     };
 
-    const handleKeyUp = async (e: KeyboardEvent) => {
-      if (e.key === 'Enter') {
+    const handleKeyDown = async (e: KeyboardEvent) => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
         sendInput();
-        e.stopPropagation();
       }
     };
 
@@ -86,7 +86,7 @@ export class ChatInputComponent extends MobxLitElement {
           .value=${this.getUserInput()}
           ?focused=${autoFocus()}
           ?disabled=${this.isDisabled}
-          @keyup=${handleKeyUp}
+          @keydown=${handleKeyDown}
           @input=${handleInput}
           @paste=${handlePaste}
         >

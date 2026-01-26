@@ -26,7 +26,7 @@ export class ChatEditor extends MobxLitElement {
 
     return html`
       <div class="title">Conversation settings</div>
-      ${this.renderTimeLimit()}
+      ${this.renderTimeLimit()} ${this.renderPreventCancellation()}
       <div class="divider"></div>
       <div class="title">Message limits</div>
       ${this.renderTurnBasedChat()} ${this.renderMinNumberOfTurns()}
@@ -117,6 +117,36 @@ export class ChatEditor extends MobxLitElement {
               </div>
             `
           : nothing}
+      </div>
+    `;
+  }
+
+  private renderPreventCancellation() {
+    const preventCancellation = this.stage?.preventCancellation ?? false;
+
+    const updateCheck = (e: Event) => {
+      if (!this.stage) return;
+      this.experimentEditor.updateStage({
+        ...this.stage,
+        preventCancellation: (e.target as HTMLInputElement).checked,
+      });
+    };
+
+    return html`
+      <div class="config-item">
+        <div class="checkbox-wrapper">
+          <md-checkbox
+            touch-target="wrapper"
+            ?checked=${preventCancellation}
+            ?disabled=${!this.experimentEditor.canEditStages}
+            @change=${updateCheck}
+          >
+          </md-checkbox>
+          <div>
+            Prevent cancellation of pending requests (stops gaming of minimum
+            message counts)
+          </div>
+        </div>
       </div>
     `;
   }

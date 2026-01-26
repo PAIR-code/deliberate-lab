@@ -598,6 +598,7 @@ class PrivateChatStageConfig(BaseModel):
     isTurnBasedChat: bool | None = None
     minNumberOfTurns: float | None = None
     maxNumberOfTurns: float | None = None
+    preventCancellation: bool | None = None
 
 
 class ItemRankingStageConfig(BaseModel):

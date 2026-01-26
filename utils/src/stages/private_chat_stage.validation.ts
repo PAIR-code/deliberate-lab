@@ -29,6 +29,9 @@ export const PrivateChatStageConfigData = Type.Object(
     // If turn based chat set to true, this specifies the max
     // number of messages the participant can send
     maxNumberOfTurns: Type.Optional(Type.Union([Type.Number(), Type.Null()])),
+    // If true, prevents participants from cancelling pending requests
+    // while waiting for a response (to prevent gaming minimum message counts)
+    preventCancellation: Type.Optional(Type.Boolean()),
   },
   {$id: 'PrivateChatStageConfig', ...strict},
 );
