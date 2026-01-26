@@ -1,7 +1,7 @@
 {
   "name": "functions",
   "scripts": {
-    "preinstall": "node -e \"if (process.env.INIT_CWD === process.cwd()) { console.error('\\n\\x1b[31mError: Run npm install from the repository root.\\x1b[0m\\nTo add a package to functions/, run:\\n  npm install <pkg> -w functions\\nfrom the root directory.\\n'); process.exit(1); }\"",
+    "preinstall": "node -e \"if (process.env.INIT_CWD === process.cwd()) { console.warn('\\n\\x1b[33mWarning: Consider running npm install from the repository root.\\x1b[0m\\nTo add a package to functions/, run:\\n  npm install <pkg> -w functions\\nfrom the root directory.\\n'); }\"",
     "lint": "eslint",
     "build": "node build.js",
     "build:watch": "node build.js --watch",
