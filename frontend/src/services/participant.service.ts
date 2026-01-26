@@ -37,7 +37,7 @@ import {
   setDoc,
   updateDoc,
 } from 'firebase/firestore';
-import {action, computed, makeObservable, observable} from 'mobx';
+import {action, computed, makeObservable, observable, runInAction} from 'mobx';
 import {CohortService} from './cohort.service';
 import {ExperimentService} from './experiment.service';
 import {FirebaseService} from './firebase.service';
@@ -275,28 +275,35 @@ export class ParticipantService extends Service {
           this.participantId,
         ),
         async (doc) => {
-          this.profile = {
+          const profile = {
             agentConfig: null,
             ...doc.data(),
           } as ParticipantProfileExtended;
+
+          runInAction(() => {
+            this.profile = profile;
+          });
+
           // Load cohort data
           if (this.experimentId) {
             await this.sp.cohortService.loadCohortData(
               this.experimentId,
-              this.profile.currentCohortId,
+              profile.currentCohortId,
             );
           }
 
           // Load profile to participant answer service
-          this.sp.participantAnswerService.setProfile(this.profile);
-          // Set current stage (use undefined if experiment not started)
-          if (this.profile.timestamps.startExperiment) {
-            this.currentStageViewId = this.profile.currentStageId;
-          } else {
-            this.currentStageViewId = undefined;
-          }
+          this.sp.participantAnswerService.setProfile(profile);
 
-          this.isProfileLoading = false;
+          runInAction(() => {
+            // Set current stage (use undefined if experiment not started)
+            if (profile.timestamps.startExperiment) {
+              this.currentStageViewId = profile.currentStageId;
+            } else {
+              this.currentStageViewId = undefined;
+            }
+            this.isProfileLoading = false;
+          });
         },
       ),
     );
@@ -316,14 +323,16 @@ export class ParticipantService extends Service {
           let changedDocs = snapshot.docChanges().map((change) => change.doc);
           if (changedDocs.length === 0) changedDocs = snapshot.docs;
 
-          // Update the public stage data signals
-          changedDocs.forEach((doc) => {
-            const answer = doc.data() as StageParticipantAnswer;
-            this.answerMap[doc.id] = answer;
-            // Load answers to participant answer service
-            this.sp.participantAnswerService.addAnswer(doc.id, answer);
+          runInAction(() => {
+            // Update the public stage data signals
+            changedDocs.forEach((doc) => {
+              const answer = doc.data() as StageParticipantAnswer;
+              this.answerMap[doc.id] = answer;
+              // Load answers to participant answer service
+              this.sp.participantAnswerService.addAnswer(doc.id, answer);
+            });
+            this.areAnswersLoading = false;
           });
-          this.areAnswersLoading = false;
         },
       ),
     );
@@ -367,10 +376,12 @@ export class ParticipantService extends Service {
             orderBy('timestamp', 'asc'),
           ),
           (snapshot) => {
-            this.privateChatMap[stageId] = snapshot.docs.map(
-              (doc) => doc.data() as ChatMessage,
-            );
-            this.isPrivateChatLoading = false;
+            runInAction(() => {
+              this.privateChatMap[stageId] = snapshot.docs.map(
+                (doc) => doc.data() as ChatMessage,
+              );
+              this.isPrivateChatLoading = false;
+            });
           },
         ),
       );
@@ -399,9 +410,11 @@ export class ParticipantService extends Service {
             changedDocs = snapshot.docs;
           }
 
-          changedDocs.forEach((doc) => {
-            const alert = doc.data() as AlertMessage;
-            this.alertMap[alert.id] = alert;
+          runInAction(() => {
+            changedDocs.forEach((doc) => {
+              const alert = doc.data() as AlertMessage;
+              this.alertMap[alert.id] = alert;
+            });
           });
         },
       ),
