@@ -6,7 +6,7 @@ from __future__ import annotations
 from enum import Enum
 from typing import Any, Dict, List, Literal
 
-from pydantic import BaseModel, ConfigDict, Field, RootModel, confloat, constr
+from pydantic import BaseModel, ConfigDict, Field, RootModel, confloat, conint, constr
 
 
 class CollectionName(Enum):
@@ -36,6 +36,18 @@ class ProlificConfig(BaseModel):
     defaultRedirectCode: str
     attentionFailRedirectCode: str
     bootedRedirectCode: str
+
+
+class CohortDefinition(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    id: constr(min_length=1)
+    alias: constr(min_length=1)
+    name: constr(min_length=1)
+    description: str | None = None
+    generatedCohortId: str | None = None
+    maxParticipantsPerCohort: conint(ge=1) | None = None
 
 
 class ParsedItem(BaseModel):
@@ -185,10 +197,23 @@ class ConditionOperator(Enum):
 
 
 class CohortParticipantConfig(BaseModel):
-    minParticipantsPerCohort: confloat(ge=0.0) | None = None
-    maxParticipantsPerCohort: confloat(ge=1.0) | None = None
+    minParticipantsPerCohort: conint(ge=0) | None = None
+    maxParticipantsPerCohort: conint(ge=1) | None = None
     includeAllParticipantsInCohortCount: bool
     botProtection: bool
+
+
+class SurveyAutoTransferConfig(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    type: Literal["survey"] = "survey"
+    autoCohortParticipantConfig: CohortParticipantConfig
+    surveyStageId: constr(min_length=1)
+    surveyQuestionId: constr(min_length=1)
+    participantCounts: Dict[constr(pattern=r"^(.*)$"), conint(ge=1)] = Field(
+        ..., title="ParticipantCounts"
+    )
 
 
 class Scope(Enum):
@@ -468,8 +493,8 @@ class Role(BaseModel):
     id: constr(min_length=1)
     name: str
     displayLines: List[str]
-    minParticipants: float
-    maxParticipants: float | None = None
+    minParticipants: int
+    maxParticipants: int | None = None
 
 
 class StageProgressConfig(RootModel[Any]):
@@ -485,6 +510,7 @@ class CohortConfig(BaseModel):
         extra="forbid",
     )
     id: str
+    alias: str | None = None
     metadata: Metadata = Field(..., title="Metadata")
     participantConfig: CohortParticipantConfig
     stageUnlockMap: Dict[constr(pattern=r"^(.*)$"), bool] = Field(
@@ -651,6 +677,16 @@ class ComparisonCondition(BaseModel):
     value: str | float | bool
 
 
+class DefaultAutoTransferConfig(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    type: Literal["default"] = "default"
+    autoCohortParticipantConfig: CohortParticipantConfig
+    minParticipants: conint(ge=1)
+    maxParticipants: conint(ge=1)
+
+
 class Persona(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
@@ -778,19 +814,6 @@ class TosStageConfig(BaseModel):
     tosLines: List[str]
 
 
-class TransferStageConfig(BaseModel):
-    model_config = ConfigDict(
-        extra="forbid",
-    )
-    id: constr(min_length=1)
-    kind: Literal["transfer"] = "transfer"
-    name: constr(min_length=1)
-    descriptions: Any
-    progress: Any
-    enableTimeout: bool
-    timeoutSeconds: float
-
-
 class RankingStageConfig(
     RootModel[ItemRankingStageConfig | ParticipantRankingStageConfig]
 ):
@@ -852,6 +875,7 @@ class Experiment(BaseModel):
     variableMap: Dict[constr(pattern=r"^(.*)$"), str] | None = Field(
         None, title="VariableMap"
     )
+    cohortDefinitions: List[CohortDefinition] | None = None
 
 
 class ExperimentTemplate(BaseModel):
@@ -1024,12 +1048,63 @@ class SurveyStageConfig(BaseModel):
     ]
 
 
+class TransferStageConfig(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    id: constr(min_length=1)
+    kind: Literal["transfer"] = "transfer"
+    name: constr(min_length=1)
+    descriptions: Any
+    progress: Any
+    enableTimeout: bool
+    timeoutSeconds: float
+    autoTransferConfig: (
+        DefaultAutoTransferConfig
+        | SurveyAutoTransferConfig
+        | ConditionAutoTransferConfig
+        | None
+    ) = None
+
+
+class ConditionAutoTransferConfig(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    type: Literal["condition"] = "condition"
+    autoCohortParticipantConfig: CohortParticipantConfig
+    transferGroups: List[TransferGroup] = Field(..., min_length=1)
+
+
+class TransferGroup(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    id: constr(min_length=1)
+    name: constr(min_length=1)
+    composition: List[GroupComposition] = Field(..., min_length=1)
+    targetCohortAlias: constr(min_length=1) | None = None
+
+
+class GroupComposition(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    id: constr(min_length=1)
+    condition: ComparisonCondition | ConditionGroup = Field(..., title="Condition")
+    minCount: conint(ge=1)
+    maxCount: conint(ge=1)
+
+
 class StaticVariableConfig(BaseModel):
     id: constr(min_length=1)
     type: Literal["static"] = "static"
     scope: Scope
     definition: VariableDefinition
     value: str
+    cohortValues: Dict[constr(pattern=r"^(.*)$"), str] | None = Field(
+        None, title="CohortValues"
+    )
 
 
 class Object(BaseModel):
@@ -1263,6 +1338,9 @@ DeliberateLabAPISchemas.model_rebuild()
 SurveyPerParticipantStageConfig.model_rebuild()
 TextSurveyQuestion.model_rebuild()
 ConditionGroup.model_rebuild()
+TransferStageConfig.model_rebuild()
+ConditionAutoTransferConfig.model_rebuild()
+TransferGroup.model_rebuild()
 StaticVariableConfig.model_rebuild()
 Object.model_rebuild()
 Array.model_rebuild()
