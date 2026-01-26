@@ -6,6 +6,7 @@ import '../../pair-components/tooltip';
 import '../participant_profile/profile_display';
 import './cohort_summary';
 import './participant_summary';
+import './cohort_filter_controls';
 import './agent_participant_configuration_dialog';
 import './agent_mediator_add_dialog';
 import {renderMediatorStatusChip} from './mediator_status';
@@ -13,15 +14,11 @@ import {renderMediatorStatusChip} from './mediator_status';
 import {MobxLitElement} from '@adobe/lit-mobx';
 import {CSSResultGroup, html, nothing, TemplateResult} from 'lit';
 import {customElement, property, state} from 'lit/decorators.js';
-import {classMap} from 'lit/directives/class-map.js';
-
 import {core} from '../../core/core';
 import {AnalyticsService, ButtonClick} from '../../services/analytics.service';
 import {ExperimentEditor} from '../../services/experiment.editor';
 import {ExperimentManager} from '../../services/experiment.manager';
 import {ExperimentService} from '../../services/experiment.service';
-import {HomeService} from '../../services/home.service';
-import {Pages, RouterService} from '../../services/router.service';
 
 import {
   CohortConfig,
@@ -29,9 +26,13 @@ import {
   MediatorStatus,
   ParticipantProfile,
   ParticipantProfileExtended,
-  ParticipantStatus,
   StageKind,
 } from '@deliberation-lab/utils';
+
+import {
+  filterParticipantsByStatus,
+  sortParticipants,
+} from '../../shared/participant.utils';
 
 import {styles} from './cohort_editor.scss';
 
@@ -175,6 +176,7 @@ export class Component extends MobxLitElement {
             ${this.renderSettingsButton()}
           </div>
         </div>
+        <cohort-filter-controls></cohort-filter-controls>
         ${this.renderParticipantTable(
           'Human participants',
           this.experimentManager.getCohortHumanParticipants(this.cohort.id),
@@ -269,26 +271,40 @@ export class Component extends MobxLitElement {
 
   private renderParticipantTable(
     title: string,
-    participants: ParticipantProfileExtended[],
+    allParticipants: ParticipantProfileExtended[],
     actionBar: TemplateResult,
     emptyMessage = 'No participants yet',
   ) {
+    const participants = filterParticipantsByStatus(
+      allParticipants,
+      this.experimentManager.participantStatusFilters,
+    );
+    const filters = this.experimentManager.participantStatusFilters;
+    const hasParticipants = allParticipants.length > 0;
+
     const renderEmptyMessage = () => {
       if (participants.length === 0) {
-        return html` <div class="table-row">${emptyMessage}</div> `;
+        const message =
+          hasParticipants && filters.size > 0
+            ? 'No participants match the current filter.'
+            : emptyMessage;
+        return html` <div class="table-row">${message}</div> `;
       }
       return nothing;
     };
 
-    const isTransferTimeout = (participant: ParticipantProfile) => {
-      return participant.currentStatus == ParticipantStatus.TRANSFER_TIMEOUT;
-    };
-
     const isOnTransferStage = (participant: ParticipantProfile) => {
       const stage = this.experimentService.getStage(participant.currentStageId);
-      if (!stage) return false; // Return false instead of 'nothing' to ensure it's a boolean
+      if (!stage) return false;
       return stage.kind === StageKind.TRANSFER;
     };
+
+    const sortedParticipants = sortParticipants(participants, {
+      sortBy: this.experimentManager.participantSortBy,
+      sortDirection: this.experimentManager.participantSortDirection,
+      stageIds: this.experimentService.experiment?.stageIds ?? [],
+      isOnTransferStage,
+    });
 
     return html`
       <div class="table-wrapper">
@@ -298,31 +314,13 @@ export class Component extends MobxLitElement {
         </div>
         <div class="table-body">
           ${renderEmptyMessage()}
-          ${participants
-            .slice()
-            .sort((a, b) => {
-              if (isTransferTimeout(a)) {
-                return 1;
-              }
-
-              if (isTransferTimeout(b)) {
-                return -1;
-              }
-
-              const aIsTransfer = isOnTransferStage(a) ? 0 : 1; // 0 if true, 1 if false
-              const bIsTransfer = isOnTransferStage(b) ? 0 : 1;
-              return (
-                aIsTransfer - bIsTransfer ||
-                a.publicId.localeCompare(b.publicId)
-              );
-            })
-            .map(
-              (participant) => html`
-                <participant-summary
-                  .participant=${participant}
-                ></participant-summary>
-              `,
-            )}
+          ${sortedParticipants.map(
+            (participant) => html`
+              <participant-summary
+                .participant=${participant}
+              ></participant-summary>
+            `,
+          )}
         </div>
       </div>
     `;

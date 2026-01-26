@@ -7,6 +7,10 @@
   align-items: end;
 }
 
+:host([alignstart]) {
+  align-items: start;
+}
+
 .button-content {
   @include common.flex-row-align-center;
   flex-wrap: wrap;
@@ -23,6 +27,10 @@
 
   &.show-menu {
     overflow: visible;
+  }
+
+  &.align-start {
+    align-items: start;
   }
 }
 
