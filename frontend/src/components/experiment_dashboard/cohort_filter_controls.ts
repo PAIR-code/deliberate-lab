@@ -8,7 +8,10 @@ import {customElement, property} from 'lit/decorators.js';
 
 import {core} from '../../core/core';
 import {ExperimentManager} from '../../services/experiment.manager';
-import {ParticipantStatusFilter} from '../../shared/participant.utils';
+import {
+  ParticipantSortOption,
+  ParticipantStatusFilter,
+} from '../../shared/participant.utils';
 
 import {styles} from './cohort_filter_controls.scss';
 
@@ -23,6 +26,13 @@ const STATUS_FILTER_LABELS: Record<ParticipantStatusFilter, string> = {
   attentionCheck: 'Attention Check',
   booted: 'Booted',
   obsolete: 'Dropped',
+};
+
+/** Display labels for each participant sort option. */
+const SORT_OPTION_LABELS: Record<ParticipantSortOption, string> = {
+  lastActive: 'Last Active',
+  name: 'Name',
+  startTime: 'Start Time',
 };
 
 /** Shared filter and sort controls for cohort participant lists */
@@ -72,7 +82,7 @@ export class CohortFilterControls extends MobxLitElement {
 
   private renderSortMenu() {
     const sortBy = this.experimentManager.participantSortBy;
-    const label = sortBy === 'lastActive' ? 'Last Active' : 'Name';
+    const label = SORT_OPTION_LABELS[sortBy];
 
     return html`
       <pr-menu
@@ -83,22 +93,18 @@ export class CohortFilterControls extends MobxLitElement {
         ?alignStart=${this.alignStart}
       >
         <div class="menu-wrapper">
-          <div
-            class="menu-item"
-            @click=${() => {
-              this.experimentManager.setParticipantSortBy('lastActive');
-            }}
-          >
-            Sort by Last Active
-          </div>
-          <div
-            class="menu-item"
-            @click=${() => {
-              this.experimentManager.setParticipantSortBy('name');
-            }}
-          >
-            Sort by name
-          </div>
+          ${(Object.keys(SORT_OPTION_LABELS) as ParticipantSortOption[]).map(
+            (option) => html`
+              <div
+                class="menu-item"
+                @click=${() => {
+                  this.experimentManager.setParticipantSortBy(option);
+                }}
+              >
+                Sort by ${SORT_OPTION_LABELS[option]}
+              </div>
+            `,
+          )}
         </div>
       </pr-menu>
     `;
