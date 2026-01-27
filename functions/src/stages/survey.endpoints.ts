@@ -39,7 +39,7 @@ export const updateSurveyStageParticipantAnswer = onCall(
     }
 
     // Define document reference
-    const document = app
+    const participantStageDoc = app
       .firestore()
       .collection('experiments')
       .doc(data.experimentId)
@@ -49,7 +49,7 @@ export const updateSurveyStageParticipantAnswer = onCall(
       .doc(data.surveyStageParticipantAnswer.id);
 
     // Define public stage document reference
-    const publicDocument = app
+    const publicStageDoc = app
       .firestore()
       .collection('experiments')
       .doc(data.experimentId)
@@ -64,10 +64,10 @@ export const updateSurveyStageParticipantAnswer = onCall(
 
     // Run document write as transaction to ensure consistency
     await app.firestore().runTransaction(async (transaction) => {
-      transaction.set(document, data.surveyStageParticipantAnswer);
+      transaction.set(participantStageDoc, data.surveyStageParticipantAnswer);
     });
 
-    return {id: document.id};
+    return {id: participantStageDoc.id};
   },
 );
 
@@ -113,7 +113,7 @@ export const updateSurveyPerParticipantStageParticipantAnswer = onCall(
     }
 
     // Define document reference
-    const document = app
+    const participantStageDoc = app
       .firestore()
       .collection('experiments')
       .doc(data.experimentId)
@@ -125,12 +125,12 @@ export const updateSurveyPerParticipantStageParticipantAnswer = onCall(
     // Run document write as transaction to ensure consistency
     await app.firestore().runTransaction(async (transaction) => {
       transaction.set(
-        document,
+        participantStageDoc,
         data.surveyPerParticipantStageParticipantAnswer,
       );
     });
 
-    return {id: document.id};
+    return {id: participantStageDoc.id};
   },
 );
 
