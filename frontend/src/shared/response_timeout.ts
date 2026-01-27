@@ -46,7 +46,7 @@ export class ResponseTimeoutTracker {
         if (!this._timedOut) {
           this._timedOut = true;
           this.waitingForMessageId = lastMessageId;
-          this.onTimedOut();
+          this.onTimedOut.call(undefined);
         }
         return;
       }

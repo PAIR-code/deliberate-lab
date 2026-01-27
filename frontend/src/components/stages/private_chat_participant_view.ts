@@ -5,7 +5,7 @@ import '../participant_profile/avatar_icon';
 
 import {MobxLitElement} from '@adobe/lit-mobx';
 import {CSSResultGroup, html, nothing} from 'lit';
-import {customElement, property, state} from 'lit/decorators.js';
+import {customElement, property} from 'lit/decorators.js';
 
 import {core} from '../../core/core';
 import {ParticipantService} from '../../services/participant.service';
@@ -32,11 +32,10 @@ export class PrivateChatView extends MobxLitElement {
   // After this timeout, stop showing the spinner and re-enable input
   // so the participant can send another message if the backend failed silently.
   private static readonly RESPONSE_TIMEOUT_S = 120;
-  @state() private waitingTimedOut = false;
-  private responseTimeout = new ResponseTimeoutTracker(
+  private readonly responseTimeout = new ResponseTimeoutTracker(
     PrivateChatView.RESPONSE_TIMEOUT_S,
     () => {
-      this.waitingTimedOut = true;
+      this.requestUpdate();
     },
   );
 
@@ -55,17 +54,11 @@ export class PrivateChatView extends MobxLitElement {
       lastMessageIsFromParticipant,
       sentAtSeconds,
     );
-
-    // Sync: if the tracker cleared (e.g., response received), reset the flag.
-    if (!this.responseTimeout.timedOut && this.waitingTimedOut) {
-      this.waitingTimedOut = false;
-    }
   }
 
   override disconnectedCallback() {
     super.disconnectedCallback();
     this.responseTimeout.clear();
-    this.waitingTimedOut = false;
   }
 
   override render() {
@@ -85,7 +78,7 @@ export class PrivateChatView extends MobxLitElement {
     const isWaitingForResponse =
       chatMessages.length > 0 &&
       chatMessages[chatMessages.length - 1].senderId === publicId &&
-      !this.waitingTimedOut;
+      !this.responseTimeout.timedOut;
 
     // Check if max number of turns reached (but only after response received)
     const maxTurnsReached =
