@@ -17,7 +17,11 @@ import {app} from '../app';
  * (e.g., accepting transfer or moving to next stage).
  */
 export const updateAgentParticipant = onDocumentUpdated(
-  {document: 'experiments/{experimentId}/participants/{participantId}'},
+  {
+    document: 'experiments/{experimentId}/participants/{participantId}',
+    memory: '1GiB',
+    timeoutSeconds: 300,
+  },
   async (event) => {
     if (!event.data) return;
 
