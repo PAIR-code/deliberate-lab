@@ -52,6 +52,7 @@ export class PrivateChatView extends MobxLitElement {
     this.responseTimeout.update(
       lastMessage?.id ?? null,
       lastMessageIsFromParticipant,
+      lastMessage?.timestamp?.seconds ?? null,
     );
 
     // Sync: if the tracker cleared (e.g., response received), reset the flag.
