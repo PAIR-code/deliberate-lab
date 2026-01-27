@@ -9,16 +9,17 @@ describe('ResponseTimeoutTracker', () => {
     jest.useRealTimers();
   });
 
-  const TIMEOUT_MS = 120_000;
+  const TIMEOUT_S = 120;
+  const TIMEOUT_MS = TIMEOUT_S * 1000;
 
-  /** Returns the current fake time as seconds (Firestore timestamp format). */
+  /** Returns the current fake time in seconds. */
   function nowSeconds() {
     return Date.now() / 1000;
   }
 
   function createTracker(onTimedOut = jest.fn()) {
     return {
-      tracker: new ResponseTimeoutTracker(TIMEOUT_MS, onTimedOut),
+      tracker: new ResponseTimeoutTracker(TIMEOUT_S, onTimedOut),
       onTimedOut,
     };
   }

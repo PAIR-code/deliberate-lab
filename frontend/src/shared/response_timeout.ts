@@ -5,8 +5,8 @@
  * This prevents participants from being stuck with a spinner forever
  * if the backend fails silently (e.g., OOM, timeout).
  *
- * The timeout is based on the message's Firestore timestamp, so it
- * survives page refreshes.
+ * The timeout is based on the message's sent time, so it survives
+ * page refreshes. All time values are in seconds.
  */
 export class ResponseTimeoutTracker {
   private responseTimeoutId: ReturnType<typeof setTimeout> | null = null;
@@ -15,7 +15,7 @@ export class ResponseTimeoutTracker {
   private onTimedOut: () => void;
 
   constructor(
-    private readonly timeoutMs: number,
+    private readonly timeoutSeconds: number,
     onTimedOut: () => void,
   ) {
     this.onTimedOut = onTimedOut;
@@ -31,17 +31,17 @@ export class ResponseTimeoutTracker {
    *
    * @param lastMessageId - ID of the last chat message
    * @param lastMessageIsFromParticipant - whether the last message is from the participant
-   * @param lastMessageTimestamp - timestamp (in seconds) of the last message
+   * @param sentAtSeconds - when the last message was sent, in seconds since epoch
    */
   update(
     lastMessageId: string | null,
     lastMessageIsFromParticipant: boolean,
-    lastMessageTimestamp: number | null,
+    sentAtSeconds: number | null,
   ) {
-    if (lastMessageIsFromParticipant && lastMessageTimestamp !== null) {
-      const elapsed = Date.now() - lastMessageTimestamp * 1000;
+    if (lastMessageIsFromParticipant && sentAtSeconds !== null) {
+      const elapsedSeconds = Date.now() / 1000 - sentAtSeconds;
 
-      if (elapsed >= this.timeoutMs) {
+      if (elapsedSeconds >= this.timeoutSeconds) {
         // Already timed out (e.g., after a page refresh).
         if (!this._timedOut) {
           this._timedOut = true;
@@ -55,12 +55,12 @@ export class ResponseTimeoutTracker {
         // New participant message — start a timeout for the remaining time.
         this.clear();
         this.waitingForMessageId = lastMessageId;
-        const remaining = this.timeoutMs - elapsed;
+        const remainingMs = (this.timeoutSeconds - elapsedSeconds) * 1000;
         this.responseTimeoutId = setTimeout(() => {
           this.responseTimeoutId = null;
           this._timedOut = true;
           this.onTimedOut();
-        }, remaining);
+        }, remainingMs);
       }
     } else if (!lastMessageIsFromParticipant) {
       // Response received — clear everything.

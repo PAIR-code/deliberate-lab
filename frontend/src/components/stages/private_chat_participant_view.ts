@@ -31,10 +31,10 @@ export class PrivateChatView extends MobxLitElement {
 
   // After this timeout, stop showing the spinner and re-enable input
   // so the participant can send another message if the backend failed silently.
-  private static readonly RESPONSE_TIMEOUT_MS = 120_000;
+  private static readonly RESPONSE_TIMEOUT_S = 120;
   @state() private waitingTimedOut = false;
   private responseTimeout = new ResponseTimeoutTracker(
-    PrivateChatView.RESPONSE_TIMEOUT_MS,
+    PrivateChatView.RESPONSE_TIMEOUT_S,
     () => {
       this.waitingTimedOut = true;
     },
@@ -49,10 +49,11 @@ export class PrivateChatView extends MobxLitElement {
     const lastMessageIsFromParticipant =
       lastMessage !== null && lastMessage.senderId === publicId;
 
+    const sentAtSeconds = lastMessage?.timestamp?.seconds ?? null;
     this.responseTimeout.update(
       lastMessage?.id ?? null,
       lastMessageIsFromParticipant,
-      lastMessage?.timestamp?.seconds ?? null,
+      sentAtSeconds,
     );
 
     // Sync: if the tracker cleared (e.g., response received), reset the flag.
