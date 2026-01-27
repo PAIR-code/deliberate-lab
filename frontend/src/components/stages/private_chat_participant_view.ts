@@ -16,6 +16,7 @@ import {
   UserType,
 } from '@deliberation-lab/utils';
 import {getHashBasedColor} from '../../shared/utils';
+import {ResponseTimeoutTracker} from '../../shared/response_timeout';
 
 import {styles} from './group_chat_participant_view.scss';
 
@@ -27,6 +28,38 @@ export class PrivateChatView extends MobxLitElement {
   private readonly participantService = core.getService(ParticipantService);
 
   @property() stage: PrivateChatStageConfig | undefined = undefined;
+
+  // After this timeout, stop showing the spinner and re-enable input
+  // so the participant can send another message if the backend failed silently.
+  private static readonly RESPONSE_TIMEOUT_S = 120;
+  private readonly responseTimeout = new ResponseTimeoutTracker(
+    PrivateChatView.RESPONSE_TIMEOUT_S,
+    () => {
+      this.requestUpdate();
+    },
+  );
+
+  override updated() {
+    const chatMessages =
+      this.participantService.privateChatMap[this.stage?.id ?? ''] ?? [];
+    const publicId = this.participantService.profile?.publicId ?? '';
+    const lastMessage =
+      chatMessages.length > 0 ? chatMessages[chatMessages.length - 1] : null;
+    const lastMessageIsFromParticipant =
+      lastMessage !== null && lastMessage.senderId === publicId;
+
+    const sentAtSeconds = lastMessage?.timestamp?.seconds ?? null;
+    this.responseTimeout.update(
+      lastMessage?.id ?? null,
+      lastMessageIsFromParticipant,
+      sentAtSeconds,
+    );
+  }
+
+  override disconnectedCallback() {
+    super.disconnectedCallback();
+    this.responseTimeout.clear();
+  }
 
   override render() {
     if (!this.stage) return nothing;
@@ -40,10 +73,12 @@ export class PrivateChatView extends MobxLitElement {
       (msg) => msg.senderId === publicId && !msg.isError,
     ).length;
 
-    // Check if we're waiting for a response (last message is from participant)
+    // Check if we're waiting for a response (last message is from participant
+    // and we haven't timed out waiting)
     const isWaitingForResponse =
       chatMessages.length > 0 &&
-      chatMessages[chatMessages.length - 1].senderId === publicId;
+      chatMessages[chatMessages.length - 1].senderId === publicId &&
+      !this.responseTimeout.timedOut;
 
     // Check if max number of turns reached (but only after response received)
     const maxTurnsReached =
@@ -106,7 +141,9 @@ export class PrivateChatView extends MobxLitElement {
       : undefined;
 
     const renderCancelButton = () => {
-      if (this.stage?.preventCancellation) return nothing;
+      if (this.stage?.preventCancellation) {
+        return nothing;
+      }
       return html`
         <pr-tooltip text="Cancel">
           <pr-icon-button
