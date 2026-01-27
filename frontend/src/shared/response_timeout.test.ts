@@ -2,7 +2,7 @@ import {ResponseTimeoutTracker} from './response_timeout';
 
 describe('ResponseTimeoutTracker', () => {
   beforeEach(() => {
-    jest.useFakeTimers();
+    jest.useFakeTimers({doNotFake: ['queueMicrotask']});
   });
 
   afterEach(() => {
@@ -15,11 +15,6 @@ describe('ResponseTimeoutTracker', () => {
   /** Returns the current fake time in seconds. */
   function nowSeconds() {
     return Date.now() / 1000;
-  }
-
-  /** Flush pending microtasks (e.g., queueMicrotask callbacks). */
-  function flushMicrotasks(): Promise<void> {
-    return new Promise((resolve) => setImmediate(resolve));
   }
 
   function createTracker(onTimedOut = jest.fn()) {
@@ -48,7 +43,7 @@ describe('ResponseTimeoutTracker', () => {
 
     jest.advanceTimersByTime(TIMEOUT_MS);
     expect(tracker.timedOut).toBe(true);
-    await flushMicrotasks();
+    await Promise.resolve();
     expect(onTimedOut).toHaveBeenCalledTimes(1);
   });
 
@@ -63,7 +58,7 @@ describe('ResponseTimeoutTracker', () => {
     // Timeout elapses — should not fire.
     jest.advanceTimersByTime(TIMEOUT_MS);
     expect(tracker.timedOut).toBe(false);
-    await flushMicrotasks();
+    await Promise.resolve();
     expect(onTimedOut).not.toHaveBeenCalled();
   });
 
@@ -74,7 +69,7 @@ describe('ResponseTimeoutTracker', () => {
     // First timeout fires.
     jest.advanceTimersByTime(TIMEOUT_MS);
     expect(tracker.timedOut).toBe(true);
-    await flushMicrotasks();
+    await Promise.resolve();
     expect(onTimedOut).toHaveBeenCalledTimes(1);
 
     // Participant sends a new message.
@@ -87,7 +82,7 @@ describe('ResponseTimeoutTracker', () => {
 
     jest.advanceTimersByTime(1);
     expect(tracker.timedOut).toBe(true);
-    await flushMicrotasks();
+    await Promise.resolve();
     expect(onTimedOut).toHaveBeenCalledTimes(2);
   });
 
@@ -112,11 +107,11 @@ describe('ResponseTimeoutTracker', () => {
 
     jest.advanceTimersByTime(TIMEOUT_MS);
     expect(tracker.timedOut).toBe(false);
-    await flushMicrotasks();
+    await Promise.resolve();
     expect(onTimedOut).not.toHaveBeenCalled();
   });
 
-  it('handles response after timeout followed by new message', async () => {
+  it('handles response after timeout followed by new message', () => {
     const {tracker} = createTracker();
     tracker.update('msg-1', true, nowSeconds());
 
@@ -143,7 +138,7 @@ describe('ResponseTimeoutTracker', () => {
     tracker.update(null, false, null);
     jest.advanceTimersByTime(TIMEOUT_MS);
     expect(tracker.timedOut).toBe(false);
-    await flushMicrotasks();
+    await Promise.resolve();
     expect(onTimedOut).not.toHaveBeenCalled();
   });
 
@@ -155,7 +150,7 @@ describe('ResponseTimeoutTracker', () => {
     tracker.update('msg-1', true, threeMinutesAgo);
 
     expect(tracker.timedOut).toBe(true);
-    await flushMicrotasks();
+    await Promise.resolve();
     expect(onTimedOut).toHaveBeenCalledTimes(1);
   });
 
@@ -175,7 +170,7 @@ describe('ResponseTimeoutTracker', () => {
     // Should fire after 90 seconds total.
     jest.advanceTimersByTime(1_000);
     expect(tracker.timedOut).toBe(true);
-    await flushMicrotasks();
+    await Promise.resolve();
     expect(onTimedOut).toHaveBeenCalledTimes(1);
   });
 });
