@@ -46,7 +46,7 @@ export class ResponseTimeoutTracker {
         if (!this._timedOut) {
           this._timedOut = true;
           this.waitingForMessageId = lastMessageId;
-          this.onTimedOut.call(undefined);
+          queueMicrotask(this.onTimedOut);
         }
         return;
       }
@@ -59,7 +59,7 @@ export class ResponseTimeoutTracker {
         this.responseTimeoutId = setTimeout(() => {
           this.responseTimeoutId = null;
           this._timedOut = true;
-          this.onTimedOut();
+          queueMicrotask(this.onTimedOut);
         }, remainingMs);
       }
     } else if (!lastMessageIsFromParticipant) {
