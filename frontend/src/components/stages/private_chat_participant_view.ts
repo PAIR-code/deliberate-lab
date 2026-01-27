@@ -5,7 +5,7 @@ import '../participant_profile/avatar_icon';
 
 import {MobxLitElement} from '@adobe/lit-mobx';
 import {CSSResultGroup, html, nothing} from 'lit';
-import {customElement, property} from 'lit/decorators.js';
+import {customElement, property, state} from 'lit/decorators.js';
 
 import {core} from '../../core/core';
 import {ParticipantService} from '../../services/participant.service';
@@ -16,6 +16,7 @@ import {
   UserType,
 } from '@deliberation-lab/utils';
 import {getHashBasedColor} from '../../shared/utils';
+import {ResponseTimeoutTracker} from '../../shared/response_timeout';
 
 import {styles} from './group_chat_participant_view.scss';
 
@@ -27,6 +28,43 @@ export class PrivateChatView extends MobxLitElement {
   private readonly participantService = core.getService(ParticipantService);
 
   @property() stage: PrivateChatStageConfig | undefined = undefined;
+
+  // After this timeout, stop showing the spinner and re-enable input
+  // so the participant can send another message if the backend failed silently.
+  private static readonly RESPONSE_TIMEOUT_MS = 120_000;
+  @state() private waitingTimedOut = false;
+  private responseTimeout = new ResponseTimeoutTracker(
+    PrivateChatView.RESPONSE_TIMEOUT_MS,
+    () => {
+      this.waitingTimedOut = true;
+    },
+  );
+
+  override updated() {
+    const chatMessages =
+      this.participantService.privateChatMap[this.stage?.id ?? ''] ?? [];
+    const publicId = this.participantService.profile?.publicId ?? '';
+    const lastMessage =
+      chatMessages.length > 0 ? chatMessages[chatMessages.length - 1] : null;
+    const lastMessageIsFromParticipant =
+      lastMessage !== null && lastMessage.senderId === publicId;
+
+    this.responseTimeout.update(
+      lastMessage?.id ?? null,
+      lastMessageIsFromParticipant,
+    );
+
+    // Sync: if the tracker cleared (e.g., response received), reset the flag.
+    if (!this.responseTimeout.timedOut && this.waitingTimedOut) {
+      this.waitingTimedOut = false;
+    }
+  }
+
+  override disconnectedCallback() {
+    super.disconnectedCallback();
+    this.responseTimeout.clear();
+    this.waitingTimedOut = false;
+  }
 
   override render() {
     if (!this.stage) return nothing;
@@ -40,10 +78,12 @@ export class PrivateChatView extends MobxLitElement {
       (msg) => msg.senderId === publicId && !msg.isError,
     ).length;
 
-    // Check if we're waiting for a response (last message is from participant)
+    // Check if we're waiting for a response (last message is from participant
+    // and we haven't timed out waiting)
     const isWaitingForResponse =
       chatMessages.length > 0 &&
-      chatMessages[chatMessages.length - 1].senderId === publicId;
+      chatMessages[chatMessages.length - 1].senderId === publicId &&
+      !this.waitingTimedOut;
 
     // Check if max number of turns reached (but only after response received)
     const maxTurnsReached =
@@ -106,7 +146,9 @@ export class PrivateChatView extends MobxLitElement {
       : undefined;
 
     const renderCancelButton = () => {
-      if (this.stage?.preventCancellation) return nothing;
+      if (this.stage?.preventCancellation) {
+        return nothing;
+      }
       return html`
         <pr-tooltip text="Cancel">
           <pr-icon-button
