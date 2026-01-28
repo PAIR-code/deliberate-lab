@@ -85,6 +85,7 @@ import {
 } from '../shared/file.utils';
 import {
   isObsoleteParticipant,
+  ParticipantSortOption,
   ParticipantStatusFilter,
   requiresAnonymousProfiles,
 } from '../shared/participant.utils';
@@ -147,7 +148,7 @@ export class ExperimentManager extends Service {
   @observable hideLockedCohorts = false;
   @observable expandAllCohorts = true;
   @observable showMediatorsInCohortSummary = false;
-  @observable participantSortBy: 'lastActive' | 'name' = 'lastActive';
+  @observable participantSortBy: ParticipantSortOption = 'startTime';
   @observable participantSortDirection: 'asc' | 'desc' = 'asc';
   @observable participantStatusFilters: Set<ParticipantStatusFilter> =
     new Set();
@@ -280,7 +281,7 @@ export class ExperimentManager extends Service {
     this.showMediatorsInCohortSummary = show;
   }
 
-  setParticipantSortBy(sortBy: 'lastActive' | 'name') {
+  setParticipantSortBy(sortBy: ParticipantSortOption) {
     this.participantSortBy = sortBy;
   }
 

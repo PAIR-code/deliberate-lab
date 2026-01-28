@@ -249,6 +249,138 @@ describe('sortParticipants', () => {
     });
   });
 
+  describe('sorting by startTime', () => {
+    it('sorts participants by experiment start time ascending', () => {
+      const participants = [
+        createMockParticipant({
+          publicId: 'p1',
+          name: 'Late',
+          timestamps: {
+            acceptedTOS: null,
+            startExperiment: {seconds: 3000, nanoseconds: 0},
+            endExperiment: null,
+            completedStages: {},
+            readyStages: {},
+            cohortTransfers: {},
+          } as unknown as ProgressTimestamps,
+        }),
+        createMockParticipant({
+          publicId: 'p2',
+          name: 'Early',
+          timestamps: {
+            acceptedTOS: null,
+            startExperiment: {seconds: 1000, nanoseconds: 0},
+            endExperiment: null,
+            completedStages: {},
+            readyStages: {},
+            cohortTransfers: {},
+          } as unknown as ProgressTimestamps,
+        }),
+        createMockParticipant({
+          publicId: 'p3',
+          name: 'Middle',
+          timestamps: {
+            acceptedTOS: null,
+            startExperiment: {seconds: 2000, nanoseconds: 0},
+            endExperiment: null,
+            completedStages: {},
+            readyStages: {},
+            cohortTransfers: {},
+          } as unknown as ProgressTimestamps,
+        }),
+      ];
+
+      const options: SortParticipantsOptions = {
+        sortBy: 'startTime',
+        sortDirection: 'asc',
+        stageIds,
+      };
+
+      const sorted = sortParticipants(participants, options);
+
+      expect(sorted.map((p) => p.name)).toEqual(['Early', 'Middle', 'Late']);
+    });
+
+    it('sorts participants by experiment start time descending', () => {
+      const participants = [
+        createMockParticipant({
+          publicId: 'p1',
+          name: 'Early',
+          timestamps: {
+            acceptedTOS: null,
+            startExperiment: {seconds: 1000, nanoseconds: 0},
+            endExperiment: null,
+            completedStages: {},
+            readyStages: {},
+            cohortTransfers: {},
+          } as unknown as ProgressTimestamps,
+        }),
+        createMockParticipant({
+          publicId: 'p2',
+          name: 'Late',
+          timestamps: {
+            acceptedTOS: null,
+            startExperiment: {seconds: 3000, nanoseconds: 0},
+            endExperiment: null,
+            completedStages: {},
+            readyStages: {},
+            cohortTransfers: {},
+          } as unknown as ProgressTimestamps,
+        }),
+      ];
+
+      const options: SortParticipantsOptions = {
+        sortBy: 'startTime',
+        sortDirection: 'desc',
+        stageIds,
+      };
+
+      const sorted = sortParticipants(participants, options);
+
+      expect(sorted.map((p) => p.name)).toEqual(['Late', 'Early']);
+    });
+
+    it('handles participants without start time', () => {
+      const participants = [
+        createMockParticipant({
+          publicId: 'zebra-1',
+          name: 'NoStart',
+          timestamps: {
+            acceptedTOS: null,
+            startExperiment: null,
+            endExperiment: null,
+            completedStages: {},
+            readyStages: {},
+            cohortTransfers: {},
+          } as unknown as ProgressTimestamps,
+        }),
+        createMockParticipant({
+          publicId: 'apple-1',
+          name: 'HasStart',
+          timestamps: {
+            acceptedTOS: null,
+            startExperiment: {seconds: 1000, nanoseconds: 0},
+            endExperiment: null,
+            completedStages: {},
+            readyStages: {},
+            cohortTransfers: {},
+          } as unknown as ProgressTimestamps,
+        }),
+      ];
+
+      const options: SortParticipantsOptions = {
+        sortBy: 'startTime',
+        sortDirection: 'asc',
+        stageIds,
+      };
+
+      const sorted = sortParticipants(participants, options);
+
+      // Participant with start time should come first in ascending order
+      expect(sorted.map((p) => p.name)).toEqual(['HasStart', 'NoStart']);
+    });
+  });
+
   describe('transfer stage priority', () => {
     it('puts participants ready for transfer at the top', () => {
       const participants = [

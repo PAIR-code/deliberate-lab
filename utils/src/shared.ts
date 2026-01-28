@@ -120,6 +120,25 @@ export function getUnifiedDurationSeconds(
 }
 
 /**
+ * Compare two optional timestamps for sorting.
+ * Returns negative if a < b, positive if a > b, 0 if equal or both null.
+ * If only one is null, the non-null timestamp is considered "less than" (comes first).
+ */
+export function compareTimestamps(
+  a: UnifiedTimestamp | null | undefined,
+  b: UnifiedTimestamp | null | undefined,
+): number {
+  if (a && b) {
+    const diff = a.seconds - b.seconds;
+    if (diff !== 0) return diff;
+    return a.nanoseconds - b.nanoseconds;
+  }
+  if (a && !b) return -1;
+  if (!a && b) return 1;
+  return 0;
+}
+
+/**
  * Converts UnifiedTimestamp to %Y-%m-%d %H:%M
  */
 export function convertUnifiedTimestampToDateTime(timestamp: UnifiedTimestamp) {
