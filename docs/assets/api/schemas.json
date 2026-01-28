@@ -1967,6 +1967,9 @@
         },
         "defaultModelSettings": {
           "$ref": "#/$defs/AgentModelSettings"
+        },
+        "defaultProfile": {
+          "$ref": "#/$defs/ParticipantProfileBase"
         }
       }
     },
@@ -2022,6 +2025,44 @@
           "type": "string"
         }
       ]
+    },
+    "ParticipantProfileBase": {
+      "title": "ParticipantProfileBase",
+      "additionalProperties": false,
+      "type": "object",
+      "required": ["pronouns", "avatar", "name"],
+      "properties": {
+        "pronouns": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "string"
+            }
+          ]
+        },
+        "avatar": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "string"
+            }
+          ]
+        },
+        "name": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "string"
+            }
+          ]
+        }
+      }
     },
     "ChatPromptConfig": {
       "title": "ChatPromptConfig",
