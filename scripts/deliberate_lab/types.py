@@ -291,6 +291,15 @@ class AgentModelSettings(BaseModel):
     modelName: str
 
 
+class ParticipantProfileBase(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    pronouns: str | None = None
+    avatar: str | None = None
+    name: str | None = None
+
+
 class ChatStageType(Enum):
     chat = "chat"
     privateChat = "privateChat"
@@ -694,6 +703,7 @@ class Persona(BaseModel):
     id: constr(min_length=1)
     name: str
     defaultModelSettings: AgentModelSettings | None = None
+    defaultProfile: ParticipantProfileBase | None = None
 
 
 class GoogleProviderOptions(BaseModel):

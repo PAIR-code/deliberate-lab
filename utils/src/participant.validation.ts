@@ -12,15 +12,11 @@ const strict = {additionalProperties: false} as const;
 /** ParticipantProfileBase input validation. */
 export const ParticipantProfileBaseData = Type.Object(
   {
-    pronouns: Type.Optional(
-      Type.Union([Type.Null(), Type.String({minLength: 1})]),
-    ),
-    avatar: Type.Optional(
-      Type.Union([Type.Null(), Type.String({minLength: 1})]),
-    ),
-    name: Type.Optional(Type.Union([Type.Null(), Type.String({minLength: 1})])),
+    pronouns: Type.Union([Type.Null(), Type.String()]),
+    avatar: Type.Union([Type.Null(), Type.String()]),
+    name: Type.Union([Type.Null(), Type.String()]),
   },
-  strict,
+  {$id: 'ParticipantProfileBase', ...strict},
 );
 
 export type ParticipantProfileBaseData = Static<

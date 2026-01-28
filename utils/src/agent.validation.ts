@@ -13,6 +13,7 @@ import {
   ChatMediatorStructuredOutputConfigData,
 } from './structured_output.validation';
 import {StageKindData} from './stages/stage.validation';
+import {ParticipantProfileBaseData} from './participant.validation';
 
 /** Shorthand for strict TypeBox object validation */
 const strict = {additionalProperties: false} as const;
@@ -40,6 +41,7 @@ export const AgentConfigData = Type.Object(
     id: Type.String({minLength: 1}),
     name: Type.String(),
     defaultModelSettings: Type.Optional(AgentModelSettingsData),
+    defaultProfile: Type.Optional(ParticipantProfileBaseData),
   },
   {$id: 'Persona', ...strict},
 );
