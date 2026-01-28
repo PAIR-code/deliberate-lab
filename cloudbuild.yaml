@@ -8,7 +8,7 @@ options:
   automapSubstitutions: true
 
 steps:
-# 1. Install Dependencies
+# 0. Install Dependencies
 - name: 'node:22'
   id: NpmCI
   script: |
@@ -22,7 +22,7 @@ steps:
     npm ci
   dir: '.'
 
-# 2. Lint & Format Check
+# 1. Lint & Format Check
 - name: 'node:22'
   id: LintCheck
   script: |
@@ -39,7 +39,7 @@ steps:
   waitFor: ['NpmCI']
   dir: '.'
 
-# 3. Build Utils Workspace
+# 2. Build Utils Workspace
 - name: 'node:22'
   id: BuildUtils
   script: |
@@ -54,7 +54,7 @@ steps:
   waitFor: ['LintCheck']
   dir: '.'
 
-# 4. Build Functions Workspace
+# 3. Build Functions Workspace
 - name: 'node:22'
   id: BuildFunctions
   script: |
@@ -69,7 +69,7 @@ steps:
   waitFor: ['BuildUtils']
   dir: '.'
 
-# 5. Run Tests (Install Java 21 for functions tests)
+# 4. Run Tests (Install Java 21 for functions tests)
 - name: 'node:22'
   id: TestFunctions
   script: |
@@ -95,7 +95,7 @@ steps:
   waitFor: ['BuildFunctions']
   dir: '.'
 
-# 6. Deploy Functions Step
+# 5. Deploy Functions Step
 - name: 'node:22'
   id: DeployFirebaseFunctions
   script: |
@@ -112,7 +112,7 @@ steps:
   waitFor: ['TestFunctions']
   dir: '.'
 
-# 7. Deploy Rules Step
+# 6. Deploy Rules Step
 - name: 'node:22'
   id: DeployFirebaseRules
   script: |
@@ -129,7 +129,7 @@ steps:
   waitFor: ['NpmCI']
   dir: '.'
 
-# 8. Deploy Indexes Step
+# 7. Deploy Indexes Step
 - name: 'node:22'
   id: DeployFirebaseIndexes
   script: |
