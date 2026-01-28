@@ -1,7 +1,7 @@
 # cloudbuild.yaml for Deliberate Lab Backend Deployments
 
 substitutions:
-  _DEPLOYMENT_TYPE: 'test' # Default value, will be overridden by triggers (test, functions, rules, indexes)
+  _DEPLOYMENT_TYPE: 'test' # Default value, will be overridden by triggers (test, functions, rules, indexes, all)
 
 options:
   logging: CLOUD_LOGGING_ONLY
@@ -28,7 +28,7 @@ steps:
   script: |
     #!/usr/bin/env bash
     set -e
-    if [[ "${_DEPLOYMENT_TYPE}" == "functions" || "${_DEPLOYMENT_TYPE}" == "test" ]]; then
+    if [[ "${_DEPLOYMENT_TYPE}" == "functions" || "${_DEPLOYMENT_TYPE}" == "test" || "${_DEPLOYMENT_TYPE}" == "all" ]]; then
       echo "Running Lint/Format Check..."
       # Scoped to backend directories to avoid blocking on frontend issues
       npx prettier --check "functions/**/*.ts" "utils/**/*.ts"
@@ -45,7 +45,7 @@ steps:
   script: |
     #!/usr/bin/env bash
     set -e
-    if [[ "${_DEPLOYMENT_TYPE}" == "functions" || "${_DEPLOYMENT_TYPE}" == "test" ]]; then
+    if [[ "${_DEPLOYMENT_TYPE}" == "functions" || "${_DEPLOYMENT_TYPE}" == "test" || "${_DEPLOYMENT_TYPE}" == "all" ]]; then
       echo "Building utils workspace..."
       npm run build --workspace=utils
     else
@@ -60,7 +60,7 @@ steps:
   script: |
     #!/usr/bin/env bash
     set -e
-    if [[ "${_DEPLOYMENT_TYPE}" == "functions" || "${_DEPLOYMENT_TYPE}" == "test" ]]; then
+    if [[ "${_DEPLOYMENT_TYPE}" == "functions" || "${_DEPLOYMENT_TYPE}" == "test" || "${_DEPLOYMENT_TYPE}" == "all" ]]; then
       echo "Building functions workspace..."
       npm run build --workspace=functions
     else
@@ -75,7 +75,7 @@ steps:
   script: |
     #!/usr/bin/env bash
     set -e
-    if [[ "${_DEPLOYMENT_TYPE}" == "functions" || "${_DEPLOYMENT_TYPE}" == "test" ]]; then
+    if [[ "${_DEPLOYMENT_TYPE}" == "functions" || "${_DEPLOYMENT_TYPE}" == "test" || "${_DEPLOYMENT_TYPE}" == "all" ]]; then
       echo "Installing Oracle JDK 21..."
       apt-get update -y && apt-get install -y wget
       wget -q https://download.oracle.com/java/21/latest/jdk-21_linux-x64_bin.deb
