@@ -177,6 +177,18 @@ steps:
 
       echo "Deploying Firestore Indexes..."
       npx firebase deploy --only firestore:indexes --project ${PROJECT_ID} --non-interactive --force
+
+      echo "Fetching deployed production indexes..."
+      npx firebase firestore:indexes --project ${PROJECT_ID} > deployed_firestore_indexes.json
+      
+      if cmp -s "existing_firestore_indexes.json" "deployed_firestore_indexes.json"; then
+        echo "Deployed Firestore Indexes match existing (no change)."
+      else
+        echo "--- DEPLOYED FIRESTORE INDEXES BACKUP: START ---"
+        cat deployed_firestore_indexes.json
+        echo "--- DEPLOYED FIRESTORE INDEXES BACKUP: END ---"
+      fi
+
     else
       echo "Skipping Firebase indexes deploy for '${_DEPLOYMENT_TYPE}' deployment."
     fi
