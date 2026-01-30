@@ -168,6 +168,7 @@ export class SurveyStageHandler extends BaseStageHandler {
     return getSurveyStageDisplayPromptString(
       participantAnswers,
       stage.questions,
+      includeScaffolding,
     );
   }
 }
