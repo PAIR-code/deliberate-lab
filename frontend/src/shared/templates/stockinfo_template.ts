@@ -281,6 +281,108 @@ const GREENWAVE_CSV_DATA = `Date,Close
 2025-12-22,359.85
 2025-12-29,375.40`;
 
+const HEALTHBRIDGE_CSV_DATA = `Date,Close
+2024-01-01,78.50
+2024-01-15,81.20
+2024-02-01,84.75
+2024-02-15,88.30
+2024-03-01,92.15
+2024-03-15,96.40
+2024-04-01,100.85
+2024-04-15,105.20
+2024-05-01,109.75
+2024-05-15,114.30
+2024-06-01,118.95
+2024-06-15,123.60
+2024-07-01,128.25
+2024-07-15,132.90
+2024-08-01,137.55
+2024-08-15,142.20
+2024-09-01,146.85
+2024-09-15,151.50
+2024-10-01,156.15
+2024-10-15,160.80
+2024-11-01,165.45
+2024-11-15,170.10
+2024-12-01,174.75
+2024-12-15,179.40
+2025-01-01,184.05
+2025-01-15,188.70
+2025-02-01,193.35
+2025-02-15,198.00
+2025-03-01,202.65
+2025-03-15,207.30
+2025-04-01,211.95
+2025-04-15,216.60
+2025-05-01,221.25
+2025-05-15,225.90
+2025-06-01,230.55
+2025-06-15,235.20
+2025-07-01,239.85
+2025-07-15,244.50
+2025-08-01,249.15
+2025-08-15,253.80
+2025-09-01,258.45
+2025-09-15,263.10
+2025-10-01,267.75
+2025-10-15,272.40
+2025-11-01,277.05
+2025-11-15,281.70
+2025-12-01,286.35
+2025-12-15,291.00
+2025-12-29,295.65`;
+
+const BLUEHORIZON_CSV_DATA = `Date,Close
+2024-01-01,145.20
+2024-01-15,142.80
+2024-02-01,138.50
+2024-02-15,134.20
+2024-03-01,129.90
+2024-03-15,125.60
+2024-04-01,121.30
+2024-04-15,117.00
+2024-05-01,112.70
+2024-05-15,108.40
+2024-06-01,104.10
+2024-06-15,99.80
+2024-07-01,95.50
+2024-07-15,91.20
+2024-08-01,86.90
+2024-08-15,82.60
+2024-09-01,85.40
+2024-09-15,88.20
+2024-10-01,91.00
+2024-10-15,93.80
+2024-11-01,96.60
+2024-11-15,99.40
+2024-12-01,102.20
+2024-12-15,105.00
+2025-01-01,107.80
+2025-01-15,110.60
+2025-02-01,113.40
+2025-02-15,116.20
+2025-03-01,119.00
+2025-03-15,121.80
+2025-04-01,124.60
+2025-04-15,127.40
+2025-05-01,130.20
+2025-05-15,133.00
+2025-06-01,135.80
+2025-06-15,138.60
+2025-07-01,141.40
+2025-07-15,144.20
+2025-08-01,147.00
+2025-08-15,149.80
+2025-09-01,152.60
+2025-09-15,155.40
+2025-10-01,158.20
+2025-10-15,161.00
+2025-11-01,163.80
+2025-11-15,166.60
+2025-12-01,169.40
+2025-12-15,172.20
+2025-12-29,175.00`;
+
 const GLOBALCONNECT_CSV_DATA = `Date,Close
 2024-01-01,89.40
 2024-01-08,90.15
@@ -481,6 +583,68 @@ export const STOCKINFO_MAIN_STAGE = createStockInfoStage({
           title: 'Dividend Yield',
           value: '2.1%',
           subtext: 'Quarterly dividend payments',
+          enabled: true,
+        }),
+      ],
+    }),
+    createStock({
+      id: 'healthbridge_stock',
+      name: 'HealthBridge Medical (HBMD)',
+      csvData: HEALTHBRIDGE_CSV_DATA,
+      description: `**HealthBridge Medical** is a fictional healthcare technology company focused on medical devices and digital health solutions.
+
+**Key Business Areas:**
+- Medical imaging devices
+- Remote patient monitoring
+- Electronic health records
+- Telemedicine platforms
+- AI-assisted diagnostics
+
+**Market Position:** Innovative healthcare technology provider with strong R&D capabilities and partnerships with major hospital systems.
+
+**Recent Performance:** Strong growth driven by increased healthcare digitization and aging population demographics.`,
+      customCards: [
+        createStockInfoCard({
+          title: 'Market Cap',
+          value: '$320B',
+          subtext: 'Healthcare innovator',
+          enabled: true,
+        }),
+        createStockInfoCard({
+          title: 'R&D Spending',
+          value: '18%',
+          subtext: 'Of revenue invested in research',
+          enabled: true,
+        }),
+      ],
+    }),
+    createStock({
+      id: 'bluehorizon_stock',
+      name: 'BlueHorizon Aerospace (BHAZ)',
+      csvData: BLUEHORIZON_CSV_DATA,
+      description: `**BlueHorizon Aerospace** is a fictional aerospace and defense company specializing in commercial aviation and space technology.
+
+**Key Business Areas:**
+- Commercial aircraft manufacturing
+- Space launch systems
+- Satellite technology
+- Defense systems
+- Aviation services
+
+**Market Position:** Major aerospace manufacturer with diverse portfolio spanning commercial aviation, defense contracts, and emerging space ventures.
+
+**Recent Performance:** Recovering from industry downturn with strong order backlog and growing space division revenue.`,
+      customCards: [
+        createStockInfoCard({
+          title: 'Market Cap',
+          value: '$180B',
+          subtext: 'Aerospace & defense leader',
+          enabled: true,
+        }),
+        createStockInfoCard({
+          title: 'Order Backlog',
+          value: '$420B',
+          subtext: 'Multi-year contracted orders',
           enabled: true,
         }),
       ],

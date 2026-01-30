@@ -169,7 +169,9 @@ export function getAssetAllocationSummaryText(
   const overview =
     '## Asset Allocation: User has $1,000 to allocate between two stocks:';
 
-  return `${overview}\n* ${stage.stockConfig.stockA.name}\n* ${stage.stockConfig.stockB.name}`;
+  const stockAName = stage.stockConfig.stockA?.name ?? 'Stock A';
+  const stockBName = stage.stockConfig.stockB?.name ?? 'Stock B';
+  return `${overview}\n* ${stockAName}\n* ${stockBName}`;
 }
 
 export function getAssetAllocationAnswersText(
