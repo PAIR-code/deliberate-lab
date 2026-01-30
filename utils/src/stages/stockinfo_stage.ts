@@ -41,6 +41,11 @@ export interface Stock {
 export interface StockInfoStageConfig extends BaseStageConfig {
   kind: StageKind.STOCKINFO;
   stocks: Stock[];
+  /** Optional templated stock IDs for variable-based filtering.
+   *  If set, only stocks with IDs matching resolved values are shown.
+   *  Example: ["{{assigned_stock_1_id}}", "{{assigned_stock_2_id}}"]
+   */
+  visibleStockIds?: string[];
   showBestYearCard: boolean;
   showWorstYearCard: boolean;
   requireViewAllStocks: boolean;
@@ -126,6 +131,7 @@ export function createStockInfoStage(
         showParticipantProgress: true,
       }),
     stocks: config.stocks ?? [createStock()],
+    visibleStockIds: config.visibleStockIds,
     showBestYearCard: config.showBestYearCard ?? true,
     showWorstYearCard: config.showWorstYearCard ?? true,
     requireViewAllStocks: config.requireViewAllStocks ?? true,

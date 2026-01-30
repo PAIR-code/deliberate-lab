@@ -3316,10 +3316,15 @@
         "stockConfig": {
           "additionalProperties": false,
           "type": "object",
-          "required": ["stockA", "stockB"],
           "properties": {
             "stockInfoStageId": {
               "minLength": 1,
+              "type": "string"
+            },
+            "stockAId": {
+              "type": "string"
+            },
+            "stockBId": {
               "type": "string"
             },
             "stockA": {
@@ -3727,6 +3732,12 @@
           "type": "array",
           "items": {
             "$ref": "#/$defs/Stock"
+          }
+        },
+        "visibleStockIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
           }
         },
         "showBestYearCard": {

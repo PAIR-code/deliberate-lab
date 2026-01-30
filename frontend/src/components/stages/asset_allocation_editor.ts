@@ -169,6 +169,11 @@ export class AssetAllocationEditor extends MobxLitElement {
   private renderSimpleStockConfiguration() {
     if (!this.stage) return nothing;
 
+    const stockA =
+      this.stage.stockConfig.stockA ?? createStock({name: 'Stock A'});
+    const stockB =
+      this.stage.stockConfig.stockB ?? createStock({name: 'Stock B'});
+
     return html`
       <div class="section">
         <h4>Simple Stock Configuration</h4>
@@ -180,12 +185,12 @@ export class AssetAllocationEditor extends MobxLitElement {
         <div class="simple-stocks">
           <div class="stock-config">
             <h5>Stock A</h5>
-            ${this.renderSimpleStockEditor(this.stage.stockConfig.stockA, 'A')}
+            ${this.renderSimpleStockEditor(stockA, 'A')}
           </div>
 
           <div class="stock-config">
             <h5>Stock B</h5>
-            ${this.renderSimpleStockEditor(this.stage.stockConfig.stockB, 'B')}
+            ${this.renderSimpleStockEditor(stockB, 'B')}
           </div>
         </div>
       </div>
