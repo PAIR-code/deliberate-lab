@@ -45,13 +45,16 @@ export class AssetAllocationStageHandler extends BaseStageHandler {
   getStageDisplayForPrompt(
     _participants: ParticipantProfileExtended[],
     stageContext: StageContextData,
-    _includeScaffolding: boolean,
+    includeScaffolding: boolean,
   ) {
     const assetParticipantAnswers = stageContext.privateAnswers as {
       participantPublicId: string;
       participantDisplayName: string;
       answer: AssetAllocationStageParticipantAnswer;
     }[];
-    return getAssetAllocationAnswersText(assetParticipantAnswers, true);
+    return getAssetAllocationAnswersText(
+      assetParticipantAnswers,
+      includeScaffolding,
+    );
   }
 }
