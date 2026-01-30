@@ -8,6 +8,7 @@ import {
   ProfileType,
   StageConfig,
   StageKind,
+  compareTimestamps,
 } from '@deliberation-lab/utils';
 
 /**
@@ -181,16 +182,19 @@ export function filterParticipantsByStatus<T extends ParticipantProfile>(
   );
 }
 
+/** Sort options for participant lists. */
+export type ParticipantSortOption = 'lastActive' | 'name' | 'startTime';
+
 /** Options for sorting participants. */
 export interface SortParticipantsOptions {
-  sortBy: 'lastActive' | 'name';
+  sortBy: ParticipantSortOption;
   sortDirection: 'asc' | 'desc';
   stageIds: string[];
   /** Returns true if participant is on a transfer stage (ready for transfer). */
   isOnTransferStage?: (participant: ParticipantProfile) => boolean;
 }
 
-/** Sort participants by name or last active time. */
+/** Sort participants by name, last active time, or start time. */
 export function sortParticipants<T extends ParticipantProfile>(
   participants: T[],
   options: SortParticipantsOptions,
@@ -198,19 +202,35 @@ export function sortParticipants<T extends ParticipantProfile>(
   const {sortBy, sortDirection, stageIds, isOnTransferStage} = options;
   const dirMultiplier = sortDirection === 'asc' ? 1 : -1;
 
-  const isTransferTimeout = (participant: ParticipantProfile) =>
-    participant.currentStatus === ParticipantStatus.TRANSFER_TIMEOUT;
-
-  return participants.slice().sort((a, b) => {
-    if (sortBy === 'name') {
+  // Sort by name
+  if (sortBy === 'name') {
+    return participants.slice().sort((a, b) => {
       const aName = a.name ? a.name : a.publicId;
       const bName = b.name ? b.name : b.publicId;
       return (
         dirMultiplier *
         aName.localeCompare(bName, undefined, {sensitivity: 'base'})
       );
-    }
+    });
+  }
 
+  // Time-based sorting (startTime or lastActive)
+
+  const isTransferTimeout = (participant: ParticipantProfile) =>
+    participant.currentStatus === ParticipantStatus.TRANSFER_TIMEOUT;
+
+  const getTimestamp = (p: ParticipantProfile) => {
+    switch (sortBy) {
+      case 'startTime':
+        return p.timestamps.startExperiment;
+      case 'lastActive':
+        return getCurrentStageStartTime(p, stageIds);
+      default:
+        return null;
+    }
+  };
+
+  return participants.slice().sort((a, b) => {
     // Ready for transfer always at top
     if (isOnTransferStage) {
       const aIsReadyForTransfer = isOnTransferStage(a);
@@ -225,19 +245,9 @@ export function sortParticipants<T extends ParticipantProfile>(
       return isTransferTimeout(a) ? 1 : -1;
     }
 
-    // Sort by last active
-    const aStartTime = getCurrentStageStartTime(a, stageIds);
-    const bStartTime = getCurrentStageStartTime(b, stageIds);
-
-    if (aStartTime && bStartTime) {
-      const diff = aStartTime.seconds - bStartTime.seconds;
-      if (diff !== 0) return dirMultiplier * diff;
-      return dirMultiplier * (aStartTime.nanoseconds - bStartTime.nanoseconds);
-    } else if (aStartTime && !bStartTime) {
-      return -dirMultiplier;
-    } else if (!aStartTime && bStartTime) {
-      return dirMultiplier;
-    }
+    // Sort by timestamp
+    const cmp = compareTimestamps(getTimestamp(a), getTimestamp(b));
+    if (cmp !== 0) return dirMultiplier * cmp;
 
     return dirMultiplier * a.publicId.localeCompare(b.publicId);
   });
