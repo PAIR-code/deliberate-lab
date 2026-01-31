@@ -22,6 +22,7 @@ export class Footer extends MobxLitElement {
 
   @property() disabled = false;
   @property() showNextButton = true;
+  @property() buttonText = ''; // Custom button text (overrides default)
   @property() onNextClick: () => void = async () => {
     await this.participantService.progressToNextStage();
   };
@@ -54,6 +55,9 @@ export class Footer extends MobxLitElement {
     const preventNextClick =
       this.disabled || this.participantService.disableStage;
 
+    // Use custom text if provided, otherwise default based on stage position
+    const text = this.buttonText || (isLast ? 'End experiment' : 'Next stage');
+
     return html`
       <pr-button
         variant=${this.disabled ? 'default' : 'tonal'}
@@ -62,7 +66,7 @@ export class Footer extends MobxLitElement {
         ?loading=${this.isLoadingNext}
         @click=${handleNext}
       >
-        ${isLast ? 'End experiment' : 'Next stage'}
+        ${text}
       </pr-button>
     `;
   }

@@ -3316,10 +3316,15 @@
         "stockConfig": {
           "additionalProperties": false,
           "type": "object",
-          "required": ["stockA", "stockB"],
           "properties": {
             "stockInfoStageId": {
               "minLength": 1,
+              "type": "string"
+            },
+            "stockAId": {
+              "type": "string"
+            },
+            "stockBId": {
               "type": "string"
             },
             "stockA": {
@@ -3702,7 +3707,12 @@
         "progress",
         "stocks",
         "showBestYearCard",
-        "showWorstYearCard"
+        "showWorstYearCard",
+        "requireViewAllStocks",
+        "useQuarterlyMarkers",
+        "showInvestmentGrowth",
+        "initialInvestment",
+        "currency"
       ],
       "properties": {
         "id": {
@@ -3729,11 +3739,35 @@
             "$ref": "#/$defs/Stock"
           }
         },
+        "visibleStockIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
         "showBestYearCard": {
           "type": "boolean"
         },
         "showWorstYearCard": {
           "type": "boolean"
+        },
+        "requireViewAllStocks": {
+          "type": "boolean"
+        },
+        "useQuarterlyMarkers": {
+          "type": "boolean"
+        },
+        "showInvestmentGrowth": {
+          "type": "boolean"
+        },
+        "initialInvestment": {
+          "minimum": 1,
+          "default": 1000,
+          "type": "number"
+        },
+        "currency": {
+          "default": "$",
+          "type": "string"
         },
         "introText": {
           "type": "string"

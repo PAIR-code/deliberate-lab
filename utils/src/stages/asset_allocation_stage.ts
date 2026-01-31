@@ -30,8 +30,18 @@ export interface AssetAllocation {
 /** Stock configuration for asset allocation (two stocks). */
 export interface AssetAllocationStockInfoConfig {
   stockInfoStageId?: string; // Optional reference to StockInfo stage
-  stockA: Stock;
-  stockB: Stock;
+  /** Templated stock ID for variable-based lookup from StockInfo stage.
+   *  Example: "{{assigned_stock_1_id}}"
+   */
+  stockAId?: string;
+  /** Templated stock ID for variable-based lookup from StockInfo stage.
+   *  Example: "{{assigned_stock_2_id}}"
+   */
+  stockBId?: string;
+  /** Direct stock data (used when stockAId is not set, for backwards compatibility) */
+  stockA?: Stock;
+  /** Direct stock data (used when stockBId is not set, for backwards compatibility) */
+  stockB?: Stock;
 }
 
 /** AssetAllocation stage config. */
@@ -103,8 +113,15 @@ export function createAssetAllocationStockInfoConfig(
 ): AssetAllocationStockInfoConfig {
   return {
     stockInfoStageId: config.stockInfoStageId,
-    stockA: config.stockA ?? createStock({name: 'Stock A'}),
-    stockB: config.stockB ?? createStock({name: 'Stock B'}),
+    stockAId: config.stockAId,
+    stockBId: config.stockBId,
+    // Only create default stocks if no ID is provided (backward compatibility)
+    stockA:
+      config.stockA ??
+      (config.stockAId ? undefined : createStock({name: 'Stock A'})),
+    stockB:
+      config.stockB ??
+      (config.stockBId ? undefined : createStock({name: 'Stock B'})),
   };
 }
 
