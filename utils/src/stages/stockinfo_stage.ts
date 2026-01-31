@@ -51,6 +51,10 @@ export interface StockInfoStageConfig extends BaseStageConfig {
   requireViewAllStocks: boolean;
   useQuarterlyMarkers: boolean;
   showInvestmentGrowth: boolean;
+  /** Initial investment amount for investment growth calculations (default: 1000) */
+  initialInvestment: number;
+  /** Currency symbol for display (default: '$') */
+  currency: string;
 }
 
 /** StockInfo stage participant answer. */
@@ -137,5 +141,7 @@ export function createStockInfoStage(
     requireViewAllStocks: config.requireViewAllStocks ?? true,
     useQuarterlyMarkers: config.useQuarterlyMarkers ?? false,
     showInvestmentGrowth: config.showInvestmentGrowth ?? false,
+    initialInvestment: config.initialInvestment ?? 1000,
+    currency: config.currency ?? '$',
   };
 }

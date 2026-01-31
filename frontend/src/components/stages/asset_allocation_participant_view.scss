@@ -156,6 +156,12 @@
       flex: 1; // Take up remaining space
     }
 
+    .amount-display {
+      font-size: 1rem;
+      font-weight: 500;
+      color: var(--md-sys-color-on-surface-variant);
+    }
+
     .percentage-display {
       font-size: 1.125rem;
       font-weight: 600;
