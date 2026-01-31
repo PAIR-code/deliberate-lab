@@ -124,14 +124,16 @@ export class StockInfoParticipantView extends MobxLitElement {
   }
 
   private renderMainContent(stock: Stock) {
+    const currency = this.stage?.currency ?? '$';
+    const initialInvestment = this.stage?.initialInvestment ?? 1000;
+    const chartTitle = this.stage?.showInvestmentGrowth
+      ? `${currency}${initialInvestment.toLocaleString()} Investment Growth`
+      : 'Price Chart';
+
     return html`
       <div class="main-content">
         <div class="chart-container">
-          <h3>
-            ${this.stage?.showInvestmentGrowth
-              ? '$1,000 Investment Growth'
-              : 'Price Chart'}
-          </h3>
+          <h3>${chartTitle}</h3>
           ${this.renderChart(stock)}
         </div>
         <div class="description-container">
@@ -154,6 +156,8 @@ export class StockInfoParticipantView extends MobxLitElement {
     const svgContent = generateSVGChart(stock.parsedData, {
       isInvestmentGrowth: this.stage?.showInvestmentGrowth,
       useQuarterlyMarkers: this.stage?.useQuarterlyMarkers,
+      initialInvestment: this.stage?.initialInvestment,
+      currency: this.stage?.currency,
     });
 
     return html`<div class="chart">${unsafeHTML(svgContent)}</div>`;
