@@ -38,15 +38,16 @@ export class StockInfoParticipantView extends MobxLitElement {
 
   /** Stocks with failsafe parsing and visibleStockIds filtering/ordering */
   private get stocks(): Stock[] {
-    if (!this.stage) return [];
+    const {stage} = this;
+    if (!stage) return [];
 
     // If visibleStockIds is set, use its order (map over IDs to preserve order)
     // Otherwise show all stocks in their original order
-    const orderedStocks = this.stage.visibleStockIds?.length
-      ? this.stage.visibleStockIds
-          .map((id) => this.stage!.stocks.find((stock) => stock.id === id))
+    const orderedStocks = stage.visibleStockIds?.length
+      ? stage.visibleStockIds
+          .map((id) => stage.stocks.find((stock) => stock.id === id))
           .filter((stock): stock is Stock => stock !== undefined)
-      : this.stage.stocks;
+      : stage.stocks;
 
     // Failsafe: ensure parsedData exists
     return orderedStocks.map((stock) => ({

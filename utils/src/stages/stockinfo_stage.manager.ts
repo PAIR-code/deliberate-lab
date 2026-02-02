@@ -34,6 +34,12 @@ export class StockInfoStageHandler extends BaseStageHandler {
     return updatedStage;
   }
 
+  /**
+   * Returns a text summary of the StockInfo stage for use in LLM prompts.
+   * Note: This stage displays the same stock information regardless of
+   * participants, so the participants parameter is unused. The scaffolding
+   * flag is also unused since stock summaries don't vary by context.
+   */
   getStageDisplayForPrompt(
     _participants: ParticipantProfileExtended[],
     stageContext: StageContextData,

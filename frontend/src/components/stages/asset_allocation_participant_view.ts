@@ -68,7 +68,7 @@ export class AssetAllocationParticipantView extends MobxLitElement {
     const config = this.stage.stockConfig;
 
     // Failsafe: ensure parsedData exists
-    const ensureParsedData = (stock: Stock | undefined): Stock | null => {
+    const ensureParsedData = (stock?: Stock): Stock | null => {
       if (!stock) return null;
       return {
         ...stock,
