@@ -31,6 +31,7 @@ import {
   getStockTicker,
   createAssetAllocation,
   createAssetAllocationStageParticipantAnswer,
+  parseStockData,
 } from '@deliberation-lab/utils';
 
 import {core} from '../../core/core';
@@ -58,13 +59,46 @@ export class AssetAllocationParticipantView extends MobxLitElement {
   @state() private selectedStockIndex = 0; // 0 for Stock A, 1 for Stock B
   @state() private allocation = {stockAPercentage: 50, stockBPercentage: 50};
 
+  /** Stocks with ID-based lookup and failsafe parsing */
   private get stocks() {
     if (!this.stage) {
       return {stockA: null, stockB: null};
     }
+
+    const config = this.stage.stockConfig;
+
+    // Failsafe: ensure parsedData exists
+    const ensureParsedData = (stock?: Stock): Stock | null => {
+      if (!stock) return null;
+      return {
+        ...stock,
+        parsedData: stock.parsedData?.length
+          ? stock.parsedData
+          : parseStockData(stock.csvData),
+      };
+    };
+
+    // ID-based lookup mode: get stocks from StockInfo stage
+    if (config.stockInfoStageId && config.stockAId && config.stockBId) {
+      const stockInfoStage = this.getStockInfoStage();
+      if (stockInfoStage) {
+        const stockA = stockInfoStage.stocks.find(
+          (s) => s.id === config.stockAId,
+        );
+        const stockB = stockInfoStage.stocks.find(
+          (s) => s.id === config.stockBId,
+        );
+        return {
+          stockA: ensureParsedData(stockA),
+          stockB: ensureParsedData(stockB),
+        };
+      }
+    }
+
+    // Fallback: use direct stock data (backwards compatibility)
     return {
-      stockA: this.stage.stockConfig.stockA,
-      stockB: this.stage.stockConfig.stockB,
+      stockA: ensureParsedData(config.stockA),
+      stockB: ensureParsedData(config.stockB),
     };
   }
 
@@ -399,12 +433,37 @@ export class MultiAssetAllocationParticipantView extends MobxLitElement {
   @property({type: Object}) stage: MultiAssetAllocationStageConfig | undefined =
     undefined;
 
+  /** Stocks with failsafe parsing - ensures parsedData exists */
+  private get stockOptions(): Stock[] {
+    if (!this.stage) return [];
+
+    const start = performance.now();
+
+    const result = this.stage.stockOptions.map((stock) => ({
+      ...stock,
+      parsedData: stock.parsedData?.length
+        ? stock.parsedData
+        : parseStockData(stock.csvData),
+    }));
+
+    const parsedCount = result.filter(
+      (s, i) => !this.stage!.stockOptions[i]?.parsedData?.length,
+    ).length;
+
+    console.log(
+      `[MultiAssetAllocation] stockOptions getter: ${(performance.now() - start).toFixed(3)}ms, ` +
+        `${result.length} stocks, parsed: ${parsedCount}`,
+    );
+
+    return result;
+  }
+
   override render() {
     if (!this.stage) return nothing;
 
     // Check if allocations sum to 100 percent
     const isValidAnswer =
-      this.stage.stockOptions
+      this.stockOptions
         .map(
           (stock, index) => this.getStockAllocation(stock.id)?.percentage ?? 0,
         )
@@ -438,7 +497,7 @@ export class MultiAssetAllocationParticipantView extends MobxLitElement {
               <h3>Asset Allocation</h3>
             </div>
             <div class="sliders-section">
-              ${this.stage.stockOptions.map((stock, index) =>
+              ${this.stockOptions.map((stock, index) =>
                 this.renderSlider(
                   stock,
                   this.getStockAllocation(stock.id),

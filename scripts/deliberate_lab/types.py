@@ -463,8 +463,10 @@ class StockConfig(BaseModel):
         extra="forbid",
     )
     stockInfoStageId: constr(min_length=1) | None = None
-    stockA: Stock
-    stockB: Stock
+    stockAId: str | None = None
+    stockBId: str | None = None
+    stockA: Stock | None = None
+    stockB: Stock | None = None
 
 
 class TextQuestion(BaseModel):
@@ -807,6 +809,7 @@ class StockinfoStageConfig(BaseModel):
     descriptions: Any
     progress: Any
     stocks: List[Stock]
+    visibleStockIds: List[str] | None = None
     showBestYearCard: bool
     showWorstYearCard: bool
     introText: str | None = None

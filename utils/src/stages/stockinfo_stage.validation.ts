@@ -55,6 +55,7 @@ export const StockInfoStageConfigData = Type.Object(
     descriptions: Type.Ref(StageTextConfigSchema),
     progress: Type.Ref(StageProgressConfigSchema),
     stocks: Type.Array(StockData),
+    visibleStockIds: Type.Optional(Type.Array(Type.String())),
     showBestYearCard: Type.Boolean(),
     showWorstYearCard: Type.Boolean(),
     introText: Type.Optional(Type.String()),

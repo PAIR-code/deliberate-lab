@@ -169,7 +169,9 @@ export function getAssetAllocationSummaryText(
   const overview =
     '## Asset Allocation: User has $1,000 to allocate between two stocks:';
 
-  return `${overview}\n* ${stage.stockConfig.stockA.name}\n* ${stage.stockConfig.stockB.name}`;
+  const stockAName = stage.stockConfig.stockA?.name ?? 'Stock A';
+  const stockBName = stage.stockConfig.stockB?.name ?? 'Stock B';
+  return `${overview}\n* ${stockAName}\n* ${stockBName}`;
 }
 
 export function getAssetAllocationAnswersText(
@@ -178,7 +180,7 @@ export function getAssetAllocationAnswersText(
     participantDisplayName: string;
     answer: AssetAllocationStageParticipantAnswer;
   }>,
-  alwaysShowParticipantNames = false,
+  includeScaffolding = true,
 ): string {
   if (participantAnswers.length === 0) {
     return '';
@@ -187,9 +189,8 @@ export function getAssetAllocationAnswersText(
   const answerSummaries = participantAnswers.map(
     ({participantPublicId, participantDisplayName, answer}) => {
       const allocation = answer.allocation;
-      // Include participant names based on configuration or if multiple participants
-      const showNames =
-        alwaysShowParticipantNames || participantAnswers.length > 1;
+      // Include participant names if scaffolding enabled OR multiple participants
+      const showNames = includeScaffolding || participantAnswers.length > 1;
       const prefix = showNames
         ? `Participant ${participantDisplayName}:\n`
         : '';
