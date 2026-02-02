@@ -20,6 +20,7 @@ export class MediaPreview extends LitElement {
 
   @property({type: Object}) file: StoredFile | undefined = undefined;
   @property({type: Boolean}) allowFullscreen = true;
+  @property({type: Boolean, reflect: true}) expanded = false;
 
   private handleImageClick = () => {
     if (this.allowFullscreen && this.file) {

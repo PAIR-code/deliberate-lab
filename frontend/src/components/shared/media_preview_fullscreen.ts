@@ -1,24 +1,19 @@
+import './media_preview';
+
 import {LitElement, html, nothing, CSSResultGroup} from 'lit';
 import {customElement, property} from 'lit/decorators.js';
 
-import {
-  FileCategory,
-  getFileCategory,
-  StoredFile,
-} from '@deliberation-lab/utils';
+import {StoredFile} from '@deliberation-lab/utils';
 
 import {styles} from './media_preview_fullscreen.scss';
 
 /**
  * A fullscreen modal component for viewing media files.
- * Initially supports images, extensible for video/audio.
+ * Reuses media-preview for content rendering, adding modal behavior
+ * (backdrop, escape key, close button).
  */
 @customElement('media-preview-fullscreen')
 export class MediaPreviewFullscreen extends LitElement {
-  constructor() {
-    super();
-  }
-
   static override styles: CSSResultGroup = [styles];
 
   @property({type: Object}) file: StoredFile | undefined;
@@ -50,49 +45,16 @@ export class MediaPreviewFullscreen extends LitElement {
 
     return html`
       <div class="fullscreen-modal" @click=${this.close}>
-        <div class="modal-content">
+        <div class="modal-content" @click=${(e: Event) => e.stopPropagation()}>
           <button class="close-button" @click=${this.close}>✕</button>
-          ${this.renderMedia()}
+          <media-preview
+            .file=${this.file}
+            .allowFullscreen=${false}
+            expanded
+          ></media-preview>
         </div>
       </div>
     `;
-  }
-
-  private renderMedia() {
-    if (!this.file) {
-      return nothing;
-    }
-
-    switch (getFileCategory(this.file)) {
-      case FileCategory.IMAGE:
-        return html`
-          <img
-            src="${this.file.url}"
-            alt="Fullscreen image"
-            @click=${(e: Event) => e.stopPropagation()}
-          />
-        `;
-      case FileCategory.VIDEO:
-        return html`
-          <video
-            src="${this.file.url}"
-            controls
-            autoplay
-            @click=${(e: Event) => e.stopPropagation()}
-          ></video>
-        `;
-      case FileCategory.AUDIO:
-        return html`
-          <audio
-            src="${this.file.url}"
-            controls
-            autoplay
-            @click=${(e: Event) => e.stopPropagation()}
-          ></audio>
-        `;
-      default:
-        return nothing;
-    }
   }
 }
 
