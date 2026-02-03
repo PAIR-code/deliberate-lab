@@ -80,20 +80,14 @@ export class ChatMessageComponent extends MobxLitElement {
       return nothing;
     }
 
-    let content;
     switch (this.chat.type) {
       case UserType.PARTICIPANT:
-        content = this.renderParticipantMessage(this.chat);
-        break;
+        return this.renderParticipantMessage(this.chat);
       case UserType.SYSTEM:
-        content = this.renderSystemMessage(this.chat);
-        break;
+        return this.renderSystemMessage(this.chat);
       default:
-        content = this.renderMediatorMessage(this.chat);
-        break;
+        return this.renderMediatorMessage(this.chat);
     }
-
-    return html`${content}`;
   }
 
   renderParticipantMessage(chatMessage: ChatMessage) {
