@@ -6,7 +6,7 @@ import {MediaPreviewFullscreen} from '../shared/media_preview_fullscreen';
 import {MobxLitElement} from '@adobe/lit-mobx';
 
 import {CSSResultGroup, html, nothing} from 'lit';
-import {customElement, property, state} from 'lit/decorators.js';
+import {customElement, property} from 'lit/decorators.js';
 import {classMap} from 'lit/directives/class-map.js';
 import {unsafeHTML} from 'lit/directives/unsafe-html.js';
 
@@ -35,7 +35,6 @@ export class ChatMessageComponent extends MobxLitElement {
   private readonly participantService = core.getService(ParticipantService);
 
   @property() chat: ChatMessage | undefined = undefined;
-  @state() private maximizedFile: StoredFile | null = null;
   private fullscreenElement: HTMLElement | null = null;
 
   override disconnectedCallback() {
@@ -45,16 +44,10 @@ export class ChatMessageComponent extends MobxLitElement {
 
   private handleMaximize = (e: CustomEvent) => {
     const file = e.detail.file as StoredFile;
-    this.maximizedFile = file;
-    this.showFullscreen();
+    this.showFullscreen(file);
   };
 
-  private showFullscreen = () => {
-    if (!this.maximizedFile) return;
-
-    // Store file before closeFullscreen clears it
-    const fileToShow = this.maximizedFile;
-
+  private showFullscreen = (file: StoredFile) => {
     this.closeFullscreen();
 
     const el = document.createElement(
@@ -62,7 +55,7 @@ export class ChatMessageComponent extends MobxLitElement {
     ) as MediaPreviewFullscreen;
     el.addEventListener('close', () => this.closeFullscreen());
     document.body.appendChild(el);
-    el.file = fileToShow;
+    el.file = file;
     this.fullscreenElement = el;
   };
 
@@ -71,7 +64,6 @@ export class ChatMessageComponent extends MobxLitElement {
       this.fullscreenElement.remove();
       this.fullscreenElement = null;
     }
-    this.maximizedFile = null;
   };
 
   override render() {
