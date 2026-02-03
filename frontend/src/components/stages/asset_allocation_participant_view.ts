@@ -131,7 +131,7 @@ export class AssetAllocationParticipantView extends MobxLitElement {
     const currency = stockInfoStage?.currency ?? 'USD';
 
     const allocationTitle = initialInvestment
-      ? `Asset Allocation (${formatCurrency(initialInvestment, currency)})`
+      ? `Asset Allocation (${formatCurrency(initialInvestment, currency, {decimals: 0})})`
       : 'Asset Allocation';
 
     return html`
@@ -197,10 +197,10 @@ export class AssetAllocationParticipantView extends MobxLitElement {
 
     // Calculate amounts based on allocation percentages
     const amountA = initialInvestment
-      ? Math.round((this.allocation.stockAPercentage / 100) * initialInvestment)
+      ? (this.allocation.stockAPercentage / 100) * initialInvestment
       : null;
     const amountB = initialInvestment
-      ? Math.round((this.allocation.stockBPercentage / 100) * initialInvestment)
+      ? (this.allocation.stockBPercentage / 100) * initialInvestment
       : null;
 
     return html`
@@ -211,7 +211,7 @@ export class AssetAllocationParticipantView extends MobxLitElement {
             <span class="stock-name">${this.stocks.stockA?.name}</span>
             ${amountA !== null
               ? html`<span class="amount-display"
-                  >${formatCurrency(amountA, currency)}</span
+                  >${formatCurrency(amountA, currency, {decimals: 0})}</span
                 >`
               : nothing}
             <span class="percentage-display"
@@ -237,7 +237,7 @@ export class AssetAllocationParticipantView extends MobxLitElement {
             <span class="stock-name">${this.stocks.stockB?.name}</span>
             ${amountB !== null
               ? html`<span class="amount-display"
-                  >${formatCurrency(amountB, currency)}</span
+                  >${formatCurrency(amountB, currency, {decimals: 0})}</span
                 >`
               : nothing}
             <span class="percentage-display"
@@ -334,10 +334,10 @@ export class AssetAllocationParticipantView extends MobxLitElement {
 
     // Calculate amounts if initial investment is available
     const amountA = initialInvestment
-      ? Math.round((this.allocation.stockAPercentage / 100) * initialInvestment)
+      ? (this.allocation.stockAPercentage / 100) * initialInvestment
       : null;
     const amountB = initialInvestment
-      ? Math.round((this.allocation.stockBPercentage / 100) * initialInvestment)
+      ? (this.allocation.stockBPercentage / 100) * initialInvestment
       : null;
 
     return html`
@@ -349,14 +349,14 @@ export class AssetAllocationParticipantView extends MobxLitElement {
             <li>
               ${this.stocks.stockA?.name}:
               ${amountA !== null
-                ? html`${formatCurrency(amountA, currency)}
+                ? html`${formatCurrency(amountA, currency, {decimals: 0})}
                   (${this.allocation.stockAPercentage}%)`
                 : html`${this.allocation.stockAPercentage}%`}
             </li>
             <li>
               ${this.stocks.stockB?.name}:
               ${amountB !== null
-                ? html`${formatCurrency(amountB, currency)}
+                ? html`${formatCurrency(amountB, currency, {decimals: 0})}
                   (${this.allocation.stockBPercentage}%)`
                 : html`${this.allocation.stockBPercentage}%`}
             </li>

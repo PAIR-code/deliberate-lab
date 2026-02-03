@@ -192,7 +192,9 @@ export function generateSVGReferenceLine(
     config.padding +
     (1 - (dataMaxValue - chartMin) / chartRange) *
       (config.height - 2 * config.padding);
-  const highLabel = formatCurrency(Math.round(dataMaxValue), config.currency);
+  const highLabel = formatCurrency(dataMaxValue, config.currency, {
+    decimals: 0,
+  });
   referenceLines += `
     <line x1="${config.leftPadding}" y1="${maxSvgY}" x2="${config.width - config.padding}" y2="${maxSvgY}" stroke="var(--md-sys-color-primary)" stroke-width="1" stroke-dasharray="2,2" />
     <text x="${config.width - config.padding - 5}" y="${maxSvgY - 5}" font-size="11" fill="var(--md-sys-color-primary)" text-anchor="end">High: ${highLabel}</text>`;
@@ -205,7 +207,9 @@ export function generateSVGReferenceLine(
       config.padding +
       (1 - (dataMinValue - chartMin) / chartRange) *
         (config.height - 2 * config.padding);
-    const lowLabel = formatCurrency(Math.round(dataMinValue), config.currency);
+    const lowLabel = formatCurrency(dataMinValue, config.currency, {
+      decimals: 0,
+    });
     referenceLines += `
       <line x1="${config.leftPadding}" y1="${minSvgY}" x2="${config.width - config.padding}" y2="${minSvgY}" stroke="var(--md-sys-color-error)" stroke-width="1" stroke-dasharray="2,2" />
       <text x="${config.width - config.padding - 5}" y="${minSvgY + 12}" font-size="11" fill="var(--md-sys-color-error)" text-anchor="end">Low: ${lowLabel}</text>`;
@@ -230,7 +234,7 @@ export function generateSVGValueLabels(
       config.padding +
       (1 - (value - chartMin) / chartRange) *
         (config.height - 2 * config.padding);
-    const valueLabel = formatCurrency(value, config.currency);
+    const valueLabel = formatCurrency(value, config.currency, {decimals: 0});
     labels += `<text x="${config.leftPadding - 5}" y="${tickY + 5}" font-size="12" fill="var(--md-sys-color-on-surface-variant)" text-anchor="end">${valueLabel}</text>`;
   }
 
@@ -417,10 +421,9 @@ export function generateStockInfoCards(
       cards.push({
         id: 'best-year',
         title: 'Best Year Performance',
-        value: formatCurrency(
-          Math.abs(Math.round(performance.best.dollarChange)),
-          currency,
-        ),
+        value: formatCurrency(performance.best.dollarChange, currency, {
+          decimals: 0,
+        }),
         subtext: `${performance.best.percentChange.toFixed(1)}% (${performance.best.year})`,
         enabled: true,
       });
@@ -430,10 +433,9 @@ export function generateStockInfoCards(
       cards.push({
         id: 'worst-year',
         title: 'Worst Year Performance',
-        value: formatCurrency(
-          Math.abs(Math.round(performance.worst.dollarChange)),
-          currency,
-        ),
+        value: formatCurrency(performance.worst.dollarChange, currency, {
+          decimals: 0,
+        }),
         subtext: `${performance.worst.percentChange.toFixed(1)}% (${performance.worst.year})`,
         enabled: true,
       });
