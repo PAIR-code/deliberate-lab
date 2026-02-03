@@ -1,3 +1,5 @@
+@use '../../sass/common';
+
 :host {
   display: block;
 }
@@ -6,7 +8,7 @@ img {
   max-width: 100%;
   width: 100%;
   height: auto;
-  border-radius: 12px;
+  border-radius: common.$spacing-large;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   transition:
     transform 0.2s ease,
@@ -16,12 +18,15 @@ img {
     transform: scale(1.02);
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
   }
+  &.clickable {
+    cursor: pointer;
+  }
 }
 
 video,
 audio {
   max-width: 100%;
-  border-radius: 8px;
+  border-radius: common.$spacing-medium;
 }
 
 a {
@@ -30,5 +35,23 @@ a {
 
   &:hover {
     text-decoration: underline;
+  }
+}
+
+/* Expanded mode (fullscreen) styles */
+:host([expanded]) {
+  img {
+    max-width: 100%;
+    max-height: 95vh;
+    width: auto;
+    object-fit: contain;
+    border-radius: common.$spacing-medium;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+
+    /* Disable hover effects in expanded mode */
+    &:hover {
+      transform: none;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    }
   }
 }

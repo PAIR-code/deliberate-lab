@@ -1,5 +1,7 @@
 import '../participant_profile/avatar_icon';
 import '../shared/media_preview';
+import '../shared/media_preview_fullscreen';
+import {MediaPreviewFullscreen} from '../shared/media_preview_fullscreen';
 
 import {MobxLitElement} from '@adobe/lit-mobx';
 
@@ -33,6 +35,37 @@ export class ChatMessageComponent extends MobxLitElement {
   private readonly participantService = core.getService(ParticipantService);
 
   @property() chat: ChatMessage | undefined = undefined;
+  private fullscreenElement: HTMLElement | null = null;
+
+  override disconnectedCallback() {
+    super.disconnectedCallback();
+    this.closeFullscreen();
+  }
+
+  private handleMaximize = (e: CustomEvent) => {
+    const file = e.detail.file as StoredFile;
+    this.showFullscreen(file);
+  };
+
+  private showFullscreen = (file: StoredFile) => {
+    if (!file) return;
+    this.closeFullscreen();
+
+    const el = document.createElement(
+      'media-preview-fullscreen',
+    ) as MediaPreviewFullscreen;
+    el.addEventListener('close', () => this.closeFullscreen());
+    document.body.appendChild(el);
+    el.file = file;
+    this.fullscreenElement = el;
+  };
+
+  private closeFullscreen = () => {
+    if (this.fullscreenElement) {
+      this.fullscreenElement.remove();
+      this.fullscreenElement = null;
+    }
+  };
 
   override render() {
     if (!this.chat) {
@@ -145,7 +178,11 @@ export class ChatMessageComponent extends MobxLitElement {
     }
 
     return files.map(
-      (file) => html`<media-preview .file=${file}></media-preview>`,
+      (file) =>
+        html`<media-preview
+          .file=${file}
+          @maximize=${this.handleMaximize}
+        ></media-preview>`,
     );
   }
 
