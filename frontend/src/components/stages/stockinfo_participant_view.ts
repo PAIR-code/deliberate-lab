@@ -128,7 +128,7 @@ export class StockInfoParticipantView extends MobxLitElement {
     const currency = this.stage?.currency ?? 'USD';
     const initialInvestment = this.stage?.initialInvestment ?? 1000;
     const chartTitle = this.stage?.showInvestmentGrowth
-      ? `${formatCurrency(initialInvestment, currency)} Investment Growth`
+      ? `${formatCurrency(initialInvestment, currency, {decimals: 0})} Investment Growth`
       : 'Price Chart';
 
     return html`
