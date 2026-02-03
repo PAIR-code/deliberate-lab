@@ -8,6 +8,8 @@ import '@material/web/button/text-button.js';
 import '@material/web/checkbox/checkbox.js';
 import '@material/web/icon/icon.js';
 import '@material/web/iconbutton/icon-button.js';
+import '@material/web/select/filled-select.js';
+import '@material/web/select/select-option.js';
 import '@material/web/textfield/filled-text-field.js';
 import '@material/web/textfield/outlined-text-field.js';
 
@@ -18,8 +20,11 @@ import {
   StockInfoStageConfig,
   Stock,
   StockInfoCard,
+  CurrencyCode,
+  CURRENCY_DISPLAY_NAMES,
   createStock,
   createStockInfoCard,
+  formatCurrency,
   parseStockData,
 } from '@deliberation-lab/utils';
 
@@ -101,9 +106,44 @@ export class StockInfoEditor extends MobxLitElement {
               ?checked=${this.stage.showInvestmentGrowth}
               @change=${this.updateShowInvestmentGrowth}
             ></md-checkbox>
-            Show $1,000 investment growth instead of stock price
+            Show investment growth instead of stock price
           </label>
         </div>
+
+        ${this.stage.showInvestmentGrowth
+          ? html`
+              <div class="setting-row investment-settings">
+                <md-filled-text-field
+                  type="number"
+                  label="Initial investment amount"
+                  .value=${String(this.stage.initialInvestment ?? 1000)}
+                  @input=${this.updateInitialInvestment}
+                  min="1"
+                  ?disabled=${!this.experimentEditor.canEditStages}
+                ></md-filled-text-field>
+                <md-filled-select
+                  class="currency-field"
+                  label="Currency"
+                  .value=${this.stage.currency ?? 'USD'}
+                  @change=${this.updateCurrency}
+                  ?disabled=${!this.experimentEditor.canEditStages}
+                >
+                  ${Object.values(CurrencyCode).map(
+                    (code) => html`
+                      <md-select-option
+                        value=${code}
+                        ?selected=${this.stage?.currency === code}
+                      >
+                        <div slot="headline">
+                          ${CURRENCY_DISPLAY_NAMES[code]}
+                        </div>
+                      </md-select-option>
+                    `,
+                  )}
+                </md-filled-select>
+              </div>
+            `
+          : nothing}
       </div>
     `;
   }
@@ -201,6 +241,7 @@ export class StockInfoEditor extends MobxLitElement {
     const lastDate = stock.parsedData[stock.parsedData.length - 1]?.date;
     const minPrice = Math.min(...stock.parsedData.map((d) => d.close));
     const maxPrice = Math.max(...stock.parsedData.map((d) => d.close));
+    const currency = this.stage?.currency ?? 'USD';
 
     return html`
       <div class="data-preview success">
@@ -209,7 +250,8 @@ export class StockInfoEditor extends MobxLitElement {
           <div><strong>${dataPoints}</strong> data points parsed</div>
           <div>Date range: ${firstDate} to ${lastDate}</div>
           <div>
-            Price range: $${minPrice.toFixed(2)} - $${maxPrice.toFixed(2)}
+            Price range: ${formatCurrency(minPrice, currency, {decimals: 2})} -
+            ${formatCurrency(maxPrice, currency, {decimals: 2})}
           </div>
         </div>
       </div>
@@ -341,6 +383,26 @@ export class StockInfoEditor extends MobxLitElement {
     this.experimentEditor.updateStage({
       ...this.stage,
       showInvestmentGrowth: checked,
+    });
+  };
+
+  private updateInitialInvestment = (e: Event) => {
+    if (!this.stage) return;
+    const value = parseInt((e.target as HTMLInputElement).value, 10);
+    if (!isNaN(value) && value > 0) {
+      this.experimentEditor.updateStage({
+        ...this.stage,
+        initialInvestment: value,
+      });
+    }
+  };
+
+  private updateCurrency = (e: Event) => {
+    if (!this.stage) return;
+    const value = (e.target as HTMLInputElement).value;
+    this.experimentEditor.updateStage({
+      ...this.stage,
+      currency: value,
     });
   };
 

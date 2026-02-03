@@ -812,6 +812,11 @@ class StockinfoStageConfig(BaseModel):
     visibleStockIds: List[str] | None = None
     showBestYearCard: bool
     showWorstYearCard: bool
+    requireViewAllStocks: bool
+    useQuarterlyMarkers: bool
+    showInvestmentGrowth: bool
+    initialInvestment: confloat(ge=1.0) | None = 1000
+    currency: str | None = "USD"
     introText: str | None = None
 
 

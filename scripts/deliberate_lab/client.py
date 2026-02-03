@@ -83,7 +83,9 @@ class Client:
         elif env is None or env == "dev":
             self.base_url = self.DEV_URL
         else:
-            raise ValueError(f"Unknown env '{env}'. Use 'prod', 'dev', or provide a base_url.")
+            raise ValueError(
+                f"Unknown env '{env}'. Use 'prod', 'dev', or provide a base_url."
+            )
         self.api_key = api_key or os.environ.get("DL_API_KEY")
         self.timeout = timeout
         if not self.api_key:
