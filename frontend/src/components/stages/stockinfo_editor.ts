@@ -8,6 +8,8 @@ import '@material/web/button/text-button.js';
 import '@material/web/checkbox/checkbox.js';
 import '@material/web/icon/icon.js';
 import '@material/web/iconbutton/icon-button.js';
+import '@material/web/select/filled-select.js';
+import '@material/web/select/select-option.js';
 import '@material/web/textfield/filled-text-field.js';
 import '@material/web/textfield/outlined-text-field.js';
 
@@ -18,8 +20,11 @@ import {
   StockInfoStageConfig,
   Stock,
   StockInfoCard,
+  CurrencyCode,
+  CURRENCY_DISPLAY_NAMES,
   createStock,
   createStockInfoCard,
+  formatCurrency,
   parseStockData,
 } from '@deliberation-lab/utils';
 
@@ -116,14 +121,26 @@ export class StockInfoEditor extends MobxLitElement {
                   min="1"
                   ?disabled=${!this.experimentEditor.canEditStages}
                 ></md-filled-text-field>
-                <md-filled-text-field
+                <md-filled-select
                   class="currency-field"
-                  label="Currency symbol"
-                  .value=${this.stage.currency ?? '$'}
-                  @input=${this.updateCurrency}
-                  placeholder="e.g., $, £, €"
+                  label="Currency"
+                  .value=${this.stage.currency ?? 'USD'}
+                  @change=${this.updateCurrency}
                   ?disabled=${!this.experimentEditor.canEditStages}
-                ></md-filled-text-field>
+                >
+                  ${Object.values(CurrencyCode).map(
+                    (code) => html`
+                      <md-select-option
+                        value=${code}
+                        ?selected=${this.stage?.currency === code}
+                      >
+                        <div slot="headline">
+                          ${CURRENCY_DISPLAY_NAMES[code]}
+                        </div>
+                      </md-select-option>
+                    `,
+                  )}
+                </md-filled-select>
               </div>
             `
           : nothing}
@@ -224,7 +241,7 @@ export class StockInfoEditor extends MobxLitElement {
     const lastDate = stock.parsedData[stock.parsedData.length - 1]?.date;
     const minPrice = Math.min(...stock.parsedData.map((d) => d.close));
     const maxPrice = Math.max(...stock.parsedData.map((d) => d.close));
-    const currency = this.stage?.currency ?? '$';
+    const currency = this.stage?.currency ?? 'USD';
 
     return html`
       <div class="data-preview success">
@@ -233,8 +250,8 @@ export class StockInfoEditor extends MobxLitElement {
           <div><strong>${dataPoints}</strong> data points parsed</div>
           <div>Date range: ${firstDate} to ${lastDate}</div>
           <div>
-            Price range: ${currency}${minPrice.toFixed(2)} -
-            ${currency}${maxPrice.toFixed(2)}
+            Price range: ${formatCurrency(minPrice, currency, {decimals: 2})} -
+            ${formatCurrency(maxPrice, currency, {decimals: 2})}
           </div>
         </div>
       </div>

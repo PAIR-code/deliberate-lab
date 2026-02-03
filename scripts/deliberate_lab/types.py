@@ -816,7 +816,7 @@ class StockinfoStageConfig(BaseModel):
     useQuarterlyMarkers: bool
     showInvestmentGrowth: bool
     initialInvestment: confloat(ge=1.0) | None = 1000
-    currency: str | None = "$"
+    currency: str | None = "USD"
     introText: str | None = None
 
 

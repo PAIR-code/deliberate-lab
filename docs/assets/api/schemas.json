@@ -3766,7 +3766,7 @@
           "type": "number"
         },
         "currency": {
-          "default": "$",
+          "default": "USD",
           "type": "string"
         },
         "introText": {

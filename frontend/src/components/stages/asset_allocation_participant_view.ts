@@ -26,6 +26,7 @@ import {
   Stock,
   StockAllocation,
   StockInfoStageConfig,
+  formatCurrency,
   generateSVGChart,
   generateDonutChartSVG,
   getStockTicker,
@@ -127,10 +128,10 @@ export class AssetAllocationParticipantView extends MobxLitElement {
       ? this.getStockInfoStage()
       : null;
     const initialInvestment = stockInfoStage?.initialInvestment;
-    const currency = stockInfoStage?.currency ?? '$';
+    const currency = stockInfoStage?.currency ?? 'USD';
 
     const allocationTitle = initialInvestment
-      ? `Asset Allocation (${currency}${this.formatAmount(initialInvestment, currency)})`
+      ? `Asset Allocation (${formatCurrency(initialInvestment, currency)})`
       : 'Asset Allocation';
 
     return html`
@@ -192,7 +193,7 @@ export class AssetAllocationParticipantView extends MobxLitElement {
       ? this.getStockInfoStage()
       : null;
     const initialInvestment = stockInfoStage?.initialInvestment;
-    const currency = stockInfoStage?.currency ?? '$';
+    const currency = stockInfoStage?.currency ?? 'USD';
 
     // Calculate amounts based on allocation percentages
     const amountA = initialInvestment
@@ -210,7 +211,7 @@ export class AssetAllocationParticipantView extends MobxLitElement {
             <span class="stock-name">${this.stocks.stockA?.name}</span>
             ${amountA !== null
               ? html`<span class="amount-display"
-                  >${currency}${this.formatAmount(amountA, currency)}</span
+                  >${formatCurrency(amountA, currency)}</span
                 >`
               : nothing}
             <span class="percentage-display"
@@ -236,7 +237,7 @@ export class AssetAllocationParticipantView extends MobxLitElement {
             <span class="stock-name">${this.stocks.stockB?.name}</span>
             ${amountB !== null
               ? html`<span class="amount-display"
-                  >${currency}${this.formatAmount(amountB, currency)}</span
+                  >${formatCurrency(amountB, currency)}</span
                 >`
               : nothing}
             <span class="percentage-display"
@@ -329,7 +330,7 @@ export class AssetAllocationParticipantView extends MobxLitElement {
       ? this.getStockInfoStage()
       : null;
     const initialInvestment = stockInfoStage?.initialInvestment;
-    const currency = stockInfoStage?.currency ?? '$';
+    const currency = stockInfoStage?.currency ?? 'USD';
 
     // Calculate amounts if initial investment is available
     const amountA = initialInvestment
@@ -348,14 +349,14 @@ export class AssetAllocationParticipantView extends MobxLitElement {
             <li>
               ${this.stocks.stockA?.name}:
               ${amountA !== null
-                ? html`${currency}${this.formatAmount(amountA, currency)}
+                ? html`${formatCurrency(amountA, currency)}
                   (${this.allocation.stockAPercentage}%)`
                 : html`${this.allocation.stockAPercentage}%`}
             </li>
             <li>
               ${this.stocks.stockB?.name}:
               ${amountB !== null
-                ? html`${currency}${this.formatAmount(amountB, currency)}
+                ? html`${formatCurrency(amountB, currency)}
                   (${this.allocation.stockBPercentage}%)`
                 : html`${this.allocation.stockBPercentage}%`}
             </li>
@@ -477,15 +478,6 @@ export class AssetAllocationParticipantView extends MobxLitElement {
       id: this.stage!.id,
       allocation,
     });
-  }
-
-  /** Format amount with locale-appropriate number grouping based on currency. */
-  private formatAmount(amount: number, currency: string): string {
-    // Use Indian numbering system (lakhs/crores) for rupees
-    if (currency === '₹') {
-      return amount.toLocaleString('en-IN');
-    }
-    return amount.toLocaleString();
   }
 }
 

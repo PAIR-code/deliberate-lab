@@ -62,7 +62,7 @@ export const StockInfoStageConfigData = Type.Object(
     useQuarterlyMarkers: Type.Boolean(),
     showInvestmentGrowth: Type.Boolean(),
     initialInvestment: Type.Number({minimum: 1, default: 1000}),
-    currency: Type.String({default: '$'}),
+    currency: Type.String({default: 'USD'}),
     introText: Type.Optional(Type.String()),
   },
   strict,

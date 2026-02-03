@@ -112,11 +112,6 @@
 md-filled-text-field,
 md-outlined-text-field {
   width: 100%;
-
-  &.currency-field {
-    width: auto;
-    max-width: 12ch; // Enough for a few characters plus label
-  }
 }
 
 .data-preview {

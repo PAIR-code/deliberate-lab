@@ -13,6 +13,7 @@ import {unsafeHTML} from 'lit/directives/unsafe-html.js';
 import {
   Stock,
   StockInfoStageConfig,
+  formatCurrency,
   generateSVGChart,
   generateStockInfoCards,
   parseStockData,
@@ -124,10 +125,10 @@ export class StockInfoParticipantView extends MobxLitElement {
   }
 
   private renderMainContent(stock: Stock) {
-    const currency = this.stage?.currency ?? '$';
+    const currency = this.stage?.currency ?? 'USD';
     const initialInvestment = this.stage?.initialInvestment ?? 1000;
     const chartTitle = this.stage?.showInvestmentGrowth
-      ? `${currency}${initialInvestment.toLocaleString()} Investment Growth`
+      ? `${formatCurrency(initialInvestment, currency)} Investment Growth`
       : 'Price Chart';
 
     return html`
