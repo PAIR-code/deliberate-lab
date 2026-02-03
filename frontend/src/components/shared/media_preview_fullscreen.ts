@@ -1,3 +1,5 @@
+import '@material/web/icon/icon.js';
+import '@material/web/iconbutton/icon-button.js';
 import './media_preview';
 
 import {LitElement, html, nothing, CSSResultGroup} from 'lit';
@@ -44,9 +46,20 @@ export class MediaPreviewFullscreen extends LitElement {
     }
 
     return html`
-      <div class="fullscreen-modal" @click=${this.close}>
+      <div
+        class="fullscreen-modal"
+        role="dialog"
+        aria-modal="true"
+        @click=${this.close}
+      >
+        <md-icon-button
+          class="close-button"
+          @click=${this.close}
+          aria-label="Close"
+        >
+          <md-icon>close</md-icon>
+        </md-icon-button>
         <div class="modal-content" @click=${(e: Event) => e.stopPropagation()}>
-          <button class="close-button" @click=${this.close}>✕</button>
           <media-preview
             .file=${this.file}
             .allowFullscreen=${false}

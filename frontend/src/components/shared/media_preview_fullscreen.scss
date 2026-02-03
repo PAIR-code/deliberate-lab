@@ -1,10 +1,12 @@
 @use '../../sass/common';
 
+$fullscreen-z-index: 1000; // Above all other content
+
 :host {
   display: block;
   position: fixed;
   inset: 0;
-  z-index: 10000;
+  z-index: $fullscreen-z-index;
 }
 
 .fullscreen-modal {
@@ -23,35 +25,19 @@
   position: relative;
   max-width: 95vw;
   max-height: 95vh;
-  display: flex;
-  align-items: center;
+  @include common.flex-row-align-center;
   justify-content: center;
   cursor: default;
 }
 
 .close-button {
-  @include common.flex-row-align-center;
   position: fixed;
-  top: 20px;
-  right: 20px;
-  background: var(--md-sys-color-inverse-surface, #313033);
-  color: var(--md-sys-color-inverse-on-surface, #f4eff4);
-  border: 1px solid var(--md-sys-color-inverse-on-surface, #f4eff4);
-  border-radius: 50%;
-  width: 40px;
-  height: 40px;
-  font-size: 24px;
-  cursor: pointer;
-  justify-content: center;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-  transition: all 0.2s ease;
+  top: common.$spacing-xl;
+  right: common.$spacing-xl;
   z-index: 2;
-  font-weight: bold;
-
-  &:hover {
-    background: var(--md-sys-color-surface-variant);
-    transform: scale(1.1);
-  }
+  --md-icon-button-icon-color: var(--md-sys-color-inverse-on-surface, #f4eff4);
+  background: var(--md-sys-color-inverse-surface, #313033);
+  border-radius: 50%;
 }
 
 @keyframes fadeIn {
