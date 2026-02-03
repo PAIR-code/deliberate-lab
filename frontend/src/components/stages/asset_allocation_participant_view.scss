@@ -1,4 +1,5 @@
 @use '../../sass/common';
+@use '../../sass/typescale';
 
 :host {
   @include common.flex-column;
@@ -45,9 +46,9 @@
   align-items: center;
 
   h3 {
+    @include typescale.title-medium;
     margin: 0;
     font-size: 1.25rem;
-    font-weight: 500;
     color: var(--md-sys-color-on-surface);
     text-align: left;
   }
@@ -78,7 +79,7 @@
   fill: var(--md-sys-color-on-surface);
 
   .stock-label {
-    font-weight: 500;
+    font-weight: var(--md-sys-typescale-label-medium-font-weight);
   }
 }
 
@@ -145,11 +146,10 @@
   gap: common.$spacing-medium;
 
   label {
+    @include typescale.label-medium;
     display: flex;
     align-items: center;
     gap: common.$spacing-medium;
-    font-size: 0.875rem;
-    font-weight: 500;
     color: var(--md-sys-color-on-surface);
 
     .stock-name {
@@ -157,13 +157,12 @@
     }
 
     .amount-display {
-      font-size: 1rem;
-      font-weight: 500;
+      @include typescale.label-large;
       color: var(--md-sys-color-on-surface-variant);
     }
 
     .percentage-display {
-      font-size: 1.125rem;
+      @include typescale.title-small;
       font-weight: 600;
       color: var(--md-sys-color-primary);
       margin-left: auto; // Push to the right
@@ -183,9 +182,9 @@
   min-height: 0; // Allow flex child to shrink
 
   h3 {
+    @include typescale.title-medium;
     margin: 0;
     font-size: 1.25rem;
-    font-weight: 500;
     color: var(--md-sys-color-on-surface);
     flex-shrink: 0; // Keep header fixed
   }
@@ -262,17 +261,17 @@
   }
 
   h4 {
+    @include typescale.title-small;
     margin: 0 0 common.$spacing-large 0; // Slightly more space below title
     font-size: 1.125rem;
-    font-weight: 500;
     color: var(--md-sys-color-on-surface);
   }
 
   p,
   div {
+    @include typescale.body-small;
     margin: 0;
-    font-size: 0.875rem;
-    line-height: 1.6; // Improved line spacing
+    line-height: 1.6;
     color: var(--md-sys-color-on-surface-variant);
   }
 
