@@ -48,6 +48,7 @@ export class ChatMessageComponent extends MobxLitElement {
   };
 
   private showFullscreen = (file: StoredFile) => {
+    if (!file) return;
     this.closeFullscreen();
 
     const el = document.createElement(
