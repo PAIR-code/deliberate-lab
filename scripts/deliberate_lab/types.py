@@ -1,4 +1,5 @@
 # pyright: reportInvalidTypeForm=false
+# pytype: disable=invalid-function-definition
 # pylint: disable=missing-module-docstring,missing-class-docstring,invalid-name,too-few-public-methods
 
 from __future__ import annotations
