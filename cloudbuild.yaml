@@ -1,0 +1,274 @@
+# cloudbuild.yaml for Deliberate Lab Backend Deployments
+#
+# This build config supports multiple deployment types controlled by the
+# substitution variable `_DEPLOYMENT_TYPE`.
+#
+# Usage:
+#   This variable MUST be specified in the build trigger.
+#
+# Allowed Values for `_DEPLOYMENT_TYPE`:
+#   - test:
+#       Runs linting, formatting checks, and unit tests for utils and functions.
+#       Does NOT deploy anything.
+#   - functions:
+#       Runs validation (lint/test) and builds the project.
+#       Deploys Cloud Functions.
+#   - rules:
+#       Deploys security rules for Firestore and Realtime Database.
+#   - indexes:
+#       Deploys Firestore indexes.
+#       Includes a safety mechanism to backup existing indexes before deploying.
+#   - all:
+#       Runs the full pipeline: validation, build, test, and deployment of
+#       functions, rules, and indexes.
+
+substitutions:
+  _DEPLOYMENT_TYPE: '' # Default value, MUST be overridden by trigger.
+
+options:
+  logging: CLOUD_LOGGING_ONLY
+  automapSubstitutions: true
+
+steps:
+# Validate Substitution Values
+- name: 'node:22'
+  id: ValidateSubstitutionValues
+  env:
+    - 'DEPLOYMENT_TYPES=" all functions indexes rules test "'
+  script: |
+    #!/usr/bin/env bash
+    set -euo pipefail
+    if [[ -z "${_DEPLOYMENT_TYPE}" ]]; then
+       echo "Validation Failed: '_DEPLOYMENT_TYPE' Substitution Value MUST be specified"
+       exit 1
+    fi
+    if [[ "${DEPLOYMENT_TYPES}" == *" ${_DEPLOYMENT_TYPE} "* ]]; then
+       echo "Validation Passed: '${_DEPLOYMENT_TYPE}' is in list: [${DEPLOYMENT_TYPES}]"
+    else
+       echo "Validation Failed: '${_DEPLOYMENT_TYPE}' is not in list: [${DEPLOYMENT_TYPES}]"
+       exit 1
+    fi
+  dir: '.'
+
+# Install Java 21 for Firebase Emulators
+- name: 'node:22'
+  id: InstallJava
+  env:
+    - 'DEPLOYMENT_TYPES=" all functions test "'
+  script: |
+    #!/usr/bin/env bash
+    set -euo pipefail
+    if [[ "${DEPLOYMENT_TYPES}" == *" ${_DEPLOYMENT_TYPE} "* ]]; then
+      echo "Installing Oracle JDK 21..."
+      apt-get update -y && apt-get install -y wget
+      wget -q https://download.oracle.com/java/21/latest/jdk-21_linux-x64_bin.tar.gz
+      mkdir -p java-runtime
+      tar -xzf jdk-21_linux-x64_bin.tar.gz -C java-runtime --strip-components=1
+      rm jdk-21_linux-x64_bin.tar.gz
+      export JAVA_HOME=$(pwd)/java-runtime
+      export PATH=$JAVA_HOME/bin:$PATH
+      echo "Java version check:"
+      java -version
+    else
+      echo "Skipping Java install for '${_DEPLOYMENT_TYPE}' deployment."
+    fi
+  waitFor: ['ValidateSubstitutionValues']
+  dir: '.'
+
+# Prepare Firebase Production Config
+- name: 'node:22'
+  id: PrepareFirebaseProdConfig
+  env:
+    - 'DEPLOYMENT_TYPES=" all functions indexes rules test "'
+  script: |
+    #!/usr/bin/env bash
+    set -euo pipefail
+    if [[ "${DEPLOYMENT_TYPES}" == *" ${_DEPLOYMENT_TYPE} "* ]]; then
+      # Removes 'predeploy' conditions since those are handled in separate steps.
+      echo "Prepare firebase-prod.json file..."
+      cat firebase.json | \
+        node -p '
+          const config = JSON.parse(require("fs").readFileSync(0, "utf-8"));
+          [].concat(config.functions).forEach(f => delete f.predeploy);
+          JSON.stringify(config, null, "  ")
+        ' \
+        | tee firebase-prod.json
+    else
+      echo "Skipping production config prep for '${_DEPLOYMENT_TYPE}' deployment."
+    fi
+  waitFor: ['ValidateSubstitutionValues']
+  dir: '.'
+
+# Install Dependencies
+- name: 'node:22'
+  id: NpmCI
+  script: |
+    #!/usr/bin/env bash
+    set -euo pipefail
+    echo "Node version:"
+    node -v
+    echo "NPM version:"
+    npm -v
+    echo "Installing dependencies..."
+    npm ci
+  waitFor: ['PrepareFirebaseProdConfig']
+  dir: '.'
+
+# Lint & Format Check
+- name: 'node:22'
+  id: LintCheck
+  env:
+    - 'DEPLOYMENT_TYPES=" all functions test "'
+  script: |
+    #!/usr/bin/env bash
+    set -euo pipefail
+    if [[ "${DEPLOYMENT_TYPES}" == *" ${_DEPLOYMENT_TYPE} "* ]]; then
+      echo "Running Lint/Format Check..."
+      # Scoped to backend directories to avoid blocking on frontend issues
+      npx prettier --check "functions/**/*.ts" "utils/**/*.ts"
+      npx eslint --quiet "functions/**/*.ts" "utils/**/*.ts"
+    else
+      echo "Skipping Lint/Format Check for '${_DEPLOYMENT_TYPE}' deployment."
+    fi
+  waitFor: ['NpmCI']
+  dir: '.'
+
+# Build Utils Workspace
+- name: 'node:22'
+  id: BuildUtils
+  env:
+    - 'DEPLOYMENT_TYPES=" all functions test "'
+  script: |
+    #!/usr/bin/env bash
+    set -euo pipefail
+    if [[ "${DEPLOYMENT_TYPES}" == *" ${_DEPLOYMENT_TYPE} "* ]]; then
+      echo "Building utils workspace..."
+      npm run build --workspace=utils
+    else
+      echo "Skipping Build Utils for '${_DEPLOYMENT_TYPE}' deployment."
+    fi
+  waitFor: ['LintCheck']
+  dir: '.'
+
+# Build Functions Workspace
+- name: 'node:22'
+  id: BuildFunctions
+  env:
+    - 'DEPLOYMENT_TYPES=" all functions test "'
+  script: |
+    #!/usr/bin/env bash
+    set -euo pipefail
+    if [[ "${DEPLOYMENT_TYPES}" == *" ${_DEPLOYMENT_TYPE} "* ]]; then
+      echo "Building functions workspace..."
+      npm run build --workspace=functions
+    else
+      echo "Skipping Build Functions for '${_DEPLOYMENT_TYPE}' deployment."
+    fi
+  waitFor: ['BuildUtils']
+  dir: '.'
+
+# Run Tests
+- name: 'node:22'
+  id: TestFunctions
+  env:
+    - 'DEPLOYMENT_TYPES=" all functions test "'
+  script: |
+    #!/usr/bin/env bash
+    set -euo pipefail
+    if [[ "${DEPLOYMENT_TYPES}" == *" ${_DEPLOYMENT_TYPE} "* ]]; then
+      export JAVA_HOME=$(pwd)/java-runtime
+      export PATH=$JAVA_HOME/bin:$PATH
+      echo "Running Backend Tests..."
+      npm test --workspace=utils
+      npm test --workspace=functions
+    else
+      echo "Skipping Tests for '${_DEPLOYMENT_TYPE}' deployment."
+    fi
+  waitFor: ['BuildFunctions', 'InstallJava']
+  dir: '.'
+
+# Deploy Functions Step
+- name: 'node:22'
+  id: DeployFirebaseFunctions
+  env:
+    - 'DEPLOYMENT_TYPES=" all functions "'
+  script: |
+    #!/usr/bin/env bash
+    set -euo pipefail
+    if [[ "${DEPLOYMENT_TYPES}" == *" ${_DEPLOYMENT_TYPE} "* ]]; then
+      echo "Deploying Functions..."
+      npx firebase deploy \
+        --config=firebase-prod.json \
+        --only functions \
+        --project ${PROJECT_ID} \
+        --non-interactive \
+        --force
+    else
+      echo "Skipping backend deploy for '${_DEPLOYMENT_TYPE}' deployment."
+    fi
+  waitFor: ['TestFunctions']
+  dir: '.'
+
+# Deploy Rules Step
+- name: 'node:22'
+  id: DeployFirebaseRules
+  env:
+    - 'DEPLOYMENT_TYPES=" all rules "'
+  script: |
+    #!/usr/bin/env bash
+    set -euo pipefail
+    if [[ "${DEPLOYMENT_TYPES}" == *" ${_DEPLOYMENT_TYPE} "* ]]; then
+      echo "Deploying Rules (Firestore, Database)..."
+      npx firebase deploy \
+        --config=firebase-prod.json \
+        --only firestore:rules,database:rules,storage \
+        --project ${PROJECT_ID} \
+        --non-interactive \
+        --force
+    else
+      echo "Skipping Firebase rules deploy for '${_DEPLOYMENT_TYPE}' deployment."
+    fi
+  waitFor: ['TestFunctions']
+  dir: '.'
+
+# Deploy Indexes Step (With Backup)
+- name: 'node:22'
+  id: DeployFirebaseIndexes
+  env:
+    - 'DEPLOYMENT_TYPES=" all indexes "'
+  script: |
+    #!/usr/bin/env bash
+    set -euo pipefail
+    if [[ "${DEPLOYMENT_TYPES}" == *" ${_DEPLOYMENT_TYPE} "* ]]; then
+      
+      echo "Fetching current production indexes (Backup)..."
+      npx firebase firestore:indexes --project ${PROJECT_ID} > existing_firestore_indexes.json
+      
+      echo "--- EXISTING FIRESTORE INDEXES BACKUP: START ---"
+      cat existing_firestore_indexes.json
+      echo "--- EXISTING FIRESTORE INDEXES BACKUP: END ---"
+
+      echo "Deploying Firestore Indexes..."
+      npx firebase deploy \
+        --config=firebase-prod.json \
+        --only firestore:indexes \
+        --project ${PROJECT_ID} \
+        --non-interactive \
+        --force
+
+      echo "Fetching deployed production indexes..."
+      npx firebase firestore:indexes --project ${PROJECT_ID} > deployed_firestore_indexes.json
+      
+      if cmp -s "existing_firestore_indexes.json" "deployed_firestore_indexes.json"; then
+        echo "Deployed Firestore Indexes match existing (no change)."
+      else
+        echo "--- DEPLOYED FIRESTORE INDEXES BACKUP: START ---"
+        cat deployed_firestore_indexes.json
+        echo "--- DEPLOYED FIRESTORE INDEXES BACKUP: END ---"
+      fi
+
+    else
+      echo "Skipping Firebase indexes deploy for '${_DEPLOYMENT_TYPE}' deployment."
+    fi
+  waitFor: ['TestFunctions']
+  dir: '.'
