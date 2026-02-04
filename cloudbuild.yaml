@@ -221,7 +221,7 @@ steps:
       echo "Deploying Rules (Firestore, Database)..."
       npx firebase deploy \
         --config=firebase-prod.json \
-        --only firestore:rules,database:rules,storage:rules \
+        --only firestore:rules,database:rules,storage \
         --project ${PROJECT_ID} \
         --non-interactive \
         --force
