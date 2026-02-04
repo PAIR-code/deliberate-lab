@@ -121,8 +121,8 @@ steps:
     echo "Deployment Type: '${_DEPLOYMENT_TYPE}'"
 
     if [[ "${_DEPLOYMENT_TYPE}" == "rules" ]]; then
-      echo "Deploying Rules (Firestore, Storage, Database)..."
-      npx firebase deploy --only firestore:rules,storage:rules,database:rules --project ${PROJECT_ID} --non-interactive --force
+      echo "Deploying Rules (Firestore, Database)..."
+      npx firebase deploy --only firestore:rules,database:rules --project ${PROJECT_ID} --non-interactive --force
     else
       echo "Skipping Firebase rules deploy for '${_DEPLOYMENT_TYPE}' deployment."
     fi
