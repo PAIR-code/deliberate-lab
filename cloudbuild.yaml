@@ -76,9 +76,13 @@ steps:
     #!/usr/bin/env bash
     set -e
     if [[ "${_DEPLOYMENT_TYPE}" == "functions" || "${_DEPLOYMENT_TYPE}" == "test" ]]; then
-      echo "Installing OpenJDK 21 for Firebase Emulator tests..."
-      apt-get update -y && apt-get install -y openjdk-21-jdk --no-install-recommends
-      apt-get clean && rm -rf /var/lib/apt/lists/*
+      echo "Installing Oracle JDK 21..."
+      apt-get update -y && apt-get install -y wget
+      wget -q https://download.oracle.com/java/21/latest/jdk-21_linux-x64_bin.deb
+      apt-get install -y ./jdk-21_linux-x64_bin.deb
+      rm jdk-21_linux-x64_bin.deb
+      export JAVA_HOME=/usr/lib/jvm/jdk-21-oracle-x64
+      export PATH=$JAVA_HOME/bin:$PATH
       echo "Java version check:"
       java -version
 
