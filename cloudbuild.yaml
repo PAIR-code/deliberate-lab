@@ -1,7 +1,7 @@
 # cloudbuild.yaml for Deliberate Lab Backend Deployments
 
 substitutions:
-  _DEPLOYMENT_TYPE: 'test' # Default value, will be overridden by triggers (test, functions, rules, indexes, all)
+  _DEPLOYMENT_TYPE: '' # Default value, MUST be overridden by trigger.
 
 options:
   logging: CLOUD_LOGGING_ONLY
