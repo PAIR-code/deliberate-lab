@@ -158,7 +158,7 @@ steps:
   waitFor: ['TestFunctions']
   dir: '.'
 
-# 8. Deploy Indexes Step
+# 8. Deploy Indexes Step (With Backup)
 - name: 'node:22'
   id: DeployFirebaseIndexes
   env:
@@ -167,6 +167,14 @@ steps:
     #!/usr/bin/env bash
     set -eu
     if [[ "${DEPLOYMENT_TYPES}" == *" ${_DEPLOYMENT_TYPE} "* ]]; then
+      
+      echo "Fetching current production indexes (Backup)..."
+      npx firebase firestore:indexes --project ${PROJECT_ID} > existing_firestore_indexes.json
+      
+      echo "--- EXISTING FIRESTORE INDEXES BACKUP: START ---"
+      cat existing_firestore_indexes.json
+      echo "--- EXISTING FIRESTORE INDEXES BACKUP: END ---"
+
       echo "Deploying Firestore Indexes..."
       npx firebase deploy --only firestore:indexes --project ${PROJECT_ID} --non-interactive --force
     else
