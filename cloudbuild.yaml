@@ -1,4 +1,26 @@
 # cloudbuild.yaml for Deliberate Lab Backend Deployments
+#
+# This build config supports multiple deployment types controlled by the
+# substitution variable `_DEPLOYMENT_TYPE`.
+#
+# Usage:
+#   This variable MUST be specified in the build trigger.
+#
+# Allowed Values for `_DEPLOYMENT_TYPE`:
+#   - test:
+#       Runs linting, formatting checks, and unit tests for utils and functions.
+#       Does NOT deploy anything.
+#   - functions:
+#       Runs validation (lint/test) and builds the project.
+#       Deploys Cloud Functions.
+#   - rules:
+#       Deploys security rules for Firestore and Realtime Database.
+#   - indexes:
+#       Deploys Firestore indexes.
+#       Includes a safety mechanism to backup existing indexes before deploying.
+#   - all:
+#       Runs the full pipeline: validation, build, test, and deployment of
+#       functions, rules, and indexes.
 
 substitutions:
   _DEPLOYMENT_TYPE: '' # Default value, MUST be overridden by trigger.
@@ -8,7 +30,7 @@ options:
   automapSubstitutions: true
 
 steps:
-# Validate Substition Values
+# Validate Substitution Values
 - name: 'node:22'
   id: ValidateSubstitutionValues
   env:
