@@ -37,7 +37,7 @@ steps:
     - 'DEPLOYMENT_TYPES=" all functions indexes rules test "'
   script: |
     #!/usr/bin/env bash
-    set -eu
+    set -euo pipefail
     if [[ -z "${_DEPLOYMENT_TYPE}" ]]; then
        echo "Validation Failed: '_DEPLOYMENT_TYPE' Substitution Value MUST be specified"
        exit 1
@@ -57,7 +57,7 @@ steps:
     - 'DEPLOYMENT_TYPES=" all functions indexes rules test "'
   script: |
     #!/usr/bin/env bash
-    set -eu
+    set -euo pipefail
     if [[ "${DEPLOYMENT_TYPES}" == *" ${_DEPLOYMENT_TYPE} "* ]]; then
       # Removes 'predeploy' conditions since those are handled in separate steps.
       echo "Prepare firebase-prod.json file..."
@@ -79,7 +79,7 @@ steps:
   id: NpmCI
   script: |
     #!/usr/bin/env bash
-    set -eu
+    set -euo pipefail
     echo "Node version:"
     node -v
     echo "NPM version:"
@@ -96,7 +96,7 @@ steps:
     - 'DEPLOYMENT_TYPES=" all functions test "'
   script: |
     #!/usr/bin/env bash
-    set -eu
+    set -euo pipefail
     if [[ "${DEPLOYMENT_TYPES}" == *" ${_DEPLOYMENT_TYPE} "* ]]; then
       echo "Running Lint/Format Check..."
       # Scoped to backend directories to avoid blocking on frontend issues
@@ -115,7 +115,7 @@ steps:
     - 'DEPLOYMENT_TYPES=" all functions test "'
   script: |
     #!/usr/bin/env bash
-    set -eu
+    set -euo pipefail
     if [[ "${DEPLOYMENT_TYPES}" == *" ${_DEPLOYMENT_TYPE} "* ]]; then
       echo "Building utils workspace..."
       npm run build --workspace=utils
@@ -132,7 +132,7 @@ steps:
     - 'DEPLOYMENT_TYPES=" all functions test "'
   script: |
     #!/usr/bin/env bash
-    set -eu
+    set -euo pipefail
     if [[ "${DEPLOYMENT_TYPES}" == *" ${_DEPLOYMENT_TYPE} "* ]]; then
       echo "Building functions workspace..."
       npm run build --workspace=functions
@@ -149,7 +149,7 @@ steps:
     - 'DEPLOYMENT_TYPES=" all functions test "'
   script: |
     #!/usr/bin/env bash
-    set -eu
+    set -euo pipefail
     if [[ "${DEPLOYMENT_TYPES}" == *" ${_DEPLOYMENT_TYPE} "* ]]; then
       echo "Installing Oracle JDK 21..."
       apt-get update -y && apt-get install -y wget
@@ -177,7 +177,7 @@ steps:
     - 'DEPLOYMENT_TYPES=" all functions "'
   script: |
     #!/usr/bin/env bash
-    set -eu
+    set -euo pipefail
     if [[ "${DEPLOYMENT_TYPES}" == *" ${_DEPLOYMENT_TYPE} "* ]]; then
       echo "Deploying Functions..."
       npx firebase deploy \
@@ -199,7 +199,7 @@ steps:
     - 'DEPLOYMENT_TYPES=" all rules "'
   script: |
     #!/usr/bin/env bash
-    set -eu
+    set -euo pipefail
     if [[ "${DEPLOYMENT_TYPES}" == *" ${_DEPLOYMENT_TYPE} "* ]]; then
       echo "Deploying Rules (Firestore, Database)..."
       npx firebase deploy \
@@ -221,7 +221,7 @@ steps:
     - 'DEPLOYMENT_TYPES=" all indexes "'
   script: |
     #!/usr/bin/env bash
-    set -eu
+    set -euo pipefail
     if [[ "${DEPLOYMENT_TYPES}" == *" ${_DEPLOYMENT_TYPE} "* ]]; then
       
       echo "Fetching current production indexes (Backup)..."
