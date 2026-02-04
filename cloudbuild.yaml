@@ -61,10 +61,11 @@ steps:
     if [[ "${DEPLOYMENT_TYPES}" == *" ${_DEPLOYMENT_TYPE} "* ]]; then
       echo "Installing Oracle JDK 21..."
       apt-get update -y && apt-get install -y wget
-      wget -q https://download.oracle.com/java/21/latest/jdk-21_linux-x64_bin.deb
-      apt-get install -y ./jdk-21_linux-x64_bin.deb
-      rm jdk-21_linux-x64_bin.deb
-      export JAVA_HOME=/usr/lib/jvm/jdk-21-oracle-x64
+      wget -q https://download.oracle.com/java/21/latest/jdk-21_linux-x64_bin.tar.gz
+      mkdir -p java-runtime
+      tar -xzf jdk-21_linux-x64_bin.tar.gz -C java-runtime --strip-components=1
+      rm jdk-21_linux-x64_bin.tar.gz
+      export JAVA_HOME=$(pwd)/java-runtime
       export PATH=$JAVA_HOME/bin:$PATH
       echo "Java version check:"
       java -version
@@ -175,6 +176,8 @@ steps:
     #!/usr/bin/env bash
     set -euo pipefail
     if [[ "${DEPLOYMENT_TYPES}" == *" ${_DEPLOYMENT_TYPE} "* ]]; then
+      export JAVA_HOME=$(pwd)/java-runtime
+      export PATH=$JAVA_HOME/bin:$PATH
       echo "Running Backend Tests..."
       npm test --workspace=utils
       npm test --workspace=functions
