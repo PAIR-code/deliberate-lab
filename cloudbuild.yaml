@@ -1,0 +1,143 @@
+# cloudbuild.yaml for Deliberate Lab Backend Deployments
+
+substitutions:
+  _DEPLOYMENT_TYPE: 'test' # Default value, will be overridden by triggers (test, functions, rules, indexes)
+
+options:
+  logging: CLOUD_LOGGING_ONLY
+  automapSubstitutions: true
+
+steps:
+# 1. Install Dependencies
+- name: 'node:22'
+  id: NpmCI
+  script: |
+    #!/usr/bin/env bash
+    set -e
+    echo "Node version:"
+    node -v
+    echo "NPM version:"
+    npm -v
+    echo "Installing dependencies..."
+    npm ci
+  dir: '.'
+
+# 2. Lint & Format Check
+- name: 'node:22'
+  id: LintCheck
+  script: |
+    #!/usr/bin/env bash
+    set -e
+    if [[ "${_DEPLOYMENT_TYPE}" == "functions" || "${_DEPLOYMENT_TYPE}" == "test" ]]; then
+      echo "Running Lint/Format Check..."
+      # Scoped to backend directories to avoid blocking on frontend issues
+      npx prettier --check "functions/**/*.ts" "utils/**/*.ts"
+      npx eslint --quiet "functions/**/*.ts" "utils/**/*.ts"
+    else
+      echo "Skipping Lint/Format Check for '${_DEPLOYMENT_TYPE}' deployment."
+    fi
+  waitFor: ['NpmCI']
+  dir: '.'
+
+# 3. Build Utils Workspace
+- name: 'node:22'
+  id: BuildUtils
+  script: |
+    #!/usr/bin/env bash
+    set -e
+    if [[ "${_DEPLOYMENT_TYPE}" == "functions" || "${_DEPLOYMENT_TYPE}" == "test" ]]; then
+      echo "Building utils workspace..."
+      npm run build --workspace=utils
+    else
+      echo "Skipping Build Utils for '${_DEPLOYMENT_TYPE}' deployment."
+    fi
+  waitFor: ['LintCheck']
+  dir: '.'
+
+# 4. Build Functions Workspace
+- name: 'node:22'
+  id: BuildFunctions
+  script: |
+    #!/usr/bin/env bash
+    set -e
+    if [[ "${_DEPLOYMENT_TYPE}" == "functions" || "${_DEPLOYMENT_TYPE}" == "test" ]]; then
+      echo "Building functions workspace..."
+      npm run build --workspace=functions
+    else
+      echo "Skipping Build Functions for '${_DEPLOYMENT_TYPE}' deployment."
+    fi
+  waitFor: ['BuildUtils']
+  dir: '.'
+
+# 5. Run Tests (Install Java 21 for functions tests)
+- name: 'node:22'
+  id: TestFunctions
+  script: |
+    #!/usr/bin/env bash
+    set -e
+    if [[ "${_DEPLOYMENT_TYPE}" == "functions" || "${_DEPLOYMENT_TYPE}" == "test" ]]; then
+      echo "Installing OpenJDK 21 for Firebase Emulator tests..."
+      apt-get update -y && apt-get install -y openjdk-21-jdk --no-install-recommends
+      apt-get clean && rm -rf /var/lib/apt/lists/*
+      echo "Java version check:"
+      java -version
+
+      echo "Running Backend Tests..."
+      npm test --workspace=utils
+      npm test --workspace=functions
+    else
+      echo "Skipping Tests for '${_DEPLOYMENT_TYPE}' deployment."
+    fi
+  waitFor: ['BuildFunctions']
+  dir: '.'
+
+# 6. Deploy Functions Step
+- name: 'node:22'
+  id: DeployFirebaseFunctions
+  script: |
+    #!/usr/bin/env bash
+    set -e
+    echo "Deployment Type: '${_DEPLOYMENT_TYPE}'"
+
+    if [[ "${_DEPLOYMENT_TYPE}" == "functions" ]]; then
+      echo "Deploying Functions..."
+      npx firebase deploy --only functions --project ${PROJECT_ID} --no-predeploy --non-interactive --force
+    else
+      echo "Skipping backend deploy for '${_DEPLOYMENT_TYPE}' deployment."
+    fi
+  waitFor: ['TestFunctions']
+  dir: '.'
+
+# 7. Deploy Rules Step
+- name: 'node:22'
+  id: DeployFirebaseRules
+  script: |
+    #!/usr/bin/env bash
+    set -e
+    echo "Deployment Type: '${_DEPLOYMENT_TYPE}'"
+
+    if [[ "${_DEPLOYMENT_TYPE}" == "rules" ]]; then
+      echo "Deploying Rules (Firestore, Storage, Database)..."
+      npx firebase deploy --only firestore:rules,storage:rules,database:rules --project ${PROJECT_ID} --non-interactive --force
+    else
+      echo "Skipping Firebase rules deploy for '${_DEPLOYMENT_TYPE}' deployment."
+    fi
+  waitFor: ['NpmCI']
+  dir: '.'
+
+# 8. Deploy Indexes Step
+- name: 'node:22'
+  id: DeployFirebaseIndexes
+  script: |
+    #!/usr/bin/env bash
+    set -e
+    echo "Deployment Type: '${_DEPLOYMENT_TYPE}'"
+
+    if [[ "${_DEPLOYMENT_TYPE}" == "indexes" ]]; then
+      echo "Deploying Firestore Indexes..."
+      npx firebase deploy --only firestore:indexes --project ${PROJECT_ID} --non-interactive --force
+    else
+      echo "Skipping Firebase indexes deploy for '${_DEPLOYMENT_TYPE}' deployment."
+    fi
+  waitFor: ['NpmCI']
+  dir: '.'
