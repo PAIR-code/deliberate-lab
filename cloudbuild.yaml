@@ -8,7 +8,7 @@ options:
   automapSubstitutions: true
 
 steps:
-# 0. Validate Substition Values
+# Validate Substition Values
 - name: 'node:22'
   id: ValidateSubstitutionValues
   env:
@@ -28,7 +28,31 @@ steps:
     fi
   dir: '.'
 
-# 1. Install Dependencies
+# Prepare Firebase Production Config
+- name: 'node:22'
+  id: PrepareFirebaseProdConfig
+  env:
+    - 'DEPLOYMENT_TYPES=" all functions indexes rules test "'
+  script: |
+    #!/usr/bin/env bash
+    set -eu
+    if [[ "${DEPLOYMENT_TYPES}" == *" ${_DEPLOYMENT_TYPE} "* ]]; then
+      # Removes 'predeploy' conditions since those are handled in separate steps.
+      echo "Prepare firebase-prod.json file..."
+      cat firebase.json | \
+        node -p '
+          const config = JSON.parse(require("fs").readFileSync(0, "utf-8"));
+          [].concat(config.functions).forEach(f => delete f.predeploy);
+          JSON.stringify(config, null, "  ")
+        ' \
+        | tee firebase-prod.json
+    else
+      echo "Skipping production config prep for '${_DEPLOYMENT_TYPE}' deployment."
+    fi
+  waitFor: ['ValidateSubstitutionValues']
+  dir: '.'
+
+# Install Dependencies
 - name: 'node:22'
   id: NpmCI
   script: |
@@ -40,10 +64,10 @@ steps:
     npm -v
     echo "Installing dependencies..."
     npm ci
-  waitFor: ['ValidateSubstitutionValues']
+  waitFor: ['PrepareFirebaseProdConfig']
   dir: '.'
 
-# 2. Lint & Format Check
+# Lint & Format Check
 - name: 'node:22'
   id: LintCheck
   env:
@@ -62,7 +86,7 @@ steps:
   waitFor: ['NpmCI']
   dir: '.'
 
-# 3. Build Utils Workspace
+# Build Utils Workspace
 - name: 'node:22'
   id: BuildUtils
   env:
@@ -79,7 +103,7 @@ steps:
   waitFor: ['LintCheck']
   dir: '.'
 
-# 4. Build Functions Workspace
+# Build Functions Workspace
 - name: 'node:22'
   id: BuildFunctions
   env:
@@ -96,7 +120,7 @@ steps:
   waitFor: ['BuildUtils']
   dir: '.'
 
-# 5. Run Tests (Install Java 21 for functions tests)
+# Run Tests (Install Java 21 for functions tests)
 - name: 'node:22'
   id: TestFunctions
   env:
@@ -124,7 +148,7 @@ steps:
   waitFor: ['BuildFunctions']
   dir: '.'
 
-# 6. Deploy Functions Step
+# Deploy Functions Step
 - name: 'node:22'
   id: DeployFirebaseFunctions
   env:
@@ -134,14 +158,19 @@ steps:
     set -eu
     if [[ "${DEPLOYMENT_TYPES}" == *" ${_DEPLOYMENT_TYPE} "* ]]; then
       echo "Deploying Functions..."
-      npx firebase deploy --only functions --project ${PROJECT_ID} --no-predeploy --non-interactive --force
+      npx firebase deploy \
+        --config=firebase-prod.json \
+        --only functions \
+        --project ${PROJECT_ID} \
+        --non-interactive \
+        --force
     else
       echo "Skipping backend deploy for '${_DEPLOYMENT_TYPE}' deployment."
     fi
   waitFor: ['TestFunctions']
   dir: '.'
 
-# 7. Deploy Rules Step
+# Deploy Rules Step
 - name: 'node:22'
   id: DeployFirebaseRules
   env:
@@ -151,14 +180,19 @@ steps:
     set -eu
     if [[ "${DEPLOYMENT_TYPES}" == *" ${_DEPLOYMENT_TYPE} "* ]]; then
       echo "Deploying Rules (Firestore, Database)..."
-      npx firebase deploy --only firestore:rules,database:rules --project ${PROJECT_ID} --non-interactive --force
+      npx firebase deploy \
+        --config=firebase-prod.json \
+        --only firestore:rules,database:rules \
+        --project ${PROJECT_ID} \
+        --non-interactive \
+        --force
     else
       echo "Skipping Firebase rules deploy for '${_DEPLOYMENT_TYPE}' deployment."
     fi
   waitFor: ['TestFunctions']
   dir: '.'
 
-# 8. Deploy Indexes Step (With Backup)
+# Deploy Indexes Step (With Backup)
 - name: 'node:22'
   id: DeployFirebaseIndexes
   env:
@@ -176,7 +210,12 @@ steps:
       echo "--- EXISTING FIRESTORE INDEXES BACKUP: END ---"
 
       echo "Deploying Firestore Indexes..."
-      npx firebase deploy --only firestore:indexes --project ${PROJECT_ID} --non-interactive --force
+      npx firebase deploy \
+        --config=firebase-prod.json \
+        --only firestore:indexes \
+        --project ${PROJECT_ID} \
+        --non-interactive \
+        --force
 
       echo "Fetching deployed production indexes..."
       npx firebase firestore:indexes --project ${PROJECT_ID} > deployed_firestore_indexes.json
