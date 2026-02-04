@@ -17,7 +17,7 @@ steps:
     #!/usr/bin/env bash
     set -eu
     if [[ -z "${_DEPLOYMENT_TYPE}" ]]; then
-       echo "Validation Failed: '${_DEPLOYMENT_TYPE}' MUST be specified"
+       echo "Validation Failed: '_DEPLOYMENT_TYPE' Substitution Value MUST be specified"
        exit 1
     fi
     if [[ "${DEPLOYMENT_TYPES}" == *" ${_DEPLOYMENT_TYPE} "* ]]; then
