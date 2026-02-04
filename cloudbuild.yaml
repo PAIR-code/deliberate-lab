@@ -50,6 +50,30 @@ steps:
     fi
   dir: '.'
 
+# Install Java 21 for Firebase Emulators
+- name: 'node:22'
+  id: InstallJava
+  env:
+    - 'DEPLOYMENT_TYPES=" all functions test "'
+  script: |
+    #!/usr/bin/env bash
+    set -euo pipefail
+    if [[ "${DEPLOYMENT_TYPES}" == *" ${_DEPLOYMENT_TYPE} "* ]]; then
+      echo "Installing Oracle JDK 21..."
+      apt-get update -y && apt-get install -y wget
+      wget -q https://download.oracle.com/java/21/latest/jdk-21_linux-x64_bin.deb
+      apt-get install -y ./jdk-21_linux-x64_bin.deb
+      rm jdk-21_linux-x64_bin.deb
+      export JAVA_HOME=/usr/lib/jvm/jdk-21-oracle-x64
+      export PATH=$JAVA_HOME/bin:$PATH
+      echo "Java version check:"
+      java -version
+    else
+      echo "Skipping Java install for '${_DEPLOYMENT_TYPE}' deployment."
+    fi
+  waitFor: ['ValidateSubstitutionValues']
+  dir: '.'
+
 # Prepare Firebase Production Config
 - name: 'node:22'
   id: PrepareFirebaseProdConfig
@@ -142,7 +166,7 @@ steps:
   waitFor: ['BuildUtils']
   dir: '.'
 
-# Run Tests (Install Java 21 for functions tests)
+# Run Tests
 - name: 'node:22'
   id: TestFunctions
   env:
@@ -151,23 +175,13 @@ steps:
     #!/usr/bin/env bash
     set -euo pipefail
     if [[ "${DEPLOYMENT_TYPES}" == *" ${_DEPLOYMENT_TYPE} "* ]]; then
-      echo "Installing Oracle JDK 21..."
-      apt-get update -y && apt-get install -y wget
-      wget -q https://download.oracle.com/java/21/latest/jdk-21_linux-x64_bin.deb
-      apt-get install -y ./jdk-21_linux-x64_bin.deb
-      rm jdk-21_linux-x64_bin.deb
-      export JAVA_HOME=/usr/lib/jvm/jdk-21-oracle-x64
-      export PATH=$JAVA_HOME/bin:$PATH
-      echo "Java version check:"
-      java -version
-
       echo "Running Backend Tests..."
       npm test --workspace=utils
       npm test --workspace=functions
     else
       echo "Skipping Tests for '${_DEPLOYMENT_TYPE}' deployment."
     fi
-  waitFor: ['BuildFunctions']
+  waitFor: ['BuildFunctions', 'InstallJava']
   dir: '.'
 
 # Deploy Functions Step
