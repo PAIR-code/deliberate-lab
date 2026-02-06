@@ -16,7 +16,7 @@ import {AuthGuard} from './utils/auth-guard';
 // Input structure: { creatorId, agentConfig, promptConfig }
 // Validation: utils/src/agent.validation.ts
 // ****************************************************************************
-export const testAgentConfig = onCall(async (request) => {
+export const testAgentConfig = onCall(async (request): ModelResponseStatus => {
   const {data} = request;
   const agentConfig = data.agentConfig;
   const promptConfig = data.promptConfig;
@@ -51,9 +51,5 @@ export const testAgentConfig = onCall(async (request) => {
     response,
   );
 
-  if (response.status !== ModelResponseStatus.OK) {
-    return {data: `Error: ${response.status}: ${response.errorMessage}`};
-  }
-
-  return {data: response.text};
+  return response;
 });

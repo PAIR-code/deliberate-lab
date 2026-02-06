@@ -32,6 +32,8 @@ import {
   MediatorStatus,
   MetadataConfig,
   ModelGenerationConfig,
+  ModelResponse,
+  ModelResponseStatus,
   ParticipantProfileExtended,
   ParticipantStatus,
   ProfileAgentConfig,
@@ -1036,21 +1038,20 @@ export class ExperimentManager extends Service {
   /** Test given agent config. */
   async testAgentConfig(
     agentConfig: AgentPersonaConfig,
-    promptConfig: TestAgentPromptConfig,
-  ) {
-    let response = '';
+    promptConfig: BaseAgentPromptConfig,
+  ): Promise<ModelResponse> {
     const creatorId = this.sp.authService.experimenterData?.email;
-    if (creatorId) {
-      response =
-        (
-          await testAgentConfigCallable(this.sp.firebaseService.functions, {
-            creatorId,
-            agentConfig,
-            promptConfig,
-          })
-        ).data ?? '';
+    if (!creatorId) {
+      return {
+        status: ModelResponseStatus.INTERNAL_ERROR,
+        errorMessage: 'experimenter email not found',
+      };
     }
-    return response;
+    return await testAgentConfigCallable(this.sp.firebaseService.functions, {
+      creatorId,
+      agentConfig,
+      promptConfig,
+    });
   }
 
   /** Acknowledge alert message. */
