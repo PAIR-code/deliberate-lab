@@ -32,7 +32,7 @@ export const DefaultPayoutItemData = Type.Object(
     baseCurrencyAmount: Type.Number(),
     randomSelectionId: Type.String(),
   },
-  strict,
+  {...strict, $id: 'DefaultPayoutItem'},
 );
 
 /** ChipPayoutItem input validation. */
@@ -46,7 +46,7 @@ export const ChipPayoutItemData = Type.Object(
     stageId: Type.String(),
     baseCurrencyAmount: Type.Number(),
   },
-  strict,
+  {...strict, $id: 'ChipPayoutItem'},
 );
 
 /** SurveyPayoutItem input validation. */
@@ -65,7 +65,7 @@ export const SurveyPayoutItemData = Type.Object(
       Type.Union([Type.Number(), Type.Null()]),
     ),
   },
-  strict,
+  {...strict, $id: 'SurveyPayoutItem'},
 );
 
 /** PayoutItem input validation. */
@@ -87,5 +87,5 @@ export const PayoutStageConfigData = Type.Object(
     payoutItems: Type.Array(PayoutItemData),
     averageAllPayoutItems: Type.Boolean(),
   },
-  strict,
+  {...strict, $id: 'PayoutStageConfig'},
 );

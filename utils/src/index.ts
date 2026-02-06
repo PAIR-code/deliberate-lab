@@ -54,8 +54,13 @@ export * from './profile_sets';
 // TODO: Organize these files into 'agent' subdirectory
 export * from './agent';
 export * from './agent.validation';
+export * from './model_config';
 export * from './model_response';
+export * from './prompt.validation';
+export * from './providers';
+export * from './providers.validation';
 export * from './structured_output';
+export * from './structured_output.validation';
 export * from './structured_prompt';
 
 // Sort
@@ -147,6 +152,7 @@ export * from './utils/cache.utils';
 export * from './utils/condition';
 export * from './utils/condition.utils';
 export * from './utils/condition.validation';
+export * from './utils/currency.utils';
 export * from './utils/object.utils';
 export * from './utils/random.utils';
 export * from './utils/string.utils';

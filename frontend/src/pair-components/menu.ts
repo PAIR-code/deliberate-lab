@@ -23,8 +23,31 @@ export class Menu extends MobxLitElement {
   @property({type: Boolean}) disabled = false;
   @property({type: Boolean}) loading = false;
   @property({type: Boolean}) useIconButton = false;
+  @property({type: Boolean}) alignStart = false;
 
   @state() showMenu = false;
+
+  private boundHandleClickOutside = this.handleClickOutside.bind(this);
+
+  override connectedCallback() {
+    super.connectedCallback();
+    document.addEventListener('click', this.boundHandleClickOutside);
+  }
+
+  override disconnectedCallback() {
+    super.disconnectedCallback();
+    document.removeEventListener('click', this.boundHandleClickOutside);
+  }
+
+  private handleClickOutside(event: Event) {
+    if (!this.showMenu) return;
+
+    // Use composedPath to handle shadow DOM correctly
+    const path = event.composedPath();
+    if (!path.includes(this)) {
+      this.showMenu = false;
+    }
+  }
 
   override render() {
     const toggleMenu = () => {
@@ -34,6 +57,7 @@ export class Menu extends MobxLitElement {
     const menuClasses = classMap({
       'menu-wrapper': true,
       'show-menu': this.showMenu && !this.disabled,
+      'align-start': this.alignStart,
     });
 
     if (this.useIconButton) {

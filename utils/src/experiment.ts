@@ -39,6 +39,33 @@ import {VariableConfig} from './variables';
  */
 export const EXPERIMENT_VERSION_ID = 19;
 
+/** Cohort definition for pre-defined cohorts/study arms. */
+export interface CohortDefinition {
+  id: string; // Generated UUID for this definition object
+  alias: string; // Human-readable identifier used in config (e.g., 'arm-pro-ai')
+  name: string; // Display name for the cohort
+  description?: string; // Optional documentation
+  generatedCohortId?: string; // Set once when cohort is created from this definition
+  // Override experiment.defaultCohortConfig.maxParticipantsPerCohort for cohorts created from this definition.
+  // If set, enables overflow: when cohort is full, new cohorts with same alias are created.
+  // If undefined, uses experiment.defaultCohortConfig.maxParticipantsPerCohort.
+  maxParticipantsPerCohort?: number;
+}
+
+/** Create a cohort definition. */
+export function createCohortDefinition(
+  config: Partial<CohortDefinition> = {},
+): CohortDefinition {
+  return {
+    id: config.id ?? generateId(),
+    alias: config.alias ?? '',
+    name: config.name ?? 'New Cohort',
+    description: config.description,
+    generatedCohortId: config.generatedCohortId,
+    maxParticipantsPerCohort: config.maxParticipantsPerCohort,
+  };
+}
+
 /** Experiment. */
 export interface Experiment {
   id: string;
@@ -52,6 +79,7 @@ export interface Experiment {
   cohortLockMap: Record<string, boolean>; // maps cohort ID to is locked
   variableConfigs?: VariableConfig[]; // list of variable configs used in experiment
   variableMap?: Record<string, string>; // variable to assigned value
+  cohortDefinitions?: CohortDefinition[]; // pre-defined cohorts for individual routing
 }
 
 /** Experiment template (used to load experiments). */
@@ -96,17 +124,19 @@ export function createExperimentConfig(
   config: Partial<Experiment> = {},
 ): Experiment {
   return {
-    id: config.id ?? generateId(),
+    id: config.id || generateId(),
     versionId: EXPERIMENT_VERSION_ID,
     metadata: config.metadata ?? createMetadataConfig(),
     permissions: config.permissions ?? createPermissionsConfig(),
-    defaultCohortConfig:
-      config.defaultCohortConfig ?? createCohortParticipantConfig(),
+    defaultCohortConfig: createCohortParticipantConfig(
+      config.defaultCohortConfig,
+    ),
     prolificConfig: config.prolificConfig ?? createProlificConfig(),
     stageIds: stages.map((stage) => stage.id),
     cohortLockMap: config.cohortLockMap ?? {},
     variableConfigs: config.variableConfigs ?? [],
     variableMap: config.variableMap ?? {},
+    cohortDefinitions: config.cohortDefinitions,
   };
 }
 
@@ -115,7 +145,7 @@ export function createExperimentTemplate(
   config: Partial<ExperimentTemplate>,
 ): ExperimentTemplate {
   return {
-    id: config.id ?? generateId(),
+    id: config.id || generateId(),
     experiment: config.experiment ?? createExperimentConfig(),
     stageConfigs: config.stageConfigs ?? [],
     agentMediators: config.agentMediators ?? [],

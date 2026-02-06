@@ -24,46 +24,52 @@ import {
 // Validation: utils/src/stages/survey_stage.validation.ts                   //
 // ************************************************************************* //
 
-export const updateSurveyStageParticipantAnswer = onCall(async (request) => {
-  const {data} = request;
+export const updateSurveyStageParticipantAnswer = onCall(
+  {memory: '1GiB'},
+  async (request) => {
+    const {data} = request;
 
-  // Validate input
-  const validInput = Value.Check(UpdateSurveyStageParticipantAnswerData, data);
-  if (!validInput) {
-    handleUpdateSurveyStageParticipantAnswerValidationErrors(data);
-  }
+    // Validate input
+    const validInput = Value.Check(
+      UpdateSurveyStageParticipantAnswerData,
+      data,
+    );
+    if (!validInput) {
+      handleUpdateSurveyStageParticipantAnswerValidationErrors(data);
+    }
 
-  // Define document reference
-  const document = app
-    .firestore()
-    .collection('experiments')
-    .doc(data.experimentId)
-    .collection('participants')
-    .doc(data.participantPrivateId)
-    .collection('stageData')
-    .doc(data.surveyStageParticipantAnswer.id);
+    // Define document reference
+    const participantStageDoc = app
+      .firestore()
+      .collection('experiments')
+      .doc(data.experimentId)
+      .collection('participants')
+      .doc(data.participantPrivateId)
+      .collection('stageData')
+      .doc(data.surveyStageParticipantAnswer.id);
 
-  // Define public stage document reference
-  const publicDocument = app
-    .firestore()
-    .collection('experiments')
-    .doc(data.experimentId)
-    .collection('cohorts')
-    .doc(data.cohortId)
-    .collection('publicStageData')
-    .doc(data.surveyStageParticipantAnswer.id);
+    // Define public stage document reference
+    const publicStageDoc = app
+      .firestore()
+      .collection('experiments')
+      .doc(data.experimentId)
+      .collection('cohorts')
+      .doc(data.cohortId)
+      .collection('publicStageData')
+      .doc(data.surveyStageParticipantAnswer.id);
 
-  const participantAnswerMap = {
-    [data.participantPublicId]: data.surveyStageParticipantAnswer.answerMap,
-  };
+    const participantAnswerMap = {
+      [data.participantPublicId]: data.surveyStageParticipantAnswer.answerMap,
+    };
 
-  // Run document write as transaction to ensure consistency
-  await app.firestore().runTransaction(async (transaction) => {
-    transaction.set(document, data.surveyStageParticipantAnswer);
-  });
+    // Run document write as transaction to ensure consistency
+    await app.firestore().runTransaction(async (transaction) => {
+      transaction.set(participantStageDoc, data.surveyStageParticipantAnswer);
+    });
 
-  return {id: document.id};
-});
+    return {id: participantStageDoc.id};
+  },
+);
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function handleUpdateSurveyStageParticipantAnswerValidationErrors(data: any) {
@@ -107,7 +113,7 @@ export const updateSurveyPerParticipantStageParticipantAnswer = onCall(
     }
 
     // Define document reference
-    const document = app
+    const participantStageDoc = app
       .firestore()
       .collection('experiments')
       .doc(data.experimentId)
@@ -119,12 +125,12 @@ export const updateSurveyPerParticipantStageParticipantAnswer = onCall(
     // Run document write as transaction to ensure consistency
     await app.firestore().runTransaction(async (transaction) => {
       transaction.set(
-        document,
+        participantStageDoc,
         data.surveyPerParticipantStageParticipantAnswer,
       );
     });
 
-    return {id: document.id};
+    return {id: participantStageDoc.id};
   },
 );
 

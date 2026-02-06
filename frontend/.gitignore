@@ -12,9 +12,6 @@ npm-debug.log*
 
 .vscode/
 
-.gcloudignore
-app.yaml
-
 Dockerfile
 Caddyfile
 

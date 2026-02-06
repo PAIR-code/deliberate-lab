@@ -1,6 +1,8 @@
 import {Type, type Static} from '@sinclair/typebox';
-import {MetadataConfigSchema} from './shared.validation';
-import {CohortParticipantConfigSchema} from './experiment.validation';
+import {
+  MetadataConfigSchema,
+  CohortParticipantConfigSchema,
+} from './shared.validation';
 import {StageConfigData} from './stages/stage.validation';
 
 /** Shorthand for strict TypeBox object validation */
@@ -16,6 +18,7 @@ export const CohortCreationData = Type.Object(
     cohortConfig: Type.Object(
       {
         id: Type.String(),
+        alias: Type.Optional(Type.String()),
         metadata: MetadataConfigSchema,
         participantConfig: CohortParticipantConfigSchema,
         stageUnlockMap: Type.Record(Type.String(), Type.Boolean()),

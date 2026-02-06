@@ -13,8 +13,10 @@ import {unsafeHTML} from 'lit/directives/unsafe-html.js';
 import {
   Stock,
   StockInfoStageConfig,
+  formatCurrency,
   generateSVGChart,
   generateStockInfoCards,
+  parseStockData,
 } from '@deliberation-lab/utils';
 import {core} from '../../core/core';
 import {ParticipantAnswerService} from '../../services/participant.answer';
@@ -35,6 +37,28 @@ export class StockInfoParticipantView extends MobxLitElement {
 
   @property({type: Object}) stage: StockInfoStageConfig | undefined = undefined;
 
+  /** Stocks with failsafe parsing and visibleStockIds filtering/ordering */
+  private get stocks(): Stock[] {
+    const {stage} = this;
+    if (!stage) return [];
+
+    // If visibleStockIds is set, use its order (map over IDs to preserve order)
+    // Otherwise show all stocks in their original order
+    const orderedStocks = stage.visibleStockIds?.length
+      ? stage.visibleStockIds
+          .map((id) => stage.stocks.find((stock) => stock.id === id))
+          .filter((stock): stock is Stock => stock !== undefined)
+      : stage.stocks;
+
+    // Failsafe: ensure parsedData exists
+    return orderedStocks.map((stock) => ({
+      ...stock,
+      parsedData: stock.parsedData?.length
+        ? stock.parsedData
+        : parseStockData(stock.csvData),
+    }));
+  }
+
   override render() {
     if (!this.stage || !this.participantService.profile) {
       return nothing;
@@ -42,7 +66,7 @@ export class StockInfoParticipantView extends MobxLitElement {
 
     const currentStockIndex =
       this.participantAnswerService.getCurrentStockIndex(this.stage.id);
-    const currentStock = this.stage.stocks[currentStockIndex];
+    const currentStock = this.stocks[currentStockIndex];
     if (!currentStock) {
       return nothing;
     }
@@ -101,14 +125,16 @@ export class StockInfoParticipantView extends MobxLitElement {
   }
 
   private renderMainContent(stock: Stock) {
+    const currency = this.stage?.currency ?? 'USD';
+    const initialInvestment = this.stage?.initialInvestment ?? 1000;
+    const chartTitle = this.stage?.showInvestmentGrowth
+      ? `${formatCurrency(initialInvestment, currency, {decimals: 0})} Investment Growth`
+      : 'Price Chart';
+
     return html`
       <div class="main-content">
         <div class="chart-container">
-          <h3>
-            ${this.stage?.showInvestmentGrowth
-              ? '$1,000 Investment Growth'
-              : 'Price Chart'}
-          </h3>
+          <h3>${chartTitle}</h3>
           ${this.renderChart(stock)}
         </div>
         <div class="description-container">
@@ -131,13 +157,15 @@ export class StockInfoParticipantView extends MobxLitElement {
     const svgContent = generateSVGChart(stock.parsedData, {
       isInvestmentGrowth: this.stage?.showInvestmentGrowth,
       useQuarterlyMarkers: this.stage?.useQuarterlyMarkers,
+      initialInvestment: this.stage?.initialInvestment,
+      currency: this.stage?.currency,
     });
 
     return html`<div class="chart">${unsafeHTML(svgContent)}</div>`;
   }
 
   private renderStockNavigation() {
-    if (this.stage!.stocks.length <= 1) {
+    if (this.stocks.length <= 1) {
       return nothing;
     }
 
@@ -146,7 +174,7 @@ export class StockInfoParticipantView extends MobxLitElement {
 
     return html`
       <div class="stock-navigation">
-        ${this.stage!.stocks.map((stock, index) => {
+        ${this.stocks.map((stock, index) => {
           const isActive = index === currentStockIndex;
           return isActive
             ? html`
@@ -180,7 +208,7 @@ export class StockInfoParticipantView extends MobxLitElement {
       });
 
       // Record view of new stock
-      const stockId = this.stage!.stocks[index].id;
+      const stockId = this.stocks[index].id;
       const viewedStockIds = this.participantAnswerService.getViewedStockIds(
         this.stage!.id,
       );
@@ -199,7 +227,7 @@ export class StockInfoParticipantView extends MobxLitElement {
     }
 
     // Check if all stocks have been viewed
-    const allStockIds = this.stage.stocks.map((stock) => stock.id);
+    const allStockIds = this.stocks.map((stock) => stock.id);
     const viewedStockIds = this.participantAnswerService.getViewedStockIds(
       this.stage.id,
     );
@@ -208,7 +236,7 @@ export class StockInfoParticipantView extends MobxLitElement {
 
   protected override firstUpdated() {
     // Record initial stock view
-    const currentStockId = this.stage?.stocks[0]?.id;
+    const currentStockId = this.stocks[0]?.id;
 
     if (currentStockId) {
       const viewedStockIds = this.participantAnswerService.getViewedStockIds(

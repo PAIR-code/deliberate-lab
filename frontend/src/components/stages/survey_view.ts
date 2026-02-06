@@ -417,12 +417,8 @@ export class SurveyView extends MobxLitElement {
         <div class=${titleClasses}>
           ${unsafeHTML(convertMarkdownToHTML(question.questionTitle + '*'))}
         </div>
-        <div class="scale labels">
-          <div>${question.lowerText}</div>
-          <div>${question.middleText}</div>
-          <div>${question.upperText}</div>
-        </div>
-        <div class="scale slider">
+        <div class="scale slider-row">
+          <div class="slider-value">${question.lowerValue}</div>
           <md-slider
             min=${question.lowerValue}
             max=${question.upperValue}
@@ -434,6 +430,12 @@ export class SurveyView extends MobxLitElement {
             @input=${handleSliderChange}
           >
           </md-slider>
+          <div class="slider-value">${question.upperValue}</div>
+        </div>
+        <div class="scale labels">
+          <div>${question.lowerText}</div>
+          <div>${question.middleText}</div>
+          <div>${question.upperText}</div>
         </div>
       </div>
     `;

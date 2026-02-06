@@ -71,3 +71,35 @@ stage-footer {
     color: var(--md-sys-color-error);
   }
 }
+
+.typing-indicator {
+  @include common.flex-row-align-center;
+  gap: common.$spacing-small;
+  padding: common.$spacing-medium 0;
+}
+
+.avatar-spinner-wrapper {
+  position: relative;
+  display: inline-block;
+  // Match avatar-icon size: calc($spacing-xxl * 1.5)
+  min-width: calc(common.$spacing-xxl * 1.5);
+  min-height: calc(common.$spacing-xxl * 1.5);
+}
+
+.spinner {
+  position: absolute;
+  inset: -3px;
+  border: 2px solid transparent;
+  border-top-color: var(--md-sys-color-primary);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}

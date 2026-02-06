@@ -9,7 +9,9 @@ Usage:
 
     import deliberate_lab as dl
 
-    client = dl.Client()
+    client = dl.Client()              # defaults to dev
+    client = dl.Client(env="prod")     # use production
+    client = dl.Client(base_url="...") # custom URL
 
     # List experiments
     experiments = client.list_experiments()
@@ -53,10 +55,12 @@ class APIError(requests.HTTPError):
 class Client:
     """Client for the Deliberate Lab REST API."""
 
-    DEFAULT_BASE_URL = "https://us-central1-deliberate-lab.cloudfunctions.net/api/v1"
+    PROD_URL = "https://us-central1-deliberate-lab.cloudfunctions.net/api/v1"
+    DEV_URL = "http://127.0.0.1:5001/demo-deliberate-lab/us-central1/api/v1"
 
     def __init__(
         self,
+        env: Optional[str] = None,
         base_url: Optional[str] = None,
         api_key: Optional[str] = None,
         timeout: float = 60.0,
@@ -65,12 +69,23 @@ class Client:
         Initialize the client.
 
         Args:
+            env: Environment to use: "prod" or "dev". Defaults to "dev".
+                 Ignored if base_url is provided.
+            base_url: Custom base URL for the API. Overrides env if provided.
             api_key: API key for authentication. If not provided, reads from
                      DL_API_KEY environment variable.
-            base_url: Base URL for the API. Defaults to production URL.
             timeout: Request timeout in seconds. Defaults to 60, longer for exports.
         """
-        self.base_url = base_url or self.DEFAULT_BASE_URL
+        if base_url is not None:
+            self.base_url = base_url
+        elif env == "prod":
+            self.base_url = self.PROD_URL
+        elif env is None or env == "dev":
+            self.base_url = self.DEV_URL
+        else:
+            raise ValueError(
+                f"Unknown env '{env}'. Use 'prod', 'dev', or provide a base_url."
+            )
         self.api_key = api_key or os.environ.get("DL_API_KEY")
         self.timeout = timeout
         if not self.api_key:
@@ -184,7 +199,9 @@ class Client:
 
         # Full template creation takes precedence
         if template is not None:
-            data["template"] = template.model_dump(by_alias=True, exclude_none=True)
+            data["template"] = template.model_dump(
+                mode="json", by_alias=True, exclude_none=True
+            )
         else:
             # Simple creation mode
             if name is None:
@@ -197,20 +214,21 @@ class Client:
             if stages is not None:
                 # Convert Pydantic models to dicts for JSON serialization
                 data["stages"] = [
-                    s.model_dump(by_alias=True, exclude_none=True) for s in stages
+                    s.model_dump(mode="json", by_alias=True, exclude_none=True)
+                    for s in stages
                 ]
             if prolific_config is not None:
                 data["prolificConfig"] = prolific_config.model_dump(
-                    by_alias=True, exclude_none=True
+                    mode="json", by_alias=True, exclude_none=True
                 )
             if agent_mediators is not None:
                 data["agentMediators"] = [
-                    a.model_dump(by_alias=True, exclude_none=True)
+                    a.model_dump(mode="json", by_alias=True, exclude_none=True)
                     for a in agent_mediators
                 ]
             if agent_participants is not None:
                 data["agentParticipants"] = [
-                    a.model_dump(by_alias=True, exclude_none=True)
+                    a.model_dump(mode="json", by_alias=True, exclude_none=True)
                     for a in agent_participants
                 ]
 
@@ -271,7 +289,9 @@ class Client:
 
         # Full template update takes precedence
         if template is not None:
-            data["template"] = template.model_dump(by_alias=True, exclude_none=True)
+            data["template"] = template.model_dump(
+                mode="json", by_alias=True, exclude_none=True
+            )
         else:
             # Partial update mode
             if name is not None:
@@ -280,20 +300,21 @@ class Client:
                 data["description"] = description
             if stages is not None:
                 data["stages"] = [
-                    s.model_dump(by_alias=True, exclude_none=True) for s in stages
+                    s.model_dump(mode="json", by_alias=True, exclude_none=True)
+                    for s in stages
                 ]
             if prolific_config is not None:
                 data["prolificConfig"] = prolific_config.model_dump(
-                    by_alias=True, exclude_none=True
+                    mode="json", by_alias=True, exclude_none=True
                 )
             if agent_mediators is not None:
                 data["agentMediators"] = [
-                    a.model_dump(by_alias=True, exclude_none=True)
+                    a.model_dump(mode="json", by_alias=True, exclude_none=True)
                     for a in agent_mediators
                 ]
             if agent_participants is not None:
                 data["agentParticipants"] = [
-                    a.model_dump(by_alias=True, exclude_none=True)
+                    a.model_dump(mode="json", by_alias=True, exclude_none=True)
                     for a in agent_participants
                 ]
 
@@ -435,7 +456,7 @@ class Client:
             data["description"] = description
         if participant_config is not None:
             data["participantConfig"] = participant_config.model_dump(
-                by_alias=True, exclude_none=True
+                mode="json", by_alias=True, exclude_none=True
             )
 
         response = self._session.post(
@@ -473,7 +494,7 @@ class Client:
             data["description"] = description
         if participant_config is not None:
             data["participantConfig"] = participant_config.model_dump(
-                by_alias=True, exclude_none=True
+                mode="json", by_alias=True, exclude_none=True
             )
 
         response = self._session.put(

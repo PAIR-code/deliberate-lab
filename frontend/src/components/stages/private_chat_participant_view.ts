@@ -1,6 +1,7 @@
 import '../progress/progress_stage_completed';
 import '../chat/chat_interface';
 import '../chat/chat_message';
+import '../participant_profile/avatar_icon';
 
 import {MobxLitElement} from '@adobe/lit-mobx';
 import {CSSResultGroup, html, nothing} from 'lit';
@@ -9,7 +10,13 @@ import {customElement, property} from 'lit/decorators.js';
 import {core} from '../../core/core';
 import {ParticipantService} from '../../services/participant.service';
 
-import {ChatMessage, PrivateChatStageConfig} from '@deliberation-lab/utils';
+import {
+  ChatMessage,
+  PrivateChatStageConfig,
+  UserType,
+} from '@deliberation-lab/utils';
+import {getHashBasedColor} from '../../shared/utils';
+import {ResponseTimeoutTracker} from '../../shared/response_timeout';
 
 import {styles} from './group_chat_participant_view.scss';
 
@@ -21,6 +28,38 @@ export class PrivateChatView extends MobxLitElement {
   private readonly participantService = core.getService(ParticipantService);
 
   @property() stage: PrivateChatStageConfig | undefined = undefined;
+
+  // After this timeout, stop showing the spinner and re-enable input
+  // so the participant can send another message if the backend failed silently.
+  private static readonly RESPONSE_TIMEOUT_S = 120;
+  private readonly responseTimeout = new ResponseTimeoutTracker(
+    PrivateChatView.RESPONSE_TIMEOUT_S,
+    () => {
+      this.requestUpdate();
+    },
+  );
+
+  override updated() {
+    const chatMessages =
+      this.participantService.privateChatMap[this.stage?.id ?? ''] ?? [];
+    const publicId = this.participantService.profile?.publicId ?? '';
+    const lastMessage =
+      chatMessages.length > 0 ? chatMessages[chatMessages.length - 1] : null;
+    const lastMessageIsFromParticipant =
+      lastMessage !== null && lastMessage.senderId === publicId;
+
+    const sentAtSeconds = lastMessage?.timestamp?.seconds ?? null;
+    this.responseTimeout.update(
+      lastMessage?.id ?? null,
+      lastMessageIsFromParticipant,
+      sentAtSeconds,
+    );
+  }
+
+  override disconnectedCallback() {
+    super.disconnectedCallback();
+    this.responseTimeout.clear();
+  }
 
   override render() {
     if (!this.stage) return nothing;
@@ -34,10 +73,12 @@ export class PrivateChatView extends MobxLitElement {
       (msg) => msg.senderId === publicId && !msg.isError,
     ).length;
 
-    // Check if we're waiting for a response (last message is from participant)
+    // Check if we're waiting for a response (last message is from participant
+    // and we haven't timed out waiting)
     const isWaitingForResponse =
       chatMessages.length > 0 &&
-      chatMessages[chatMessages.length - 1].senderId === publicId;
+      chatMessages[chatMessages.length - 1].senderId === publicId &&
+      !this.responseTimeout.timedOut;
 
     // Check if max number of turns reached (but only after response received)
     const maxTurnsReached =
@@ -73,8 +114,8 @@ export class PrivateChatView extends MobxLitElement {
     return html`
       <chat-interface .stage=${this.stage} .disableInput=${isDisabledInput()}>
         ${chatMessages.map((message) => this.renderChatMessage(message))}
-        ${isDisabledInput() && !isConversationOver
-          ? this.renderWaitingMessage()
+        ${isWaitingForResponse && !isConversationOver
+          ? this.renderAgentIndicator(chatMessages)
           : nothing}
         ${isConversationOver ? this.renderConversationEndedMessage() : nothing}
       </chat-interface>
@@ -89,25 +130,45 @@ export class PrivateChatView extends MobxLitElement {
     `;
   }
 
-  private renderWaitingMessage() {
-    const sendError = () => {
-      this.participantService.sendErrorChatMessage({
-        message: 'Request canceled',
-      });
-    };
+  private renderAgentIndicator(chatMessages: ChatMessage[]) {
+    // Get avatar/color from last mediator message
+    const lastMediator = [...chatMessages]
+      .reverse()
+      .find((msg) => msg.type === UserType.MEDIATOR);
+    const avatar = lastMediator?.profile?.avatar;
+    const color = lastMediator
+      ? getHashBasedColor(lastMediator.senderId ?? '')
+      : undefined;
 
-    return html`
-      <div class="description">
-        <div>Waiting for a response...</div>
+    const renderCancelButton = () => {
+      if (this.stage?.preventCancellation) {
+        return nothing;
+      }
+      return html`
         <pr-tooltip text="Cancel">
           <pr-icon-button
             icon="stop_circle"
             color="neutral"
             variant="default"
-            @click=${sendError}
+            @click=${() =>
+              this.participantService.sendErrorChatMessage({
+                message: 'Request canceled',
+              })}
           >
           </pr-icon-button>
         </pr-tooltip>
+      `;
+    };
+
+    return html`
+      <div class="typing-indicator">
+        <div class="avatar-spinner-wrapper">
+          ${avatar
+            ? html`<avatar-icon .emoji=${avatar} .color=${color}></avatar-icon>`
+            : nothing}
+          <div class="spinner"></div>
+        </div>
+        ${renderCancelButton()}
       </div>
     `;
   }

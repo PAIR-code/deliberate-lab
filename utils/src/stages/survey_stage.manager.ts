@@ -143,7 +143,6 @@ export class SurveyStageHandler extends BaseStageHandler {
         type: StructuredOutputType.JSON_SCHEMA,
         schema,
         appendToPrompt: true,
-        explanationField: '', // Not used for this stage
       },
       numRetries: 3,
     };
@@ -169,6 +168,7 @@ export class SurveyStageHandler extends BaseStageHandler {
     return getSurveyStageDisplayPromptString(
       participantAnswers,
       stage.questions,
+      includeScaffolding,
     );
   }
 }

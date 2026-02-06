@@ -69,17 +69,17 @@ const ASSET_ALLOCATION_INTRO_STAGE = createInfoStage({
   infoLines: [ASSET_ALLOCATION_INTRO_TEXT],
 });
 
-// Create a modified version of the imported StockInfo stage with only two stocks
+// Create a modified version of the imported StockInfo stage with all stocks
 const ASSET_ALLOCATION_STOCKINFO_STAGE = {
   ...STOCKINFO_MAIN_STAGE,
   id: 'asset_allocation_stockinfo',
   name: 'Stock Information Review',
   descriptions: createStageTextConfig({
     primaryText:
-      'Review the information for both stocks before making your allocation decision. Click through both stocks to see their performance data and company details.',
+      'Review the information for all stocks before making your allocation decision. Click through each stock to see their performance data and company details.',
   }),
-  // Only keep the first two stocks from the template
-  stocks: STOCKINFO_MAIN_STAGE.stocks.slice(0, 2),
+  // Show all 5 stocks to test multi-stock navigation
+  stocks: STOCKINFO_MAIN_STAGE.stocks,
   showInvestmentGrowth: true,
 };
 

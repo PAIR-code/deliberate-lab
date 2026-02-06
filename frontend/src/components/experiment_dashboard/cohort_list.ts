@@ -1,25 +1,17 @@
 import '../../pair-components/button';
 import '../../pair-components/icon';
 import '../../pair-components/icon_button';
-import '../../pair-components/menu';
 import '../../pair-components/tooltip';
 
 import './cohort_summary';
-
-import '@material/web/checkbox/checkbox.js';
+import './cohort_filter_controls';
 
 import {MobxLitElement} from '@adobe/lit-mobx';
-import {CSSResultGroup, html, nothing} from 'lit';
-import {customElement, property} from 'lit/decorators.js';
-import {classMap} from 'lit/directives/class-map.js';
+import {CSSResultGroup, html} from 'lit';
+import {customElement} from 'lit/decorators.js';
 
 import {core} from '../../core/core';
 import {AnalyticsService, ButtonClick} from '../../services/analytics.service';
-import {AuthService} from '../../services/auth.service';
-import {HomeService} from '../../services/home.service';
-import {Pages, RouterService} from '../../services/router.service';
-
-import {StageConfig} from '@deliberation-lab/utils';
 import {ExperimentManager} from '../../services/experiment.manager';
 
 import {styles} from './cohort_list.scss';
@@ -48,6 +40,18 @@ export class Component extends MobxLitElement {
     return html`
       <div class="header">
         <div class="left">
+          <pr-tooltip text="Expand/collapse all" position="BOTTOM_START">
+            <pr-icon-button
+              icon=${expandAllCohorts ? 'collapse_all' : 'expand_all'}
+              color="secondary"
+              size="small"
+              variant="default"
+              @click=${() => {
+                this.experimentManager.setExpandAllCohorts(!expandAllCohorts);
+              }}
+            >
+            </pr-icon-button>
+          </pr-tooltip>
           <div
             class="checkbox-wrapper"
             @click=${() => {
@@ -58,27 +62,14 @@ export class Component extends MobxLitElement {
               color="secondary"
               size="small"
               variant="default"
-              icon=${hideLockedCohorts ? 'filter_list' : 'filter_list_off'}
+              icon=${hideLockedCohorts ? 'visibility_off' : 'visibility'}
             >
             </pr-icon>
             <div>
-              ${hideLockedCohorts ? 'Show all cohorts' : 'Hide locked cohorts'}
+              ${hideLockedCohorts
+                ? 'Show all cohorts'
+                : 'Hide\u00A0locked cohorts'}
             </div>
-          </div>
-          <div
-            class="checkbox-wrapper"
-            @click=${() => {
-              this.experimentManager.setExpandAllCohorts(!expandAllCohorts);
-            }}
-          >
-            <pr-icon
-              color="secondary"
-              size="small"
-              variant="default"
-              icon=${expandAllCohorts ? 'collapse_all' : 'expand_all'}
-            >
-            </pr-icon>
-            <div>${expandAllCohorts ? 'Collapse' : 'Expand'} all cohorts</div>
           </div>
           <div
             class="checkbox-wrapper"
@@ -92,50 +83,22 @@ export class Component extends MobxLitElement {
               color="secondary"
               size="small"
               variant="default"
-              icon=${showMediators ? 'visibility_off' : 'visibility'}
+              icon=${showMediators ? 'person' : 'person_off'}
             >
             </pr-icon>
-            <div>${showMediators ? 'Hide' : 'Show'} mediators</div>
+            <div>${showMediators ? 'Hide mediators' : 'Show mediators'}</div>
           </div>
-          <div class="sort-controls">
-            <pr-menu
-              name=${this.experimentManager.participantSortBy === 'lastActive'
-                ? 'Last Active'
-                : 'Name'}
-              icon=${this.experimentManager.participantSortBy === 'lastActive'
-                ? 'hourglass_empty'
-                : 'sort_by_alpha'}
-              color="secondary"
-              variant="default"
-            >
-              <div class="menu-wrapper">
-                <div
-                  class="menu-item"
-                  @click=${() => {
-                    this.experimentManager.setParticipantSortBy('lastActive');
-                  }}
-                >
-                  Sort by Last Active
-                </div>
-                <div
-                  class="menu-item"
-                  @click=${() => {
-                    this.experimentManager.setParticipantSortBy('name');
-                  }}
-                >
-                  Sort by name
-                </div>
-              </div>
-            </pr-menu>
-          </div>
+        </div>
+        <div class="right">
+          <cohort-filter-controls></cohort-filter-controls>
         </div>
       </div>
     `;
   }
 
   private renderHeader() {
-    const getCohortName = (length: number) => {
-      return this.experimentManager.getNextCohortName(length);
+    const getCohortName = (offset: number) => {
+      return this.experimentManager.getNextCohortName(offset);
     };
 
     return html`
@@ -155,9 +118,7 @@ export class Component extends MobxLitElement {
               ?loading=${this.experimentManager.isWritingCohort}
               @click=${() => {
                 this.analyticsService.trackButtonClick(ButtonClick.COHORT_ADD);
-                const name = getCohortName(
-                  this.experimentManager.cohortList.length,
-                );
+                const name = getCohortName(0);
                 this.experimentManager.createCohort({}, name);
               }}
             >
@@ -170,12 +131,11 @@ export class Component extends MobxLitElement {
               variant="tonal"
               ?loading=${this.experimentManager.isWritingCohort}
               @click=${() => {
-                const numCohorts = this.experimentManager.cohortList.length;
                 [...Array(5).keys()].forEach((key) => {
                   this.analyticsService.trackButtonClick(
                     ButtonClick.COHORT_ADD,
                   );
-                  const name = getCohortName(numCohorts + key);
+                  const name = getCohortName(key);
                   this.experimentManager.createCohort({}, name);
                 });
               }}
@@ -189,12 +149,11 @@ export class Component extends MobxLitElement {
               variant="tonal"
               ?loading=${this.experimentManager.isWritingCohort}
               @click=${() => {
-                const numCohorts = this.experimentManager.cohortList.length;
                 [...Array(10).keys()].forEach((key) => {
                   this.analyticsService.trackButtonClick(
                     ButtonClick.COHORT_ADD,
                   );
-                  const name = getCohortName(numCohorts + key);
+                  const name = getCohortName(key);
                   this.experimentManager.createCohort({}, name);
                 });
               }}

@@ -325,6 +325,7 @@ function getSurveyQuestionTextForPrompt(question: SurveyQuestion) {
 
 /** Get stage display string for SurveyStage
  *  with participant answers optionally included.
+ *  @param includeScaffolding - If true, includes participant name prefix.
  */
 export function getSurveyStageDisplayPromptString(
   participantAnswers: Array<{
@@ -333,6 +334,7 @@ export function getSurveyStageDisplayPromptString(
     answer: SurveyStageParticipantAnswer;
   }>,
   questions: SurveyQuestion[],
+  includeScaffolding = true,
 ): string {
   // If no answers, just return the questions
   if (participantAnswers.length === 0) {
@@ -342,12 +344,20 @@ export function getSurveyStageDisplayPromptString(
   }
 
   const answerSummaries = participantAnswers.map((answer) =>
-    getSurveyQuestionSetForPrompt(questions, answer),
+    getSurveyQuestionSetForPrompt(
+      questions,
+      answer,
+      includeScaffolding,
+      participantAnswers.length,
+    ),
   );
   return answerSummaries.join('\n');
 }
 
-/** Return questions from survey with given participant's answers populated.*/
+/** Return questions from survey with given participant's answers populated.
+ *  @param includeScaffolding - If true, always includes participant name prefix.
+ *  @param numParticipants - Total number of participants (prefix shown if > 1).
+ */
 export function getSurveyQuestionSetForPrompt(
   questions: SurveyQuestion[],
   surveyAnswer: {
@@ -355,14 +365,21 @@ export function getSurveyQuestionSetForPrompt(
     participantDisplayName: string;
     answer: SurveyStageParticipantAnswer;
   },
+  includeScaffolding = true,
+  numParticipants = 1,
 ): string {
-  const prefix = `* Participant ${surveyAnswer.participantDisplayName}'s answers:`;
   const responses = formatSurveyResponses(
     surveyAnswer.answer.answerMap,
     questions,
   );
   if (responses.length > 0) {
-    return `${prefix}\n${responses.join('\n')}`;
+    // Show participant prefix if scaffolding enabled OR multiple participants
+    const showPrefix = includeScaffolding || numParticipants > 1;
+    if (showPrefix) {
+      const prefix = `* Participant ${surveyAnswer.participantDisplayName}'s answers:`;
+      return `${prefix}\n${responses.join('\n')}`;
+    }
+    return responses.join('\n');
   }
   return '';
 }

@@ -199,7 +199,7 @@
   justify-content: center;
   padding: calc($main-content-padding * 2);
   position: absolute;
-  z-index: 2; // above app header
+  z-index: 20; // above app header
 }
 
 @mixin dialog {
@@ -310,6 +310,20 @@
   }
   a {
     color: var(--md-sys-color-primary);
+  }
+  table {
+    border-collapse: collapse;
+    color: var(--md-sys-color-on-surface);
+  }
+  th,
+  td {
+    border: 1px solid var(--md-sys-color-outline-variant);
+    padding: $spacing-medium;
+    text-align: left;
+  }
+  th {
+    background-color: var(--md-sys-color-surface-container);
+    font-weight: 500;
   }
 }
 

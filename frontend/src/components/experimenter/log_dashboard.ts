@@ -1,6 +1,7 @@
 import '../../pair-components/button';
 import '../../pair-components/icon_button';
 import '../../pair-components/icon';
+import '../shared/media_preview';
 
 import {MobxLitElement} from '@adobe/lit-mobx';
 import {CSSResultGroup, html, nothing} from 'lit';
@@ -12,17 +13,17 @@ import {ExperimentService} from '../../services/experiment.service';
 
 import {
   convertUnifiedTimestampToDateTime,
-  LogEntry,
-  LogEntryType,
-  ModelLogEntry,
-  ModelResponseStatus,
+  FilterState,
   filterLogs,
   getCohortOptions,
   getParticipantOptions,
   getStageOptions,
   getStatusOptions,
   getUnifiedDurationSeconds,
-  FilterState,
+  LogEntry,
+  LogEntryType,
+  ModelLogEntry,
+  ModelResponseStatus,
 } from '@deliberation-lab/utils';
 
 import {styles} from './log_dashboard.scss';
@@ -154,18 +155,13 @@ export class Component extends MobxLitElement {
             </details>
           `
         : nothing}
-      ${log.imageUrls && log.imageUrls.length > 0
+      ${log.files && log.files.length > 0
         ? html`
             <details>
-              <summary>Generated images (${log.imageUrls.length})</summary>
-              <div class="image-gallery">
-                ${log.imageUrls.map(
-                  (url) =>
-                    html`<img
-                      src="${url}"
-                      alt="Generated image"
-                      class="log-image"
-                    />`,
+              <summary>Generated files (${log.files.length})</summary>
+              <div class="file-gallery">
+                ${log.files.map(
+                  (file) => html`<media-preview .file=${file}></media-preview>`,
                 )}
               </div>
             </details>

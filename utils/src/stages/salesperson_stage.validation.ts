@@ -9,14 +9,17 @@ import {
 /** Shorthand for strict TypeBox object validation */
 const strict = {additionalProperties: false} as const;
 
-export const SalespersonStageConfigData = Type.Object({
-  id: Type.String(),
-  kind: Type.Literal(StageKind.SALESPERSON),
-  name: Type.String(),
-  descriptions: Type.Ref(StageTextConfigSchema),
-  progress: Type.Ref(StageProgressConfigSchema),
-  // TODO: Add board
-});
+export const SalespersonStageConfigData = Type.Object(
+  {
+    id: Type.String(),
+    kind: Type.Literal(StageKind.SALESPERSON),
+    name: Type.String(),
+    descriptions: Type.Ref(StageTextConfigSchema),
+    progress: Type.Ref(StageProgressConfigSchema),
+    // TODO: Add board
+  },
+  {$id: 'SalespersonStageConfig', ...strict},
+);
 
 /** setSalespersonController endpoint data validation. */
 export const SetSalespersonControllerData = Type.Object(

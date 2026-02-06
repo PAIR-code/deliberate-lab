@@ -6,7 +6,6 @@ import '@material/web/checkbox/checkbox.js';
 import '../../pair-components/textarea_template';
 
 import {core} from '../../core/core';
-import {AuthService} from '../../services/auth.service';
 import {ExperimentEditor} from '../../services/experiment.editor';
 import {renderConditionEditor} from '../../shared/condition_editor.utils';
 import {
@@ -15,6 +14,7 @@ import {
   getConditionTargetsFromStages,
   MultipleChoiceItem,
   MultipleChoiceSurveyQuestion,
+  sanitizeSurveyQuestionConditions,
   ScaleSurveyQuestion,
   SurveyPerParticipantStageConfig,
   SurveyStageConfig,
@@ -31,7 +31,6 @@ import {styles} from './survey_editor.scss';
 export class SurveyEditor extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
 
-  private readonly authService = core.getService(AuthService);
   private readonly experimentEditor = core.getService(ExperimentEditor);
 
   @property() stage:
@@ -103,20 +102,34 @@ export class SurveyEditor extends MobxLitElement {
     }
   }
 
+  /**
+   * Update the stage with new questions, automatically sanitizing conditions.
+   */
+  private updateStageQuestions(questions: SurveyQuestion[]) {
+    if (!this.stage) return;
+
+    const sanitizedQuestions = sanitizeSurveyQuestionConditions(
+      questions,
+      this.stage.id,
+    );
+
+    this.experimentEditor.updateStage({
+      ...this.stage,
+      questions: sanitizedQuestions,
+    });
+  }
+
   moveQuestionUp(index: number) {
     if (!this.stage) return;
 
     const questions = [
       ...this.stage.questions.slice(0, index - 1),
-      ...this.stage.questions.slice(index, index + 1),
-      ...this.stage.questions.slice(index - 1, index),
+      this.stage.questions[index],
+      this.stage.questions[index - 1],
       ...this.stage.questions.slice(index + 1),
     ];
 
-    this.experimentEditor.updateStage({
-      ...this.stage,
-      questions,
-    });
+    this.updateStageQuestions(questions);
   }
 
   moveQuestionDown(index: number) {
@@ -124,15 +137,12 @@ export class SurveyEditor extends MobxLitElement {
 
     const questions = [
       ...this.stage.questions.slice(0, index),
-      ...this.stage.questions.slice(index + 1, index + 2),
-      ...this.stage.questions.slice(index, index + 1),
+      this.stage.questions[index + 1],
+      this.stage.questions[index],
       ...this.stage.questions.slice(index + 2),
     ];
 
-    this.experimentEditor.updateStage({
-      ...this.stage,
-      questions,
-    });
+    this.updateStageQuestions(questions);
   }
 
   deleteQuestion(index: number) {
@@ -143,10 +153,7 @@ export class SurveyEditor extends MobxLitElement {
       ...this.stage.questions.slice(index + 1),
     ];
 
-    this.experimentEditor.updateStage({
-      ...this.stage,
-      questions,
-    });
+    this.updateStageQuestions(questions);
   }
 
   updateQuestion(question: SurveyQuestion, index: number) {
@@ -214,7 +221,6 @@ export class SurveyEditor extends MobxLitElement {
     return renderConditionEditor({
       condition: question.condition,
       targets,
-      showAlphaFeatures: this.authService.showAlphaFeatures,
       canEdit: this.experimentEditor.canEditStages,
       onConditionChange,
     });

@@ -1,8 +1,4 @@
-import {
-  AgentChatPromptConfig,
-  AgentPersonaConfig,
-  ProfileAgentConfig,
-} from './agent';
+import {AgentPersonaConfig, ProfileAgentConfig} from './agent';
 import {UserProfileBase, UserType} from './participant';
 import {generateId} from './shared';
 

@@ -1,23 +1,23 @@
 /**
- * Utilities for converting chat history to message-based API format
+ * Utilities for converting chat history to message-based API format.
  */
 
 import {ChatMessage, UserType} from '@deliberation-lab/utils';
-// Define types locally since they're not in the utils package yet
+
+import {ModelMessage} from '../api/ai-sdk.api';
+
+/**
+ * Message roles compatible with AI SDK's ModelMessage type.
+ * Values must match the literal string types expected by the SDK.
+ */
 export enum MessageRole {
   SYSTEM = 'system',
   USER = 'user',
   ASSISTANT = 'assistant',
 }
 
-export interface ConversationMessage {
-  role: MessageRole;
-  content: string;
-  name?: string;
-}
-
 export interface MessageBasedPrompt {
-  messages: ConversationMessage[];
+  messages: ModelMessage[];
   systemPrompt?: string;
 }
 
@@ -29,17 +29,16 @@ export interface ChatToMessageOptions {
 }
 
 /**
- * Convert chat messages to conversation format for message-based APIs
+ * Convert chat messages to conversation format for message-based APIs.
  * For private chats with one participant and one mediator, this creates
  * a proper conversation flow with user/assistant roles.
  */
 export function convertChatToMessages(
   chatHistory: ChatMessage[],
   currentUserType: UserType,
-  currentUserId: string,
   options: ChatToMessageOptions,
-): ConversationMessage[] {
-  const messages: ConversationMessage[] = [];
+): ModelMessage[] {
+  const messages: ModelMessage[] = [];
 
   if (!options.isPrivateChat) {
     // For group chats, return empty array (fallback to text prompt)
@@ -48,36 +47,40 @@ export function convertChatToMessages(
 
   // For private chats, convert to user/assistant format
   for (const msg of chatHistory) {
-    let role: MessageRole;
-
-    // Determine role based on who sent the message
-    if (msg.type === UserType.PARTICIPANT) {
-      // Participant messages are "user" from the mediator's perspective
-      role =
-        currentUserType === UserType.MEDIATOR
-          ? MessageRole.USER
-          : MessageRole.ASSISTANT;
-    } else if (msg.type === UserType.MEDIATOR) {
-      // Mediator messages are "assistant" from the participant's perspective
-      role =
-        currentUserType === UserType.MEDIATOR
-          ? MessageRole.ASSISTANT
-          : MessageRole.USER;
-    } else if (msg.type === UserType.SYSTEM) {
-      // System messages are treated as "user" messages for the AI to see them
-      role = MessageRole.USER;
-      // Prefix content to distinguish from regular user messages
-      msg.message = `[SYSTEM NOTIFICATION]: ${msg.message}`;
-    } else {
-      // Skip other message types for now
-      continue;
+    switch (msg.type) {
+      case UserType.PARTICIPANT: {
+        // Participant messages are "user" from the mediator's perspective
+        const role =
+          currentUserType === UserType.MEDIATOR
+            ? MessageRole.USER
+            : MessageRole.ASSISTANT;
+        messages.push({role, content: msg.message});
+        break;
+      }
+      case UserType.MEDIATOR: {
+        // Mediator messages are "assistant" from the participant's perspective
+        const role =
+          currentUserType === UserType.MEDIATOR
+            ? MessageRole.ASSISTANT
+            : MessageRole.USER;
+        messages.push({role, content: msg.message});
+        break;
+      }
+      case UserType.SYSTEM:
+        // System messages are treated as "user" messages for the AI to see them
+        messages.push({
+          role: MessageRole.USER,
+          content: `[SYSTEM NOTIFICATION]: ${msg.message}`,
+        });
+        break;
+      case UserType.EXPERIMENTER:
+        // Experimenter messages not yet supported in message format
+        console.log(`Skipping experimenter message: ${msg.message}`);
+        break;
+      case UserType.UNKNOWN:
+        console.warn(`Unknown message type encountered: ${msg.message}`);
+        break;
     }
-
-    messages.push({
-      role,
-      content: msg.message,
-      name: msg.profile.name || msg.senderId,
-    });
   }
 
   return messages;
@@ -90,10 +93,9 @@ export function createMessageBasedPrompt(
   systemPrompt: string,
   chatHistory: ChatMessage[],
   currentUserType: UserType,
-  currentUserId: string,
   options: ChatToMessageOptions,
 ): MessageBasedPrompt {
-  const messages: ConversationMessage[] = [];
+  const messages: ModelMessage[] = [];
 
   // Add system prompt if requested
   if (options.includeSystemPrompt && systemPrompt) {
@@ -107,7 +109,6 @@ export function createMessageBasedPrompt(
   const conversationMessages = convertChatToMessages(
     chatHistory,
     currentUserType,
-    currentUserId,
     options,
   );
 

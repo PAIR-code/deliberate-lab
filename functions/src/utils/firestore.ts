@@ -135,28 +135,30 @@ export async function getFirestoreActiveParticipants(
   stageId: string | null = null, // if null, can be in any stage
   checkIsAgent = false, // whether to check if participant is agent
 ) {
-  // TODO: Use isActiveParticipant utils function.
+  // TODO: Use isActiveParticipant utils function?
   const activeStatuses = [
     ParticipantStatus.IN_PROGRESS,
     ParticipantStatus.SUCCESS,
     ParticipantStatus.ATTENTION_CHECK,
   ];
-  const activeParticipants = (
-    await app
-      .firestore()
-      .collection('experiments')
-      .doc(experimentId)
-      .collection('participants')
-      .where('currentCohortId', '==', cohortId)
-      .get()
-  ).docs
+
+  // Build query with Firestore-side filtering
+  let query: FirebaseFirestore.Query = app
+    .firestore()
+    .collection('experiments')
+    .doc(experimentId)
+    .collection('participants')
+    .where('currentCohortId', '==', cohortId)
+    .where('currentStatus', 'in', activeStatuses);
+
+  if (stageId !== null && stageId !== undefined) {
+    query = query.where('currentStageId', '==', stageId);
+  }
+
+  const activeParticipants = (await query.get()).docs
     .map((doc) => doc.data() as ParticipantProfileExtended)
-    .filter(
-      (participant) =>
-        (stageId !== null ? participant.currentStageId === stageId : true) &&
-        (checkIsAgent ? participant.agentConfig : true) &&
-        activeStatuses.find((status) => status === participant.currentStatus),
-    );
+    .filter((participant) => (checkIsAgent ? participant.agentConfig : true));
+
   return activeParticipants;
 }
 
@@ -388,6 +390,10 @@ export async function getAgentParticipantPrompt(
   stageId: string,
   agentId: string,
 ): Promise<ParticipantPromptConfig | null> {
+  if (!agentId) {
+    return null;
+  }
+
   const prompt = await app
     .firestore()
     .collection('experiments')

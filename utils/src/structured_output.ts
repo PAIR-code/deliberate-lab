@@ -27,20 +27,78 @@ export interface StructuredOutputSchema {
   enumItems?: string[];
 }
 
-// TODO: Add StageKind or new enum to differentiate different configs
+/**
+ * Base configuration for structured output.
+ * Use ChatMediatorStructuredOutputConfig for chat-specific configurations.
+ */
 export interface StructuredOutputConfig {
   enabled: boolean;
   type: StructuredOutputType;
   schema?: StructuredOutputSchema;
   appendToPrompt: boolean;
-  explanationField: string; // field for model reasoning
 }
 
-// TODO: Move to mediator or chat file
+/**
+ * Chat mediator-specific structured output configuration.
+ * Extends base config with field mappings for extracting chat decision fields.
+ */
 export interface ChatMediatorStructuredOutputConfig extends StructuredOutputConfig {
-  shouldRespondField: string;
-  messageField: string;
-  readyToEndField: string;
+  shouldRespondField: string; // Maps to schema field for respond decision
+  messageField: string; // Maps to schema field for message content
+  explanationField: string; // Maps to schema field for decision explanation
+  readyToEndField: string; // Maps to schema field for end-chat signal
+}
+
+/**
+ * Extracted fields from a chat mediator's structured output.
+ * Represents the mediator's decision about responding to the conversation.
+ */
+export interface ChatMediatorStructuredFields {
+  shouldRespond: boolean; // Should the mediator send a message?
+  message: string | null; // The message to send (null if not responding)
+  explanation: string | null; // Why the mediator made this decision
+  readyToEndChat: boolean; // Is the mediator ready to end the conversation?
+}
+
+/**
+ * Extract chat mediator decision fields from parsed structured output.
+ * Uses the configured field names from ChatMediatorStructuredOutputConfig.
+ */
+export function extractChatMediatorStructuredFields(
+  parsed: Record<string, unknown>,
+  config: ChatMediatorStructuredOutputConfig,
+): ChatMediatorStructuredFields {
+  // shouldRespond: defaults to true unless explicitly set to false
+  const shouldRespondValue = config.shouldRespondField
+    ? parsed[config.shouldRespondField]
+    : undefined;
+  const shouldRespond = shouldRespondValue !== false;
+
+  // message: from the configured messageField (default 'response')
+  const messageField = config.messageField || DEFAULT_RESPONSE_FIELD;
+  const message =
+    typeof parsed[messageField] === 'string'
+      ? (parsed[messageField] as string)
+      : null;
+
+  // explanation: from the configured explanationField (default 'explanation')
+  const explanationField = config.explanationField || DEFAULT_EXPLANATION_FIELD;
+  const explanation =
+    typeof parsed[explanationField] === 'string'
+      ? (parsed[explanationField] as string)
+      : null;
+
+  // readyToEndChat: from the configured readyToEndField
+  const readyToEndChat = config.readyToEndField
+    ? Boolean(parsed[config.readyToEndField])
+    : false;
+
+  return {
+    shouldRespond,
+    message,
+    explanation,
+    readyToEndChat,
+  };
 }
 
 // ****************************************************************************
@@ -70,7 +128,7 @@ export function createStructuredOutputConfig(
         schema: {
           type: StructuredOutputDataType.STRING,
           description:
-            '1–2 sentences explaining why you are sending this message, or why you are staying silent, based on your persona and the chat context.',
+            '1-2 sentences explaining why you are sending this message, or why you are staying silent, based on your persona and the chat context.',
         },
       },
       {
@@ -101,9 +159,9 @@ export function createStructuredOutputConfig(
   };
   return {
     enabled: config.enabled ?? true,
-    type: config.type ?? StructuredOutputType.NONE,
+    type: config.type ?? StructuredOutputType.JSON_SCHEMA,
     schema: schema,
-    appendToPrompt: true,
+    appendToPrompt: config.appendToPrompt ?? true,
     shouldRespondField:
       config.shouldRespondField ?? DEFAULT_SHOULD_RESPOND_FIELD,
     messageField: config.messageField ?? DEFAULT_RESPONSE_FIELD,
@@ -112,7 +170,7 @@ export function createStructuredOutputConfig(
   };
 }
 
-function schemaToObject(schema: StructuredOutputSchema): object {
+export function schemaToObject(schema: StructuredOutputSchema): object {
   let properties: Record<string, object> | undefined = undefined;
   let required = undefined;
   if (schema.properties) {

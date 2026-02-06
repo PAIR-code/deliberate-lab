@@ -146,30 +146,42 @@ $bubble-width: 400px;
   }
 }
 
-.debug {
-  @include typescale.label-small;
-  color: var(--md-sys-color-tertiary);
+.debug-container {
+  @include common.flex-column;
+  gap: common.$spacing-xs;
   max-width: $bubble-width;
 }
 
-.generated-image {
+.debug {
+  @include typescale.label-small;
   max-width: $bubble-width;
-  width: 100%;
-  height: auto;
-  border-radius: common.$spacing-medium;
-  margin-top: common.$spacing-small;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  transition:
-    transform 0.2s ease,
-    box-shadow 0.2s ease;
+  padding: common.$spacing-xs common.$spacing-small;
+  border-radius: common.$spacing-xs;
 
-  &:hover {
-    transform: scale(1.02);
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+  &.explanation {
+    color: var(--md-sys-color-tertiary);
+    background: var(--md-sys-color-tertiary-container);
   }
 
-  // Add spacing between multiple images
-  & + .generated-image {
+  &.reasoning {
+    color: var(--md-sys-color-secondary);
+    background: var(--md-sys-color-secondary-container);
+    font-style: italic;
+  }
+}
+
+.debug-label {
+  font-weight: 500;
+  margin-right: common.$spacing-xs;
+}
+
+media-preview {
+  display: block;
+  max-width: $bubble-width;
+  margin-top: common.$spacing-small;
+
+  // Add spacing between multiple media items
+  & + media-preview {
     margin-top: common.$spacing-medium;
   }
 }

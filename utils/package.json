@@ -6,6 +6,7 @@
   "module": "dist/index.mjs",
   "types": "dist/index.d.ts",
   "scripts": {
+    "preinstall": "node -e \"if (process.env.INIT_CWD === process.cwd()) { console.warn('\\n\\x1b[33mWarning: Consider running npm install from the repository root.\\x1b[0m\\nTo add a package to utils/, run:\\n  npm install <pkg> -w utils\\nfrom the root directory.\\n'); }\"",
     "declarations": "tsc --declaration --emitDeclarationOnly",
     "build": "tsup --onSuccess \"npm run declarations\"",
     "build:watch": "tsup --watch --onSuccess \"npm run declarations\"",
@@ -17,18 +18,18 @@
     "dist/**/*"
   ],
   "peerDependencies": {
-    "@sinclair/typebox": "^0.34.41",
-    "firebase": "^12.6.0"
+    "@sinclair/typebox": "^0.34.48",
+    "firebase": "^12.8.0"
   },
   "devDependencies": {
-    "@babel/preset-env": "^7.28.5",
+    "@babel/preset-env": "^7.29.0",
     "@babel/preset-typescript": "^7.28.5",
     "@types/jest": "^30.0.0",
     "@types/mustache": "^4.2.6",
-    "@typescript-eslint/eslint-plugin": "^8.49.0",
+    "@typescript-eslint/eslint-plugin": "^8.54.0",
     "babel-jest": "^30.2.0",
     "eslint-config-prettier": "^10.1.8",
-    "eslint-plugin-prettier": "^5.5.4",
+    "eslint-plugin-prettier": "^5.5.5",
     "picomatch": "^4.0.3",
     "ts-jest": "^29.4.6",
     "tsup": "^8.5.1",
@@ -36,6 +37,11 @@
   },
   "dependencies": {
     "ajv": "^8.17.1",
+    "crypto-browserify": "^3.12.1",
+    "firebase-functions-test": "^3.4.1",
+    "firebase-tools": "^15.5.1",
+    "jest": "^30.2.0",
+    "jsonrepair": "^3.13.2",
     "mustache": "^4.2.0",
     "process": "^0.11.10"
   },

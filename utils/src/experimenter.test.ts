@@ -1,4 +1,4 @@
-import {ApiKeyType} from './agent';
+import {ApiKeyType} from './providers';
 import {
   ExperimenterData,
   checkApiKeyExists,
@@ -38,7 +38,7 @@ describe('checkApiKeyExists', () => {
   });
 
   test('returns false if active API key type is Ollama and ollamaApiKey is invalid', () => {
-    experimenterData.apiKeys.ollamaApiKey = {url: ''};
+    experimenterData.apiKeys.ollamaApiKey = {url: '', apiKey: ''};
     expect(
       checkApiKeyExists(ApiKeyType.OLLAMA_CUSTOM_URL, experimenterData),
     ).toBe(false);
@@ -47,6 +47,7 @@ describe('checkApiKeyExists', () => {
   test('returns true if active API key type is Ollama and ollamaApiKey is valid', () => {
     experimenterData.apiKeys.ollamaApiKey = {
       url: 'http://valid-url.com',
+      apiKey: '',
     };
     expect(
       checkApiKeyExists(ApiKeyType.OLLAMA_CUSTOM_URL, experimenterData),

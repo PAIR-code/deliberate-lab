@@ -1,9 +1,19 @@
+import {Timestamp} from 'firebase-admin/firestore';
 import {
   CohortConfig,
+  CohortDefinition,
+  CohortParticipantConfig,
   Experiment,
   MediatorProfileExtended,
+  ParticipantStatus,
   StageConfig,
+  UnifiedTimestamp,
+  VariableConfig,
+  VariableConfigType,
+  createCohortConfig,
+  createMetadataConfig,
   createPublicDataFromStageConfigs,
+  generateId,
   VariableScope,
 } from '@deliberation-lab/utils';
 import {generateVariablesForScope} from './variables.utils';
@@ -11,9 +21,59 @@ import {createMediatorsForCohort} from './mediator.utils';
 import {app} from './app';
 
 /**
+ * Mark all participants in a cohort as deleted.
+ * Queries by both currentCohortId and transferCohortId to catch all related participants.
+ */
+export async function markCohortParticipantsAsDeleted(
+  experimentId: string,
+  cohortId: string,
+): Promise<{updatedCount: number}> {
+  const firestore = app.firestore();
+  const participantsCollection = firestore
+    .collection('experiments')
+    .doc(experimentId)
+    .collection('participants');
+
+  // Query participants by currentCohortId and transferCohortId separately
+  // (Firestore doesn't support OR across different fields)
+  const [currentCohortDocs, transferCohortDocs] = await Promise.all([
+    participantsCollection.where('currentCohortId', '==', cohortId).get(),
+    participantsCollection.where('transferCohortId', '==', cohortId).get(),
+  ]);
+
+  // Combine results, avoiding duplicates using Map
+  const participantMap = new Map<string, FirebaseFirestore.DocumentSnapshot>();
+  for (const doc of currentCohortDocs.docs) {
+    participantMap.set(doc.id, doc);
+  }
+  for (const doc of transferCohortDocs.docs) {
+    participantMap.set(doc.id, doc);
+  }
+
+  // Batch updates for efficiency
+  const batch = firestore.batch();
+  for (const doc of participantMap.values()) {
+    const participant = doc.data();
+    batch.set(doc.ref, {
+      ...participant,
+      currentStatus: ParticipantStatus.DELETED,
+    });
+  }
+  await batch.commit();
+
+  return {updatedCount: participantMap.size};
+}
+
+/**
  * Creates a cohort with the given configuration.
  * This function initializes public stage data, unlocks relevant stages,
  * and adds mediators to the cohort.
+ *
+ * Note: The experiment must already exist in Firestore before calling this function.
+ *
+ * @param transaction - Firestore transaction
+ * @param experimentId - The experiment ID
+ * @param cohortConfig - The cohort configuration
  */
 export async function createCohortInternal(
   transaction: FirebaseFirestore.Transaction,
@@ -42,6 +102,16 @@ export async function createCohortInternal(
     await transaction.get(firestore.collection('experiments').doc(experimentId))
   ).data() as Experiment;
 
+  // Transform cohortValues keys if this cohort has an alias
+  let variableConfigs = experiment.variableConfigs ?? [];
+  if (cohortConfig.alias) {
+    variableConfigs = transformCohortValuesKeys(
+      variableConfigs,
+      cohortConfig.alias,
+      cohortConfig.id,
+    );
+  }
+
   const publicData = createPublicDataFromStageConfigs(stages);
 
   for (const dataItem of publicData) {
@@ -67,10 +137,11 @@ export async function createCohortInternal(
   }
 
   // Add variable values at the cohort level
-  cohortConfig.variableMap = await generateVariablesForScope(
-    experiment.variableConfigs ?? [],
-    {scope: VariableScope.COHORT, experimentId, cohortId: cohortConfig.id},
-  );
+  cohortConfig.variableMap = await generateVariablesForScope(variableConfigs, {
+    scope: VariableScope.COHORT,
+    experimentId,
+    cohortId: cohortConfig.id,
+  });
 
   // Write cohort config
   transaction.set(document, cohortConfig);
@@ -88,4 +159,86 @@ export async function createCohortInternal(
       .doc(mediator.privateId);
     transaction.set(mediatorDoc, mediator);
   }
+}
+
+/**
+ * Transform cohortValues keys from alias to cohortId.
+ *
+ * This function creates a copy of the variable configs where STATIC variables
+ * with cohortValues have their keys transformed from alias to cohortId.
+ * This allows generateStaticVariables to look up values by cohortId.
+ *
+ * @param variableConfigs - Original variable configs with alias keys
+ * @param alias - The cohort alias to match
+ * @param cohortId - The cohort ID to use as the new key
+ * @returns New array of variable configs with transformed cohortValues
+ */
+export function transformCohortValuesKeys(
+  variableConfigs: VariableConfig[],
+  alias: string,
+  cohortId: string,
+): VariableConfig[] {
+  return variableConfigs.map((config) => {
+    if (
+      config.type === VariableConfigType.STATIC &&
+      config.cohortValues?.[alias]
+    ) {
+      return {
+        ...config,
+        cohortValues: {[cohortId]: config.cohortValues[alias]},
+      };
+    }
+    return config;
+  });
+}
+
+/**
+ * Create a cohort from a cohort definition.
+ *
+ * This function creates a new cohort config with a generated UUID and the
+ * definition's alias, then calls createCohortInternal which handles variable
+ * transformation based on the alias.
+ *
+ * Note: The experiment must already exist in Firestore before calling this function.
+ *
+ * @param transaction - Firestore transaction
+ * @param experimentId - The experiment ID
+ * @param definition - The cohort definition to create from
+ * @param defaultCohortConfig - Default participant config for the cohort
+ * @returns The created cohort config
+ */
+export async function createCohortFromDefinition(
+  transaction: FirebaseFirestore.Transaction,
+  experimentId: string,
+  definition: CohortDefinition,
+  defaultCohortConfig: CohortParticipantConfig,
+): Promise<CohortConfig> {
+  // Use Admin SDK Timestamp for Firestore compatibility
+  const timestamp = Timestamp.now() as UnifiedTimestamp;
+
+  // Build participant config, applying definition override if set
+  const participantConfig: CohortParticipantConfig =
+    definition.maxParticipantsPerCohort !== undefined
+      ? {
+          ...defaultCohortConfig,
+          maxParticipantsPerCohort: definition.maxParticipantsPerCohort,
+        }
+      : defaultCohortConfig;
+
+  // Create cohort config with generated UUID and alias
+  const cohortConfig = createCohortConfig({
+    id: generateId(true), // Alphanumeric for sorting
+    alias: definition.alias,
+    metadata: createMetadataConfig({
+      name: definition.name,
+      dateCreated: timestamp,
+      dateModified: timestamp,
+    }),
+    participantConfig,
+  });
+
+  // Create the cohort - createCohortInternal handles variable transformation
+  await createCohortInternal(transaction, experimentId, cohortConfig);
+
+  return cohortConfig;
 }

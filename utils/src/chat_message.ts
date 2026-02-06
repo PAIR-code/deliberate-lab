@@ -5,7 +5,7 @@ import {
   UserType,
   createParticipantProfileBase,
 } from './participant';
-import {AgentChatPromptConfig} from './agent';
+import {StoredFile} from './model_response';
 
 /** Chat message types and functions (used in chat stages). */
 
@@ -30,20 +30,10 @@ export interface ChatMessage {
   profile: ParticipantProfileBase;
   senderId: string; // participant public ID or mediator public ID
   agentId: string; // agent persona used (or blank if none)
-  explanation: string; // agent reasoning (or blank if none)
+  explanation: string; // agent's explicit decision explanation from structured output
+  reasoning?: string; // model's internal chain-of-thought (from thinking/reasoning features)
   isError: boolean; // is error message (used for private chats)
-  imageUrls?: string[]; // multiple images
-}
-
-/** Format for LLM API chat message output. */
-export interface AgentChatResponse {
-  profile: ParticipantProfileBase;
-  profileId: string; // ID of participant or mediator
-  agentId: string; // ID of agent persona
-  promptConfig: AgentChatPromptConfig;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  parsed: any;
-  message: string;
+  files?: StoredFile[]; // uploaded files (images, documents, etc.)
 }
 
 // ************************************************************************* //
@@ -72,8 +62,9 @@ export function createChatMessage(
     senderId: config.senderId ?? '',
     agentId: config.agentId ?? '',
     explanation: config.explanation ?? '',
+    reasoning: config.reasoning ?? undefined,
     isError: config.isError ?? false,
-    imageUrls: config.imageUrls ?? undefined,
+    files: config.files ?? undefined,
   };
 }
 
@@ -91,8 +82,9 @@ export function createParticipantChatMessage(
     senderId: config.senderId ?? '',
     agentId: config.agentId ?? '',
     explanation: config.explanation ?? '',
+    reasoning: config.reasoning ?? undefined,
     isError: config.isError ?? false,
-    imageUrls: config.imageUrls ?? undefined,
+    files: config.files ?? undefined,
   };
 }
 
@@ -110,8 +102,9 @@ export function createMediatorChatMessage(
     senderId: config.senderId ?? '',
     agentId: config.agentId ?? '',
     explanation: config.explanation ?? '',
+    reasoning: config.reasoning ?? undefined,
     isError: config.isError ?? false,
-    imageUrls: config.imageUrls ?? undefined,
+    files: config.files ?? undefined,
   };
 }
 
@@ -129,8 +122,9 @@ export function createExperimenterChatMessage(
     senderId: EXPERIMENTER_MANUAL_CHAT_SENDER_ID,
     agentId: config.agentId ?? '',
     explanation: config.explanation ?? '',
+    reasoning: config.reasoning ?? undefined,
     isError: config.isError ?? false,
-    imageUrls: config.imageUrls ?? undefined,
+    files: config.files ?? undefined,
   };
 }
 
@@ -148,6 +142,8 @@ export function createSystemChatMessage(
     senderId: config.senderId ?? '',
     agentId: config.agentId ?? '',
     explanation: config.explanation ?? '',
+    reasoning: config.reasoning ?? undefined,
     isError: false,
+    files: config.files ?? undefined,
   };
 }

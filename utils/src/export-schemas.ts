@@ -19,6 +19,7 @@ import {
   CohortCreationData,
   UpdateCohortMetadataData,
 } from './cohort.validation';
+import {AgentMediatorTemplateData} from './agent.validation';
 
 /**
  * Recursively collect all schemas with $id from a schema tree.
@@ -83,6 +84,9 @@ for (const [key, schema] of Object.entries(CONFIG_DATA)) {
   collectedSchemas.set(stageName, schema);
   collectSchemasWithId(schema, collectedSchemas);
 }
+
+// Collect agent schemas (reachable via AgentMediatorTemplateData.promptMap -> PromptConfigData)
+collectSchemasWithId(AgentMediatorTemplateData, collectedSchemas);
 
 // Build $defs from collected schemas (excluding the root schema)
 const $defs: Record<string, unknown> = {};
@@ -156,12 +160,14 @@ function discriminatorToClassName(value: string): string {
  * @param parentKey - The key this object is stored under in its parent
  * @param typeContext - Context like 'Question', 'StageConfig' for discriminated unions
  * @param arrayContext - The property name if this is inside an array's items
+ * @param currentSchemaId - The $id of the current schema being processed (for self-references)
  */
 function fixRefs(
   obj: unknown,
   parentKey?: string,
   typeContext?: string,
   arrayContext?: string,
+  currentSchemaId?: string,
 ): unknown {
   if (obj === null || typeof obj !== 'object') {
     return obj;
@@ -169,12 +175,16 @@ function fixRefs(
 
   if (Array.isArray(obj)) {
     return obj.map((item) =>
-      fixRefs(item, parentKey, typeContext, arrayContext),
+      fixRefs(item, parentKey, typeContext, arrayContext, currentSchemaId),
     );
   }
 
   const result: Record<string, unknown> = {};
   const record = obj as Record<string, unknown>;
+
+  // Track the current schema's $id for self-references
+  const schemaId =
+    typeof record.$id === 'string' ? record.$id : currentSchemaId;
 
   // Determine type context for discriminated unions
   let newTypeContext = typeContext;
@@ -191,16 +201,31 @@ function fixRefs(
   const newArrayContext = arrayContext;
 
   for (const [key, value] of Object.entries(record)) {
-    if (key === '$ref' && typeof value === 'string' && !value.startsWith('#')) {
-      result[key] = `#/$defs/${value}`;
+    if (key === '$ref' && typeof value === 'string') {
+      if (value === '#' && schemaId) {
+        // Self-reference: replace "#" with "#/$defs/{schemaId}"
+        result[key] = `#/$defs/${schemaId}`;
+      } else if (!value.startsWith('#')) {
+        // Named reference: add #/$defs/ prefix
+        result[key] = `#/$defs/${value}`;
+      } else {
+        // Already a proper $ref, keep as-is
+        result[key] = value;
+      }
     } else if (key === '$id' && typeof value === 'string') {
       // Convert $id to title for better Python class naming
       result.title = value;
     } else if (key === 'items' && typeof value === 'object') {
       // This is an array items schema - pass the parent key as array context
-      result[key] = fixRefs(value, key, newTypeContext, parentKey);
+      result[key] = fixRefs(value, key, newTypeContext, parentKey, schemaId);
     } else {
-      result[key] = fixRefs(value, key, newTypeContext, newArrayContext);
+      result[key] = fixRefs(
+        value,
+        key,
+        newTypeContext,
+        newArrayContext,
+        schemaId,
+      );
     }
   }
 
@@ -231,6 +256,55 @@ function fixRefs(
 const fixedSchema = fixRefs(combinedSchema) as Record<string, unknown>;
 // Restore root $id
 fixedSchema.$id = 'DeliberateLabSchemas';
+
+/**
+ * Simplify allOf structures created by Type.Composite.
+ *
+ * When Type.Composite combines a base schema (with anyOf for multiple type options)
+ * and a specific schema (with const for one specific type), it creates:
+ *   { allOf: [{ anyOf: [...] }, { const: "specific", default: "specific" }] }
+ *
+ * This is semantically correct but too complex for datamodel-codegen to parse.
+ * We simplify it to just the const schema since it's the more specific constraint.
+ */
+function simplifyAllOf(obj: unknown): unknown {
+  if (obj === null || typeof obj !== 'object') {
+    return obj;
+  }
+
+  if (Array.isArray(obj)) {
+    return obj.map((item) => simplifyAllOf(item));
+  }
+
+  const record = obj as Record<string, unknown>;
+
+  // Check if this is an allOf that can be simplified
+  if (Array.isArray(record.allOf) && record.allOf.length === 2) {
+    const [first, second] = record.allOf as [
+      Record<string, unknown>,
+      Record<string, unknown>,
+    ];
+
+    // Pattern: allOf with anyOf (union) + const (specific value)
+    // Keep only the const schema since it's more specific
+    if (first.anyOf && second.const !== undefined) {
+      return simplifyAllOf(second);
+    }
+    if (second.anyOf && first.const !== undefined) {
+      return simplifyAllOf(first);
+    }
+  }
+
+  // Recursively process all properties
+  const result: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(record)) {
+    result[key] = simplifyAllOf(value);
+  }
+  return result;
+}
+
+const simplifiedSchema = simplifyAllOf(fixedSchema) as Record<string, unknown>;
+simplifiedSchema.$id = 'DeliberateLabSchemas';
 
 /**
  * Second pass: replace inline schemas that have the same title as a $defs entry with $refs.
@@ -292,13 +366,13 @@ function deduplicateWithRefs(
 }
 
 // Get $defs from the schema
-const defs = (fixedSchema.$defs || {}) as Record<string, unknown>;
+const defs = (simplifiedSchema.$defs || {}) as Record<string, unknown>;
 
 // Deduplicate inline schemas
-const deduplicatedSchema = deduplicateWithRefs(fixedSchema, defs) as Record<
-  string,
-  unknown
->;
+const deduplicatedSchema = deduplicateWithRefs(
+  simplifiedSchema,
+  defs,
+) as Record<string, unknown>;
 deduplicatedSchema.$id = 'DeliberateLabSchemas';
 
 // Write to docs/assets/api for public access

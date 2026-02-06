@@ -7,6 +7,10 @@
   align-items: end;
 }
 
+:host([alignstart]) {
+  align-items: start;
+}
+
 .button-content {
   @include common.flex-row-align-center;
   flex-wrap: wrap;
@@ -19,10 +23,14 @@
   height: 0;
   overflow: hidden;
   width: 0;
-  z-index: 1;
+  z-index: 30;
 
   &.show-menu {
     overflow: visible;
+  }
+
+  &.align-start {
+    align-items: start;
   }
 }
 

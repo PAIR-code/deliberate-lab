@@ -1,0 +1,49 @@
+@use '../../sass/common';
+@use '../../sass/typescale';
+
+:host {
+  @include common.flex-row-align-center;
+  gap: common.$spacing-xs;
+  position: relative;
+  // Scale down the controls to fit better alongside table headers
+  // while keeping consistent internal padding and icon sizes.
+  transform: scale(0.8);
+  transform-origin: right center;
+  z-index: 1;
+}
+
+.direction-toggle {
+  @include typescale.body-small;
+  @include common.flex-row-align-center;
+  color: var(--md-sys-color-outline);
+  cursor: pointer;
+  gap: common.$spacing-xs;
+
+  &:focus,
+  &:hover {
+    color: var(--md-sys-color-secondary);
+  }
+}
+
+.menu-wrapper {
+  @include typescale.label-medium;
+  @include common.flex-column;
+  gap: common.$spacing-xs;
+  overflow: auto;
+}
+
+.menu-item {
+  @include common.nav-item;
+  border-radius: common.$spacing-small;
+  padding: common.$spacing-small common.$spacing-medium;
+
+  &.checkbox-item {
+    @include common.flex-row-align-center;
+    gap: common.$spacing-xs;
+  }
+}
+
+.menu-divider {
+  border-top: 1px solid var(--md-sys-color-outline-variant);
+  margin: common.$spacing-xs 0;
+}

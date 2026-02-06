@@ -84,7 +84,7 @@ export const ShuffleConfigData = Type.Object(
     ]),
     customSeed: Type.String(),
   },
-  strict,
+  {$id: 'ShuffleConfig', ...strict},
 );
 
 /** StaticVariableConfig. */
@@ -93,8 +93,11 @@ export const StaticVariableConfigData = Type.Composite(
     BaseVariableConfigData,
     Type.Object(
       {
-        type: Type.Literal(VariableConfigType.STATIC),
+        type: Type.Literal(VariableConfigType.STATIC, {
+          default: VariableConfigType.STATIC,
+        }),
         value: Type.String(),
+        cohortValues: Type.Optional(Type.Record(Type.String(), Type.String())),
       },
       strict,
     ),
@@ -108,7 +111,9 @@ export const RandomPermutationVariableConfigData = Type.Composite(
     BaseVariableConfigData,
     Type.Object(
       {
-        type: Type.Literal(VariableConfigType.RANDOM_PERMUTATION),
+        type: Type.Literal(VariableConfigType.RANDOM_PERMUTATION, {
+          default: VariableConfigType.RANDOM_PERMUTATION,
+        }),
         shuffleConfig: ShuffleConfigData,
         values: Type.Array(Type.String()),
         numToSelect: Type.Optional(Type.Number({minimum: 1})),
@@ -126,7 +131,9 @@ export const BalancedAssignmentVariableConfigData = Type.Composite(
     BaseVariableConfigData,
     Type.Object(
       {
-        type: Type.Literal(VariableConfigType.BALANCED_ASSIGNMENT),
+        type: Type.Literal(VariableConfigType.BALANCED_ASSIGNMENT, {
+          default: VariableConfigType.BALANCED_ASSIGNMENT,
+        }),
         values: Type.Array(Type.String()),
         weights: Type.Optional(Type.Array(Type.Number({minimum: 1}))),
         balanceStrategy: Type.Union([

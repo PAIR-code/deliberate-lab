@@ -147,3 +147,8 @@ code {
   overflow: auto;
   word-break: break-all;
 }
+
+cohort-filter-controls {
+  padding: 0 common.$main-content-padding;
+  align-self: flex-end;
+}

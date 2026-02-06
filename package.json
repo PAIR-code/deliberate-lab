@@ -8,15 +8,18 @@
     "type": "git",
     "url": "git+https://github.com/PAIR-code/deliberate-lab.git"
   },
+  "engines": {
+    "node": ">=22"
+  },
   "devDependencies": {
-    "@eslint/js": "^9.39.1",
-    "eslint": "^9.39.1",
-    "firebase-tools": "^15.0.0",
-    "globals": "^16.5.0",
+    "@eslint/js": "^9.39.2",
+    "eslint": "^9.39.2",
+    "firebase-tools": "^15.5.1",
+    "globals": "^17.3.0",
     "husky": "^9.1.7",
     "lint-staged": "^16.2.7",
-    "prettier": "^3.7.4",
-    "typescript-eslint": "^8.49.0"
+    "prettier": "^3.8.1",
+    "typescript-eslint": "^8.54.0"
   },
   "lint-staged": {
     "*.{json,ts,html,scss,css}": [
@@ -25,11 +28,16 @@
     ]
   },
   "scripts": {
-    "prepare": "husky"
+    "doctor": "node scripts/doctor.js",
+    "prepare": "husky",
+    "update-schemas": "npm run build --workspace=utils && npx tsx utils/src/export-schemas.ts && npx prettier --write docs/assets/api/schemas.json && cd scripts && uv run datamodel-codegen --input ../docs/assets/api/schemas.json --output deliberate_lab/types.py --input-file-type jsonschema --reuse-model --collapse-root-models --use-union-operator --use-title-as-name --use-one-literal-as-default --use-default --use-annotated --use-standard-collections --target-python-version 3.12 --output-model-type pydantic_v2.BaseModel --custom-file-header '# pyright: reportInvalidTypeForm=false\n# pytype: disable=invalid-function-definition\n# pylint: disable=missing-module-docstring,missing-class-docstring,invalid-name,too-few-public-methods' && uv run black deliberate_lab/ && uv run pyright deliberate_lab/"
   },
   "workspaces": [
     "frontend",
     "utils",
     "functions"
-  ]
+  ],
+  "dependencies": {
+    "crypto-browserify": "^3.12.1"
+  }
 }

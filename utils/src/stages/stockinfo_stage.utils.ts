@@ -3,6 +3,7 @@ import {
   StockInfoCard,
   StockInfoStageConfig,
 } from './stockinfo_stage';
+import {formatCurrency} from '../utils/currency.utils';
 
 // ************************************************************************* //
 // CHART CONFIGURATION                                                       //
@@ -15,6 +16,8 @@ export interface ChartConfig {
   padding: number;
   isInvestmentGrowth: boolean;
   useQuarterlyMarkers: boolean;
+  initialInvestment: number;
+  currency: string;
 }
 
 // ************************************************************************* //
@@ -54,6 +57,8 @@ function calculateChartBounds(
 export function calculateChartConfig(options: {
   isInvestmentGrowth?: boolean;
   useQuarterlyMarkers?: boolean;
+  initialInvestment?: number;
+  currency?: string;
 }): ChartConfig {
   return {
     width: 600,
@@ -62,16 +67,21 @@ export function calculateChartConfig(options: {
     padding: 30,
     isInvestmentGrowth: options.isInvestmentGrowth || false,
     useQuarterlyMarkers: options.useQuarterlyMarkers || false,
+    initialInvestment: options.initialInvestment ?? 1000,
+    currency: options.currency ?? 'USD',
   };
 }
 
 export function normalizeChartValues(
   data: StockDataPoint[],
   isInvestmentGrowth: boolean,
+  initialInvestment: number = 1000,
 ): number[] {
   if (isInvestmentGrowth) {
     const initialPrice = data[0].close;
-    return data.map((point) => (point.close / initialPrice) * 1000);
+    return data.map(
+      (point) => (point.close / initialPrice) * initialInvestment,
+    );
   }
   return data.map((d) => d.close);
 }
@@ -167,8 +177,8 @@ export function generateSVGReferenceLine(
 
   let referenceLines = '';
 
-  // Initial investment line at $1,000
-  const initialInvestmentValue = 1000;
+  // Initial investment line
+  const initialInvestmentValue = config.initialInvestment;
   const initialSvgY =
     config.padding +
     (1 - (initialInvestmentValue - chartMin) / chartRange) *
@@ -182,19 +192,27 @@ export function generateSVGReferenceLine(
     config.padding +
     (1 - (dataMaxValue - chartMin) / chartRange) *
       (config.height - 2 * config.padding);
+  const highLabel = formatCurrency(dataMaxValue, config.currency, {
+    decimals: 0,
+  });
   referenceLines += `
     <line x1="${config.leftPadding}" y1="${maxSvgY}" x2="${config.width - config.padding}" y2="${maxSvgY}" stroke="var(--md-sys-color-primary)" stroke-width="1" stroke-dasharray="2,2" />
-    <text x="${config.width - config.padding - 5}" y="${maxSvgY - 5}" font-size="11" fill="var(--md-sys-color-primary)" text-anchor="end">High: $${Math.round(dataMaxValue).toLocaleString()}</text>`;
+    <text x="${config.width - config.padding - 5}" y="${maxSvgY - 5}" font-size="11" fill="var(--md-sys-color-primary)" text-anchor="end">High: ${highLabel}</text>`;
 
   // Minimum investment line (only if different from initial and not too close)
-  if (Math.abs(dataMinValue - initialInvestmentValue) > 50) {
+  // Use 5% of initial investment as threshold for showing low line
+  const threshold = config.initialInvestment * 0.05;
+  if (Math.abs(dataMinValue - initialInvestmentValue) > threshold) {
     const minSvgY =
       config.padding +
       (1 - (dataMinValue - chartMin) / chartRange) *
         (config.height - 2 * config.padding);
+    const lowLabel = formatCurrency(dataMinValue, config.currency, {
+      decimals: 0,
+    });
     referenceLines += `
       <line x1="${config.leftPadding}" y1="${minSvgY}" x2="${config.width - config.padding}" y2="${minSvgY}" stroke="var(--md-sys-color-error)" stroke-width="1" stroke-dasharray="2,2" />
-      <text x="${config.width - config.padding - 5}" y="${minSvgY + 12}" font-size="11" fill="var(--md-sys-color-error)" text-anchor="end">Low: $${Math.round(dataMinValue).toLocaleString()}</text>`;
+      <text x="${config.width - config.padding - 5}" y="${minSvgY + 12}" font-size="11" fill="var(--md-sys-color-error)" text-anchor="end">Low: ${lowLabel}</text>`;
   }
 
   return referenceLines;
@@ -216,7 +234,8 @@ export function generateSVGValueLabels(
       config.padding +
       (1 - (value - chartMin) / chartRange) *
         (config.height - 2 * config.padding);
-    labels += `<text x="${config.leftPadding - 5}" y="${tickY + 5}" font-size="12" fill="var(--md-sys-color-on-surface-variant)" text-anchor="end">$${value.toLocaleString()}</text>`;
+    const valueLabel = formatCurrency(value, config.currency, {decimals: 0});
+    labels += `<text x="${config.leftPadding - 5}" y="${tickY + 5}" font-size="12" fill="var(--md-sys-color-on-surface-variant)" text-anchor="end">${valueLabel}</text>`;
   }
 
   return labels;
@@ -227,12 +246,15 @@ export function generateSVGChart(
   options: {
     isInvestmentGrowth?: boolean;
     useQuarterlyMarkers?: boolean;
+    initialInvestment?: number;
+    currency?: string;
   } = {},
 ): string {
   const chartConfig = calculateChartConfig(options);
   const chartData = normalizeChartValues(
     stockData,
     chartConfig.isInvestmentGrowth,
+    chartConfig.initialInvestment,
   );
   const chartPoints = generateSVGChartPoints(chartData, chartConfig);
   const dateMarkers = generateSVGDateMarkers(stockData, chartConfig);
@@ -255,9 +277,10 @@ export function generateSVGChart(
 // STOCK PERFORMANCE UTILITIES                                               //
 // ************************************************************************* //
 
-/** Calculate year-over-year performance for $1000 investment. */
+/** Calculate year-over-year performance for a given initial investment. */
 export function calculateYearOverYearPerformance(
   data: StockDataPoint[],
+  initialInvestment: number = 1000,
 ): Array<{
   year: number;
   dollarChange: number;
@@ -283,7 +306,7 @@ export function calculateYearOverYearPerformance(
   for (const [yearStr, {start, end}] of Object.entries(yearlyData)) {
     const year = parseInt(yearStr);
     const percentChange = ((end - start) / start) * 100;
-    const dollarChange = (percentChange / 100) * 1000;
+    const dollarChange = (percentChange / 100) * initialInvestment;
     performance.push({year, dollarChange, percentChange});
   }
 
@@ -291,11 +314,14 @@ export function calculateYearOverYearPerformance(
 }
 
 /** Get best and worst year performance. */
-export function getBestAndWorstYearPerformance(data: StockDataPoint[]): {
+export function getBestAndWorstYearPerformance(
+  data: StockDataPoint[],
+  initialInvestment: number = 1000,
+): {
   best: {year: number; dollarChange: number; percentChange: number} | null;
   worst: {year: number; dollarChange: number; percentChange: number} | null;
 } {
-  const performance = calculateYearOverYearPerformance(data);
+  const performance = calculateYearOverYearPerformance(data, initialInvestment);
   if (performance.length === 0) return {best: null, worst: null};
 
   const best = performance.reduce((max, current) =>
@@ -373,19 +399,31 @@ export function validateStockData(data: StockDataPoint[]): {
 /** Generate all info cards for a stock (performance + custom cards). */
 export function generateStockInfoCards(
   stock: {parsedData: StockDataPoint[]; customCards: StockInfoCard[]},
-  stage: {showBestYearCard?: boolean; showWorstYearCard?: boolean},
+  stage: {
+    showBestYearCard?: boolean;
+    showWorstYearCard?: boolean;
+    initialInvestment?: number;
+    currency?: string;
+  },
 ): StockInfoCard[] {
   const cards: StockInfoCard[] = [];
+  const initialInvestment = stage.initialInvestment ?? 1000;
+  const currency = stage.currency ?? 'USD';
 
   // Add default cards if enabled
   if (stage.showBestYearCard || stage.showWorstYearCard) {
-    const performance = getBestAndWorstYearPerformance(stock.parsedData);
+    const performance = getBestAndWorstYearPerformance(
+      stock.parsedData,
+      initialInvestment,
+    );
 
     if (stage.showBestYearCard && performance.best) {
       cards.push({
         id: 'best-year',
         title: 'Best Year Performance',
-        value: `$${Math.abs(performance.best.dollarChange).toFixed(0)}`,
+        value: formatCurrency(performance.best.dollarChange, currency, {
+          decimals: 0,
+        }),
         subtext: `${performance.best.percentChange.toFixed(1)}% (${performance.best.year})`,
         enabled: true,
       });
@@ -395,7 +433,9 @@ export function generateStockInfoCards(
       cards.push({
         id: 'worst-year',
         title: 'Worst Year Performance',
-        value: `$${Math.abs(performance.worst.dollarChange).toFixed(0)}`,
+        value: formatCurrency(performance.worst.dollarChange, currency, {
+          decimals: 0,
+        }),
         subtext: `${performance.worst.percentChange.toFixed(1)}% (${performance.worst.year})`,
         enabled: true,
       });

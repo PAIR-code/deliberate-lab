@@ -10,6 +10,7 @@ import {
   ConditionTargetReference,
   getConditionTargetKey,
   extractMultipleConditionDependencies,
+  extractConditionDependencies,
   evaluateCondition,
   Condition,
 } from './condition';
@@ -310,4 +311,47 @@ export function getConditionTargetsFromStages(
   }
 
   return targets;
+}
+
+/**
+ * Sanitize survey question conditions to ensure they only reference valid targets.
+ *
+ * A condition is invalid if it references:
+ * - A question that doesn't exist in the list
+ * - A question that comes at or after the current question's position
+ *
+ * Invalid conditions are cleared (set to undefined) to prevent rendering issues.
+ *
+ * @param questions - The list of survey questions to sanitize
+ * @param stageId - The ID of the stage containing these questions
+ * @returns A new array with invalid conditions cleared
+ */
+export function sanitizeSurveyQuestionConditions<
+  T extends {id: string; condition?: Condition},
+>(questions: T[], stageId: string): T[] {
+  // Build a map of question ID to its index in the ordering
+  const questionIndexMap = new Map<string, number>();
+  questions.forEach((q, idx) => {
+    questionIndexMap.set(q.id, idx);
+  });
+
+  return questions.map((question, index) => {
+    if (!question.condition) return question;
+
+    const dependencies = extractConditionDependencies(question.condition);
+
+    // Check if any dependency in the same stage is invalid
+    const hasInvalidDependency = dependencies.some((dep) => {
+      if (dep.stageId !== stageId) return false; // Other stages are fine
+
+      const refIndex = questionIndexMap.get(dep.questionId);
+      // Invalid if: question doesn't exist, or comes at/after current position
+      return refIndex === undefined || refIndex >= index;
+    });
+
+    if (hasInvalidDependency) {
+      return {...question, condition: undefined};
+    }
+    return question;
+  });
 }

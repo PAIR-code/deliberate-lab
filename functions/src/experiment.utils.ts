@@ -4,17 +4,52 @@
 
 import {Firestore, Timestamp, Transaction} from 'firebase-admin/firestore';
 import {
+  CohortDefinition,
+  CohortParticipantConfig,
   ExperimentTemplate,
   StageConfig,
   UnifiedTimestamp,
   Visibility,
+  createAgentMediatorPersonaConfig,
+  createAgentParticipantPersonaConfig,
   createExperimentConfig,
   createExperimentTemplate,
+  createMetadataConfig,
   generateId,
   VariableScope,
 } from '@deliberation-lab/utils';
 import {getExperimentDownload} from './data';
 import {generateVariablesForScope} from './variables.utils';
+import {AuthGuard} from './utils/auth-guard';
+import {createCohortFromDefinition} from './cohort.utils';
+
+/**
+ * Create cohorts from cohort definitions and update the definitions with generated IDs.
+ * Each cohort is created in its own transaction for parallel execution.
+ */
+async function createCohortsFromDefinitions(
+  firestore: Firestore,
+  experimentId: string,
+  definitions: CohortDefinition[],
+  defaultCohortConfig: CohortParticipantConfig,
+): Promise<void> {
+  if (definitions.length === 0) return;
+
+  await Promise.all(
+    definitions.map(async (definition) => {
+      await firestore.runTransaction(async (transaction: Transaction) => {
+        const cohortConfig = await createCohortFromDefinition(
+          transaction,
+          experimentId,
+          definition,
+          defaultCohortConfig,
+        );
+        // Store the generated cohort ID back on the definition
+        definition.generatedCohortId = cohortConfig.id;
+      });
+    }),
+  );
+}
 
 /**
  * Options for writing an experiment from a template
@@ -61,8 +96,14 @@ export async function writeExperimentFromTemplate(
     return '';
   }
 
-  // Set creator
-  experimentConfig.metadata.creator = creatorId;
+  // Build metadata with admin SDK Timestamps and set creator
+  const timestamp = Timestamp.now() as UnifiedTimestamp;
+  experimentConfig.metadata = createMetadataConfig({
+    ...experimentConfig.metadata,
+    creator: creatorId,
+    dateCreated: timestamp,
+    dateModified: timestamp,
+  });
 
   // Generate variable values at the experiment level before the transaction
   // so the experimentConfig has the variableMap when it's written
@@ -76,7 +117,6 @@ export async function writeExperimentFromTemplate(
 
   // Run document write as transaction to ensure consistency
   await firestore.runTransaction(async (transaction: Transaction) => {
-    // Set the experiment document
     transaction.set(document, experimentConfig);
 
     // Add collection of stages
@@ -86,8 +126,9 @@ export async function writeExperimentFromTemplate(
 
     // Add agent mediators under `agentMediators` collection
     for (const agent of template.agentMediators) {
-      const doc = document.collection('agentMediators').doc(agent.persona.id);
-      transaction.set(doc, agent.persona);
+      const persona = createAgentMediatorPersonaConfig(agent.persona);
+      const doc = document.collection('agentMediators').doc(persona.id);
+      transaction.set(doc, persona);
       for (const prompt of Object.values(agent.promptMap)) {
         transaction.set(doc.collection('prompts').doc(prompt.id), prompt);
       }
@@ -95,15 +136,29 @@ export async function writeExperimentFromTemplate(
 
     // Add agent participants under `agentParticipants` collection
     for (const agent of template.agentParticipants) {
-      const doc = document
-        .collection('agentParticipants')
-        .doc(agent.persona.id);
-      transaction.set(doc, agent.persona);
+      const persona = createAgentParticipantPersonaConfig(agent.persona);
+      const doc = document.collection('agentParticipants').doc(persona.id);
+      transaction.set(doc, persona);
       for (const prompt of Object.values(agent.promptMap)) {
         transaction.set(doc.collection('prompts').doc(prompt.id), prompt);
       }
     }
   });
+
+  // Create cohorts from cohort definitions AFTER main transaction commits
+  // (so createCohortInternal can read the experiment normally)
+  if (experimentConfig.cohortDefinitions?.length) {
+    await createCohortsFromDefinitions(
+      firestore,
+      experimentConfig.id,
+      experimentConfig.cohortDefinitions,
+      experimentConfig.defaultCohortConfig,
+    );
+    // Update experiment with generatedCohortIds
+    await document.update({
+      cohortDefinitions: experimentConfig.cohortDefinitions,
+    });
+  }
 
   return document.id;
 }
@@ -243,7 +298,7 @@ export interface UpdateExperimentOptions {
  */
 export interface UpdateExperimentResult {
   success: boolean;
-  error?: 'not-found' | 'not-owner';
+  error?: 'not-found' | 'not-owner' | 'cohort-definitions-locked';
 }
 
 /**
@@ -284,16 +339,72 @@ export async function updateExperimentFromTemplate(
     return {success: false, error: 'not-found'};
   }
 
-  // Verify that the experimenter is the creator
+  // Verify that the experimenter is the creator or an admin
   if (experimenterId !== oldExperiment.data()?.metadata.creator) {
-    return {success: false, error: 'not-owner'};
+    const isAdmin = await AuthGuard.isAdminEmail(firestore, experimenterId);
+
+    if (!isAdmin) {
+      return {success: false, error: 'not-owner'};
+    }
   }
+
+  // Preserve original dateCreated and creator, always update dateModified
+  const oldData = oldExperiment.data();
+  experimentConfig.metadata = createMetadataConfig({
+    ...experimentConfig.metadata,
+    creator: oldData?.metadata.creator,
+    dateCreated: oldData?.metadata.dateCreated,
+    dateModified: Timestamp.now() as UnifiedTimestamp,
+  });
 
   // Regenerate variable values based on current variable configs
   experimentConfig.variableMap = await generateVariablesForScope(
     experimentConfig.variableConfigs ?? [],
     {scope: VariableScope.EXPERIMENT, experimentId: experimentConfig.id},
   );
+
+  // Handle cohortDefinitions updates:
+  // - Compare definitions to see if locked fields changed (id, alias, maxParticipantsPerCohort)
+  // - If participants exist and locked fields changed: error
+  // - If no participants and locked fields changed: regenerate cohorts
+  // - If locked fields unchanged: preserve generatedCohortIds
+  const participantsSnapshot = await document
+    .collection('participants')
+    .limit(1)
+    .get();
+  const hasParticipants = !participantsSnapshot.empty;
+
+  // Check if locked cohortDefinition fields changed
+  const getLockedFields = (d: CohortDefinition) => ({
+    id: d.id,
+    alias: d.alias,
+    maxParticipantsPerCohort: d.maxParticipantsPerCohort,
+  });
+  const oldLocked = (oldData?.cohortDefinitions ?? []).map(getLockedFields);
+  const newLocked = (experimentConfig.cohortDefinitions ?? []).map(
+    getLockedFields,
+  );
+  const lockedFieldsChanged =
+    JSON.stringify(oldLocked) !== JSON.stringify(newLocked);
+
+  if (lockedFieldsChanged && hasParticipants) {
+    // Can't change locked fields after participants join
+    return {success: false, error: 'cohort-definitions-locked'};
+  }
+
+  if (!lockedFieldsChanged) {
+    // Definitions unchanged - preserve generatedCohortIds from old definitions
+    const oldDefMap = new Map<string, string | undefined>(
+      (oldData?.cohortDefinitions ?? []).map((d: CohortDefinition) => [
+        d.id,
+        d.generatedCohortId,
+      ]),
+    );
+    for (const def of experimentConfig.cohortDefinitions ?? []) {
+      def.generatedCohortId = oldDefMap.get(def.id);
+    }
+  }
+  // If lockedFieldsChanged && !hasParticipants: regenerate cohorts after transaction
 
   // NOTE: The recursiveDelete calls below are NOT part of the transaction.
   // They execute immediately and independently. If the transaction fails after
@@ -316,8 +427,9 @@ export async function updateExperimentFromTemplate(
 
     // Add agent mediators under `agentMediators` collection
     for (const agent of template.agentMediators) {
-      const doc = document.collection('agentMediators').doc(agent.persona.id);
-      transaction.set(doc, agent.persona);
+      const persona = createAgentMediatorPersonaConfig(agent.persona);
+      const doc = document.collection('agentMediators').doc(persona.id);
+      transaction.set(doc, persona);
       for (const prompt of Object.values(agent.promptMap)) {
         transaction.set(doc.collection('prompts').doc(prompt.id), prompt);
       }
@@ -325,15 +437,34 @@ export async function updateExperimentFromTemplate(
 
     // Add agent participants under `agentParticipants` collection
     for (const agent of template.agentParticipants) {
-      const doc = document
-        .collection('agentParticipants')
-        .doc(agent.persona.id);
-      transaction.set(doc, agent.persona);
+      const persona = createAgentParticipantPersonaConfig(agent.persona);
+      const doc = document.collection('agentParticipants').doc(persona.id);
+      transaction.set(doc, persona);
       for (const prompt of Object.values(agent.promptMap)) {
         transaction.set(doc.collection('prompts').doc(prompt.id), prompt);
       }
     }
   });
+
+  // Regenerate cohorts only if definitions changed AND no participants have joined
+  if (lockedFieldsChanged && !hasParticipants) {
+    // Delete old cohorts (including their publicStageData subcollections)
+    await firestore.recursiveDelete(document.collection('cohorts'));
+
+    // Create cohorts from updated definitions
+    if (experimentConfig.cohortDefinitions?.length) {
+      await createCohortsFromDefinitions(
+        firestore,
+        experimentConfig.id,
+        experimentConfig.cohortDefinitions,
+        experimentConfig.defaultCohortConfig,
+      );
+      // Update experiment with new generatedCohortIds
+      await document.update({
+        cohortDefinitions: experimentConfig.cohortDefinitions,
+      });
+    }
+  }
 
   return {success: true};
 }
@@ -384,10 +515,14 @@ export async function deleteExperimentById(
     return {success: false, error: 'not-found'};
   }
 
-  // Verify ownership
+  // Verify ownership or admin status
   const experiment = experimentDoc.data();
   if (experimenterId !== experiment?.metadata?.creator) {
-    return {success: false, error: 'not-owner'};
+    const isAdmin = await AuthGuard.isAdminEmail(firestore, experimenterId);
+
+    if (!isAdmin) {
+      return {success: false, error: 'not-owner'};
+    }
   }
 
   // Delete experiment and all subcollections

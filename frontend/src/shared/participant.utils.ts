@@ -8,6 +8,7 @@ import {
   ProfileType,
   StageConfig,
   StageKind,
+  compareTimestamps,
 } from '@deliberation-lab/utils';
 
 /**
@@ -132,6 +133,124 @@ export function isDisconnectedUnfinishedParticipant(
 /** If successfully completed experiment. */
 export function isSuccessParticipant(participant: ParticipantProfile) {
   return participant.currentStatus === ParticipantStatus.SUCCESS;
+}
+
+/** Filter type for participant status in cohort views. */
+export type ParticipantStatusFilter =
+  | 'active'
+  | 'inProgress'
+  | 'completed'
+  | 'attentionCheck'
+  | 'booted'
+  | 'obsolete';
+
+/** Check if participant matches the given status filter. */
+export function matchesStatusFilter(
+  participant: ParticipantProfile,
+  filter: ParticipantStatusFilter,
+): boolean {
+  switch (filter) {
+    case 'active':
+      return isActiveParticipant(participant);
+    case 'inProgress':
+      return (
+        isActiveParticipant(participant) && !isSuccessParticipant(participant)
+      );
+    case 'completed':
+      return isSuccessParticipant(participant);
+    case 'attentionCheck':
+      return participant.currentStatus === ParticipantStatus.ATTENTION_CHECK;
+    case 'booted':
+      return participant.currentStatus === ParticipantStatus.BOOTED_OUT;
+    case 'obsolete':
+      return isObsoleteParticipant(participant);
+  }
+}
+
+/** Filter participants by a set of status filters (OR logic). */
+export function filterParticipantsByStatus<T extends ParticipantProfile>(
+  participants: T[],
+  filters: Set<ParticipantStatusFilter>,
+): T[] {
+  if (filters.size === 0) {
+    return participants;
+  }
+  return participants.filter((participant) =>
+    Array.from(filters).some((filter) =>
+      matchesStatusFilter(participant, filter),
+    ),
+  );
+}
+
+/** Sort options for participant lists. */
+export type ParticipantSortOption = 'lastActive' | 'name' | 'startTime';
+
+/** Options for sorting participants. */
+export interface SortParticipantsOptions {
+  sortBy: ParticipantSortOption;
+  sortDirection: 'asc' | 'desc';
+  stageIds: string[];
+  /** Returns true if participant is on a transfer stage (ready for transfer). */
+  isOnTransferStage?: (participant: ParticipantProfile) => boolean;
+}
+
+/** Sort participants by name, last active time, or start time. */
+export function sortParticipants<T extends ParticipantProfile>(
+  participants: T[],
+  options: SortParticipantsOptions,
+): T[] {
+  const {sortBy, sortDirection, stageIds, isOnTransferStage} = options;
+  const dirMultiplier = sortDirection === 'asc' ? 1 : -1;
+
+  // Sort by name
+  if (sortBy === 'name') {
+    return participants.slice().sort((a, b) => {
+      const aName = a.name ? a.name : a.publicId;
+      const bName = b.name ? b.name : b.publicId;
+      return (
+        dirMultiplier *
+        aName.localeCompare(bName, undefined, {sensitivity: 'base'})
+      );
+    });
+  }
+
+  // Time-based sorting (startTime or lastActive)
+
+  const isTransferTimeout = (participant: ParticipantProfile) =>
+    participant.currentStatus === ParticipantStatus.TRANSFER_TIMEOUT;
+
+  const getTimestamp = (p: ParticipantProfile) => {
+    switch (sortBy) {
+      case 'startTime':
+        return p.timestamps.startExperiment;
+      case 'lastActive':
+        return getCurrentStageStartTime(p, stageIds);
+      default:
+        return null;
+    }
+  };
+
+  return participants.slice().sort((a, b) => {
+    // Ready for transfer always at top
+    if (isOnTransferStage) {
+      const aIsReadyForTransfer = isOnTransferStage(a);
+      const bIsReadyForTransfer = isOnTransferStage(b);
+      if (aIsReadyForTransfer !== bIsReadyForTransfer) {
+        return aIsReadyForTransfer ? -1 : 1;
+      }
+    }
+
+    // Timeouts always at bottom
+    if (isTransferTimeout(a) !== isTransferTimeout(b)) {
+      return isTransferTimeout(a) ? 1 : -1;
+    }
+
+    // Sort by timestamp
+    const cmp = compareTimestamps(getTimestamp(a), getTimestamp(b));
+    if (cmp !== 0) return dirMultiplier * cmp;
+
+    return dirMultiplier * a.publicId.localeCompare(b.publicId);
+  });
 }
 
 /** If participant is in a waiting state (and thus not "active")

@@ -64,10 +64,35 @@ export const updateExperiment = onCall(async (request) => {
   await AuthGuard.isExperimenter(request);
   const {data} = request;
 
+  // Validate input
+  const templateId =
+    data.experimentTemplate?.id || data.experimentTemplate?.experiment?.id;
+
+  if (!data.collectionName || !templateId) {
+    throw new HttpsError(
+      'invalid-argument',
+      'collectionName and experimentTemplate.id (or experiment.id) are required',
+    );
+  }
+
   const experimenterId = request.auth?.token.email?.toLowerCase() || '';
 
   // Use shared utility to update experiment
   // TODO: Enable admins to update experiment?
+
+  // Define document reference
+  const document = app
+    .firestore()
+    .collection(data.collectionName)
+    .doc(templateId);
+
+  // If experiment does not exist, return false
+  const oldExperiment = await document.get();
+  if (!oldExperiment.exists) {
+    return {success: false};
+  }
+
+  // Use shared utility to update experiment
   const result = await updateExperimentFromTemplate(
     app.firestore(),
     data.experimentTemplate,
@@ -75,7 +100,7 @@ export const updateExperiment = onCall(async (request) => {
     {collectionName: data.collectionName},
   );
 
-  return {success: result.success};
+  return {success: result.success, error: result.error};
 });
 
 // ************************************************************************* //
@@ -97,8 +122,21 @@ export const deleteExperiment = onCall(async (request) => {
 
   const experimenterId = request.auth?.token.email?.toLowerCase() || '';
 
+  const experiment = (
+    await app
+      .firestore()
+      .collection(data.collectionName)
+      .doc(data.experimentId)
+      .get()
+  ).data();
+  if (!experiment) {
+    throw new HttpsError(
+      'not-found',
+      `Experiment ${data.experimentId} not found in collection ${data.collectionName}`,
+    );
+  }
+
   // Use shared utility to delete experiment
-  // TODO: Enable admins to delete?
   const result = await deleteExperimentById(
     app.firestore(),
     data.experimentId,
@@ -185,7 +223,7 @@ export const getExperimentTemplate = onCall(async (request) => {
   }
 
   const template = createExperimentTemplate({
-    id: '',
+    id: data.experimentId,
     experiment,
   });
 

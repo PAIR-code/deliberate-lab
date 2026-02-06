@@ -38,6 +38,9 @@ export interface PrivateChatStageConfig extends BaseStageConfig {
   // can only send one message per turn)
   // If not set, there is no limit
   maxNumberOfTurns: number | null;
+  // If true, prevents participants from cancelling pending requests
+  // while waiting for a response (to prevent gaming minimum message counts)
+  preventCancellation: boolean;
 }
 
 // ************************************************************************* //
@@ -59,5 +62,6 @@ export function createPrivateChatStage(
     isTurnBasedChat: config.isTurnBasedChat ?? true,
     minNumberOfTurns: config.minNumberOfTurns ?? 0,
     maxNumberOfTurns: config.maxNumberOfTurns ?? null,
+    preventCancellation: config.preventCancellation ?? false,
   };
 }

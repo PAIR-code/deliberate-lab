@@ -2,7 +2,7 @@
 
 import {Timestamp} from 'firebase/firestore';
 import {UnifiedTimestamp} from './shared';
-import {ApiKeyType} from './agent';
+import {ApiKeyType} from './providers';
 
 // ************************************************************************* //
 // TYPES                                                                     //
@@ -51,8 +51,7 @@ export interface ClaudeServerConfig {
 
 export interface OllamaServerConfig {
   url: string;
-  // port: number; // apparently not needed? https://github.com/ollama/ollama/blob/main/docs/api.md#generate-a-completion
-  // will probably need more data for server-side auth?
+  apiKey?: string;
 }
 
 // ************************************************************************* //
@@ -102,7 +101,7 @@ export function createExperimenterData(
     apiKeys: {
       geminiApiKey: INVALID_API_KEY,
       openAIApiKey: createOpenAIServerConfig(),
-      ollamaApiKey: {url: INVALID_API_KEY},
+      ollamaApiKey: {url: INVALID_API_KEY, apiKey: INVALID_API_KEY},
     },
     email: experimenterEmail,
     viewedExperiments: [],

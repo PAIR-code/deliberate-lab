@@ -4,7 +4,6 @@ import {
   CohortConfig,
   CohortCreationData,
   CohortDeletionData,
-  ParticipantStatus,
 } from '@deliberation-lab/utils';
 
 import {onCall, HttpsError} from 'firebase-functions/v2/https';
@@ -17,7 +16,10 @@ import {
   prettyPrintError,
   prettyPrintErrors,
 } from './utils/validation';
-import {createCohortInternal} from './cohort.utils';
+import {
+  createCohortInternal,
+  markCohortParticipantsAsDeleted,
+} from './cohort.utils';
 
 /** Create/update and delete cohorts. */
 
@@ -92,9 +94,12 @@ export const updateCohortMetadata = onCall(async (request) => {
   await app.firestore().runTransaction(async (transaction) => {
     const cohortConfig = (await document.get()).data() as CohortConfig;
 
-    // Verify that the experimenter is the creator
-    // before updating.
-    if (cohortConfig.metadata.creator !== request.auth?.token.email) {
+    const canUpdate = await AuthGuard.isCreatorOrAdmin(
+      request,
+      cohortConfig.metadata.creator,
+    );
+
+    if (!canUpdate) {
       success = false;
       return;
     }
@@ -128,7 +133,6 @@ export const deleteCohort = onCall(async (request) => {
     return {success: false};
   }
 
-  // Verify that experimenter is the creator before enabling delete
   const experiment = (
     await app.firestore().collection('experiments').doc(data.experimentId).get()
   ).data();
@@ -139,8 +143,13 @@ export const deleteCohort = onCall(async (request) => {
     );
   }
 
-  if (request.auth?.token.email?.toLowerCase() !== experiment.metadata.creator)
-    return;
+  const canDelete = await AuthGuard.isCreatorOrAdmin(
+    request,
+    experiment.metadata.creator,
+  );
+  if (!canDelete) {
+    return {success: false};
+  }
 
   // Delete document
   const doc = app
@@ -149,33 +158,7 @@ export const deleteCohort = onCall(async (request) => {
   app.firestore().recursiveDelete(doc);
 
   // Set all participants in cohort to deleted
-  const participants = (
-    await app
-      .firestore()
-      .collection('experiments')
-      .doc(data.experimentId)
-      .collection('participants')
-      .get()
-  ).docs.map((doc) => doc.data());
-  for (const participant of participants) {
-    if (
-      participant.currentCohortId === data.cohortId ||
-      participant.transferCohortId === data.cohortId
-    ) {
-      await app.firestore().runTransaction(async (transaction) => {
-        const participantDoc = app
-          .firestore()
-          .collection('experiments')
-          .doc(data.experimentId)
-          .collection('participants')
-          .doc(participant.privateId);
-        transaction.set(participantDoc, {
-          ...participant,
-          currentStatus: ParticipantStatus.DELETED,
-        });
-      });
-    }
-  }
+  await markCohortParticipantsAsDeleted(data.experimentId, data.cohortId);
 
   // TODO: Set all mediators in cohort to deleted
 

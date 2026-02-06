@@ -23,6 +23,7 @@ export const onParticipantStageDataUpdated = onDocumentWritten(
   {
     document:
       'experiments/{experimentId}/participants/{participantId}/stageData/{stageId}',
+    memory: '1GiB',
     timeoutSeconds: 60,
   },
   async (event) => {
@@ -106,6 +107,7 @@ export const onPublicStageDataUpdated = onDocumentUpdated(
   {
     document:
       'experiments/{experimentId}/cohorts/{cohortId}/publicStageData/{stageId}/',
+    memory: '1GiB',
     timeoutSeconds: 360, // Maximum timeout of 6 minutes.
   },
   async (event) => {

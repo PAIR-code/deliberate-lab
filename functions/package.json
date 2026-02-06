@@ -1,6 +1,7 @@
 {
   "name": "functions",
   "scripts": {
+    "preinstall": "node -e \"if (process.env.INIT_CWD === process.cwd()) { console.warn('\\n\\x1b[33mWarning: Consider running npm install from the repository root.\\x1b[0m\\nTo add a package to functions/, run:\\n  npm install <pkg> -w functions\\nfrom the root directory.\\n'); }\"",
     "lint": "eslint",
     "build": "node build.js",
     "build:watch": "node build.js --watch",
@@ -18,19 +19,24 @@
     "node": "22"
   },
   "config": {
-    "firestore_tests": "src/log.utils.test.ts src/dl_api/experiments.dl_api.integration.test.ts src/dl_api/cohorts.dl_api.integration.test.ts src/variables.utils.test.ts"
+    "firestore_tests": "src/log.utils.test.ts src/dl_api/experiments.dl_api.integration.test.ts src/dl_api/cohorts.dl_api.integration.test.ts src/variables.utils.test.ts src/cohort_definitions.integration.test.ts"
   },
   "main": "lib/index.js",
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.71.2",
+    "@ai-sdk/anthropic": "^3.0.36",
+    "@ai-sdk/google": "^3.0.20",
+    "@ai-sdk/openai": "^3.0.25",
     "@deliberation-lab/utils": "file:../utils",
-    "@google/genai": "^1.32.0",
-    "@sinclair/typebox": "^0.34.41",
+    "@sinclair/typebox": "^0.34.48",
+    "ai": "^6.0.69",
+    "crypto-browserify": "^3.12.1",
     "express": "^5.2.1",
     "express-rate-limit": "^8.2.1",
     "firebase-admin": "^13.6.0",
-    "firebase-functions": "^7.0.1",
-    "openai": "^6.10.0",
+    "firebase-functions": "^7.0.5",
+    "firebase-tools": "^15.5.1",
+    "jest": "^30.2.0",
+    "ollama-ai-provider-v2": "^3.0.3",
     "unique-names-generator": "^4.7.1"
   },
   "jest": {
@@ -45,26 +51,26 @@
     }
   },
   "devDependencies": {
-    "@babel/preset-env": "^7.28.5",
+    "@babel/preset-env": "^7.29.0",
     "@babel/preset-typescript": "^7.28.5",
     "@firebase/rules-unit-testing": "^5.0.0",
     "@types/express": "^5.0.6",
     "@types/jest": "^30.0.0",
     "@types/supertest": "^6.0.3",
-    "@typescript-eslint/eslint-plugin": "^8.49.0",
-    "@typescript-eslint/parser": "^8.49.0",
+    "@typescript-eslint/eslint-plugin": "^8.54.0",
+    "@typescript-eslint/parser": "^8.54.0",
     "babel-jest": "^30.2.0",
-    "esbuild": "0.27.1",
-    "eslint": "^9.39.1",
+    "esbuild": "0.27.2",
+    "eslint": "^9.39.2",
     "eslint-config-google": "^0.14.0",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-import": "^2.32.0",
     "eslint-plugin-only-warn": "^1.1.0",
-    "eslint-plugin-prettier": "^5.5.4",
-    "firebase": "^12.6.0",
+    "eslint-plugin-prettier": "^5.5.5",
+    "firebase": "^12.8.0",
     "firebase-functions-test": "^3.4.1",
     "nock": "^14.0.10",
-    "supertest": "^7.1.4",
+    "supertest": "^7.2.2",
     "ts-jest": "^29.4.6",
     "typescript": "^5.9.3"
   },

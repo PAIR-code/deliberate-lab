@@ -1,3 +1,5 @@
+import {jsonrepair} from 'jsonrepair';
+
 export enum ModelResponseStatus {
   // A successful response.
   OK = 'ok',
@@ -29,6 +31,88 @@ export enum ModelResponseStatus {
 }
 
 /**
+ * Token usage information from the model response.
+ */
+export interface ModelUsage {
+  promptTokens: number;
+  completionTokens: number;
+  totalTokens: number;
+}
+
+/**
+ * File data from model response (images, audio, etc.).
+ * Uses AI SDK naming conventions (mediaType, base64).
+ */
+export interface ModelFile {
+  mediaType: string;
+  base64: string;
+}
+
+/**
+ * File that has been uploaded to storage.
+ * The stored version of ModelFile, with URL instead of base64.
+ */
+export interface StoredFile {
+  mediaType: string;
+  url: string;
+}
+
+/** Categories of file types for rendering decisions */
+export enum FileCategory {
+  IMAGE = 'image',
+  VIDEO = 'video',
+  AUDIO = 'audio',
+  DOCUMENT = 'document',
+  OTHER = 'other',
+}
+
+/** Get the category of a file based on its mediaType */
+export function getFileCategory(file: StoredFile | ModelFile): FileCategory {
+  const type = file.mediaType.split('/')[0];
+  switch (type) {
+    case 'image':
+      return FileCategory.IMAGE;
+    case 'video':
+      return FileCategory.VIDEO;
+    case 'audio':
+      return FileCategory.AUDIO;
+    case 'application':
+      // PDFs, documents, etc.
+      return FileCategory.DOCUMENT;
+    default:
+      return FileCategory.OTHER;
+  }
+}
+
+/** Check if a file is a media file (image, video, or audio) */
+export function isMediaFile(file: StoredFile | ModelFile): boolean {
+  const category = getFileCategory(file);
+  return (
+    category === FileCategory.IMAGE ||
+    category === FileCategory.VIDEO ||
+    category === FileCategory.AUDIO
+  );
+}
+
+/** Check if a file is an image */
+export function isImageFile(file: StoredFile | ModelFile): boolean {
+  return getFileCategory(file) === FileCategory.IMAGE;
+}
+
+/** Get file extension from mediaType (e.g., 'image/png' -> 'png') */
+export function getFileExtension(file: StoredFile | ModelFile): string {
+  return file.mediaType.split('/')[1] || 'file';
+}
+
+/** Filter files by category */
+export function getFilesByCategory<T extends StoredFile | ModelFile>(
+  files: T[],
+  category: FileCategory,
+): T[] {
+  return files.filter((f) => getFileCategory(f) === category);
+}
+
+/**
  * Common interface for all model responses.
  */
 export interface ModelResponse {
@@ -44,8 +128,10 @@ export interface ModelResponse {
   errorMessage?: string;
   // Reasoning/thought blocks (concatenated if multiple)
   reasoning?: string;
-  // List of images (excludes images from thought blocks)
-  imageDataList?: Array<{mimeType: string; data: string}>;
+  // List of files from response (images, etc.) - excludes files from thought blocks
+  files?: ModelFile[];
+  // Token usage information
+  usage?: ModelUsage;
 }
 
 /**
@@ -124,4 +210,132 @@ export function addParsedModelResponse(response: ModelResponse) {
       error instanceof Error ? error.message : String(error);
     return response;
   }
+}
+
+/**
+ * Extract known fields from corrupted JSON using regex.
+ * This is a fallback when jsonrepair fails, e.g., when Gemini inserts
+ * images in the middle of JSON output, corrupting the structure.
+ */
+function extractFieldsFromCorruptedJson(
+  text: string,
+): Record<string, unknown> | null {
+  const result: Record<string, unknown> = {};
+
+  // Extract common structured output fields using regex
+  // Pattern: "fieldName": "value" or "fieldName": value (for booleans/numbers)
+
+  // Extract string fields (handles escaped quotes and newlines)
+  const stringFieldPattern =
+    /"(explanation|response|message)":\s*"((?:[^"\\]|\\.)*)"/g;
+  let match;
+  while ((match = stringFieldPattern.exec(text)) !== null) {
+    const [, fieldName, value] = match;
+    // Unescape the value
+    result[fieldName] = value
+      .replace(/\\n/g, '\n')
+      .replace(/\\"/g, '"')
+      .replace(/\\\\/g, '\\');
+  }
+
+  // Extract boolean fields
+  const boolFieldPattern = /"(shouldRespond|readyToEndChat)":\s*(true|false)/g;
+  while ((match = boolFieldPattern.exec(text)) !== null) {
+    const [, fieldName, value] = match;
+    result[fieldName] = value === 'true';
+  }
+
+  return Object.keys(result).length > 0 ? result : null;
+}
+
+/**
+ * Parse structured output from text.
+ * Uses jsonrepair to handle markdown code blocks, malformed JSON, etc.
+ */
+export function parseStructuredOutputFromText(
+  text: string,
+): Record<string, unknown> | null {
+  // Convert literal \n sequences to actual newlines
+  const preprocessed = text.replace(/\\n/g, '\n');
+  const trimmed = preprocessed.trim();
+
+  // Strategy 1: Handle "json\n{...}" prefix (jsonrepair misinterprets this as array)
+  const jsonPrefixMatch = trimmed.match(/^json\s*\n(\{[\s\S]*\})$/);
+  if (jsonPrefixMatch && jsonPrefixMatch[1]) {
+    try {
+      return JSON.parse(jsonrepair(jsonPrefixMatch[1])) as Record<
+        string,
+        unknown
+      >;
+    } catch (e) {
+      console.error('Strategy 1 (json prefix) JSON parse error:', e);
+    }
+  }
+
+  // Strategy 2: Let jsonrepair handle everything (markdown, raw JSON, NDJSON, malformed)
+  // jsonrepair converts newline-delimited JSON into an array, which we handle below
+  try {
+    const repaired = JSON.parse(jsonrepair(trimmed));
+
+    // If jsonrepair returned an array (from NDJSON), check for schema echo pattern
+    // Some models (Gemini) echo the JSON schema before the actual response:
+    // { "type": "object", "properties": { ... } }
+    // { "explanation": "...", "shouldRespond": true, ... }
+    if (Array.isArray(repaired) && repaired.length >= 2) {
+      const first = repaired[0];
+
+      // If first element looks like a schema, drop it and use the next one
+      const firstIsSchema =
+        first &&
+        typeof first === 'object' &&
+        'type' in first &&
+        'properties' in first;
+
+      if (firstIsSchema) {
+        console.log(
+          'Strategy 2 (jsonrepair array) dropped echoed schema, using next element',
+        );
+        return repaired[1] as Record<string, unknown>;
+      }
+    }
+
+    return repaired as Record<string, unknown>;
+  } catch (e) {
+    console.error('Strategy 2 (jsonrepair) JSON parse error:', e);
+  }
+
+  // Strategy 3: Extract fields via regex when JSON is especially corrupted
+  // (e.g., when Gemini inserts images in the middle of JSON output)
+  const extractedFields = extractFieldsFromCorruptedJson(trimmed);
+  if (extractedFields && Object.keys(extractedFields).length > 0) {
+    console.log(
+      'Strategy 3 (regex extraction) recovered fields:',
+      Object.keys(extractedFields),
+    );
+    return extractedFields;
+  }
+
+  return null;
+}
+
+/**
+ * Get structured output from ModelResponse.
+ * Prefers native parsedResponse (from AI SDK's Output.object()),
+ * falls back to regex parsing from text.
+ */
+export function getStructuredOutput(
+  response: ModelResponse,
+): Record<string, unknown> | null {
+  // Only use parsedResponse if it's an actual object (not a string)
+  if (
+    response.parsedResponse &&
+    typeof response.parsedResponse === 'object' &&
+    response.parsedResponse !== null
+  ) {
+    return response.parsedResponse as Record<string, unknown>;
+  }
+  if (response.text) {
+    return parseStructuredOutputFromText(response.text);
+  }
+  return null;
 }

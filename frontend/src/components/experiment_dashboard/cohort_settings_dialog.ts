@@ -51,16 +51,19 @@ export class CohortSettingsDialog extends MobxLitElement {
           <pr-button
             color="error"
             variant="tonal"
-            @click=${() => {
+            @click=${async () => {
               this.analyticsService.trackButtonClick(ButtonClick.COHORT_DELETE);
-              this.experimentManager.deleteCohort(
+              await this.experimentManager.deleteCohort(
                 this.experimentManager.cohortEditing!.id,
               );
+              this.experimentManager.setCurrentCohortId(undefined);
+              this.experimentManager.setShowCohortList(true, true);
             }}
           >
             Delete cohort
           </pr-button>
           <pr-button
+            ?disabled=${!this.experimentManager.isCreator}
             @click=${() => {
               this.analyticsService.trackButtonClick(
                 ButtonClick.COHORT_SAVE_EXISTING,
