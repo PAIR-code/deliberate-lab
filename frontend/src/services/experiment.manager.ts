@@ -1038,7 +1038,7 @@ export class ExperimentManager extends Service {
   /** Test given agent config. */
   async testAgentConfig(
     agentConfig: AgentPersonaConfig,
-    promptConfig: BaseAgentPromptConfig,
+    promptConfig: TestAgentPromptConfig,
   ): Promise<ModelResponse> {
     const creatorId = this.sp.authService.experimenterData?.email;
     if (!creatorId) {
