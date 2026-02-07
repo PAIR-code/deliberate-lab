@@ -282,6 +282,16 @@ steps:
       echo "Generating firebase_config.ts from substitution variables..."
       echo "import {FirebaseOptions} from 'firebase/app';" > ./frontend/firebase_config.ts
       echo "export const FIREBASE_CONFIG: FirebaseOptions = ${_FIREBASE_CONFIG};" >> ./frontend/firebase_config.ts
+
+      echo "Extracting MEASUREMENT_ID for Webpack..."
+      export MEASUREMENT_ID=$(
+        echo "${_FIREBASE_CONFIG}" | \
+        node -p 'JSON.parse(require("fs").readFileSync(0)).measurementId'
+      )
+
+      echo "Preparing index.html from index.example.html..."
+      cp ./frontend/index.example.html ./frontend/index.html
+
       echo "Building frontend workspace for production..."
       npm run build:prod --workspace=frontend
     else
