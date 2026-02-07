@@ -194,19 +194,19 @@ steps:
   waitFor: ['BuildUtils']
   dir: '.'
 
-# Build Frontend Workspace
+# Build Frontend Workspace (Development Mode)
 - name: 'node:22'
-  id: BuildFrontend
+  id: BuildDevFrontend
   env:
     - 'DEPLOYMENT_TYPES=" all frontend test "'
   script: |
     #!/usr/bin/env bash
     set -euo pipefail
     if [[ "${DEPLOYMENT_TYPES}" == *" ${_DEPLOYMENT_TYPE} "* ]]; then
-      echo "Building frontend workspace..."
+      echo "Building frontend workspace in development mode..."
       npm run build --workspace=frontend
     else
-      echo "Skipping Build Frontend for '${_DEPLOYMENT_TYPE}' deployment."
+      echo "Skipping Build frontend for '${_DEPLOYMENT_TYPE}' deployment."
     fi
   waitFor: ['BuildUtils']
   dir: '.'
@@ -256,12 +256,29 @@ steps:
     #!/usr/bin/env bash
     set -euo pipefail
     if [[ "${DEPLOYMENT_TYPES}" == *" ${_DEPLOYMENT_TYPE} "* ]]; then
-      echo "Running Frontend Tests..."
+      echo "Running Frontend tests against dev build..."
       npm test --workspace=frontend
     else
       echo "Skipping Frontend tests for '${_DEPLOYMENT_TYPE}' deployment."
     fi
-  waitFor: ['BuildUtils']
+  waitFor: ['BuildDevFrontend']
+  dir: '.'
+
+# Build Frontend Workspace (Production mode)
+- name: 'node:22'
+  id: BuildProdFrontend
+  env:
+    - 'DEPLOYMENT_TYPES=" all frontend test "'
+  script: |
+    #!/usr/bin/env bash
+    set -euo pipefail
+    if [[ "${DEPLOYMENT_TYPES}" == *" ${_DEPLOYMENT_TYPE} "* ]]; then
+      echo "Building frontend workspace for production..."
+      npm run build:prod --workspace=frontend
+    else
+      echo "Skipping Build Frontend for '${_DEPLOYMENT_TYPE}' deployment."
+    fi
+  waitFor: ['TestFrontend'] # Must be finished using dev build.
   dir: '.'
 
 # Deploy Functions Step
