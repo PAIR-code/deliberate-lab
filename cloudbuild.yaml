@@ -203,6 +203,8 @@ steps:
     #!/usr/bin/env bash
     set -euo pipefail
     if [[ "${DEPLOYMENT_TYPES}" == *" ${_DEPLOYMENT_TYPE} "* ]]; then
+      echo "Copying example Firebase config..."
+      cp ./frontend/firebase_config.example.ts ./frontend/firebase_config.ts
       echo "Building frontend workspace in development mode..."
       npm run build --workspace=frontend
     else
@@ -268,11 +270,24 @@ steps:
 - name: 'node:22'
   id: BuildProdFrontend
   env:
-    - 'DEPLOYMENT_TYPES=" all frontend test "'
+    - 'DEPLOYMENT_TYPES=" all frontend "'
   script: |
     #!/usr/bin/env bash
     set -euo pipefail
     if [[ "${DEPLOYMENT_TYPES}" == *" ${_DEPLOYMENT_TYPE} "* ]]; then
+      echo "Generating firebase_config.ts from substitution variables..."
+      cat <<EOF > ./frontend/firebase_config.ts
+    import {FirebaseOptions} from 'firebase/app';
+    export const FIREBASE_CONFIG: FirebaseOptions = {
+      apiKey: '${_FIREBASE_API_KEY}',
+      authDomain: '${_FIREBASE_AUTH_DOMAIN}',
+      projectId: '${_PROJECT_ID}',
+      storageBucket: '${_STORAGE_BUCKET}',
+      messagingSenderId: '${_MESSAGING_SENDER_ID}',
+      appId: '${_FIREBASE_APP_ID}',
+      measurementId: '${_MEASUREMENT_ID}',
+    };
+    EOF
       echo "Building frontend workspace for production..."
       npm run build:prod --workspace=frontend
     else
