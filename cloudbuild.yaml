@@ -24,6 +24,17 @@ substitutions:
   #       functions, rules, indexes and frontend.
   _DEPLOYMENT_TYPE: ''
 
+  # Gatekeeper boolean. Commands with external effects will ONLY be performed if
+  # `_DEPLOY` is set to "true".
+  # Allowed values:
+  #   - true:
+  #       Potentially destructive commands like `firebase deploy` (without
+  #       `--dry-run`) and `gcloud app deploy` WILL be executed.
+  #   - false:
+  #       Destructive commands WILL NOT be run. Alternative safe commands may be
+  #       run instead, such as `firebase deploy --dry-run`.
+  _DEPLOY: 'false'
+
   # When `_DEPLOYMENT_TYPE` is 'all' or 'frontend', this value MUST also be set
   # to a JSON string containing an object of the form:
   #
@@ -74,6 +85,10 @@ steps:
       echo "Validation Passed: '${_DEPLOYMENT_TYPE}' is in list: [${DEPLOYMENT_TYPES}]"
     else
       echo "Validation Failed: '${_DEPLOYMENT_TYPE}' is not in list: [${DEPLOYMENT_TYPES}]"
+      exit 1
+    fi
+    if [[ "${_DEPLOY}" != "true" && "${_DEPLOY}" != "false" ]]; then
+      echo "Validation Failed: '_DEPLOY' must be strictly 'true' or 'false'. Got: '${_DEPLOY}'"
       exit 1
     fi
     if [[ " all frontend " == *" ${_DEPLOYMENT_TYPE} "* ]]; then
@@ -376,13 +391,23 @@ steps:
     #!/usr/bin/env bash
     set -euo pipefail
     if [[ "${DEPLOYMENT_TYPES}" == *" ${_DEPLOYMENT_TYPE} "* ]]; then
-      echo "Deploying Functions..."
-      npx firebase deploy \
-        --config=firebase-prod.json \
-        --only functions \
-        --project ${PROJECT_ID} \
-        --non-interactive \
-        --force
+      if [[ "${_DEPLOY}" == "true" ]]; then
+        echo "Deploying Functions..."
+        npx firebase deploy \
+          --config=firebase-prod.json \
+          --only functions \
+          --project ${PROJECT_ID} \
+          --non-interactive \
+          --force
+      else
+        echo "Dry-run: Deploying Functions..."
+        npx firebase deploy \
+          --config=firebase-prod.json \
+          --only functions \
+          --project ${PROJECT_ID} \
+          --non-interactive \
+          --dry-run
+      fi
     else
       echo "Skipping backend deploy for '${_DEPLOYMENT_TYPE}' deployment."
     fi
@@ -398,13 +423,23 @@ steps:
     #!/usr/bin/env bash
     set -euo pipefail
     if [[ "${DEPLOYMENT_TYPES}" == *" ${_DEPLOYMENT_TYPE} "* ]]; then
-      echo "Deploying Rules (Firestore, Database)..."
-      npx firebase deploy \
-        --config=firebase-prod.json \
-        --only firestore:rules,database:rules,storage \
-        --project ${PROJECT_ID} \
-        --non-interactive \
-        --force
+      if [[ "${_DEPLOY}" == "true" ]]; then
+        echo "Deploying Rules (Firestore, Database)..."
+        npx firebase deploy \
+          --config=firebase-prod.json \
+          --only firestore:rules,database:rules,storage \
+          --project ${PROJECT_ID} \
+          --non-interactive \
+          --force
+      else
+        echo "Dry-run: Deploying Rules (Firestore, Database)..."
+        npx firebase deploy \
+          --config=firebase-prod.json \
+          --only firestore:rules,database:rules,storage \
+          --project ${PROJECT_ID} \
+          --non-interactive \
+          --dry-run
+      fi
     else
       echo "Skipping Firebase rules deploy for '${_DEPLOYMENT_TYPE}' deployment."
     fi
@@ -428,23 +463,35 @@ steps:
       cat existing_firestore_indexes.json
       echo "--- EXISTING FIRESTORE INDEXES BACKUP: END ---"
 
-      echo "Deploying Firestore Indexes..."
-      npx firebase deploy \
-        --config=firebase-prod.json \
-        --only firestore:indexes \
-        --project ${PROJECT_ID} \
-        --non-interactive \
-        --force
+      if [[ "${_DEPLOY}" == "true" ]]; then
+        echo "Deploying Firestore Indexes..."
+        npx firebase deploy \
+          --config=firebase-prod.json \
+          --only firestore:indexes \
+          --project ${PROJECT_ID} \
+          --non-interactive \
+          --force
 
-      echo "Fetching deployed production indexes..."
-      npx firebase firestore:indexes --project ${PROJECT_ID} > deployed_firestore_indexes.json
-      
-      if cmp -s "existing_firestore_indexes.json" "deployed_firestore_indexes.json"; then
-        echo "Deployed Firestore Indexes match existing (no change)."
+        echo "Fetching deployed production indexes..."
+        npx firebase firestore:indexes --project ${PROJECT_ID} > deployed_firestore_indexes.json
+        
+        if cmp -s "existing_firestore_indexes.json" "deployed_firestore_indexes.json"; then
+          echo "Deployed Firestore Indexes match existing (no change)."
+        else
+          echo "--- DEPLOYED FIRESTORE INDEXES BACKUP: START ---"
+          cat deployed_firestore_indexes.json
+          echo "--- DEPLOYED FIRESTORE INDEXES BACKUP: END ---"
+        fi
       else
-        echo "--- DEPLOYED FIRESTORE INDEXES BACKUP: START ---"
-        cat deployed_firestore_indexes.json
-        echo "--- DEPLOYED FIRESTORE INDEXES BACKUP: END ---"
+        echo "Dry-run: Deploying Firestore Indexes..."
+        npx firebase deploy \
+          --config=firebase-prod.json \
+          --only firestore:indexes \
+          --project ${PROJECT_ID} \
+          --non-interactive \
+          --dry-run
+
+        echo "Skipping post-deploy verification in dry-run mode."
       fi
 
     else
@@ -462,14 +509,20 @@ steps:
     #!/usr/bin/env bash
     set -euo pipefail
     if [[ "${DEPLOYMENT_TYPES}" == *" ${_DEPLOYMENT_TYPE} "* ]]; then
-      APP_DEPLOY_FLAGS="--no-promote"
-      if [[ "${_AUTO_PROMOTE}" == "true" ]]; then
-        echo "Auto-promotion enabled."
-        APP_DEPLOY_FLAGS=""
+      if [[ "${_DEPLOY}" == "true" ]]; then
+        APP_DEPLOY_FLAGS="--no-promote"
+        if [[ "${_AUTO_PROMOTE}" == "true" ]]; then
+          echo "Auto-promotion enabled."
+          APP_DEPLOY_FLAGS=""
+        else
+          echo "Auto-promotion disabled."
+        fi
+        (cd ./frontend && gcloud app deploy ./app.yaml ${APP_DEPLOY_FLAGS})
       else
-        echo "Auto-promotion disabled."
+        echo "Dry-run: Skipping Frontend deploy."
+        echo "Verifying App Engine state..."
+        gcloud app describe
       fi
-      (cd ./frontend && gcloud app deploy ./app.yaml ${APP_DEPLOY_FLAGS})
     else
       echo "Skipping Frontend deploy for '${_DEPLOYMENT_TYPE}' deployment."
     fi
