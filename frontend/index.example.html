@@ -40,6 +40,9 @@
         `;
         // Append the scripts to the head of the document
         document.head.appendChild(gaScript);
+        document.head.appendChild(configScript);
+      }
+      // Comment out if not tracking analytics
       addAnalyticsScript();
     </script>
     <% } %>
