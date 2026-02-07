@@ -26,15 +26,8 @@
 #       functions, rules, indexes and frontend.
 
 substitutions:
-  _DEPLOYMENT_TYPE: ''       # Default value, MUST be overridden by trigger.
-  # Frontend configuration.
-  _FIREBASE_APP_ID: ''       # Unique Firebase application id. 
-  _FIREBASE_API_KEY: ''      # API key frontend will use to connect to Firebase.
-  _FIREBASE_AUTH_DOMAIN: ''  # Domain from which Firebase client may connect.
-  _PROJECT_ID: ''            # Unique Firebase/Cloud project id.
-  _STORAGE_BUCKET: ''        # Default Cloud Storage bucket name.
-  _MESSAGING_SENDER_ID: ''   # Firebase Cloud Messaging sender id.
-  _MEASUREMENT_ID: ''        # Google Analytics id.
+  _DEPLOYMENT_TYPE: '' # MUST be overridden by trigger.
+  _FIREBASE_CONFIG: '' # JSON used to create ./frontend/firebase_config.ts. 
 
 options:
   logging: CLOUD_LOGGING_ONLY
@@ -61,18 +54,29 @@ steps:
     fi
     if [[ " all frontend " == *" ${_DEPLOYMENT_TYPE} "* ]]; then
       MISSING_VARS=""
-      if [[ -z "${_FIREBASE_APP_ID}" ]]; then MISSING_VARS="${MISSING_VARS} _FIREBASE_APP_ID"; fi
-      if [[ -z "${_FIREBASE_API_KEY}" ]]; then MISSING_VARS="${MISSING_VARS} _FIREBASE_API_KEY"; fi
-      if [[ -z "${_FIREBASE_AUTH_DOMAIN}" ]]; then MISSING_VARS="${MISSING_VARS} _FIREBASE_AUTH_DOMAIN"; fi
-      if [[ -z "${_PROJECT_ID}" ]]; then MISSING_VARS="${MISSING_VARS} _PROJECT_ID"; fi
-      if [[ -z "${_STORAGE_BUCKET}" ]]; then MISSING_VARS="${MISSING_VARS} _STORAGE_BUCKET"; fi
-      if [[ -z "${_MESSAGING_SENDER_ID}" ]]; then MISSING_VARS="${MISSING_VARS} _MESSAGING_SENDER_ID"; fi
-      if [[ -z "${_MEASUREMENT_ID}" ]]; then MISSING_VARS="${MISSING_VARS} _MEASUREMENT_ID"; fi
-
-      if [[ -n "${MISSING_VARS}" ]]; then
-        echo "Validation Failed: The following substitution values are missing for '${_DEPLOYMENT_TYPE}' deployment:${MISSING_VARS}"
+      if [[ -z "${_FIREBASE_CONFIG}" ]]; then
+        echo "Validation Failed: '_FIREBASE_CONFIG' missing for '${_DEPLOYMENT_TYPE}' deployment"
         exit 1
       fi
+      echo "${_FIREBASE_CONFIG}" | \
+        node -e '
+          const config = JSON.parse(require("fs").readFileSync(0, "utf-8"));
+          if (typeof config !== "object") throw new Error("Config must be an object");
+          const missingFields = [
+            "apiKey",
+            "appId",
+            "authDomain",
+            "measurementId",
+            "messagingSenderId",
+            "projectId",
+            "storageBucket",
+          ].filter((field) =>
+            !config[field] || typeof config[field] !== "string"
+          );
+          if (missingFields.length) {
+            throw new Error(`Missing required fields: ${missingFields}`);
+          }
+        '
       echo "Validation Passed: All Frontend configuration values are present."
     fi
   dir: '.'
@@ -276,18 +280,8 @@ steps:
     set -euo pipefail
     if [[ "${DEPLOYMENT_TYPES}" == *" ${_DEPLOYMENT_TYPE} "* ]]; then
       echo "Generating firebase_config.ts from substitution variables..."
-      cat <<EOF > ./frontend/firebase_config.ts
-    import {FirebaseOptions} from 'firebase/app';
-    export const FIREBASE_CONFIG: FirebaseOptions = {
-      apiKey: '${_FIREBASE_API_KEY}',
-      authDomain: '${_FIREBASE_AUTH_DOMAIN}',
-      projectId: '${_PROJECT_ID}',
-      storageBucket: '${_STORAGE_BUCKET}',
-      messagingSenderId: '${_MESSAGING_SENDER_ID}',
-      appId: '${_FIREBASE_APP_ID}',
-      measurementId: '${_MEASUREMENT_ID}',
-    };
-    EOF
+      echo "import {FirebaseOptions} from 'firebase/app';" > ./frontend/firebase_config.ts
+      echo "export const FIREBASE_CONFIG: FirebaseOptions = ${_FIREBASE_CONFIG};" >> ./frontend/firebase_config.ts
       echo "Building frontend workspace for production..."
       npm run build:prod --workspace=frontend
     else
