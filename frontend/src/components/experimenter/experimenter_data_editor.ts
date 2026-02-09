@@ -16,14 +16,8 @@ import {styles} from './experimenter_data_editor.scss';
 import {
   ApiKeyType,
   ExperimenterData,
-  StageKind,
-  createAgentModelSettings,
-  createAgentMediatorPersonaConfig,
-  createDefaultPromptFromText,
-  createModelGenerationConfig,
   createClaudeServerConfig,
   createOpenAIServerConfig,
-  createStructuredOutputConfig,
   ModelResponseStatus,
 } from '@deliberation-lab/utils';
 
@@ -48,18 +42,14 @@ export class ExperimenterDataEditor extends MobxLitElement {
   private readonly experimentManager = core.getService(ExperimentManager);
   private readonly experimentService = core.getService(ExperimentService);
 
-  @state() geminiKeyResponse: CheckApiKeyResult = {
-    status: CheckApiKeyStatus.NONE,
-  };
-  @state() openAIKeyResponse: CheckApiKeyResult = {
-    status: CheckApiKeyStatus.NONE,
-  };
-  @state() claudeKeyResponse: CheckApiKeyResult = {
-    status: CheckApiKeyStatus.NONE,
-  };
-  @state() ollamaKeyResponse: CheckApiKeyResult = {
-    status: CheckApiKeyStatus.NONE,
-  };
+  @state() apiKeyResults = new Map<ApiKeyType, CheckApiKeyResult>();
+
+  /** Update a result and trigger a reactive re-render. */
+  private setApiKeyResult(apiType: ApiKeyType, result: CheckApiKeyResult) {
+    const updated = new Map(this.apiKeyResults);
+    updated.set(apiType, result);
+    this.apiKeyResults = updated;
+  }
 
   override render() {
     const experiment = this.experimentService.experiment;
@@ -90,64 +80,17 @@ export class ExperimenterDataEditor extends MobxLitElement {
   }
 
   private renderCheckApiKey(apiType: ApiKeyType) {
-    const agentConfig = createAgentMediatorPersonaConfig({
-      defaultModelSettings: createAgentModelSettings({apiType}),
-    });
-    const promptConfig = {
-      id: '',
-      type: StageKind.INFO,
-      prompt: createDefaultPromptFromText(
-        'Say "hello world" and tell a unique joke',
-      ),
-      generationConfig: createModelGenerationConfig(),
-      structuredOutputConfig: createStructuredOutputConfig(),
-    };
-
     const testEndpoint = async () => {
-      if (apiType === ApiKeyType.GEMINI_API_KEY) {
-        this.geminiKeyResponse = {status: CheckApiKeyStatus.PENDING};
-      } else if (apiType === ApiKeyType.OPENAI_API_KEY) {
-        this.openAIKeyResponse = {status: CheckApiKeyStatus.PENDING};
-      } else if (apiType === ApiKeyType.CLAUDE_API_KEY) {
-        this.claudeKeyResponse = {status: CheckApiKeyStatus.PENDING};
-      } else if (apiType === ApiKeyType.OLLAMA_CUSTOM_URL) {
-        this.ollamaKeyResponse = {status: CheckApiKeyStatus.PENDING};
-      }
+      this.setApiKeyResult(apiType, {status: CheckApiKeyStatus.PENDING});
 
-      const response = await this.experimentManager.testAgentConfig(
-        agentConfig,
-        promptConfig,
-      );
-      const result = {
+      const response = await this.experimentManager.testApiKey(apiType);
+      this.setApiKeyResult(apiType, {
         status:
-          response.status == ModelResponseStatus.OK
+          response.status === ModelResponseStatus.OK
             ? CheckApiKeyStatus.SUCCESS
             : CheckApiKeyStatus.FAILURE,
         errorMessage: `Error: ${response.status}: ${response.errorMessage}`,
-      };
-      if (apiType === ApiKeyType.GEMINI_API_KEY) {
-        this.geminiKeyResponse = result;
-      } else if (apiType === ApiKeyType.OPENAI_API_KEY) {
-        this.openAIKeyResponse = result;
-      } else if (apiType === ApiKeyType.CLAUDE_API_KEY) {
-        this.claudeKeyResponse = result;
-      } else if (apiType === ApiKeyType.OLLAMA_CUSTOM_URL) {
-        this.ollamaKeyResponse = result;
-      }
-    };
-
-    const getResult = () => {
-      if (apiType === ApiKeyType.GEMINI_API_KEY) {
-        return this.geminiKeyResponse;
-      } else if (apiType === ApiKeyType.OPENAI_API_KEY) {
-        return this.openAIKeyResponse;
-      } else if (apiType === ApiKeyType.CLAUDE_API_KEY) {
-        return this.claudeKeyResponse;
-      } else if (apiType === ApiKeyType.OLLAMA_CUSTOM_URL) {
-        return this.ollamaKeyResponse;
-      }
-      console.error(`Unrecognized API type ${apiType}`);
-      return this.geminiKeyResponse;
+      });
     };
 
     const renderResult = (result: CheckApiKeyResult) => {
@@ -164,7 +107,9 @@ export class ExperimenterDataEditor extends MobxLitElement {
       }
     };
 
-    const result = getResult();
+    const result = this.apiKeyResults.get(apiType) ?? {
+      status: CheckApiKeyStatus.NONE,
+    };
     return html`
       <div class="api-check">
         <pr-tooltip text="Test API key">
@@ -188,7 +133,9 @@ export class ExperimenterDataEditor extends MobxLitElement {
       if (!oldData) return;
 
       const geminiKey = (e.target as HTMLTextAreaElement).value;
-      this.geminiKeyResponse = {status: CheckApiKeyStatus.NONE};
+      this.setApiKeyResult(ApiKeyType.GEMINI_API_KEY, {
+        status: CheckApiKeyStatus.NONE,
+      });
       const newData = updateExperimenterData(oldData, {
         apiKeys: {...oldData.apiKeys, geminiApiKey: geminiKey},
       });
@@ -222,7 +169,9 @@ export class ExperimenterDataEditor extends MobxLitElement {
       if (!oldData) return;
 
       const value = (e.target as HTMLInputElement).value;
-      this.claudeKeyResponse = {status: CheckApiKeyStatus.NONE};
+      this.setApiKeyResult(ApiKeyType.CLAUDE_API_KEY, {
+        status: CheckApiKeyStatus.NONE,
+      });
 
       const newData = updateExperimenterData(oldData, {
         apiKeys: {
@@ -269,7 +218,9 @@ export class ExperimenterDataEditor extends MobxLitElement {
       if (!oldData) return;
 
       const value = (e.target as HTMLInputElement).value;
-      this.openAIKeyResponse = {status: CheckApiKeyStatus.NONE};
+      this.setApiKeyResult(ApiKeyType.OPENAI_API_KEY, {
+        status: CheckApiKeyStatus.NONE,
+      });
       let newData;
 
       switch (field) {
@@ -336,7 +287,9 @@ export class ExperimenterDataEditor extends MobxLitElement {
       if (!oldData) return;
 
       const value = (e.target as HTMLInputElement).value;
-      this.ollamaKeyResponse = {status: CheckApiKeyStatus.NONE};
+      this.setApiKeyResult(ApiKeyType.OLLAMA_CUSTOM_URL, {
+        status: CheckApiKeyStatus.NONE,
+      });
       let newData;
 
       switch (field) {

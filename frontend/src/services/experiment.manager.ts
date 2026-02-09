@@ -23,6 +23,7 @@ import {
   AlertStatus,
   AgentPersonaConfig,
   AgentPersonaType,
+  ApiKeyType,
   ChatMessage,
   CohortConfig,
   CohortParticipantConfig,
@@ -31,27 +32,15 @@ import {
   MediatorProfileExtended,
   MediatorStatus,
   MetadataConfig,
-  ModelGenerationConfig,
   ModelResponse,
   ModelResponseStatus,
   ParticipantProfileExtended,
   ParticipantStatus,
   ProfileAgentConfig,
-  PromptItem,
   StageKind,
-  StructuredOutputConfig,
   createCohortConfig,
   createExperimenterChatMessage,
 } from '@deliberation-lab/utils';
-
-/** Prompt config for testAgentConfig endpoint */
-interface TestAgentPromptConfig {
-  id: string;
-  type: StageKind;
-  prompt: PromptItem[];
-  generationConfig: ModelGenerationConfig;
-  structuredOutputConfig: StructuredOutputConfig;
-}
 
 import {
   ackAlertMessageCallable,
@@ -1035,11 +1024,8 @@ export class ExperimentManager extends Service {
     return data;
   }
 
-  /** Test given agent config. */
-  async testAgentConfig(
-    agentConfig: AgentPersonaConfig,
-    promptConfig: TestAgentPromptConfig,
-  ): Promise<ModelResponse> {
+  /** Test API key by sending a simple prompt to the specified provider. */
+  async testApiKey(apiType: ApiKeyType): Promise<ModelResponse> {
     const creatorId = this.sp.authService.experimenterData?.email;
     if (!creatorId) {
       return {
@@ -1049,8 +1035,7 @@ export class ExperimentManager extends Service {
     }
     return await testAgentConfigCallable(this.sp.firebaseService.functions, {
       creatorId,
-      agentConfig,
-      promptConfig,
+      apiType,
     });
   }
 

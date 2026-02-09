@@ -1,7 +1,7 @@
 import {
+  ModelResponse,
   ModelResponseStatus,
-  PromptItemType,
-  TextPromptItem,
+  createAgentModelSettings,
   createModelGenerationConfig,
 } from '@deliberation-lab/utils';
 import {getAgentResponse} from './agent.utils';
@@ -13,43 +13,40 @@ import {AuthGuard} from './utils/auth-guard';
 
 // ****************************************************************************
 // Test new agent configs
-// Input structure: { creatorId, agentConfig, promptConfig }
+// Input structure: { creatorId, apiType }
 // Validation: utils/src/agent.validation.ts
 // ****************************************************************************
-export const testAgentConfig = onCall(async (request): ModelResponseStatus => {
-  const {data} = request;
-  const agentConfig = data.agentConfig;
-  const promptConfig = data.promptConfig;
-  const creatorId = data.creatorId;
+export const testAgentConfig = onCall(
+  async (request): Promise<ModelResponse> => {
+    const {data} = request;
+    const creatorId = data.creatorId;
+    const apiType = data.apiType;
 
-  // Only allow experimenters to use this test endpoint
-  await AuthGuard.isExperimenter(request);
+    // Only allow experimenters to use this test endpoint
+    await AuthGuard.isExperimenter(request);
 
-  // Fetch experiment creator's API key and other experiment data
-  const experimenterData = await getExperimenterData(creatorId);
-  if (!experimenterData) return;
+    // Fetch experiment creator's API key and other experiment data
+    const experimenterData = await getExperimenterData(creatorId);
+    if (!experimenterData) {
+      return {
+        status: ModelResponseStatus.INTERNAL_ERROR,
+        errorMessage: 'Experimenter data not found',
+      };
+    }
 
-  // Convert PromptItem[] to string for testing
-  const prompt = promptConfig.prompt
-    .filter((item: {type: PromptItemType}) => item.type === PromptItemType.TEXT)
-    .map((item: TextPromptItem) => item.text)
-    .join('\n');
-  const generationConfig = createModelGenerationConfig();
+    const modelSettings = createAgentModelSettings({apiType});
+    const prompt = 'Say "hello world" and tell a unique joke.';
+    const generationConfig = createModelGenerationConfig();
 
-  const response = await getAgentResponse(
-    experimenterData.apiKeys,
-    prompt,
-    agentConfig.defaultModelSettings,
-    generationConfig,
-  );
+    const response = await getAgentResponse(
+      experimenterData.apiKeys,
+      prompt,
+      modelSettings,
+      generationConfig,
+    );
 
-  // Check console log for response
-  console.log(
-    'TESTING AGENT CONFIG\n',
-    JSON.stringify(agentConfig),
-    JSON.stringify(promptConfig),
-    response,
-  );
+    console.log('TESTING AGENT CONFIG\n', apiType, response);
 
-  return response;
-});
+    return response;
+  },
+);
