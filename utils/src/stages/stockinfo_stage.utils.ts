@@ -18,6 +18,7 @@ export interface ChartConfig {
   useQuarterlyMarkers: boolean;
   initialInvestment: number;
   currency: string;
+  overrideBounds?: ChartBounds;
 }
 
 // ************************************************************************* //
@@ -31,7 +32,7 @@ export interface ChartBounds {
   increment: number;
 }
 
-function calculateChartBounds(
+export function calculateChartBounds(
   chartData: number[],
   config: ChartConfig,
 ): ChartBounds {
@@ -59,6 +60,7 @@ export function calculateChartConfig(options: {
   useQuarterlyMarkers?: boolean;
   initialInvestment?: number;
   currency?: string;
+  overrideBounds?: ChartBounds;
 }): ChartConfig {
   return {
     width: 600,
@@ -69,6 +71,7 @@ export function calculateChartConfig(options: {
     useQuarterlyMarkers: options.useQuarterlyMarkers || false,
     initialInvestment: options.initialInvestment ?? 1000,
     currency: options.currency ?? 'USD',
+    overrideBounds: options.overrideBounds,
   };
 }
 
@@ -90,7 +93,8 @@ export function generateSVGChartPoints(
   chartData: number[],
   config: ChartConfig,
 ): string {
-  const {chartMin, chartRange} = calculateChartBounds(chartData, config);
+  const {chartMin, chartRange} =
+    config.overrideBounds ?? calculateChartBounds(chartData, config);
   const svgWidth = config.width - config.leftPadding - config.padding;
 
   return chartData
@@ -171,7 +175,8 @@ export function generateSVGReferenceLine(
 ): string {
   if (!config.isInvestmentGrowth || !chartData) return '';
 
-  const {chartMin, chartRange} = calculateChartBounds(chartData, config);
+  const {chartMin, chartRange} =
+    config.overrideBounds ?? calculateChartBounds(chartData, config);
   const dataMaxValue = Math.max(...chartData);
   const dataMinValue = Math.min(...chartData);
 
@@ -222,10 +227,8 @@ export function generateSVGValueLabels(
   chartData: number[],
   config: ChartConfig,
 ): string {
-  const {chartMin, chartMax, chartRange, increment} = calculateChartBounds(
-    chartData,
-    config,
-  );
+  const {chartMin, chartMax, chartRange, increment} =
+    config.overrideBounds ?? calculateChartBounds(chartData, config);
   let labels = '';
 
   // Add tick marks at regular increments
@@ -248,6 +251,7 @@ export function generateSVGChart(
     useQuarterlyMarkers?: boolean;
     initialInvestment?: number;
     currency?: string;
+    overrideBounds?: ChartBounds;
   } = {},
 ): string {
   const chartConfig = calculateChartConfig(options);

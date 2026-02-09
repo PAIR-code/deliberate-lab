@@ -51,6 +51,8 @@ export interface StockInfoStageConfig extends BaseStageConfig {
   requireViewAllStocks: boolean;
   useQuarterlyMarkers: boolean;
   showInvestmentGrowth: boolean;
+  /** Use the same Y-axis range across all stock charts for easier comparison */
+  useSharedYAxis: boolean;
   /** Initial investment amount for investment growth calculations (default: 1000) */
   initialInvestment: number;
   /** ISO 4217 currency code for display (default: 'USD') */
@@ -141,6 +143,7 @@ export function createStockInfoStage(
     requireViewAllStocks: config.requireViewAllStocks ?? true,
     useQuarterlyMarkers: config.useQuarterlyMarkers ?? false,
     showInvestmentGrowth: config.showInvestmentGrowth ?? false,
+    useSharedYAxis: config.useSharedYAxis ?? false,
     initialInvestment: config.initialInvestment ?? 1000,
     currency: config.currency ?? 'USD',
   };

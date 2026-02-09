@@ -20,16 +20,20 @@ import {
   AssetAllocationStageConfig,
   AssetAllocationStageParticipantAnswer,
   AssetAllocation,
+  ChartBounds,
   MultiAssetAllocationStageConfig,
   MultiAssetAllocationStageParticipantAnswer,
   StageKind,
   Stock,
   StockAllocation,
   StockInfoStageConfig,
+  calculateChartBounds,
+  calculateChartConfig,
   formatCurrency,
   generateSVGChart,
   generateDonutChartSVG,
   getStockTicker,
+  normalizeChartValues,
   createAssetAllocation,
   createAssetAllocationStageParticipantAnswer,
   parseStockData,
@@ -270,12 +274,43 @@ export class AssetAllocationParticipantView extends MobxLitElement {
     const stockInfoStage = this.stage?.stockConfig.stockInfoStageId
       ? this.getStockInfoStage()
       : null;
+
+    // Compute shared bounds across both stocks if enabled
+    let overrideBounds: ChartBounds | undefined;
+    if (
+      stockInfoStage?.useSharedYAxis &&
+      this.stocks.stockA &&
+      this.stocks.stockB
+    ) {
+      const isInvestmentGrowth = stockInfoStage.showInvestmentGrowth ?? false;
+      const initialInvestment = stockInfoStage.initialInvestment ?? 1000;
+      const allValues = [
+        ...normalizeChartValues(
+          this.stocks.stockA.parsedData,
+          isInvestmentGrowth,
+          initialInvestment,
+        ),
+        ...normalizeChartValues(
+          this.stocks.stockB.parsedData,
+          isInvestmentGrowth,
+          initialInvestment,
+        ),
+      ];
+      const config = calculateChartConfig({
+        isInvestmentGrowth,
+        initialInvestment,
+        currency: stockInfoStage.currency,
+      });
+      overrideBounds = calculateChartBounds(allValues, config);
+    }
+
     const chartSvg = stockInfoStage
       ? generateSVGChart(selectedStock.parsedData, {
           isInvestmentGrowth: stockInfoStage.showInvestmentGrowth,
           useQuarterlyMarkers: stockInfoStage.useQuarterlyMarkers,
           initialInvestment: stockInfoStage.initialInvestment,
           currency: stockInfoStage.currency,
+          overrideBounds,
         })
       : '';
 
