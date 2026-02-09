@@ -190,6 +190,7 @@ export class PrivateChatView extends MobxLitElement {
 
   private renderMinTurnsMessage(currentCount: number) {
     const remaining = this.stage!.minNumberOfTurns - currentCount;
+    if (remaining <= 0) return nothing;
     return html`
       <div class="description">
         Please send at least ${remaining} more
