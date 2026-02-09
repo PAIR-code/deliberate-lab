@@ -8,7 +8,7 @@ import {
   ParticipantPromptConfig,
 } from './structured_prompt';
 import {ApiKeyType, ProviderOptionsMap} from './providers';
-import {GEMINI_DEFAULT_MODEL} from './model_config';
+import {getDefaultModelForApiType} from './model_config';
 
 /** Agent types and functions. */
 
@@ -142,9 +142,9 @@ export interface AgentParticipantTemplate {
 // ************************************************************************* //
 export const DEFAULT_AGENT_API_TYPE = ApiKeyType.GEMINI_API_KEY;
 
-export const DEFAULT_AGENT_OPENAI_MODEL = 'gpt-5-nano';
-export const DEFAULT_AGENT_CLAUDE_MODEL = 'claude-haiku-4-5';
-export const DEFAULT_AGENT_API_MODEL = GEMINI_DEFAULT_MODEL;
+export const DEFAULT_AGENT_API_MODEL = getDefaultModelForApiType(
+  DEFAULT_AGENT_API_TYPE,
+);
 
 export const DEFAULT_AGENT_MODEL_SETTINGS: AgentModelSettings = {
   apiType: DEFAULT_AGENT_API_TYPE,
@@ -158,17 +158,6 @@ export const DEFAULT_AGENT_PARTICIPANT_ID = '';
 // FUNCTIONS                                                                 //
 // ************************************************************************* //
 
-export function defaultModelName(apiType: ApiKeyType) {
-  switch (apiType) {
-    case ApiKeyType.OPENAI_API_KEY:
-      return DEFAULT_AGENT_OPENAI_MODEL;
-    case ApiKeyType.CLAUDE_API_KEY:
-      return DEFAULT_AGENT_CLAUDE_MODEL;
-    default:
-      return DEFAULT_AGENT_API_MODEL;
-  }
-}
-
 export function createAgentModelSettings(
   config: Partial<AgentModelSettings> = {},
 ): AgentModelSettings {
@@ -176,7 +165,7 @@ export function createAgentModelSettings(
   const apiType = config.apiType ?? DEFAULT_AGENT_API_TYPE;
   return {
     apiType,
-    modelName: defaultModelName(apiType),
+    modelName: config.modelName ?? getDefaultModelForApiType(apiType),
   };
 }
 
