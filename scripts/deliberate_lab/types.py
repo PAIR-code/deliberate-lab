@@ -16,6 +16,9 @@ class CollectionName(StrEnum):
 
 
 class Metadata(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
     name: str
     publicName: str
     description: str
@@ -28,11 +31,17 @@ class Visibility(StrEnum):
 
 
 class Permissions(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
     visibility: Visibility
     readers: list[str]
 
 
 class ProlificConfig(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
     enableProlificIntegration: bool
     defaultRedirectCode: str
     attentionFailRedirectCode: str
@@ -42,6 +51,7 @@ class ProlificConfig(BaseModel):
 class CohortDefinition(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
+        populate_by_name=True,
     )
     id: Annotated[str, Field(min_length=1)]
     alias: Annotated[str, Field(min_length=1)]
@@ -54,6 +64,7 @@ class CohortDefinition(BaseModel):
 class ParsedItem(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
+        populate_by_name=True,
     )
     date: Annotated[str, Field(min_length=1)]
     close: float
@@ -62,6 +73,7 @@ class ParsedItem(BaseModel):
 class CustomCard(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
+        populate_by_name=True,
     )
     id: Annotated[str, Field(min_length=1)]
     title: str
@@ -73,6 +85,7 @@ class CustomCard(BaseModel):
 class Stock(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
+        populate_by_name=True,
     )
     id: Annotated[str, Field(min_length=1)]
     name: Annotated[str, Field(min_length=1)]
@@ -85,6 +98,7 @@ class Stock(BaseModel):
 class ChipItem(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
+        populate_by_name=True,
     )
     id: str
     name: str
@@ -99,6 +113,7 @@ class ChipItem(BaseModel):
 class MultipleChoiceItem(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
+        populate_by_name=True,
     )
     id: Annotated[str, Field(min_length=1)]
     imageId: str
@@ -108,6 +123,7 @@ class MultipleChoiceItem(BaseModel):
 class FlipCard(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
+        populate_by_name=True,
     )
     id: Annotated[str, Field(min_length=1)]
     title: str
@@ -124,6 +140,7 @@ class Currency(StrEnum):
 class DefaultPayoutItem(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
+        populate_by_name=True,
     )
     id: Annotated[str, Field(min_length=1)]
     type: Literal["DEFAULT"] = "DEFAULT"
@@ -138,6 +155,7 @@ class DefaultPayoutItem(BaseModel):
 class ChipPayoutItem(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
+        populate_by_name=True,
     )
     id: Annotated[str, Field(min_length=1)]
     type: Literal["CHIP"] = "CHIP"
@@ -151,6 +169,7 @@ class ChipPayoutItem(BaseModel):
 class SurveyPayoutItem(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
+        populate_by_name=True,
     )
     id: Annotated[str, Field(min_length=1)]
     type: Literal["SURVEY"] = "SURVEY"
@@ -185,6 +204,7 @@ class ComparisonOperator(StrEnum):
 class ConditionTargetReference(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
+        populate_by_name=True,
     )
     stageId: Annotated[str, Field(min_length=1)]
     questionId: Annotated[str, Field(min_length=1)]
@@ -196,14 +216,23 @@ class ConditionOperator(StrEnum):
 
 
 class MinParticipantsPerCohort(RootModel[int]):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
     root: Annotated[int, Field(ge=0)]
 
 
 class MaxParticipantsPerCohort(RootModel[int]):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
     root: Annotated[int, Field(ge=1)]
 
 
 class CohortParticipantConfig(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
     minParticipantsPerCohort: MinParticipantsPerCohort | None = None
     maxParticipantsPerCohort: MaxParticipantsPerCohort | None = None
     includeAllParticipantsInCohortCount: bool
@@ -213,6 +242,7 @@ class CohortParticipantConfig(BaseModel):
 class SurveyAutoTransferConfig(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
+        populate_by_name=True,
     )
     type: Literal["survey"] = "survey"
     autoCohortParticipantConfig: CohortParticipantConfig
@@ -230,6 +260,7 @@ class Scope(StrEnum):
 class String(BaseModel):
     model_config = ConfigDict(
         extra="allow",
+        populate_by_name=True,
     )
     type: Literal["string"] = "string"
 
@@ -237,6 +268,7 @@ class String(BaseModel):
 class Number(BaseModel):
     model_config = ConfigDict(
         extra="allow",
+        populate_by_name=True,
     )
     type: Literal["number"] = "number"
 
@@ -244,6 +276,7 @@ class Number(BaseModel):
 class Integer(BaseModel):
     model_config = ConfigDict(
         extra="allow",
+        populate_by_name=True,
     )
     type: Literal["integer"] = "integer"
 
@@ -251,6 +284,7 @@ class Integer(BaseModel):
 class Boolean(BaseModel):
     model_config = ConfigDict(
         extra="allow",
+        populate_by_name=True,
     )
     type: Literal["boolean"] = "boolean"
 
@@ -265,6 +299,7 @@ class Seed(StrEnum):
 class ShuffleConfig(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
+        populate_by_name=True,
     )
     shuffle: bool
     seed: Seed
@@ -272,6 +307,9 @@ class ShuffleConfig(BaseModel):
 
 
 class Weight(RootModel[float]):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
     root: Annotated[float, Field(ge=1.0)]
 
 
@@ -295,6 +333,7 @@ class ApiKeyType(StrEnum):
 class AgentModelSettings(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
+        populate_by_name=True,
     )
     apiType: Annotated[ApiKeyType, Field(title="ApiKeyType")]
     modelName: str
@@ -303,6 +342,7 @@ class AgentModelSettings(BaseModel):
 class ParticipantProfileBase(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
+        populate_by_name=True,
     )
     pronouns: str | None = None
     avatar: str | None = None
@@ -325,6 +365,7 @@ class ReasoningLevel(StrEnum):
 class CustomRequestBodyField(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
+        populate_by_name=True,
     )
     name: str
     value: str
@@ -340,6 +381,7 @@ class GoogleThinkingLevel(StrEnum):
 class GoogleThinkingConfig(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
+        populate_by_name=True,
     )
     thinkingBudget: int | None = None
     includeThoughts: bool | None = None
@@ -367,6 +409,7 @@ class GoogleSafetyThreshold(StrEnum):
 class GoogleSafetySetting(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
+        populate_by_name=True,
     )
     category: Annotated[GoogleSafetyCategory, Field(title="GoogleSafetyCategory")]
     threshold: Annotated[GoogleSafetyThreshold, Field(title="GoogleSafetyThreshold")]
@@ -386,6 +429,7 @@ class AnthropicThinkingType(StrEnum):
 class AnthropicThinkingConfig(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
+        populate_by_name=True,
     )
     type: Annotated[AnthropicThinkingType, Field(title="AnthropicThinkingType")]
     budgetTokens: int | None = None
@@ -399,6 +443,7 @@ class AnthropicCacheTtl(StrEnum):
 class AnthropicCacheControl(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
+        populate_by_name=True,
     )
     type: Literal["ephemeral"] = "ephemeral"
     ttl: Annotated[AnthropicCacheTtl | None, Field(title="AnthropicCacheTtl")] = None
@@ -407,6 +452,7 @@ class AnthropicCacheControl(BaseModel):
 class OpenAIProviderOptions(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
+        populate_by_name=True,
     )
     reasoningEffort: Annotated[
         ReasoningEffort | None, Field(title="ReasoningEffort")
@@ -417,6 +463,7 @@ class OpenAIProviderOptions(BaseModel):
 class OllamaProviderOptions(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
+        populate_by_name=True,
     )
     numCtx: int | None = None
     numPredict: int | None = None
@@ -441,6 +488,7 @@ class StructuredOutputDataType(StrEnum):
 class AgentChatSettings(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
+        populate_by_name=True,
     )
     wordsPerMinute: float | None = None
     minMessagesBeforeResponding: int
@@ -474,6 +522,7 @@ class StageKind(StrEnum):
 class StockConfig(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
+        populate_by_name=True,
     )
     stockInfoStageId: Annotated[str | None, Field(min_length=1)] = None
     stockAId: str | None = None
@@ -485,6 +534,7 @@ class StockConfig(BaseModel):
 class TextQuestion(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
+        populate_by_name=True,
     )
     id: Annotated[str, Field(min_length=1)]
     kind: Literal["text"] = "text"
@@ -495,6 +545,7 @@ class TextQuestion(BaseModel):
 class McQuestion(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
+        populate_by_name=True,
     )
     id: Annotated[str, Field(min_length=1)]
     kind: Literal["mc"] = "mc"
@@ -513,6 +564,7 @@ class ProfileType(StrEnum):
 class Role(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
+        populate_by_name=True,
     )
     id: Annotated[str, Field(min_length=1)]
     name: str
@@ -522,6 +574,9 @@ class Role(BaseModel):
 
 
 class StageProgressConfig(RootModel[Any]):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
     root: Any
 
 
@@ -532,6 +587,7 @@ class StageTextConfig(StageProgressConfig):
 class CohortConfig(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
+        populate_by_name=True,
     )
     id: str
     alias: str | None = None
@@ -544,6 +600,7 @@ class CohortConfig(BaseModel):
 class CohortCreation(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
+        populate_by_name=True,
     )
     experimentId: Annotated[str, Field(min_length=1)]
     cohortConfig: Annotated[CohortConfig, Field(title="CohortConfig")]
@@ -552,6 +609,7 @@ class CohortCreation(BaseModel):
 class CohortUpdate(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
+        populate_by_name=True,
     )
     experimentId: Annotated[str, Field(min_length=1)]
     cohortId: Annotated[str, Field(min_length=1)]
@@ -562,6 +620,7 @@ class CohortUpdate(BaseModel):
 class ChatStageConfig(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
+        populate_by_name=True,
     )
     id: str
     kind: Literal["chat"] = "chat"
@@ -575,6 +634,7 @@ class ChatStageConfig(BaseModel):
 class ChipStageConfig(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
+        populate_by_name=True,
     )
     id: str
     kind: Literal["chip"] = "chip"
@@ -589,6 +649,7 @@ class ChipStageConfig(BaseModel):
 class FlipCardStageConfig(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
+        populate_by_name=True,
     )
     id: Annotated[str, Field(min_length=1)]
     kind: Literal["flipcard"] = "flipcard"
@@ -606,6 +667,7 @@ class FlipCardStageConfig(BaseModel):
 class InfoStageConfig(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
+        populate_by_name=True,
     )
     id: Annotated[str, Field(min_length=1)]
     kind: Literal["info"] = "info"
@@ -619,6 +681,7 @@ class InfoStageConfig(BaseModel):
 class PayoutStageConfig(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
+        populate_by_name=True,
     )
     id: Annotated[str, Field(min_length=1)]
     kind: Literal["payout"] = "payout"
@@ -633,6 +696,7 @@ class PayoutStageConfig(BaseModel):
 class PrivateChatStageConfig(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
+        populate_by_name=True,
     )
     id: str
     kind: Literal["privateChat"] = "privateChat"
@@ -650,6 +714,7 @@ class PrivateChatStageConfig(BaseModel):
 class ItemRankingStageConfig(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
+        populate_by_name=True,
     )
     id: Annotated[str, Field(min_length=1)]
     kind: Literal["ranking"] = "ranking"
@@ -664,6 +729,7 @@ class ItemRankingStageConfig(BaseModel):
 class ParticipantRankingStageConfig(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
+        populate_by_name=True,
     )
     id: Annotated[str, Field(min_length=1)]
     kind: Literal["ranking"] = "ranking"
@@ -678,6 +744,7 @@ class ParticipantRankingStageConfig(BaseModel):
 class SalespersonStageConfig(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
+        populate_by_name=True,
     )
     id: str
     kind: Literal["salesperson"] = "salesperson"
@@ -689,6 +756,7 @@ class SalespersonStageConfig(BaseModel):
 class ComparisonCondition(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
+        populate_by_name=True,
     )
     id: Annotated[str, Field(min_length=1)]
     type: Literal["comparison"] = "comparison"
@@ -700,6 +768,7 @@ class ComparisonCondition(BaseModel):
 class DefaultAutoTransferConfig(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
+        populate_by_name=True,
     )
     type: Literal["default"] = "default"
     autoCohortParticipantConfig: CohortParticipantConfig
@@ -710,6 +779,7 @@ class DefaultAutoTransferConfig(BaseModel):
 class Persona(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
+        populate_by_name=True,
     )
     id: Annotated[str, Field(min_length=1)]
     name: str
@@ -720,6 +790,7 @@ class Persona(BaseModel):
 class GoogleProviderOptions(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
+        populate_by_name=True,
     )
     thinkingConfig: GoogleThinkingConfig | None = None
     safetySettings: list[GoogleSafetySetting] | None = None
@@ -728,6 +799,7 @@ class GoogleProviderOptions(BaseModel):
 class AnthropicProviderOptions(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
+        populate_by_name=True,
     )
     thinking: AnthropicThinkingConfig | None = None
     effort: Annotated[ReasoningEffort | None, Field(title="ReasoningEffort")] = None
@@ -738,6 +810,7 @@ class AnthropicProviderOptions(BaseModel):
 class AssetAllocationStageConfig(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
+        populate_by_name=True,
     )
     id: Annotated[str, Field(min_length=1)]
     kind: Literal["assetAllocation"] = "assetAllocation"
@@ -750,6 +823,7 @@ class AssetAllocationStageConfig(BaseModel):
 class MultiAssetAllocationStageConfig(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
+        populate_by_name=True,
     )
     id: Annotated[str, Field(min_length=1)]
     kind: Literal["multiAssetAllocation"] = "multiAssetAllocation"
@@ -763,6 +837,7 @@ class MultiAssetAllocationStageConfig(BaseModel):
 class ComprehensionStageConfig(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
+        populate_by_name=True,
     )
     id: Annotated[str, Field(min_length=1)]
     kind: Literal["comprehension"] = "comprehension"
@@ -775,6 +850,7 @@ class ComprehensionStageConfig(BaseModel):
 class ProfileStageConfig(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
+        populate_by_name=True,
     )
     id: Annotated[str, Field(min_length=1)]
     kind: Literal["profile"] = "profile"
@@ -787,6 +863,7 @@ class ProfileStageConfig(BaseModel):
 class RevealStageConfig(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
+        populate_by_name=True,
     )
     id: Annotated[str, Field(min_length=1)]
     kind: Literal["reveal"] = "reveal"
@@ -799,6 +876,7 @@ class RevealStageConfig(BaseModel):
 class RoleStageConfig(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
+        populate_by_name=True,
     )
     id: Annotated[str, Field(min_length=1)]
     kind: Literal["role"] = "role"
@@ -811,6 +889,7 @@ class RoleStageConfig(BaseModel):
 class StockinfoStageConfig(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
+        populate_by_name=True,
     )
     id: Annotated[str, Field(min_length=1)]
     kind: Literal["stockinfo"] = "stockinfo"
@@ -832,6 +911,7 @@ class StockinfoStageConfig(BaseModel):
 class TosStageConfig(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
+        populate_by_name=True,
     )
     id: Annotated[str, Field(min_length=1)]
     kind: Literal["tos"] = "tos"
@@ -844,6 +924,9 @@ class TosStageConfig(BaseModel):
 class RankingStageConfig(
     RootModel[ItemRankingStageConfig | ParticipantRankingStageConfig]
 ):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
     root: Annotated[
         ItemRankingStageConfig | ParticipantRankingStageConfig,
         Field(title="RankingStageConfig"),
@@ -853,6 +936,7 @@ class RankingStageConfig(
 class ProviderOptionsMap(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
+        populate_by_name=True,
     )
     google: GoogleProviderOptions | None = None
     anthropic: AnthropicProviderOptions | None = None
@@ -863,6 +947,7 @@ class ProviderOptionsMap(BaseModel):
 class ModelGenerationConfig(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
+        populate_by_name=True,
     )
     maxTokens: int | None = None
     stopSequences: list[str] | None = None
@@ -883,6 +968,7 @@ class ModelGenerationConfig(BaseModel):
 class Experiment(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
+        populate_by_name=True,
     )
     id: str
     versionId: float
@@ -905,6 +991,9 @@ class Experiment(BaseModel):
 
 
 class ExperimentTemplate(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
     id: str
     experiment: Annotated[Experiment, Field(title="Experiment")]
     stageConfigs: list[
@@ -936,12 +1025,16 @@ class ExperimentTemplate(BaseModel):
 class ExperimentCreation(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
+        populate_by_name=True,
     )
     collectionName: CollectionName
     experimentTemplate: Annotated[ExperimentTemplate, Field(title="ExperimentTemplate")]
 
 
 class DeliberateLabAPISchemas(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
     stage: (
         AssetAllocationStageConfig
         | MultiAssetAllocationStageConfig
@@ -972,6 +1065,7 @@ class DeliberateLabAPISchemas(BaseModel):
 class SurveyPerParticipantStageConfig(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
+        populate_by_name=True,
     )
     id: Annotated[str, Field(min_length=1)]
     kind: Literal["surveyPerParticipant"] = "surveyPerParticipant"
@@ -990,6 +1084,7 @@ class SurveyPerParticipantStageConfig(BaseModel):
 class TextSurveyQuestion(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
+        populate_by_name=True,
     )
     id: Annotated[str, Field(min_length=1)]
     kind: Literal["text"] = "text"
@@ -1004,6 +1099,7 @@ class TextSurveyQuestion(BaseModel):
 class ConditionGroup(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
+        populate_by_name=True,
     )
     id: Annotated[str, Field(min_length=1)]
     type: Literal["group"] = "group"
@@ -1014,6 +1110,7 @@ class ConditionGroup(BaseModel):
 class CheckSurveyQuestion(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
+        populate_by_name=True,
     )
     id: Annotated[str, Field(min_length=1)]
     kind: Literal["check"] = "check"
@@ -1027,6 +1124,7 @@ class CheckSurveyQuestion(BaseModel):
 class MultipleChoiceSurveyQuestion(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
+        populate_by_name=True,
     )
     id: Annotated[str, Field(min_length=1)]
     kind: Literal["mc"] = "mc"
@@ -1041,6 +1139,7 @@ class MultipleChoiceSurveyQuestion(BaseModel):
 class ScaleSurveyQuestion(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
+        populate_by_name=True,
     )
     id: Annotated[str, Field(min_length=1)]
     kind: Literal["scale"] = "scale"
@@ -1060,6 +1159,7 @@ class ScaleSurveyQuestion(BaseModel):
 class SurveyStageConfig(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
+        populate_by_name=True,
     )
     id: Annotated[str, Field(min_length=1)]
     kind: Literal["survey"] = "survey"
@@ -1077,6 +1177,7 @@ class SurveyStageConfig(BaseModel):
 class TransferStageConfig(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
+        populate_by_name=True,
     )
     id: Annotated[str, Field(min_length=1)]
     kind: Literal["transfer"] = "transfer"
@@ -1096,6 +1197,7 @@ class TransferStageConfig(BaseModel):
 class ConditionAutoTransferConfig(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
+        populate_by_name=True,
     )
     type: Literal["condition"] = "condition"
     autoCohortParticipantConfig: CohortParticipantConfig
@@ -1105,6 +1207,7 @@ class ConditionAutoTransferConfig(BaseModel):
 class TransferGroup(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
+        populate_by_name=True,
     )
     id: Annotated[str, Field(min_length=1)]
     name: Annotated[str, Field(min_length=1)]
@@ -1115,6 +1218,7 @@ class TransferGroup(BaseModel):
 class GroupComposition(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
+        populate_by_name=True,
     )
     id: Annotated[str, Field(min_length=1)]
     condition: Annotated[ComparisonCondition | ConditionGroup, Field(title="Condition")]
@@ -1123,6 +1227,9 @@ class GroupComposition(BaseModel):
 
 
 class StaticVariableConfig(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
     id: Annotated[str, Field(min_length=1)]
     type: Literal["static"] = "static"
     scope: Scope
@@ -1134,6 +1241,7 @@ class StaticVariableConfig(BaseModel):
 class Object(BaseModel):
     model_config = ConfigDict(
         extra="allow",
+        populate_by_name=True,
     )
     type: Literal["object"] = "object"
     properties: Annotated[
@@ -1145,6 +1253,7 @@ class Object(BaseModel):
 class Array(BaseModel):
     model_config = ConfigDict(
         extra="allow",
+        populate_by_name=True,
     )
     type: Literal["array"] = "array"
     items: Annotated[
@@ -1156,6 +1265,7 @@ class Array(BaseModel):
 class VariableDefinition(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
+        populate_by_name=True,
     )
     name: Annotated[str, Field(min_length=1)]
     description: str
@@ -1166,6 +1276,9 @@ class VariableDefinition(BaseModel):
 
 
 class RandomPermutationVariableConfig(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
     id: Annotated[str, Field(min_length=1)]
     type: Literal["random_permutation"] = "random_permutation"
     scope: Scope
@@ -1177,6 +1290,9 @@ class RandomPermutationVariableConfig(BaseModel):
 
 
 class BalancedAssignmentVariableConfig(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
     id: Annotated[str, Field(min_length=1)]
     type: Literal["balanced_assignment"] = "balanced_assignment"
     scope: Scope
@@ -1188,6 +1304,9 @@ class BalancedAssignmentVariableConfig(BaseModel):
 
 
 class AgentMediatorTemplate(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
     persona: Persona
     promptMap: Annotated[
         dict[str, ChatPromptConfig | GenericPromptConfig], Field(title="PromptMap")
@@ -1197,6 +1316,7 @@ class AgentMediatorTemplate(BaseModel):
 class ChatPromptConfig(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
+        populate_by_name=True,
     )
     id: Annotated[str, Field(min_length=1)]
     type: Annotated[ChatStageType, Field(title="ChatStageType")]
@@ -1219,6 +1339,7 @@ class ChatPromptConfig(BaseModel):
 class TextPromptItem(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
+        populate_by_name=True,
     )
     type: Literal["TEXT"] = "TEXT"
     text: str
@@ -1230,6 +1351,7 @@ class TextPromptItem(BaseModel):
 class ProfileInfoPromptItem(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
+        populate_by_name=True,
     )
     type: Literal["PROFILE_INFO"] = "PROFILE_INFO"
     condition: Annotated[
@@ -1240,6 +1362,7 @@ class ProfileInfoPromptItem(BaseModel):
 class ProfileContextPromptItem(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
+        populate_by_name=True,
     )
     type: Literal["PROFILE_CONTEXT"] = "PROFILE_CONTEXT"
     condition: Annotated[
@@ -1250,6 +1373,7 @@ class ProfileContextPromptItem(BaseModel):
 class StageContextPromptItem(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
+        populate_by_name=True,
     )
     type: Literal["STAGE_CONTEXT"] = "STAGE_CONTEXT"
     stageId: str
@@ -1266,6 +1390,7 @@ class StageContextPromptItem(BaseModel):
 class PromptItemGroup(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
+        populate_by_name=True,
     )
     type: Literal["GROUP"] = "GROUP"
     title: str
@@ -1285,6 +1410,7 @@ class PromptItemGroup(BaseModel):
 class StructuredOutputConfig(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
+        populate_by_name=True,
     )
     enabled: bool
     type: Annotated[StructuredOutputType, Field(title="StructuredOutputType")]
@@ -1295,6 +1421,7 @@ class StructuredOutputConfig(BaseModel):
 class StructuredOutputSchema(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
+        populate_by_name=True,
     )
     type: Annotated[StructuredOutputDataType, Field(title="StructuredOutputDataType")]
     description: str | None = None
@@ -1306,6 +1433,7 @@ class StructuredOutputSchema(BaseModel):
 class StructuredOutputSchemaProperty(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
+        populate_by_name=True,
     )
     name: str
     schema_: Annotated[StructuredOutputSchema, Field(alias="schema")]
@@ -1314,6 +1442,7 @@ class StructuredOutputSchemaProperty(BaseModel):
 class ChatMediatorStructuredOutputConfig(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
+        populate_by_name=True,
     )
     enabled: bool
     type: Annotated[StructuredOutputType, Field(title="StructuredOutputType")]
@@ -1328,6 +1457,7 @@ class ChatMediatorStructuredOutputConfig(BaseModel):
 class GenericPromptConfig(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
+        populate_by_name=True,
     )
     id: Annotated[str, Field(min_length=1)]
     type: Annotated[StageKind, Field(title="StageKind")]
@@ -1350,6 +1480,9 @@ AgentParticipantTemplate = AgentMediatorTemplate
 class JSONSchemaDefinition(
     RootModel[String | Number | Integer | Boolean | Object | Array]
 ):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
     root: Annotated[
         String | Number | Integer | Boolean | Object | Array,
         Field(title="JSONSchemaDefinition"),
