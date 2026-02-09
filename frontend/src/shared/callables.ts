@@ -619,7 +619,7 @@ export const updateParticipantStatusCallable = async (
   return data;
 };
 
-/** Generic endpoint for testing agent config. */
+/** Test API key by sending a simple prompt to the specified provider. */
 export const testAgentConfigCallable = async (
   functions: Functions,
   config: AgentConfigTestData,

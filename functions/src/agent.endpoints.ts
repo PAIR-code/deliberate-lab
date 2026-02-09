@@ -1,8 +1,8 @@
 import {
   ModelResponse,
   ModelResponseStatus,
-  PromptItemType,
-  TextPromptItem,
+  createAgentModelSettings,
+  createModelGenerationConfig,
 } from '@deliberation-lab/utils';
 import {getAgentResponse} from './agent.utils';
 import {getExperimenterData} from './utils/firestore';
@@ -13,15 +13,14 @@ import {AuthGuard} from './utils/auth-guard';
 
 // ****************************************************************************
 // Test new agent configs
-// Input structure: { creatorId, agentConfig, promptConfig }
+// Input structure: { creatorId, apiType }
 // Validation: utils/src/agent.validation.ts
 // ****************************************************************************
 export const testAgentConfig = onCall(
   async (request): Promise<ModelResponse> => {
     const {data} = request;
-    const agentConfig = data.agentConfig;
-    const promptConfig = data.promptConfig;
     const creatorId = data.creatorId;
+    const apiType = data.apiType;
 
     // Only allow experimenters to use this test endpoint
     await AuthGuard.isExperimenter(request);
@@ -35,29 +34,18 @@ export const testAgentConfig = onCall(
       };
     }
 
-    // Convert PromptItem[] to string for testing
-    const prompt = promptConfig.prompt
-      .filter(
-        (item: {type: PromptItemType}) => item.type === PromptItemType.TEXT,
-      )
-      .map((item: TextPromptItem) => item.text)
-      .join('\n');
+    const modelSettings = createAgentModelSettings({apiType});
+    const prompt = 'Say "hello world" and tell a unique joke.';
+    const generationConfig = createModelGenerationConfig();
 
     const response = await getAgentResponse(
       experimenterData.apiKeys,
       prompt,
-      agentConfig.defaultModelSettings,
-      promptConfig.generationConfig,
-      promptConfig.structuredOutputConfig,
+      modelSettings,
+      generationConfig,
     );
 
-    // Check console log for response
-    console.log(
-      'TESTING AGENT CONFIG\n',
-      JSON.stringify(agentConfig),
-      JSON.stringify(promptConfig),
-      response,
-    );
+    console.log('TESTING AGENT CONFIG\n', apiType, response);
 
     return response;
   },

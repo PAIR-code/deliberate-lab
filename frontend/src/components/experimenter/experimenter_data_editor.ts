@@ -16,14 +16,8 @@ import {styles} from './experimenter_data_editor.scss';
 import {
   ApiKeyType,
   ExperimenterData,
-  StageKind,
-  createAgentModelSettings,
-  createAgentMediatorPersonaConfig,
-  createDefaultPromptFromText,
-  createModelGenerationConfig,
   createClaudeServerConfig,
   createOpenAIServerConfig,
-  createStructuredOutputConfig,
   ModelResponseStatus,
 } from '@deliberation-lab/utils';
 
@@ -86,26 +80,10 @@ export class ExperimenterDataEditor extends MobxLitElement {
   }
 
   private renderCheckApiKey(apiType: ApiKeyType) {
-    const agentConfig = createAgentMediatorPersonaConfig({
-      defaultModelSettings: createAgentModelSettings({apiType}),
-    });
-    const promptConfig = {
-      id: '',
-      type: StageKind.INFO,
-      prompt: createDefaultPromptFromText(
-        'Say "hello world" and tell a unique joke',
-      ),
-      generationConfig: createModelGenerationConfig(),
-      structuredOutputConfig: createStructuredOutputConfig(),
-    };
-
     const testEndpoint = async () => {
       this.setApiKeyResult(apiType, {status: CheckApiKeyStatus.PENDING});
 
-      const response = await this.experimentManager.testAgentConfig(
-        agentConfig,
-        promptConfig,
-      );
+      const response = await this.experimentManager.testApiKey(apiType);
       this.setApiKeyResult(apiType, {
         status:
           response.status === ModelResponseStatus.OK
