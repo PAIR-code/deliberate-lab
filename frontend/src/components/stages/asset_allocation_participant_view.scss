@@ -67,6 +67,11 @@
   @include common.flex-column;
   align-items: center;
   gap: common.$spacing-medium;
+
+  svg {
+    max-width: 85%;
+    height: auto;
+  }
 }
 
 .donut-chart {
