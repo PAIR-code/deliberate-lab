@@ -493,7 +493,8 @@ export class AssetAllocationParticipantView extends MobxLitElement {
       this.stage.id,
     );
 
-    this.requestUpdate();
+    // Automatically progress to next stage
+    await this.participantService.progressToNextStage();
   }
 
   private getStockInfoStage(): StockInfoStageConfig | null {
