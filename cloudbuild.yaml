@@ -174,20 +174,56 @@ steps:
   waitFor: ['PrepareFirebaseProdConfig']
   dir: '.'
 
-# Lint & Format Check
+# Lint & Format Check Utils
 - name: 'node:22'
-  id: LintCheck
+  id: LintUtils
   env:
     - 'DEPLOYMENT_TYPES=" all frontend functions test "'
   script: |
     #!/usr/bin/env bash
     set -euo pipefail
     if [[ "${DEPLOYMENT_TYPES}" == *" ${_DEPLOYMENT_TYPE} "* ]]; then
-      echo "Running Lint/Format Check..."
-      npx prettier --check "**/*.ts"
-      npx eslint --quiet "**/*.ts"
+      echo "Running Utils Lint/Format utils..."
+      npx prettier --check "utils/**/*.ts"
+      npx eslint --quiet "utils/**/*.ts"
     else
-      echo "Skipping Lint/Format Check for '${_DEPLOYMENT_TYPE}' deployment."
+      echo "Skipping Utils Lint/Format Check for '${_DEPLOYMENT_TYPE}' deployment."
+    fi
+  waitFor: ['NpmCI']
+  dir: '.'
+
+# Lint & Format Check Functions
+- name: 'node:22'
+  id: LintFunctions
+  env:
+    - 'DEPLOYMENT_TYPES=" all functions test "'
+  script: |
+    #!/usr/bin/env bash
+    set -euo pipefail
+    if [[ "${DEPLOYMENT_TYPES}" == *" ${_DEPLOYMENT_TYPE} "* ]]; then
+      echo "Running Functions Lint/Format utils..."
+      npx prettier --check "functions/**/*.ts"
+      npx eslint --quiet "functions/**/*.ts"
+    else
+      echo "Skipping Functions Lint/Format Check for '${_DEPLOYMENT_TYPE}' deployment."
+    fi
+  waitFor: ['NpmCI']
+  dir: '.'
+
+# Lint & Format Check Frontend
+- name: 'node:22'
+  id: LintFrontend
+  env:
+    - 'DEPLOYMENT_TYPES=" all frontend test "'
+  script: |
+    #!/usr/bin/env bash
+    set -euo pipefail
+    if [[ "${DEPLOYMENT_TYPES}" == *" ${_DEPLOYMENT_TYPE} "* ]]; then
+      echo "Running Frontend Lint/Format utils..."
+      npx prettier --check "frontend/**/*.ts"
+      npx eslint --quiet "frontend/**/*.ts"
+    else
+      echo "Skipping Frontend Lint/Format Check for '${_DEPLOYMENT_TYPE}' deployment."
     fi
   waitFor: ['NpmCI']
   dir: '.'
@@ -206,7 +242,7 @@ steps:
     else
       echo "Skipping Build Utils for '${_DEPLOYMENT_TYPE}' deployment."
     fi
-  waitFor: ['LintCheck']
+  waitFor: ['LintUtils']
   dir: '.'
 
 # Build Functions Workspace
@@ -223,7 +259,7 @@ steps:
     else
       echo "Skipping Build Functions for '${_DEPLOYMENT_TYPE}' deployment."
     fi
-  waitFor: ['BuildUtils']
+  waitFor: ['LintFunctions','BuildUtils']
   dir: '.'
 
 # Build Frontend Workspace (Development Mode)
@@ -244,7 +280,7 @@ steps:
     else
       echo "Skipping Build frontend for '${_DEPLOYMENT_TYPE}' deployment."
     fi
-  waitFor: ['BuildUtils']
+  waitFor: ['LintFrontend','BuildUtils']
   dir: '.'
 
 # Run Utils Tests
