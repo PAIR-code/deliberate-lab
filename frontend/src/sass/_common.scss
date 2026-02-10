@@ -308,6 +308,14 @@
     @include typescale.label-small;
     text-transform: uppercase;
   }
+  ul,
+  ol {
+    margin: $spacing-medium 0;
+    padding-left: $spacing-xxl;
+  }
+  li {
+    margin-bottom: $spacing-medium;
+  }
   a {
     color: var(--md-sys-color-primary);
   }
