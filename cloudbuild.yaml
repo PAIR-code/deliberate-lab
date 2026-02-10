@@ -1,4 +1,4 @@
-# cloudbuild.yaml for Deliberate Lab Backend Deployments
+# cloudbuild.yaml for Deliberate Lab Deployments
 #
 # This build config supports multiple deployment types controlled by the
 # substitution variable `_DEPLOYMENT_TYPE`.
@@ -8,7 +8,7 @@
 #
 # Allowed Values for `_DEPLOYMENT_TYPE`:
 #   - test:
-#       Runs linting, formatting checks, and unit tests for utils and functions.
+#       Runs linting, formatting checks, and unit tests for all workspaces.
 #       Does NOT deploy anything.
 #   - functions:
 #       Runs validation (lint/test) and builds the project.
@@ -18,12 +18,23 @@
 #   - indexes:
 #       Deploys Firestore indexes.
 #       Includes a safety mechanism to backup existing indexes before deploying.
+#   - frontend:
+#       Runs validation (lint/test) and builds the project.
+#       Deploys Cloud App Engine frontend.
 #   - all:
 #       Runs the full pipeline: validation, build, test, and deployment of
-#       functions, rules, and indexes.
+#       functions, rules, indexes and frontend.
 
 substitutions:
-  _DEPLOYMENT_TYPE: '' # Default value, MUST be overridden by trigger.
+  _DEPLOYMENT_TYPE: ''       # Default value, MUST be overridden by trigger.
+  # Frontend configuration.
+  _FIREBASE_APP_ID: ''       # Unique Firebase application id. 
+  _FIREBASE_API_KEY: ''      # API key frontend will use to connect to Firebase.
+  _FIREBASE_AUTH_DOMAIN: ''  # Domain from which Firebase client may connect.
+  _PROJECT_ID: ''            # Unique Firebase/Cloud project id.
+  _STORAGE_BUCKET: ''        # Default Cloud Storage bucket name.
+  _MESSAGING_SENDER_ID: ''   # Firebase Cloud Messaging sender id.
+  _MEASUREMENT_ID: ''        # Google Analytics id.
 
 options:
   logging: CLOUD_LOGGING_ONLY
@@ -34,19 +45,35 @@ steps:
 - name: 'node:22'
   id: ValidateSubstitutionValues
   env:
-    - 'DEPLOYMENT_TYPES=" all functions indexes rules test "'
+    - 'DEPLOYMENT_TYPES=" all frontend functions indexes rules test "'
   script: |
     #!/usr/bin/env bash
     set -euo pipefail
     if [[ -z "${_DEPLOYMENT_TYPE}" ]]; then
-       echo "Validation Failed: '_DEPLOYMENT_TYPE' Substitution Value MUST be specified"
-       exit 1
+      echo "Validation Failed: '_DEPLOYMENT_TYPE' Substitution Value MUST be specified"
+      exit 1
     fi
     if [[ "${DEPLOYMENT_TYPES}" == *" ${_DEPLOYMENT_TYPE} "* ]]; then
-       echo "Validation Passed: '${_DEPLOYMENT_TYPE}' is in list: [${DEPLOYMENT_TYPES}]"
+      echo "Validation Passed: '${_DEPLOYMENT_TYPE}' is in list: [${DEPLOYMENT_TYPES}]"
     else
-       echo "Validation Failed: '${_DEPLOYMENT_TYPE}' is not in list: [${DEPLOYMENT_TYPES}]"
-       exit 1
+      echo "Validation Failed: '${_DEPLOYMENT_TYPE}' is not in list: [${DEPLOYMENT_TYPES}]"
+      exit 1
+    fi
+    if [[ " all frontend " == *" ${_DEPLOYMENT_TYPE} "* ]]; then
+      MISSING_VARS=""
+      if [[ -z "${_FIREBASE_APP_ID}" ]]; then MISSING_VARS="${MISSING_VARS} _FIREBASE_APP_ID"; fi
+      if [[ -z "${_FIREBASE_API_KEY}" ]]; then MISSING_VARS="${MISSING_VARS} _FIREBASE_API_KEY"; fi
+      if [[ -z "${_FIREBASE_AUTH_DOMAIN}" ]]; then MISSING_VARS="${MISSING_VARS} _FIREBASE_AUTH_DOMAIN"; fi
+      if [[ -z "${_PROJECT_ID}" ]]; then MISSING_VARS="${MISSING_VARS} _PROJECT_ID"; fi
+      if [[ -z "${_STORAGE_BUCKET}" ]]; then MISSING_VARS="${MISSING_VARS} _STORAGE_BUCKET"; fi
+      if [[ -z "${_MESSAGING_SENDER_ID}" ]]; then MISSING_VARS="${MISSING_VARS} _MESSAGING_SENDER_ID"; fi
+      if [[ -z "${_MEASUREMENT_ID}" ]]; then MISSING_VARS="${MISSING_VARS} _MEASUREMENT_ID"; fi
+
+      if [[ -n "${MISSING_VARS}" ]]; then
+        echo "Validation Failed: The following substitution values are missing for '${_DEPLOYMENT_TYPE}' deployment:${MISSING_VARS}"
+        exit 1
+      fi
+      echo "Validation Passed: All Frontend configuration values are present."
     fi
   dir: '.'
 
