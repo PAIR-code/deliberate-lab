@@ -76,6 +76,9 @@ export default (
         favicon: './favicon.png',
         // Prepend an optional prefix path to the base URL of referenced assets in index.html
         base: process.env.URL_PREFIX ?? '/',
+        templateParameters: {
+          analyticsId: process.env.MEASUREMENT_ID || 'your-google-analytics-id',
+        },
       }),
       new webpack.DefinePlugin({
         'process.env.URL_PREFIX': process.env.URL_PREFIX ?? "'/'",

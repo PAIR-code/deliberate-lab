@@ -1,29 +1,68 @@
-# cloudbuild.yaml for Deliberate Lab Backend Deployments
+# cloudbuild.yaml for Deliberate Lab Deployments
 #
 # This build config supports multiple deployment types controlled by the
-# substitution variable `_DEPLOYMENT_TYPE`.
-#
-# Usage:
-#   This variable MUST be specified in the build trigger.
-#
-# Allowed Values for `_DEPLOYMENT_TYPE`:
-#   - test:
-#       Runs linting, formatting checks, and unit tests for utils and functions.
-#       Does NOT deploy anything.
-#   - functions:
-#       Runs validation (lint/test) and builds the project.
-#       Deploys Cloud Functions.
-#   - rules:
-#       Deploys security rules for Firestore and Realtime Database.
-#   - indexes:
-#       Deploys Firestore indexes.
-#       Includes a safety mechanism to backup existing indexes before deploying.
-#   - all:
-#       Runs the full pipeline: validation, build, test, and deployment of
-#       functions, rules, and indexes.
+# required substitution variable `_DEPLOYMENT_TYPE`.
 
 substitutions:
-  _DEPLOYMENT_TYPE: '' # Default value, MUST be overridden by trigger.
+  # MUST be specified in the build trigger. Allowed values:
+  #   - test:
+  #       Runs linting, formatting checks, and unit tests for all workspaces.
+  #       Does NOT deploy anything.
+  #   - functions:
+  #       Runs validation (lint/test) and builds the project.
+  #       Deploys Cloud Functions.
+  #   - rules:
+  #       Deploys security rules for Firestore and Realtime Database.
+  #   - indexes:
+  #       Deploys Firestore indexes. Includes a safety mechanism to backup
+  #       existing indexes before deploying.
+  #   - frontend:
+  #       Runs validation (lint/test) and builds the project.
+  #       Deploys Cloud App Engine frontend.
+  #   - all:
+  #       Runs the full pipeline: validation, build, test, and deployment of
+  #       functions, rules, indexes and frontend.
+  _DEPLOYMENT_TYPE: ''
+
+  # Gatekeeper boolean. Commands with external effects will ONLY be performed if
+  # `_DEPLOY` is set to "true".
+  # Allowed values:
+  #   - true:
+  #       Potentially destructive commands like `firebase deploy` (without
+  #       `--dry-run`) and `gcloud app deploy` WILL be executed.
+  #   - false:
+  #       Destructive commands WILL NOT be run. Alternative safe commands may be
+  #       run instead, such as `firebase deploy --dry-run`.
+  _DEPLOY: 'false'
+
+  # When `_DEPLOYMENT_TYPE` is 'all' or 'frontend', this value MUST also be set
+  # to a JSON string containing an object of the form:
+  #
+  # ```json
+  # {
+  #   "apiKey": "...",
+  #   "appId": "...",
+  #   "authDomain": "...",
+  #   "measurementId": "...",
+  #   "messagingSenderId": "...",
+  #   "projectId": "...",
+  #   "storageBucket": "..."
+  # }
+  # ```
+  #
+  # See https://firebase.google.com/docs/reference/js/app.firebaseoptions
+  _FIREBASE_CONFIG: ''
+
+  # When deploying the frontend, this substitution value determines whether
+  # traffic will automatically be migrated over to the newly deployed frontend.
+  # Allowed values:
+  #   - true:
+  #       The `gcloud app deploy` command will run WITHOUT `--no-promote`.
+  #       Traffic WILL auto-migrate to the newly deployed frontend.
+  #   - false (default):
+  #       The `gcloud app deploy` command will run WITH `--no-promote`. Traffic 
+  #       WILL NOT be directed to the newly deployed frontend automatically.
+  _AUTO_PROMOTE: 'false'
 
 options:
   logging: CLOUD_LOGGING_ONLY
@@ -34,24 +73,62 @@ steps:
 - name: 'node:22'
   id: ValidateSubstitutionValues
   env:
-    - 'DEPLOYMENT_TYPES=" all functions indexes rules test "'
+    - 'DEPLOYMENT_TYPES=" all frontend functions indexes rules test "'
   script: |
     #!/usr/bin/env bash
     set -euo pipefail
     if [[ -z "${_DEPLOYMENT_TYPE}" ]]; then
-       echo "Validation Failed: '_DEPLOYMENT_TYPE' Substitution Value MUST be specified"
-       exit 1
+      echo "Validation Failed: '_DEPLOYMENT_TYPE' Substitution Value MUST be specified"
+      exit 1
     fi
     if [[ "${DEPLOYMENT_TYPES}" == *" ${_DEPLOYMENT_TYPE} "* ]]; then
-       echo "Validation Passed: '${_DEPLOYMENT_TYPE}' is in list: [${DEPLOYMENT_TYPES}]"
+      echo "Validation Passed: '${_DEPLOYMENT_TYPE}' is in list: [${DEPLOYMENT_TYPES}]"
     else
-       echo "Validation Failed: '${_DEPLOYMENT_TYPE}' is not in list: [${DEPLOYMENT_TYPES}]"
-       exit 1
+      echo "Validation Failed: '${_DEPLOYMENT_TYPE}' is not in list: [${DEPLOYMENT_TYPES}]"
+      exit 1
+    fi
+    if [[ "${_DEPLOY}" != "true" && "${_DEPLOY}" != "false" ]]; then
+      echo "Validation Failed: '_DEPLOY' must be strictly 'true' or 'false'. Got: '${_DEPLOY}'"
+      exit 1
+    fi
+    if [[ " all frontend " == *" ${_DEPLOYMENT_TYPE} "* ]]; then
+      if [[ "${_AUTO_PROMOTE}" != "true" && "${_AUTO_PROMOTE}" != "false" ]]; then
+        echo "Validation Failed: '_AUTO_PROMOTE' must be strictly 'true' or 'false'. Got: '${_AUTO_PROMOTE}'"
+        exit 1
+      fi
+
+      MISSING_VARS=""
+      if [[ -z "${_FIREBASE_CONFIG}" ]]; then
+        echo "Validation Failed: '_FIREBASE_CONFIG' missing for '${_DEPLOYMENT_TYPE}' deployment"
+        exit 1
+      fi
+      echo "${_FIREBASE_CONFIG}" | \
+        node -e '
+          const config = JSON.parse(require("fs").readFileSync(0, "utf-8"));
+          if (typeof config !== "object") throw new Error("Config must be an object");
+          const missingFields = [
+            "apiKey",
+            "appId",
+            "authDomain",
+            "measurementId",
+            "messagingSenderId",
+            "projectId",
+            "storageBucket",
+          ].filter((field) =>
+            !config[field] || typeof config[field] !== "string"
+          );
+          if (missingFields.length) {
+            throw new Error(`Missing required fields: ${missingFields}`);
+          }
+        '
+      echo "Validation Passed: All Frontend configuration values are present."
     fi
   dir: '.'
 
 # Install Java 21 for Firebase Emulators
-- name: 'node:22'
+# NOTE: The image used here doesn't matter here for the step itself. Using the
+# Cloud SDK image warms the cache for the DeployFrontend step.
+- name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
   id: InstallJava
   env:
     - 'DEPLOYMENT_TYPES=" all functions test "'
@@ -114,21 +191,56 @@ steps:
   waitFor: ['PrepareFirebaseProdConfig']
   dir: '.'
 
-# Lint & Format Check
+# Lint & Format Check Utils
 - name: 'node:22'
-  id: LintCheck
+  id: LintUtils
+  env:
+    - 'DEPLOYMENT_TYPES=" all frontend functions test "'
+  script: |
+    #!/usr/bin/env bash
+    set -euo pipefail
+    if [[ "${DEPLOYMENT_TYPES}" == *" ${_DEPLOYMENT_TYPE} "* ]]; then
+      echo "Running Utils Lint/Format utils..."
+      npx prettier --check "utils/**/*.ts"
+      npx eslint --quiet "utils/**/*.ts"
+    else
+      echo "Skipping Utils Lint/Format Check for '${_DEPLOYMENT_TYPE}' deployment."
+    fi
+  waitFor: ['NpmCI']
+  dir: '.'
+
+# Lint & Format Check Functions
+- name: 'node:22'
+  id: LintFunctions
   env:
     - 'DEPLOYMENT_TYPES=" all functions test "'
   script: |
     #!/usr/bin/env bash
     set -euo pipefail
     if [[ "${DEPLOYMENT_TYPES}" == *" ${_DEPLOYMENT_TYPE} "* ]]; then
-      echo "Running Lint/Format Check..."
-      # Scoped to backend directories to avoid blocking on frontend issues
-      npx prettier --check "functions/**/*.ts" "utils/**/*.ts"
-      npx eslint --quiet "functions/**/*.ts" "utils/**/*.ts"
+      echo "Running Functions Lint/Format utils..."
+      npx prettier --check "functions/**/*.ts"
+      npx eslint --quiet "functions/**/*.ts"
     else
-      echo "Skipping Lint/Format Check for '${_DEPLOYMENT_TYPE}' deployment."
+      echo "Skipping Functions Lint/Format Check for '${_DEPLOYMENT_TYPE}' deployment."
+    fi
+  waitFor: ['NpmCI']
+  dir: '.'
+
+# Lint & Format Check Frontend
+- name: 'node:22'
+  id: LintFrontend
+  env:
+    - 'DEPLOYMENT_TYPES=" all frontend test "'
+  script: |
+    #!/usr/bin/env bash
+    set -euo pipefail
+    if [[ "${DEPLOYMENT_TYPES}" == *" ${_DEPLOYMENT_TYPE} "* ]]; then
+      echo "Running Frontend Lint/Format utils..."
+      npx prettier --check "frontend/**/*.ts"
+      npx eslint --quiet "frontend/**/*.ts"
+    else
+      echo "Skipping Frontend Lint/Format Check for '${_DEPLOYMENT_TYPE}' deployment."
     fi
   waitFor: ['NpmCI']
   dir: '.'
@@ -137,7 +249,7 @@ steps:
 - name: 'node:22'
   id: BuildUtils
   env:
-    - 'DEPLOYMENT_TYPES=" all functions test "'
+    - 'DEPLOYMENT_TYPES=" all frontend functions test "'
   script: |
     #!/usr/bin/env bash
     set -euo pipefail
@@ -147,7 +259,7 @@ steps:
     else
       echo "Skipping Build Utils for '${_DEPLOYMENT_TYPE}' deployment."
     fi
-  waitFor: ['LintCheck']
+  waitFor: ['LintUtils']
   dir: '.'
 
 # Build Functions Workspace
@@ -164,10 +276,48 @@ steps:
     else
       echo "Skipping Build Functions for '${_DEPLOYMENT_TYPE}' deployment."
     fi
+  waitFor: ['LintFunctions','BuildUtils']
+  dir: '.'
+
+# Build Frontend Workspace (Development Mode)
+- name: 'node:22'
+  id: BuildDevFrontend
+  env:
+    - 'DEPLOYMENT_TYPES=" all frontend test "'
+  script: |
+    #!/usr/bin/env bash
+    set -euo pipefail
+    if [[ "${DEPLOYMENT_TYPES}" == *" ${_DEPLOYMENT_TYPE} "* ]]; then
+      echo "Copying example Firebase config..."
+      cp ./frontend/firebase_config.example.ts ./frontend/firebase_config.ts
+      echo "Copying index.example.html to index.html..."
+      cp ./frontend/index.example.html ./frontend/index.html
+      echo "Building frontend workspace in development mode..."
+      npm run build --workspace=frontend
+    else
+      echo "Skipping Build frontend for '${_DEPLOYMENT_TYPE}' deployment."
+    fi
+  waitFor: ['LintFrontend','BuildUtils']
+  dir: '.'
+
+# Run Utils Tests
+- name: 'node:22'
+  id: TestUtils
+  env:
+    - 'DEPLOYMENT_TYPES=" all frontend functions test "'
+  script: |
+    #!/usr/bin/env bash
+    set -euo pipefail
+    if [[ "${DEPLOYMENT_TYPES}" == *" ${_DEPLOYMENT_TYPE} "* ]]; then
+      echo "Running Utils tests..."
+      npm test --workspace=utils
+    else
+      echo "Skipping Utils tests for '${_DEPLOYMENT_TYPE}' deployment."
+    fi
   waitFor: ['BuildUtils']
   dir: '.'
 
-# Run Tests
+# Run Functions Tests
 - name: 'node:22'
   id: TestFunctions
   env:
@@ -178,13 +328,60 @@ steps:
     if [[ "${DEPLOYMENT_TYPES}" == *" ${_DEPLOYMENT_TYPE} "* ]]; then
       export JAVA_HOME=$(pwd)/java-runtime
       export PATH=$JAVA_HOME/bin:$PATH
-      echo "Running Backend Tests..."
-      npm test --workspace=utils
+      echo "Running Firebase Functions Tests..."
       npm test --workspace=functions
     else
-      echo "Skipping Tests for '${_DEPLOYMENT_TYPE}' deployment."
+      echo "Skipping Functions tests for '${_DEPLOYMENT_TYPE}' deployment."
     fi
   waitFor: ['BuildFunctions', 'InstallJava']
+  dir: '.'
+
+# Run Frontend Tests
+- name: 'node:22'
+  id: TestFrontend
+  env:
+    - 'DEPLOYMENT_TYPES=" all frontend test "'
+  script: |
+    #!/usr/bin/env bash
+    set -euo pipefail
+    if [[ "${DEPLOYMENT_TYPES}" == *" ${_DEPLOYMENT_TYPE} "* ]]; then
+      echo "Running Frontend tests against dev build..."
+      npm test --workspace=frontend
+    else
+      echo "Skipping Frontend tests for '${_DEPLOYMENT_TYPE}' deployment."
+    fi
+  waitFor: ['BuildDevFrontend']
+  dir: '.'
+
+# Build Frontend Workspace (Production mode)
+- name: 'node:22'
+  id: BuildProdFrontend
+  env:
+    - 'DEPLOYMENT_TYPES=" all frontend "'
+  script: |
+    #!/usr/bin/env bash
+    set -euo pipefail
+    if [[ "${DEPLOYMENT_TYPES}" == *" ${_DEPLOYMENT_TYPE} "* ]]; then
+      echo "Generating firebase_config.ts from substitution variables..."
+      echo "import {FirebaseOptions} from 'firebase/app';" > ./frontend/firebase_config.ts
+      echo "export const FIREBASE_CONFIG: FirebaseOptions = ${_FIREBASE_CONFIG};" >> ./frontend/firebase_config.ts
+
+      echo "Extracting MEASUREMENT_ID for Webpack..."
+      export MEASUREMENT_ID=$(
+        echo "${_FIREBASE_CONFIG}" | \
+        node -p 'JSON.parse(require("fs").readFileSync(0)).measurementId'
+      )
+
+      echo "Copying index.example.html to index.html..."
+      cp ./frontend/index.example.html ./frontend/index.html
+
+      echo "Building frontend workspace for production..."
+      npm run build:prod --workspace=frontend
+    else
+      echo "Skipping Build Frontend for '${_DEPLOYMENT_TYPE}' deployment."
+    fi
+  waitFor:
+    - 'TestFrontend'  # MUST be finished using dev build's firebase_config.ts.
   dir: '.'
 
 # Deploy Functions Step
@@ -196,37 +393,121 @@ steps:
     #!/usr/bin/env bash
     set -euo pipefail
     if [[ "${DEPLOYMENT_TYPES}" == *" ${_DEPLOYMENT_TYPE} "* ]]; then
-      echo "Deploying Functions..."
-      npx firebase deploy \
-        --config=firebase-prod.json \
-        --only functions \
-        --project ${PROJECT_ID} \
-        --non-interactive \
-        --force
+      if [[ "${_DEPLOY}" == "true" ]]; then
+        echo "Deploying Functions..."
+        npx firebase deploy \
+          --config=firebase-prod.json \
+          --only functions \
+          --project ${PROJECT_ID} \
+          --non-interactive \
+          --force
+      else
+        echo "Dry-run: Deploying Functions..."
+        npx firebase deploy \
+          --config=firebase-prod.json \
+          --only functions \
+          --project ${PROJECT_ID} \
+          --non-interactive \
+          --dry-run
+      fi
     else
       echo "Skipping backend deploy for '${_DEPLOYMENT_TYPE}' deployment."
     fi
   waitFor: ['TestFunctions']
   dir: '.'
 
-# Deploy Rules Step
+# Deploy Firestore Rules Step
 - name: 'node:22'
-  id: DeployFirebaseRules
+  id: DeployFirebaseFirestoreRules
   env:
     - 'DEPLOYMENT_TYPES=" all rules "'
   script: |
     #!/usr/bin/env bash
     set -euo pipefail
     if [[ "${DEPLOYMENT_TYPES}" == *" ${_DEPLOYMENT_TYPE} "* ]]; then
-      echo "Deploying Rules (Firestore, Database)..."
-      npx firebase deploy \
-        --config=firebase-prod.json \
-        --only firestore:rules,database:rules,storage \
-        --project ${PROJECT_ID} \
-        --non-interactive \
-        --force
+      if [[ "${_DEPLOY}" == "true" ]]; then
+        echo "Deploying Firestore Rules..."
+        npx firebase deploy \
+          --config=firebase-prod.json \
+          --only firestore:rules \
+          --project ${PROJECT_ID} \
+          --non-interactive \
+          --force
+      else
+        echo "Dry-run: Deploying Firestore Rules..."
+        npx firebase deploy \
+          --config=firebase-prod.json \
+          --only firestore:rules \
+          --project ${PROJECT_ID} \
+          --non-interactive \
+          --dry-run
+      fi
     else
-      echo "Skipping Firebase rules deploy for '${_DEPLOYMENT_TYPE}' deployment."
+      echo "Skipping Firestore rules deploy for '${_DEPLOYMENT_TYPE}' deployment."
+    fi
+  waitFor: ['TestFunctions']
+  dir: '.'
+
+# Deploy Database Rules Step
+- name: 'node:22'
+  id: DeployFirebaseDatabaseRules
+  env:
+    - 'DEPLOYMENT_TYPES=" all rules "'
+  script: |
+    #!/usr/bin/env bash
+    set -euo pipefail
+    if [[ "${DEPLOYMENT_TYPES}" == *" ${_DEPLOYMENT_TYPE} "* ]]; then
+      if [[ "${_DEPLOY}" == "true" ]]; then
+        echo "Deploying Database Rules..."
+        npx firebase deploy \
+          --config=firebase-prod.json \
+          --only database:rules \
+          --project ${PROJECT_ID} \
+          --non-interactive \
+          --force
+      else
+        echo "Dry-run: Deploying Database Rules..."
+        npx firebase deploy \
+          --config=firebase-prod.json \
+          --only database:rules \
+          --project ${PROJECT_ID} \
+          --non-interactive \
+          --dry-run
+      fi
+    else
+      echo "Skipping Database rules deploy for '${_DEPLOYMENT_TYPE}' deployment."
+    fi
+  waitFor: ['TestFunctions']
+  dir: '.'
+
+# Deploy Storage Rules Step
+- name: 'node:22'
+  id: DeployFirebaseStorageRules
+  env:
+    - 'DEPLOYMENT_TYPES=" all rules "'
+  script: |
+    #!/usr/bin/env bash
+    set -euo pipefail
+    if [[ "${DEPLOYMENT_TYPES}" == *" ${_DEPLOYMENT_TYPE} "* ]]; then
+      if [[ "${_DEPLOY}" == "true" ]]; then
+        echo "Deploying Storage Rules..."
+        npx firebase deploy \
+          --config=firebase-prod.json \
+          --only storage \
+          --project ${PROJECT_ID} \
+          --non-interactive \
+          --force
+      else
+        echo "Dry-run: Deploying Storage Rules..."
+        npx firebase deploy \
+          --config=firebase-prod.json \
+          --only storage \
+          --project ${PROJECT_ID} \
+          --non-interactive \
+          --dry-run
+      fi
+    else
+      echo "Skipping Storage rules deploy for '${_DEPLOYMENT_TYPE}' deployment."
     fi
   waitFor: ['TestFunctions']
   dir: '.'
@@ -248,27 +529,74 @@ steps:
       cat existing_firestore_indexes.json
       echo "--- EXISTING FIRESTORE INDEXES BACKUP: END ---"
 
-      echo "Deploying Firestore Indexes..."
-      npx firebase deploy \
-        --config=firebase-prod.json \
-        --only firestore:indexes \
-        --project ${PROJECT_ID} \
-        --non-interactive \
-        --force
+      if [[ "${_DEPLOY}" == "true" ]]; then
+        echo "Deploying Firestore Indexes..."
+        npx firebase deploy \
+          --config=firebase-prod.json \
+          --only firestore:indexes \
+          --project ${PROJECT_ID} \
+          --non-interactive \
+          --force
 
-      echo "Fetching deployed production indexes..."
-      npx firebase firestore:indexes --project ${PROJECT_ID} > deployed_firestore_indexes.json
-      
-      if cmp -s "existing_firestore_indexes.json" "deployed_firestore_indexes.json"; then
-        echo "Deployed Firestore Indexes match existing (no change)."
+        echo "Fetching deployed production indexes..."
+        npx firebase firestore:indexes --project ${PROJECT_ID} > deployed_firestore_indexes.json
+        
+        if cmp -s "existing_firestore_indexes.json" "deployed_firestore_indexes.json"; then
+          echo "Deployed Firestore Indexes match existing (no change)."
+        else
+          echo "--- DEPLOYED FIRESTORE INDEXES BACKUP: START ---"
+          cat deployed_firestore_indexes.json
+          echo "--- DEPLOYED FIRESTORE INDEXES BACKUP: END ---"
+        fi
       else
-        echo "--- DEPLOYED FIRESTORE INDEXES BACKUP: START ---"
-        cat deployed_firestore_indexes.json
-        echo "--- DEPLOYED FIRESTORE INDEXES BACKUP: END ---"
+        echo "Dry-run: Deploying Firestore Indexes..."
+        npx firebase deploy \
+          --config=firebase-prod.json \
+          --only firestore:indexes \
+          --project ${PROJECT_ID} \
+          --non-interactive \
+          --dry-run
+
+        echo "Skipping post-deploy verification in dry-run mode."
       fi
 
     else
       echo "Skipping Firebase indexes deploy for '${_DEPLOYMENT_TYPE}' deployment."
     fi
   waitFor: ['TestFunctions']
+  dir: '.'
+
+# Deploy Frontend
+- name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+  id: DeployFrontend
+  env:
+    - 'DEPLOYMENT_TYPES=" all frontend "'
+  script: |
+    #!/usr/bin/env bash
+    set -euo pipefail
+    if [[ "${DEPLOYMENT_TYPES}" == *" ${_DEPLOYMENT_TYPE} "* ]]; then
+      if [[ "${_DEPLOY}" == "true" ]]; then
+        APP_DEPLOY_FLAGS="--no-promote"
+        if [[ "${_AUTO_PROMOTE}" == "true" ]]; then
+          echo "Auto-promotion enabled."
+          APP_DEPLOY_FLAGS=""
+        else
+          echo "Auto-promotion disabled."
+        fi
+        (cd ./frontend && gcloud app deploy ./app.yaml ${APP_DEPLOY_FLAGS})
+      else
+        echo "Dry-run: Skipping Frontend deploy."
+        echo "Verifying App Engine state..."
+        gcloud app describe
+      fi
+    else
+      echo "Skipping Frontend deploy for '${_DEPLOYMENT_TYPE}' deployment."
+    fi
+  waitFor:
+    - 'BuildProdFrontend'
+    - 'DeployFirebaseFunctions'
+    - 'DeployFirebaseIndexes'
+    - 'DeployFirebaseFirestoreRules'
+    - 'DeployFirebaseDatabaseRules'
+    - 'DeployFirebaseStorageRules'
   dir: '.'
