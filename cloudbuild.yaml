@@ -178,15 +178,14 @@ steps:
 - name: 'node:22'
   id: LintCheck
   env:
-    - 'DEPLOYMENT_TYPES=" all functions test "'
+    - 'DEPLOYMENT_TYPES=" all frontend functions test "'
   script: |
     #!/usr/bin/env bash
     set -euo pipefail
     if [[ "${DEPLOYMENT_TYPES}" == *" ${_DEPLOYMENT_TYPE} "* ]]; then
       echo "Running Lint/Format Check..."
-      # Scoped to backend directories to avoid blocking on frontend issues
-      npx prettier --check "functions/**/*.ts" "utils/**/*.ts"
-      npx eslint --quiet "functions/**/*.ts" "utils/**/*.ts"
+      npx prettier --check "**/*.ts"
+      npx eslint --quiet "**/*.ts"
     else
       echo "Skipping Lint/Format Check for '${_DEPLOYMENT_TYPE}' deployment."
     fi
