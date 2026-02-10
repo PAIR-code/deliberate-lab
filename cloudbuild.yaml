@@ -419,7 +419,7 @@ steps:
   dir: '.'
 
 # Deploy Frontend
-- name: 'node:22'
+- name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
   id: DeployFrontend
   env:
     - 'DEPLOYMENT_TYPES=" all frontend "'
