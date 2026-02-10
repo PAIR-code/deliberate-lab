@@ -414,9 +414,9 @@ steps:
   waitFor: ['TestFunctions']
   dir: '.'
 
-# Deploy Rules Step
+# Deploy Firestore Rules Step
 - name: 'node:22'
-  id: DeployFirebaseRules
+  id: DeployFirebaseFirestoreRules
   env:
     - 'DEPLOYMENT_TYPES=" all rules "'
   script: |
@@ -424,24 +424,88 @@ steps:
     set -euo pipefail
     if [[ "${DEPLOYMENT_TYPES}" == *" ${_DEPLOYMENT_TYPE} "* ]]; then
       if [[ "${_DEPLOY}" == "true" ]]; then
-        echo "Deploying Rules (Firestore, Database)..."
+        echo "Deploying Firestore Rules..."
         npx firebase deploy \
           --config=firebase-prod.json \
-          --only firestore:rules,database:rules,storage \
+          --only firestore:rules \
           --project ${PROJECT_ID} \
           --non-interactive \
           --force
       else
-        echo "Dry-run: Deploying Rules (Firestore, Database)..."
+        echo "Dry-run: Deploying Firestore Rules..."
         npx firebase deploy \
           --config=firebase-prod.json \
-          --only firestore:rules,database:rules,storage \
+          --only firestore:rules \
           --project ${PROJECT_ID} \
           --non-interactive \
           --dry-run
       fi
     else
-      echo "Skipping Firebase rules deploy for '${_DEPLOYMENT_TYPE}' deployment."
+      echo "Skipping Firestore rules deploy for '${_DEPLOYMENT_TYPE}' deployment."
+    fi
+  waitFor: ['TestFunctions']
+  dir: '.'
+
+# Deploy Database Rules Step
+- name: 'node:22'
+  id: DeployFirebaseDatabaseRules
+  env:
+    - 'DEPLOYMENT_TYPES=" all rules "'
+  script: |
+    #!/usr/bin/env bash
+    set -euo pipefail
+    if [[ "${DEPLOYMENT_TYPES}" == *" ${_DEPLOYMENT_TYPE} "* ]]; then
+      if [[ "${_DEPLOY}" == "true" ]]; then
+        echo "Deploying Database Rules..."
+        npx firebase deploy \
+          --config=firebase-prod.json \
+          --only database:rules \
+          --project ${PROJECT_ID} \
+          --non-interactive \
+          --force
+      else
+        echo "Dry-run: Deploying Database Rules..."
+        npx firebase deploy \
+          --config=firebase-prod.json \
+          --only database:rules \
+          --project ${PROJECT_ID} \
+          --non-interactive \
+          --dry-run
+      fi
+    else
+      echo "Skipping Database rules deploy for '${_DEPLOYMENT_TYPE}' deployment."
+    fi
+  waitFor: ['TestFunctions']
+  dir: '.'
+
+# Deploy Storage Rules Step
+- name: 'node:22'
+  id: DeployFirebaseStorageRules
+  env:
+    - 'DEPLOYMENT_TYPES=" all rules "'
+  script: |
+    #!/usr/bin/env bash
+    set -euo pipefail
+    if [[ "${DEPLOYMENT_TYPES}" == *" ${_DEPLOYMENT_TYPE} "* ]]; then
+      if [[ "${_DEPLOY}" == "true" ]]; then
+        echo "Deploying Storage Rules..."
+        npx firebase deploy \
+          --config=firebase-prod.json \
+          --only storage \
+          --project ${PROJECT_ID} \
+          --non-interactive \
+          --force
+      else
+        echo "Dry-run: Deploying Storage Rules..."
+        npx firebase deploy \
+          --config=firebase-prod.json \
+          --only storage \
+          --project ${PROJECT_ID} \
+          --non-interactive \
+          --dry-run
+      fi
+    else
+      echo "Skipping Storage rules deploy for '${_DEPLOYMENT_TYPE}' deployment."
     fi
   waitFor: ['TestFunctions']
   dir: '.'
@@ -530,5 +594,7 @@ steps:
     - 'BuildProdFrontend'
     - 'DeployFirebaseFunctions'
     - 'DeployFirebaseIndexes'
-    - 'DeployFirebaseRules'
+    - 'DeployFirebaseFirestoreRules'
+    - 'DeployFirebaseDatabaseRules'
+    - 'DeployFirebaseStorageRules'
   dir: '.'
