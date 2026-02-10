@@ -209,6 +209,8 @@ steps:
     if [[ "${DEPLOYMENT_TYPES}" == *" ${_DEPLOYMENT_TYPE} "* ]]; then
       echo "Copying example Firebase config..."
       cp ./frontend/firebase_config.example.ts ./frontend/firebase_config.ts
+      echo "Copying index.example.html to index.html..."
+      cp ./frontend/index.example.html ./frontend/index.html
       echo "Building frontend workspace in development mode..."
       npm run build --workspace=frontend
     else
@@ -289,7 +291,7 @@ steps:
         node -p 'JSON.parse(require("fs").readFileSync(0)).measurementId'
       )
 
-      echo "Preparing index.html from index.example.html..."
+      echo "Copying index.example.html to index.html..."
       cp ./frontend/index.example.html ./frontend/index.html
 
       echo "Building frontend workspace for production..."
