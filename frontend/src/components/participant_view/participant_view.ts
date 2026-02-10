@@ -26,6 +26,7 @@ import './participant_help_panel';
 import './participant_nav';
 
 import {MobxLitElement} from '@adobe/lit-mobx';
+import {reaction} from 'mobx';
 import {CSSResultGroup, html, nothing} from 'lit';
 import {customElement, property, state} from 'lit/decorators.js';
 
@@ -63,6 +64,35 @@ export class ParticipantView extends MobxLitElement {
   private readonly routerService = core.getService(RouterService);
 
   @state() isStartExperimentLoading = false;
+
+  private stageReactionDisposer?: () => void;
+
+  override connectedCallback() {
+    super.connectedCallback();
+    this.stageReactionDisposer = reaction(
+      () => this.participantService.currentStageViewId,
+      async () => {
+        // Wait for Lit to re-render with the new stage component
+        await this.updateComplete;
+        const previewer = this.shadowRoot?.querySelector(
+          '.participant-previewer',
+        );
+        previewer?.scrollTo(0, 0);
+        // Stage components have their own overflow:auto on :host,
+        // so scroll the stage element too.
+        previewer
+          ?.querySelector(
+            ':scope > :not(participant-header):not(participant-nav)',
+          )
+          ?.scrollTo(0, 0);
+      },
+    );
+  }
+
+  override disconnectedCallback() {
+    super.disconnectedCallback();
+    this.stageReactionDisposer?.();
+  }
 
   override render() {
     const stageId = this.participantService.currentStageViewId;
