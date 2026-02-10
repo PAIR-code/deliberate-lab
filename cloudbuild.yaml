@@ -164,7 +164,7 @@ steps:
 - name: 'node:22'
   id: BuildUtils
   env:
-    - 'DEPLOYMENT_TYPES=" all functions test "'
+    - 'DEPLOYMENT_TYPES=" all frontend functions test "'
   script: |
     #!/usr/bin/env bash
     set -euo pipefail
@@ -194,7 +194,41 @@ steps:
   waitFor: ['BuildUtils']
   dir: '.'
 
-# Run Tests
+# Build Frontend Workspace
+- name: 'node:22'
+  id: BuildFrontend
+  env:
+    - 'DEPLOYMENT_TYPES=" all frontend test "'
+  script: |
+    #!/usr/bin/env bash
+    set -euo pipefail
+    if [[ "${DEPLOYMENT_TYPES}" == *" ${_DEPLOYMENT_TYPE} "* ]]; then
+      echo "Building frontend workspace..."
+      npm run build --workspace=frontend
+    else
+      echo "Skipping Build Frontend for '${_DEPLOYMENT_TYPE}' deployment."
+    fi
+  waitFor: ['BuildUtils']
+  dir: '.'
+
+# Run Utils Tests
+- name: 'node:22'
+  id: TestUtils
+  env:
+    - 'DEPLOYMENT_TYPES=" all frontend functions test "'
+  script: |
+    #!/usr/bin/env bash
+    set -euo pipefail
+    if [[ "${DEPLOYMENT_TYPES}" == *" ${_DEPLOYMENT_TYPE} "* ]]; then
+      echo "Running Utils tests..."
+      npm test --workspace=utils
+    else
+      echo "Skipping Utils tests for '${_DEPLOYMENT_TYPE}' deployment."
+    fi
+  waitFor: ['BuildUtils']
+  dir: '.'
+
+# Run Functions Tests
 - name: 'node:22'
   id: TestFunctions
   env:
@@ -205,13 +239,29 @@ steps:
     if [[ "${DEPLOYMENT_TYPES}" == *" ${_DEPLOYMENT_TYPE} "* ]]; then
       export JAVA_HOME=$(pwd)/java-runtime
       export PATH=$JAVA_HOME/bin:$PATH
-      echo "Running Backend Tests..."
-      npm test --workspace=utils
+      echo "Running Firebase Functions Tests..."
       npm test --workspace=functions
     else
-      echo "Skipping Tests for '${_DEPLOYMENT_TYPE}' deployment."
+      echo "Skipping Functions tests for '${_DEPLOYMENT_TYPE}' deployment."
     fi
   waitFor: ['BuildFunctions', 'InstallJava']
+  dir: '.'
+
+# Run Frontend Tests
+- name: 'node:22'
+  id: TestFrontend
+  env:
+    - 'DEPLOYMENT_TYPES=" all frontend test "'
+  script: |
+    #!/usr/bin/env bash
+    set -euo pipefail
+    if [[ "${DEPLOYMENT_TYPES}" == *" ${_DEPLOYMENT_TYPE} "* ]]; then
+      echo "Running Frontend Tests..."
+      npm test --workspace=frontend
+    else
+      echo "Skipping Frontend tests for '${_DEPLOYMENT_TYPE}' deployment."
+    fi
+  waitFor: ['BuildUtils']
   dir: '.'
 
 # Deploy Functions Step
