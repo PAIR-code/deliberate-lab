@@ -1,33 +1,57 @@
 # cloudbuild.yaml for Deliberate Lab Deployments
 #
 # This build config supports multiple deployment types controlled by the
-# substitution variable `_DEPLOYMENT_TYPE`.
-#
-# Usage:
-#   This variable MUST be specified in the build trigger.
-#
-# Allowed Values for `_DEPLOYMENT_TYPE`:
-#   - test:
-#       Runs linting, formatting checks, and unit tests for all workspaces.
-#       Does NOT deploy anything.
-#   - functions:
-#       Runs validation (lint/test) and builds the project.
-#       Deploys Cloud Functions.
-#   - rules:
-#       Deploys security rules for Firestore and Realtime Database.
-#   - indexes:
-#       Deploys Firestore indexes.
-#       Includes a safety mechanism to backup existing indexes before deploying.
-#   - frontend:
-#       Runs validation (lint/test) and builds the project.
-#       Deploys Cloud App Engine frontend.
-#   - all:
-#       Runs the full pipeline: validation, build, test, and deployment of
-#       functions, rules, indexes and frontend.
+# required substitution variable `_DEPLOYMENT_TYPE`.
 
 substitutions:
-  _DEPLOYMENT_TYPE: '' # MUST be overridden by trigger.
-  _FIREBASE_CONFIG: '' # JSON used to create ./frontend/firebase_config.ts. 
+  # MUST be specified in the build trigger. Allowed values:
+  #   - test:
+  #       Runs linting, formatting checks, and unit tests for all workspaces.
+  #       Does NOT deploy anything.
+  #   - functions:
+  #       Runs validation (lint/test) and builds the project.
+  #       Deploys Cloud Functions.
+  #   - rules:
+  #       Deploys security rules for Firestore and Realtime Database.
+  #   - indexes:
+  #       Deploys Firestore indexes. Includes a safety mechanism to backup
+  #       existing indexes before deploying.
+  #   - frontend:
+  #       Runs validation (lint/test) and builds the project.
+  #       Deploys Cloud App Engine frontend.
+  #   - all:
+  #       Runs the full pipeline: validation, build, test, and deployment of
+  #       functions, rules, indexes and frontend.
+  _DEPLOYMENT_TYPE: ''
+
+  # When `_DEPLOYMENT_TYPE` is 'all' or 'frontend', this value MUST also be set
+  # to a JSON string containing an object of the form:
+  #
+  # ```json
+  # {
+  #   "apiKey": "...",
+  #   "appId": "...",
+  #   "authDomain": "...",
+  #   "measurementId": "...",
+  #   "messagingSenderId": "...",
+  #   "projectId": "...",
+  #   "storageBucket": "..."
+  # }
+  # ```
+  #
+  # See https://firebase.google.com/docs/reference/js/app.firebaseoptions
+  _FIREBASE_CONFIG: ''
+
+  # When deploying the frontend, this substitution value determines whether
+  # traffic will automatically be migrated over to the newly deployed frontend.
+  # Allowed values:
+  #   - true:
+  #       The `gcloud app deploy` command will run WITHOUT `--no-promote`.
+  #       Traffic WILL auto-migrate to the newly deployed frontend.
+  #   - false (default):
+  #       The `gcloud app deploy` command will run WITH `--no-promote`. Traffic 
+  #       WILL NOT be directed to the newly deployed frontend automatically.
+  _AUTO_PROMOTE: 'false'
 
 options:
   logging: CLOUD_LOGGING_ONLY
@@ -53,6 +77,11 @@ steps:
       exit 1
     fi
     if [[ " all frontend " == *" ${_DEPLOYMENT_TYPE} "* ]]; then
+      if [[ "${_AUTO_PROMOTE}" != "true" && "${_AUTO_PROMOTE}" != "false" ]]; then
+        echo "Validation Failed: '_AUTO_PROMOTE' must be strictly 'true' or 'false'. Got: '${_AUTO_PROMOTE}'"
+        exit 1
+      fi
+
       MISSING_VARS=""
       if [[ -z "${_FIREBASE_CONFIG}" ]]; then
         echo "Validation Failed: '_FIREBASE_CONFIG' missing for '${_DEPLOYMENT_TYPE}' deployment"
@@ -299,7 +328,8 @@ steps:
     else
       echo "Skipping Build Frontend for '${_DEPLOYMENT_TYPE}' deployment."
     fi
-  waitFor: ['TestFrontend'] # Must be finished using dev build.
+  waitFor:
+    - 'TestFrontend'  # MUST be finished using dev build's firebase_config.ts.
   dir: '.'
 
 # Deploy Functions Step
@@ -386,4 +416,31 @@ steps:
       echo "Skipping Firebase indexes deploy for '${_DEPLOYMENT_TYPE}' deployment."
     fi
   waitFor: ['TestFunctions']
+  dir: '.'
+
+# Deploy Frontend
+- name: 'node:22'
+  id: DeployFrontend
+  env:
+    - 'DEPLOYMENT_TYPES=" all frontend "'
+  script: |
+    #!/usr/bin/env bash
+    set -euo pipefail
+    if [[ "${DEPLOYMENT_TYPES}" == *" ${_DEPLOYMENT_TYPE} "* ]]; then
+      APP_DEPLOY_FLAGS="--no-promote"
+      if [[ "${_AUTO_PROMOTE}" == "true" ]]; then
+        echo "Auto-promotion enabled."
+        APP_DEPLOY_FLAGS=""
+      else
+        echo "Auto-promotion disabled."
+      fi
+      (cd ./frontend && gcloud app deploy ./app.yaml ${APP_DEPLOY_FLAGS})
+    else
+      echo "Skipping Frontend deploy for '${_DEPLOYMENT_TYPE}' deployment."
+    fi
+  waitFor:
+    - 'BuildProdFrontend'
+    - 'DeployFirebaseFunctions'
+    - 'DeployFirebaseIndexes'
+    - 'DeployFirebaseRules'
   dir: '.'
