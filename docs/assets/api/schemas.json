@@ -3711,6 +3711,7 @@
         "requireViewAllStocks",
         "useQuarterlyMarkers",
         "showInvestmentGrowth",
+        "useSharedYAxis",
         "initialInvestment",
         "currency"
       ],
@@ -3758,6 +3759,9 @@
           "type": "boolean"
         },
         "showInvestmentGrowth": {
+          "type": "boolean"
+        },
+        "useSharedYAxis": {
           "type": "boolean"
         },
         "initialInvestment": {

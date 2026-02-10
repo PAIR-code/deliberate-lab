@@ -824,6 +824,7 @@ class StockinfoStageConfig(BaseModel):
     requireViewAllStocks: bool
     useQuarterlyMarkers: bool
     showInvestmentGrowth: bool
+    useSharedYAxis: bool
     initialInvestment: Annotated[float | None, Field(ge=1.0)] = 1000
     currency: str | None = "USD"
     introText: str | None = None
