@@ -126,7 +126,9 @@ steps:
   dir: '.'
 
 # Install Java 21 for Firebase Emulators
-- name: 'node:22'
+# NOTE: The image used here doesn't matter here for the step itself. Using the
+# Cloud SDK image warms the cache for the DeployFrontend step.
+- name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
   id: InstallJava
   env:
     - 'DEPLOYMENT_TYPES=" all functions test "'
