@@ -110,6 +110,16 @@ export class StockInfoEditor extends MobxLitElement {
           </label>
         </div>
 
+        <div class="setting-row">
+          <label class="checkbox-label">
+            <md-checkbox
+              ?checked=${this.stage.useSharedYAxis}
+              @change=${this.updateUseSharedYAxis}
+            ></md-checkbox>
+            Use shared Y-axis across all stock charts
+          </label>
+        </div>
+
         ${this.stage.showInvestmentGrowth
           ? html`
               <div class="setting-row investment-settings">
@@ -383,6 +393,15 @@ export class StockInfoEditor extends MobxLitElement {
     this.experimentEditor.updateStage({
       ...this.stage,
       showInvestmentGrowth: checked,
+    });
+  };
+
+  private updateUseSharedYAxis = (e: Event) => {
+    if (!this.stage) return;
+    const checked = (e.target as HTMLInputElement).checked;
+    this.experimentEditor.updateStage({
+      ...this.stage,
+      useSharedYAxis: checked,
     });
   };
 

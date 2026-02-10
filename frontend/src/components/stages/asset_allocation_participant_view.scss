@@ -67,6 +67,11 @@
   @include common.flex-column;
   align-items: center;
   gap: common.$spacing-medium;
+
+  svg {
+    max-width: 85%;
+    height: auto;
+  }
 }
 
 .donut-chart {
@@ -228,10 +233,9 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  height: 200px; // Reduced from min-height: 300px
   background-color: var(--md-sys-color-surface-container-low);
   border-radius: common.$spacing-medium;
-  padding: common.$spacing-large; // Reduced padding
+  padding: 0 common.$spacing-small;
 
   .chart-wrapper {
     width: 100%;
@@ -241,8 +245,7 @@
     justify-content: center;
 
     svg {
-      max-width: 100%;
-      max-height: 100%; // Ensure chart fits in container
+      max-width: 85%;
       height: auto;
     }
   }

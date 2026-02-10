@@ -11,11 +11,15 @@ import {customElement, property} from 'lit/decorators.js';
 import {unsafeHTML} from 'lit/directives/unsafe-html.js';
 
 import {
+  ChartBounds,
   Stock,
   StockInfoStageConfig,
+  calculateChartBounds,
+  calculateChartConfig,
   formatCurrency,
   generateSVGChart,
   generateStockInfoCards,
+  normalizeChartValues,
   parseStockData,
 } from '@deliberation-lab/utils';
 import {core} from '../../core/core';
@@ -78,12 +82,11 @@ export class StockInfoParticipantView extends MobxLitElement {
         <stage-description .stage=${this.stage}></stage-description>
 
         <div class="stock-content">
+          ${this.renderStockNavigation()}
           ${this.renderStockHeader(currentStock)}
           ${this.renderInfoCards(currentStock)}
           ${this.renderMainContent(currentStock)}
         </div>
-
-        ${this.renderStockNavigation()}
 
         <stage-footer .stage=${this.stage} .disabled=${!isComplete}>
           ${this.stage.progress.showParticipantProgress
@@ -149,6 +152,36 @@ export class StockInfoParticipantView extends MobxLitElement {
     `;
   }
 
+  private getSharedBounds(): ChartBounds | undefined {
+    if (!this.stage?.useSharedYAxis) return undefined;
+
+    const isInvestmentGrowth = this.stage.showInvestmentGrowth ?? false;
+    const initialInvestment = this.stage.initialInvestment ?? 1000;
+
+    // Combine normalized chart data from all visible stocks
+    const allValues: number[] = [];
+    for (const stock of this.stocks) {
+      if (stock.parsedData.length > 0) {
+        allValues.push(
+          ...normalizeChartValues(
+            stock.parsedData,
+            isInvestmentGrowth,
+            initialInvestment,
+          ),
+        );
+      }
+    }
+
+    if (allValues.length === 0) return undefined;
+
+    const config = calculateChartConfig({
+      isInvestmentGrowth,
+      initialInvestment,
+      currency: this.stage.currency,
+    });
+    return calculateChartBounds(allValues, config);
+  }
+
   private renderChart(stock: Stock) {
     if (stock.parsedData.length === 0) {
       return html`<div class="no-data">No chart data available</div>`;
@@ -159,6 +192,7 @@ export class StockInfoParticipantView extends MobxLitElement {
       useQuarterlyMarkers: this.stage?.useQuarterlyMarkers,
       initialInvestment: this.stage?.initialInvestment,
       currency: this.stage?.currency,
+      overrideBounds: this.getSharedBounds(),
     });
 
     return html`<div class="chart">${unsafeHTML(svgContent)}</div>`;

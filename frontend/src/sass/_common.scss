@@ -283,15 +283,24 @@
   h3,
   h4,
   h5,
-  h6,
+  h6 {
+    margin: $spacing-large 0 $spacing-small 0;
+    line-height: 1.4;
+
+    &:first-child {
+      margin-top: 0;
+    }
+  }
   p {
     margin: 0;
   }
   h1 {
     @include typescale.title-large;
+    line-height: 1.4;
   }
   h2 {
     @include typescale.title-medium;
+    line-height: 1.4;
   }
   h3 {
     @include typescale.title-small;
@@ -307,6 +316,14 @@
   h6 {
     @include typescale.label-small;
     text-transform: uppercase;
+  }
+  ul,
+  ol {
+    margin: $spacing-medium 0;
+    padding-left: $spacing-xxl;
+  }
+  li {
+    margin-bottom: $spacing-medium;
   }
   a {
     color: var(--md-sys-color-primary);
