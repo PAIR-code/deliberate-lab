@@ -51,7 +51,7 @@ export DL_API_KEY="your_api_key_here"
 
 ## 1. Quick Start
 
-Let's start with the simplest possible experiment:
+We can create a very simple experiment:
 
 ```python
 import deliberate_lab as dl
@@ -63,7 +63,7 @@ result = client.create_experiment(name="My First Experiment")
 print(f"Created experiment: {result['experiment']['id']}")
 ```
 
-That's it! You now have an experiment you can view in the web UI.
+Ta da! You did it! Codelab done! Just kidding. Haha. More codelab below.
 
 ---
 
