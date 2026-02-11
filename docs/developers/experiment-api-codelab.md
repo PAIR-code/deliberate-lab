@@ -247,16 +247,16 @@ Export all experiment data including participant responses:
 # Export full experiment data
 data = client.export_experiment(experiment_id)
 
-# Access exported structure
+# Access exported structure (uses Map format)
 experiment = data["experiment"]
-stages = data["stages"]
-cohorts = data["cohorts"]
-participants = data["participants"]
+stage_map = data["stageMap"]
+cohort_map = data["cohortMap"]
+participant_map = data["participantMap"]
 
 print(f"Experiment: {experiment['metadata']['name']}")
-print(f"Stages: {len(stages)}")
-print(f"Cohorts: {len(cohorts)}")
-print(f"Total participants: {len(participants)}")
+print(f"Stages: {len(stage_map)}")
+print(f"Cohorts: {len(cohort_map)}")
+print(f"Total participants: {len(participant_map)}")
 
 # Save to file
 import json
