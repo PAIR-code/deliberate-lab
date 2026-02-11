@@ -627,6 +627,7 @@ class ChatStageConfig(BaseModel):
     name: str
     descriptions: Any
     progress: Any
+    discussions: list[Any] = []  # Required for cohort creation
     timeLimitInMinutes: float | None = None
     requireFullTime: bool | None = None
 
