@@ -161,8 +161,7 @@ export function createChatStagePublicData(
   config: ChatStageConfig,
 ): ChatStagePublicData {
   const id = config.id;
-  const currentDiscussionId =
-    config.discussions.length === 0 ? null : config.discussions[0].id;
+  const currentDiscussionId = config.discussions?.[0]?.id ?? null;
 
   return {
     id,

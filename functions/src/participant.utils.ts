@@ -230,9 +230,11 @@ export async function updateCohortStageUnlocked(
       .collection('cohorts')
       .doc(cohortId);
 
-    const cohortConfig = (await cohortDoc.get()).data() as CohortConfig;
-    if (cohortConfig.stageUnlockMap[stageId]) {
-      return; // already marked as true
+    const cohortConfig = (await cohortDoc.get()).data() as
+      | CohortConfig
+      | undefined;
+    if (!cohortConfig || cohortConfig.stageUnlockMap[stageId]) {
+      return; // cohort deleted or already unlocked
     }
 
     cohortConfig.stageUnlockMap[stageId] = true;
