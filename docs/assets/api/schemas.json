@@ -87,7 +87,8 @@
         "descriptions",
         "progress",
         "timeLimitInMinutes",
-        "requireFullTime"
+        "requireFullTime",
+        "discussions"
       ],
       "properties": {
         "id": {
@@ -125,6 +126,78 @@
               "type": "null"
             }
           ]
+        },
+        "discussions": {
+          "type": "array",
+          "items": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/DefaultChatDiscussion"
+              },
+              {
+                "$ref": "#/$defs/CompareChatDiscussion"
+              }
+            ]
+          }
+        }
+      }
+    },
+    "DefaultChatDiscussion": {
+      "title": "DefaultChatDiscussion",
+      "additionalProperties": false,
+      "type": "object",
+      "required": ["id", "type", "description"],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "type": {
+          "const": "DEFAULT",
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        }
+      }
+    },
+    "CompareChatDiscussion": {
+      "title": "CompareChatDiscussion",
+      "additionalProperties": false,
+      "type": "object",
+      "required": ["id", "type", "description", "items"],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "type": {
+          "const": "COMPARE",
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "items": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/DiscussionItem"
+          }
+        }
+      }
+    },
+    "DiscussionItem": {
+      "title": "DiscussionItem",
+      "additionalProperties": false,
+      "type": "object",
+      "required": ["id", "imageId", "name"],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "imageId": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
         }
       }
     },
