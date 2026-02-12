@@ -1,6 +1,7 @@
 import {Type, type Static} from '@sinclair/typebox';
 import {UnifiedTimestampSchema} from '../shared.validation';
 import {StageKind} from './stage';
+import {ChatDiscussionType} from './chat_stage';
 import {
   StageTextConfigSchema,
   StageProgressConfigSchema,
@@ -9,6 +10,47 @@ import {UserType} from '../participant';
 
 /** Shorthand for strict TypeBox object validation */
 const strict = {additionalProperties: false} as const;
+
+// ************************************************************************* //
+// ChatDiscussion types                                                      //
+// ************************************************************************* //
+
+/** DiscussionItem input validation. */
+export const DiscussionItemData = Type.Object(
+  {
+    id: Type.String(),
+    imageId: Type.String(),
+    name: Type.String(),
+  },
+  {$id: 'DiscussionItem', ...strict},
+);
+
+/** DefaultChatDiscussion input validation. */
+export const DefaultChatDiscussionData = Type.Object(
+  {
+    id: Type.String(),
+    type: Type.Literal(ChatDiscussionType.DEFAULT),
+    description: Type.String(),
+  },
+  {$id: 'DefaultChatDiscussion', ...strict},
+);
+
+/** CompareChatDiscussion input validation. */
+export const CompareChatDiscussionData = Type.Object(
+  {
+    id: Type.String(),
+    type: Type.Literal(ChatDiscussionType.COMPARE),
+    description: Type.String(),
+    items: Type.Array(DiscussionItemData),
+  },
+  {$id: 'CompareChatDiscussion', ...strict},
+);
+
+/** ChatDiscussion input validation (discriminated union on `type`). */
+export const ChatDiscussionData = Type.Union([
+  DefaultChatDiscussionData,
+  CompareChatDiscussionData,
+]);
 
 // ************************************************************************* //
 // updateChatStageConfig endpoint                                            //
@@ -22,8 +64,7 @@ export const ChatStageConfigData = Type.Object(
     progress: Type.Ref(StageProgressConfigSchema),
     timeLimitInMinutes: Type.Union([Type.Number(), Type.Null()]),
     requireFullTime: Type.Union([Type.Boolean(), Type.Null()]),
-    // discussions
-    // agents
+    discussions: Type.Array(ChatDiscussionData),
   },
   {$id: 'ChatStageConfig', ...strict},
 );

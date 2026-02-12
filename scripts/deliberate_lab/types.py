@@ -95,6 +95,26 @@ class Stock(BaseModel):
     customCards: list[CustomCard]
 
 
+class DefaultChatDiscussion(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+        populate_by_name=True,
+    )
+    id: str
+    type: Literal["DEFAULT"] = "DEFAULT"
+    description: str
+
+
+class DiscussionItem(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+        populate_by_name=True,
+    )
+    id: str
+    imageId: str
+    name: str
+
+
 class ChipItem(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
@@ -617,19 +637,15 @@ class CohortUpdate(BaseModel):
     participantConfig: CohortParticipantConfig
 
 
-class ChatStageConfig(BaseModel):
+class CompareChatDiscussion(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
         populate_by_name=True,
     )
     id: str
-    kind: Literal["chat"] = "chat"
-    name: str
-    descriptions: Any
-    progress: Any
-    discussions: list[Any] = []  # Required for cohort creation
-    timeLimitInMinutes: float | None = None
-    requireFullTime: bool | None = None
+    type: Literal["COMPARE"] = "COMPARE"
+    description: str
+    items: list[DiscussionItem]
 
 
 class ChipStageConfig(BaseModel):
@@ -921,6 +937,21 @@ class TosStageConfig(BaseModel):
     descriptions: Any
     progress: Any
     tosLines: list[str]
+
+
+class ChatStageConfig(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+        populate_by_name=True,
+    )
+    id: str
+    kind: Literal["chat"] = "chat"
+    name: str
+    descriptions: Any
+    progress: Any
+    timeLimitInMinutes: float | None = None
+    requireFullTime: bool | None = None
+    discussions: list[DefaultChatDiscussion | CompareChatDiscussion]
 
 
 class RankingStageConfig(
