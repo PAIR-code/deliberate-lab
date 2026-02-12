@@ -53,6 +53,22 @@ export const createParticipant = onCall(async (request) => {
     handleCreateParticipantValidationErrors(data);
   }
 
+  // If prolificId is provided, check for an existing non-deleted participant
+  if (data.prolificId) {
+    const existing = await app
+      .firestore()
+      .collection(`experiments/${data.experimentId}/participants`)
+      .where('prolificId', '==', data.prolificId)
+      .get();
+
+    const existingParticipant = existing.docs
+      .map((doc) => doc.data() as ParticipantProfileExtended)
+      .find((p) => p.currentStatus !== ParticipantStatus.DELETED);
+    if (existingParticipant) {
+      return {id: existingParticipant.privateId};
+    }
+  }
+
   // Create initial participant config
   const participantConfig = createParticipantProfileExtended({
     currentCohortId: data.cohortId,
