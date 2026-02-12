@@ -3,9 +3,6 @@
  * All cloud functions are defined in their own files and imported here.
  */
 
-import {setGlobalOptions} from 'firebase-functions/v2';
-setGlobalOptions({memory: '512MiB'});
-
 // Endpoints called from frontend
 export * from './admin.endpoints';
 export * from './alert.endpoints';

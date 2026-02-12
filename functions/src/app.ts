@@ -1,5 +1,12 @@
 import {StageManager} from '@deliberation-lab/utils';
 import * as admin from 'firebase-admin';
+import {setGlobalOptions} from 'firebase-functions/v2';
+
+// Set global options before any function definitions.
+// This MUST be in this file (not index.ts) because the bundler resolves
+// dependency modules before executing index.ts top-level code.
+// Since all endpoint files import app.ts, this runs before any onCall() calls.
+setGlobalOptions({memory: '512MiB'});
 
 // Start writing functions
 // https://firebase.google.com/docs/functions/typescript
