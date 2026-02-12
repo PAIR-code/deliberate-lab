@@ -77,3 +77,40 @@ jobs:
     - name: Test frontend
       working-directory: ./frontend
       run: npm test
+
+  schemas:
+    name: Check generated schemas are up to date
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Use Node.js 22.x
+      uses: actions/setup-node@v4
+      with:
+        node-version: 22.x
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.12'
+
+    - name: Install uv
+      uses: astral-sh/setup-uv@v4
+
+    - name: Install dependencies
+      run: |
+        npm install
+        cd scripts && uv sync
+
+    - name: Regenerate schemas
+      run: npm run update-schemas
+
+    - name: Check for diff
+      run: |
+        if ! git diff --exit-code docs/assets/api/schemas.json scripts/deliberate_lab/types.py; then
+          echo ""
+          echo "Generated schemas are out of date. Please run 'npm run update-schemas' and commit the changes."
+          exit 1
+        fi
