@@ -1235,6 +1235,7 @@ class ConditionAutoTransferConfig(BaseModel):
     type: Literal["condition"] = "condition"
     autoCohortParticipantConfig: CohortParticipantConfig
     transferGroups: Annotated[list[TransferGroup], Field(min_length=1)]
+    enableGroupBalancing: bool | None = None
 
 
 class TransferGroup(BaseModel):

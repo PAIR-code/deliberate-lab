@@ -688,10 +688,16 @@ async function handleConditionAutoTransfer(
     }
   }
 
-  // Find a group that can form a complete cohort (all composition entries have minCount)
-  // and includes the current participant
-  let readyGroup: TransferGroup | null = null;
-  let readyGroupBuckets: GroupBuckets | null = null;
+  // Find group(s) that can form a complete cohort (all composition entries have minCount)
+  // and include the current participant.
+  // When enableGroupBalancing is true, collect ALL ready groups and pick the one
+  // whose target cohort has the fewest participants (balanced assignment).
+  // When false (default), first matching ready group wins.
+  const enableBalancing = autoTransferConfig.enableGroupBalancing ?? false;
+  const readyGroupCandidates: Array<{
+    group: TransferGroup;
+    buckets: GroupBuckets;
+  }> = [];
 
   for (const group of autoTransferConfig.transferGroups) {
     const buckets = groupCompositionBuckets[group.id];
@@ -711,12 +717,11 @@ async function handleConditionAutoTransfer(
     );
 
     if (allConditionsMet) {
-      readyGroup = group;
-      readyGroupBuckets = buckets;
       console.log(
         `[CONDITION] Group "${group.name}" is ready to form a cohort`,
       );
-      break;
+      readyGroupCandidates.push({group, buckets});
+      if (!enableBalancing) break; // first match wins (existing behavior)
     } else {
       // Log which composition entries are not yet met
       for (const entry of group.composition) {
@@ -727,6 +732,55 @@ async function handleConditionAutoTransfer(
         }
       }
     }
+  }
+
+  // Select the best group from candidates
+  let readyGroup: TransferGroup | null = null;
+  let readyGroupBuckets: GroupBuckets | null = null;
+
+  if (readyGroupCandidates.length === 1 || !enableBalancing) {
+    // Single candidate or balancing disabled: use first match
+    if (readyGroupCandidates.length > 0) {
+      readyGroup = readyGroupCandidates[0].group;
+      readyGroupBuckets = readyGroupCandidates[0].buckets;
+    }
+  } else if (readyGroupCandidates.length > 1) {
+    // Balanced selection: pick group whose target cohort has fewest participants
+    const experiment = await getFirestoreExperiment(experimentId);
+
+    let minCohortSize = Infinity;
+    for (const candidate of readyGroupCandidates) {
+      let cohortSize = Infinity; // Default for groups without targetCohortAlias
+
+      if (candidate.group.targetCohortAlias && experiment) {
+        const definition = experiment.cohortDefinitions?.find(
+          (d) => d.alias === candidate.group.targetCohortAlias,
+        );
+        if (definition?.generatedCohortId) {
+          const cohortParticipants = await getFirestoreCohortParticipants(
+            experimentId,
+            definition.generatedCohortId,
+          );
+          cohortSize = cohortParticipants.length;
+        }
+      }
+
+      console.log(
+        `[CONDITION] Balanced selection: group "${candidate.group.name}" ` +
+          `(target: ${candidate.group.targetCohortAlias}) has ${cohortSize} participants`,
+      );
+
+      // Use strictly less-than for tie-breaking: first match wins on ties
+      if (cohortSize < minCohortSize) {
+        minCohortSize = cohortSize;
+        readyGroup = candidate.group;
+        readyGroupBuckets = candidate.buckets;
+      }
+    }
+
+    console.log(
+      `[CONDITION] Balanced selection chose group "${readyGroup?.name}"`,
+    );
   }
 
   if (!readyGroup || !readyGroupBuckets) {
