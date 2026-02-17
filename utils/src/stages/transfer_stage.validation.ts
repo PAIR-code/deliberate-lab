@@ -66,6 +66,7 @@ export const ConditionAutoTransferConfigSchema = Type.Object(
     type: Type.Literal(AutoTransferType.CONDITION),
     autoCohortParticipantConfig: CohortParticipantConfigSchema,
     transferGroups: Type.Array(TransferGroupSchema, {minItems: 1}),
+    enableGroupBalancing: Type.Optional(Type.Boolean()),
   },
   {...strict, $id: 'ConditionAutoTransferConfig'},
 );
