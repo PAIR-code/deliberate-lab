@@ -1,7 +1,6 @@
 import {computed, makeObservable, observable} from 'mobx';
 import {
   collection,
-  getDocs,
   onSnapshot,
   orderBy,
   query,
@@ -58,6 +57,7 @@ import {
   sendParticipantCheckCallable,
   setExperimentCohortLockCallable,
   testAgentConfigCallable,
+  downloadExperimentLogsCallable,
   updateCohortMetadataCallable,
   updateMediatorStatusCallable,
   updateParticipantStatusCallable,
@@ -929,21 +929,12 @@ export class ExperimentManager extends Service {
         // Add experiment JSON to zip
         zip.file(`${experimentName}.json`, JSON.stringify(result, null, 2));
 
-        // TODO: Refactor
         // Add logs to zip
-        const logs = (
-          await getDocs(
-            query(
-              collection(
-                this.sp.firebaseService.firestore,
-                'experiments',
-                experimentId,
-                'logs',
-              ),
-              orderBy('createdTimestamp', 'asc'),
-            ),
-          )
-        ).docs.map((doc) => doc.data() as LogEntry);
+        const logsResponse = await downloadExperimentLogsCallable(
+          this.sp.firebaseService.functions,
+          experimentId,
+        );
+        const logs = logsResponse.data ?? [];
         zip.file(`${experimentName}_Logs.json`, JSON.stringify(logs, null, 2));
 
         // Add chip negotiation data
