@@ -61,6 +61,102 @@ class CohortDefinition(BaseModel):
     maxParticipantsPerCohort: Annotated[int | None, Field(ge=1)] = None
 
 
+class MinParticipantsPerCohort(RootModel[int]):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    root: Annotated[int, Field(ge=0)]
+
+
+class MaxParticipantsPerCohort(RootModel[int]):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    root: Annotated[int, Field(ge=1)]
+
+
+class CohortParticipantConfig(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    minParticipantsPerCohort: MinParticipantsPerCohort | None = None
+    maxParticipantsPerCohort: MaxParticipantsPerCohort | None = None
+    includeAllParticipantsInCohortCount: bool
+    botProtection: bool
+
+
+class Scope(StrEnum):
+    experiment = "experiment"
+    cohort = "cohort"
+    participant = "participant"
+
+
+class String(BaseModel):
+    model_config = ConfigDict(
+        extra="allow",
+        populate_by_name=True,
+    )
+    type: Literal["string"] = "string"
+
+
+class Number(BaseModel):
+    model_config = ConfigDict(
+        extra="allow",
+        populate_by_name=True,
+    )
+    type: Literal["number"] = "number"
+
+
+class Integer(BaseModel):
+    model_config = ConfigDict(
+        extra="allow",
+        populate_by_name=True,
+    )
+    type: Literal["integer"] = "integer"
+
+
+class Boolean(BaseModel):
+    model_config = ConfigDict(
+        extra="allow",
+        populate_by_name=True,
+    )
+    type: Literal["boolean"] = "boolean"
+
+
+class Seed(StrEnum):
+    experiment = "experiment"
+    cohort = "cohort"
+    participant = "participant"
+    custom = "custom"
+
+
+class ShuffleConfig(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+        populate_by_name=True,
+    )
+    shuffle: bool
+    seed: Seed
+    customSeed: str
+
+
+class Weight(RootModel[float]):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    root: Annotated[float, Field(ge=1.0)]
+
+
+class BalanceStrategy(StrEnum):
+    round_robin = "round_robin"
+    random = "random"
+
+
+class BalanceAcross(StrEnum):
+    experiment = "experiment"
+    cohort = "cohort"
+
+
 class StageTextConfig(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
@@ -470,28 +566,15 @@ class TOSStageConfig(BaseModel):
     tosLines: list[str]
 
 
-class MinParticipantsPerCohort(RootModel[int]):
+class DefaultAutoTransferConfig(BaseModel):
     model_config = ConfigDict(
+        extra="forbid",
         populate_by_name=True,
     )
-    root: Annotated[int, Field(ge=0)]
-
-
-class MaxParticipantsPerCohort(RootModel[int]):
-    model_config = ConfigDict(
-        populate_by_name=True,
-    )
-    root: Annotated[int, Field(ge=1)]
-
-
-class CohortParticipantConfig(BaseModel):
-    model_config = ConfigDict(
-        populate_by_name=True,
-    )
-    minParticipantsPerCohort: MinParticipantsPerCohort | None = None
-    maxParticipantsPerCohort: MaxParticipantsPerCohort | None = None
-    includeAllParticipantsInCohortCount: bool
-    botProtection: bool
+    type: Literal["default"] = "default"
+    autoCohortParticipantConfig: CohortParticipantConfig
+    minParticipants: Annotated[int, Field(ge=1)]
+    maxParticipants: Annotated[int, Field(ge=1)]
 
 
 class SurveyAutoTransferConfig(BaseModel):
@@ -504,78 +587,6 @@ class SurveyAutoTransferConfig(BaseModel):
     surveyStageId: Annotated[str, Field(min_length=1)]
     surveyQuestionId: Annotated[str, Field(min_length=1)]
     participantCounts: Annotated[dict[str, int], Field(title="ParticipantCounts")]
-
-
-class Scope(StrEnum):
-    experiment = "experiment"
-    cohort = "cohort"
-    participant = "participant"
-
-
-class String(BaseModel):
-    model_config = ConfigDict(
-        extra="allow",
-        populate_by_name=True,
-    )
-    type: Literal["string"] = "string"
-
-
-class Number(BaseModel):
-    model_config = ConfigDict(
-        extra="allow",
-        populate_by_name=True,
-    )
-    type: Literal["number"] = "number"
-
-
-class Integer(BaseModel):
-    model_config = ConfigDict(
-        extra="allow",
-        populate_by_name=True,
-    )
-    type: Literal["integer"] = "integer"
-
-
-class Boolean(BaseModel):
-    model_config = ConfigDict(
-        extra="allow",
-        populate_by_name=True,
-    )
-    type: Literal["boolean"] = "boolean"
-
-
-class Seed(StrEnum):
-    experiment = "experiment"
-    cohort = "cohort"
-    participant = "participant"
-    custom = "custom"
-
-
-class ShuffleConfig(BaseModel):
-    model_config = ConfigDict(
-        extra="forbid",
-        populate_by_name=True,
-    )
-    shuffle: bool
-    seed: Seed
-    customSeed: str
-
-
-class Weight(RootModel[float]):
-    model_config = ConfigDict(
-        populate_by_name=True,
-    )
-    root: Annotated[float, Field(ge=1.0)]
-
-
-class BalanceStrategy(StrEnum):
-    round_robin = "round_robin"
-    random = "random"
-
-
-class BalanceAcross(StrEnum):
-    experiment = "experiment"
-    cohort = "cohort"
 
 
 class ApiKeyType(StrEnum):
@@ -774,39 +785,6 @@ class StageKind(StrEnum):
     transfer = "transfer"
 
 
-class CohortConfig(BaseModel):
-    model_config = ConfigDict(
-        extra="forbid",
-        populate_by_name=True,
-    )
-    id: str
-    alias: str | None = None
-    metadata: Annotated[Metadata, Field(title="Metadata")]
-    participantConfig: CohortParticipantConfig
-    stageUnlockMap: Annotated[dict[str, bool], Field(title="StageUnlockMap")]
-    variableMap: Annotated[dict[str, str] | None, Field(title="VariableMap")] = None
-
-
-class CohortCreation(BaseModel):
-    model_config = ConfigDict(
-        extra="forbid",
-        populate_by_name=True,
-    )
-    experimentId: Annotated[str, Field(min_length=1)]
-    cohortConfig: Annotated[CohortConfig, Field(title="CohortConfig")]
-
-
-class CohortUpdate(BaseModel):
-    model_config = ConfigDict(
-        extra="forbid",
-        populate_by_name=True,
-    )
-    experimentId: Annotated[str, Field(min_length=1)]
-    cohortId: Annotated[str, Field(min_length=1)]
-    metadata: Annotated[Metadata, Field(title="Metadata")]
-    participantConfig: CohortParticipantConfig
-
-
 class StockConfig(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
@@ -959,17 +937,6 @@ class ComparisonCondition(BaseModel):
     target: ConditionTargetReference
     operator: Annotated[ComparisonOperator, Field(title="ComparisonOperator")]
     value: str | float | bool
-
-
-class DefaultAutoTransferConfig(BaseModel):
-    model_config = ConfigDict(
-        extra="forbid",
-        populate_by_name=True,
-    )
-    type: Literal["default"] = "default"
-    autoCohortParticipantConfig: CohortParticipantConfig
-    minParticipants: Annotated[int, Field(ge=1)]
-    maxParticipants: Annotated[int, Field(ge=1)]
 
 
 class Persona(BaseModel):
@@ -1132,31 +1099,84 @@ class DeliberateLabAPISchemas(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    stage: (
-        AssetAllocationStageConfig
-        | MultiAssetAllocationStageConfig
-        | ChatStageConfig
-        | ChipStageConfig
-        | ComprehensionStageConfig
-        | FlipCardStageConfig
-        | InfoStageConfig
-        | PayoutStageConfig
-        | PrivateChatStageConfig
-        | ProfileStageConfig
-        | ItemRankingStageConfig
-        | ParticipantRankingStageConfig
-        | RevealStageConfig
-        | RoleStageConfig
-        | SalespersonStageConfig
-        | StockInfoStageConfig
-        | SurveyPerParticipantStageConfig
-        | SurveyStageConfig
-        | TOSStageConfig
-        | TransferStageConfig
-    )
     experimentCreation: Annotated[ExperimentCreation, Field(title="ExperimentCreation")]
-    cohortCreation: Annotated[CohortCreation, Field(title="CohortCreation")]
-    cohortUpdate: Annotated[CohortUpdate, Field(title="CohortUpdate")]
+
+
+class StaticVariableConfig(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    id: Annotated[str, Field(min_length=1)]
+    type: Literal["static"] = "static"
+    scope: Scope
+    definition: VariableDefinition
+    value: str
+    cohortValues: Annotated[dict[str, str] | None, Field(title="CohortValues")] = None
+
+
+class Object(BaseModel):
+    model_config = ConfigDict(
+        extra="allow",
+        populate_by_name=True,
+    )
+    type: Literal["object"] = "object"
+    properties: Annotated[
+        dict[str, String | Number | Integer | Boolean | Object | Array] | None,
+        Field(title="Properties"),
+    ] = None
+
+
+class Array(BaseModel):
+    model_config = ConfigDict(
+        extra="allow",
+        populate_by_name=True,
+    )
+    type: Literal["array"] = "array"
+    items: Annotated[
+        String | Number | Integer | Boolean | Object | Array | None,
+        Field(title="JSONSchemaDefinition"),
+    ] = None
+
+
+class VariableDefinition(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+        populate_by_name=True,
+    )
+    name: Annotated[str, Field(min_length=1)]
+    description: str
+    schema_: Annotated[
+        String | Number | Integer | Boolean | Object | Array,
+        Field(alias="schema", title="JSONSchemaDefinition"),
+    ]
+
+
+class RandomPermutationVariableConfig(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    id: Annotated[str, Field(min_length=1)]
+    type: Literal["random_permutation"] = "random_permutation"
+    scope: Scope
+    definition: VariableDefinition
+    shuffleConfig: ShuffleConfig
+    values: list[str]
+    numToSelect: Annotated[float | None, Field(ge=1.0)] = None
+    expandListToSeparateVariables: bool | None = None
+
+
+class BalancedAssignmentVariableConfig(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    id: Annotated[str, Field(min_length=1)]
+    type: Literal["balanced_assignment"] = "balanced_assignment"
+    scope: Scope
+    definition: VariableDefinition
+    values: list[str]
+    weights: list[Weight] | None = None
+    balanceStrategy: BalanceStrategy
+    balanceAcross: BalanceAcross
 
 
 class SurveyPerParticipantStageConfig(BaseModel):
@@ -1322,83 +1342,6 @@ class GroupComposition(BaseModel):
     condition: Annotated[ComparisonCondition | ConditionGroup, Field(title="Condition")]
     minCount: Annotated[int, Field(ge=1)]
     maxCount: Annotated[int, Field(ge=1)]
-
-
-class StaticVariableConfig(BaseModel):
-    model_config = ConfigDict(
-        populate_by_name=True,
-    )
-    id: Annotated[str, Field(min_length=1)]
-    type: Literal["static"] = "static"
-    scope: Scope
-    definition: VariableDefinition
-    value: str
-    cohortValues: Annotated[dict[str, str] | None, Field(title="CohortValues")] = None
-
-
-class Object(BaseModel):
-    model_config = ConfigDict(
-        extra="allow",
-        populate_by_name=True,
-    )
-    type: Literal["object"] = "object"
-    properties: Annotated[
-        dict[str, String | Number | Integer | Boolean | Object | Array] | None,
-        Field(title="Properties"),
-    ] = None
-
-
-class Array(BaseModel):
-    model_config = ConfigDict(
-        extra="allow",
-        populate_by_name=True,
-    )
-    type: Literal["array"] = "array"
-    items: Annotated[
-        String | Number | Integer | Boolean | Object | Array | None,
-        Field(title="JSONSchemaDefinition"),
-    ] = None
-
-
-class VariableDefinition(BaseModel):
-    model_config = ConfigDict(
-        extra="forbid",
-        populate_by_name=True,
-    )
-    name: Annotated[str, Field(min_length=1)]
-    description: str
-    schema_: Annotated[
-        String | Number | Integer | Boolean | Object | Array,
-        Field(alias="schema", title="JSONSchemaDefinition"),
-    ]
-
-
-class RandomPermutationVariableConfig(BaseModel):
-    model_config = ConfigDict(
-        populate_by_name=True,
-    )
-    id: Annotated[str, Field(min_length=1)]
-    type: Literal["random_permutation"] = "random_permutation"
-    scope: Scope
-    definition: VariableDefinition
-    shuffleConfig: ShuffleConfig
-    values: list[str]
-    numToSelect: Annotated[float | None, Field(ge=1.0)] = None
-    expandListToSeparateVariables: bool | None = None
-
-
-class BalancedAssignmentVariableConfig(BaseModel):
-    model_config = ConfigDict(
-        populate_by_name=True,
-    )
-    id: Annotated[str, Field(min_length=1)]
-    type: Literal["balanced_assignment"] = "balanced_assignment"
-    scope: Scope
-    definition: VariableDefinition
-    values: list[str]
-    weights: list[Weight] | None = None
-    balanceStrategy: BalanceStrategy
-    balanceAcross: BalanceAcross
 
 
 class AgentMediatorTemplate(BaseModel):
@@ -1589,16 +1532,15 @@ class JSONSchemaDefinition(
 
 Experiment.model_rebuild()
 ExperimentTemplate.model_rebuild()
-DeliberateLabAPISchemas.model_rebuild()
+StaticVariableConfig.model_rebuild()
+Object.model_rebuild()
+Array.model_rebuild()
 SurveyPerParticipantStageConfig.model_rebuild()
 TextSurveyQuestion.model_rebuild()
 ConditionGroup.model_rebuild()
 TransferStageConfig.model_rebuild()
 ConditionAutoTransferConfig.model_rebuild()
 TransferGroup.model_rebuild()
-StaticVariableConfig.model_rebuild()
-Object.model_rebuild()
-Array.model_rebuild()
 AgentMediatorTemplate.model_rebuild()
 ChatPromptConfig.model_rebuild()
 StructuredOutputConfig.model_rebuild()

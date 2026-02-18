@@ -2,6 +2,458 @@
   "title": "Deliberate Lab API Schemas",
   "description": "JSON Schema definitions for Deliberate Lab API request types",
   "$defs": {
+    "CohortParticipantConfig": {
+      "title": "CohortParticipantConfig",
+      "type": "object",
+      "required": [
+        "minParticipantsPerCohort",
+        "maxParticipantsPerCohort",
+        "includeAllParticipantsInCohortCount",
+        "botProtection"
+      ],
+      "properties": {
+        "minParticipantsPerCohort": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "minimum": 0,
+              "type": "integer"
+            }
+          ]
+        },
+        "maxParticipantsPerCohort": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "minimum": 1,
+              "type": "integer"
+            }
+          ]
+        },
+        "includeAllParticipantsInCohortCount": {
+          "type": "boolean"
+        },
+        "botProtection": {
+          "type": "boolean"
+        }
+      }
+    },
+    "StaticVariableConfig": {
+      "title": "StaticVariableConfig",
+      "type": "object",
+      "required": ["id", "type", "scope", "definition", "value"],
+      "properties": {
+        "id": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "type": {
+          "default": "static",
+          "const": "static",
+          "type": "string"
+        },
+        "scope": {
+          "anyOf": [
+            {
+              "const": "experiment",
+              "type": "string"
+            },
+            {
+              "const": "cohort",
+              "type": "string"
+            },
+            {
+              "const": "participant",
+              "type": "string"
+            }
+          ]
+        },
+        "definition": {
+          "$ref": "#/$defs/VariableDefinition"
+        },
+        "value": {
+          "type": "string"
+        },
+        "cohortValues": {
+          "type": "object",
+          "patternProperties": {
+            "^(.*)$": {
+              "type": "string"
+            }
+          },
+          "title": "CohortValues"
+        }
+      }
+    },
+    "VariableDefinition": {
+      "title": "VariableDefinition",
+      "additionalProperties": false,
+      "type": "object",
+      "required": ["name", "description", "schema"],
+      "properties": {
+        "name": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "schema": {
+          "title": "JSONSchemaDefinition",
+          "anyOf": [
+            {
+              "additionalProperties": true,
+              "type": "object",
+              "required": ["type"],
+              "properties": {
+                "type": {
+                  "const": "string",
+                  "type": "string"
+                }
+              },
+              "title": "String"
+            },
+            {
+              "additionalProperties": true,
+              "type": "object",
+              "required": ["type"],
+              "properties": {
+                "type": {
+                  "const": "number",
+                  "type": "string"
+                }
+              },
+              "title": "Number"
+            },
+            {
+              "additionalProperties": true,
+              "type": "object",
+              "required": ["type"],
+              "properties": {
+                "type": {
+                  "const": "integer",
+                  "type": "string"
+                }
+              },
+              "title": "Integer"
+            },
+            {
+              "additionalProperties": true,
+              "type": "object",
+              "required": ["type"],
+              "properties": {
+                "type": {
+                  "const": "boolean",
+                  "type": "string"
+                }
+              },
+              "title": "Boolean"
+            },
+            {
+              "additionalProperties": true,
+              "type": "object",
+              "required": ["type"],
+              "properties": {
+                "type": {
+                  "const": "object",
+                  "type": "string"
+                },
+                "properties": {
+                  "type": "object",
+                  "patternProperties": {
+                    "^(.*)$": {
+                      "$ref": "#/$defs/JSONSchemaDefinition"
+                    }
+                  },
+                  "title": "Properties"
+                }
+              },
+              "title": "Object"
+            },
+            {
+              "additionalProperties": true,
+              "type": "object",
+              "required": ["type"],
+              "properties": {
+                "type": {
+                  "const": "array",
+                  "type": "string"
+                },
+                "items": {
+                  "$ref": "#/$defs/JSONSchemaDefinition"
+                }
+              },
+              "title": "Array"
+            }
+          ]
+        }
+      }
+    },
+    "JSONSchemaDefinition": {
+      "title": "JSONSchemaDefinition",
+      "anyOf": [
+        {
+          "additionalProperties": true,
+          "type": "object",
+          "required": ["type"],
+          "properties": {
+            "type": {
+              "const": "string",
+              "type": "string"
+            }
+          },
+          "title": "String"
+        },
+        {
+          "additionalProperties": true,
+          "type": "object",
+          "required": ["type"],
+          "properties": {
+            "type": {
+              "const": "number",
+              "type": "string"
+            }
+          },
+          "title": "Number"
+        },
+        {
+          "additionalProperties": true,
+          "type": "object",
+          "required": ["type"],
+          "properties": {
+            "type": {
+              "const": "integer",
+              "type": "string"
+            }
+          },
+          "title": "Integer"
+        },
+        {
+          "additionalProperties": true,
+          "type": "object",
+          "required": ["type"],
+          "properties": {
+            "type": {
+              "const": "boolean",
+              "type": "string"
+            }
+          },
+          "title": "Boolean"
+        },
+        {
+          "additionalProperties": true,
+          "type": "object",
+          "required": ["type"],
+          "properties": {
+            "type": {
+              "const": "object",
+              "type": "string"
+            },
+            "properties": {
+              "type": "object",
+              "patternProperties": {
+                "^(.*)$": {
+                  "$ref": "#/$defs/JSONSchemaDefinition"
+                }
+              },
+              "title": "Properties"
+            }
+          },
+          "title": "Object"
+        },
+        {
+          "additionalProperties": true,
+          "type": "object",
+          "required": ["type"],
+          "properties": {
+            "type": {
+              "const": "array",
+              "type": "string"
+            },
+            "items": {
+              "$ref": "#/$defs/JSONSchemaDefinition"
+            }
+          },
+          "title": "Array"
+        }
+      ]
+    },
+    "RandomPermutationVariableConfig": {
+      "title": "RandomPermutationVariableConfig",
+      "type": "object",
+      "required": [
+        "id",
+        "type",
+        "scope",
+        "definition",
+        "shuffleConfig",
+        "values"
+      ],
+      "properties": {
+        "id": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "type": {
+          "default": "random_permutation",
+          "const": "random_permutation",
+          "type": "string"
+        },
+        "scope": {
+          "anyOf": [
+            {
+              "const": "experiment",
+              "type": "string"
+            },
+            {
+              "const": "cohort",
+              "type": "string"
+            },
+            {
+              "const": "participant",
+              "type": "string"
+            }
+          ]
+        },
+        "definition": {
+          "$ref": "#/$defs/VariableDefinition"
+        },
+        "shuffleConfig": {
+          "$ref": "#/$defs/ShuffleConfig"
+        },
+        "values": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "numToSelect": {
+          "minimum": 1,
+          "type": "number"
+        },
+        "expandListToSeparateVariables": {
+          "type": "boolean"
+        }
+      }
+    },
+    "ShuffleConfig": {
+      "title": "ShuffleConfig",
+      "additionalProperties": false,
+      "type": "object",
+      "required": ["shuffle", "seed", "customSeed"],
+      "properties": {
+        "shuffle": {
+          "type": "boolean"
+        },
+        "seed": {
+          "anyOf": [
+            {
+              "const": "experiment",
+              "type": "string"
+            },
+            {
+              "const": "cohort",
+              "type": "string"
+            },
+            {
+              "const": "participant",
+              "type": "string"
+            },
+            {
+              "const": "custom",
+              "type": "string"
+            }
+          ]
+        },
+        "customSeed": {
+          "type": "string"
+        }
+      }
+    },
+    "BalancedAssignmentVariableConfig": {
+      "title": "BalancedAssignmentVariableConfig",
+      "type": "object",
+      "required": [
+        "id",
+        "type",
+        "scope",
+        "definition",
+        "values",
+        "balanceStrategy",
+        "balanceAcross"
+      ],
+      "properties": {
+        "id": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "type": {
+          "default": "balanced_assignment",
+          "const": "balanced_assignment",
+          "type": "string"
+        },
+        "scope": {
+          "anyOf": [
+            {
+              "const": "experiment",
+              "type": "string"
+            },
+            {
+              "const": "cohort",
+              "type": "string"
+            },
+            {
+              "const": "participant",
+              "type": "string"
+            }
+          ]
+        },
+        "definition": {
+          "$ref": "#/$defs/VariableDefinition"
+        },
+        "values": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "weights": {
+          "type": "array",
+          "items": {
+            "minimum": 1,
+            "type": "number"
+          }
+        },
+        "balanceStrategy": {
+          "anyOf": [
+            {
+              "const": "round_robin",
+              "type": "string"
+            },
+            {
+              "const": "random",
+              "type": "string"
+            }
+          ]
+        },
+        "balanceAcross": {
+          "anyOf": [
+            {
+              "const": "experiment",
+              "type": "string"
+            },
+            {
+              "const": "cohort",
+              "type": "string"
+            }
+          ]
+        }
+      }
+    },
     "AssetAllocationStageConfig": {
       "title": "AssetAllocationStageConfig",
       "additionalProperties": false,
@@ -2083,46 +2535,6 @@
         }
       }
     },
-    "CohortParticipantConfig": {
-      "title": "CohortParticipantConfig",
-      "type": "object",
-      "required": [
-        "minParticipantsPerCohort",
-        "maxParticipantsPerCohort",
-        "includeAllParticipantsInCohortCount",
-        "botProtection"
-      ],
-      "properties": {
-        "minParticipantsPerCohort": {
-          "anyOf": [
-            {
-              "type": "null"
-            },
-            {
-              "minimum": 0,
-              "type": "integer"
-            }
-          ]
-        },
-        "maxParticipantsPerCohort": {
-          "anyOf": [
-            {
-              "type": "null"
-            },
-            {
-              "minimum": 1,
-              "type": "integer"
-            }
-          ]
-        },
-        "includeAllParticipantsInCohortCount": {
-          "type": "boolean"
-        },
-        "botProtection": {
-          "type": "boolean"
-        }
-      }
-    },
     "SurveyAutoTransferConfig": {
       "additionalProperties": false,
       "title": "SurveyAutoTransferConfig",
@@ -2242,418 +2654,6 @@
         "maxCount": {
           "minimum": 1,
           "type": "integer"
-        }
-      }
-    },
-    "StaticVariableConfig": {
-      "title": "StaticVariableConfig",
-      "type": "object",
-      "required": ["id", "type", "scope", "definition", "value"],
-      "properties": {
-        "id": {
-          "minLength": 1,
-          "type": "string"
-        },
-        "type": {
-          "default": "static",
-          "const": "static",
-          "type": "string"
-        },
-        "scope": {
-          "anyOf": [
-            {
-              "const": "experiment",
-              "type": "string"
-            },
-            {
-              "const": "cohort",
-              "type": "string"
-            },
-            {
-              "const": "participant",
-              "type": "string"
-            }
-          ]
-        },
-        "definition": {
-          "$ref": "#/$defs/VariableDefinition"
-        },
-        "value": {
-          "type": "string"
-        },
-        "cohortValues": {
-          "type": "object",
-          "patternProperties": {
-            "^(.*)$": {
-              "type": "string"
-            }
-          },
-          "title": "CohortValues"
-        }
-      }
-    },
-    "VariableDefinition": {
-      "title": "VariableDefinition",
-      "additionalProperties": false,
-      "type": "object",
-      "required": ["name", "description", "schema"],
-      "properties": {
-        "name": {
-          "minLength": 1,
-          "type": "string"
-        },
-        "description": {
-          "type": "string"
-        },
-        "schema": {
-          "title": "JSONSchemaDefinition",
-          "anyOf": [
-            {
-              "additionalProperties": true,
-              "type": "object",
-              "required": ["type"],
-              "properties": {
-                "type": {
-                  "const": "string",
-                  "type": "string"
-                }
-              },
-              "title": "String"
-            },
-            {
-              "additionalProperties": true,
-              "type": "object",
-              "required": ["type"],
-              "properties": {
-                "type": {
-                  "const": "number",
-                  "type": "string"
-                }
-              },
-              "title": "Number"
-            },
-            {
-              "additionalProperties": true,
-              "type": "object",
-              "required": ["type"],
-              "properties": {
-                "type": {
-                  "const": "integer",
-                  "type": "string"
-                }
-              },
-              "title": "Integer"
-            },
-            {
-              "additionalProperties": true,
-              "type": "object",
-              "required": ["type"],
-              "properties": {
-                "type": {
-                  "const": "boolean",
-                  "type": "string"
-                }
-              },
-              "title": "Boolean"
-            },
-            {
-              "additionalProperties": true,
-              "type": "object",
-              "required": ["type"],
-              "properties": {
-                "type": {
-                  "const": "object",
-                  "type": "string"
-                },
-                "properties": {
-                  "type": "object",
-                  "patternProperties": {
-                    "^(.*)$": {
-                      "$ref": "#/$defs/JSONSchemaDefinition"
-                    }
-                  },
-                  "title": "Properties"
-                }
-              },
-              "title": "Object"
-            },
-            {
-              "additionalProperties": true,
-              "type": "object",
-              "required": ["type"],
-              "properties": {
-                "type": {
-                  "const": "array",
-                  "type": "string"
-                },
-                "items": {
-                  "$ref": "#/$defs/JSONSchemaDefinition"
-                }
-              },
-              "title": "Array"
-            }
-          ]
-        }
-      }
-    },
-    "JSONSchemaDefinition": {
-      "title": "JSONSchemaDefinition",
-      "anyOf": [
-        {
-          "additionalProperties": true,
-          "type": "object",
-          "required": ["type"],
-          "properties": {
-            "type": {
-              "const": "string",
-              "type": "string"
-            }
-          },
-          "title": "String"
-        },
-        {
-          "additionalProperties": true,
-          "type": "object",
-          "required": ["type"],
-          "properties": {
-            "type": {
-              "const": "number",
-              "type": "string"
-            }
-          },
-          "title": "Number"
-        },
-        {
-          "additionalProperties": true,
-          "type": "object",
-          "required": ["type"],
-          "properties": {
-            "type": {
-              "const": "integer",
-              "type": "string"
-            }
-          },
-          "title": "Integer"
-        },
-        {
-          "additionalProperties": true,
-          "type": "object",
-          "required": ["type"],
-          "properties": {
-            "type": {
-              "const": "boolean",
-              "type": "string"
-            }
-          },
-          "title": "Boolean"
-        },
-        {
-          "additionalProperties": true,
-          "type": "object",
-          "required": ["type"],
-          "properties": {
-            "type": {
-              "const": "object",
-              "type": "string"
-            },
-            "properties": {
-              "type": "object",
-              "patternProperties": {
-                "^(.*)$": {
-                  "$ref": "#/$defs/JSONSchemaDefinition"
-                }
-              },
-              "title": "Properties"
-            }
-          },
-          "title": "Object"
-        },
-        {
-          "additionalProperties": true,
-          "type": "object",
-          "required": ["type"],
-          "properties": {
-            "type": {
-              "const": "array",
-              "type": "string"
-            },
-            "items": {
-              "$ref": "#/$defs/JSONSchemaDefinition"
-            }
-          },
-          "title": "Array"
-        }
-      ]
-    },
-    "RandomPermutationVariableConfig": {
-      "title": "RandomPermutationVariableConfig",
-      "type": "object",
-      "required": [
-        "id",
-        "type",
-        "scope",
-        "definition",
-        "shuffleConfig",
-        "values"
-      ],
-      "properties": {
-        "id": {
-          "minLength": 1,
-          "type": "string"
-        },
-        "type": {
-          "default": "random_permutation",
-          "const": "random_permutation",
-          "type": "string"
-        },
-        "scope": {
-          "anyOf": [
-            {
-              "const": "experiment",
-              "type": "string"
-            },
-            {
-              "const": "cohort",
-              "type": "string"
-            },
-            {
-              "const": "participant",
-              "type": "string"
-            }
-          ]
-        },
-        "definition": {
-          "$ref": "#/$defs/VariableDefinition"
-        },
-        "shuffleConfig": {
-          "$ref": "#/$defs/ShuffleConfig"
-        },
-        "values": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "numToSelect": {
-          "minimum": 1,
-          "type": "number"
-        },
-        "expandListToSeparateVariables": {
-          "type": "boolean"
-        }
-      }
-    },
-    "ShuffleConfig": {
-      "title": "ShuffleConfig",
-      "additionalProperties": false,
-      "type": "object",
-      "required": ["shuffle", "seed", "customSeed"],
-      "properties": {
-        "shuffle": {
-          "type": "boolean"
-        },
-        "seed": {
-          "anyOf": [
-            {
-              "const": "experiment",
-              "type": "string"
-            },
-            {
-              "const": "cohort",
-              "type": "string"
-            },
-            {
-              "const": "participant",
-              "type": "string"
-            },
-            {
-              "const": "custom",
-              "type": "string"
-            }
-          ]
-        },
-        "customSeed": {
-          "type": "string"
-        }
-      }
-    },
-    "BalancedAssignmentVariableConfig": {
-      "title": "BalancedAssignmentVariableConfig",
-      "type": "object",
-      "required": [
-        "id",
-        "type",
-        "scope",
-        "definition",
-        "values",
-        "balanceStrategy",
-        "balanceAcross"
-      ],
-      "properties": {
-        "id": {
-          "minLength": 1,
-          "type": "string"
-        },
-        "type": {
-          "default": "balanced_assignment",
-          "const": "balanced_assignment",
-          "type": "string"
-        },
-        "scope": {
-          "anyOf": [
-            {
-              "const": "experiment",
-              "type": "string"
-            },
-            {
-              "const": "cohort",
-              "type": "string"
-            },
-            {
-              "const": "participant",
-              "type": "string"
-            }
-          ]
-        },
-        "definition": {
-          "$ref": "#/$defs/VariableDefinition"
-        },
-        "values": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "weights": {
-          "type": "array",
-          "items": {
-            "minimum": 1,
-            "type": "number"
-          }
-        },
-        "balanceStrategy": {
-          "anyOf": [
-            {
-              "const": "round_robin",
-              "type": "string"
-            },
-            {
-              "const": "random",
-              "type": "string"
-            }
-          ]
-        },
-        "balanceAcross": {
-          "anyOf": [
-            {
-              "const": "experiment",
-              "type": "string"
-            },
-            {
-              "const": "cohort",
-              "type": "string"
-            }
-          ]
         }
       }
     },
@@ -4016,77 +4016,8 @@
     }
   },
   "type": "object",
-  "required": ["stage", "experimentCreation", "cohortCreation", "cohortUpdate"],
+  "required": ["experimentCreation"],
   "properties": {
-    "stage": {
-      "anyOf": [
-        {
-          "$ref": "#/$defs/AssetAllocationStageConfig"
-        },
-        {
-          "$ref": "#/$defs/MultiAssetAllocationStageConfig"
-        },
-        {
-          "$ref": "#/$defs/ChatStageConfig"
-        },
-        {
-          "$ref": "#/$defs/ChipStageConfig"
-        },
-        {
-          "$ref": "#/$defs/ComprehensionStageConfig"
-        },
-        {
-          "$ref": "#/$defs/FlipCardStageConfig"
-        },
-        {
-          "$ref": "#/$defs/InfoStageConfig"
-        },
-        {
-          "$ref": "#/$defs/PayoutStageConfig"
-        },
-        {
-          "$ref": "#/$defs/PrivateChatStageConfig"
-        },
-        {
-          "$ref": "#/$defs/ProfileStageConfig"
-        },
-        {
-          "title": "RankingStageConfig",
-          "anyOf": [
-            {
-              "$ref": "#/$defs/ItemRankingStageConfig"
-            },
-            {
-              "$ref": "#/$defs/ParticipantRankingStageConfig"
-            }
-          ]
-        },
-        {
-          "$ref": "#/$defs/RevealStageConfig"
-        },
-        {
-          "$ref": "#/$defs/RoleStageConfig"
-        },
-        {
-          "$ref": "#/$defs/SalespersonStageConfig"
-        },
-        {
-          "$ref": "#/$defs/StockInfoStageConfig"
-        },
-        {
-          "$ref": "#/$defs/SurveyPerParticipantStageConfig"
-        },
-        {
-          "$ref": "#/$defs/SurveyStageConfig"
-        },
-        {
-          "$ref": "#/$defs/TOSStageConfig"
-        },
-        {
-          "$ref": "#/$defs/TransferStageConfig"
-        }
-      ]
-    },
     "experimentCreation": {
       "additionalProperties": false,
       "type": "object",
@@ -4376,116 +4307,6 @@
         }
       },
       "title": "ExperimentCreation"
-    },
-    "cohortCreation": {
-      "additionalProperties": false,
-      "type": "object",
-      "required": ["experimentId", "cohortConfig"],
-      "properties": {
-        "experimentId": {
-          "minLength": 1,
-          "type": "string"
-        },
-        "cohortConfig": {
-          "additionalProperties": false,
-          "type": "object",
-          "required": ["id", "metadata", "participantConfig", "stageUnlockMap"],
-          "properties": {
-            "id": {
-              "type": "string"
-            },
-            "alias": {
-              "type": "string"
-            },
-            "metadata": {
-              "type": "object",
-              "required": ["name", "publicName", "description", "tags"],
-              "properties": {
-                "name": {
-                  "type": "string"
-                },
-                "publicName": {
-                  "type": "string"
-                },
-                "description": {
-                  "type": "string"
-                },
-                "tags": {
-                  "type": "array",
-                  "items": {
-                    "type": "string"
-                  }
-                }
-              },
-              "title": "Metadata"
-            },
-            "participantConfig": {
-              "$ref": "#/$defs/CohortParticipantConfig"
-            },
-            "stageUnlockMap": {
-              "type": "object",
-              "patternProperties": {
-                "^(.*)$": {
-                  "type": "boolean"
-                }
-              },
-              "title": "StageUnlockMap"
-            },
-            "variableMap": {
-              "type": "object",
-              "patternProperties": {
-                "^(.*)$": {
-                  "type": "string"
-                }
-              },
-              "title": "VariableMap"
-            }
-          },
-          "title": "CohortConfig"
-        }
-      },
-      "title": "CohortCreation"
-    },
-    "cohortUpdate": {
-      "additionalProperties": false,
-      "type": "object",
-      "required": ["experimentId", "cohortId", "metadata", "participantConfig"],
-      "properties": {
-        "experimentId": {
-          "minLength": 1,
-          "type": "string"
-        },
-        "cohortId": {
-          "minLength": 1,
-          "type": "string"
-        },
-        "metadata": {
-          "type": "object",
-          "required": ["name", "publicName", "description", "tags"],
-          "properties": {
-            "name": {
-              "type": "string"
-            },
-            "publicName": {
-              "type": "string"
-            },
-            "description": {
-              "type": "string"
-            },
-            "tags": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            }
-          },
-          "title": "Metadata"
-        },
-        "participantConfig": {
-          "$ref": "#/$defs/CohortParticipantConfig"
-        }
-      },
-      "title": "CohortUpdate"
     }
   },
   "$id": "DeliberateLabSchemas"

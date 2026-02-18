@@ -13,14 +13,8 @@ import * as path from 'path';
 import {Type} from '@sinclair/typebox';
 
 // Import top-level schemas
-import {StageConfigData, CONFIG_DATA} from './stages/stage.validation';
+import {CONFIG_DATA} from './stages/stage.validation';
 import {ExperimentCreationData} from './experiment.validation';
-import {
-  CohortCreationData,
-  UpdateCohortMetadataData,
-} from './cohort.validation';
-import {AgentMediatorTemplateData} from './agent.validation';
-
 /**
  * Recursively collect all schemas with $id from a schema tree.
  * These will be added to $defs for deduplication.
@@ -59,38 +53,18 @@ function collectSchemasWithId(
   }
 }
 
-// Create base schema with top-level types
-const baseSchema = Type.Object(
-  {
-    stage: StageConfigData,
-    experimentCreation: ExperimentCreationData,
-    cohortCreation: CohortCreationData,
-    cohortUpdate: UpdateCohortMetadataData,
-  },
-  {
-    $id: 'DeliberateLabSchemas',
-    title: 'Deliberate Lab API Schemas',
-    description: 'JSON Schema definitions for Deliberate Lab API request types',
-  },
-);
+// Verify all stage configs have $id for proper naming in $defs
+for (const [key, schema] of Object.entries(CONFIG_DATA)) {
+  if (!(schema as Record<string, unknown>).$id) {
+    throw new Error(
+      `Stage config "${key}" is missing $id. Add $id to its TypeBox definition.`,
+    );
+  }
+}
 
 // Collect all schemas with $id from the schema tree
 const collectedSchemas = new Map<string, unknown>();
-collectSchemasWithId(baseSchema, collectedSchemas);
-
-// Also collect from individual stage configs (for stage-specific naming)
-for (const [key, schema] of Object.entries(CONFIG_DATA)) {
-  const record = schema as Record<string, unknown>;
-  // Only use the key-derived name if the schema doesn't have an explicit $id
-  if (!record.$id) {
-    const stageName = `${key.charAt(0).toUpperCase() + key.slice(1)}StageConfig`;
-    collectedSchemas.set(stageName, schema);
-  }
-  collectSchemasWithId(schema, collectedSchemas);
-}
-
-// Collect agent schemas (reachable via AgentMediatorTemplateData.promptMap -> PromptConfigData)
-collectSchemasWithId(AgentMediatorTemplateData, collectedSchemas);
+collectSchemasWithId(ExperimentCreationData, collectedSchemas);
 
 // Build $defs from collected schemas (excluding the root schema)
 const $defs: Record<string, unknown> = {};
@@ -103,10 +77,7 @@ for (const [id, schema] of collectedSchemas) {
 // Create final schema with $defs
 const combinedSchema = Type.Object(
   {
-    stage: StageConfigData,
     experimentCreation: ExperimentCreationData,
-    cohortCreation: CohortCreationData,
-    cohortUpdate: UpdateCohortMetadataData,
   },
   {
     $id: 'DeliberateLabSchemas',
