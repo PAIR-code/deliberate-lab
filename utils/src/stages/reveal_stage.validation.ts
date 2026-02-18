@@ -23,7 +23,7 @@ export const RankingRevealItemData = Type.Object(
       Type.Literal(RevealAudience.ALL_PARTICIPANTS),
     ]),
   },
-  strict,
+  {...strict, $id: 'RankingRevealItem'},
 );
 
 /** Survey reveal item input validation. */
@@ -37,7 +37,7 @@ export const SurveyRevealItemData = Type.Object(
     ]),
     revealScorableOnly: Type.Boolean(),
   },
-  strict,
+  {...strict, $id: 'SurveyRevealItem'},
 );
 
 /** Reveal item input validation. */

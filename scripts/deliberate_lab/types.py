@@ -210,6 +210,32 @@ class Strategy(StrEnum):
 RankingItem = MultipleChoiceItem
 
 
+class RevealAudience(StrEnum):
+    CURRENT = "CURRENT"
+    ALL = "ALL"
+
+
+class RankingRevealItem(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+        populate_by_name=True,
+    )
+    id: Annotated[str, Field(min_length=1)]
+    kind: Literal["reveal"] = "reveal"
+    revealAudience: RevealAudience
+
+
+class SurveyRevealItem(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+        populate_by_name=True,
+    )
+    id: Annotated[str, Field(min_length=1)]
+    kind: Literal["survey"] = "survey"
+    revealAudience: RevealAudience
+    revealScorableOnly: bool
+
+
 class ComparisonOperator(StrEnum):
     equals = "equals"
     not_equals = "not_equals"
@@ -884,6 +910,19 @@ class ProfileStageConfig(BaseModel):
     profileType: ProfileType
 
 
+class RevealStageConfig(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+        populate_by_name=True,
+    )
+    id: Annotated[str, Field(min_length=1)]
+    kind: Literal["reveal"] = "reveal"
+    name: Annotated[str, Field(min_length=1)]
+    descriptions: StageTextConfig
+    progress: StageProgressConfig
+    items: list[RankingRevealItem | SurveyRevealItem]
+
+
 class RoleStageConfig(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
@@ -1503,19 +1542,6 @@ class GenericPromptConfig(BaseModel):
 
 
 AgentParticipantTemplate = AgentMediatorTemplate
-
-
-class RevealStageConfig(BaseModel):
-    model_config = ConfigDict(
-        extra="forbid",
-        populate_by_name=True,
-    )
-    id: Annotated[str, Field(min_length=1)]
-    kind: Literal["reveal"] = "reveal"
-    name: Annotated[str, Field(min_length=1)]
-    descriptions: StageTextConfig
-    progress: StageProgressConfig
-    items: list[RevealStageConfig | SurveyStageConfig]
 
 
 class JSONSchemaDefinition(

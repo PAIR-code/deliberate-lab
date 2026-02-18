@@ -851,6 +851,65 @@
         }
       }
     },
+    "RankingRevealItem": {
+      "additionalProperties": false,
+      "title": "RankingRevealItem",
+      "type": "object",
+      "required": ["id", "kind", "revealAudience"],
+      "properties": {
+        "id": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "kind": {
+          "const": "reveal",
+          "type": "string"
+        },
+        "revealAudience": {
+          "anyOf": [
+            {
+              "const": "CURRENT",
+              "type": "string"
+            },
+            {
+              "const": "ALL",
+              "type": "string"
+            }
+          ]
+        }
+      }
+    },
+    "SurveyRevealItem": {
+      "additionalProperties": false,
+      "title": "SurveyRevealItem",
+      "type": "object",
+      "required": ["id", "kind", "revealAudience", "revealScorableOnly"],
+      "properties": {
+        "id": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "kind": {
+          "const": "survey",
+          "type": "string"
+        },
+        "revealAudience": {
+          "anyOf": [
+            {
+              "const": "CURRENT",
+              "type": "string"
+            },
+            {
+              "const": "ALL",
+              "type": "string"
+            }
+          ]
+        },
+        "revealScorableOnly": {
+          "type": "boolean"
+        }
+      }
+    },
     "SalespersonStageConfig": {
       "title": "SalespersonStageConfig",
       "additionalProperties": false,
@@ -3694,10 +3753,10 @@
           "items": {
             "anyOf": [
               {
-                "$ref": "#/$defs/RevealStageConfig"
+                "$ref": "#/$defs/RankingRevealItem"
               },
               {
-                "$ref": "#/$defs/SurveyStageConfig"
+                "$ref": "#/$defs/SurveyRevealItem"
               }
             ]
           }
