@@ -5,7 +5,7 @@
 from __future__ import annotations
 
 from enum import StrEnum
-from typing import Annotated, Any, Literal
+from typing import Annotated, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, RootModel
 
@@ -884,19 +884,6 @@ class ProfileStageConfig(BaseModel):
     profileType: ProfileType
 
 
-class RevealStageConfig(BaseModel):
-    model_config = ConfigDict(
-        extra="forbid",
-        populate_by_name=True,
-    )
-    id: Annotated[str, Field(min_length=1)]
-    kind: Literal["reveal"] = "reveal"
-    name: Annotated[str, Field(min_length=1)]
-    descriptions: StageTextConfig
-    progress: StageProgressConfig
-    items: list[Any]
-
-
 class RoleStageConfig(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
@@ -1516,6 +1503,19 @@ class GenericPromptConfig(BaseModel):
 
 
 AgentParticipantTemplate = AgentMediatorTemplate
+
+
+class RevealStageConfig(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+        populate_by_name=True,
+    )
+    id: Annotated[str, Field(min_length=1)]
+    kind: Literal["reveal"] = "reveal"
+    name: Annotated[str, Field(min_length=1)]
+    descriptions: StageTextConfig
+    progress: StageProgressConfig
+    items: list[RevealStageConfig | SurveyStageConfig]
 
 
 class JSONSchemaDefinition(

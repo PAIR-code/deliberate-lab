@@ -41,7 +41,7 @@ export const SurveyRevealItemData = Type.Object(
 );
 
 /** Reveal item input validation. */
-export const RevealItemData = Type.Any([
+export const RevealItemData = Type.Union([
   RankingRevealItemData,
   SurveyRevealItemData,
 ]);

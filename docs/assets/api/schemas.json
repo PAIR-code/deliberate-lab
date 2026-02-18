@@ -3692,12 +3692,14 @@
         "items": {
           "type": "array",
           "items": {
-            "0": {
-              "$ref": "#/$defs/RevealStageConfig"
-            },
-            "1": {
-              "$ref": "#/$defs/SurveyStageConfig"
-            }
+            "anyOf": [
+              {
+                "$ref": "#/$defs/RevealStageConfig"
+              },
+              {
+                "$ref": "#/$defs/SurveyStageConfig"
+              }
+            ]
           }
         }
       },
