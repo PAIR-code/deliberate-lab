@@ -1,9 +1,6 @@
 import {Type, type Static} from '@sinclair/typebox';
 import {StageKind} from './stage';
-import {
-  StageProgressConfigSchema,
-  StageTextConfigSchema,
-} from './stage.validation';
+import {BaseStageConfigSchema} from './stage.schemas';
 import {RankingItem, ElectionStrategy, RankingType} from './ranking_stage';
 
 /** Shorthand for strict TypeBox object validation */
@@ -24,37 +21,41 @@ export const RankingItemData = Type.Object(
 );
 
 /** RankingStageConfig input validation. */
-export const ItemRankingStageConfigData = Type.Object(
-  {
-    id: Type.String({minLength: 1}),
-    kind: Type.Literal(StageKind.RANKING),
-    name: Type.String({minLength: 1}),
-    descriptions: Type.Ref(StageTextConfigSchema),
-    progress: Type.Ref(StageProgressConfigSchema),
-    rankingType: Type.Literal(RankingType.ITEMS),
-    strategy: Type.Union([
-      Type.Literal(ElectionStrategy.NONE),
-      Type.Literal(ElectionStrategy.CONDORCET),
-    ]),
-    rankingItems: Type.Array(RankingItemData),
-  },
+export const ItemRankingStageConfigData = Type.Composite(
+  [
+    BaseStageConfigSchema,
+    Type.Object(
+      {
+        kind: Type.Literal(StageKind.RANKING),
+        rankingType: Type.Literal(RankingType.ITEMS),
+        strategy: Type.Union([
+          Type.Literal(ElectionStrategy.NONE),
+          Type.Literal(ElectionStrategy.CONDORCET),
+        ]),
+        rankingItems: Type.Array(RankingItemData),
+      },
+      strict,
+    ),
+  ],
   {$id: 'ItemRankingStageConfig', ...strict},
 );
 
-export const ParticipantRankingStageConfigData = Type.Object(
-  {
-    id: Type.String({minLength: 1}),
-    kind: Type.Literal(StageKind.RANKING),
-    name: Type.String({minLength: 1}),
-    descriptions: Type.Ref(StageTextConfigSchema),
-    progress: Type.Ref(StageProgressConfigSchema),
-    rankingType: Type.Literal(RankingType.PARTICIPANTS),
-    strategy: Type.Union([
-      Type.Literal(ElectionStrategy.NONE),
-      Type.Literal(ElectionStrategy.CONDORCET),
-    ]),
-    enableSelfVoting: Type.Boolean(),
-  },
+export const ParticipantRankingStageConfigData = Type.Composite(
+  [
+    BaseStageConfigSchema,
+    Type.Object(
+      {
+        kind: Type.Literal(StageKind.RANKING),
+        rankingType: Type.Literal(RankingType.PARTICIPANTS),
+        strategy: Type.Union([
+          Type.Literal(ElectionStrategy.NONE),
+          Type.Literal(ElectionStrategy.CONDORCET),
+        ]),
+        enableSelfVoting: Type.Boolean(),
+      },
+      strict,
+    ),
+  ],
   {$id: 'ParticipantRankingStageConfig', ...strict},
 );
 

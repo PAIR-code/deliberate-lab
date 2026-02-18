@@ -1,10 +1,7 @@
 import {Type} from '@sinclair/typebox';
 import {StageKind} from './stage';
 import {AutoTransferType} from './transfer_stage';
-import {
-  StageProgressConfigSchema,
-  StageTextConfigSchema,
-} from './stage.validation';
+import {BaseStageConfigSchema} from './stage.schemas';
 import {CohortParticipantConfigSchema} from '../shared.validation';
 import {ConditionSchema} from '../utils/condition.validation';
 
@@ -83,16 +80,18 @@ export const AutoTransferConfigSchema = Type.Union([
 // ************************************************************************* //
 
 /** TransferStageConfig input validation. */
-export const TransferStageConfigData = Type.Object(
-  {
-    id: Type.String({minLength: 1}),
-    kind: Type.Literal(StageKind.TRANSFER),
-    name: Type.String({minLength: 1}),
-    descriptions: Type.Ref(StageTextConfigSchema),
-    progress: Type.Ref(StageProgressConfigSchema),
-    enableTimeout: Type.Boolean(),
-    timeoutSeconds: Type.Number(),
-    autoTransferConfig: Type.Union([AutoTransferConfigSchema, Type.Null()]),
-  },
-  {...strict, $id: 'TransferStageConfig'},
+export const TransferStageConfigData = Type.Composite(
+  [
+    BaseStageConfigSchema,
+    Type.Object(
+      {
+        kind: Type.Literal(StageKind.TRANSFER),
+        enableTimeout: Type.Boolean(),
+        timeoutSeconds: Type.Number(),
+        autoTransferConfig: Type.Union([AutoTransferConfigSchema, Type.Null()]),
+      },
+      strict,
+    ),
+  ],
+  {$id: 'TransferStageConfig', ...strict},
 );

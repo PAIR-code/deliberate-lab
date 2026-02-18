@@ -2,6 +2,550 @@
   "title": "Deliberate Lab API Schemas",
   "description": "JSON Schema definitions for Deliberate Lab API request types",
   "$defs": {
+    "CohortParticipantConfig": {
+      "title": "CohortParticipantConfig",
+      "type": "object",
+      "required": [
+        "minParticipantsPerCohort",
+        "maxParticipantsPerCohort",
+        "includeAllParticipantsInCohortCount",
+        "botProtection"
+      ],
+      "properties": {
+        "minParticipantsPerCohort": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "minimum": 0,
+              "type": "integer"
+            }
+          ]
+        },
+        "maxParticipantsPerCohort": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "minimum": 1,
+              "type": "integer"
+            }
+          ]
+        },
+        "includeAllParticipantsInCohortCount": {
+          "type": "boolean"
+        },
+        "botProtection": {
+          "type": "boolean"
+        }
+      }
+    },
+    "StaticVariableConfig": {
+      "title": "StaticVariableConfig",
+      "type": "object",
+      "required": ["id", "type", "scope", "definition", "value"],
+      "properties": {
+        "id": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "type": {
+          "default": "static",
+          "const": "static",
+          "type": "string"
+        },
+        "scope": {
+          "anyOf": [
+            {
+              "const": "experiment",
+              "type": "string"
+            },
+            {
+              "const": "cohort",
+              "type": "string"
+            },
+            {
+              "const": "participant",
+              "type": "string"
+            }
+          ]
+        },
+        "definition": {
+          "$ref": "#/$defs/VariableDefinition"
+        },
+        "value": {
+          "type": "string"
+        },
+        "cohortValues": {
+          "type": "object",
+          "patternProperties": {
+            "^(.*)$": {
+              "type": "string"
+            }
+          },
+          "title": "CohortValues"
+        }
+      }
+    },
+    "VariableDefinition": {
+      "title": "VariableDefinition",
+      "additionalProperties": false,
+      "type": "object",
+      "required": ["name", "description", "schema"],
+      "properties": {
+        "name": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "schema": {
+          "title": "JSONSchemaDefinition",
+          "anyOf": [
+            {
+              "additionalProperties": true,
+              "type": "object",
+              "required": ["type"],
+              "properties": {
+                "type": {
+                  "const": "string",
+                  "type": "string"
+                }
+              },
+              "title": "String"
+            },
+            {
+              "additionalProperties": true,
+              "type": "object",
+              "required": ["type"],
+              "properties": {
+                "type": {
+                  "const": "number",
+                  "type": "string"
+                }
+              },
+              "title": "Number"
+            },
+            {
+              "additionalProperties": true,
+              "type": "object",
+              "required": ["type"],
+              "properties": {
+                "type": {
+                  "const": "integer",
+                  "type": "string"
+                }
+              },
+              "title": "Integer"
+            },
+            {
+              "additionalProperties": true,
+              "type": "object",
+              "required": ["type"],
+              "properties": {
+                "type": {
+                  "const": "boolean",
+                  "type": "string"
+                }
+              },
+              "title": "Boolean"
+            },
+            {
+              "additionalProperties": true,
+              "type": "object",
+              "required": ["type"],
+              "properties": {
+                "type": {
+                  "const": "object",
+                  "type": "string"
+                },
+                "properties": {
+                  "type": "object",
+                  "patternProperties": {
+                    "^(.*)$": {
+                      "$ref": "#/$defs/JSONSchemaDefinition"
+                    }
+                  },
+                  "title": "Properties"
+                }
+              },
+              "title": "Object"
+            },
+            {
+              "additionalProperties": true,
+              "type": "object",
+              "required": ["type"],
+              "properties": {
+                "type": {
+                  "const": "array",
+                  "type": "string"
+                },
+                "items": {
+                  "$ref": "#/$defs/JSONSchemaDefinition"
+                }
+              },
+              "title": "Array"
+            }
+          ]
+        }
+      }
+    },
+    "JSONSchemaDefinition": {
+      "title": "JSONSchemaDefinition",
+      "anyOf": [
+        {
+          "additionalProperties": true,
+          "type": "object",
+          "required": ["type"],
+          "properties": {
+            "type": {
+              "const": "string",
+              "type": "string"
+            }
+          },
+          "title": "String"
+        },
+        {
+          "additionalProperties": true,
+          "type": "object",
+          "required": ["type"],
+          "properties": {
+            "type": {
+              "const": "number",
+              "type": "string"
+            }
+          },
+          "title": "Number"
+        },
+        {
+          "additionalProperties": true,
+          "type": "object",
+          "required": ["type"],
+          "properties": {
+            "type": {
+              "const": "integer",
+              "type": "string"
+            }
+          },
+          "title": "Integer"
+        },
+        {
+          "additionalProperties": true,
+          "type": "object",
+          "required": ["type"],
+          "properties": {
+            "type": {
+              "const": "boolean",
+              "type": "string"
+            }
+          },
+          "title": "Boolean"
+        },
+        {
+          "additionalProperties": true,
+          "type": "object",
+          "required": ["type"],
+          "properties": {
+            "type": {
+              "const": "object",
+              "type": "string"
+            },
+            "properties": {
+              "type": "object",
+              "patternProperties": {
+                "^(.*)$": {
+                  "$ref": "#/$defs/JSONSchemaDefinition"
+                }
+              },
+              "title": "Properties"
+            }
+          },
+          "title": "Object"
+        },
+        {
+          "additionalProperties": true,
+          "type": "object",
+          "required": ["type"],
+          "properties": {
+            "type": {
+              "const": "array",
+              "type": "string"
+            },
+            "items": {
+              "$ref": "#/$defs/JSONSchemaDefinition"
+            }
+          },
+          "title": "Array"
+        }
+      ]
+    },
+    "RandomPermutationVariableConfig": {
+      "title": "RandomPermutationVariableConfig",
+      "type": "object",
+      "required": [
+        "id",
+        "type",
+        "scope",
+        "definition",
+        "shuffleConfig",
+        "values"
+      ],
+      "properties": {
+        "id": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "type": {
+          "default": "random_permutation",
+          "const": "random_permutation",
+          "type": "string"
+        },
+        "scope": {
+          "anyOf": [
+            {
+              "const": "experiment",
+              "type": "string"
+            },
+            {
+              "const": "cohort",
+              "type": "string"
+            },
+            {
+              "const": "participant",
+              "type": "string"
+            }
+          ]
+        },
+        "definition": {
+          "$ref": "#/$defs/VariableDefinition"
+        },
+        "shuffleConfig": {
+          "$ref": "#/$defs/ShuffleConfig"
+        },
+        "values": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "numToSelect": {
+          "minimum": 1,
+          "type": "number"
+        },
+        "expandListToSeparateVariables": {
+          "type": "boolean"
+        }
+      }
+    },
+    "ShuffleConfig": {
+      "title": "ShuffleConfig",
+      "additionalProperties": false,
+      "type": "object",
+      "required": ["shuffle", "seed", "customSeed"],
+      "properties": {
+        "shuffle": {
+          "type": "boolean"
+        },
+        "seed": {
+          "anyOf": [
+            {
+              "const": "experiment",
+              "type": "string"
+            },
+            {
+              "const": "cohort",
+              "type": "string"
+            },
+            {
+              "const": "participant",
+              "type": "string"
+            },
+            {
+              "const": "custom",
+              "type": "string"
+            }
+          ]
+        },
+        "customSeed": {
+          "type": "string"
+        }
+      }
+    },
+    "BalancedAssignmentVariableConfig": {
+      "title": "BalancedAssignmentVariableConfig",
+      "type": "object",
+      "required": [
+        "id",
+        "type",
+        "scope",
+        "definition",
+        "values",
+        "balanceStrategy",
+        "balanceAcross"
+      ],
+      "properties": {
+        "id": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "type": {
+          "default": "balanced_assignment",
+          "const": "balanced_assignment",
+          "type": "string"
+        },
+        "scope": {
+          "anyOf": [
+            {
+              "const": "experiment",
+              "type": "string"
+            },
+            {
+              "const": "cohort",
+              "type": "string"
+            },
+            {
+              "const": "participant",
+              "type": "string"
+            }
+          ]
+        },
+        "definition": {
+          "$ref": "#/$defs/VariableDefinition"
+        },
+        "values": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "weights": {
+          "type": "array",
+          "items": {
+            "minimum": 1,
+            "type": "number"
+          }
+        },
+        "balanceStrategy": {
+          "anyOf": [
+            {
+              "const": "round_robin",
+              "type": "string"
+            },
+            {
+              "const": "random",
+              "type": "string"
+            }
+          ]
+        },
+        "balanceAcross": {
+          "anyOf": [
+            {
+              "const": "experiment",
+              "type": "string"
+            },
+            {
+              "const": "cohort",
+              "type": "string"
+            }
+          ]
+        }
+      }
+    },
+    "AssetAllocationStageConfig": {
+      "title": "AssetAllocationStageConfig",
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "id",
+        "kind",
+        "name",
+        "descriptions",
+        "progress",
+        "stockConfig"
+      ],
+      "properties": {
+        "id": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "kind": {
+          "const": "assetAllocation",
+          "type": "string"
+        },
+        "name": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "descriptions": {
+          "$ref": "#/$defs/StageTextConfig"
+        },
+        "progress": {
+          "$ref": "#/$defs/StageProgressConfig"
+        },
+        "stockConfig": {
+          "additionalProperties": false,
+          "type": "object",
+          "properties": {
+            "stockInfoStageId": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "stockAId": {
+              "type": "string"
+            },
+            "stockBId": {
+              "type": "string"
+            },
+            "stockA": {
+              "$ref": "#/$defs/Stock"
+            },
+            "stockB": {
+              "$ref": "#/$defs/Stock"
+            }
+          },
+          "title": "StockConfig"
+        }
+      }
+    },
+    "StageTextConfig": {
+      "title": "StageTextConfig",
+      "type": "object",
+      "required": ["primaryText", "infoText", "helpText"],
+      "properties": {
+        "primaryText": {
+          "type": "string"
+        },
+        "infoText": {
+          "type": "string"
+        },
+        "helpText": {
+          "type": "string"
+        }
+      }
+    },
+    "StageProgressConfig": {
+      "title": "StageProgressConfig",
+      "type": "object",
+      "required": [
+        "minParticipants",
+        "waitForAllParticipants",
+        "showParticipantProgress"
+      ],
+      "properties": {
+        "minParticipants": {
+          "type": "integer"
+        },
+        "waitForAllParticipants": {
+          "type": "boolean"
+        },
+        "showParticipantProgress": {
+          "type": "boolean"
+        }
+      }
+    },
     "Stock": {
       "title": "Stock",
       "additionalProperties": false,
@@ -76,6 +620,49 @@
         }
       }
     },
+    "MultiAssetAllocationStageConfig": {
+      "title": "MultiAssetAllocationStageConfig",
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "id",
+        "kind",
+        "name",
+        "descriptions",
+        "progress",
+        "stockOptions",
+        "stockInfoStageId"
+      ],
+      "properties": {
+        "id": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "kind": {
+          "const": "multiAssetAllocation",
+          "type": "string"
+        },
+        "name": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "descriptions": {
+          "$ref": "#/$defs/StageTextConfig"
+        },
+        "progress": {
+          "$ref": "#/$defs/StageProgressConfig"
+        },
+        "stockOptions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Stock"
+          }
+        },
+        "stockInfoStageId": {
+          "type": "string"
+        }
+      }
+    },
     "ChatStageConfig": {
       "title": "ChatStageConfig",
       "additionalProperties": false,
@@ -92,6 +679,7 @@
       ],
       "properties": {
         "id": {
+          "minLength": 1,
           "type": "string"
         },
         "kind": {
@@ -99,6 +687,7 @@
           "type": "string"
         },
         "name": {
+          "minLength": 1,
           "type": "string"
         },
         "descriptions": {
@@ -217,6 +806,7 @@
       ],
       "properties": {
         "id": {
+          "minLength": 1,
           "type": "string"
         },
         "kind": {
@@ -224,6 +814,7 @@
           "type": "string"
         },
         "name": {
+          "minLength": 1,
           "type": "string"
         },
         "descriptions": {
@@ -284,6 +875,102 @@
         },
         "upperValue": {
           "type": "number"
+        }
+      }
+    },
+    "ComprehensionStageConfig": {
+      "title": "ComprehensionStageConfig",
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "id",
+        "kind",
+        "name",
+        "descriptions",
+        "progress",
+        "questions"
+      ],
+      "properties": {
+        "id": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "kind": {
+          "const": "comprehension",
+          "type": "string"
+        },
+        "name": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "descriptions": {
+          "$ref": "#/$defs/StageTextConfig"
+        },
+        "progress": {
+          "$ref": "#/$defs/StageProgressConfig"
+        },
+        "questions": {
+          "type": "array",
+          "items": {
+            "anyOf": [
+              {
+                "additionalProperties": false,
+                "type": "object",
+                "required": ["id", "kind", "questionTitle", "correctAnswer"],
+                "properties": {
+                  "id": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "kind": {
+                    "const": "text",
+                    "type": "string"
+                  },
+                  "questionTitle": {
+                    "type": "string"
+                  },
+                  "correctAnswer": {
+                    "type": "string"
+                  }
+                },
+                "title": "TextQuestion"
+              },
+              {
+                "additionalProperties": false,
+                "type": "object",
+                "required": [
+                  "id",
+                  "kind",
+                  "questionTitle",
+                  "options",
+                  "correctAnswerId"
+                ],
+                "properties": {
+                  "id": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "kind": {
+                    "const": "mc",
+                    "type": "string"
+                  },
+                  "questionTitle": {
+                    "type": "string"
+                  },
+                  "options": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/$defs/MultipleChoiceItem"
+                    }
+                  },
+                  "correctAnswerId": {
+                    "type": "string"
+                  }
+                },
+                "title": "McQuestion"
+              }
+            ]
+          }
         }
       }
     },
@@ -430,8 +1117,8 @@
       }
     },
     "PayoutStageConfig": {
-      "additionalProperties": false,
       "title": "PayoutStageConfig",
+      "additionalProperties": false,
       "type": "object",
       "required": [
         "id",
@@ -662,6 +1349,7 @@
       ],
       "properties": {
         "id": {
+          "minLength": 1,
           "type": "string"
         },
         "kind": {
@@ -669,6 +1357,7 @@
           "type": "string"
         },
         "name": {
+          "minLength": 1,
           "type": "string"
         },
         "descriptions": {
@@ -708,6 +1397,59 @@
         },
         "preventCancellation": {
           "type": "boolean"
+        }
+      }
+    },
+    "ProfileStageConfig": {
+      "title": "ProfileStageConfig",
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "id",
+        "kind",
+        "name",
+        "descriptions",
+        "progress",
+        "profileType"
+      ],
+      "properties": {
+        "id": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "kind": {
+          "const": "profile",
+          "type": "string"
+        },
+        "name": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "descriptions": {
+          "$ref": "#/$defs/StageTextConfig"
+        },
+        "progress": {
+          "$ref": "#/$defs/StageProgressConfig"
+        },
+        "profileType": {
+          "anyOf": [
+            {
+              "const": "DEFAULT",
+              "type": "string"
+            },
+            {
+              "const": "DEFAULT_GENDERED",
+              "type": "string"
+            },
+            {
+              "const": "ANONYMOUS_ANIMAL",
+              "type": "string"
+            },
+            {
+              "const": "ANONYMOUS_PARTICIPANT",
+              "type": "string"
+            }
+          ]
         }
       }
     },
@@ -851,20 +1593,22 @@
         }
       }
     },
-    "SalespersonStageConfig": {
-      "title": "SalespersonStageConfig",
+    "RevealStageConfig": {
+      "title": "RevealStageConfig",
       "additionalProperties": false,
       "type": "object",
-      "required": ["id", "kind", "name", "descriptions", "progress"],
+      "required": ["id", "kind", "name", "descriptions", "progress", "items"],
       "properties": {
         "id": {
+          "minLength": 1,
           "type": "string"
         },
         "kind": {
-          "const": "salesperson",
+          "const": "reveal",
           "type": "string"
         },
         "name": {
+          "minLength": 1,
           "type": "string"
         },
         "descriptions": {
@@ -872,6 +1616,330 @@
         },
         "progress": {
           "$ref": "#/$defs/StageProgressConfig"
+        },
+        "items": {
+          "type": "array",
+          "items": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/ChipRevealItem"
+              },
+              {
+                "$ref": "#/$defs/RankingRevealItem"
+              },
+              {
+                "$ref": "#/$defs/SurveyRevealItem"
+              },
+              {
+                "$ref": "#/$defs/MultiAssetAllocationRevealItem"
+              }
+            ]
+          }
+        }
+      }
+    },
+    "ChipRevealItem": {
+      "additionalProperties": false,
+      "title": "ChipRevealItem",
+      "type": "object",
+      "required": ["id", "kind", "revealAudience"],
+      "properties": {
+        "id": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "kind": {
+          "const": "chip",
+          "type": "string"
+        },
+        "revealAudience": {
+          "anyOf": [
+            {
+              "const": "CURRENT",
+              "type": "string"
+            },
+            {
+              "const": "ALL",
+              "type": "string"
+            }
+          ]
+        }
+      }
+    },
+    "RankingRevealItem": {
+      "additionalProperties": false,
+      "title": "RankingRevealItem",
+      "type": "object",
+      "required": ["id", "kind", "revealAudience"],
+      "properties": {
+        "id": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "kind": {
+          "const": "ranking",
+          "type": "string"
+        },
+        "revealAudience": {
+          "anyOf": [
+            {
+              "const": "CURRENT",
+              "type": "string"
+            },
+            {
+              "const": "ALL",
+              "type": "string"
+            }
+          ]
+        }
+      }
+    },
+    "SurveyRevealItem": {
+      "additionalProperties": false,
+      "title": "SurveyRevealItem",
+      "type": "object",
+      "required": ["id", "kind", "revealAudience", "revealScorableOnly"],
+      "properties": {
+        "id": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "kind": {
+          "const": "survey",
+          "type": "string"
+        },
+        "revealAudience": {
+          "anyOf": [
+            {
+              "const": "CURRENT",
+              "type": "string"
+            },
+            {
+              "const": "ALL",
+              "type": "string"
+            }
+          ]
+        },
+        "revealScorableOnly": {
+          "type": "boolean"
+        }
+      }
+    },
+    "MultiAssetAllocationRevealItem": {
+      "additionalProperties": false,
+      "title": "MultiAssetAllocationRevealItem",
+      "type": "object",
+      "required": ["id", "kind", "revealAudience", "displayMode"],
+      "properties": {
+        "id": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "kind": {
+          "const": "multiAssetAllocation",
+          "type": "string"
+        },
+        "revealAudience": {
+          "anyOf": [
+            {
+              "const": "CURRENT",
+              "type": "string"
+            },
+            {
+              "const": "ALL",
+              "type": "string"
+            }
+          ]
+        },
+        "displayMode": {
+          "anyOf": [
+            {
+              "const": "full",
+              "type": "string"
+            },
+            {
+              "const": "scoreOnly",
+              "type": "string"
+            }
+          ]
+        }
+      }
+    },
+    "RoleStageConfig": {
+      "title": "RoleStageConfig",
+      "additionalProperties": false,
+      "type": "object",
+      "required": ["id", "kind", "name", "descriptions", "progress", "roles"],
+      "properties": {
+        "id": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "kind": {
+          "const": "role",
+          "type": "string"
+        },
+        "name": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "descriptions": {
+          "$ref": "#/$defs/StageTextConfig"
+        },
+        "progress": {
+          "$ref": "#/$defs/StageProgressConfig"
+        },
+        "roles": {
+          "type": "array",
+          "items": {
+            "additionalProperties": false,
+            "type": "object",
+            "required": [
+              "id",
+              "name",
+              "displayLines",
+              "minParticipants",
+              "maxParticipants"
+            ],
+            "properties": {
+              "id": {
+                "minLength": 1,
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "displayLines": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "minParticipants": {
+                "type": "integer"
+              },
+              "maxParticipants": {
+                "anyOf": [
+                  {
+                    "type": "integer"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "title": "Role"
+          }
+        }
+      }
+    },
+    "SalespersonStageConfig": {
+      "title": "SalespersonStageConfig",
+      "additionalProperties": false,
+      "type": "object",
+      "required": ["id", "kind", "name", "descriptions", "progress"],
+      "properties": {
+        "id": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "kind": {
+          "const": "salesperson",
+          "type": "string"
+        },
+        "name": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "descriptions": {
+          "$ref": "#/$defs/StageTextConfig"
+        },
+        "progress": {
+          "$ref": "#/$defs/StageProgressConfig"
+        }
+      }
+    },
+    "StockInfoStageConfig": {
+      "title": "StockInfoStageConfig",
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "id",
+        "kind",
+        "name",
+        "descriptions",
+        "progress",
+        "stocks",
+        "showBestYearCard",
+        "showWorstYearCard",
+        "requireViewAllStocks",
+        "useQuarterlyMarkers",
+        "showInvestmentGrowth",
+        "useSharedYAxis",
+        "initialInvestment",
+        "currency"
+      ],
+      "properties": {
+        "id": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "kind": {
+          "const": "stockinfo",
+          "type": "string"
+        },
+        "name": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "descriptions": {
+          "$ref": "#/$defs/StageTextConfig"
+        },
+        "progress": {
+          "$ref": "#/$defs/StageProgressConfig"
+        },
+        "stocks": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Stock"
+          }
+        },
+        "visibleStockIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "showBestYearCard": {
+          "type": "boolean"
+        },
+        "showWorstYearCard": {
+          "type": "boolean"
+        },
+        "requireViewAllStocks": {
+          "type": "boolean"
+        },
+        "useQuarterlyMarkers": {
+          "type": "boolean"
+        },
+        "showInvestmentGrowth": {
+          "type": "boolean"
+        },
+        "useSharedYAxis": {
+          "type": "boolean"
+        },
+        "initialInvestment": {
+          "minimum": 1,
+          "default": 1000,
+          "type": "number"
+        },
+        "currency": {
+          "default": "USD",
+          "type": "string"
+        },
+        "introText": {
+          "type": "string"
         }
       }
     },
@@ -1339,9 +2407,48 @@
         }
       }
     },
-    "TransferStageConfig": {
+    "TOSStageConfig": {
+      "title": "TOSStageConfig",
       "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "id",
+        "kind",
+        "name",
+        "descriptions",
+        "progress",
+        "tosLines"
+      ],
+      "properties": {
+        "id": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "kind": {
+          "const": "tos",
+          "type": "string"
+        },
+        "name": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "descriptions": {
+          "$ref": "#/$defs/StageTextConfig"
+        },
+        "progress": {
+          "$ref": "#/$defs/StageProgressConfig"
+        },
+        "tosLines": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "TransferStageConfig": {
       "title": "TransferStageConfig",
+      "additionalProperties": false,
       "type": "object",
       "required": [
         "id",
@@ -1425,46 +2532,6 @@
         "maxParticipants": {
           "minimum": 1,
           "type": "integer"
-        }
-      }
-    },
-    "CohortParticipantConfig": {
-      "title": "CohortParticipantConfig",
-      "type": "object",
-      "required": [
-        "minParticipantsPerCohort",
-        "maxParticipantsPerCohort",
-        "includeAllParticipantsInCohortCount",
-        "botProtection"
-      ],
-      "properties": {
-        "minParticipantsPerCohort": {
-          "anyOf": [
-            {
-              "type": "null"
-            },
-            {
-              "minimum": 0,
-              "type": "integer"
-            }
-          ]
-        },
-        "maxParticipantsPerCohort": {
-          "anyOf": [
-            {
-              "type": "null"
-            },
-            {
-              "minimum": 1,
-              "type": "integer"
-            }
-          ]
-        },
-        "includeAllParticipantsInCohortCount": {
-          "type": "boolean"
-        },
-        "botProtection": {
-          "type": "boolean"
         }
       }
     },
@@ -1587,418 +2654,6 @@
         "maxCount": {
           "minimum": 1,
           "type": "integer"
-        }
-      }
-    },
-    "StaticVariableConfig": {
-      "title": "StaticVariableConfig",
-      "type": "object",
-      "required": ["id", "type", "scope", "definition", "value"],
-      "properties": {
-        "id": {
-          "minLength": 1,
-          "type": "string"
-        },
-        "type": {
-          "default": "static",
-          "const": "static",
-          "type": "string"
-        },
-        "scope": {
-          "anyOf": [
-            {
-              "const": "experiment",
-              "type": "string"
-            },
-            {
-              "const": "cohort",
-              "type": "string"
-            },
-            {
-              "const": "participant",
-              "type": "string"
-            }
-          ]
-        },
-        "definition": {
-          "$ref": "#/$defs/VariableDefinition"
-        },
-        "value": {
-          "type": "string"
-        },
-        "cohortValues": {
-          "type": "object",
-          "patternProperties": {
-            "^(.*)$": {
-              "type": "string"
-            }
-          },
-          "title": "CohortValues"
-        }
-      }
-    },
-    "VariableDefinition": {
-      "title": "VariableDefinition",
-      "additionalProperties": false,
-      "type": "object",
-      "required": ["name", "description", "schema"],
-      "properties": {
-        "name": {
-          "minLength": 1,
-          "type": "string"
-        },
-        "description": {
-          "type": "string"
-        },
-        "schema": {
-          "title": "JSONSchemaDefinition",
-          "anyOf": [
-            {
-              "additionalProperties": true,
-              "type": "object",
-              "required": ["type"],
-              "properties": {
-                "type": {
-                  "const": "string",
-                  "type": "string"
-                }
-              },
-              "title": "String"
-            },
-            {
-              "additionalProperties": true,
-              "type": "object",
-              "required": ["type"],
-              "properties": {
-                "type": {
-                  "const": "number",
-                  "type": "string"
-                }
-              },
-              "title": "Number"
-            },
-            {
-              "additionalProperties": true,
-              "type": "object",
-              "required": ["type"],
-              "properties": {
-                "type": {
-                  "const": "integer",
-                  "type": "string"
-                }
-              },
-              "title": "Integer"
-            },
-            {
-              "additionalProperties": true,
-              "type": "object",
-              "required": ["type"],
-              "properties": {
-                "type": {
-                  "const": "boolean",
-                  "type": "string"
-                }
-              },
-              "title": "Boolean"
-            },
-            {
-              "additionalProperties": true,
-              "type": "object",
-              "required": ["type"],
-              "properties": {
-                "type": {
-                  "const": "object",
-                  "type": "string"
-                },
-                "properties": {
-                  "type": "object",
-                  "patternProperties": {
-                    "^(.*)$": {
-                      "$ref": "#/$defs/JSONSchemaDefinition"
-                    }
-                  },
-                  "title": "Properties"
-                }
-              },
-              "title": "Object"
-            },
-            {
-              "additionalProperties": true,
-              "type": "object",
-              "required": ["type"],
-              "properties": {
-                "type": {
-                  "const": "array",
-                  "type": "string"
-                },
-                "items": {
-                  "$ref": "#/$defs/JSONSchemaDefinition"
-                }
-              },
-              "title": "Array"
-            }
-          ]
-        }
-      }
-    },
-    "JSONSchemaDefinition": {
-      "title": "JSONSchemaDefinition",
-      "anyOf": [
-        {
-          "additionalProperties": true,
-          "type": "object",
-          "required": ["type"],
-          "properties": {
-            "type": {
-              "const": "string",
-              "type": "string"
-            }
-          },
-          "title": "String"
-        },
-        {
-          "additionalProperties": true,
-          "type": "object",
-          "required": ["type"],
-          "properties": {
-            "type": {
-              "const": "number",
-              "type": "string"
-            }
-          },
-          "title": "Number"
-        },
-        {
-          "additionalProperties": true,
-          "type": "object",
-          "required": ["type"],
-          "properties": {
-            "type": {
-              "const": "integer",
-              "type": "string"
-            }
-          },
-          "title": "Integer"
-        },
-        {
-          "additionalProperties": true,
-          "type": "object",
-          "required": ["type"],
-          "properties": {
-            "type": {
-              "const": "boolean",
-              "type": "string"
-            }
-          },
-          "title": "Boolean"
-        },
-        {
-          "additionalProperties": true,
-          "type": "object",
-          "required": ["type"],
-          "properties": {
-            "type": {
-              "const": "object",
-              "type": "string"
-            },
-            "properties": {
-              "type": "object",
-              "patternProperties": {
-                "^(.*)$": {
-                  "$ref": "#/$defs/JSONSchemaDefinition"
-                }
-              },
-              "title": "Properties"
-            }
-          },
-          "title": "Object"
-        },
-        {
-          "additionalProperties": true,
-          "type": "object",
-          "required": ["type"],
-          "properties": {
-            "type": {
-              "const": "array",
-              "type": "string"
-            },
-            "items": {
-              "$ref": "#/$defs/JSONSchemaDefinition"
-            }
-          },
-          "title": "Array"
-        }
-      ]
-    },
-    "RandomPermutationVariableConfig": {
-      "title": "RandomPermutationVariableConfig",
-      "type": "object",
-      "required": [
-        "id",
-        "type",
-        "scope",
-        "definition",
-        "shuffleConfig",
-        "values"
-      ],
-      "properties": {
-        "id": {
-          "minLength": 1,
-          "type": "string"
-        },
-        "type": {
-          "default": "random_permutation",
-          "const": "random_permutation",
-          "type": "string"
-        },
-        "scope": {
-          "anyOf": [
-            {
-              "const": "experiment",
-              "type": "string"
-            },
-            {
-              "const": "cohort",
-              "type": "string"
-            },
-            {
-              "const": "participant",
-              "type": "string"
-            }
-          ]
-        },
-        "definition": {
-          "$ref": "#/$defs/VariableDefinition"
-        },
-        "shuffleConfig": {
-          "$ref": "#/$defs/ShuffleConfig"
-        },
-        "values": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "numToSelect": {
-          "minimum": 1,
-          "type": "number"
-        },
-        "expandListToSeparateVariables": {
-          "type": "boolean"
-        }
-      }
-    },
-    "ShuffleConfig": {
-      "title": "ShuffleConfig",
-      "additionalProperties": false,
-      "type": "object",
-      "required": ["shuffle", "seed", "customSeed"],
-      "properties": {
-        "shuffle": {
-          "type": "boolean"
-        },
-        "seed": {
-          "anyOf": [
-            {
-              "const": "experiment",
-              "type": "string"
-            },
-            {
-              "const": "cohort",
-              "type": "string"
-            },
-            {
-              "const": "participant",
-              "type": "string"
-            },
-            {
-              "const": "custom",
-              "type": "string"
-            }
-          ]
-        },
-        "customSeed": {
-          "type": "string"
-        }
-      }
-    },
-    "BalancedAssignmentVariableConfig": {
-      "title": "BalancedAssignmentVariableConfig",
-      "type": "object",
-      "required": [
-        "id",
-        "type",
-        "scope",
-        "definition",
-        "values",
-        "balanceStrategy",
-        "balanceAcross"
-      ],
-      "properties": {
-        "id": {
-          "minLength": 1,
-          "type": "string"
-        },
-        "type": {
-          "default": "balanced_assignment",
-          "const": "balanced_assignment",
-          "type": "string"
-        },
-        "scope": {
-          "anyOf": [
-            {
-              "const": "experiment",
-              "type": "string"
-            },
-            {
-              "const": "cohort",
-              "type": "string"
-            },
-            {
-              "const": "participant",
-              "type": "string"
-            }
-          ]
-        },
-        "definition": {
-          "$ref": "#/$defs/VariableDefinition"
-        },
-        "values": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "weights": {
-          "type": "array",
-          "items": {
-            "minimum": 1,
-            "type": "number"
-          }
-        },
-        "balanceStrategy": {
-          "anyOf": [
-            {
-              "const": "round_robin",
-              "type": "string"
-            },
-            {
-              "const": "random",
-              "type": "string"
-            }
-          ]
-        },
-        "balanceAcross": {
-          "anyOf": [
-            {
-              "const": "experiment",
-              "type": "string"
-            },
-            {
-              "const": "cohort",
-              "type": "string"
-            }
-          ]
         }
       }
     },
@@ -3358,615 +4013,11 @@
           "title": "PromptMap"
         }
       }
-    },
-    "AssetAllocationStageConfig": {
-      "additionalProperties": false,
-      "type": "object",
-      "required": [
-        "id",
-        "kind",
-        "name",
-        "descriptions",
-        "progress",
-        "stockConfig"
-      ],
-      "properties": {
-        "id": {
-          "minLength": 1,
-          "type": "string"
-        },
-        "kind": {
-          "const": "assetAllocation",
-          "type": "string"
-        },
-        "name": {
-          "minLength": 1,
-          "type": "string"
-        },
-        "descriptions": {
-          "$ref": "#/$defs/StageTextConfig"
-        },
-        "progress": {
-          "$ref": "#/$defs/StageProgressConfig"
-        },
-        "stockConfig": {
-          "additionalProperties": false,
-          "type": "object",
-          "properties": {
-            "stockInfoStageId": {
-              "minLength": 1,
-              "type": "string"
-            },
-            "stockAId": {
-              "type": "string"
-            },
-            "stockBId": {
-              "type": "string"
-            },
-            "stockA": {
-              "$ref": "#/$defs/Stock"
-            },
-            "stockB": {
-              "$ref": "#/$defs/Stock"
-            }
-          },
-          "title": "StockConfig"
-        }
-      },
-      "title": "AssetAllocationStageConfig"
-    },
-    "MultiAssetAllocationStageConfig": {
-      "additionalProperties": false,
-      "type": "object",
-      "required": [
-        "id",
-        "kind",
-        "name",
-        "descriptions",
-        "progress",
-        "stockOptions",
-        "stockInfoStageId"
-      ],
-      "properties": {
-        "id": {
-          "minLength": 1,
-          "type": "string"
-        },
-        "kind": {
-          "const": "multiAssetAllocation",
-          "type": "string"
-        },
-        "name": {
-          "minLength": 1,
-          "type": "string"
-        },
-        "descriptions": {
-          "$ref": "#/$defs/StageTextConfig"
-        },
-        "progress": {
-          "$ref": "#/$defs/StageProgressConfig"
-        },
-        "stockOptions": {
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/Stock"
-          }
-        },
-        "stockInfoStageId": {
-          "type": "string"
-        }
-      },
-      "title": "MultiAssetAllocationStageConfig"
-    },
-    "ComprehensionStageConfig": {
-      "additionalProperties": false,
-      "type": "object",
-      "required": [
-        "id",
-        "kind",
-        "name",
-        "descriptions",
-        "progress",
-        "questions"
-      ],
-      "properties": {
-        "id": {
-          "minLength": 1,
-          "type": "string"
-        },
-        "kind": {
-          "const": "comprehension",
-          "type": "string"
-        },
-        "name": {
-          "minLength": 1,
-          "type": "string"
-        },
-        "descriptions": {
-          "$ref": "#/$defs/StageTextConfig"
-        },
-        "progress": {
-          "$ref": "#/$defs/StageProgressConfig"
-        },
-        "questions": {
-          "type": "array",
-          "items": {
-            "anyOf": [
-              {
-                "additionalProperties": false,
-                "type": "object",
-                "required": ["id", "kind", "questionTitle", "correctAnswer"],
-                "properties": {
-                  "id": {
-                    "minLength": 1,
-                    "type": "string"
-                  },
-                  "kind": {
-                    "const": "text",
-                    "type": "string"
-                  },
-                  "questionTitle": {
-                    "type": "string"
-                  },
-                  "correctAnswer": {
-                    "type": "string"
-                  }
-                },
-                "title": "TextQuestion"
-              },
-              {
-                "additionalProperties": false,
-                "type": "object",
-                "required": [
-                  "id",
-                  "kind",
-                  "questionTitle",
-                  "options",
-                  "correctAnswerId"
-                ],
-                "properties": {
-                  "id": {
-                    "minLength": 1,
-                    "type": "string"
-                  },
-                  "kind": {
-                    "const": "mc",
-                    "type": "string"
-                  },
-                  "questionTitle": {
-                    "type": "string"
-                  },
-                  "options": {
-                    "type": "array",
-                    "items": {
-                      "$ref": "#/$defs/MultipleChoiceItem"
-                    }
-                  },
-                  "correctAnswerId": {
-                    "type": "string"
-                  }
-                },
-                "title": "McQuestion"
-              }
-            ]
-          }
-        }
-      },
-      "title": "ComprehensionStageConfig"
-    },
-    "FlipcardStageConfig": {
-      "title": "FlipCardStageConfig",
-      "additionalProperties": false,
-      "type": "object",
-      "required": [
-        "id",
-        "kind",
-        "name",
-        "descriptions",
-        "progress",
-        "cards",
-        "enableSelection",
-        "allowMultipleSelections",
-        "requireConfirmation",
-        "minUniqueCardsFlippedRequirement",
-        "shuffleCards"
-      ],
-      "properties": {
-        "id": {
-          "minLength": 1,
-          "type": "string"
-        },
-        "kind": {
-          "const": "flipcard",
-          "type": "string"
-        },
-        "name": {
-          "minLength": 1,
-          "type": "string"
-        },
-        "descriptions": {
-          "$ref": "#/$defs/StageTextConfig"
-        },
-        "progress": {
-          "$ref": "#/$defs/StageProgressConfig"
-        },
-        "cards": {
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/FlipCard"
-          }
-        },
-        "enableSelection": {
-          "type": "boolean"
-        },
-        "allowMultipleSelections": {
-          "type": "boolean"
-        },
-        "requireConfirmation": {
-          "type": "boolean"
-        },
-        "minUniqueCardsFlippedRequirement": {
-          "type": "number"
-        },
-        "shuffleCards": {
-          "type": "boolean"
-        }
-      }
-    },
-    "ProfileStageConfig": {
-      "additionalProperties": false,
-      "type": "object",
-      "required": [
-        "id",
-        "kind",
-        "name",
-        "descriptions",
-        "progress",
-        "profileType"
-      ],
-      "properties": {
-        "id": {
-          "minLength": 1,
-          "type": "string"
-        },
-        "kind": {
-          "const": "profile",
-          "type": "string"
-        },
-        "name": {
-          "minLength": 1,
-          "type": "string"
-        },
-        "descriptions": {
-          "$ref": "#/$defs/StageTextConfig"
-        },
-        "progress": {
-          "$ref": "#/$defs/StageProgressConfig"
-        },
-        "profileType": {
-          "anyOf": [
-            {
-              "const": "DEFAULT",
-              "type": "string"
-            },
-            {
-              "const": "DEFAULT_GENDERED",
-              "type": "string"
-            },
-            {
-              "const": "ANONYMOUS_ANIMAL",
-              "type": "string"
-            },
-            {
-              "const": "ANONYMOUS_PARTICIPANT",
-              "type": "string"
-            }
-          ]
-        }
-      },
-      "title": "ProfileStageConfig"
-    },
-    "RevealStageConfig": {
-      "additionalProperties": false,
-      "type": "object",
-      "required": ["id", "kind", "name", "descriptions", "progress", "items"],
-      "properties": {
-        "id": {
-          "minLength": 1,
-          "type": "string"
-        },
-        "kind": {
-          "const": "reveal",
-          "type": "string"
-        },
-        "name": {
-          "minLength": 1,
-          "type": "string"
-        },
-        "descriptions": {
-          "$ref": "#/$defs/StageTextConfig"
-        },
-        "progress": {
-          "$ref": "#/$defs/StageProgressConfig"
-        },
-        "items": {
-          "type": "array",
-          "items": {
-            "0": {
-              "$ref": "#/$defs/RevealStageConfig"
-            },
-            "1": {
-              "$ref": "#/$defs/SurveyStageConfig"
-            }
-          }
-        }
-      },
-      "title": "RevealStageConfig"
-    },
-    "RoleStageConfig": {
-      "additionalProperties": false,
-      "type": "object",
-      "required": ["id", "kind", "name", "descriptions", "progress", "roles"],
-      "properties": {
-        "id": {
-          "minLength": 1,
-          "type": "string"
-        },
-        "kind": {
-          "const": "role",
-          "type": "string"
-        },
-        "name": {
-          "minLength": 1,
-          "type": "string"
-        },
-        "descriptions": {
-          "$ref": "#/$defs/StageTextConfig"
-        },
-        "progress": {
-          "$ref": "#/$defs/StageProgressConfig"
-        },
-        "roles": {
-          "type": "array",
-          "items": {
-            "additionalProperties": false,
-            "type": "object",
-            "required": [
-              "id",
-              "name",
-              "displayLines",
-              "minParticipants",
-              "maxParticipants"
-            ],
-            "properties": {
-              "id": {
-                "minLength": 1,
-                "type": "string"
-              },
-              "name": {
-                "type": "string"
-              },
-              "displayLines": {
-                "type": "array",
-                "items": {
-                  "type": "string"
-                }
-              },
-              "minParticipants": {
-                "type": "integer"
-              },
-              "maxParticipants": {
-                "anyOf": [
-                  {
-                    "type": "integer"
-                  },
-                  {
-                    "type": "null"
-                  }
-                ]
-              }
-            },
-            "title": "Role"
-          }
-        }
-      },
-      "title": "RoleStageConfig"
-    },
-    "StockinfoStageConfig": {
-      "additionalProperties": false,
-      "type": "object",
-      "required": [
-        "id",
-        "kind",
-        "name",
-        "descriptions",
-        "progress",
-        "stocks",
-        "showBestYearCard",
-        "showWorstYearCard",
-        "requireViewAllStocks",
-        "useQuarterlyMarkers",
-        "showInvestmentGrowth",
-        "useSharedYAxis",
-        "initialInvestment",
-        "currency"
-      ],
-      "properties": {
-        "id": {
-          "minLength": 1,
-          "type": "string"
-        },
-        "kind": {
-          "const": "stockinfo",
-          "type": "string"
-        },
-        "name": {
-          "minLength": 1,
-          "type": "string"
-        },
-        "descriptions": {
-          "$ref": "#/$defs/StageTextConfig"
-        },
-        "progress": {
-          "$ref": "#/$defs/StageProgressConfig"
-        },
-        "stocks": {
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/Stock"
-          }
-        },
-        "visibleStockIds": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "showBestYearCard": {
-          "type": "boolean"
-        },
-        "showWorstYearCard": {
-          "type": "boolean"
-        },
-        "requireViewAllStocks": {
-          "type": "boolean"
-        },
-        "useQuarterlyMarkers": {
-          "type": "boolean"
-        },
-        "showInvestmentGrowth": {
-          "type": "boolean"
-        },
-        "useSharedYAxis": {
-          "type": "boolean"
-        },
-        "initialInvestment": {
-          "minimum": 1,
-          "default": 1000,
-          "type": "number"
-        },
-        "currency": {
-          "default": "USD",
-          "type": "string"
-        },
-        "introText": {
-          "type": "string"
-        }
-      },
-      "title": "StockinfoStageConfig"
-    },
-    "TosStageConfig": {
-      "additionalProperties": false,
-      "type": "object",
-      "required": [
-        "id",
-        "kind",
-        "name",
-        "descriptions",
-        "progress",
-        "tosLines"
-      ],
-      "properties": {
-        "id": {
-          "minLength": 1,
-          "type": "string"
-        },
-        "kind": {
-          "const": "tos",
-          "type": "string"
-        },
-        "name": {
-          "minLength": 1,
-          "type": "string"
-        },
-        "descriptions": {
-          "$ref": "#/$defs/StageTextConfig"
-        },
-        "progress": {
-          "$ref": "#/$defs/StageProgressConfig"
-        },
-        "tosLines": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        }
-      },
-      "title": "TosStageConfig"
     }
   },
   "type": "object",
-  "required": ["stage", "experimentCreation", "cohortCreation", "cohortUpdate"],
+  "required": ["experimentCreation"],
   "properties": {
-    "stage": {
-      "anyOf": [
-        {
-          "$ref": "#/$defs/AssetAllocationStageConfig"
-        },
-        {
-          "$ref": "#/$defs/MultiAssetAllocationStageConfig"
-        },
-        {
-          "$ref": "#/$defs/ChatStageConfig"
-        },
-        {
-          "$ref": "#/$defs/ChipStageConfig"
-        },
-        {
-          "$ref": "#/$defs/ComprehensionStageConfig"
-        },
-        {
-          "$ref": "#/$defs/FlipCardStageConfig"
-        },
-        {
-          "$ref": "#/$defs/InfoStageConfig"
-        },
-        {
-          "$ref": "#/$defs/PayoutStageConfig"
-        },
-        {
-          "$ref": "#/$defs/PrivateChatStageConfig"
-        },
-        {
-          "$ref": "#/$defs/ProfileStageConfig"
-        },
-        {
-          "title": "RankingStageConfig",
-          "anyOf": [
-            {
-              "$ref": "#/$defs/ItemRankingStageConfig"
-            },
-            {
-              "$ref": "#/$defs/ParticipantRankingStageConfig"
-            }
-          ]
-        },
-        {
-          "$ref": "#/$defs/RevealStageConfig"
-        },
-        {
-          "$ref": "#/$defs/RoleStageConfig"
-        },
-        {
-          "$ref": "#/$defs/SalespersonStageConfig"
-        },
-        {
-          "$ref": "#/$defs/StockinfoStageConfig"
-        },
-        {
-          "$ref": "#/$defs/SurveyPerParticipantStageConfig"
-        },
-        {
-          "$ref": "#/$defs/SurveyStageConfig"
-        },
-        {
-          "$ref": "#/$defs/TosStageConfig"
-        },
-        {
-          "$ref": "#/$defs/TransferStageConfig"
-        }
-      ]
-    },
     "experimentCreation": {
       "additionalProperties": false,
       "type": "object",
@@ -4222,7 +4273,7 @@
                     "$ref": "#/$defs/SalespersonStageConfig"
                   },
                   {
-                    "$ref": "#/$defs/StockinfoStageConfig"
+                    "$ref": "#/$defs/StockInfoStageConfig"
                   },
                   {
                     "$ref": "#/$defs/SurveyPerParticipantStageConfig"
@@ -4231,7 +4282,7 @@
                     "$ref": "#/$defs/SurveyStageConfig"
                   },
                   {
-                    "$ref": "#/$defs/TosStageConfig"
+                    "$ref": "#/$defs/TOSStageConfig"
                   },
                   {
                     "$ref": "#/$defs/TransferStageConfig"
@@ -4256,116 +4307,6 @@
         }
       },
       "title": "ExperimentCreation"
-    },
-    "cohortCreation": {
-      "additionalProperties": false,
-      "type": "object",
-      "required": ["experimentId", "cohortConfig"],
-      "properties": {
-        "experimentId": {
-          "minLength": 1,
-          "type": "string"
-        },
-        "cohortConfig": {
-          "additionalProperties": false,
-          "type": "object",
-          "required": ["id", "metadata", "participantConfig", "stageUnlockMap"],
-          "properties": {
-            "id": {
-              "type": "string"
-            },
-            "alias": {
-              "type": "string"
-            },
-            "metadata": {
-              "type": "object",
-              "required": ["name", "publicName", "description", "tags"],
-              "properties": {
-                "name": {
-                  "type": "string"
-                },
-                "publicName": {
-                  "type": "string"
-                },
-                "description": {
-                  "type": "string"
-                },
-                "tags": {
-                  "type": "array",
-                  "items": {
-                    "type": "string"
-                  }
-                }
-              },
-              "title": "Metadata"
-            },
-            "participantConfig": {
-              "$ref": "#/$defs/CohortParticipantConfig"
-            },
-            "stageUnlockMap": {
-              "type": "object",
-              "patternProperties": {
-                "^(.*)$": {
-                  "type": "boolean"
-                }
-              },
-              "title": "StageUnlockMap"
-            },
-            "variableMap": {
-              "type": "object",
-              "patternProperties": {
-                "^(.*)$": {
-                  "type": "string"
-                }
-              },
-              "title": "VariableMap"
-            }
-          },
-          "title": "CohortConfig"
-        }
-      },
-      "title": "CohortCreation"
-    },
-    "cohortUpdate": {
-      "additionalProperties": false,
-      "type": "object",
-      "required": ["experimentId", "cohortId", "metadata", "participantConfig"],
-      "properties": {
-        "experimentId": {
-          "minLength": 1,
-          "type": "string"
-        },
-        "cohortId": {
-          "minLength": 1,
-          "type": "string"
-        },
-        "metadata": {
-          "type": "object",
-          "required": ["name", "publicName", "description", "tags"],
-          "properties": {
-            "name": {
-              "type": "string"
-            },
-            "publicName": {
-              "type": "string"
-            },
-            "description": {
-              "type": "string"
-            },
-            "tags": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            }
-          },
-          "title": "Metadata"
-        },
-        "participantConfig": {
-          "$ref": "#/$defs/CohortParticipantConfig"
-        }
-      },
-      "title": "CohortUpdate"
     }
   },
   "$id": "DeliberateLabSchemas"

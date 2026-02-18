@@ -13,14 +13,8 @@ import * as path from 'path';
 import {Type} from '@sinclair/typebox';
 
 // Import top-level schemas
-import {StageConfigData, CONFIG_DATA} from './stages/stage.validation';
+import {CONFIG_DATA} from './stages/stage.validation';
 import {ExperimentCreationData} from './experiment.validation';
-import {
-  CohortCreationData,
-  UpdateCohortMetadataData,
-} from './cohort.validation';
-import {AgentMediatorTemplateData} from './agent.validation';
-
 /**
  * Recursively collect all schemas with $id from a schema tree.
  * These will be added to $defs for deduplication.
@@ -59,50 +53,29 @@ function collectSchemasWithId(
   }
 }
 
-// Create base schema with top-level types
-const baseSchema = Type.Object(
-  {
-    stage: StageConfigData,
-    experimentCreation: ExperimentCreationData,
-    cohortCreation: CohortCreationData,
-    cohortUpdate: UpdateCohortMetadataData,
-  },
-  {
-    $id: 'DeliberateLabSchemas',
-    title: 'Deliberate Lab API Schemas',
-    description: 'JSON Schema definitions for Deliberate Lab API request types',
-  },
-);
+// Verify all stage configs have $id for proper naming in $defs
+for (const [key, schema] of Object.entries(CONFIG_DATA)) {
+  if (!(schema as Record<string, unknown>).$id) {
+    throw new Error(
+      `Stage config "${key}" is missing $id. Add $id to its TypeBox definition.`,
+    );
+  }
+}
 
 // Collect all schemas with $id from the schema tree
 const collectedSchemas = new Map<string, unknown>();
-collectSchemasWithId(baseSchema, collectedSchemas);
+collectSchemasWithId(ExperimentCreationData, collectedSchemas);
 
-// Also collect from individual stage configs (for stage-specific naming)
-for (const [key, schema] of Object.entries(CONFIG_DATA)) {
-  const stageName = `${key.charAt(0).toUpperCase() + key.slice(1)}StageConfig`;
-  collectedSchemas.set(stageName, schema);
-  collectSchemasWithId(schema, collectedSchemas);
-}
-
-// Collect agent schemas (reachable via AgentMediatorTemplateData.promptMap -> PromptConfigData)
-collectSchemasWithId(AgentMediatorTemplateData, collectedSchemas);
-
-// Build $defs from collected schemas (excluding the root schema)
+// Build $defs from collected schemas
 const $defs: Record<string, unknown> = {};
 for (const [id, schema] of collectedSchemas) {
-  if (id !== 'DeliberateLabSchemas') {
-    $defs[id] = schema;
-  }
+  $defs[id] = schema;
 }
 
 // Create final schema with $defs
 const combinedSchema = Type.Object(
   {
-    stage: StageConfigData,
     experimentCreation: ExperimentCreationData,
-    cohortCreation: CohortCreationData,
-    cohortUpdate: UpdateCohortMetadataData,
   },
   {
     $id: 'DeliberateLabSchemas',
@@ -191,14 +164,10 @@ function fixRefs(
   if (parentKey) {
     const keyLower = parentKey.toLowerCase();
     if (keyLower.includes('question')) newTypeContext = 'Question';
-    else if (keyLower.includes('stageconfig') || keyLower === 'stage')
-      newTypeContext = 'StageConfig';
+    else if (keyLower.includes('stageconfig')) newTypeContext = 'StageConfig';
     else if (keyLower.includes('answer')) newTypeContext = 'Answer';
     else if (keyLower.includes('condition')) newTypeContext = 'Condition';
   }
-
-  // Track array context for item naming
-  const newArrayContext = arrayContext;
 
   for (const [key, value] of Object.entries(record)) {
     if (key === '$ref' && typeof value === 'string') {
@@ -219,13 +188,7 @@ function fixRefs(
       // This is an array items schema - pass the parent key as array context
       result[key] = fixRefs(value, key, newTypeContext, parentKey, schemaId);
     } else {
-      result[key] = fixRefs(
-        value,
-        key,
-        newTypeContext,
-        newArrayContext,
-        schemaId,
-      );
+      result[key] = fixRefs(value, key, newTypeContext, arrayContext, schemaId);
     }
   }
 
