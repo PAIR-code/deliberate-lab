@@ -126,6 +126,7 @@ export const api = onRequest(
   {
     timeoutSeconds: 60,
     maxInstances: 100,
+    memory: '1GiB',
   },
   app,
 );
