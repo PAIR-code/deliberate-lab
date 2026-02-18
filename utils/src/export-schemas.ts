@@ -66,12 +66,10 @@ for (const [key, schema] of Object.entries(CONFIG_DATA)) {
 const collectedSchemas = new Map<string, unknown>();
 collectSchemasWithId(ExperimentCreationData, collectedSchemas);
 
-// Build $defs from collected schemas (excluding the root schema)
+// Build $defs from collected schemas
 const $defs: Record<string, unknown> = {};
 for (const [id, schema] of collectedSchemas) {
-  if (id !== 'DeliberateLabSchemas') {
-    $defs[id] = schema;
-  }
+  $defs[id] = schema;
 }
 
 // Create final schema with $defs
@@ -166,14 +164,10 @@ function fixRefs(
   if (parentKey) {
     const keyLower = parentKey.toLowerCase();
     if (keyLower.includes('question')) newTypeContext = 'Question';
-    else if (keyLower.includes('stageconfig') || keyLower === 'stage')
-      newTypeContext = 'StageConfig';
+    else if (keyLower.includes('stageconfig')) newTypeContext = 'StageConfig';
     else if (keyLower.includes('answer')) newTypeContext = 'Answer';
     else if (keyLower.includes('condition')) newTypeContext = 'Condition';
   }
-
-  // Track array context for item naming
-  const newArrayContext = arrayContext;
 
   for (const [key, value] of Object.entries(record)) {
     if (key === '$ref' && typeof value === 'string') {
@@ -194,13 +188,7 @@ function fixRefs(
       // This is an array items schema - pass the parent key as array context
       result[key] = fixRefs(value, key, newTypeContext, parentKey, schemaId);
     } else {
-      result[key] = fixRefs(
-        value,
-        key,
-        newTypeContext,
-        newArrayContext,
-        schemaId,
-      );
+      result[key] = fixRefs(value, key, newTypeContext, arrayContext, schemaId);
     }
   }
 
