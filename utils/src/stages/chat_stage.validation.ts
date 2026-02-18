@@ -2,10 +2,7 @@ import {Type, type Static} from '@sinclair/typebox';
 import {UnifiedTimestampSchema} from '../shared.validation';
 import {StageKind} from './stage';
 import {ChatDiscussionType} from './chat_stage';
-import {
-  StageTextConfigSchema,
-  StageProgressConfigSchema,
-} from './stage.validation';
+import {BaseStageConfigSchema} from './stage.schemas';
 import {UserType} from '../participant';
 
 /** Shorthand for strict TypeBox object validation */
@@ -55,17 +52,19 @@ export const ChatDiscussionData = Type.Union([
 // ************************************************************************* //
 // updateChatStageConfig endpoint                                            //
 // ************************************************************************* //
-export const ChatStageConfigData = Type.Object(
-  {
-    id: Type.String(),
-    kind: Type.Literal(StageKind.CHAT),
-    name: Type.String(),
-    descriptions: Type.Ref(StageTextConfigSchema),
-    progress: Type.Ref(StageProgressConfigSchema),
-    timeLimitInMinutes: Type.Union([Type.Number(), Type.Null()]),
-    requireFullTime: Type.Union([Type.Boolean(), Type.Null()]),
-    discussions: Type.Array(ChatDiscussionData),
-  },
+export const ChatStageConfigData = Type.Composite(
+  [
+    BaseStageConfigSchema,
+    Type.Object(
+      {
+        kind: Type.Literal(StageKind.CHAT),
+        timeLimitInMinutes: Type.Union([Type.Number(), Type.Null()]),
+        requireFullTime: Type.Union([Type.Boolean(), Type.Null()]),
+        discussions: Type.Array(ChatDiscussionData),
+      },
+      strict,
+    ),
+  ],
   {$id: 'ChatStageConfig', ...strict},
 );
 

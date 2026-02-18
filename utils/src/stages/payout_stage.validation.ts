@@ -1,9 +1,6 @@
 import {Type, type Static} from '@sinclair/typebox';
 import {StageKind} from './stage';
-import {
-  StageProgressConfigSchema,
-  StageTextConfigSchema,
-} from './stage.validation';
+import {BaseStageConfigSchema} from './stage.schemas';
 import {PayoutCurrency, PayoutItemType} from './payout_stage';
 
 /** Shorthand for strict TypeBox object validation */
@@ -76,16 +73,18 @@ export const PayoutItemData = Type.Union([
 ]);
 
 /** PayoutStageConfig input validation. */
-export const PayoutStageConfigData = Type.Object(
-  {
-    id: Type.String({minLength: 1}),
-    kind: Type.Literal(StageKind.PAYOUT),
-    name: Type.String({minLength: 1}),
-    descriptions: Type.Ref(StageTextConfigSchema),
-    progress: Type.Ref(StageProgressConfigSchema),
-    currency: PayoutCurrencySchema,
-    payoutItems: Type.Array(PayoutItemData),
-    averageAllPayoutItems: Type.Boolean(),
-  },
-  {...strict, $id: 'PayoutStageConfig'},
+export const PayoutStageConfigData = Type.Composite(
+  [
+    BaseStageConfigSchema,
+    Type.Object(
+      {
+        kind: Type.Literal(StageKind.PAYOUT),
+        currency: PayoutCurrencySchema,
+        payoutItems: Type.Array(PayoutItemData),
+        averageAllPayoutItems: Type.Boolean(),
+      },
+      strict,
+    ),
+  ],
+  {$id: 'PayoutStageConfig', ...strict},
 );

@@ -1,9 +1,6 @@
 import {Type, type Static} from '@sinclair/typebox';
 import {StageKind} from './stage';
-import {
-  StageProgressConfigSchema,
-  StageTextConfigSchema,
-} from './stage.validation';
+import {BaseStageConfigSchema} from './stage.schemas';
 import {SurveyQuestionKind} from './survey_stage';
 import {ConditionSchema} from '../utils/condition.validation';
 
@@ -89,29 +86,33 @@ export const SurveyQuestionData = Type.Union([
 ]);
 
 /** SurveyStageConfig input validation. */
-export const SurveyStageConfigData = Type.Object(
-  {
-    id: Type.String({minLength: 1}),
-    kind: Type.Literal(StageKind.SURVEY),
-    name: Type.String({minLength: 1}),
-    descriptions: Type.Ref(StageTextConfigSchema),
-    progress: Type.Ref(StageProgressConfigSchema),
-    questions: Type.Array(SurveyQuestionData),
-  },
+export const SurveyStageConfigData = Type.Composite(
+  [
+    BaseStageConfigSchema,
+    Type.Object(
+      {
+        kind: Type.Literal(StageKind.SURVEY),
+        questions: Type.Array(SurveyQuestionData),
+      },
+      strict,
+    ),
+  ],
   {$id: 'SurveyStageConfig', ...strict},
 );
 
 /** SurveyPerParticipantStageConfig input validation. */
-export const SurveyPerParticipantStageConfigData = Type.Object(
-  {
-    id: Type.String({minLength: 1}),
-    kind: Type.Literal(StageKind.SURVEY_PER_PARTICIPANT),
-    name: Type.String({minLength: 1}),
-    descriptions: Type.Ref(StageTextConfigSchema),
-    progress: Type.Ref(StageProgressConfigSchema),
-    questions: Type.Array(SurveyQuestionData),
-    enableSelfSurvey: Type.Boolean(),
-  },
+export const SurveyPerParticipantStageConfigData = Type.Composite(
+  [
+    BaseStageConfigSchema,
+    Type.Object(
+      {
+        kind: Type.Literal(StageKind.SURVEY_PER_PARTICIPANT),
+        questions: Type.Array(SurveyQuestionData),
+        enableSelfSurvey: Type.Boolean(),
+      },
+      strict,
+    ),
+  ],
   {$id: 'SurveyPerParticipantStageConfig', ...strict},
 );
 

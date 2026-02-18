@@ -13,12 +13,7 @@ import * as path from 'path';
 import {Type} from '@sinclair/typebox';
 
 // Import top-level schemas
-import {
-  StageConfigData,
-  CONFIG_DATA,
-  StageTextConfigSchema,
-  StageProgressConfigSchema,
-} from './stages/stage.validation';
+import {StageConfigData, CONFIG_DATA} from './stages/stage.validation';
 import {ExperimentCreationData} from './experiment.validation';
 import {
   CohortCreationData,
@@ -85,14 +80,14 @@ collectSchemasWithId(baseSchema, collectedSchemas);
 
 // Also collect from individual stage configs (for stage-specific naming)
 for (const [key, schema] of Object.entries(CONFIG_DATA)) {
-  const stageName = `${key.charAt(0).toUpperCase() + key.slice(1)}StageConfig`;
-  collectedSchemas.set(stageName, schema);
+  const record = schema as Record<string, unknown>;
+  // Only use the key-derived name if the schema doesn't have an explicit $id
+  if (!record.$id) {
+    const stageName = `${key.charAt(0).toUpperCase() + key.slice(1)}StageConfig`;
+    collectedSchemas.set(stageName, schema);
+  }
   collectSchemasWithId(schema, collectedSchemas);
 }
-
-// Collect shared schemas only reachable via Type.Ref (not embedded in the tree)
-collectSchemasWithId(StageTextConfigSchema, collectedSchemas);
-collectSchemasWithId(StageProgressConfigSchema, collectedSchemas);
 
 // Collect agent schemas (reachable via AgentMediatorTemplateData.promptMap -> PromptConfigData)
 collectSchemasWithId(AgentMediatorTemplateData, collectedSchemas);
