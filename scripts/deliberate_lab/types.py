@@ -593,15 +593,22 @@ class Role(BaseModel):
     maxParticipants: int | None = None
 
 
-class StageProgressConfig(RootModel[Any]):
+class StageTextConfig(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    root: Any
+    primaryText: str
+    infoText: str
+    helpText: str
 
 
-class StageTextConfig(StageProgressConfig):
-    pass
+class StageProgressConfig(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    minParticipants: int
+    waitForAllParticipants: bool
+    showParticipantProgress: bool
 
 
 class CohortConfig(BaseModel):
@@ -656,8 +663,8 @@ class ChipStageConfig(BaseModel):
     id: str
     kind: Literal["chip"] = "chip"
     name: str
-    descriptions: Any
-    progress: Any
+    descriptions: StageTextConfig
+    progress: StageProgressConfig
     enableChat: bool
     numRounds: float
     chips: list[ChipItem]
@@ -671,8 +678,8 @@ class FlipCardStageConfig(BaseModel):
     id: Annotated[str, Field(min_length=1)]
     kind: Literal["flipcard"] = "flipcard"
     name: Annotated[str, Field(min_length=1)]
-    descriptions: Any
-    progress: Any
+    descriptions: StageTextConfig
+    progress: StageProgressConfig
     cards: list[FlipCard]
     enableSelection: bool
     allowMultipleSelections: bool
@@ -689,8 +696,8 @@ class InfoStageConfig(BaseModel):
     id: Annotated[str, Field(min_length=1)]
     kind: Literal["info"] = "info"
     name: Annotated[str, Field(min_length=1)]
-    descriptions: Any
-    progress: Any
+    descriptions: StageTextConfig
+    progress: StageProgressConfig
     infoLines: list[str]
     youtubeVideoId: str | None = None
 
@@ -703,8 +710,8 @@ class PayoutStageConfig(BaseModel):
     id: Annotated[str, Field(min_length=1)]
     kind: Literal["payout"] = "payout"
     name: Annotated[str, Field(min_length=1)]
-    descriptions: Any
-    progress: Any
+    descriptions: StageTextConfig
+    progress: StageProgressConfig
     currency: Currency
     payoutItems: list[DefaultPayoutItem | ChipPayoutItem | SurveyPayoutItem]
     averageAllPayoutItems: bool
@@ -718,8 +725,8 @@ class PrivateChatStageConfig(BaseModel):
     id: str
     kind: Literal["privateChat"] = "privateChat"
     name: str
-    descriptions: Any
-    progress: Any
+    descriptions: StageTextConfig
+    progress: StageProgressConfig
     timeLimitInMinutes: float | None = None
     requireFullTime: bool | None = None
     isTurnBasedChat: bool | None = None
@@ -736,8 +743,8 @@ class ItemRankingStageConfig(BaseModel):
     id: Annotated[str, Field(min_length=1)]
     kind: Literal["ranking"] = "ranking"
     name: Annotated[str, Field(min_length=1)]
-    descriptions: Any
-    progress: Any
+    descriptions: StageTextConfig
+    progress: StageProgressConfig
     rankingType: Literal["items"] = "items"
     strategy: Strategy
     rankingItems: list[RankingItem]
@@ -751,8 +758,8 @@ class ParticipantRankingStageConfig(BaseModel):
     id: Annotated[str, Field(min_length=1)]
     kind: Literal["ranking"] = "ranking"
     name: Annotated[str, Field(min_length=1)]
-    descriptions: Any
-    progress: Any
+    descriptions: StageTextConfig
+    progress: StageProgressConfig
     rankingType: Literal["participants"] = "participants"
     strategy: Strategy
     enableSelfVoting: bool
@@ -766,8 +773,8 @@ class SalespersonStageConfig(BaseModel):
     id: str
     kind: Literal["salesperson"] = "salesperson"
     name: str
-    descriptions: Any
-    progress: Any
+    descriptions: StageTextConfig
+    progress: StageProgressConfig
 
 
 class ComparisonCondition(BaseModel):
@@ -832,8 +839,8 @@ class AssetAllocationStageConfig(BaseModel):
     id: Annotated[str, Field(min_length=1)]
     kind: Literal["assetAllocation"] = "assetAllocation"
     name: Annotated[str, Field(min_length=1)]
-    descriptions: Any
-    progress: Any
+    descriptions: StageTextConfig
+    progress: StageProgressConfig
     stockConfig: Annotated[StockConfig, Field(title="StockConfig")]
 
 
@@ -845,8 +852,8 @@ class MultiAssetAllocationStageConfig(BaseModel):
     id: Annotated[str, Field(min_length=1)]
     kind: Literal["multiAssetAllocation"] = "multiAssetAllocation"
     name: Annotated[str, Field(min_length=1)]
-    descriptions: Any
-    progress: Any
+    descriptions: StageTextConfig
+    progress: StageProgressConfig
     stockOptions: list[Stock]
     stockInfoStageId: str
 
@@ -859,8 +866,8 @@ class ComprehensionStageConfig(BaseModel):
     id: Annotated[str, Field(min_length=1)]
     kind: Literal["comprehension"] = "comprehension"
     name: Annotated[str, Field(min_length=1)]
-    descriptions: Any
-    progress: Any
+    descriptions: StageTextConfig
+    progress: StageProgressConfig
     questions: list[TextQuestion | McQuestion]
 
 
@@ -872,8 +879,8 @@ class ProfileStageConfig(BaseModel):
     id: Annotated[str, Field(min_length=1)]
     kind: Literal["profile"] = "profile"
     name: Annotated[str, Field(min_length=1)]
-    descriptions: Any
-    progress: Any
+    descriptions: StageTextConfig
+    progress: StageProgressConfig
     profileType: ProfileType
 
 
@@ -885,8 +892,8 @@ class RevealStageConfig(BaseModel):
     id: Annotated[str, Field(min_length=1)]
     kind: Literal["reveal"] = "reveal"
     name: Annotated[str, Field(min_length=1)]
-    descriptions: Any
-    progress: Any
+    descriptions: StageTextConfig
+    progress: StageProgressConfig
     items: list[Any]
 
 
@@ -898,8 +905,8 @@ class RoleStageConfig(BaseModel):
     id: Annotated[str, Field(min_length=1)]
     kind: Literal["role"] = "role"
     name: Annotated[str, Field(min_length=1)]
-    descriptions: Any
-    progress: Any
+    descriptions: StageTextConfig
+    progress: StageProgressConfig
     roles: list[Role]
 
 
@@ -911,8 +918,8 @@ class StockinfoStageConfig(BaseModel):
     id: Annotated[str, Field(min_length=1)]
     kind: Literal["stockinfo"] = "stockinfo"
     name: Annotated[str, Field(min_length=1)]
-    descriptions: Any
-    progress: Any
+    descriptions: StageTextConfig
+    progress: StageProgressConfig
     stocks: list[Stock]
     visibleStockIds: list[str] | None = None
     showBestYearCard: bool
@@ -934,8 +941,8 @@ class TosStageConfig(BaseModel):
     id: Annotated[str, Field(min_length=1)]
     kind: Literal["tos"] = "tos"
     name: Annotated[str, Field(min_length=1)]
-    descriptions: Any
-    progress: Any
+    descriptions: StageTextConfig
+    progress: StageProgressConfig
     tosLines: list[str]
 
 
@@ -947,8 +954,8 @@ class ChatStageConfig(BaseModel):
     id: str
     kind: Literal["chat"] = "chat"
     name: str
-    descriptions: Any
-    progress: Any
+    descriptions: StageTextConfig
+    progress: StageProgressConfig
     timeLimitInMinutes: float | None = None
     requireFullTime: bool | None = None
     discussions: list[DefaultChatDiscussion | CompareChatDiscussion]
@@ -1103,8 +1110,8 @@ class SurveyPerParticipantStageConfig(BaseModel):
     id: Annotated[str, Field(min_length=1)]
     kind: Literal["surveyPerParticipant"] = "surveyPerParticipant"
     name: Annotated[str, Field(min_length=1)]
-    descriptions: Any
-    progress: Any
+    descriptions: StageTextConfig
+    progress: StageProgressConfig
     questions: list[
         TextSurveyQuestion
         | CheckSurveyQuestion
@@ -1197,8 +1204,8 @@ class SurveyStageConfig(BaseModel):
     id: Annotated[str, Field(min_length=1)]
     kind: Literal["survey"] = "survey"
     name: Annotated[str, Field(min_length=1)]
-    descriptions: Any
-    progress: Any
+    descriptions: StageTextConfig
+    progress: StageProgressConfig
     questions: list[
         TextSurveyQuestion
         | CheckSurveyQuestion
@@ -1215,8 +1222,8 @@ class TransferStageConfig(BaseModel):
     id: Annotated[str, Field(min_length=1)]
     kind: Literal["transfer"] = "transfer"
     name: Annotated[str, Field(min_length=1)]
-    descriptions: Any
-    progress: Any
+    descriptions: StageTextConfig
+    progress: StageProgressConfig
     enableTimeout: bool
     timeoutSeconds: float
     autoTransferConfig: (

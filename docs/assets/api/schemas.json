@@ -3893,6 +3893,42 @@
         }
       },
       "title": "TosStageConfig"
+    },
+    "StageTextConfig": {
+      "title": "StageTextConfig",
+      "type": "object",
+      "required": ["primaryText", "infoText", "helpText"],
+      "properties": {
+        "primaryText": {
+          "type": "string"
+        },
+        "infoText": {
+          "type": "string"
+        },
+        "helpText": {
+          "type": "string"
+        }
+      }
+    },
+    "StageProgressConfig": {
+      "title": "StageProgressConfig",
+      "type": "object",
+      "required": [
+        "minParticipants",
+        "waitForAllParticipants",
+        "showParticipantProgress"
+      ],
+      "properties": {
+        "minParticipants": {
+          "type": "integer"
+        },
+        "waitForAllParticipants": {
+          "type": "boolean"
+        },
+        "showParticipantProgress": {
+          "type": "boolean"
+        }
+      }
     }
   },
   "type": "object",

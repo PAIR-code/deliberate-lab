@@ -20,6 +20,10 @@ import {
   UpdateCohortMetadataData,
 } from './cohort.validation';
 import {AgentMediatorTemplateData} from './agent.validation';
+import {
+  StageTextConfigSchema,
+  StageProgressConfigSchema,
+} from './stages/stage.schemas';
 
 /**
  * Recursively collect all schemas with $id from a schema tree.
@@ -84,6 +88,10 @@ for (const [key, schema] of Object.entries(CONFIG_DATA)) {
   collectedSchemas.set(stageName, schema);
   collectSchemasWithId(schema, collectedSchemas);
 }
+
+// Collect shared schemas referenced via Type.Ref (not embedded in the tree)
+collectedSchemas.set('StageTextConfig', StageTextConfigSchema);
+collectedSchemas.set('StageProgressConfig', StageProgressConfigSchema);
 
 // Collect agent schemas (reachable via AgentMediatorTemplateData.promptMap -> PromptConfigData)
 collectSchemasWithId(AgentMediatorTemplateData, collectedSchemas);
