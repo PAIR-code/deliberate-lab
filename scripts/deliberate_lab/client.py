@@ -357,6 +357,22 @@ class Client:
         )
         return self._handle_response(response)
 
+    def export_experiment_logs(self, experiment_id: str) -> dict:
+        """
+        Export all model logs from an experiment.
+
+        Args:
+            experiment_id: The experiment ID to export logs for
+
+        Returns:
+            Dict with 'logs' list containing all model log entries
+        """
+        response = self._session.get(
+            f"{self.base_url}/experiments/{experiment_id}/export/logs",
+            timeout=(self.timeout * 3),  # Allow more time for exports
+        )
+        return self._handle_response(response)
+
     def fork_experiment(self, experiment_id: str, name: Optional[str] = None) -> dict:
         """
         Fork an experiment, creating a copy with all stages and agents.

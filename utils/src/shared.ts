@@ -1,5 +1,6 @@
 import {Timestamp} from 'firebase/firestore';
 import {ExperimentDownload} from './data';
+import {LogEntry} from './log';
 import {MediatorStatus} from './mediator';
 import {ParticipantStatus} from './participant';
 
@@ -29,6 +30,10 @@ export interface ParticipantNextStageResponse {
 
 export interface ExperimentDownloadResponse {
   data: ExperimentDownload | null;
+}
+
+export interface ExperimentLogsDownloadResponse {
+  data: LogEntry[] | null;
 }
 
 // Helper for Timestamp (make it work between admin & sdk).

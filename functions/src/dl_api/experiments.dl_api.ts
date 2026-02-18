@@ -24,7 +24,7 @@ import {
   UnifiedTimestamp,
 } from '@deliberation-lab/utils';
 import {getFirestoreExperimentRef} from '../utils/firestore';
-import {getExperimentDownload} from '../data';
+import {getExperimentDownload, getExperimentLogs} from '../data';
 import {
   deleteExperimentById,
   forkExperimentById,
@@ -490,6 +490,37 @@ export async function exportExperimentData(
   }
 
   res.status(200).json(experimentDownload);
+}
+
+/**
+ * Export experiment logs
+ * Returns all model log entries for the experiment
+ */
+export async function exportExperimentLogs(
+  req: DeliberateLabAPIRequest,
+  res: Response,
+): Promise<void> {
+  if (!hasDeliberateLabAPIPermission(req, 'read')) {
+    throw createHttpError(403, 'Insufficient permissions');
+  }
+
+  const experimentId = req.params.id;
+  const experimenterId = req.deliberateLabAPIKeyData!.experimenterId;
+
+  if (!experimentId) {
+    throw createHttpError(400, 'Experiment ID required');
+  }
+
+  // Verify access permissions
+  await verifyExperimentAccess(experimentId, experimenterId);
+
+  const logs = await getExperimentLogs(app.firestore(), experimentId);
+
+  if (!logs) {
+    throw createHttpError(500, 'Failed to load experiment logs');
+  }
+
+  res.status(200).json({logs});
 }
 
 /**

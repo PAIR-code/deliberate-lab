@@ -393,6 +393,38 @@ paths:
         '429':
           $ref: '#/components/responses/RateLimitError'
 
+  /experiments/{id}/export/logs:
+    get:
+      tags:
+        - experiments
+      summary: Export experiment logs
+      description: Export all model log entries from an experiment, including LLM prompts and responses
+      operationId: exportExperimentLogs
+      parameters:
+        - $ref: '#/components/parameters/ExperimentId'
+      responses:
+        '200':
+          description: Successful export
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  logs:
+                    type: array
+                    description: All model log entries ordered by creation timestamp
+                    items:
+                      type: object
+                      additionalProperties: true
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '429':
+          $ref: '#/components/responses/RateLimitError'
+
   /experiments/{id}/fork:
     post:
       tags:

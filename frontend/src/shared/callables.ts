@@ -13,6 +13,7 @@ import {
   ExperimentCreationData,
   ExperimentDeletionData,
   ExperimentDownloadResponse,
+  ExperimentLogsDownloadResponse,
   ExperimentTemplate,
   InitiateParticipantTransferData,
   ModelResponse,
@@ -126,6 +127,21 @@ export const downloadExperimentCallable = async (
   >(
     functions,
     'downloadExperiment',
+  )({experimentId});
+  return data;
+};
+
+/** Generic endpoint to download experiment logs. */
+export const downloadExperimentLogsCallable = async (
+  functions: Functions,
+  experimentId: string,
+) => {
+  const {data} = await httpsCallable<
+    {experimentId: string},
+    ExperimentLogsDownloadResponse
+  >(
+    functions,
+    'downloadExperimentLogs',
   )({experimentId});
   return data;
 };
