@@ -1,4 +1,4 @@
-name: Check format and run tests
+name: Check format, build, and run tests
 
 on: [push, pull_request]
 
@@ -29,7 +29,7 @@ jobs:
         npx eslint --quiet "**/*.ts"
 
   test:
-    name: Build and test
+    name: Build backend and run tests 
 
     runs-on: ubuntu-latest
 
@@ -64,17 +64,40 @@ jobs:
     - name: Build functions
       run: npm run build --workspace=functions
 
-    - name: Build frontend
-      run: |
-        cp frontend/index.example.html frontend/index.html
-        cp frontend/firebase_config.example.ts frontend/firebase_config.ts
-        npm run build --workspace=frontend
-
     - name: Test utils
       run: npm test --workspace=utils
 
     - name: Test functions
       run: npm test --workspace=functions
+
+  build_frontend:
+    name: Build frontend and run tests
+
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [22.x]
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Use Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ matrix.node-version }}
+
+    - name: Install dependencies
+      run: npm install
+
+    - name: Build utils
+      run: npm run build --workspace=utils
+
+    - name: Build frontend
+      run: |
+        cp frontend/index.example.html frontend/index.html
+        cp frontend/firebase_config.example.ts frontend/firebase_config.ts
+        npm run build --workspace=frontend
 
     - name: Test frontend
       run: npm test --workspace=frontend
