@@ -1,8 +1,10 @@
 import {Timestamp} from 'firebase-admin/firestore';
 import {
+  AssetAllocationStageParticipantAnswer,
   AssetAllocationStagePublicData,
   AutoTransferType,
   ChipItem,
+  ChipStageParticipantAnswer,
   ChipStagePublicData,
   CohortConfig,
   ConditionAutoTransferConfig,
@@ -14,16 +16,23 @@ import {
   Experiment,
   extractAnswerValue,
   extractMultipleConditionDependencies,
+  FlipCardStageParticipantAnswer,
   FlipCardStagePublicData,
   getConditionTargetKey,
+  MultiAssetAllocationStageParticipantAnswer,
   MultiAssetAllocationStagePublicData,
   ParticipantProfileExtended,
   ParticipantStatus,
+  RankingStageParticipantAnswer,
   RankingStagePublicData,
   RoleStagePublicData,
   StageConfig,
+  STAGE_KIND_REQUIRES_TRANSFER_MIGRATION,
   StageKind,
+  StageParticipantAnswer,
+  StagePublicData,
   SurveyQuestionKind,
+  SurveyStageParticipantAnswer,
   SurveyStagePublicData,
   TransferGroup,
   TransferStageConfig,
@@ -41,6 +50,84 @@ import {createCohortInternal} from './cohort.utils';
 import {sendSystemChatMessage} from './chat/chat.utils';
 
 import {app} from './app';
+
+/**
+ * Migration handlers for transferring participant public data between cohorts.
+ * Each handler mutates the target cohort's public data to include the
+ * transferring participant's answers.
+ *
+ * TODO: Consider standardizing all stage public data to use `participantAnswerMap`
+ * instead of varying field names (participantAllocations, participantFlipHistory, etc.)
+ * This would allow a more generic migration approach.
+ *
+ * To add a new migratable stage kind, mark it `true` in
+ * STAGE_KIND_REQUIRES_TRANSFER_MIGRATION in utils/src/stages/stage.ts and
+ * add a handler here. A test verifies these stay in sync.
+ */
+export const TRANSFER_MIGRATION_HANDLERS = {
+  [StageKind.SURVEY]: (
+    publicData: SurveyStagePublicData,
+    stage: SurveyStageParticipantAnswer,
+    publicId: string,
+  ) => {
+    publicData.participantAnswerMap[publicId] = stage.answerMap;
+  },
+  [StageKind.CHIP]: (
+    publicData: ChipStagePublicData,
+    stage: ChipStageParticipantAnswer,
+    publicId: string,
+  ) => {
+    publicData.participantChipMap[publicId] = stage.chipMap;
+    publicData.participantChipValueMap[publicId] = stage.chipValueMap;
+  },
+  [StageKind.RANKING]: (
+    publicData: RankingStagePublicData,
+    stage: RankingStageParticipantAnswer,
+    publicId: string,
+  ) => {
+    publicData.participantAnswerMap[publicId] = stage.rankingList;
+  },
+  [StageKind.ASSET_ALLOCATION]: (
+    publicData: AssetAllocationStagePublicData,
+    stage: AssetAllocationStageParticipantAnswer,
+    publicId: string,
+  ) => {
+    publicData.participantAllocations[publicId] = stage.allocation;
+  },
+  [StageKind.MULTI_ASSET_ALLOCATION]: (
+    publicData: MultiAssetAllocationStagePublicData,
+    stage: MultiAssetAllocationStageParticipantAnswer,
+    publicId: string,
+  ) => {
+    publicData.participantAnswerMap[publicId] = {
+      kind: StageKind.MULTI_ASSET_ALLOCATION,
+      id: stage.id,
+      allocationMap: stage.allocationMap,
+      isConfirmed: stage.isConfirmed,
+      confirmedTimestamp: stage.confirmedTimestamp,
+    };
+  },
+  [StageKind.FLIPCARD]: (
+    publicData: FlipCardStagePublicData,
+    stage: FlipCardStageParticipantAnswer,
+    publicId: string,
+  ) => {
+    publicData.participantFlipHistory[publicId] = stage.flipHistory ?? [];
+    publicData.participantSelections[publicId] = stage.selectedCardIds ?? [];
+  },
+  [StageKind.ROLE]: (_publicData: RoleStagePublicData) => {
+    // TODO: Assign new role to participant (or move role over)
+  },
+} as Partial<
+  Record<
+    StageKind,
+    (
+      publicData: StagePublicData,
+      stage: StageParticipantAnswer,
+      publicId: string,
+    ) => void
+  >
+>;
 
 /**
  * Instructions for executing direct transfers after a transaction commits.
@@ -1091,102 +1178,42 @@ async function migrateParticipantStageData(
 
   const stageAnswers = stageData.docs.map((stage) => stage.data());
 
-  // For each relevant answer, add to target cohort's public stage data
-  // TODO: Consider standardizing all stage public data to use `participantAnswerMap`
-  // instead of varying field names (participantAllocations, participantFlipHistory, etc.)
-  // This would allow a more generic migration approach.
-  for (const stage of stageAnswers) {
-    const publicDocRef = getFirestoreStagePublicDataRef(
-      experimentId,
-      targetCohortId,
-      stage.id,
-    );
+  // Filter to stages that require public data migration (see TRANSFER_MIGRATION_HANDLERS).
+  const migratableStages = stageAnswers
+    .filter(
+      (stage) =>
+        STAGE_KIND_REQUIRES_TRANSFER_MIGRATION[stage.kind as StageKind],
+    )
+    .map((stage) => ({
+      stage,
+      publicDocRef: getFirestoreStagePublicDataRef(
+        experimentId,
+        targetCohortId,
+        stage.id,
+      ),
+    }));
 
-    switch (stage.kind) {
-      case StageKind.SURVEY: {
-        const publicData = (
-          await transaction.get(publicDocRef)
-        ).data() as SurveyStagePublicData;
-        if (publicData) {
-          publicData.participantAnswerMap[publicId] = stage.answerMap;
-          transaction.set(publicDocRef, publicData);
-        }
-        break;
-      }
-      case StageKind.CHIP: {
-        const publicData = (
-          await transaction.get(publicDocRef)
-        ).data() as ChipStagePublicData;
-        if (publicData) {
-          publicData.participantChipMap[publicId] = stage.chipMap;
-          publicData.participantChipValueMap[publicId] = stage.chipValueMap;
-          transaction.set(publicDocRef, publicData);
-        }
-        break;
-      }
-      case StageKind.RANKING: {
-        const publicData = (
-          await transaction.get(publicDocRef)
-        ).data() as RankingStagePublicData;
-        if (publicData) {
-          publicData.participantAnswerMap[publicId] = stage.rankingList;
-          transaction.set(publicDocRef, publicData);
-        }
-        break;
-      }
-      case StageKind.ASSET_ALLOCATION: {
-        const publicData = (
-          await transaction.get(publicDocRef)
-        ).data() as AssetAllocationStagePublicData;
-        if (publicData) {
-          publicData.participantAllocations[publicId] = stage.allocation;
-          transaction.set(publicDocRef, publicData);
-        }
-        break;
-      }
-      case StageKind.MULTI_ASSET_ALLOCATION: {
-        const publicData = (
-          await transaction.get(publicDocRef)
-        ).data() as MultiAssetAllocationStagePublicData;
-        if (publicData) {
-          // Store the participant's answer (allocationMap, isConfirmed, etc.)
-          publicData.participantAnswerMap[publicId] = {
-            kind: StageKind.MULTI_ASSET_ALLOCATION,
-            id: stage.id,
-            allocationMap: stage.allocationMap,
-            isConfirmed: stage.isConfirmed,
-            confirmedTimestamp: stage.confirmedTimestamp,
-          };
-          transaction.set(publicDocRef, publicData);
-        }
-        break;
-      }
-      case StageKind.FLIPCARD: {
-        const publicData = (
-          await transaction.get(publicDocRef)
-        ).data() as FlipCardStagePublicData;
-        if (publicData) {
-          publicData.participantFlipHistory[publicId] = stage.flipHistory ?? [];
-          publicData.participantSelections[publicId] =
-            stage.selectedCardIds ?? [];
-          transaction.set(publicDocRef, publicData);
-        }
-        break;
-      }
-      case StageKind.ROLE: {
-        const publicData = (
-          await transaction.get(publicDocRef)
-        ).data() as RoleStagePublicData;
-        if (publicData) {
-          // TODO: Assign new role to participant (or move role over)
-          transaction.set(publicDocRef, publicData);
-        }
-        break;
-      }
-      default:
-        // Other stage types don't have participant-keyed public data
-        break;
-    }
+  // Phase 1: Perform ALL reads before any writes.
+  // Firestore transactions require all reads to be executed before all writes.
+  const migrationEntries = await Promise.all(
+    migratableStages.map(async (entry) => ({
+      ...entry,
+      publicData: (await transaction.get(entry.publicDocRef)).data(),
+    })),
+  );
+
+  // Phase 2: Apply mutations and write all changes.
+  for (const {stage, publicDocRef, publicData} of migrationEntries) {
+    if (!publicData) continue;
+
+    const handler = TRANSFER_MIGRATION_HANDLERS[stage.kind as StageKind];
+    if (!handler) continue;
+    handler(
+      publicData as StagePublicData,
+      stage as StageParticipantAnswer,
+      publicId,
+    );
+    transaction.set(publicDocRef, publicData);
   }
 }
 

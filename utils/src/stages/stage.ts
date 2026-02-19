@@ -194,6 +194,47 @@ export type StagePublicData =
   | MultiAssetAllocationStagePublicData
   | SurveyStagePublicData;
 
+/**
+ * Exhaustive map from every StageKind to whether its participant-keyed public
+ * data should be migrated when a participant transfers cohorts.
+ *
+ * When adding a new StageKind, you MUST add an entry here — TypeScript will
+ * error otherwise. Set to `true` if the stage has participant-keyed public data
+ * that is portable across cohorts (e.g., survey answers, rankings). Set to
+ * `false` if the stage has no public data, or its participant-keyed data is
+ * contextual to the cohort (e.g., chat discussion timestamps, game state).
+ * If `true`, a migration handler must also exist in
+ * functions/src/participant.utils.ts (enforced at compile time).
+ */
+export const STAGE_KIND_REQUIRES_TRANSFER_MIGRATION: Record<
+  StageKind,
+  boolean
+> = {
+  [StageKind.SURVEY]: true,
+  [StageKind.CHIP]: true,
+  [StageKind.RANKING]: true,
+  [StageKind.ASSET_ALLOCATION]: true,
+  [StageKind.MULTI_ASSET_ALLOCATION]: true,
+  [StageKind.FLIPCARD]: true,
+  [StageKind.ROLE]: true,
+  // Has participant-keyed public data, but contextual to the cohort's
+  // discussions — not portable across cohorts.
+  [StageKind.CHAT]: false,
+  // Has participant-keyed public data (move responses), but contextual
+  // to the cohort's game session — not portable across cohorts.
+  [StageKind.SALESPERSON]: false,
+  [StageKind.COMPREHENSION]: false,
+  [StageKind.INFO]: false,
+  [StageKind.PAYOUT]: false,
+  [StageKind.PRIVATE_CHAT]: false,
+  [StageKind.PROFILE]: false,
+  [StageKind.REVEAL]: false,
+  [StageKind.STOCKINFO]: false,
+  [StageKind.SURVEY_PER_PARTICIPANT]: false,
+  [StageKind.TOS]: false,
+  [StageKind.TRANSFER]: false,
+};
+
 /** Stage context data (used for assembling prompts). */
 export interface StageContextData {
   stage: StageConfig;
