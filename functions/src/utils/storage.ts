@@ -15,9 +15,9 @@ export function getChatMessageStoragePath(
  * @param base64Data The base64 encoded file string.
  * @param mimeType The MIME type of the file.
  * @param prefix A prefix for the file name in the bucket.
- * @returns A URL for the uploaded file.
- *   - In production: signed URL valid for 7 days
- *   - In emulator: public URL (emulator can't sign)
+ * @returns A permanent download URL for the uploaded file.
+ *   - In production: token-based Firebase download URL (does not expire)
+ *   - In emulator: public URL (emulator doesn't support token-based URLs)
  */
 export async function uploadBase64FileToGCS(
   base64Data: string,
@@ -34,7 +34,7 @@ export async function uploadBase64FileToGCS(
   const isEmulator = process.env.FUNCTIONS_EMULATOR === 'true';
 
   if (isEmulator) {
-    // Emulator: save and return public URL (emulator can't sign URLs)
+    // Emulator: save and return public URL (emulator doesn't support token-based URLs)
     await file.save(buffer, {
       metadata: {
         contentType: mimeType,
@@ -43,19 +43,18 @@ export async function uploadBase64FileToGCS(
     });
     return file.publicUrl();
   } else {
-    // Production: save and return signed URL (works regardless of bucket ACL settings)
+    // Production: save with a download token and return a permanent Firebase download URL
+    const downloadToken = generateId();
     await file.save(buffer, {
       metadata: {
         contentType: mimeType,
+        metadata: {
+          firebaseStorageDownloadTokens: downloadToken,
+        },
       },
     });
 
-    const [signedUrl] = await file.getSignedUrl({
-      action: 'read',
-      expires: Date.now() + 7 * 24 * 60 * 60 * 1000, // 7 days
-    });
-
-    return signedUrl;
+    return `https://firebasestorage.googleapis.com/v0/b/${BUCKET_NAME}/o/${encodeURIComponent(fileName)}?alt=media&token=${downloadToken}`;
   }
 }
 
