@@ -29,7 +29,7 @@ jobs:
         npx eslint --quiet "**/*.ts"
 
   test:
-    name: Run tests
+    name: Build and test
 
     runs-on: ubuntu-latest
 
@@ -59,31 +59,25 @@ jobs:
       run: npm install
 
     - name: Build utils
-      working-directory: ./utils
-      run: npm run build
+      run: npm run build --workspace=utils
 
     - name: Build functions
-      working-directory: ./functions
-      run: npm run build
+      run: npm run build --workspace=functions
 
     - name: Build frontend
-      working-directory: ./frontend
       run: |
-        cp index.example.html index.html
-        cp firebase_config.example.ts firebase_config.ts
-        npm run build
+        cp frontend/index.example.html frontend/index.html
+        cp frontend/firebase_config.example.ts frontend/firebase_config.ts
+        npm run build --workspace=frontend
 
     - name: Test utils
-      working-directory: ./utils
-      run: npm test
+      run: npm test --workspace=utils
 
     - name: Test functions
-      working-directory: ./functions
-      run: npm test
+      run: npm test --workspace=functions
 
     - name: Test frontend
-      working-directory: ./frontend
-      run: npm test
+      run: npm test --workspace=frontend
 
   schemas:
     name: Check generated schemas are up to date
