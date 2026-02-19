@@ -66,6 +66,13 @@ jobs:
       working-directory: ./functions
       run: npm run build
 
+    - name: Build frontend
+      working-directory: ./frontend
+      run: |
+        cp index.example.html index.html
+        cp firebase_config.example.ts firebase_config.ts
+        npm run build
+
     - name: Test utils
       working-directory: ./utils
       run: npm test
