@@ -4,6 +4,8 @@ This directory contains the **Deliberate Lab Python client** — a
 pip-installable SDK for the REST API — plus a standalone Node.js
 diagnostic script.
 
+> See also: [root AGENTS.md](../AGENTS.md) for monorepo-wide conventions.
+
 ## Package structure
 
 | File | Purpose |

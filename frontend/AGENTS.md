@@ -4,6 +4,8 @@ Lit Element + MobX single-page application built with Webpack.
 See also `frontend/README.md` for additional context on routing,
 Firebase setup, and experiment configuration.
 
+> See also: [root AGENTS.md](../AGENTS.md) for monorepo-wide conventions.
+
 ## Build & test
 
 From the **repository root**:
@@ -52,8 +54,9 @@ Organized into 17 subdirectories by feature area:
 ### `src/pair-components/` — Reusable primitives
 
 Standalone UI primitives: `button`, `icon`, `icon_button`, `textarea`,
-`textarea_template`, `tooltip`, `menu`, `info_popup`. These are
-general-purpose and not tied to project state.
+`textarea_template`, `tooltip`, `menu`, `info_popup`. Also contains
+`types.ts` (shared primitive types) and `utils.ts` (helper functions).
+These are general-purpose and not tied to project state.
 
 `shared.css` in this directory provides base styles used across primitives.
 
