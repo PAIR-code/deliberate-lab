@@ -36,6 +36,8 @@ Other top-level directories:
 utils ──► frontend
   │
   └────► functions
+  ·
+  ·····► scripts/types.py  (auto-generated via npm run update-schemas)
 ```
 
 `utils` is a shared library consumed by both `frontend` and `functions`.
@@ -48,8 +50,9 @@ utils ──► frontend
 - Run everything locally: `./run_locally.sh`
 
 > [!IMPORTANT]
-> Always run npm commands from the **repository root** using the `--workspace`
-> (or `-w`) flag. Do **not** `cd` into subdirectories.
+> Always run **npm** commands from the **repository root** using the
+> `--workspace` (or `-w`) flag. Do **not** `cd` into subdirectories for
+> npm operations.
 >
 > ```sh
 > npm run build -w utils
@@ -59,6 +62,10 @@ utils ──► frontend
 >
 > This matches the convention used in `cloudbuild.yaml` and ensures
 > consistent dependency resolution via npm workspaces.
+>
+> Python tooling (`uv`, `pyright`) in `scripts/` is the exception — those
+> commands expect to run from the `scripts/` directory where
+> `pyproject.toml` lives.
 
 ## Linting & formatting
 
@@ -85,7 +92,8 @@ variable controls which steps run:
 GitHub Actions (`.github/workflows/ci.yaml`) also runs a **schema sync
 check**: if types in `utils` change, `docs/assets/api/schemas.json` and
 `scripts/deliberate_lab/types.py` must be regenerated or CI will fail.
-Run `npm run update-schemas` from the repo root to fix this.
+Run `npm run update-schemas` from the repo root to fix this (requires
+Python 3.12+ and `uv` — see `scripts/AGENTS.md` for setup).
 
 ## Testing
 
@@ -126,3 +134,20 @@ Adding a new stage type touches **all three workspaces**:
 3. **`frontend/src/components/stages/`** — config, preview, and answer UI components
 
 See each workspace's `AGENTS.md` for detailed guidance.
+
+## Common pitfalls
+
+1. **Forgetting to rebuild `utils`** — `frontend` and `functions` consume
+   the compiled output in `utils/dist/`. After changing `utils` source,
+   rebuild it (`npm run build -w utils`) before testing downstream
+   workspaces, or changes won't be picked up.
+2. **Running `npm` from a subdirectory** — always run from the repo root
+   with `-w <workspace>` (see above).
+3. **Editing `scripts/deliberate_lab/types.py` by hand** — this file is
+   auto-generated and will be overwritten by `npm run update-schemas`.
+4. **Missing Java 21 for `functions` tests** — the Firebase emulator
+   requires Java 21. Unit-only tests can be run without it via
+   `npm run test:unit -w functions`.
+5. **Forgetting to run `npm run update-schemas`** — if you change types
+   in `utils`, CI will fail the schema sync check until schemas are
+   regenerated.

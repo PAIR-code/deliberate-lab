@@ -4,6 +4,8 @@ Shared TypeScript types, validation functions, and utilities consumed by
 both `frontend` and `functions`. Changes here can cause cascading breakage —
 always rebuild and run tests before committing.
 
+> See also: [root AGENTS.md](../AGENTS.md) for monorepo-wide conventions.
+
 ## Build & test
 
 From the **repository root**:
@@ -41,6 +43,12 @@ Each stage type follows a consistent naming pattern:
 | `<stage_type>_stage.test.ts` | Tests |
 
 Not every stage type has all of these files — only the ones it needs.
+For example:
+
+- **Minimal** (`tos_stage`): `.ts`, `.validation.ts`, `.manager.ts`,
+  `.prompts.ts` — just the basics
+- **Full** (`survey_stage`): `.ts`, `.validation.ts`, `.manager.ts`,
+  `.prompts.ts`, `.prompts.test.ts` — includes prompt tests
 
 ## How to add a new stage type
 

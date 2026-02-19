@@ -3,6 +3,8 @@
 Firebase Cloud Functions backend: HTTP callable endpoints and Firestore
 document triggers. All functions are registered in `src/index.ts`.
 
+> See also: [root AGENTS.md](../AGENTS.md) for monorepo-wide conventions.
+
 ## Build & test
 
 From the **repository root**:
@@ -19,7 +21,7 @@ runner uses `firebase-test.json` (in the repo root) as the emulator config.
 Unit-only tests (no emulator):
 
 ```sh
-npx jest --testPathIgnorePatterns=<firestore_test_paths> -w functions
+npm run test:unit -w functions
 ```
 
 The integration test in `cohort_definitions.integration.test.ts` is large
@@ -44,6 +46,17 @@ Stage backend logic lives in `src/stages/` and follows these patterns:
 | `<stage_type>.utils.test.ts` | Tests |
 
 New stage endpoints must be exported from `src/index.ts`.
+
+## Source directory overview
+
+| Directory | Purpose |
+|-----------|---------|
+| `src/stages/` | Stage-specific backend logic |
+| `src/triggers/` | Firestore document triggers (see `src/triggers/README.md`) |
+| `src/chat/` | Chat-specific utilities |
+| `src/dl_api/` | External REST API layer |
+| `src/api/` | Internal API utilities |
+| `src/utils/` | Shared backend helper functions |
 
 ## Trigger system
 
