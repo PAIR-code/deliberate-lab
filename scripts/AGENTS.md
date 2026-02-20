@@ -13,6 +13,7 @@ diagnostic script.
 | `deliberate_lab/client.py` | `Client` class — full REST API client |
 | `deliberate_lab/types.py` | ⚠️ **Auto-generated** Pydantic models — do not edit by hand |
 | `deliberate_lab/__init__.py` | Public API surface (`Client`, `APIError`, all types) |
+| `update_schemas.sh` | Schema regeneration pipeline (called by `npm run update-schemas`) |
 | `doctor.js` | Node.js diagnostic script (not part of the Python package) |
 
 ## ⚠️ `types.py` is auto-generated
