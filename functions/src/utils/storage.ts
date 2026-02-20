@@ -54,8 +54,23 @@ export async function uploadBase64FileToGCS(
       },
     });
 
-    return `https://firebasestorage.googleapis.com/v0/b/${BUCKET_NAME}/o/${encodeURIComponent(fileName)}?alt=media&token=${downloadToken}`;
+    return buildFirebaseDownloadUrl(BUCKET_NAME, fileName, downloadToken);
   }
+}
+
+/**
+ * Constructs a permanent Firebase Storage download URL.
+ * @param bucketName The GCS bucket name.
+ * @param fileName The full path to the file within the bucket.
+ * @param token The Firebase download token.
+ * @returns A token-based Firebase Storage download URL.
+ */
+function buildFirebaseDownloadUrl(
+  bucketName: string,
+  fileName: string,
+  token: string,
+): string {
+  return `https://firebasestorage.googleapis.com/v0/b/${bucketName}/o/${encodeURIComponent(fileName)}?alt=media&token=${token}`;
 }
 
 /**
