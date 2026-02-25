@@ -523,7 +523,7 @@ export async function exportExperimentLogs(
   }
 
   res.status(200).setHeader('Content-Type', 'application/json');
-  new JsonStreamStringify({logs}).pipe(res);
+  new JsonStreamStringify(logs).pipe(res);
 }
 
 /**

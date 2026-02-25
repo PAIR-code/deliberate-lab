@@ -408,14 +408,11 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  logs:
-                    type: array
-                    description: All model log entries ordered by creation timestamp
-                    items:
-                      type: object
-                      additionalProperties: true
+                type: array
+                description: All model log entries ordered by creation timestamp
+                items:
+                  type: object
+                  additionalProperties: true
         '401':
           $ref: '#/components/responses/UnauthorizedError'
         '403':

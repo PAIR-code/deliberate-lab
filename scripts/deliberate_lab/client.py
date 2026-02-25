@@ -357,7 +357,7 @@ class Client:
         )
         return self._handle_response(response)
 
-    def export_experiment_logs(self, experiment_id: str) -> dict:
+    def export_experiment_logs(self, experiment_id: str) -> list:
         """
         Export all model logs from an experiment.
 
@@ -365,7 +365,7 @@ class Client:
             experiment_id: The experiment ID to export logs for
 
         Returns:
-            Dict with 'logs' list containing all model log entries
+            List of model log entries
         """
         response = self._session.get(
             f"{self.base_url}/experiments/{experiment_id}/export/logs",
