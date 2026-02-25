@@ -36,6 +36,7 @@
     "firebase-functions": "^7.0.5",
     "firebase-tools": "^15.5.1",
     "jest": "^30.2.0",
+    "json-stream-stringify": "^3.1.6",
     "ollama-ai-provider-v2": "^3.0.3",
     "unique-names-generator": "^4.7.1"
   },

@@ -25,6 +25,7 @@ import {
 } from '@deliberation-lab/utils';
 import {getFirestoreExperimentRef} from '../utils/firestore';
 import {getExperimentDownload, getExperimentLogs} from '../data';
+import {JsonStreamStringify} from 'json-stream-stringify';
 import {
   deleteExperimentById,
   forkExperimentById,
@@ -489,7 +490,8 @@ export async function exportExperimentData(
     throw createHttpError(400, 'Unsupported format. Use format=json');
   }
 
-  res.status(200).json(experimentDownload);
+  res.status(200).setHeader('Content-Type', 'application/json');
+  new JsonStreamStringify(experimentDownload).pipe(res);
 }
 
 /**
@@ -520,7 +522,8 @@ export async function exportExperimentLogs(
     throw createHttpError(500, 'Failed to load experiment logs');
   }
 
-  res.status(200).json({logs});
+  res.status(200).setHeader('Content-Type', 'application/json');
+  new JsonStreamStringify({logs}).pipe(res);
 }
 
 /**
