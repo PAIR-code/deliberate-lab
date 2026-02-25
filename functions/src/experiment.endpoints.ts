@@ -375,24 +375,27 @@ export const downloadExperiment = onCall(async (request) => {
 // Input structure: { experimentId }                                         //
 // Returns: ExperimentLogsDownloadResponse                                   //
 // ************************************************************************* //
-export const downloadExperimentLogs = onCall(async (request) => {
-  await AuthGuard.isExperimenter(request);
-  const {data} = request;
+export const downloadExperimentLogs = onCall(
+  {memory: '1GiB'},
+  async (request) => {
+    await AuthGuard.isExperimenter(request);
+    const {data} = request;
 
-  try {
-    const logs = await getExperimentLogs(app.firestore(), data.experimentId);
+    try {
+      const logs = await getExperimentLogs(app.firestore(), data.experimentId);
 
-    if (!logs) {
+      if (!logs) {
+        return {data: null};
+      }
+
+      const response: ExperimentLogsDownloadResponse = {
+        data: logs,
+      };
+
+      return response;
+    } catch (error) {
+      console.error('Error downloading experiment logs:', error);
       return {data: null};
     }
-
-    const response: ExperimentLogsDownloadResponse = {
-      data: logs,
-    };
-
-    return response;
-  } catch (error) {
-    console.error('Error downloading experiment logs:', error);
-    return {data: null};
-  }
-});
+  },
+);
