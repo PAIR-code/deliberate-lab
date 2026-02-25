@@ -100,7 +100,7 @@ class Client:
             }
         )
 
-    def _handle_response(self, response: requests.Response) -> dict:
+    def _handle_response(self, response: requests.Response):
         """Handle API response and raise errors if needed."""
         if response.status_code >= 400:
             try:
