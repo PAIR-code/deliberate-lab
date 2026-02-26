@@ -1,7 +1,8 @@
 # AGENTS.md — `functions`
 
-Firebase Cloud Functions backend: HTTP callable endpoints and Firestore
-document triggers. All functions are registered in `src/index.ts`.
+Firebase Cloud Functions backend (built with **esbuild**): HTTP callable
+endpoints and Firestore document triggers. All functions are registered in
+`src/index.ts`.
 
 > See also: [root AGENTS.md](../AGENTS.md) for monorepo-wide conventions.
 
@@ -95,5 +96,16 @@ extend the data access layer instead.
 - Endpoints are defined in `*.endpoints.ts` files and exported from
   `src/index.ts`
 - Each endpoint returns structured responses
-- The Express app setup is in `src/app.ts`
+- `src/app.ts` initializes the `StageManager` (from `utils`) which maps
+  stage types to their handler logic
 - The `src/dl_api/` directory contains the external REST API layer
+  (key-authenticated HTTP endpoints for programmatic access)
+
+## Common pitfalls
+
+1. **Writing raw Firestore calls in endpoint files** — use or extend the
+   data access layer in `src/data.ts` instead.
+2. **Forgetting to export new endpoints from `src/index.ts`** — Cloud
+   Functions will silently ignore unregistered functions.
+3. **Missing Java 21 for emulator tests** — use `npm run test:unit -w
+   functions` to run unit tests without the emulator.

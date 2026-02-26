@@ -14,7 +14,7 @@ diagnostic script.
 | `deliberate_lab/types.py` | ⚠️ **Auto-generated** Pydantic models — do not edit by hand |
 | `deliberate_lab/__init__.py` | Public API surface (`Client`, `APIError`, all types) |
 | `update_schemas.sh` | Schema regeneration pipeline (called by `npm run update-schemas`) |
-| `doctor.js` | Node.js diagnostic script (not part of the Python package) |
+| `doctor.js` | Node.js health-check script: verifies Node version, config files, and build outputs (run via `npm run doctor` from repo root) |
 
 ## ⚠️ `types.py` is auto-generated
 
@@ -35,7 +35,12 @@ This builds `utils`, exports JSON schemas, then runs `datamodel-codegen`
 to produce Pydantic v2 models. **Never edit `types.py` manually** — your
 changes will be overwritten.
 
-## Development
+> [!NOTE]
+> The pipeline requires `utils` to be built first. If you have changed
+> `utils` source, `npm run update-schemas` will rebuild it automatically
+> via the `update_schemas.sh` script.
+
+## Build & test
 
 Requires **Python 3.12+** and uses **uv** for dependency management:
 
@@ -63,3 +68,8 @@ data = client.export_experiment("experiment-id")
 
 The `Client` class supports `env="prod"` or `env="dev"` (default) to
 target production or local emulator endpoints.
+
+## Testing
+
+There are no automated tests for the Python client. The end-to-end schema
+sync is validated by the CI schema check (see root `AGENTS.md`).
