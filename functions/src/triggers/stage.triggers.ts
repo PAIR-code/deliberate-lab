@@ -18,6 +18,7 @@ import {addParticipantAnswerToAssetAllocationStagePublicData} from '../stages/as
 import {addParticipantAnswerToMultiAssetAllocationStagePublicData} from '../stages/multi_asset_allocation.utils';
 import {updateParticipantReadyToEndChat} from '../chat/chat.utils';
 
+//database.instance
 /** When participant (private) stage data is updated. */
 export const onParticipantStageDataUpdated = onDocumentWritten(
   {

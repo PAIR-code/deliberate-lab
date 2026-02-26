@@ -59,8 +59,26 @@ export const ParticipantRankingStageConfigData = Type.Composite(
   {$id: 'ParticipantRankingStageConfig', ...strict},
 );
 
+export const LRRankingStageConfigData = Type.Object(
+  {
+    id: Type.String({minLength: 1}),
+    kind: Type.Literal(StageKind.RANKING),
+    name: Type.String({minLength: 1}),
+    descriptions: StageTextConfigSchema,
+    progress: StageProgressConfigSchema,
+    rankingType: Type.Literal(RankingType.LR),
+    strategy: Type.Literal(ElectionStrategy.NONE),
+    enableSelfVoting: Type.Boolean(),
+  },
+  {$id: 'LRRankingStageConfigData', ...strict},
+);
+
 export const RankingStageConfigData = Type.Union(
-  [ItemRankingStageConfigData, ParticipantRankingStageConfigData],
+  [
+    ItemRankingStageConfigData,
+    ParticipantRankingStageConfigData,
+    LRRankingStageConfigData,
+  ],
   {$id: 'RankingStageConfig'},
 );
 
