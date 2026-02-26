@@ -66,7 +66,7 @@ New stage endpoints must be exported from `src/index.ts`.
 | `src/index.ts` | Registers all Cloud Functions (callables + triggers) |
 | `src/app.ts` | Initializes `StageManager` — maps stage types to handlers |
 | `src/data.ts` | Firestore data access layer (reads/exports) |
-| `src/participant.utils.ts` | Participant lifecycle — stage progression, transfers, cohort assignment (~1400 lines, the largest and most complex backend file) |
+| `src/participant.utils.ts` | Participant lifecycle — stage progression, transfers, cohort assignment (~1400 lines, the largest and most complex backend file). Handles complex Firestore transaction chains; changes here carry a high risk of subtle race conditions. |
 
 ## Trigger system
 
@@ -147,15 +147,54 @@ Adding a REST API endpoint touches multiple files across workspaces:
 > `src/index.ts` with corresponding wrappers in
 > `frontend/src/shared/callables.ts`.
 
+## How to add a new callable endpoint
+
+Callable endpoints are Firebase `onCall` functions invoked by the
+frontend. This is the most common type of new endpoint.
+
+1. **Implement the function** — create or update a `*.endpoints.ts` file
+   with the new `onCall` function
+2. **Export from `src/index.ts`** — add the export so Firebase registers
+   the function
+3. **Add a frontend wrapper** — add a typed callable wrapper in
+   `frontend/src/shared/callables.ts` (the frontend calls endpoints
+   exclusively through these wrappers)
+4. **Wire up the UI** — call the new wrapper from the appropriate
+   service or component
+
+## Firestore data model
+
+The Firestore document hierarchy (derived from trigger paths and the
+data access layer):
+
+```
+experiments/{experimentId}
+├── participants/{participantId}
+│   └── stageData/{stageId}                    # participant answers
+│       └── privateChats/{chatId}              # private chat messages
+├── cohorts/{cohortId}
+│   └── publicStageData/{stageId}              # public stage data
+│       ├── chats/{chatId}                     # group chat messages
+│       └── transactions/{transactionId}       # chip transactions
+└── stages/{stageId}                           # stage config
+```
+
+Triggers listen on these paths — see `src/triggers/README.md` for the
+full list of trigger functions and the specific paths they watch.
+
 ## Common pitfalls
 
 1. **Writing raw Firestore calls in endpoint files** — use or extend the
    data access layer in `src/data.ts` instead.
 2. **Forgetting to export new endpoints from `src/index.ts`** — Cloud
    Functions will silently ignore unregistered functions.
-3. **Missing Java 21 for emulator tests** — use `npm run test:unit -w
+3. **Forgetting to add a `callables.ts` wrapper** — the frontend calls
+   all callable endpoints through typed wrappers in
+   `frontend/src/shared/callables.ts`. A new endpoint without a wrapper
+   is unreachable from the UI.
+4. **Missing Java 21 for emulator tests** — use `npm run test:unit -w
    functions` to run unit tests without the emulator.
-4. **Firestore race conditions** — concurrent writes to the same document
+5. **Firestore race conditions** — concurrent writes to the same document
    (e.g., multiple participants updating public stage data simultaneously)
    are a recurring source of bugs. Use Firestore **transactions** for
    read-modify-write operations on shared documents.
