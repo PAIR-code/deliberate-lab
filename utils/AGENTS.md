@@ -19,6 +19,12 @@ npm run typecheck -w utils
 `utils` must be rebuilt before `frontend` or `functions` pick up changes.
 During local dev, `run_locally.sh` starts a watcher automatically.
 
+> [!TIP]
+> If you change **any exported type** in `utils`, you must also run
+> `npm run update-schemas` from the repo root to regenerate
+> `docs/assets/api/schemas.json` and `scripts/deliberate_lab/types.py`.
+> CI will fail the schema sync check if these are out of date.
+
 ## File naming conventions
 
 ### General entities
@@ -70,6 +76,25 @@ For example:
    `functions/src/stages/` and UI components in
    `frontend/src/components/stages/`; register any new endpoints in
    `functions/src/index.ts`
+
+## How to modify an existing stage
+
+Modifying an existing stage is the most common type of change. The files
+you need to touch depend on what you're changing:
+
+| What you're changing | Files to update |
+|---------------------|-----------------|
+| Stage config options | `utils/src/stages/<stage>_stage.ts` (types), `<stage>_stage.validation.ts` (defaults), and the frontend config editor in `frontend/src/components/stages/<stage>_config.ts` |
+| Participant answer shape | `utils/src/stages/<stage>_stage.ts` (answer type + union in `stage.ts`), `<stage>_stage.validation.ts`, and the frontend answer component |
+| Public stage data | Same as above, plus any trigger or backend logic in `functions/src/stages/` that reads/writes public data |
+| LLM agent behavior | `utils/src/stages/<stage>_stage.manager.ts` and/or `<stage>_stage.prompts.ts` |
+| Backend logic only | `functions/src/stages/<stage>.utils.ts` and/or `<stage>.endpoints.ts` |
+| UI only | `frontend/src/components/stages/<stage>_*.ts` and SCSS files |
+
+After any type change in `utils`, remember to:
+1. Rebuild: `npm run build -w utils`
+2. Regenerate schemas: `npm run update-schemas`
+3. Run tests: `npm test -w utils`
 
 ## Variables system
 

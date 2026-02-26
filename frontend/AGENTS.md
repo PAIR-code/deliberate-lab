@@ -122,6 +122,7 @@ typically has three components:
 | `src/app.ts` | Root app component and page rendering |
 | `src/index.ts` | App entry point |
 | `src/service_provider.ts` | MobX service dependency injection |
+| `src/shared/callables.ts` | Typed wrappers for all Cloud Function calls (must be updated when adding new callable endpoints) |
 | `src/shared/` | Shared config, constants, and utilities |
 
 ## Common pitfalls

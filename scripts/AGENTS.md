@@ -69,6 +69,18 @@ data = client.export_experiment("experiment-id")
 The `Client` class supports `env="prod"` or `env="dev"` (default) to
 target production or local emulator endpoints.
 
+## REST API connection
+
+The Python client in `client.py` is the SDK for the REST API implemented
+in `functions/src/dl_api/`. When a new REST API endpoint is added, the
+matching Python method should be added here. The API spec lives in
+`docs/assets/api/openapi.yaml`.
+
+```
+functions/src/dl_api/ → docs/assets/api/openapi.yaml → client.py
+(implementation)        (API spec)                     (Python SDK)
+```
+
 ## Testing
 
 There are no automated tests for the Python client. The end-to-end schema
