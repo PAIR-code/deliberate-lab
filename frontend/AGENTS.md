@@ -60,12 +60,20 @@ These are general-purpose and not tied to project state.
 
 `shared.css` in this directory provides base styles used across primitives.
 
+> [!NOTE]
+> Primitives use a **mix** of `.css` and `.scss` for styles. `button`,
+> `icon`, `icon_button`, `textarea`, `textarea_template`, and `tooltip`
+> use plain `.css`; `menu` and `info_popup` use `.scss`. Follow the
+> existing pattern when modifying a primitive.
+
 ## Service layer
 
 MobX-based services in `src/services/`:
 
 | Service | Role |
 |---------|------|
+| `service.ts` | Abstract `Service` base class (all services extend this) |
+| `initialization.service.ts` | Orchestrates app startup (initializes analytics, Firebase, routing) |
 | `firebase.service.ts` | Firebase connection (Firestore, Auth) |
 | `auth.service.ts` | Authentication and login state |
 | `experiment.manager.ts` | Experiment data management (largest service) |
@@ -80,6 +88,11 @@ MobX-based services in `src/services/`:
 | `admin.service.ts` | Admin operations |
 | `analytics.service.ts` | Google Analytics |
 | `presence.service.ts` | Participant online/offline presence |
+
+Services are wired together via `src/service_provider.ts`, which
+creates all service instances and injects dependencies. Components access
+services through the service provider — see existing components for the
+pattern.
 
 ## Stage components
 
@@ -110,3 +123,13 @@ typically has three components:
 | `src/index.ts` | App entry point |
 | `src/service_provider.ts` | MobX service dependency injection |
 | `src/shared/` | Shared config, constants, and utilities |
+
+## Common pitfalls
+
+1. **Hardcoding colors or spacing** — use SASS variables and mixins from
+   `src/sass/`. Do not hardcode hex colors, pixel sizes, or font values.
+2. **Mixing CSS formats in pair-components** — check the existing style file
+   format (`.css` vs `.scss`) before editing a primitive's styles.
+3. **Forgetting to register a new service** — new services must be
+   instantiated in `src/service_provider.ts` and extend the `Service` base
+   class.

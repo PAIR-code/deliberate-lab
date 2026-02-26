@@ -48,6 +48,13 @@ utils ──► frontend
 - **Node ≥22** is required (see `.nvmrc`)
 - Install all dependencies from the repo root: `npm ci`
 - Run everything locally: `./run_locally.sh`
+- Diagnose setup problems: `npm run doctor`
+
+`run_locally.sh` copies required config files (`.firebaserc`,
+`firebase_config.ts`, `index.html`) if they are missing, builds `utils` and
+`functions`, starts file watchers for both, launches the Firebase emulators
+(with seed data from `emulator_test_config/`), and serves the frontend at
+`http://localhost:4201`.
 
 > [!IMPORTANT]
 > Always run **npm** commands from the **repository root** using the
@@ -70,9 +77,11 @@ utils ──► frontend
 ## Linting & formatting
 
 - **Prettier** formats `.json`, `.ts`, `.html`, `.scss`, and `.css` files
-- **ESLint** with `@typescript-eslint`; `@typescript-eslint/no-explicit-any`
-  is set to `error` — do not use `any`
-- **Husky** + **lint-staged** runs Prettier and ESLint on pre-commit
+- **ESLint** uses the **flat config** format (`eslint.config.mjs`); the
+  project does **not** have a `.eslintrc.*` file
+- `@typescript-eslint/no-explicit-any` is set to `error` — do not use `any`
+- **Husky** + **lint-staged** runs both Prettier and ESLint on pre-commit
+  for the same file set (`*.{json,ts,html,scss,css}`)
 - Frontend files get browser globals; everything else gets Node globals
 
 ## CI
@@ -120,6 +129,18 @@ Functions tests run against the Firebase emulator using
 | `firestore/database.rules.json` | Realtime Database rules |
 | `firestore/storage.rules` | Cloud Storage rules |
 | `firestore/indexes.json` | Firestore composite indexes |
+
+## Import convention
+
+Both `frontend` and `functions` import from `utils` using the npm workspace
+package name:
+
+```ts
+import {StageKind, ExperimentConfig} from '@deliberation-lab/utils';
+```
+
+Do **not** use relative paths to reach into `utils/src/` — always import
+from `@deliberation-lab/utils`.
 
 ## Stage system
 

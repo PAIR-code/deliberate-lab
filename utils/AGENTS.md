@@ -76,8 +76,11 @@ For example:
 `variables.ts`, `variables.utils.ts`, and `variables.template.ts` implement
 a template variable system used in prompts and stage descriptions.
 `variables.schema.utils.ts` handles schema-level variable processing.
-Variables are defined as `VariableDefinition` objects and resolved at
-runtime via `resolveTemplateVariables`.
+
+Variables are defined as `VariableDefinition` objects (name, description,
+default value) and referenced in text using double-brace syntax (e.g.,
+`{{variable_name}}`). At runtime, `resolveTemplateVariables` replaces
+placeholders with their resolved values.
 
 ## Key files
 
@@ -89,3 +92,15 @@ runtime via `resolveTemplateVariables`.
 | `src/export-schemas.ts` | JSON schema generation for the docs site |
 | `src/structured_prompt.ts` | Structured prompt types (mediator + participant) |
 | `src/structured_output.ts` | Structured output parsing |
+
+## Common pitfalls
+
+1. **Forgetting to update union types** — when adding a new stage, you must
+   add it to the `StageConfig`, `StageParticipantAnswer`, and
+   `StagePublicData` unions in `src/stages/stage.ts`.
+2. **Forgetting to rebuild** — `frontend` and `functions` consume compiled
+   output from `utils/dist/`. After changing source, rebuild with
+   `npm run build -w utils` or rely on the watcher started by
+   `run_locally.sh`.
+3. **Editing `scripts/deliberate_lab/types.py` by hand** — this file is
+   auto-generated. Run `npm run update-schemas` instead.
