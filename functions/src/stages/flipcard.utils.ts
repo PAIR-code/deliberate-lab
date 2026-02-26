@@ -30,24 +30,31 @@ export async function addParticipantAnswerToFlipCardStagePublicData(
     const publicDoc = await transaction.get(publicDocument);
     const publicData = publicDoc.data() as FlipCardStagePublicData | undefined;
 
-    if (publicData) {
-      // Update public data with participant's flip history and selections
-      const updatedPublicData: FlipCardStagePublicData = {
-        ...publicData,
-        participantFlipHistory: {
-          ...publicData.participantFlipHistory,
-          [participant.publicId]: answer.flipHistory,
-        },
-        participantSelections: {
-          ...publicData.participantSelections,
-          [participant.publicId]: answer.selectedCardIds,
-        },
-      };
-
-      transaction.set(publicDocument, {
-        ...updatedPublicData,
-        timestamp: admin.firestore.FieldValue.serverTimestamp(),
-      });
+    if (!publicData) {
+      console.warn(
+        `Public stage data not found for stage ${stage.id} in cohort ${participant.currentCohortId}. This should have been initialized on cohort creation.`,
+      );
+      return;
     }
+
+    const currentPublicData = publicData;
+
+    // Update public data with participant's flip history and selections
+    const updatedPublicData: FlipCardStagePublicData = {
+      ...currentPublicData,
+      participantFlipHistory: {
+        ...currentPublicData.participantFlipHistory,
+        [participant.publicId]: answer.flipHistory,
+      },
+      participantSelections: {
+        ...currentPublicData.participantSelections,
+        [participant.publicId]: answer.selectedCardIds,
+      },
+    };
+
+    transaction.set(publicDocument, {
+      ...updatedPublicData,
+      timestamp: admin.firestore.FieldValue.serverTimestamp(),
+    });
   });
 }

@@ -4,7 +4,7 @@ import {
   MultiAssetAllocationStagePublicData,
   ParticipantProfile,
 } from '@deliberation-lab/utils';
-import * as admin from 'firebase-admin';
+
 import {app} from '../app';
 
 /**
@@ -42,16 +42,18 @@ export async function addParticipantAnswerToMultiAssetAllocationStagePublicData(
       | undefined;
 
     if (!publicData) {
-      console.error(
-        `Public data for stage ${stage.id} does not exist. Cannot update.`,
+      console.warn(
+        `Public stage data not found for stage ${stage.id} in cohort ${participant.currentCohortId}. This should have been initialized on cohort creation.`,
       );
       return;
     }
 
+    const currentPublicData = publicData;
+
     const updatedPublicData: MultiAssetAllocationStagePublicData = {
-      ...publicData,
+      ...currentPublicData,
       participantAnswerMap: {
-        ...publicData.participantAnswerMap,
+        ...currentPublicData.participantAnswerMap,
         [participant.publicId]: answer,
       },
     };
