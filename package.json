@@ -30,7 +30,7 @@
   "scripts": {
     "doctor": "node scripts/doctor.js",
     "prepare": "husky",
-    "update-schemas": "npm run build --workspace=utils && npx tsx utils/src/export-schemas.ts && npx prettier --write docs/assets/api/schemas.json && cd scripts && uv run datamodel-codegen --input ../docs/assets/api/schemas.json --output deliberate_lab/types.py --input-file-type jsonschema --reuse-model --collapse-root-models --use-union-operator --use-title-as-name --use-one-literal-as-default --use-default --use-annotated --use-standard-collections --target-python-version 3.12 --output-model-type pydantic_v2.BaseModel --allow-population-by-field-name --custom-file-header '# pyright: reportInvalidTypeForm=false\n# pytype: disable=invalid-function-definition\n# pylint: disable=missing-module-docstring,missing-class-docstring,invalid-name,too-few-public-methods' && uv run black deliberate_lab/ && uv run pyright deliberate_lab/"
+    "update-schemas": "./scripts/update_schemas.sh"
   },
   "workspaces": [
     "frontend",

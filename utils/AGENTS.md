@@ -1,0 +1,131 @@
+# AGENTS.md — `@deliberation-lab/utils`
+
+Shared TypeScript types, validation functions, and utilities consumed by
+both `frontend` and `functions`. Changes here can cause cascading breakage —
+always rebuild and run tests before committing.
+
+> See also: [root AGENTS.md](../AGENTS.md) for monorepo-wide conventions.
+
+## Build & test
+
+From the **repository root**:
+
+```sh
+npm run build -w utils    # Build with tsup (outputs to dist/)
+npm test -w utils         # Run Jest tests (colocated with source)
+npm run typecheck -w utils
+```
+
+`utils` must be rebuilt before `frontend` or `functions` pick up changes.
+During local dev, `run_locally.sh` starts a watcher automatically.
+
+> [!TIP]
+> If you change **any exported type** in `utils`, you must also run
+> `npm run update-schemas` from the repo root to regenerate
+> `docs/assets/api/schemas.json` and `scripts/deliberate_lab/types.py`.
+> CI will fail the schema sync check if these are out of date.
+
+## File naming conventions
+
+### General entities
+
+| Pattern | Purpose |
+|---------|---------|
+| `<entity>.ts` | Type definitions and interfaces |
+| `<entity>.validation.ts` | Runtime validation functions |
+| `<entity>.test.ts` | Tests (colocated with source) |
+
+### Stage files (`src/stages/`)
+
+Each stage type follows a consistent naming pattern:
+
+| Pattern | Purpose |
+|---------|---------|
+| `<stage_type>_stage.ts` | Stage config types, participant answer types, public data types |
+| `<stage_type>_stage.validation.ts` | Validation for stage configs and answers |
+| `<stage_type>_stage.manager.ts` | `BaseStageHandler` subclass for agent actions and prompt display |
+| `<stage_type>_stage.prompts.ts` | Prompt construction helpers for LLM agents |
+| `<stage_type>_stage.utils.ts` | Stage-specific utility functions |
+| `<stage_type>_stage.test.ts` | Tests |
+
+Not every stage type has all of these files — only the ones it needs.
+For example:
+
+- **Minimal** (`tos_stage`): `.ts`, `.validation.ts`, `.manager.ts`,
+  `.prompts.ts` — just the basics
+- **Full** (`survey_stage`): `.ts`, `.validation.ts`, `.manager.ts`,
+  `.prompts.ts`, `.prompts.test.ts` — includes prompt tests
+
+## How to add a new stage type
+
+1. **Define the `StageKind`** — add an entry to the `StageKind` enum in
+   `src/stages/stage.ts`
+2. **Create stage files** — add files in `src/stages/` following the naming
+   pattern above (at minimum `<stage_type>_stage.ts` and
+   `<stage_type>_stage.validation.ts`)
+3. **Add types to the unions** — update the `StageConfig`,
+   `StageParticipantAnswer`, and `StagePublicData` union types in
+   `src/stages/stage.ts`
+4. **Add transfer migration entry** — update
+   `STAGE_KIND_REQUIRES_TRANSFER_MIGRATION` in `src/stages/stage.ts`
+5. **Register the handler** — add a handler instance in
+   `src/stages/stage.handler.ts` (or import the default `BaseStageHandler`)
+6. **Export JSON schema** — register the new types in
+   `src/export-schemas.ts` so consumers can validate JSON payloads
+7. **Update sibling workspaces** — implement backend logic in
+   `functions/src/stages/` and UI components in
+   `frontend/src/components/stages/`; register any new endpoints in
+   `functions/src/index.ts`
+
+## How to modify an existing stage
+
+Modifying an existing stage is the most common type of change. The files
+you need to touch depend on what you're changing:
+
+| What you're changing | Files to update |
+|---------------------|-----------------|
+| Stage config options | `utils/src/stages/<stage>_stage.ts` (types), `<stage>_stage.validation.ts` (defaults), and the frontend config editor in `frontend/src/components/stages/<stage>_config.ts` |
+| Participant answer shape | `utils/src/stages/<stage>_stage.ts` (answer type + union in `stage.ts`), `<stage>_stage.validation.ts`, and the frontend answer component |
+| Public stage data | Same as above, plus any trigger or backend logic in `functions/src/stages/` that reads/writes public data |
+| LLM agent behavior | `utils/src/stages/<stage>_stage.manager.ts` and/or `<stage>_stage.prompts.ts` |
+| Backend logic only | `functions/src/stages/<stage>.utils.ts` and/or `<stage>.endpoints.ts` |
+| UI only | `frontend/src/components/stages/<stage>_*.ts` and SCSS files |
+
+After any type change in `utils`, remember to:
+1. Rebuild: `npm run build -w utils`
+2. Regenerate schemas: `npm run update-schemas`
+3. Run tests: `npm test -w utils`
+
+## Variables system
+
+`variables.ts`, `variables.utils.ts`, and `variables.template.ts` implement
+a template variable system used in prompts and stage descriptions.
+`variables.schema.utils.ts` handles schema-level variable processing.
+
+Variables are defined as `VariableDefinition` objects (name, description,
+default value) and referenced in text using double-brace syntax (e.g.,
+`{{variable_name}}`). At runtime, `resolveTemplateVariables` replaces
+placeholders with their resolved values.
+
+## Key files
+
+| File | Role |
+|------|------|
+| `src/index.ts` | Public API barrel file — all exports |
+| `src/stages/stage.ts` | `StageKind` enum, base types, union types |
+| `src/stages/stage.handler.ts` | `BaseStageHandler` class for stage actions |
+| `src/export-schemas.ts` | JSON schema generation for the docs site |
+| `src/structured_prompt.ts` | Structured prompt types (mediator + participant) |
+| `src/structured_output.ts` | Structured output parsing |
+
+## Common pitfalls
+
+1. **Forgetting to update union types** — when adding a new stage, you must
+   add it to the `StageConfig`, `StageParticipantAnswer`, and
+   `StagePublicData` unions in `src/stages/stage.ts`.
+2. **Forgetting to rebuild** — `frontend` and `functions` consume compiled
+   output from `utils/dist/`. After changing source, rebuild with
+   `npm run build -w utils` or rely on the watcher started by
+   `run_locally.sh`.
+3. **Editing `scripts/deliberate_lab/types.py` by hand** — this file is
+   auto-generated. Run `npm run update-schemas` instead.
