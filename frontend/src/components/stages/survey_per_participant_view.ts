@@ -29,6 +29,9 @@ import {
   SurveyAnswer,
   SurveyPerParticipantStageConfig,
   SurveyStageParticipantAnswer,
+  SurveyStagePublicData,
+  StageKind,
+  StageParticipantAnswer,
   TextSurveyAnswer,
   TextSurveyQuestion,
   isMultipleChoiceImageQuestion,
@@ -75,6 +78,46 @@ export class SurveyView extends MobxLitElement {
     );
   }
 
+  /**
+   * Build multi-participant answers from the cohort's public stage data.
+   * Used for evaluating aggregation conditions.
+   */
+  private getAllParticipantAnswers(): Record<
+    string,
+    Record<string, StageParticipantAnswer>
+  > {
+    const result: Record<string, Record<string, StageParticipantAnswer>> = {};
+
+    // Iterate over all public stage data in the cohort
+    for (const [stageId, publicData] of Object.entries(
+      this.cohortService.stagePublicDataMap,
+    )) {
+      if (publicData.kind === StageKind.SURVEY) {
+        const surveyPublicData = publicData as SurveyStagePublicData;
+
+        // For each participant in this stage's public data
+        for (const [participantId, answerMap] of Object.entries(
+          surveyPublicData.participantAnswerMap,
+        )) {
+          // Initialize participant's answer record if needed
+          if (!result[participantId]) {
+            result[participantId] = {};
+          }
+
+          // Create a SurveyStageParticipantAnswer from the answer map
+          const stageAnswer: SurveyStageParticipantAnswer = {
+            id: stageId,
+            kind: StageKind.SURVEY,
+            answerMap: answerMap,
+          };
+          result[participantId][stageId] = stageAnswer;
+        }
+      }
+    }
+
+    return result;
+  }
+
   private renderParticipant(profile: ParticipantProfile) {
     const isCurrent =
       profile.publicId === this.participantService.profile?.publicId;
@@ -98,6 +141,7 @@ export class SurveyView extends MobxLitElement {
       if (!this.stage) return false;
       const participants = this.getParticipants();
       const allStageAnswers = this.participantAnswerService.answerMap;
+      const allParticipantAnswers = this.getAllParticipantAnswers();
 
       for (const participant of participants) {
         const answerMap =
@@ -113,6 +157,7 @@ export class SurveyView extends MobxLitElement {
           answerMap,
           allStageAnswers,
           participant.publicId,
+          allParticipantAnswers,
         );
 
         if (!isSurveyComplete(visibleQuestions, answerMap)) {
@@ -205,12 +250,16 @@ export class SurveyView extends MobxLitElement {
     // Get all stage answers
     const allStageAnswers = this.participantAnswerService.answerMap;
 
+    // Get all participants' answers for aggregation conditions
+    const allParticipantAnswers = this.getAllParticipantAnswers();
+
     return isQuestionVisible(
       question,
       this.stage.id,
       currentAnswers,
       allStageAnswers,
       participant.publicId, // Pass which participant is being evaluated
+      allParticipantAnswers,
     );
   }
 

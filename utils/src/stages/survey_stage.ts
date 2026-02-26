@@ -5,7 +5,10 @@ import {
   extractConditionDependencies,
   extractMultipleConditionDependencies,
 } from '../utils/condition';
-import {getConditionDependencyValuesWithCurrentStage} from '../utils/condition.utils';
+import {
+  buildAllValuesWithCurrentStage,
+  getConditionDependencyValuesWithCurrentStage,
+} from '../utils/condition.utils';
 import {
   BaseStageConfig,
   BaseStageParticipantAnswer,
@@ -318,27 +321,42 @@ export function getVisibleSurveyQuestions(
   currentStageId: string,
   currentStageAnswers: Record<string, SurveyAnswer>,
   allStageAnswers?: Record<string, StageParticipantAnswer>, // Map of stageId to answer data
-  targetParticipantId?: string, // For survey-per-participant: which participant is being evaluated
+  currentParticipantId?: string, // The current participant taking the survey
+  allParticipantAnswers?: Record<
+    string,
+    Record<string, StageParticipantAnswer>
+  >, // All participants' answers
 ): SurveyQuestion[] {
   // Extract all dependencies from all question conditions
-  const allDependencies = extractMultipleConditionDependencies(
-    questions.map((q) => q.condition),
-  );
+  const allConditions = questions
+    .map((q) => q.condition)
+    .filter((c): c is Condition => c !== undefined);
+  const allDependencies = extractMultipleConditionDependencies(allConditions);
 
-  // Get the actual values for all condition targets
+  // Get target values for comparison conditions (single participant's answers)
   const targetValues = getConditionDependencyValuesWithCurrentStage(
     allDependencies,
     currentStageId,
     currentStageAnswers,
     allStageAnswers,
-    targetParticipantId,
   );
+
+  // Build aggregated values for aggregation conditions (all participants' answers)
+  const allValues = allParticipantAnswers
+    ? buildAllValuesWithCurrentStage(
+        allDependencies,
+        currentStageId,
+        currentStageAnswers,
+        currentParticipantId,
+        allParticipantAnswers,
+      )
+    : undefined;
 
   return questions.filter((question) => {
     if (!question.condition) {
       return true; // No condition means always show
     }
-    return evaluateCondition(question.condition, targetValues);
+    return evaluateCondition(question.condition, targetValues, allValues);
   });
 }
 
@@ -348,7 +366,11 @@ export function isQuestionVisible(
   currentStageId: string,
   currentStageAnswers: Record<string, SurveyAnswer>,
   allStageAnswers?: Record<string, StageParticipantAnswer>,
-  targetParticipantId?: string, // For survey-per-participant: which participant is being evaluated
+  currentParticipantId?: string, // The current participant taking the survey
+  allParticipantAnswers?: Record<
+    string,
+    Record<string, StageParticipantAnswer>
+  >, // All participants' answers
 ): boolean {
   if (!question.condition) {
     return true; // No condition means always show
@@ -357,16 +379,26 @@ export function isQuestionVisible(
   // Extract only this question's dependencies
   const dependencies = extractConditionDependencies(question.condition);
 
-  // Get the actual values for this question's condition targets
+  // Get target values for comparison conditions (single participant's answers)
   const targetValues = getConditionDependencyValuesWithCurrentStage(
     dependencies,
     currentStageId,
     currentStageAnswers,
     allStageAnswers,
-    targetParticipantId,
   );
 
-  return evaluateCondition(question.condition, targetValues);
+  // Build aggregated values for aggregation conditions (all participants' answers)
+  const allValues = allParticipantAnswers
+    ? buildAllValuesWithCurrentStage(
+        dependencies,
+        currentStageId,
+        currentStageAnswers,
+        currentParticipantId,
+        allParticipantAnswers,
+      )
+    : undefined;
+
+  return evaluateCondition(question.condition, targetValues, allValues);
 }
 
 /** Extract the value from a survey answer */

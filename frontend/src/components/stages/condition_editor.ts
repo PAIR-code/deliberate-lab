@@ -14,13 +14,18 @@ import {
   Condition,
   ConditionGroup,
   ComparisonCondition,
+  AggregationCondition,
   ConditionOperator,
   ComparisonOperator,
+  AggregationOperator,
+  ComparisonSpec,
   ConditionTarget,
   ConditionTargetReference,
   createConditionGroup,
   createComparisonCondition,
+  createAggregationCondition,
   getComparisonOperatorLabel,
+  getAggregationOperatorLabel,
 } from '@deliberation-lab/utils';
 
 import {styles} from './condition_editor.scss';
@@ -33,6 +38,7 @@ export class ConditionEditor extends MobxLitElement {
   @property({type: Object}) condition: Condition | undefined = undefined;
   @property({type: Array}) targets: ConditionTarget[] = [];
   @property({type: Boolean}) disabled: boolean = false;
+  @property({type: Boolean}) allowAggregation: boolean = true;
   @property() onConditionChange: (condition: Condition | undefined) => void =
     () => {};
 
@@ -65,6 +71,8 @@ export class ConditionEditor extends MobxLitElement {
   private renderCondition(condition: Condition): TemplateResult {
     if (condition.type === 'group') {
       return this.renderConditionGroup(condition);
+    } else if (condition.type === 'aggregation') {
+      return this.renderAggregationCondition(condition);
     } else {
       return this.renderComparisonCondition(condition);
     }
@@ -151,6 +159,16 @@ export class ConditionEditor extends MobxLitElement {
             <md-icon slot="icon">add</md-icon>
             Add condition
           </md-text-button>
+          ${this.allowAggregation
+            ? html`
+                <md-text-button
+                  @click=${() => this.addAggregationToGroup(group)}
+                >
+                  <md-icon slot="icon">groups</md-icon>
+                  Add aggregation
+                </md-text-button>
+              `
+            : nothing}
           <md-text-button @click=${() => this.addSubgroupToGroup(group)}>
             <md-icon slot="icon">add_circle</md-icon>
             Add subgroup
@@ -290,6 +308,229 @@ export class ConditionEditor extends MobxLitElement {
     }
   }
 
+  private renderAggregationCondition(condition: AggregationCondition) {
+    const conditionKey = this.getTargetKey(condition.target);
+    const target = this.targets.find(
+      (t) => this.getTargetKey(t.ref) === conditionKey,
+    );
+
+    const needsFilterComparison =
+      condition.aggregator === AggregationOperator.COUNT ||
+      condition.aggregator === AggregationOperator.SUM ||
+      condition.aggregator === AggregationOperator.AVERAGE;
+
+    return html`
+      <div class="aggregation-condition">
+        <div class="aggregation-header">
+          <md-outlined-select
+            class="aggregator-select"
+            .value=${condition.aggregator}
+            @change=${(e: Event) =>
+              this.updateAggregationOperator(
+                condition,
+                (e.target as HTMLSelectElement).value as AggregationOperator,
+              )}
+          >
+            ${Object.values(AggregationOperator).map(
+              (op) => html`
+                <md-select-option value=${op}>
+                  <div slot="headline">${getAggregationOperatorLabel(op)}</div>
+                </md-select-option>
+              `,
+            )}
+          </md-outlined-select>
+
+          <span class="aggregation-label">where</span>
+
+          <md-outlined-select
+            class="target-select"
+            .value=${conditionKey}
+            @change=${(e: Event) =>
+              this.updateAggregationTarget(
+                condition,
+                (e.target as HTMLSelectElement).value,
+              )}
+          >
+            ${this.targets.map(
+              (t) => html`
+                <md-select-option value=${this.getTargetKey(t.ref)}>
+                  <div slot="headline">
+                    ${t.stageName ? `[${t.stageName}] ${t.label}` : t.label}
+                  </div>
+                </md-select-option>
+              `,
+            )}
+          </md-outlined-select>
+        </div>
+
+        ${needsFilterComparison
+          ? html`
+              <div class="filter-comparison">
+                <span class="filter-label">Filter: value</span>
+                <md-outlined-select
+                  class="operator-select"
+                  .value=${condition.filterComparison?.operator ??
+                  ComparisonOperator.GREATER_THAN}
+                  @change=${(e: Event) =>
+                    this.updateAggregationFilterOperator(
+                      condition,
+                      (e.target as HTMLSelectElement)
+                        .value as ComparisonOperator,
+                    )}
+                >
+                  ${this.getAvailableOperators(target?.type).map(
+                    (op) => html`
+                      <md-select-option value=${op}>
+                        <div slot="headline">
+                          ${getComparisonOperatorLabel(op)}
+                        </div>
+                      </md-select-option>
+                    `,
+                  )}
+                </md-outlined-select>
+                <md-outlined-text-field
+                  class="value-input"
+                  type="number"
+                  .value=${String(condition.filterComparison?.value ?? 0)}
+                  @input=${(e: Event) =>
+                    this.updateAggregationFilterValue(
+                      condition,
+                      Number((e.target as HTMLInputElement).value),
+                    )}
+                  placeholder="Value"
+                ></md-outlined-text-field>
+              </div>
+            `
+          : nothing}
+
+        <div class="aggregation-comparison">
+          <span class="comparison-label">Result</span>
+          <md-outlined-select
+            class="operator-select"
+            .value=${condition.operator}
+            @change=${(e: Event) =>
+              this.updateAggregationComparisonOperator(
+                condition,
+                (e.target as HTMLSelectElement).value as ComparisonOperator,
+              )}
+          >
+            ${this.getAggregationResultOperators(condition.aggregator).map(
+              (op) => html`
+                <md-select-option value=${op}>
+                  <div slot="headline">${getComparisonOperatorLabel(op)}</div>
+                </md-select-option>
+              `,
+            )}
+          </md-outlined-select>
+          ${this.renderAggregationValue(condition)}
+        </div>
+      </div>
+    `;
+  }
+
+  private renderAggregationValue(condition: AggregationCondition) {
+    // For ANY/ALL/NONE, show target-appropriate value selector
+    // For COUNT/SUM/AVERAGE, show number input
+    if (
+      condition.aggregator === AggregationOperator.COUNT ||
+      condition.aggregator === AggregationOperator.SUM ||
+      condition.aggregator === AggregationOperator.AVERAGE
+    ) {
+      return html`
+        <md-outlined-text-field
+          class="value-input"
+          type="number"
+          .value=${String(condition.value)}
+          @input=${(e: Event) =>
+            this.updateAggregationValue(
+              condition,
+              Number((e.target as HTMLInputElement).value),
+            )}
+          placeholder="Threshold"
+        ></md-outlined-text-field>
+      `;
+    }
+
+    // For ANY/ALL/NONE, use the target type for value selection
+    const conditionKey = this.getTargetKey(condition.target);
+    const target = this.targets.find(
+      (t) => this.getTargetKey(t.ref) === conditionKey,
+    );
+
+    if (!target) return nothing;
+
+    if (target.type === 'boolean') {
+      return html`
+        <md-outlined-select
+          class="value-select"
+          .value=${String(condition.value)}
+          @change=${(e: Event) =>
+            this.updateAggregationValue(
+              condition,
+              (e.target as HTMLSelectElement).value === 'true',
+            )}
+        >
+          <md-select-option value="true">
+            <div slot="headline">Yes/Checked</div>
+          </md-select-option>
+          <md-select-option value="false">
+            <div slot="headline">No/Unchecked</div>
+          </md-select-option>
+        </md-outlined-select>
+      `;
+    } else if (target.type === 'choice' && target.choices) {
+      return html`
+        <md-outlined-select
+          class="value-select"
+          .value=${String(condition.value)}
+          @change=${(e: Event) =>
+            this.updateAggregationValue(
+              condition,
+              (e.target as HTMLSelectElement).value,
+            )}
+        >
+          ${target.choices.map(
+            (choice) => html`
+              <md-select-option value=${choice.id}>
+                <div slot="headline">${choice.label}</div>
+              </md-select-option>
+            `,
+          )}
+        </md-outlined-select>
+      `;
+    } else {
+      return html`
+        <md-outlined-text-field
+          class="value-input"
+          type=${target.type === 'number' ? 'number' : 'text'}
+          .value=${String(condition.value)}
+          @input=${(e: Event) =>
+            this.updateAggregationValue(
+              condition,
+              target.type === 'number'
+                ? Number((e.target as HTMLInputElement).value)
+                : (e.target as HTMLInputElement).value,
+            )}
+          placeholder="Value"
+        ></md-outlined-text-field>
+      `;
+    }
+  }
+
+  private getAggregationResultOperators(
+    _aggregator: AggregationOperator,
+  ): ComparisonOperator[] {
+    // All aggregation types support the same comparison operators
+    return [
+      ComparisonOperator.EQUALS,
+      ComparisonOperator.NOT_EQUALS,
+      ComparisonOperator.GREATER_THAN,
+      ComparisonOperator.GREATER_THAN_OR_EQUAL,
+      ComparisonOperator.LESS_THAN,
+      ComparisonOperator.LESS_THAN_OR_EQUAL,
+    ];
+  }
+
   private getAvailableOperators(type?: string): ComparisonOperator[] {
     if (!type) return [ComparisonOperator.EQUALS];
 
@@ -373,6 +614,26 @@ export class ConditionEditor extends MobxLitElement {
     }
   }
 
+  private createDefaultAggregation(): AggregationCondition | null {
+    const firstTarget = this.targets[0];
+    if (!firstTarget) return null;
+
+    return createAggregationCondition(
+      firstTarget.ref,
+      AggregationOperator.ANY,
+      ComparisonOperator.EQUALS,
+      this.getDefaultValue(firstTarget),
+    );
+  }
+
+  private addAggregationToGroup(group: ConditionGroup) {
+    const aggregation = this.createDefaultAggregation();
+    if (aggregation) {
+      group.conditions.push(aggregation);
+      this.onConditionChange(this.condition);
+    }
+  }
+
   private createSubgroupWithComparison(): ConditionGroup {
     const comparison = this.createDefaultComparison();
     const conditions = comparison ? [comparison] : [];
@@ -430,6 +691,97 @@ export class ConditionEditor extends MobxLitElement {
     value: string | number | boolean,
   ) {
     condition.value = value;
+    this.onConditionChange(this.condition);
+  }
+
+  // Aggregation condition update methods
+  private updateAggregationOperator(
+    condition: AggregationCondition,
+    aggregator: AggregationOperator,
+  ) {
+    condition.aggregator = aggregator;
+
+    // Initialize filterComparison for COUNT/SUM/AVERAGE if not present
+    if (
+      (aggregator === AggregationOperator.COUNT ||
+        aggregator === AggregationOperator.SUM ||
+        aggregator === AggregationOperator.AVERAGE) &&
+      !condition.filterComparison
+    ) {
+      condition.filterComparison = {
+        operator: ComparisonOperator.GREATER_THAN,
+        value: 0,
+      };
+      // Reset result value to 0 for numeric aggregations
+      condition.value = 0;
+    }
+
+    this.onConditionChange(this.condition);
+  }
+
+  private updateAggregationTarget(
+    condition: AggregationCondition,
+    targetKey: string,
+  ) {
+    const target = this.targets.find(
+      (t) => this.getTargetKey(t.ref) === targetKey,
+    );
+
+    if (target) {
+      condition.target = target.ref;
+      // Reset value based on target type (for non-COUNT/SUM/AVERAGE)
+      if (
+        condition.aggregator !== AggregationOperator.COUNT &&
+        condition.aggregator !== AggregationOperator.SUM &&
+        condition.aggregator !== AggregationOperator.AVERAGE
+      ) {
+        condition.value = this.getDefaultValue(target);
+      }
+    }
+
+    this.onConditionChange(this.condition);
+  }
+
+  private updateAggregationComparisonOperator(
+    condition: AggregationCondition,
+    operator: ComparisonOperator,
+  ) {
+    condition.operator = operator;
+    this.onConditionChange(this.condition);
+  }
+
+  private updateAggregationValue(
+    condition: AggregationCondition,
+    value: string | number | boolean,
+  ) {
+    condition.value = value;
+    this.onConditionChange(this.condition);
+  }
+
+  private updateAggregationFilterOperator(
+    condition: AggregationCondition,
+    operator: ComparisonOperator,
+  ) {
+    if (!condition.filterComparison) {
+      condition.filterComparison = {operator, value: 0};
+    } else {
+      condition.filterComparison.operator = operator;
+    }
+    this.onConditionChange(this.condition);
+  }
+
+  private updateAggregationFilterValue(
+    condition: AggregationCondition,
+    value: number,
+  ) {
+    if (!condition.filterComparison) {
+      condition.filterComparison = {
+        operator: ComparisonOperator.GREATER_THAN,
+        value,
+      };
+    } else {
+      condition.filterComparison.value = value;
+    }
     this.onConditionChange(this.condition);
   }
 }

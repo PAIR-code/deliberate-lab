@@ -19,8 +19,9 @@ import {
   StageContextPromptItem,
   StageKind,
   UserType,
-  extractConditionDependencies,
-  evaluateConditionWithStageAnswers,
+  extractMultipleConditionDependencies,
+  filterByCondition,
+  hasAggregationConditions,
   getAllPrecedingStageIds,
   getNameFromPublicId,
   getVariableContext,
@@ -97,6 +98,8 @@ export async function getFirestoreDataForStructuredPrompt(
   // participants whose answers should be used in prompt
   participants: ParticipantProfileExtended[];
   data: Record<string, StageContextData>;
+  // prompt items filtered by conditions
+  filteredPromptItems: PromptItem[];
 }> {
   const data: Record<string, StageContextData> = {};
 
@@ -133,29 +136,80 @@ export async function getFirestoreDataForStructuredPrompt(
     answerParticipants = activeParticipants;
   }
 
-  for (const item of promptConfig.prompt) {
+  // Collect all conditions from prompt items and fetch required stage answers
+  const allConditions = collectPromptItemConditions(promptConfig.prompt);
+  await fetchConditionStageAnswers(
+    experimentId,
+    cohortId,
+    allConditions,
+    answerParticipants,
+    data,
+  );
+
+  // Determine condition evaluation context based on stage type
+  const isGroupChat = promptConfig.type === StageKind.CHAT;
+
+  // For private chat with single participant context, use that participant
+  // For group chat or mediator context, determine target participant
+  let conditionParticipant: ParticipantProfileExtended | undefined;
+  if (userProfile.type === UserType.PARTICIPANT) {
+    conditionParticipant = answerParticipants[0];
+  } else if (answerParticipants.length === 1) {
+    // Mediator with single participant context (e.g., private chat)
+    conditionParticipant = answerParticipants[0];
+  }
+
+  // Build stage answers for condition evaluation
+  const singleParticipantAnswers = conditionParticipant
+    ? buildStageAnswersForParticipant(data, conditionParticipant.publicId)
+    : {};
+
+  // For aggregation conditions in group chat, collect all participant answers
+  const needsAggregation =
+    isGroupChat && allConditions.some((c) => hasAggregationConditions(c));
+  const allParticipantAnswers = needsAggregation
+    ? buildAllParticipantAnswers(data, answerParticipants)
+    : undefined;
+
+  // Filter prompt items by conditions before fetching additional data
+  const visiblePromptItems = filterPromptItemsRecursively(
+    promptConfig.prompt,
+    singleParticipantAnswers,
+    conditionParticipant?.publicId,
+    allParticipantAnswers,
+  );
+
+  // Fetch data only for visible prompt items
+  for (const item of visiblePromptItems) {
     await addFirestoreDataForPromptItem(
       experiment,
       cohortId,
       currentStageId,
-      promptConfig.type,
       item,
       activeParticipants,
       answerParticipants,
       data,
     );
   }
-  return {experiment, cohort, participants: answerParticipants, data};
+  return {
+    experiment,
+    cohort,
+    participants: answerParticipants,
+    data,
+    filteredPromptItems: visiblePromptItems,
+  };
 }
 
 /** Populates data object with Firestore documents needed for given single
  * prompt item.
+ *
+ * Note: This function assumes prompt items have already been filtered by
+ * conditions via filterPromptItemsRecursively() in getFirestoreDataForStructuredPrompt().
  */
 export async function addFirestoreDataForPromptItem(
   experiment: Experiment,
   cohortId: string,
   currentStageId: string,
-  stageKind: StageKind,
   promptItem: PromptItem,
   // All active participants in cohort
   activeParticipants: ParticipantProfileExtended[],
@@ -163,26 +217,6 @@ export async function addFirestoreDataForPromptItem(
   answerParticipants: ParticipantProfileExtended[],
   data: Record<string, StageContextData> = {},
 ) {
-  // Check condition if present
-  // Conditions are only supported for private chat contexts
-  if (promptItem.condition && stageKind === StageKind.PRIVATE_CHAT) {
-    // Lazily fetch any missing stage data needed for condition evaluation
-    await fetchConditionDependencies(
-      experiment.id,
-      cohortId,
-      promptItem.condition,
-      answerParticipants,
-      data,
-    );
-
-    // Evaluate condition - skip fetching remaining data if condition not met
-    if (
-      !shouldIncludePromptItem(promptItem, stageKind, answerParticipants, data)
-    ) {
-      return;
-    }
-  }
-
   // Get profile set ID based on stage ID
   // (Temporary workaround before profile sets are refactored)
   const getProfileSetId = (stageId: string) => {
@@ -207,7 +241,6 @@ export async function addFirestoreDataForPromptItem(
             experiment,
             cohortId,
             currentStageId,
-            stageKind,
             {...promptItem, stageId},
             activeParticipants,
             answerParticipants,
@@ -281,7 +314,6 @@ export async function addFirestoreDataForPromptItem(
           experiment,
           cohortId,
           currentStageId,
-          stageKind,
           item,
           activeParticipants,
           answerParticipants,
@@ -329,8 +361,9 @@ export async function getPromptFromConfig(
     contextParticipantIds,
   );
 
+  // Use filtered prompt items (conditions already evaluated)
   const promptText = await processPromptItems(
-    promptConfig.prompt,
+    promptData.filteredPromptItems,
     cohortId,
     stageId,
     promptConfig.type, // Pass stageKind to distinguish privateChat from groupChat.
@@ -420,17 +453,23 @@ function getProfileInfoForPrompt(
 }
 
 /**
- * Lazily fetch stage data needed for condition evaluation.
+ * Fetch stage data needed for condition evaluation.
  * Only fetches data for stages not already present in the data object.
+ *
+ * @param conditions - All conditions to evaluate (collected from prompt items)
  */
-async function fetchConditionDependencies(
+async function fetchConditionStageAnswers(
   experimentId: string,
   cohortId: string,
-  condition: Condition,
+  conditions: Condition[],
   answerParticipants: ParticipantProfileExtended[],
   data: Record<string, StageContextData>,
 ): Promise<void> {
-  const dependencies = extractConditionDependencies(condition);
+  if (conditions.length === 0) {
+    return;
+  }
+
+  const dependencies = extractMultipleConditionDependencies(conditions);
   const requiredStageIds = [...new Set(dependencies.map((dep) => dep.stageId))];
 
   // Find stages not already in data
@@ -477,34 +516,92 @@ function buildStageAnswersForParticipant(
 }
 
 /**
- * Evaluate a prompt item's condition for a single participant.
- * Returns true if the condition is met (or if there's no condition).
- * Only works for private chat contexts with a single participant.
+ * Collect all conditions from prompt items recursively (including nested groups).
  */
-function shouldIncludePromptItem(
-  promptItem: PromptItem,
-  stageKind: StageKind,
-  participants: ParticipantProfileExtended[],
-  stageContextData: Record<string, StageContextData>,
-): boolean {
-  if (
-    !promptItem.condition ||
-    stageKind !== StageKind.PRIVATE_CHAT ||
-    participants.length !== 1
-  ) {
-    return true;
+function collectPromptItemConditions(items: PromptItem[]): Condition[] {
+  const conditions: Condition[] = [];
+
+  for (const item of items) {
+    if (item.condition) {
+      conditions.push(item.condition);
+    }
+    if (item.type === PromptItemType.GROUP) {
+      conditions.push(
+        ...collectPromptItemConditions((item as PromptItemGroup).items),
+      );
+    }
   }
-  const stageAnswers = buildStageAnswersForParticipant(
-    stageContextData,
-    participants[0].publicId,
+
+  return conditions;
+}
+
+/**
+ * Build stage answers map for ALL participants.
+ * Used for aggregation conditions that need to evaluate across multiple participants.
+ */
+function buildAllParticipantAnswers(
+  stageContextData: Record<string, StageContextData>,
+  participants: ParticipantProfileExtended[],
+): Record<string, Record<string, StageParticipantAnswer>> {
+  const allAnswers: Record<string, Record<string, StageParticipantAnswer>> = {};
+
+  for (const participant of participants) {
+    allAnswers[participant.publicId] = buildStageAnswersForParticipant(
+      stageContextData,
+      participant.publicId,
+    );
+  }
+
+  return allAnswers;
+}
+
+/**
+ * Filter prompt items by conditions, recursively handling nested groups.
+ *
+ * @param items - The prompt items to filter
+ * @param stageAnswers - Stage answers for a single participant (used for comparison conditions)
+ * @param targetParticipantId - For SurveyPerParticipant stages, which participant's answers to use
+ * @param allParticipantAnswers - For aggregation conditions, all participants' answers
+ */
+function filterPromptItemsRecursively(
+  items: PromptItem[],
+  stageAnswers: Record<string, StageParticipantAnswer>,
+  targetParticipantId?: string,
+  allParticipantAnswers?: Record<
+    string,
+    Record<string, StageParticipantAnswer>
+  >,
+): PromptItem[] {
+  const visibleItems = filterByCondition(
+    items,
+    stageAnswers,
+    targetParticipantId,
+    allParticipantAnswers,
   );
-  return evaluateConditionWithStageAnswers(promptItem.condition, stageAnswers);
+
+  return visibleItems.map((item) => {
+    if (item.type === PromptItemType.GROUP) {
+      return {
+        ...item,
+        items: filterPromptItemsRecursively(
+          (item as PromptItemGroup).items,
+          stageAnswers,
+          targetParticipantId,
+          allParticipantAnswers,
+        ),
+      };
+    }
+    return item;
+  });
 }
 
 /**
  * Process prompt items recursively and return the assembled prompt text.
  *
- * @param promptItems - The list of prompt items to process.
+ * Note: This function expects promptItems to have already been filtered by
+ * conditions via filterPromptItemsRecursively() in getFirestoreDataForStructuredPrompt().
+ *
+ * @param promptItems - The list of prompt items to process (already filtered by conditions).
  * @param cohortId - The cohort ID (used as shuffle seed for GROUP items with cohort-based shuffling).
  * @param stageId - The current stage ID. Used for:
  *   - Determining preceding stages when STAGE_CONTEXT has empty stageId
@@ -518,8 +615,8 @@ function shouldIncludePromptItem(
  * @param promptData - Pre-fetched data from Firestore:
  *   - experiment: The experiment config (also used for experiment-based shuffle seeding)
  *   - cohort: The cohort config (for cohort-level variables)
- *   - participants: Participants whose answers are used for STAGE_CONTEXT rendering,
- *     condition evaluation, and participant-based shuffle seeding
+ *   - participants: Participants whose answers are used for STAGE_CONTEXT rendering
+ *     and participant-based shuffle seeding
  *   - data: Stage context data keyed by stage ID
  * @param userProfile - The agent's profile (participant or mediator). Used for:
  *   - Determining variable resolution strategy (agent participants use their own variables)
@@ -568,19 +665,9 @@ async function processPromptItems(
     participantForVariables,
   );
 
+  // Note: promptItems have already been filtered by conditions in
+  // getFirestoreDataForStructuredPrompt() via filterPromptItemsRecursively()
   for (const promptItem of promptItems) {
-    // Check condition if present (only for private chat contexts)
-    if (
-      !shouldIncludePromptItem(
-        promptItem,
-        stageKind,
-        promptData.participants,
-        promptData.data,
-      )
-    ) {
-      continue;
-    }
-
     switch (promptItem.type) {
       case PromptItemType.TEXT:
         // Resolve template variables in text prompt items
