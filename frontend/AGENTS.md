@@ -33,7 +33,7 @@ Organized into 17 subdirectories by feature area:
 
 | Directory | Purpose |
 |-----------|---------|
-| `stages/` | Stage config, preview, and answer components (~87 files) |
+| `stages/` | Stage config, preview, and answer components (largest subdirectory) |
 | `experiment_builder/` | Experiment creation/editing UI |
 | `experiment_dashboard/` | Experiment monitoring dashboard |
 | `experimenter/` | Experimenter-facing views |
@@ -122,7 +122,7 @@ typically has three components:
 | `src/app.ts` | Root app component and page rendering |
 | `src/index.ts` | App entry point |
 | `src/service_provider.ts` | MobX service dependency injection |
-| `src/shared/callables.ts` | Typed wrappers for all Cloud Function calls (must be updated when adding new callable endpoints) |
+| `src/shared/callables.ts` | Typed wrappers for **all** Cloud Function calls — every new callable endpoint in `functions` needs a corresponding wrapper here or it is unreachable from the UI |
 | `src/shared/` | Shared config, constants, and utilities |
 
 ## Common pitfalls

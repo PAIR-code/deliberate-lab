@@ -85,3 +85,15 @@ functions/src/dl_api/ → docs/assets/api/openapi.yaml → client.py
 
 There are no automated tests for the Python client. The end-to-end schema
 sync is validated by the CI schema check (see root `AGENTS.md`).
+
+## Common pitfalls
+
+1. **Editing `types.py` by hand** — this file is auto-generated and will
+   be overwritten by `npm run update-schemas`. Always modify the source
+   types in `utils` instead.
+2. **Looking for Python tests** — there are no automated tests for the
+   Python client yet. Do not create a `pytest` configuration expecting
+   existing tests to exist.
+3. **Running `uv` from the repo root** — unlike `npm` commands, Python
+   tooling (`uv`, `pyright`) must be run from the `scripts/` directory
+   where `pyproject.toml` lives.
