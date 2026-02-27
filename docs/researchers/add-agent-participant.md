@@ -10,7 +10,8 @@ same way as a human would.
 ## Preparing an Experiment for Agent Participants
 
 You can add agent participants to any experiment, as long as you have a Google
-API key configured. No other experiment-level config is necessary. However, we
+API key configured. (Right now, only Gemini models can be selected for agent
+participants.) No other experiment-level config is necessary. However, we
 recommend setting up your experiments with an eye for how agent participants
 will see each stage.
 
@@ -60,6 +61,8 @@ that agent across all experiment stages.
 - Private Chat
 - Survey / Survey Per Participant
 - Ranking
+- Asset Allocation
+- Stock Info
 
 Not currently supported:
 
@@ -67,6 +70,9 @@ Not currently supported:
 - Comprehension check
 - Payout
 - Reveal
+
+For details on how a stage implements agent participants, see
+[Add stage](../developers/add-stage).
 
 ## Debugging Agent Participants
 
