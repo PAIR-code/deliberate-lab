@@ -9,11 +9,10 @@ same way as a human would.
 
 ## Preparing an Experiment for Agent Participants
 
-You can add agent participants to any experiment, as long as you have a Google
-API key configured. (Right now, only Gemini models can be selected for agent
-participants.) No other experiment-level config is necessary. However, we
-recommend setting up your experiments with an eye for how agent participants
-will see each stage.
+You can add agent participants to any experiment, as long as you have an API
+key configured for your chosen provider. No other experiment-level config is
+necessary. However, we recommend setting up your experiments with an eye for
+how agent participants will see each stage.
 
 **Experiment info**: Agent participants will see any text in the experiment info
   stage, but they won't see the contents of a linked Youtube video.

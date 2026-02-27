@@ -1,5 +1,7 @@
 import '../../pair-components/button';
 import '../../pair-components/icon_button';
+import '../shared/agent_model_selector';
+
 import '@material/web/textfield/filled-text-field.js';
 
 import {MobxLitElement} from '@adobe/lit-mobx';
@@ -12,10 +14,9 @@ import {ExperimentEditor} from '../../services/experiment.editor';
 import {ExperimentManager} from '../../services/experiment.manager';
 
 import {
+  AgentModelSettings,
   AgentPersonaConfig,
   CohortConfig,
-  ApiKeyType,
-  AgentPersonaType,
   createAgentModelSettings,
   DEFAULT_AGENT_PARTICIPANT_ID,
 } from '@deliberation-lab/utils';
@@ -38,7 +39,8 @@ export class AgentParticipantDialog extends MobxLitElement {
   @property() agentId = '';
   @property() promptContext = '';
   @property() agent: AgentPersonaConfig | undefined = undefined;
-  @property() model: string = '';
+  @property({type: Object}) modelSettings: AgentModelSettings =
+    createAgentModelSettings();
 
   private close() {
     this.dispatchEvent(new CustomEvent('close'));
@@ -71,32 +73,37 @@ export class AgentParticipantDialog extends MobxLitElement {
   private resetFields() {
     this.agentId = '';
     this.promptContext = '';
+    this.modelSettings = createAgentModelSettings();
   }
 
   private renderEdit() {
+    const handleSettingsChange = (e: CustomEvent<AgentModelSettings>) => {
+      this.modelSettings = e.detail;
+    };
+
     return html`
-      ${this.renderAgentModel()} ${this.renderPromptContext()}
+      <agent-model-selector
+        .apiType=${this.modelSettings.apiType}
+        .modelName=${this.modelSettings.modelName}
+        @model-settings-change=${handleSettingsChange}
+      ></agent-model-selector>
+      ${this.renderPromptContext()}
       <div class="buttons-wrapper">
         <pr-button
-          ?disabled=${this.model === ''}
+          ?disabled=${!this.modelSettings.modelName}
           ?loading=${this.isLoading}
           @click=${() => {
             this.isLoading = true;
             this.analyticsService.trackButtonClick(
               ButtonClick.AGENT_PARTICIPANT_ADD,
             );
-            if (this.cohort && this.model) {
+            if (this.cohort && this.modelSettings.modelName) {
               this.experimentEditor.addAgentParticipant();
               this.agentId = DEFAULT_AGENT_PARTICIPANT_ID;
-              const modelSettings = createAgentModelSettings({
-                apiType: ApiKeyType.GEMINI_API_KEY,
-                modelName: this.model,
-              });
-
               this.experimentManager.createAgentParticipant(this.cohort.id, {
                 agentId: this.agentId,
                 promptContext: this.promptContext,
-                modelSettings,
+                modelSettings: this.modelSettings,
               });
             }
             this.resetFields();
@@ -121,47 +128,6 @@ export class AgentParticipantDialog extends MobxLitElement {
         }}
       >
         Add another agent
-      </pr-button>
-    `;
-  }
-
-  private renderAgentModel() {
-    return html`
-      <div class="selections">
-        <div>Model to use for this specific agent participant:</div>
-        <div class="model-selector">
-          ${this.renderModelButton(
-            'gemini-2.5-flash',
-            'Gemini 2.5 Flash',
-            ApiKeyType.GEMINI_API_KEY,
-          )}
-          ${this.renderModelButton(
-            'gemini-2.5-pro',
-            'Gemini 2.5 Pro',
-            ApiKeyType.GEMINI_API_KEY,
-          )}
-        </div>
-      </div>
-    `;
-  }
-
-  private renderModelButton(
-    modelId: string,
-    modelName: string,
-    apiType: ApiKeyType,
-  ) {
-    const updateModel = () => {
-      this.model = modelId;
-    };
-
-    const isActive = modelId == this.model;
-    return html`
-      <pr-button
-        color="${isActive ? 'primary' : 'neutral'}"
-        variant=${isActive ? 'tonal' : 'default'}
-        @click=${updateModel}
-      >
-        ${modelName}
       </pr-button>
     `;
   }
