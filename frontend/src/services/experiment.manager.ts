@@ -2,7 +2,6 @@ import {computed, makeObservable, observable} from 'mobx';
 import {
   collection,
   onSnapshot,
-  orderBy,
   query,
   Unsubscribe,
   where,
@@ -116,7 +115,7 @@ export class ExperimentManager extends Service {
   @observable participantMap: Record<string, ParticipantProfileExtended> = {};
   @observable mediatorMap: Record<string, MediatorProfileExtended> = {};
   @observable alertMap: Record<string, AlertMessage> = {};
-  @observable logs: LogEntry[] = [];
+  @observable logMap: Record<string, LogEntry> = {};
 
   // Loading
   @observable unsubscribe: Unsubscribe[] = [];
@@ -467,6 +466,12 @@ export class ExperimentManager extends Service {
       .sort((a, b) => b.timestamp.seconds - a.timestamp.seconds);
   }
 
+  @computed get logs() {
+    return Object.values(this.logMap).sort(
+      (a, b) => b.createdTimestamp.seconds - a.createdTimestamp.seconds,
+    );
+  }
+
   @computed get isLoading() {
     return (
       this.isCohortsLoading ||
@@ -662,17 +667,21 @@ export class ExperimentManager extends Service {
     // Subscribe to logs
     this.unsubscribe.push(
       onSnapshot(
-        query(
-          collection(
-            this.sp.firebaseService.firestore,
-            'experiments',
-            id,
-            'logs',
-          ),
-          orderBy('createdTimestamp', 'desc'),
+        collection(
+          this.sp.firebaseService.firestore,
+          'experiments',
+          id,
+          'logs',
         ),
         (snapshot) => {
-          this.logs = snapshot.docs.map((doc) => doc.data() as LogEntry);
+          snapshot.docChanges().forEach((change) => {
+            if (change.type === 'removed') {
+              delete this.logMap[change.doc.id];
+            } else {
+              const data = change.doc.data() as LogEntry;
+              this.logMap[change.doc.id] = data;
+            }
+          });
           this.isLogsLoading = false;
         },
       ),
@@ -689,7 +698,7 @@ export class ExperimentManager extends Service {
     this.mediatorMap = {};
     this.agentPersonaMap = {};
     this.alertMap = {};
-    this.logs = [];
+    this.logMap = {};
   }
 
   reset() {

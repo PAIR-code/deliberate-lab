@@ -6,6 +6,7 @@ import '../shared/media_preview';
 import {MobxLitElement} from '@adobe/lit-mobx';
 import {CSSResultGroup, html, nothing} from 'lit';
 import {customElement, state} from 'lit/decorators.js';
+import {repeat} from 'lit/directives/repeat.js';
 
 import {core} from '../../core/core';
 import {ExperimentManager} from '../../services/experiment.manager';
@@ -85,7 +86,11 @@ export class Component extends MobxLitElement {
     const content = html`
       ${this.renderHeader()}
       <div class="main-wrapper">
-        ${logs.map((log) => this.renderLog(log))}
+        ${repeat(
+          logs,
+          (log) => log.id,
+          (log) => this.renderLog(log),
+        )}
         ${logs.length === 0
           ? html`<div class="empty-message">No logs yet</div>`
           : nothing}
