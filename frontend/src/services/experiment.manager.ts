@@ -98,6 +98,12 @@ interface ServiceProvider {
  * - For experiment editor, see experiment.editor.ts
  */
 export class ExperimentManager extends Service {
+  /** Auto-filter to "in progress" when participant count exceeds this. */
+  static readonly AUTO_FILTER_PARTICIPANT_THRESHOLD = 200;
+
+  /** Max participants to render per cohort before showing "Show all" button. */
+  static readonly INITIAL_RENDER_LIMIT = 100;
+
   constructor(private readonly sp: ServiceProvider) {
     super();
     makeObservable(this);
@@ -576,6 +582,19 @@ export class ExperimentManager extends Service {
               this.participantMap[change.doc.id] = data;
             }
           });
+
+          // On initial load, default to "in progress" filter if there are
+          // many participants to avoid slow rendering.
+          if (
+            this.isParticipantsLoading &&
+            Object.keys(this.participantMap).length >
+              ExperimentManager.AUTO_FILTER_PARTICIPANT_THRESHOLD &&
+            this.participantStatusFilters.size === 0
+          ) {
+            this.participantStatusFilters = new Set<ParticipantStatusFilter>([
+              'inProgress',
+            ]);
+          }
 
           this.isParticipantsLoading = false;
         },
