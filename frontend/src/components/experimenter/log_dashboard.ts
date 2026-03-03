@@ -2,6 +2,7 @@ import '../../pair-components/button';
 import '../../pair-components/icon_button';
 import '../../pair-components/icon';
 import '../shared/media_preview';
+import './log_status_bar';
 
 import {MobxLitElement} from '@adobe/lit-mobx';
 import {CSSResultGroup, html, nothing} from 'lit';
@@ -149,6 +150,7 @@ export class Component extends MobxLitElement {
 
     const content = html`
       ${this.renderHeader()}
+      <log-status-bar></log-status-bar>
       <div class="main-wrapper">
         ${repeat(
           logs,
