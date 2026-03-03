@@ -2,10 +2,12 @@ import '../../pair-components/button';
 import '../../pair-components/icon_button';
 import '../../pair-components/icon';
 import '../shared/media_preview';
+import './log_status_bar';
 
 import {MobxLitElement} from '@adobe/lit-mobx';
 import {CSSResultGroup, html, nothing} from 'lit';
 import {customElement, state} from 'lit/decorators.js';
+import {repeat} from 'lit/directives/repeat.js';
 
 import {core} from '../../core/core';
 import {ExperimentManager} from '../../services/experiment.manager';
@@ -18,10 +20,13 @@ import {
   getCohortOptions,
   getParticipantOptions,
   getStageOptions,
-  getStatusOptions,
   getUnifiedDurationSeconds,
   LogEntry,
   LogEntryType,
+  LogStatusFilter,
+  LOG_STATUS_FILTER_LABELS,
+  LOG_ERROR_CODES,
+  MODEL_RESPONSE_STATUS_LABELS,
   ModelLogEntry,
   ModelResponseStatus,
 } from '@deliberation-lab/utils';
@@ -38,7 +43,7 @@ export class Component extends MobxLitElement {
   @state() private filterCohort: string | null = null;
   @state() private filterParticipant: string | null = null;
   @state() private filterStage: string | null = null;
-  @state() private filterStatus: string | null = null;
+  @state() private filterStatusSet: Set<LogStatusFilter> = new Set();
   @state() private showFilters = false;
 
   private readonly experimentManager = core.getService(ExperimentManager);
@@ -66,13 +71,74 @@ export class Component extends MobxLitElement {
   private getCohortName = (id: string) =>
     this.experimentManager.getCohort(id)?.metadata?.name ?? `Cohort ${id}`;
 
+  private getStatusFilterLabel() {
+    if (this.filterStatusSet.size === 0) return 'Any';
+    if (this.filterStatusSet.size === 1) {
+      const filter = Array.from(this.filterStatusSet)[0];
+      return (
+        LOG_STATUS_FILTER_LABELS[filter] ??
+        MODEL_RESPONSE_STATUS_LABELS[filter as ModelResponseStatus] ??
+        filter
+      );
+    }
+    return `${this.filterStatusSet.size} filters`;
+  }
+
+  private renderStatusOptions() {
+    const statusesInData = this.experimentManager.logStatusesInData;
+    const errorCodes = LOG_ERROR_CODES.filter((code) =>
+      statusesInData.has(code),
+    );
+
+    return html`
+      ${this.renderStatusCheckbox(
+        'success',
+        LOG_STATUS_FILTER_LABELS['success'],
+      )}
+      ${this.renderStatusCheckbox(
+        'all_errors',
+        LOG_STATUS_FILTER_LABELS['all_errors'],
+      )}
+      ${errorCodes.length > 0
+        ? html`<div class="menu-divider"></div>`
+        : nothing}
+      ${errorCodes.map((code) =>
+        this.renderStatusCheckbox(
+          code as LogStatusFilter,
+          MODEL_RESPONSE_STATUS_LABELS[code],
+        ),
+      )}
+    `;
+  }
+
+  private renderStatusCheckbox(filter: LogStatusFilter, label: string) {
+    const isChecked = this.filterStatusSet.has(filter);
+    return html`
+      <div
+        class="menu-item"
+        @click=${(e: Event) => {
+          e.stopPropagation();
+          const next = new Set(this.filterStatusSet);
+          if (next.has(filter)) {
+            next.delete(filter);
+          } else {
+            next.add(filter);
+          }
+          this.filterStatusSet = next;
+        }}
+      >
+        ${isChecked ? '☑' : '☐'} ${label}
+      </div>
+    `;
+  }
+
   private getFilteredLogs() {
     const logs = this.experimentManager.logs;
     const filters: FilterState = {
       cohort: this.filterCohort,
       participant: this.filterParticipant,
       stage: this.filterStage,
-      status: this.filterStatus,
+      statusFilters: this.filterStatusSet,
       sortMode: this.sortMode,
     };
 
@@ -84,8 +150,13 @@ export class Component extends MobxLitElement {
 
     const content = html`
       ${this.renderHeader()}
+      <log-status-bar></log-status-bar>
       <div class="main-wrapper">
-        ${logs.map((log) => this.renderLog(log))}
+        ${repeat(
+          logs,
+          (log) => log.id,
+          (log) => this.renderLog(log),
+        )}
         ${logs.length === 0
           ? html`<div class="empty-message">No logs yet</div>`
           : nothing}
@@ -308,38 +379,18 @@ export class Component extends MobxLitElement {
                     <!-- Status -->
                     <div class="filter-row">
                       <span>Status</span>
-                      <pr-menu name=${this.filterStatus ?? 'Any'}>
+                      <pr-menu name=${this.getStatusFilterLabel()}>
                         <div class="menu-wrapper">
-                          ${getStatusOptions(
-                            logs,
-                            {
-                              cohort: this.filterCohort,
-                              participant: this.filterParticipant,
-                              stage: this.filterStage,
-                            },
-                            this.getCohortName,
-                          ).map(
-                            (st) => html`
-                              <div
-                                class="menu-item"
-                                @click=${() => (this.filterStatus = st)}
-                              >
-                                ${st}
-                                ${this.filterStatus === st
-                                  ? html`<span class="checkmark">✔</span>`
-                                  : nothing}
-                              </div>
-                            `,
-                          )}
                           <div
                             class="menu-item"
-                            @click=${() => (this.filterStatus = null)}
+                            @click=${(e: Event) => {
+                              e.stopPropagation();
+                              this.filterStatusSet = new Set();
+                            }}
                           >
-                            Any
-                            ${this.filterStatus === null
-                              ? html`<span class="checkmark">✔</span>`
-                              : nothing}
+                            Show all
                           </div>
+                          ${this.renderStatusOptions()}
                         </div>
                       </pr-menu>
                     </div>
@@ -351,8 +402,8 @@ export class Component extends MobxLitElement {
                           this.filterCohort =
                             this.filterParticipant =
                             this.filterStage =
-                            this.filterStatus =
                               null;
+                          this.filterStatusSet = new Set();
                         }}
                       >
                         Clear all

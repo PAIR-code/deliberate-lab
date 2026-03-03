@@ -1,0 +1,105 @@
+@use '../../sass/common';
+@use '../../sass/typescale';
+
+:host {
+  @include common.flex-column;
+  gap: common.$spacing-xs;
+}
+
+.status-bar-wrapper {
+  @include common.flex-column;
+  gap: common.$spacing-xs;
+}
+
+.status-bar-header {
+  @include common.flex-row-align-center;
+  @include typescale.label-small;
+  justify-content: space-between;
+  color: var(--md-sys-color-on-surface-variant);
+}
+
+.range-toggles {
+  @include common.flex-row-align-center;
+  gap: common.$spacing-xs;
+}
+
+.range-toggle {
+  @include typescale.label-small;
+  cursor: pointer;
+  padding: 2px common.$spacing-small;
+  border-radius: common.$spacing-xs;
+  color: var(--md-sys-color-on-surface-variant);
+
+  &:hover {
+    background: var(--md-sys-color-surface-container-highest);
+  }
+
+  &.active {
+    background: var(--md-sys-color-secondary-container);
+    color: var(--md-sys-color-on-secondary-container);
+  }
+}
+
+.status-bar {
+  display: flex;
+  gap: 2px;
+  height: 32px;
+  width: 100%;
+}
+
+.bar-segment {
+  flex: 1;
+  border-radius: 2px;
+  min-width: 0;
+  position: relative;
+  cursor: default;
+}
+
+.bar-segment.empty {
+  background: var(--md-sys-color-surface-container-highest);
+}
+
+.bar-segment.success {
+  background: #4caf50;
+}
+
+.bar-segment.mixed {
+  background: #ff9800;
+}
+
+.bar-segment.error {
+  background: #f44336;
+}
+
+.status-bar-footer {
+  @include common.flex-row-align-center;
+  @include typescale.label-small;
+  justify-content: space-between;
+  color: var(--md-sys-color-outline);
+}
+
+.summary {
+  @include common.flex-row-align-center;
+  @include typescale.label-small;
+  gap: common.$spacing-medium;
+  color: var(--md-sys-color-on-surface-variant);
+}
+
+.summary-item {
+  @include common.flex-row-align-center;
+  gap: common.$spacing-xs;
+}
+
+.summary-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+
+  &.success {
+    background: #4caf50;
+  }
+
+  &.error {
+    background: #f44336;
+  }
+}
