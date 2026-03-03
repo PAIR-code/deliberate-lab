@@ -4,11 +4,28 @@ import {ModelResponseStatus} from './model_response';
 
 /** Functions for filtering logs in the experimenter dashboard. */
 
+/**
+ * Log status filter values: 'success', 'all_errors', or specific
+ * ModelResponseStatus codes for individual error types.
+ */
+export type LogStatusFilter = 'success' | 'all_errors' | ModelResponseStatus;
+
+/** Display labels for the top-level status filter options. */
+export const LOG_STATUS_FILTER_LABELS: Record<string, string> = {
+  success: 'Success',
+  all_errors: 'Errors',
+};
+
+/** Error-only ModelResponseStatus codes (excludes OK). */
+export const LOG_ERROR_CODES: ModelResponseStatus[] = Object.values(
+  ModelResponseStatus,
+).filter((s) => s !== ModelResponseStatus.OK);
+
 export interface FilterState {
   cohort: string | null;
   participant: string | null;
   stage: string | null;
-  status: string | null;
+  statusFilters: Set<LogStatusFilter>;
   sortMode: 'newest' | 'oldest';
 }
 
@@ -35,11 +52,19 @@ export function filterLogs(
     filtered = filtered.filter((l) => l.stageId === filters.stage);
   }
 
-  if (filters.status) {
-    filtered = filtered.filter(
-      (l): l is ModelLogEntry =>
-        l.type === LogEntryType.MODEL && l.response?.status === filters.status,
-    );
+  if (filters.statusFilters.size > 0) {
+    filtered = filtered.filter((l): l is ModelLogEntry => {
+      if (l.type !== LogEntryType.MODEL) return false;
+      const status = l.response?.status;
+      const isSuccess = status === ModelResponseStatus.OK;
+      if (filters.statusFilters.has('success') && isSuccess) return true;
+      if (filters.statusFilters.has('all_errors') && !isSuccess) return true;
+      // Check for specific error codes
+      if (status && filters.statusFilters.has(status as LogStatusFilter)) {
+        return true;
+      }
+      return false;
+    });
   }
 
   filtered.sort((a, b) => {
@@ -98,32 +123,4 @@ export function getStageOptions(
   }
 
   return [...new Set(list.map((l) => l.stageId ?? '').filter(Boolean))];
-}
-
-export function getStatusOptions(
-  logs: LogEntry[],
-  filters: Pick<FilterState, 'cohort' | 'participant' | 'stage'>,
-  getCohortName: (id: string) => string,
-): ModelResponseStatus[] {
-  let list = logs;
-
-  if (filters.cohort) {
-    list = list.filter((l) => getCohortName(l.cohortId) === filters.cohort);
-  }
-
-  if (filters.participant) {
-    list = list.filter((l) => l.userProfile?.publicId === filters.participant);
-  }
-
-  if (filters.stage) {
-    list = list.filter((l) => l.stageId === filters.stage);
-  }
-
-  return [
-    ...new Set(
-      list.flatMap((l) =>
-        l.type === LogEntryType.MODEL ? [l.response.status] : [],
-      ),
-    ),
-  ];
 }

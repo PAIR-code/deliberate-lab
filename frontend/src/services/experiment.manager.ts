@@ -27,6 +27,7 @@ import {
   CohortParticipantConfig,
   CreateChatMessageData,
   LogEntry,
+  LogEntryType,
   MediatorProfileExtended,
   MediatorStatus,
   MetadataConfig,
@@ -470,6 +471,17 @@ export class ExperimentManager extends Service {
     return Object.values(this.logMap).sort(
       (a, b) => b.createdTimestamp.seconds - a.createdTimestamp.seconds,
     );
+  }
+
+  /** Set of ModelResponseStatus values that exist in the current logs. */
+  @computed get logStatusesInData(): Set<ModelResponseStatus> {
+    const statuses = new Set<ModelResponseStatus>();
+    for (const log of Object.values(this.logMap)) {
+      if (log.type === LogEntryType.MODEL) {
+        statuses.add(log.response.status);
+      }
+    }
+    return statuses;
   }
 
   @computed get isLoading() {
