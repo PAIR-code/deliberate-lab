@@ -76,6 +76,7 @@ import {
 } from '../shared/file.utils';
 import {
   isObsoleteParticipant,
+  matchesStatusFilter,
   ParticipantSortOption,
   ParticipantStatusFilter,
   requiresAnonymousProfiles,
@@ -601,12 +602,16 @@ export class ExperimentManager extends Service {
           });
 
           // On initial load, default to "in progress" filter if there are
-          // many participants to avoid slow rendering.
+          // many participants to avoid slow rendering, but only if some
+          // participants are actually in progress (skip for finished experiments).
           if (
             this.isParticipantsLoading &&
             Object.keys(this.participantMap).length >
               ExperimentManager.AUTO_FILTER_PARTICIPANT_THRESHOLD &&
-            this.participantStatusFilters.size === 0
+            this.participantStatusFilters.size === 0 &&
+            Object.values(this.participantMap).some((p) =>
+              matchesStatusFilter(p, 'inProgress'),
+            )
           ) {
             this.participantStatusFilters = new Set<ParticipantStatusFilter>([
               'inProgress',
