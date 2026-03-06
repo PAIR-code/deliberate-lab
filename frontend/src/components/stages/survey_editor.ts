@@ -3,6 +3,8 @@ import {CSSResultGroup, html, nothing} from 'lit';
 import {customElement, property} from 'lit/decorators.js';
 import '../stages/survey_editor_menu';
 import '@material/web/checkbox/checkbox.js';
+import '@material/web/select/outlined-select.js';
+import '@material/web/select/select-option.js';
 import '../../pair-components/textarea_template';
 
 import {core} from '../../core/core';
@@ -376,6 +378,23 @@ export class SurveyEditor extends MobxLitElement {
       >
         Add multiple choice item
       </pr-button>
+      <label class="checkbox-wrapper">
+        <md-checkbox
+          touch-target="wrapper"
+          ?checked=${question.useDropdown ?? false}
+          ?disabled=${!this.experimentEditor.canEditStages}
+          @click=${() => {
+            this.updateQuestion(
+              {...question, useDropdown: !question.useDropdown},
+              index,
+            );
+          }}
+        >
+        </md-checkbox>
+        <span class="checkbox-label">
+          Optional: Display as a dropdown instead of radio buttons
+        </span>
+      </label>
       ${this.renderQuestionConditionEditor(question, index)}
     `;
   }

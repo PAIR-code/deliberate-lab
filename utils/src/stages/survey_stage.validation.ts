@@ -54,6 +54,7 @@ export const MultipleChoiceSurveyQuestionData = Type.Object(
     questionTitle: Type.String(),
     options: Type.Array(MultipleChoiceItemData),
     correctAnswerId: Type.Union([Type.Null(), Type.String()]),
+    useDropdown: Type.Optional(Type.Boolean()),
     condition: Type.Optional(ConditionSchema),
   },
   {$id: 'MultipleChoiceSurveyQuestion', ...strict},

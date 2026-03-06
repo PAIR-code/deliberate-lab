@@ -70,6 +70,7 @@ export interface MultipleChoiceSurveyQuestion extends BaseSurveyQuestion {
   options: MultipleChoiceItem[];
   // ID of correct MultipleChoiceItem, or null if no correct answer
   correctAnswerId: string | null;
+  useDropdown?: boolean; // Whether to display as dropdown instead of radio buttons
 }
 
 export interface MultipleChoiceItem {
@@ -228,6 +229,7 @@ export function createMultipleChoiceSurveyQuestion(
     questionTitle: config.questionTitle ?? '',
     options: config.options ?? [],
     correctAnswerId: config.correctAnswerId ?? null,
+    useDropdown: config.useDropdown ?? false,
     condition: config.condition,
   };
 }

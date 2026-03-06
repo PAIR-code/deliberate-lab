@@ -2282,6 +2282,9 @@
             }
           ]
         },
+        "useDropdown": {
+          "type": "boolean"
+        },
         "condition": {
           "title": "Condition",
           "anyOf": [

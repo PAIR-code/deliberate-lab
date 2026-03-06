@@ -164,3 +164,11 @@
 .required {
   color: var(--md-sys-color-error);
 }
+
+.dropdown-select {
+  width: 30%;
+
+  @include common.viewport-small {
+    width: 100%;
+  }
+}

@@ -1248,6 +1248,7 @@ class MultipleChoiceSurveyQuestion(BaseModel):
     questionTitle: str
     options: list[MultipleChoiceItem]
     correctAnswerId: str | None = None
+    useDropdown: bool | None = None
     condition: Annotated[
         ComparisonCondition | ConditionGroup | None, Field(title="Condition")
     ] = None

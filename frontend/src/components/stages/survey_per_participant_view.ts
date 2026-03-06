@@ -6,6 +6,8 @@ import './stage_description';
 import './stage_footer';
 
 import '@material/web/radio/radio.js';
+import '@material/web/select/outlined-select.js';
+import '@material/web/select/select-option.js';
 import '@material/web/slider/slider.js';
 import '@material/web/textfield/outlined-text-field.js';
 
@@ -334,6 +336,61 @@ export class SurveyView extends MobxLitElement {
     question: MultipleChoiceSurveyQuestion,
     participant: ParticipantProfile,
   ) {
+    if (question.useDropdown) {
+      const selectedChoiceId = (() => {
+        if (!this.stage) return '';
+        const answer =
+          this.participantAnswerService.getSurveyPerParticipantAnswer(
+            this.stage.id,
+            question.id,
+            participant.publicId,
+          );
+        if (answer && answer.kind === SurveyQuestionKind.MULTIPLE_CHOICE) {
+          return answer.choiceId;
+        }
+        return '';
+      })();
+
+      const handleChange = (e: Event) => {
+        const value = (e.target as HTMLSelectElement).value;
+        if (!value || !this.stage) return;
+        const answer: MultipleChoiceSurveyAnswer = {
+          id: question.id,
+          kind: SurveyQuestionKind.MULTIPLE_CHOICE,
+          choiceId: value,
+        };
+        this.participantAnswerService.updateSurveyPerParticipantAnswer(
+          this.stage.id,
+          answer,
+          participant.publicId,
+        );
+      };
+
+      return html`
+        <div class="radio-question">
+          <div class="title">${question.questionTitle}</div>
+          ${this.renderParticipant(participant)}
+          <md-outlined-select
+            class="dropdown-select"
+            label="Select an option"
+            ?disabled=${this.participantService.disableStage}
+            @change=${handleChange}
+          >
+            ${question.options.map(
+              (option) => html`
+                <md-select-option
+                  value=${option.id}
+                  ?selected=${selectedChoiceId === option.id}
+                >
+                  <div slot="headline">${option.text}</div>
+                </md-select-option>
+              `,
+            )}
+          </md-outlined-select>
+        </div>
+      `;
+    }
+
     const questionWrapperClasses = classMap({
       'radio-question-wrapper': true,
       image: isMultipleChoiceImageQuestion(question),
