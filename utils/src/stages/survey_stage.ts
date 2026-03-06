@@ -47,6 +47,12 @@ export enum SurveyQuestionKind {
   SCALE = 'scale', // e.g., "on a scale of 1 to 7"
 }
 
+/** Display type for multiple choice questions. */
+export enum MultipleChoiceDisplayType {
+  RADIO = 'radio',
+  DROPDOWN = 'dropdown',
+}
+
 export interface BaseSurveyQuestion {
   id: string;
   kind: SurveyQuestionKind;
@@ -70,7 +76,7 @@ export interface MultipleChoiceSurveyQuestion extends BaseSurveyQuestion {
   options: MultipleChoiceItem[];
   // ID of correct MultipleChoiceItem, or null if no correct answer
   correctAnswerId: string | null;
-  useDropdown?: boolean; // Whether to display as dropdown instead of radio buttons
+  displayType?: MultipleChoiceDisplayType;
 }
 
 export interface MultipleChoiceItem {
@@ -229,7 +235,7 @@ export function createMultipleChoiceSurveyQuestion(
     questionTitle: config.questionTitle ?? '',
     options: config.options ?? [],
     correctAnswerId: config.correctAnswerId ?? null,
-    useDropdown: config.useDropdown ?? false,
+    displayType: config.displayType ?? MultipleChoiceDisplayType.RADIO,
     condition: config.condition,
   };
 }

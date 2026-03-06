@@ -18,6 +18,7 @@ import {classMap} from 'lit/directives/class-map.js';
 import {
   CheckSurveyAnswer,
   CheckSurveyQuestion,
+  MultipleChoiceDisplayType,
   MultipleChoiceItem,
   MultipleChoiceSurveyAnswer,
   MultipleChoiceSurveyQuestion,
@@ -253,7 +254,10 @@ export class SurveyView extends MobxLitElement {
       ),
     });
 
-    if (question.useDropdown && !isMultipleChoiceImageQuestion(question)) {
+    if (
+      question.displayType === MultipleChoiceDisplayType.DROPDOWN &&
+      !isMultipleChoiceImageQuestion(question)
+    ) {
       return this.renderDropdownQuestion(question, titleClasses);
     }
 

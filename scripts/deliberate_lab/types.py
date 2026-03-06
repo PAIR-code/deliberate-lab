@@ -553,6 +553,11 @@ class ConditionOperator(StrEnum):
     or_ = "or"
 
 
+class MultipleChoiceDisplayType(StrEnum):
+    radio = "radio"
+    dropdown = "dropdown"
+
+
 class TOSStageConfig(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
@@ -1248,7 +1253,9 @@ class MultipleChoiceSurveyQuestion(BaseModel):
     questionTitle: str
     options: list[MultipleChoiceItem]
     correctAnswerId: str | None = None
-    useDropdown: bool | None = None
+    displayType: Annotated[
+        MultipleChoiceDisplayType | None, Field(title="MultipleChoiceDisplayType")
+    ] = None
     condition: Annotated[
         ComparisonCondition | ConditionGroup | None, Field(title="Condition")
     ] = None

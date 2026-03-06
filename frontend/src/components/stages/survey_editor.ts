@@ -12,6 +12,7 @@ import {
   CheckSurveyQuestion,
   Condition,
   getConditionTargetsFromStages,
+  MultipleChoiceDisplayType,
   MultipleChoiceItem,
   MultipleChoiceSurveyQuestion,
   isMultipleChoiceImageQuestion,
@@ -383,13 +384,15 @@ export class SurveyEditor extends MobxLitElement {
             <label class="checkbox-wrapper">
               <md-checkbox
                 touch-target="wrapper"
-                ?checked=${question.useDropdown ?? false}
+                ?checked=${question.displayType ===
+                MultipleChoiceDisplayType.DROPDOWN}
                 ?disabled=${!this.experimentEditor.canEditStages}
                 @click=${() => {
-                  this.updateQuestion(
-                    {...question, useDropdown: !question.useDropdown},
-                    index,
-                  );
+                  const displayType =
+                    question.displayType === MultipleChoiceDisplayType.DROPDOWN
+                      ? MultipleChoiceDisplayType.RADIO
+                      : MultipleChoiceDisplayType.DROPDOWN;
+                  this.updateQuestion({...question, displayType}, index);
                 }}
               >
               </md-checkbox>
