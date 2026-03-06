@@ -34,6 +34,7 @@ keywords: >-
 baseurl: "/deliberate-lab" # the subpath of your site, e.g. /blog
 url: "https://pair-code.github.io" # the base hostname & protocol for your site
 github_username: PAIR-code
+plugins: [jekyll-youtube]
 collections:
     pages:
         order: # TODO: update
