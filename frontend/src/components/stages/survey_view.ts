@@ -253,7 +253,7 @@ export class SurveyView extends MobxLitElement {
       ),
     });
 
-    if (question.useDropdown) {
+    if (question.useDropdown && !isMultipleChoiceImageQuestion(question)) {
       return this.renderDropdownQuestion(question, titleClasses);
     }
 

@@ -336,7 +336,7 @@ export class SurveyView extends MobxLitElement {
     question: MultipleChoiceSurveyQuestion,
     participant: ParticipantProfile,
   ) {
-    if (question.useDropdown) {
+    if (question.useDropdown && !isMultipleChoiceImageQuestion(question)) {
       const selectedChoiceId = (() => {
         if (!this.stage) return '';
         const answer =
