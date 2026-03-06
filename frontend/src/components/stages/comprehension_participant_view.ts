@@ -204,9 +204,15 @@ export class ComprehensionView extends MobxLitElement {
       question.id,
     );
 
+    if (!answer) return false;
+
     if (question.kind === ComprehensionQuestionKind.TEXT) {
       const textQuestion = question as TextComprehensionQuestion;
-      return answer === textQuestion.correctAnswer;
+      return (
+        textQuestion.correctAnswer.localeCompare(answer, undefined, {
+          sensitivity: 'base',
+        }) == 0
+      );
     } else if (question.kind === ComprehensionQuestionKind.MULTIPLE_CHOICE) {
       const mcQuestion = question as MultipleChoiceComprehensionQuestion;
       return answer === mcQuestion.correctAnswerId;
