@@ -185,3 +185,83 @@
     min-width: 150px;
   }
 }
+
+.aggregation-condition {
+  display: flex;
+  flex-direction: column;
+  gap: common.$spacing-small;
+  padding: common.$spacing-small;
+  background: var(--md-sys-color-secondary-container);
+  border-radius: 8px;
+  border: 1px solid var(--md-sys-color-outline-variant);
+
+  .aggregation-header {
+    display: flex;
+    align-items: center;
+    gap: common.$spacing-small;
+    flex-wrap: wrap;
+
+    .aggregator-select {
+      min-width: 180px;
+    }
+
+    .aggregation-label {
+      @include typescale.body-medium;
+      color: var(--md-sys-color-on-secondary-container);
+      white-space: nowrap;
+    }
+
+    .target-select {
+      flex: 1;
+      min-width: 200px;
+    }
+  }
+
+  .filter-comparison {
+    display: flex;
+    align-items: center;
+    gap: common.$spacing-small;
+    flex-wrap: wrap;
+    padding: common.$spacing-small;
+    background: var(--md-sys-color-surface-container);
+    border-radius: 4px;
+
+    .filter-label {
+      @include typescale.body-small;
+      color: var(--md-sys-color-on-surface-variant);
+      white-space: nowrap;
+    }
+
+    .operator-select {
+      min-width: 150px;
+    }
+
+    .value-input {
+      min-width: 100px;
+      max-width: 150px;
+    }
+  }
+
+  .aggregation-comparison {
+    display: flex;
+    align-items: center;
+    gap: common.$spacing-small;
+    flex-wrap: wrap;
+
+    .comparison-label {
+      @include typescale.body-medium;
+      color: var(--md-sys-color-on-secondary-container);
+      white-space: nowrap;
+    }
+
+    .operator-select {
+      min-width: 150px;
+    }
+
+    .value-select,
+    .value-input {
+      min-width: 100px;
+      flex: 1;
+    }
+  }
+}
