@@ -33,19 +33,29 @@ export class LogStatusBar extends MobxLitElement {
 
     return html`
       <div class="status-bar-wrapper">
-        ${this.renderHeader()}
+        ${this.renderHeader(totalSuccess, totalError)}
         <div class="status-bar">
           ${buckets.map((bucket) => this.renderSegment(bucket))}
         </div>
-        ${this.renderFooter(buckets, totalSuccess, totalError)}
+        ${this.renderFooter(buckets)}
       </div>
     `;
   }
 
-  private renderHeader() {
+  private renderHeader(totalSuccess: number, totalError: number) {
     return html`
       <div class="status-bar-header">
         <span>Log status</span>
+        <div class="summary">
+          <span class="summary-item">
+            <span class="summary-dot success"></span>
+            ${totalSuccess} ok
+          </span>
+          <span class="summary-item">
+            <span class="summary-dot error"></span>
+            ${totalError} errors
+          </span>
+        </div>
         <div class="range-toggles">
           ${(['1h', '6h', '12h', 'all'] as StatusBarRange[]).map(
             (r) => html`
@@ -74,6 +84,8 @@ export class LogStatusBar extends MobxLitElement {
     const startTime = new Date(bucket.startMs);
     const endTime = new Date(bucket.endMs);
     const fmt = (d: Date) =>
+      d.toLocaleDateString([], {month: 'short', day: 'numeric'}) +
+      ' ' +
       d.toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'});
     const tooltip =
       total === 0
@@ -96,30 +108,96 @@ export class LogStatusBar extends MobxLitElement {
     return 'mixed';
   }
 
-  private renderFooter(
+  /** Interval in ms between markers for each range. */
+  private static readonly MARKER_INTERVALS: Record<string, number> = {
+    '1h': 30 * 60 * 1000, // 30 min
+    '6h': 2 * 60 * 60 * 1000, // 2 hours
+    '12h': 3 * 60 * 60 * 1000, // 3 hours
+  };
+
+  private getTimeMarkers(
     buckets: LogStatusBucket[],
-    totalSuccess: number,
-    totalError: number,
-  ) {
+  ): {label: string; pct: number}[] {
+    if (buckets.length === 0) return [];
+
+    const startMs = buckets[0].startMs;
+    const endMs = buckets[buckets.length - 1].endMs;
+    const totalMs = endMs - startMs;
+    if (totalMs <= 0) return [];
+
+    const markers: {label: string; pct: number}[] = [];
+
+    if (this.range === 'all') {
+      // Date boundary markers
+      const totalBuckets = buckets.length;
+      let prevDateStr = '';
+      for (let i = 0; i < totalBuckets; i++) {
+        const d = new Date(buckets[i].startMs);
+        const dateStr = d.toLocaleDateString([], {
+          month: 'short',
+          day: 'numeric',
+        });
+        if (dateStr !== prevDateStr) {
+          if (prevDateStr !== '') {
+            const pct = (i / totalBuckets) * 100;
+            if (pct >= 28 && pct <= 72) {
+              markers.push({label: dateStr, pct});
+            }
+          }
+          prevDateStr = dateStr;
+        }
+      }
+    } else {
+      // Round time markers at fixed intervals, aligned to local wall-clock
+      const intervalMs = LogStatusBar.MARKER_INTERVALS[this.range];
+      // Align to local midnight so markers land on clean times (e.g. 9 AM, 12 PM)
+      const localMidnight = new Date(startMs);
+      localMidnight.setHours(0, 0, 0, 0);
+      const midnightMs = localMidnight.getTime();
+      const firstMarker =
+        midnightMs +
+        Math.ceil((startMs - midnightMs) / intervalMs) * intervalMs;
+
+      for (let ms = firstMarker; ms < endMs; ms += intervalMs) {
+        const pct = ((ms - startMs) / totalMs) * 100;
+        // Skip markers too close to edges
+        if (pct < 18 || pct > 78) continue;
+        const d = new Date(ms);
+        // Use short format: "10 AM" for on-the-hour, "10:30 AM" for others
+        const label =
+          d.getMinutes() === 0
+            ? d.toLocaleTimeString([], {hour: 'numeric'})
+            : d.toLocaleTimeString([], {hour: 'numeric', minute: '2-digit'});
+        markers.push({label, pct});
+      }
+    }
+
+    return markers;
+  }
+
+  private renderFooter(buckets: LogStatusBucket[]) {
     const firstBucket = buckets[0];
     const lastBucket = buckets[buckets.length - 1];
     const fmt = (d: Date) =>
+      d.toLocaleDateString([], {month: 'short', day: 'numeric'}) +
+      ' ' +
       d.toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'});
+
+    const markers = this.getTimeMarkers(buckets);
 
     return html`
       <div class="status-bar-footer">
-        <span>${fmt(new Date(firstBucket.startMs))}</span>
-        <div class="summary">
-          <span class="summary-item">
-            <span class="summary-dot success"></span>
-            ${totalSuccess} ok
-          </span>
-          <span class="summary-item">
-            <span class="summary-dot error"></span>
-            ${totalError} errors
-          </span>
-        </div>
-        <span>${fmt(new Date(lastBucket.endMs))}</span>
+        <span class="footer-label start"
+          >${fmt(new Date(firstBucket.startMs))}</span
+        >
+        ${markers.map(
+          (m) => html`
+            <span class="footer-label" style="left: ${m.pct}%">
+              ${m.label}
+            </span>
+          `,
+        )}
+        <span class="footer-label end">${fmt(new Date(lastBucket.endMs))}</span>
       </div>
     `;
   }

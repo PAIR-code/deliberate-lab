@@ -202,8 +202,21 @@ export function getLogStatusBuckets(
       latest = nowMs;
     }
     const totalMs = Math.max(latest - earliest, 60 * 1000); // At least 1 min
-    startMs = earliest;
-    bucketMs = Math.ceil(totalMs / BUCKET_COUNT);
+
+    // Snap to the smallest predefined range that covers all logs
+    // Use age of oldest log (from now), not just the span between logs
+    const ageMs = nowMs - earliest;
+    const snapRange = (['1h', '6h', '12h'] as const).find(
+      (r) => ageMs <= STATUS_BAR_CONFIGS[r].totalMs,
+    );
+    if (snapRange) {
+      const config = STATUS_BAR_CONFIGS[snapRange];
+      startMs = nowMs - config.totalMs;
+      bucketMs = config.bucketMs;
+    } else {
+      startMs = earliest;
+      bucketMs = Math.ceil(totalMs / BUCKET_COUNT);
+    }
   } else {
     const config = STATUS_BAR_CONFIGS[range];
     startMs = nowMs - config.totalMs;
