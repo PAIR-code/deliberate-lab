@@ -596,6 +596,7 @@ class SurveyAutoTransferConfig(BaseModel):
 
 class ApiKeyType(StrEnum):
     GEMINI = "GEMINI"
+    VERTEX_AI = "VERTEX_AI"
     OPENAI = "OPENAI"
     CLAUDE = "CLAUDE"
     OLLAMA = "OLLAMA"

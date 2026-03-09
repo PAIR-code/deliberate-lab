@@ -18,6 +18,7 @@
 /** Specifies which API to use for model calls. */
 export enum ApiKeyType {
   GEMINI_API_KEY = 'GEMINI',
+  VERTEX_AI_API_KEY = 'VERTEX_AI',
   OPENAI_API_KEY = 'OPENAI',
   CLAUDE_API_KEY = 'CLAUDE',
   OLLAMA_CUSTOM_URL = 'OLLAMA',
