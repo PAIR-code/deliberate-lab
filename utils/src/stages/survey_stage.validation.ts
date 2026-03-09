@@ -1,7 +1,7 @@
 import {Type, type Static} from '@sinclair/typebox';
 import {StageKind} from './stage';
 import {BaseStageConfigSchema} from './stage.schemas';
-import {SurveyQuestionKind} from './survey_stage';
+import {MultipleChoiceDisplayType, SurveyQuestionKind} from './survey_stage';
 import {ConditionSchema} from '../utils/condition.validation';
 
 /** Shorthand for strict TypeBox object validation */
@@ -54,6 +54,9 @@ export const MultipleChoiceSurveyQuestionData = Type.Object(
     questionTitle: Type.String(),
     options: Type.Array(MultipleChoiceItemData),
     correctAnswerId: Type.Union([Type.Null(), Type.String()]),
+    displayType: Type.Optional(
+      Type.Enum(MultipleChoiceDisplayType, {$id: 'MultipleChoiceDisplayType'}),
+    ),
     condition: Type.Optional(ConditionSchema),
   },
   {$id: 'MultipleChoiceSurveyQuestion', ...strict},

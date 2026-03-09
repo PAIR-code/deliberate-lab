@@ -2282,6 +2282,19 @@
             }
           ]
         },
+        "displayType": {
+          "title": "MultipleChoiceDisplayType",
+          "anyOf": [
+            {
+              "const": "radio",
+              "type": "string"
+            },
+            {
+              "const": "dropdown",
+              "type": "string"
+            }
+          ]
+        },
         "condition": {
           "title": "Condition",
           "anyOf": [
@@ -2294,6 +2307,19 @@
           ]
         }
       }
+    },
+    "MultipleChoiceDisplayType": {
+      "title": "MultipleChoiceDisplayType",
+      "anyOf": [
+        {
+          "const": "radio",
+          "type": "string"
+        },
+        {
+          "const": "dropdown",
+          "type": "string"
+        }
+      ]
     },
     "ScaleSurveyQuestion": {
       "title": "ScaleSurveyQuestion",
