@@ -177,6 +177,11 @@ export class AgentPersonaEditorComponent extends MobxLitElement {
           )}
           ${this.renderApiTypeButton(
             agentConfig,
+            'Vertex AI',
+            ApiKeyType.VERTEX_AI_API_KEY,
+          )}
+          ${this.renderApiTypeButton(
+            agentConfig,
             'OpenAI or compatible API',
             ApiKeyType.OPENAI_API_KEY,
           )}

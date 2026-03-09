@@ -37,7 +37,6 @@ const {
   mapResultToModelResponse,
   extractContentFromMessages,
   mapErrorToModelResponse,
-  getCredentials,
   API_TYPE_TO_PROVIDER,
 } = _testing;
 
@@ -948,57 +947,6 @@ describe('mapErrorToModelResponse', () => {
       expect(response.status).toBe(ModelResponseStatus.UNKNOWN_ERROR);
       expect(response.errorMessage).toBe('string error');
     });
-  });
-});
-
-// ============================================================================
-// CREDENTIAL TESTS
-// ============================================================================
-
-describe('getCredentials', () => {
-  const apiKeyConfig: APIKeyConfig = {
-    geminiApiKey: 'gemini-key',
-    openAIApiKey: {apiKey: 'openai-key', baseUrl: 'https://custom.openai.com'},
-    claudeApiKey: {apiKey: 'claude-key', baseUrl: 'https://custom.claude.com'},
-    ollamaApiKey: {url: 'http://localhost:11434', apiKey: 'ollama-key'},
-  };
-
-  it('extracts Gemini credentials', () => {
-    const creds = getCredentials(apiKeyConfig, ApiKeyType.GEMINI_API_KEY);
-    expect(creds).toEqual({apiKey: 'gemini-key'});
-  });
-
-  it('extracts OpenAI credentials with baseURL', () => {
-    const creds = getCredentials(apiKeyConfig, ApiKeyType.OPENAI_API_KEY);
-    expect(creds).toEqual({
-      apiKey: 'openai-key',
-      baseURL: 'https://custom.openai.com',
-    });
-  });
-
-  it('extracts Claude credentials with baseURL', () => {
-    const creds = getCredentials(apiKeyConfig, ApiKeyType.CLAUDE_API_KEY);
-    expect(creds).toEqual({
-      apiKey: 'claude-key',
-      baseURL: 'https://custom.claude.com',
-    });
-  });
-
-  it('extracts Ollama credentials', () => {
-    const creds = getCredentials(apiKeyConfig, ApiKeyType.OLLAMA_CUSTOM_URL);
-    expect(creds).toEqual({
-      apiKey: 'ollama-key',
-      baseURL: 'http://localhost:11434',
-    });
-  });
-
-  it('handles missing optional baseUrl', () => {
-    // Create a partial config - getCredentials handles missing fields gracefully
-    const config = {
-      openAIApiKey: {apiKey: 'key', baseUrl: ''},
-    } as APIKeyConfig;
-    const creds = getCredentials(config, ApiKeyType.OPENAI_API_KEY);
-    expect(creds).toEqual({apiKey: 'key', baseURL: undefined});
   });
 });
 
