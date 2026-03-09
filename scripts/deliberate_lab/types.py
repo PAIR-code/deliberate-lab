@@ -1,3 +1,6 @@
+# AUTO-GENERATED FILE — DO NOT EDIT BY HAND.
+# Regenerate via: npm run update-schemas (from repo root).
+#
 # pyright: reportInvalidTypeForm=false
 # pytype: disable=invalid-function-definition
 # pylint: disable=missing-module-docstring,missing-class-docstring,invalid-name,too-few-public-methods
