@@ -11,9 +11,9 @@ same way as a human would.
 
 ## Preparing an Experiment for Agent Participants
 
-You can add agent participants to any experiment, as long as you have a Google
-API key configured. (Right now, only Gemini models can be selected for agent
-participants.) No other experiment-level config is necessary. However, we
+You can add agent participants to any experiment, as long as you have an
+API key configured for your chosen provider (Gemini, Vertex AI, OpenAI,
+Claude, or Ollama). No other experiment-level config is necessary. However, we
 recommend setting up your experiments with an eye for how agent participants
 will see each stage.
 

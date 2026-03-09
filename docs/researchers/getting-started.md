@@ -68,7 +68,8 @@ Once you're logged in, you should be able to see a home page with
 both your experiments and any shared public experiments.
 
 > Tip: If you plan to set up LLM mediators, add relevant API keys
-(e.g., [Gemini API key](https://ai.google.dev/gemini-api/docs/api-key))
+(e.g., [Gemini API key](https://ai.google.dev/gemini-api/docs/api-key),
+Vertex AI, OpenAI, Claude, or Ollama)
 on the Settings page now. Your key must be present in order to effectively
 run LLM agents during experiments. We store it in a Firebase document
 that only you (and the backend function making the LLM calls
