@@ -7,8 +7,6 @@ LLM agents can join experiments as participants. Each agent participant can have
 its own individual prompt, but will otherwise run through an experiment in the
 same way as a human would.
 
-{% youtube "https://www.youtube.com/watch?v=zYhgq2jP-fE" %}
-
 ## Preparing an Experiment for Agent Participants
 
 You can add agent participants to any experiment, as long as you have an
