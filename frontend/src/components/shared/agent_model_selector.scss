@@ -1,0 +1,17 @@
+@use '../../sass/common';
+@use '../../sass/typescale';
+
+:host {
+  @include common.flex-column;
+  gap: common.$spacing-large;
+}
+
+.field-title {
+  @include typescale.label-small;
+}
+
+.api-type-buttons {
+  @include common.flex-row;
+  flex-wrap: wrap;
+  gap: common.$spacing-medium;
+}

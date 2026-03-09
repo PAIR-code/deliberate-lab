@@ -9,17 +9,18 @@ same way as a human would.
 
 ## Preparing an Experiment for Agent Participants
 
-You can add agent participants to any experiment, as long as you have an
-API key configured for your chosen provider (Gemini, Vertex AI, OpenAI,
-Claude, or Ollama). No other experiment-level config is necessary. However, we
-recommend setting up your experiments with an eye for how agent participants
-will see each stage.
+You can add agent participants to any experiment, as long as you have an API
+key configured for your chosen provider. No other experiment-level config is
+necessary. However, we recommend setting up your experiments with an eye for
+how agent participants will see each stage.
 
 **Experiment info**: Agent participants will see any text in the experiment info
   stage, but they won't see the contents of a linked Youtube video.
 
 **Stage metadata**: This is where agent participants will see what each stage is
-  about, so consider how clear your stage names and instructions are.
+  about, so consider how clear your stage names and instructions are. For
+  details on what each stage displays to agents, see the
+  [stage display table](../developers/agent-design#stage-display-in-stage-context-prompt-item).
   
 **Progress settings**: Agent participants may move through your experiment
   faster than you expect, or get stuck on chat stages where you don't expect.
