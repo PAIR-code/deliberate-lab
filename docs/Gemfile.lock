@@ -68,8 +68,6 @@ GEM
       sass-embedded (~> 1.75)
     jekyll-watch (2.2.1)
       listen (~> 3.0)
-    jekyll-youtube (1.0.0)
-      jekyll
     json (2.10.2)
     kramdown (2.5.1)
       rexml (>= 3.3.9)
@@ -79,7 +77,6 @@ GEM
     listen (3.9.0)
       rb-fsevent (~> 0.10, >= 0.10.3)
       rb-inotify (~> 0.9, >= 0.9.10)
-    logger (1.7.0)
     mercenary (0.4.0)
     pathutil (0.16.2)
       forwardable-extended (~> 2.6)
@@ -160,8 +157,6 @@ PLATFORMS
 DEPENDENCIES
   http_parser.rb (~> 0.6.0)
   jekyll (~> 4.4.1)
-  jekyll-youtube
-  logger
   tzinfo (~> 1.2)
   tzinfo-data
   wdm (~> 0.1.1)
