@@ -1,11 +1,14 @@
 /**
- * One-time migration script to convert old variable configs (pre-v19) to new format.
+ * One-time migration script to convert old variable configs to current format.
+ *
+ * Handles two legacy formats:
+ * - V1 (c6a19676): { variableType, variableSchema?, variableNames, seedStrategy?, values }
+ * - V2 (e348d933): { schema (TSchema), variableNames, seedStrategy, values }
  *
  * This script:
- * 1. Queries experiments created on or after Nov 3, 2025 (when the variable feature
- *    was introduced in commit c6a19676)
+ * 1. Scans all experiments in Firestore
  * 2. Checks if any have old-format variable configs
- * 3. Migrates them to the new format
+ * 3. Migrates them to the current format
  * 4. Updates the documents in Firestore
  *
  * Usage:
@@ -42,14 +45,10 @@ if (!admin.apps.length) {
 
 const db = admin.firestore();
 
-// ************************************************************************* //
-// DATE FILTER FOR VARIABLE FEATURE                                          //
-// ************************************************************************* //
-
-// The RandomPermutationVariableConfig feature was introduced on Nov 3, 2025
-// (commit c6a19676). Only experiments created on or after this date could
-// have variable configs that need migration.
-const VARIABLE_FEATURE_START_DATE = new Date('2025-11-03T00:00:00Z');
+// Note: An earlier version of this script filtered by metadata.dateCreated,
+// but some experiments store dateCreated as a plain map rather than a native
+// Firestore Timestamp, causing them to be silently skipped by inequality
+// queries. We now scan all experiments to be safe.
 
 // ************************************************************************* //
 // MAIN MIGRATION SCRIPT                                                     //
@@ -74,22 +73,10 @@ async function migrateExperiments(dryRun: boolean): Promise<MigrationResult[]> {
   );
   console.log(`${'='.repeat(60)}\n`);
 
-  // Convert start date to Firestore Timestamp
-  const startTimestamp = admin.firestore.Timestamp.fromDate(
-    VARIABLE_FEATURE_START_DATE,
-  );
-
-  console.log(
-    `Filtering experiments created on or after: ${VARIABLE_FEATURE_START_DATE.toISOString()}\n`,
-  );
-
   const results: MigrationResult[] = [];
 
-  // Query experiments created on or after the variable feature was introduced
-  const experimentsSnapshot = await db
-    .collection('experiments')
-    .where('metadata.dateCreated', '>=', startTimestamp)
-    .get();
+  // Query all experiments
+  const experimentsSnapshot = await db.collection('experiments').get();
   console.log(`Found ${experimentsSnapshot.size} experiments to check.\n`);
 
   for (const doc of experimentsSnapshot.docs) {
