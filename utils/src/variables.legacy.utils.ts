@@ -2,13 +2,28 @@
  * Legacy variable config migration utilities.
  *
  * This module provides backwards compatibility for old variable config formats
- * (pre-v19) that used a different structure. The migration functions convert
- * these old formats to the new format transparently.
+ * that used different structures. The migration functions convert these old
+ * formats to the current format transparently.
+ *
+ * Format history:
+ *
+ * V1 (commits c6a19676, f844e698) - original format:
+ *   { variableNames, variableType, variableSchema?, seedStrategy?, values }
+ *   - variableType: 'string' | 'number' | 'boolean' | 'object'
+ *   - variableSchema: Record<string, VariableType> (only for objects)
+ *   - seedStrategy was added in f844e698, may be absent in earliest configs
+ *
+ * V2 (commit e348d933) - added full JSON Schema support:
+ *   { variableNames, schema (TSchema), seedStrategy, values }
+ *   - Replaced variableType + variableSchema with a single TSchema field
+ *
+ * V3 (current format):
+ *   { definition: { name, description, schema }, scope, shuffleConfig, values, ... }
  */
 
+import {Type, type TSchema} from '@sinclair/typebox';
 import {generateId} from './shared';
 import {SeedStrategy, createShuffleConfig} from './utils/random.utils';
-import {type TSchema} from '@sinclair/typebox';
 import {
   RandomPermutationVariableConfig,
   VariableConfig,
@@ -21,11 +36,28 @@ import {
 // OLD FORMAT TYPES (for reference and migration)                            //
 // ************************************************************************* //
 
+/** V1 variable type enum values (as stored in Firestore). */
+type OldVariableType = 'string' | 'number' | 'boolean' | 'object';
+
 /**
- * Old variable config format (pre-v19) for reference.
- * These interfaces are used only for migration detection and conversion.
+ * V1 format (commits c6a19676, f844e698).
+ * Used variableType enum + optional variableSchema for objects.
  */
-export interface OldRandomPermutationVariableConfig {
+export interface V1RandomPermutationVariableConfig {
+  id: string;
+  type: VariableConfigType.RANDOM_PERMUTATION;
+  seedStrategy?: SeedStrategy; // absent in earliest configs (c6a19676)
+  variableNames: string[];
+  variableType: OldVariableType;
+  variableSchema?: Record<string, OldVariableType>; // only for objects
+  values: string[];
+}
+
+/**
+ * V2 format (commit e348d933).
+ * Replaced variableType + variableSchema with full JSON Schema (TSchema).
+ */
+export interface V2RandomPermutationVariableConfig {
   id: string;
   type: VariableConfigType.RANDOM_PERMUTATION;
   seedStrategy: SeedStrategy;
@@ -34,22 +66,90 @@ export interface OldRandomPermutationVariableConfig {
   values: string[];
 }
 
+/** Union of all legacy config types. */
+export type LegacyVariableConfig =
+  | V1RandomPermutationVariableConfig
+  | V2RandomPermutationVariableConfig;
+
 // ************************************************************************* //
-// MIGRATION UTILITIES                                                       //
+// DETECTION UTILITIES                                                       //
 // ************************************************************************* //
 
 /**
- * Type guard to detect old-format variable configs.
- * Old configs have `variableNames` and `schema` at root level,
- * and lack the `definition` field.
+ * Type guard to detect V1 format configs.
+ * V1 configs have `variableType` and lack `definition`.
  */
-export function isOldFormatConfig(
-  config: VariableConfig | OldRandomPermutationVariableConfig,
-): config is OldRandomPermutationVariableConfig {
+export function isV1FormatConfig(
+  config: VariableConfig | LegacyVariableConfig,
+): config is V1RandomPermutationVariableConfig {
+  return 'variableType' in config && !('definition' in config);
+}
+
+/**
+ * Type guard to detect V2 format configs.
+ * V2 configs have `schema` + `variableNames` at top level and lack `definition`.
+ */
+export function isV2FormatConfig(
+  config: VariableConfig | LegacyVariableConfig,
+): config is V2RandomPermutationVariableConfig {
   return (
-    'variableNames' in config && 'schema' in config && !('definition' in config)
+    'schema' in config && 'variableNames' in config && !('definition' in config)
   );
 }
+
+/**
+ * Type guard to detect any old-format variable config (V1 or V2).
+ */
+export function isOldFormatConfig(
+  config: VariableConfig | LegacyVariableConfig,
+): config is LegacyVariableConfig {
+  return isV1FormatConfig(config) || isV2FormatConfig(config);
+}
+
+// ************************************************************************* //
+// SCHEMA CONVERSION                                                         //
+// ************************************************************************* //
+
+/**
+ * Convert a V1 OldVariableType string to a TypeBox TSchema.
+ */
+function oldVariableTypeToSchema(variableType: OldVariableType): TSchema {
+  switch (variableType) {
+    case 'string':
+      return Type.String();
+    case 'number':
+      return Type.Number();
+    case 'boolean':
+      return Type.Boolean();
+    default:
+      return Type.String();
+  }
+}
+
+/**
+ * Convert V1 variableType + variableSchema into a TSchema.
+ *
+ * For primitive types (string, number, boolean), returns the corresponding
+ * TypeBox schema directly. For objects, builds a Type.Object() from the
+ * variableSchema record.
+ */
+export function v1SchemaToTSchema(
+  variableType: OldVariableType,
+  variableSchema?: Record<string, OldVariableType>,
+): TSchema {
+  if (variableType === 'object' && variableSchema) {
+    const properties: Record<string, TSchema> = {};
+    for (const [key, type] of Object.entries(variableSchema)) {
+      properties[key] = oldVariableTypeToSchema(type);
+    }
+    return Type.Object(properties);
+  }
+  return oldVariableTypeToSchema(variableType);
+}
+
+// ************************************************************************* //
+// MIGRATION UTILITIES                                                       //
+// ************************************************************************* //
 
 /**
  * Maps old SeedStrategy to new VariableScope.
@@ -71,67 +171,107 @@ function mapSeedStrategyToScope(seedStrategy: SeedStrategy): VariableScope {
 }
 
 /**
- * Migrate a single old-format variable config to the new format.
- * Returns the migrated config, or the original if already in new format.
- *
- * Old format had:
- * - variableNames: string[] (array of variable names)
- * - schema: TSchema (at config level)
- * - seedStrategy: SeedStrategy
- *
- * New format has:
- * - definition: { name, description, schema }
- * - scope: VariableScope
- * - shuffleConfig: ShuffleConfig
- * - expandListToSeparateVariables: boolean
+ * Shared migration logic for V1 and V2 configs.
+ * Both formats share the same structure except for how the item schema is
+ * represented, so this function takes the already-resolved TSchema.
+ */
+function migrateToV3(
+  id: string,
+  variableNames: string[],
+  seedStrategy: SeedStrategy | undefined,
+  itemSchema: TSchema,
+  values: string[],
+): RandomPermutationVariableConfig {
+  const resolvedSeedStrategy = seedStrategy ?? SeedStrategy.PARTICIPANT;
+  const scope = mapSeedStrategyToScope(resolvedSeedStrategy);
+
+  // Determine base variable name
+  // Old format could have multiple names like ["charity_1", "charity_2"]
+  // We extract the base name by removing trailing _N suffix if present
+  const firstName = variableNames[0] || 'variable';
+  const baseName = firstName.replace(/_\d+$/, '');
+
+  return {
+    id: id || generateId(),
+    type: VariableConfigType.RANDOM_PERMUTATION,
+    scope,
+    definition: {
+      name: baseName,
+      description: '',
+      // Wrap in array type since RandomPermutation produces arrays
+      schema: VariableType.array(itemSchema),
+    },
+    shuffleConfig: createShuffleConfig({
+      shuffle: true,
+      seed: resolvedSeedStrategy,
+    }),
+    values,
+    numToSelect: variableNames.length,
+    // Enable expansion to create separate variables (charity_1, charity_2, etc.)
+    expandListToSeparateVariables: variableNames.length > 1,
+  };
+}
+
+/**
+ * Migrate a single old-format variable config to the current format.
+ * Returns the migrated config, or the original if already in current format.
+ * Returns null if migration fails.
  */
 export function migrateVariableConfig(
-  config: VariableConfig | OldRandomPermutationVariableConfig,
+  config: VariableConfig | LegacyVariableConfig,
 ): VariableConfig | null {
-  // If already in new format, return as-is
+  // If already in current format, return as-is
   if (!isOldFormatConfig(config)) {
     return config;
   }
 
-  // Migrate old RandomPermutation format
-  if (config.type === VariableConfigType.RANDOM_PERMUTATION) {
-    const oldConfig = config as OldRandomPermutationVariableConfig;
-    const scope = mapSeedStrategyToScope(oldConfig.seedStrategy);
-
-    // Determine base variable name
-    // Old format could have multiple names like ["charity_1", "charity_2"]
-    // We extract the base name by removing trailing _N suffix if present
-    const firstName = oldConfig.variableNames[0] || 'variable';
-    const baseName = firstName.replace(/_\d+$/, '');
-
-    const migratedConfig: RandomPermutationVariableConfig = {
-      id: oldConfig.id || generateId(),
-      type: VariableConfigType.RANDOM_PERMUTATION,
-      scope,
-      definition: {
-        name: baseName,
-        description: '',
-        // Wrap in array type since RandomPermutation produces arrays
-        schema: VariableType.array(oldConfig.schema),
-      },
-      shuffleConfig: createShuffleConfig({
-        shuffle: true,
-        seed: oldConfig.seedStrategy,
-      }),
-      values: oldConfig.values,
-      numToSelect: oldConfig.variableNames.length,
-      // Enable expansion to create separate variables (charity_1, charity_2, etc.)
-      expandListToSeparateVariables: oldConfig.variableNames.length > 1,
-    };
-
-    console.info(
-      `Migrated old variable config "${firstName}" to new format with base name "${baseName}"`,
+  if (config.type !== VariableConfigType.RANDOM_PERMUTATION) {
+    console.warn(
+      'Unknown old variable config format, skipping migration:',
+      config,
     );
-
-    return migratedConfig;
+    return null;
   }
 
-  // Unknown old format - log warning and skip
+  // V1: convert variableType + variableSchema to TSchema first
+  if (isV1FormatConfig(config)) {
+    const itemSchema = v1SchemaToTSchema(
+      config.variableType,
+      config.variableSchema,
+    );
+
+    const migrated = migrateToV3(
+      config.id,
+      config.variableNames,
+      config.seedStrategy,
+      itemSchema,
+      config.values,
+    );
+
+    console.info(
+      `Migrated V1 variable config "${config.variableNames[0] || config.id}" to current format`,
+    );
+
+    return migrated;
+  }
+
+  // V2: schema is already a TSchema
+  if (isV2FormatConfig(config)) {
+    const migrated = migrateToV3(
+      config.id,
+      config.variableNames,
+      config.seedStrategy,
+      config.schema,
+      config.values,
+    );
+
+    console.info(
+      `Migrated V2 variable config "${config.variableNames[0] || config.id}" to current format`,
+    );
+
+    return migrated;
+  }
+
   console.warn(
     'Unknown old variable config format, skipping migration:',
     config,
@@ -144,7 +284,7 @@ export function migrateVariableConfig(
  * This is the main entry point for migrating experiment variable configs.
  */
 export function migrateVariableConfigs(
-  configs: (VariableConfig | OldRandomPermutationVariableConfig)[],
+  configs: (VariableConfig | LegacyVariableConfig)[],
 ): VariableConfig[] {
   const migrated: VariableConfig[] = [];
 

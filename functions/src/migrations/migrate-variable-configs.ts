@@ -21,18 +21,16 @@
  */
 
 import * as admin from 'firebase-admin';
-import {type TSchema} from '@sinclair/typebox';
 import {
   Experiment,
   RandomPermutationVariableConfig,
   VariableConfig,
   VariableConfigType,
-  VariableScope,
-  VariableType,
   EXPERIMENT_VERSION_ID,
-  generateId,
-  SeedStrategy,
-  createShuffleConfig,
+  isOldFormatConfig,
+  migrateVariableConfig,
+  migrateVariableConfigs,
+  LegacyVariableConfig,
 } from '@deliberation-lab/utils';
 
 // Initialize Firebase Admin (uses GOOGLE_APPLICATION_CREDENTIALS or emulator)
@@ -52,98 +50,6 @@ const db = admin.firestore();
 // (commit c6a19676). Only experiments created on or after this date could
 // have variable configs that need migration.
 const VARIABLE_FEATURE_START_DATE = new Date('2025-11-03T00:00:00Z');
-
-// ************************************************************************* //
-// OLD FORMAT TYPES                                                          //
-// ************************************************************************* //
-
-interface OldRandomPermutationVariableConfig {
-  id: string;
-  type: VariableConfigType.RANDOM_PERMUTATION;
-  seedStrategy: SeedStrategy;
-  variableNames: string[];
-  schema: TSchema;
-  values: string[];
-}
-
-type LegacyOrNewConfig = VariableConfig | OldRandomPermutationVariableConfig;
-
-// ************************************************************************* //
-// MIGRATION LOGIC                                                           //
-// ************************************************************************* //
-
-function isOldFormatConfig(
-  config: LegacyOrNewConfig,
-): config is OldRandomPermutationVariableConfig {
-  return (
-    'variableNames' in config && 'schema' in config && !('definition' in config)
-  );
-}
-
-function mapSeedStrategyToScope(seedStrategy: SeedStrategy): VariableScope {
-  switch (seedStrategy) {
-    case SeedStrategy.EXPERIMENT:
-      return VariableScope.EXPERIMENT;
-    case SeedStrategy.COHORT:
-      return VariableScope.COHORT;
-    case SeedStrategy.PARTICIPANT:
-    case SeedStrategy.CUSTOM:
-    default:
-      return VariableScope.PARTICIPANT;
-  }
-}
-
-function migrateVariableConfig(
-  config: LegacyOrNewConfig,
-): VariableConfig | null {
-  if (!isOldFormatConfig(config)) {
-    return config;
-  }
-
-  if (config.type === VariableConfigType.RANDOM_PERMUTATION) {
-    const oldConfig = config;
-    const scope = mapSeedStrategyToScope(oldConfig.seedStrategy);
-
-    const firstName = oldConfig.variableNames[0] || 'variable';
-    const baseName = firstName.replace(/_\d+$/, '');
-
-    return {
-      id: oldConfig.id || generateId(),
-      type: VariableConfigType.RANDOM_PERMUTATION,
-      scope,
-      definition: {
-        name: baseName,
-        description: '',
-        schema: VariableType.array(oldConfig.schema),
-      },
-      shuffleConfig: createShuffleConfig({
-        shuffle: true,
-        seed: oldConfig.seedStrategy,
-      }),
-      values: oldConfig.values,
-      numToSelect: oldConfig.variableNames.length,
-      expandListToSeparateVariables: oldConfig.variableNames.length > 1,
-    };
-  }
-
-  console.warn(`Unknown old config type, skipping:`, config);
-  return null;
-}
-
-function migrateVariableConfigs(
-  configs: LegacyOrNewConfig[],
-): VariableConfig[] {
-  const migrated: VariableConfig[] = [];
-
-  for (const config of configs) {
-    const result = migrateVariableConfig(config);
-    if (result !== null) {
-      migrated.push(result);
-    }
-  }
-
-  return migrated;
-}
 
 // ************************************************************************* //
 // MAIN MIGRATION SCRIPT                                                     //
@@ -215,8 +121,10 @@ async function migrateExperiments(dryRun: boolean): Promise<MigrationResult[]> {
         continue;
       }
 
-      // Check if any configs are in old format
-      const hasOldConfigs = variableConfigs.some(isOldFormatConfig);
+      // Check if any configs are in old format (V1 or V2)
+      const hasOldConfigs = variableConfigs.some((c) =>
+        isOldFormatConfig(c as VariableConfig | LegacyVariableConfig),
+      );
 
       if (!hasOldConfigs) {
         results.push(result);
@@ -232,30 +140,33 @@ async function migrateExperiments(dryRun: boolean): Promise<MigrationResult[]> {
       console.log(
         `\n[${experimentId}] "${experimentName}" (v${experiment.versionId})`,
       );
-      const oldConfigCount = variableConfigs.filter(isOldFormatConfig).length;
+      const oldConfigs = variableConfigs.filter((c) =>
+        isOldFormatConfig(c as VariableConfig | LegacyVariableConfig),
+      );
       console.log(
-        `  - Found ${oldConfigCount} old-format variable config(s) out of ${variableConfigs.length} total`,
+        `  - Found ${oldConfigs.length} old-format variable config(s) out of ${variableConfigs.length} total`,
       );
 
       // Show what will be migrated (only old configs)
-      for (const config of variableConfigs) {
-        if (isOldFormatConfig(config)) {
-          const migratedConfig = migrateVariableConfig(config);
-          console.log(`  - Config "${config.variableNames?.join(', ')}":`);
+      for (const config of oldConfigs) {
+        const legacyConfig = config as unknown as LegacyVariableConfig;
+        const migratedConfig = migrateVariableConfig(legacyConfig);
+        const varNames =
+          'variableNames' in legacyConfig
+            ? legacyConfig.variableNames?.join(', ')
+            : config.id;
+        console.log(`  - Config "${varNames}":`);
+        console.log(`      Old: ${JSON.stringify(Object.keys(config))}`);
+        if (
+          migratedConfig &&
+          migratedConfig.type === VariableConfigType.RANDOM_PERMUTATION
+        ) {
+          const migrated = migratedConfig as RandomPermutationVariableConfig;
           console.log(
-            `      Old: variableNames=[${config.variableNames?.join(', ')}], seedStrategy=${config.seedStrategy}`,
+            `      New: definition.name="${migrated.definition?.name}", scope=${migrated.scope}, expandListToSeparateVariables=${migrated.expandListToSeparateVariables}`,
           );
-          if (
-            migratedConfig &&
-            migratedConfig.type === VariableConfigType.RANDOM_PERMUTATION
-          ) {
-            const migrated = migratedConfig as RandomPermutationVariableConfig;
-            console.log(
-              `      New: definition.name="${migrated.definition?.name}", scope=${migrated.scope}, expandListToSeparateVariables=${migrated.expandListToSeparateVariables}`,
-            );
-          } else {
-            console.log(`      New: FAILED TO MIGRATE`);
-          }
+        } else {
+          console.log(`      New: FAILED TO MIGRATE`);
         }
       }
 
