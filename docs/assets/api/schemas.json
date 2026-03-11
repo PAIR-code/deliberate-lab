@@ -1452,6 +1452,7 @@
           ]
         },
         "showParticipantNumber": {
+          "default": true,
           "type": "boolean"
         }
       }
