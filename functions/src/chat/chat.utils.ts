@@ -22,6 +22,35 @@ import {
 } from '@deliberation-lab/utils';
 import {updateParticipantNextStage} from '../participant.utils';
 
+/** Send a system message to a private chat (e.g., mediator left the chat).
+ *  Unlike error messages, system messages are NOT ignored by chat triggers,
+ *  so they can wake up agent participants.
+ */
+export async function sendSystemPrivateChatMessage(
+  experimentId: string,
+  participantId: string,
+  stageId: string,
+  config: Partial<ChatMessage> = {},
+) {
+  const chatMessage = createSystemChatMessage({
+    ...config,
+    timestamp: Timestamp.now(),
+  });
+
+  const agentDocument = app
+    .firestore()
+    .collection('experiments')
+    .doc(experimentId)
+    .collection('participants')
+    .doc(participantId)
+    .collection('stageData')
+    .doc(stageId)
+    .collection('privateChats')
+    .doc(chatMessage.id);
+
+  await agentDocument.set(chatMessage);
+}
+
 /** Used for private chats if model response fails. */
 export async function sendErrorPrivateChatMessage(
   experimentId: string,
