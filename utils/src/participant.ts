@@ -192,15 +192,19 @@ export function setProfile(
   setAnonymousProfile = false,
   profileType: ProfileType = ProfileType.ANONYMOUS_ANIMAL,
 ) {
+  // Generate random number for unique participant ID
+  const randomNumber = Math.floor(Math.random() * 10000);
+
   const generateProfileFromSet = (
     profileSet: {name: string; avatar: string}[],
+    repeat?: number,
   ): AnonymousProfileMetadata => {
     // TODO: Randomly select from set
     const {name, avatar} = profileSet[participantNumber % profileSet.length];
     return {
-      name,
+      name: `${name} ${randomNumber}`,
       avatar,
-      repeat: Math.floor(participantNumber / profileSet.length),
+      repeat: repeat ?? Math.floor(participantNumber / profileSet.length),
     };
   };
 
@@ -212,27 +216,14 @@ export function setProfile(
     };
   };
 
-  // Generate random number for unique participant ID (used in publicID and anonymous participant profile)
-  const randomNumber = Math.floor(Math.random() * 10000);
-
-  const generateAnonymousParticipantProfile = (): AnonymousProfileMetadata => {
-    return {
-      name: `Participant ${randomNumber}`,
-      avatar: '👤',
-      repeat: 0,
-    };
-  };
-
   // Set anonymous profiles
   const profileAnimal1 = generateProfileFromSet(PROFILE_SET_ANIMALS_1);
   const profileAnimal2 = generateProfileFromSet(PROFILE_SET_ANIMALS_2);
   const profileNature = generateProfileFromSet(PROFILE_SET_NATURE);
-  const profileAnonymousParticipant = generateAnonymousParticipantProfile();
-
-  // Append random number to profile names (e.g., "Bear 1002")
-  profileAnimal1.name = `${profileAnimal1.name} ${randomNumber}`;
-  profileAnimal2.name = `${profileAnimal2.name} ${randomNumber}`;
-  profileNature.name = `${profileNature.name} ${randomNumber}`;
+  const profileAnonymousParticipant = generateProfileFromSet(
+    [{name: 'Participant', avatar: '👤'}],
+    0,
+  );
 
   config.anonymousProfiles[PROFILE_SET_ANIMALS_1_ID] = profileAnimal1;
   config.anonymousProfiles[PROFILE_SET_ANIMALS_2_ID] = profileAnimal2;
@@ -248,26 +239,25 @@ export function setProfile(
   config.anonymousProfiles[PROFILE_SET_RANDOM_3_ID] =
     generateRandomHashProfile();
 
-  // Define public ID (using anonymous animal 1 set)
-  const mainProfile = profileAnimal1;
+  // Define public ID (using base animal name without number)
+  const baseName =
+    PROFILE_SET_ANIMALS_1[participantNumber % PROFILE_SET_ANIMALS_1.length]
+      .name;
   const color = COLORS[Math.floor(Math.random() * COLORS.length)];
 
-  config.publicId =
-    `${mainProfile.name}-${color}-${randomNumber}`.toLowerCase();
+  config.publicId = `${baseName}-${color}-${randomNumber}`.toLowerCase();
 
   if (setAnonymousProfile) {
-    if (profileType === ProfileType.ANONYMOUS_PARTICIPANT) {
-      // Use participant number profile
-      const participantProfile =
-        config.anonymousProfiles[PROFILE_SET_ANONYMOUS_PARTICIPANT_ID];
-      config.name = participantProfile.name;
-      config.avatar = participantProfile.avatar;
-    } else if (profileType === ProfileType.ANONYMOUS_ANIMAL) {
-      // Use animal profile (default)
-      config.name = mainProfile.name;
-      config.avatar = mainProfile.avatar;
+    const profileSetMap: Partial<Record<ProfileType, string>> = {
+      [ProfileType.ANONYMOUS_ANIMAL]: PROFILE_SET_ANIMALS_1_ID,
+      [ProfileType.ANONYMOUS_PARTICIPANT]: PROFILE_SET_ANONYMOUS_PARTICIPANT_ID,
+    };
+    const profileSetId = profileSetMap[profileType];
+    if (profileSetId) {
+      const profile = config.anonymousProfiles[profileSetId];
+      config.name = profile.name;
+      config.avatar = profile.avatar;
     }
-    // Note: ProfileType.DEFAULT should not reach here as setAnonymousProfile would be false
     config.pronouns = '';
   }
 }
