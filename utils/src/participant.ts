@@ -192,61 +192,45 @@ export function setProfile(
   setAnonymousProfile = false,
   profileType: ProfileType = ProfileType.ANONYMOUS_ANIMAL,
 ) {
-  // Generate random number for unique participant ID
   const randomNumber = Math.floor(Math.random() * 10000);
 
-  const generateProfileFromSet = (
+  // Create anonymous profile from a named profile set.
+  // Appends random number to name (e.g., "Bear 1002", "Participant 1002").
+  const profileFromSet = (
     profileSet: {name: string; avatar: string}[],
-    repeat?: number,
   ): AnonymousProfileMetadata => {
-    // TODO: Randomly select from set
     const {name, avatar} = profileSet[participantNumber % profileSet.length];
     return {
       name: `${name} ${randomNumber}`,
       avatar,
-      repeat: repeat ?? Math.floor(participantNumber / profileSet.length),
+      repeat: Math.floor(participantNumber / profileSet.length),
     };
   };
 
-  const generateRandomHashProfile = (): AnonymousProfileMetadata => {
-    return {
-      name: generateId(),
-      avatar: '',
+  // Set anonymous profiles for each profile set
+  config.anonymousProfiles = {
+    [PROFILE_SET_ANIMALS_1_ID]: profileFromSet(PROFILE_SET_ANIMALS_1),
+    [PROFILE_SET_ANIMALS_2_ID]: profileFromSet(PROFILE_SET_ANIMALS_2),
+    [PROFILE_SET_NATURE_ID]: profileFromSet(PROFILE_SET_NATURE),
+    [PROFILE_SET_ANONYMOUS_PARTICIPANT_ID]: {
+      name: `Participant ${randomNumber}`,
+      avatar: '👤',
       repeat: 0,
-    };
+    },
+    // Random hashes for ordering/randomization
+    [PROFILE_SET_RANDOM_1_ID]: {name: generateId(), avatar: '', repeat: 0},
+    [PROFILE_SET_RANDOM_2_ID]: {name: generateId(), avatar: '', repeat: 0},
+    [PROFILE_SET_RANDOM_3_ID]: {name: generateId(), avatar: '', repeat: 0},
   };
 
-  // Set anonymous profiles
-  const profileAnimal1 = generateProfileFromSet(PROFILE_SET_ANIMALS_1);
-  const profileAnimal2 = generateProfileFromSet(PROFILE_SET_ANIMALS_2);
-  const profileNature = generateProfileFromSet(PROFILE_SET_NATURE);
-  const profileAnonymousParticipant = generateProfileFromSet(
-    [{name: 'Participant', avatar: '👤'}],
-    0,
-  );
-
-  config.anonymousProfiles[PROFILE_SET_ANIMALS_1_ID] = profileAnimal1;
-  config.anonymousProfiles[PROFILE_SET_ANIMALS_2_ID] = profileAnimal2;
-  config.anonymousProfiles[PROFILE_SET_NATURE_ID] = profileNature;
-  config.anonymousProfiles[PROFILE_SET_ANONYMOUS_PARTICIPANT_ID] =
-    profileAnonymousParticipant;
-
-  // Set random hashes (can be used for random ordering, etc.)
-  config.anonymousProfiles[PROFILE_SET_RANDOM_1_ID] =
-    generateRandomHashProfile();
-  config.anonymousProfiles[PROFILE_SET_RANDOM_2_ID] =
-    generateRandomHashProfile();
-  config.anonymousProfiles[PROFILE_SET_RANDOM_3_ID] =
-    generateRandomHashProfile();
-
-  // Define public ID (using base animal name without number)
+  // Define public ID using base animal name (without number suffix)
   const baseName =
     PROFILE_SET_ANIMALS_1[participantNumber % PROFILE_SET_ANIMALS_1.length]
       .name;
   const color = COLORS[Math.floor(Math.random() * COLORS.length)];
-
   config.publicId = `${baseName}-${color}-${randomNumber}`.toLowerCase();
 
+  // Set display profile for anonymous participants
   if (setAnonymousProfile) {
     const profileSetMap: Partial<Record<ProfileType, string>> = {
       [ProfileType.ANONYMOUS_ANIMAL]: PROFILE_SET_ANIMALS_1_ID,
