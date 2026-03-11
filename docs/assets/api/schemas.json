@@ -1450,10 +1450,6 @@
               "type": "string"
             }
           ]
-        },
-        "showParticipantNumber": {
-          "default": true,
-          "type": "boolean"
         }
       }
     },

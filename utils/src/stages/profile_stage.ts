@@ -22,7 +22,6 @@ export enum ProfileType {
 export interface ProfileStageConfig extends BaseStageConfig {
   kind: StageKind.PROFILE;
   profileType: ProfileType;
-  showParticipantNumber?: boolean; // e.g., "Bear 1002" instead of "Bear"
 }
 
 // ************************************************************************* //
@@ -40,6 +39,5 @@ export function createProfileStage(
     descriptions: config.descriptions ?? createStageTextConfig(),
     progress: config.progress ?? createStageProgressConfig(),
     profileType: config.profileType ?? ProfileType.DEFAULT,
-    showParticipantNumber: config.showParticipantNumber ?? true,
   };
 }
