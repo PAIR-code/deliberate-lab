@@ -22,6 +22,7 @@ export enum ProfileType {
 export interface ProfileStageConfig extends BaseStageConfig {
   kind: StageKind.PROFILE;
   profileType: ProfileType;
+  informalNameStyle?: boolean; // e.g., "bear123" instead of "Bear 1002"
 }
 
 // ************************************************************************* //
@@ -39,5 +40,6 @@ export function createProfileStage(
     descriptions: config.descriptions ?? createStageTextConfig(),
     progress: config.progress ?? createStageProgressConfig(),
     profileType: config.profileType ?? ProfileType.DEFAULT,
+    informalNameStyle: config.informalNameStyle ?? false,
   };
 }
