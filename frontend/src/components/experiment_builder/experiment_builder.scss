@@ -130,7 +130,6 @@
   @include common.flex-column;
   flex-grow: 1;
   gap: common.$spacing-xxl;
-  max-width: common.$info-content-max-width;
   padding-bottom: calc(common.$main-content-padding * 2);
 
   &.padding {
