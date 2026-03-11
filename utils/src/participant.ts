@@ -191,6 +191,7 @@ export function setProfile(
   config: ParticipantProfileExtended,
   setAnonymousProfile = false,
   profileType: ProfileType = ProfileType.ANONYMOUS_ANIMAL,
+  showParticipantNumber = false,
 ) {
   const generateProfileFromSet = (
     profileSet: {name: string; avatar: string}[],
@@ -229,6 +230,13 @@ export function setProfile(
   const profileNature = generateProfileFromSet(PROFILE_SET_NATURE);
   const profileAnonymousParticipant = generateAnonymousParticipantProfile();
 
+  // Append random number to profile names (e.g., "Bear 1002" instead of "Bear")
+  if (showParticipantNumber) {
+    profileAnimal1.name = `${profileAnimal1.name} ${randomNumber}`;
+    profileAnimal2.name = `${profileAnimal2.name} ${randomNumber}`;
+    profileNature.name = `${profileNature.name} ${randomNumber}`;
+  }
+
   config.anonymousProfiles[PROFILE_SET_ANIMALS_1_ID] = profileAnimal1;
   config.anonymousProfiles[PROFILE_SET_ANIMALS_2_ID] = profileAnimal2;
   config.anonymousProfiles[PROFILE_SET_NATURE_ID] = profileNature;
@@ -259,7 +267,12 @@ export function setProfile(
       config.avatar = participantProfile.avatar;
     } else if (profileType === ProfileType.ANONYMOUS_ANIMAL) {
       // Use animal profile (default)
-      config.name = `${mainProfile.name}${mainProfile.repeat === 0 ? '' : ` ${mainProfile.repeat + 1}`}`;
+      if (showParticipantNumber) {
+        // Name already has numeric suffix (e.g., "Bear 1002")
+        config.name = mainProfile.name;
+      } else {
+        config.name = `${mainProfile.name}${mainProfile.repeat === 0 ? '' : ` ${mainProfile.repeat + 1}`}`;
+      }
       config.avatar = mainProfile.avatar;
     }
     // Note: ProfileType.DEFAULT should not reach here as setAnonymousProfile would be false

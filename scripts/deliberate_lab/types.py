@@ -391,6 +391,7 @@ class ProfileStageConfig(BaseModel):
     descriptions: StageTextConfig
     progress: StageProgressConfig
     profileType: ProfileType
+    showParticipantNumber: bool | None = None
 
 
 class Strategy(StrEnum):
