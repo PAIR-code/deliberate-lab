@@ -1,4 +1,5 @@
 import '../../pair-components/textarea';
+import '@material/web/checkbox/checkbox.js';
 import '@material/web/radio/radio';
 
 import {MobxLitElement} from '@adobe/lit-mobx';
@@ -95,6 +96,29 @@ export class ProfileStageEditorComponent extends MobxLitElement {
           ></md-radio>
           <label>🐱 Generate anonymous animal-themed profiles</label>
         </div>
+        ${this.stage.profileType === ProfileType.ANONYMOUS_ANIMAL
+          ? html`
+              <label class="checkbox-wrapper">
+                <md-checkbox
+                  touch-target="wrapper"
+                  ?checked=${this.stage.informalNameStyle}
+                  ?disabled=${!this.experimentEditor.canEditStages}
+                  @click=${() => {
+                    if (!this.stage) return;
+                    this.experimentEditor.updateStage({
+                      ...this.stage,
+                      informalNameStyle: !this.stage.informalNameStyle,
+                    });
+                  }}
+                >
+                </md-checkbox>
+                <span
+                  >Use informal name style (e.g., bear123 instead of Bear
+                  1002)</span
+                >
+              </label>
+            `
+          : nothing}
         <div class="profile-option">
           <md-radio
             name="profile-type"

@@ -191,17 +191,27 @@ export function setProfile(
   config: ParticipantProfileExtended,
   setAnonymousProfile = false,
   profileType: ProfileType = ProfileType.ANONYMOUS_ANIMAL,
+  informalNameStyle = false,
 ) {
   const randomNumber = Math.floor(Math.random() * 10000);
 
+  // Format name with random number.
+  // Informal style: "bear123" (lowercase, no space)
+  // Default style: "Bear 1002"
+  const formatName = (name: string) => {
+    if (informalNameStyle) {
+      return `${name.toLowerCase()}${randomNumber}`;
+    }
+    return `${name} ${randomNumber}`;
+  };
+
   // Create anonymous profile from a named profile set.
-  // Appends random number to name (e.g., "Bear 1002", "Participant 1002").
   const profileFromSet = (
     profileSet: {name: string; avatar: string}[],
   ): AnonymousProfileMetadata => {
     const {name, avatar} = profileSet[participantNumber % profileSet.length];
     return {
-      name: `${name} ${randomNumber}`,
+      name: formatName(name),
       avatar,
       repeat: Math.floor(participantNumber / profileSet.length),
     };
