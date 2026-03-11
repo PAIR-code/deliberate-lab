@@ -223,7 +223,7 @@ export function setProfile(
     [PROFILE_SET_ANIMALS_2_ID]: profileFromSet(PROFILE_SET_ANIMALS_2),
     [PROFILE_SET_NATURE_ID]: profileFromSet(PROFILE_SET_NATURE),
     [PROFILE_SET_ANONYMOUS_PARTICIPANT_ID]: {
-      name: `Participant ${randomNumber}`,
+      name: formatName('Participant'),
       avatar: '👤',
       repeat: 0,
     },
