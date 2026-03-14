@@ -144,71 +144,82 @@ export const onPrivateChatMessageCreated = onDocumentCreated(
     );
     if (!stage) return;
 
-    // Send agent mediator messages
     const participant = await getFirestoreParticipant(
       event.params.experimentId,
       event.params.participantId,
     );
     if (!participant) return;
 
-    const mediators = await getFirestoreActiveMediators(
-      event.params.experimentId,
-      participant.currentCohortId,
-      stage.id,
-      true,
-    );
-
-    await Promise.all(
-      mediators.map(async (mediator) => {
-        const result = await createAgentChatMessageFromPrompt(
-          event.params.experimentId,
-          participant.currentCohortId,
-          [participant.privateId],
-          stage.id,
-          event.params.chatId,
-          mediator,
-        );
-
-        if (!result) {
-          await sendErrorPrivateChatMessage(
-            event.params.experimentId,
-            participant.privateId,
-            stage.id,
-            {
-              discussionId: message.discussionId,
-              message: 'Error fetching response',
-              type: mediator.type,
-              profile: createParticipantProfileBase(mediator),
-              senderId: mediator.publicId,
-              agentId: mediator.agentConfig?.agentId ?? '',
-            },
-          );
-        }
-      }),
-    );
-
-    // If no mediator, return error (otherwise participant may wait
-    // indefinitely for a response).
-    if (mediators.length === 0) {
-      await sendErrorPrivateChatMessage(
+    // Send agent mediator responses to participant messages only.
+    // System messages (e.g., "mediator has left") should not trigger
+    // mediator responses — they are signals, not conversation turns.
+    if (
+      message.type !== UserType.MEDIATOR &&
+      message.type !== UserType.SYSTEM
+    ) {
+      const mediators = await getFirestoreActiveMediators(
         event.params.experimentId,
-        participant.privateId,
+        participant.currentCohortId,
         stage.id,
-        {
-          discussionId: message.discussionId,
-          message: 'No mediators found',
-        },
+        true,
       );
+
+      await Promise.all(
+        mediators.map(async (mediator) => {
+          const result = await createAgentChatMessageFromPrompt(
+            event.params.experimentId,
+            participant.currentCohortId,
+            [participant.privateId],
+            stage.id,
+            event.params.chatId,
+            mediator,
+          );
+
+          if (!result) {
+            await sendErrorPrivateChatMessage(
+              event.params.experimentId,
+              participant.privateId,
+              stage.id,
+              {
+                discussionId: message.discussionId,
+                message: 'Error fetching response',
+                type: mediator.type,
+                profile: createParticipantProfileBase(mediator),
+                senderId: mediator.publicId,
+                agentId: mediator.agentConfig?.agentId ?? '',
+              },
+            );
+          }
+        }),
+      );
+
+      // If no mediator, return error (otherwise participant may wait
+      // indefinitely for a response).
+      if (mediators.length === 0) {
+        await sendErrorPrivateChatMessage(
+          event.params.experimentId,
+          participant.privateId,
+          stage.id,
+          {
+            discussionId: message.discussionId,
+            message: 'No mediators found',
+          },
+        );
+      }
     }
 
-    // Send agent participant messages (if participant is an agent)
+    // Send agent participant messages (if participant is an agent).
+    // Agent responds to mediator messages and system messages (e.g.,
+    // "mediator has left the chat") so it can advance stages. (#1011)
     if (participant.agentConfig) {
-      // Ensure agent only responds to mediator, not themselves
-      if (message.type === UserType.MEDIATOR) {
+      if (
+        message.type === UserType.MEDIATOR ||
+        message.type === UserType.SYSTEM
+      ) {
         await createAgentChatMessageFromPrompt(
           event.params.experimentId,
           participant.currentCohortId,
-          [participant.privateId], // Pass agent's own ID as array
+          [participant.privateId],
           stage.id,
           event.params.chatId,
           participant,
