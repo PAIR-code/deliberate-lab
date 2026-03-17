@@ -280,12 +280,27 @@ async function restoreExperiment(
 
   const verifyOps: WriteOp[] = [];
   await collectDocumentTree(prodExperimentRef, prodExperimentRef, verifyOps);
-  if (verifyOps.length !== ops.length) {
-    const error = `Verification failed — expected ${ops.length} documents but found ${verifyOps.length} in prod`;
-    console.error(`  ERROR: ${error}`);
-    return {experimentId, success: false, docCount: ops.length, error};
+  console.log(`  Found ${verifyOps.length} documents in prod:`);
+  summarizeOps(verifyOps, experimentId);
+
+  if (verifyOps.length < ops.length) {
+    console.error(
+      `  ERROR: Wrote ${ops.length} documents but only found ${verifyOps.length} in prod.`,
+    );
+    return {
+      experimentId,
+      success: false,
+      docCount: ops.length,
+      error: `Wrote ${ops.length} documents but only found ${verifyOps.length} in prod`,
+    };
+  } else if (verifyOps.length > ops.length) {
+    console.warn(
+      `  WARNING: Wrote ${ops.length} documents but found ${verifyOps.length} in prod. ` +
+        `Firestore triggers may have added extra documents (e.g., agent chat responses, chip logs).`,
+    );
+  } else {
+    console.log(`  Verified: counts match.`);
   }
-  console.log(`  Verified: ${verifyOps.length} documents in prod.`);
 
   return {experimentId, success: true, docCount: ops.length};
 }
