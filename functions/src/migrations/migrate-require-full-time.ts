@@ -74,12 +74,19 @@ async function migrateStages(dryRun: boolean): Promise<ExperimentMigration[]> {
       .collection('stages')
       .get();
 
+    const stageDocs = stagesSnapshot.docs.filter(
+      (doc) => doc.data().requireFullTime,
+    );
+    if (stageDocs.length === 0) continue;
+
+    console.log(
+      `\n[${dateCreated}] [${experimentId}] ${experimentName} — ${stageDocs.length} stage(s):`,
+    );
+
     const stages: StageMigration[] = [];
-
-    for (const stageDoc of stagesSnapshot.docs) {
+    for (const stageDoc of stageDocs) {
       const stage = stageDoc.data();
-
-      if (!stage.requireFullTime) continue;
+      const timeMinimumInMinutes = stage.timeLimitInMinutes ?? null;
 
       const result: StageMigration = {
         stageId: stageDoc.id,
@@ -89,8 +96,6 @@ async function migrateStages(dryRun: boolean): Promise<ExperimentMigration[]> {
       };
 
       try {
-        const timeMinimumInMinutes = stage.timeLimitInMinutes ?? null;
-
         console.log(
           `  Stage "${stage.name}" (${stage.kind}): ` +
             `requireFullTime: true → timeMinimumInMinutes: ${timeMinimumInMinutes}`,
@@ -113,12 +118,7 @@ async function migrateStages(dryRun: boolean): Promise<ExperimentMigration[]> {
       stages.push(result);
     }
 
-    if (stages.length > 0) {
-      console.log(
-        `\n[${dateCreated}] ${experimentName} [${experimentId}] — ${stages.length} stage(s):`,
-      );
-      experiments.push({experimentId, experimentName, dateCreated, stages});
-    }
+    experiments.push({experimentId, experimentName, dateCreated, stages});
   }
 
   return experiments;
@@ -175,7 +175,7 @@ async function main() {
       const errors = exp.stages.filter((s) => s.error);
       const status = errors.length > 0 ? `${errors.length} error(s)` : 'OK';
       console.log(
-        `  [${exp.dateCreated}] ${exp.experimentName} [${exp.experimentId}]: ${exp.stages.length} stage(s) — ${status}`,
+        `  [${exp.dateCreated}] [${exp.experimentId}] ${exp.experimentName}: ${exp.stages.length} stage(s) — ${status}`,
       );
     }
   }
