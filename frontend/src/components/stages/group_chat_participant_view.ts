@@ -190,7 +190,7 @@ export class GroupChatView extends MobxLitElement {
     return html`
       <pr-tooltip
         text=${!this.isMinimumTimeMet
-          ? `You must wait until ${this.stage.timeMinimumInMinutes} minutes have passed.`
+          ? `You must stay on this chat for at least ${this.stage.timeMinimumInMinutes} minutes.`
           : isDisabled
             ? 'You can move on once others are also ready to move on.'
             : ''}

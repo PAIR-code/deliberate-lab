@@ -28,8 +28,8 @@ import {
 export interface ChatStageConfig extends BaseStageConfig {
   kind: StageKind.CHAT;
   discussions: ChatDiscussion[]; // ordered list of discussions
-  timeLimitInMinutes: number | null; // How long remaining in the chat.
-  timeMinimumInMinutes: number | null; // Minimum amount of time participants must spend in chat.
+  timeLimitInMinutes: number | null; // Maximum duration in minutes, or null if no limit.
+  timeMinimumInMinutes: number | null; // Minimum time participants must stay, or null if no minimum.
 }
 
 /** Chat discussion. */

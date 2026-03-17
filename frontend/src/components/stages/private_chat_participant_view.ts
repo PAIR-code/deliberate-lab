@@ -226,8 +226,8 @@ export class PrivateChatView extends MobxLitElement {
   private renderMinTimeMessage() {
     return html`
       <div class="description">
-        You must wait until ${this.stage?.timeMinimumInMinutes} minutes have
-        passed.
+        You must stay on this chat for at least
+        ${this.stage?.timeMinimumInMinutes} minutes.
       </div>
     `;
   }
