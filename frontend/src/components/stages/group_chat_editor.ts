@@ -71,7 +71,6 @@ export class ChatEditor extends MobxLitElement {
 
   private renderTimeLimit() {
     const timeLimit = this.stage?.timeLimitInMinutes ?? null;
-    const requireFullTime = this.stage?.requireFullTime ?? false;
 
     const updateCheck = () => {
       if (!this.stage) return;
@@ -79,6 +78,7 @@ export class ChatEditor extends MobxLitElement {
         this.experimentEditor.updateStage({
           ...this.stage,
           timeLimitInMinutes: null,
+          timeMinimumInMinutes: null,
         });
       } else {
         this.experimentEditor.updateStage({
@@ -88,7 +88,7 @@ export class ChatEditor extends MobxLitElement {
       }
     };
 
-    const updateNum = (e: InputEvent) => {
+    const updateMaxTime = (e: InputEvent) => {
       if (!this.stage) return;
       const timeLimit = Number((e.target as HTMLTextAreaElement).value);
       this.experimentEditor.updateStage({
@@ -97,11 +97,14 @@ export class ChatEditor extends MobxLitElement {
       });
     };
 
-    const updateRequireFullTime = (e: Event) => {
+    const updateMinTime = (e: InputEvent) => {
       if (!this.stage) return;
+      const val = Number((e.target as HTMLInputElement).value);
+      const max = this.stage.timeLimitInMinutes;
+      const clamped = max !== null ? Math.min(val, max) : val;
       this.experimentEditor.updateStage({
         ...this.stage,
-        requireFullTime: (e.target as HTMLInputElement).checked,
+        timeMinimumInMinutes: clamped > 0 ? clamped : null,
       });
     };
 
@@ -120,10 +123,7 @@ export class ChatEditor extends MobxLitElement {
         ${timeLimit !== null
           ? html`
               <div class="number-input tab">
-                <label for="timeLimit">
-                  Elapsed time from first message to conversation close (in
-                  minutes)
-                </label>
+                <label for="timeLimit"> Maximum time (in minutes) </label>
                 <input
                   type="number"
                   id="timeLimit"
@@ -131,18 +131,24 @@ export class ChatEditor extends MobxLitElement {
                   min="0"
                   .value=${timeLimit}
                   ?disabled=${!this.experimentEditor.canEditStages}
-                  @input=${updateNum}
+                  @input=${updateMaxTime}
                 />
               </div>
-              <div class="checkbox-wrapper tab">
-                <md-checkbox
-                  touch-target="wrapper"
-                  ?checked=${requireFullTime}
+              <div class="number-input tab tab-bottom">
+                <label for="timeMinimum">
+                  Minimum time participants must stay (in minutes)
+                </label>
+                <input
+                  type="number"
+                  id="timeMinimum"
+                  name="timeMinimum"
+                  min="0"
+                  .max=${timeLimit ?? ''}
+                  .value=${this.stage?.timeMinimumInMinutes ?? ''}
+                  placeholder="No minimum"
                   ?disabled=${!this.experimentEditor.canEditStages}
-                  @change=${updateRequireFullTime}
-                >
-                </md-checkbox>
-                <div>Require participants to stay until time elapses</div>
+                  @input=${updateMinTime}
+                />
               </div>
             `
           : nothing}

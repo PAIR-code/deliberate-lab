@@ -566,7 +566,7 @@ function createDiscussionStageWithMediator(
     descriptions: createStageTextConfig({primaryText: discussionText}),
     progress: createStageProgressConfig({waitForAllParticipants: true}),
     timeLimitInMinutes: 5,
-    requireFullTime: true, // Setting this to True causes the timeLimit to be a min AND maximum.
+    timeMinimumInMinutes: 5,
   });
 }
 
@@ -936,7 +936,7 @@ function createAllocationDiscussionStage(
     descriptions: createStageTextConfig({primaryText: discussionText}),
     progress: createStageProgressConfig({waitForAllParticipants: true}),
     timeLimitInMinutes: 5,
-    requireFullTime: true,
+    timeMinimumInMinutes: 5,
   });
 }
 

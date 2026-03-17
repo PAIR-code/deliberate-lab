@@ -674,7 +674,6 @@
         "descriptions",
         "progress",
         "timeLimitInMinutes",
-        "requireFullTime",
         "discussions"
       ],
       "properties": {
@@ -706,10 +705,10 @@
             }
           ]
         },
-        "requireFullTime": {
+        "timeMinimumInMinutes": {
           "anyOf": [
             {
-              "type": "boolean"
+              "type": "number"
             },
             {
               "type": "null"
@@ -1376,8 +1375,15 @@
             }
           ]
         },
-        "requireFullTime": {
-          "type": "boolean"
+        "timeMinimumInMinutes": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
         },
         "isTurnBasedChat": {
           "type": "boolean"

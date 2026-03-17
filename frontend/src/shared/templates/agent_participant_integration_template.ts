@@ -254,7 +254,7 @@ const INT_GROUP_CHAT_STAGE = createChatStage({
     minParticipants: 2,
   }),
   timeLimitInMinutes: 2,
-  requireFullTime: true,
+  timeMinimumInMinutes: 2,
 });
 
 // ****************************************************************************

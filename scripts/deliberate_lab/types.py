@@ -366,7 +366,7 @@ class PrivateChatStageConfig(BaseModel):
     descriptions: StageTextConfig
     progress: StageProgressConfig
     timeLimitInMinutes: float | None = None
-    requireFullTime: bool | None = None
+    timeMinimumInMinutes: float | None = None
     isTurnBasedChat: bool | None = None
     minNumberOfTurns: float | None = None
     maxNumberOfTurns: float | None = None
@@ -987,7 +987,7 @@ class ChatStageConfig(BaseModel):
     descriptions: StageTextConfig
     progress: StageProgressConfig
     timeLimitInMinutes: float | None = None
-    requireFullTime: bool | None = None
+    timeMinimumInMinutes: float | None = None
     discussions: list[DefaultChatDiscussion | CompareChatDiscussion]
 
 

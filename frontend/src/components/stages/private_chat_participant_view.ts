@@ -14,6 +14,7 @@ import {
   ChatMessage,
   PrivateChatStageConfig,
   UserType,
+  getTimeElapsed,
 } from '@deliberation-lab/utils';
 import {getHashBasedColor} from '../../shared/utils';
 import {ResponseTimeoutTracker} from '../../shared/response_timeout';
@@ -86,8 +87,19 @@ export class PrivateChatView extends MobxLitElement {
       participantMessageCount >= this.stage.maxNumberOfTurns &&
       !isWaitingForResponse;
 
-    // Check if conversation has ended (max turns reached and not waiting for response)
-    const isConversationOver = maxTurnsReached;
+    const discussionStartTimestamp =
+      chatMessages.length > 0 ? chatMessages[0].timestamp : null;
+    const elapsedMinutes = discussionStartTimestamp
+      ? getTimeElapsed(discussionStartTimestamp, 'm')
+      : 0;
+
+    const maxTimeReached =
+      this.stage.timeLimitInMinutes !== null &&
+      this.stage.timeLimitInMinutes > 0 &&
+      elapsedMinutes >= this.stage.timeLimitInMinutes;
+
+    // Check if conversation has ended
+    const isConversationOver = maxTurnsReached || maxTimeReached;
 
     // Disable input if turn-taking is set and latest message
     // is from participant OR if conversation is over
@@ -111,6 +123,23 @@ export class PrivateChatView extends MobxLitElement {
         !isWaitingForResponse
       : participantMessageCount >= this.stage.minNumberOfTurns;
 
+    // Check if minimum time is met
+    let minTimeMet = true;
+    if (
+      this.stage.timeMinimumInMinutes !== null &&
+      this.stage.timeMinimumInMinutes > 0
+    ) {
+      if (!discussionStartTimestamp) {
+        minTimeMet = false;
+      } else {
+        if (elapsedMinutes < this.stage.timeMinimumInMinutes) {
+          minTimeMet = false;
+        }
+      }
+    }
+
+    const isNextDisabled = !minTurnsMet || !minTimeMet;
+
     return html`
       <chat-interface .stage=${this.stage} .disableInput=${isDisabledInput()}>
         ${chatMessages.map((message) => this.renderChatMessage(message))}
@@ -119,12 +148,15 @@ export class PrivateChatView extends MobxLitElement {
           : nothing}
         ${isConversationOver ? this.renderConversationEndedMessage() : nothing}
       </chat-interface>
-      <stage-footer .disabled=${!minTurnsMet}>
+      <stage-footer .disabled=${isNextDisabled}>
         ${this.stage.progress.showParticipantProgress
           ? html`<progress-stage-completed></progress-stage-completed>`
           : nothing}
         ${!minTurnsMet && !isConversationOver
           ? this.renderMinTurnsMessage(participantMessageCount)
+          : nothing}
+        ${!minTimeMet && minTurnsMet && !isConversationOver
+          ? this.renderMinTimeMessage()
           : nothing}
       </stage-footer>
     `;
@@ -195,6 +227,15 @@ export class PrivateChatView extends MobxLitElement {
       <div class="description">
         Please send at least ${remaining} more
         message${remaining === 1 ? '' : 's'} before proceeding.
+      </div>
+    `;
+  }
+
+  private renderMinTimeMessage() {
+    return html`
+      <div class="description">
+        You must wait until ${this.stage?.timeMinimumInMinutes} minutes have
+        passed.
       </div>
     `;
   }

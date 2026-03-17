@@ -26,8 +26,8 @@ export interface PrivateChatStageConfig extends BaseStageConfig {
   // If defined, ends chat after specified time limit
   // (starting from when the first message is sent)
   timeLimitInMinutes: number | null;
-  // Require participants to stay in chat until time limit is up
-  requireFullTime: boolean;
+  // Minimum amount of time a participant must spend in chat
+  timeMinimumInMinutes: number | null;
   // If true, requires participant to go back and forth with mediator(s)
   // (rather than being able to send multiple messages at once)
   isTurnBasedChat: boolean;
@@ -58,7 +58,7 @@ export function createPrivateChatStage(
       config.progress ??
       createStageProgressConfig({waitForAllParticipants: true}),
     timeLimitInMinutes: config.timeLimitInMinutes ?? null,
-    requireFullTime: config.requireFullTime ?? false,
+    timeMinimumInMinutes: config.timeMinimumInMinutes ?? null,
     isTurnBasedChat: config.isTurnBasedChat ?? true,
     minNumberOfTurns: config.minNumberOfTurns ?? 0,
     maxNumberOfTurns: config.maxNumberOfTurns ?? null,

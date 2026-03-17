@@ -19,6 +19,7 @@ import {
   ChatStagePublicData,
   ChatStageParticipantAnswer,
   createChatStageParticipantAnswer,
+  getTimeElapsed,
 } from '@deliberation-lab/utils';
 import {updateParticipantNextStage} from '../participant.utils';
 
@@ -71,6 +72,35 @@ export async function updateParticipantReadyToEndChat(
   );
   if (!publicStageData) return;
 
+  let startTimestamp = (publicStageData as ChatStagePublicData)
+    .discussionStartTimestamp;
+
+  if (stage.kind === 'privateChat' && !startTimestamp) {
+    const chatRef = app
+      .firestore()
+      .collection('experiments')
+      .doc(experimentId)
+      .collection('participants')
+      .doc(participantId)
+      .collection('stageData')
+      .doc(stage.id)
+      .collection('privateChats')
+      .orderBy('timestamp', 'asc')
+      .limit(1);
+
+    const chatSnap = await chatRef.get();
+    if (!chatSnap.empty) {
+      startTimestamp = chatSnap.docs[0].data().timestamp as Timestamp;
+    }
+  }
+
+  const minTime = (stage as ChatStageConfig).timeMinimumInMinutes;
+  if (minTime !== undefined && minTime !== null && minTime > 0) {
+    if (!startTimestamp) return;
+    const elapsedMinutes = getTimeElapsed(startTimestamp, 'm');
+    if (elapsedMinutes < minTime) return;
+  }
+
   const participantAnswerDoc = getFirestoreParticipantAnswerRef(
     experimentId,
     participantId,
@@ -111,6 +141,7 @@ export async function updateParticipantReadyToEndChat(
   } else {
     // Otherwise, move to next stage
     const experiment = await getFirestoreExperiment(experimentId);
+    if (!experiment) return;
     await updateParticipantNextStage(
       experimentId,
       participant,

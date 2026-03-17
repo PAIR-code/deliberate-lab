@@ -15,8 +15,9 @@ export const PrivateChatStageConfigData = Type.Composite(
         // If defined, ends chat after specified time limit
         // (starting from when the first message is sent)
         timeLimitInMinutes: Type.Union([Type.Number(), Type.Null()]),
-        // Require participants to stay in chat until time limit is up
-        requireFullTime: Type.Optional(Type.Boolean()),
+        timeMinimumInMinutes: Type.Optional(
+          Type.Union([Type.Number(), Type.Null()]),
+        ),
         // If true, requires participant to go back and forth with mediator(s)
         // (rather than being able to send multiple messages at once)
         isTurnBasedChat: Type.Optional(Type.Boolean()),
