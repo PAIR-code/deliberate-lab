@@ -3,6 +3,11 @@
  *
  * Both databases must be in the same Firebase project.
  *
+ * WARNING: Restoring documents will fire Firestore onCreate/onWrite triggers.
+ * This can cause unwanted side effects for experiments that use:
+ *   - CHIP or PAYOUT stages (answers will be overwritten with random values)
+ *   - Chat stages with agent mediators (LLM API calls for every restored message)
+ *
  * Usage:
  *   cd functions
  *   npx tsx src/migrations/restore-experiment.ts --backup-db <name> <experimentId> [...]
