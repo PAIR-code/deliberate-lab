@@ -125,7 +125,7 @@ export const updateChatStageParticipantAnswer = onCall(async (request) => {
   const stage = await getFirestoreStage(data.experimentId, stageId);
   if (stage) {
     const minTime = (stage as ChatStageConfig).timeMinimumInMinutes;
-    if (minTime !== undefined && minTime !== null && minTime > 0) {
+    if (minTime != null && minTime > 0) {
       const publicStageData = await getFirestoreStagePublicData(
         data.experimentId,
         data.cohortId,

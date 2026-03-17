@@ -124,19 +124,11 @@ export class PrivateChatView extends MobxLitElement {
       : participantMessageCount >= this.stage.minNumberOfTurns;
 
     // Check if minimum time is met
-    let minTimeMet = true;
-    if (
-      this.stage.timeMinimumInMinutes !== null &&
-      this.stage.timeMinimumInMinutes > 0
-    ) {
-      if (!discussionStartTimestamp) {
-        minTimeMet = false;
-      } else {
-        if (elapsedMinutes < this.stage.timeMinimumInMinutes) {
-          minTimeMet = false;
-        }
-      }
-    }
+    const minTimeMet =
+      this.stage.timeMinimumInMinutes == null ||
+      this.stage.timeMinimumInMinutes <= 0 ||
+      (discussionStartTimestamp !== null &&
+        elapsedMinutes >= this.stage.timeMinimumInMinutes);
 
     const isNextDisabled = !minTurnsMet || !minTimeMet;
 
