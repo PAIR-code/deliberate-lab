@@ -23,10 +23,11 @@ import {
  */
 export interface PrivateChatStageConfig extends BaseStageConfig {
   kind: StageKind.PRIVATE_CHAT;
-  // If defined, ends chat after specified time limit
+  // TODO: Migrate to seconds for internal storage to avoid fractional-minute ambiguity.
+  // If defined, ends chat after specified time limit (integer minutes)
   // (starting from when the first message is sent)
   timeLimitInMinutes: number | null;
-  // Minimum amount of time a participant must spend in chat
+  // Minimum amount of time a participant must spend in chat (integer minutes)
   timeMinimumInMinutes: number | null;
   // If true, requires participant to go back and forth with mediator(s)
   // (rather than being able to send multiple messages at once)

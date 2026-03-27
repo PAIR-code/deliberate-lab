@@ -61,7 +61,9 @@ export class ChatEditor extends MobxLitElement {
 
     const updateMaxTime = (e: InputEvent) => {
       if (!this.stage) return;
-      const timeLimit = Number((e.target as HTMLTextAreaElement).value);
+      const timeLimit = Math.floor(
+        Number((e.target as HTMLTextAreaElement).value),
+      );
       this.experimentEditor.updateStage({
         ...this.stage,
         timeLimitInMinutes: timeLimit,
@@ -70,7 +72,7 @@ export class ChatEditor extends MobxLitElement {
 
     const updateMinTime = (e: InputEvent) => {
       if (!this.stage) return;
-      const val = Number((e.target as HTMLInputElement).value);
+      const val = Math.floor(Number((e.target as HTMLInputElement).value));
       const max = this.stage.timeLimitInMinutes;
       const clamped = max !== null ? Math.min(val, max) : val;
       this.experimentEditor.updateStage({
@@ -94,12 +96,15 @@ export class ChatEditor extends MobxLitElement {
         ${timeLimit !== null
           ? html`
               <div class="number-input tab">
-                <label for="timeLimit"> Maximum time (in minutes) </label>
+                <label for="timeLimit">
+                  Maximum time in minutes (starting at first message)
+                </label>
                 <input
                   type="number"
                   id="timeLimit"
                   name="timeLimit"
                   min="0"
+                  step="1"
                   .value=${timeLimit}
                   ?disabled=${!this.experimentEditor.canEditStages}
                   @input=${updateMaxTime}
@@ -114,6 +119,7 @@ export class ChatEditor extends MobxLitElement {
                   id="timeMinimum"
                   name="timeMinimum"
                   min="0"
+                  step="1"
                   .max=${timeLimit ?? ''}
                   .value=${this.stage?.timeMinimumInMinutes ?? ''}
                   placeholder="No minimum"
