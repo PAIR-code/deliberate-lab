@@ -553,6 +553,11 @@ class ConditionOperator(StrEnum):
     or_ = "or"
 
 
+class MultipleChoiceDisplayType(StrEnum):
+    radio = "radio"
+    dropdown = "dropdown"
+
+
 class TOSStageConfig(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
@@ -591,6 +596,7 @@ class SurveyAutoTransferConfig(BaseModel):
 
 class ApiKeyType(StrEnum):
     GEMINI = "GEMINI"
+    VERTEX_AI = "VERTEX_AI"
     OPENAI = "OPENAI"
     CLAUDE = "CLAUDE"
     OLLAMA = "OLLAMA"
@@ -1248,6 +1254,9 @@ class MultipleChoiceSurveyQuestion(BaseModel):
     questionTitle: str
     options: list[MultipleChoiceItem]
     correctAnswerId: str | None = None
+    displayType: Annotated[
+        MultipleChoiceDisplayType | None, Field(title="MultipleChoiceDisplayType")
+    ] = None
     condition: Annotated[
         ComparisonCondition | ConditionGroup | None, Field(title="Condition")
     ] = None

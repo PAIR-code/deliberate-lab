@@ -71,6 +71,8 @@ export class ExperimenterDataEditor extends MobxLitElement {
       </div>
       ${this.renderGeminiKey()}
       <div class="divider"></div>
+      ${this.renderVertexAISettings()}
+      <div class="divider"></div>
       ${this.renderOpenAISettings()}
       <div class="divider"></div>
       ${this.renderClaudeSettings()}
@@ -154,6 +156,67 @@ export class ExperimenterDataEditor extends MobxLitElement {
           @input=${updateKey}
         ></md-filled-text-field>
         ${this.renderCheckApiKey(ApiKeyType.GEMINI_API_KEY)}
+      </div>
+    `;
+  }
+
+  // ============ Vertex AI ============
+  private renderVertexAISettings() {
+    const updateVertexAISettings = (
+      e: InputEvent,
+      field: 'apiKey' | 'project' | 'location' | 'serviceAccountJson',
+    ) => {
+      const oldData = this.authService.experimenterData;
+      if (!oldData) return;
+
+      const value = (e.target as HTMLInputElement).value;
+      this.setApiKeyResult(ApiKeyType.VERTEX_AI_API_KEY, {
+        status: CheckApiKeyStatus.NONE,
+      });
+
+      const newData = updateExperimenterData(oldData, {
+        apiKeys: {
+          ...oldData.apiKeys,
+          vertexAIConfig: {
+            ...(oldData.apiKeys?.vertexAIConfig ?? {}),
+            [field]: value,
+          },
+        },
+      });
+
+      this.authService.writeExperimenterData(newData);
+    };
+
+    const data = this.authService.experimenterData;
+    const config = data?.apiKeys.vertexAIConfig;
+    return html`
+      <div class="section">
+        <h3>Vertex AI API settings</h3>
+        <p>
+          Use either an API key (express mode) or service account credentials.
+        </p>
+        <md-filled-text-field
+          label="API key (express mode)"
+          placeholder="Add Vertex AI API key"
+          .value=${config?.apiKey ?? ''}
+          @input=${(e: InputEvent) => updateVertexAISettings(e, 'apiKey')}
+        ></md-filled-text-field>
+        <p>Or use a service account:</p>
+        <md-filled-text-field
+          type="textarea"
+          label="Service account JSON"
+          placeholder="Paste the full JSON key file contents"
+          .value=${config?.serviceAccountJson ?? ''}
+          @input=${(e: InputEvent) =>
+            updateVertexAISettings(e, 'serviceAccountJson')}
+        ></md-filled-text-field>
+        <md-filled-text-field
+          label="Location (optional, defaults to us-central1)"
+          placeholder="us-central1"
+          .value=${config?.location ?? ''}
+          @input=${(e: InputEvent) => updateVertexAISettings(e, 'location')}
+        ></md-filled-text-field>
+        ${this.renderCheckApiKey(ApiKeyType.VERTEX_AI_API_KEY)}
       </div>
     `;
   }

@@ -2282,6 +2282,19 @@
             }
           ]
         },
+        "displayType": {
+          "title": "MultipleChoiceDisplayType",
+          "anyOf": [
+            {
+              "const": "radio",
+              "type": "string"
+            },
+            {
+              "const": "dropdown",
+              "type": "string"
+            }
+          ]
+        },
         "condition": {
           "title": "Condition",
           "anyOf": [
@@ -2294,6 +2307,19 @@
           ]
         }
       }
+    },
+    "MultipleChoiceDisplayType": {
+      "title": "MultipleChoiceDisplayType",
+      "anyOf": [
+        {
+          "const": "radio",
+          "type": "string"
+        },
+        {
+          "const": "dropdown",
+          "type": "string"
+        }
+      ]
     },
     "ScaleSurveyQuestion": {
       "title": "ScaleSurveyQuestion",
@@ -2718,6 +2744,10 @@
               "type": "string"
             },
             {
+              "const": "VERTEX_AI",
+              "type": "string"
+            },
+            {
               "const": "OPENAI",
               "type": "string"
             },
@@ -2741,6 +2771,10 @@
       "anyOf": [
         {
           "const": "GEMINI",
+          "type": "string"
+        },
+        {
+          "const": "VERTEX_AI",
           "type": "string"
         },
         {
