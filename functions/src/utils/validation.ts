@@ -185,7 +185,7 @@ export function validateStages(stages: unknown[]): ValidationResult {
                 `  - ${nestedError.path}: ${nestedError.message}`,
               );
             }
-          } catch (err) {
+          } catch {
             // If drilling into union fails, fall back to generic error
             errorMessages.push(`  - ${error.path}: ${error.message}`);
           }

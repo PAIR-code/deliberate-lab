@@ -220,10 +220,6 @@ export class GroupChatView extends MobxLitElement {
   private renderIndicators() {
     if (!this.stage) return nothing;
 
-    const publicStageData = this.cohortService.stagePublicDataMap[
-      this.stage.id
-    ] as ChatStagePublicData;
-
     // Check if all other participants have completed the stage
     const completed = this.cohortService.getStageCompletedParticipants(
       this.stage.id,

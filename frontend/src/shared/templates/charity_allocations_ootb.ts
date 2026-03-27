@@ -1,9 +1,7 @@
 import {
   ApiKeyType,
   AgentModelSettings,
-  createTextPromptItem,
   createChatStage,
-  createDefaultStageContextPromptItem,
   AgentMediatorTemplate,
   MediatorPromptConfig,
   createAgentMediatorPersonaConfig,
@@ -12,10 +10,6 @@ import {
   StructuredOutputSchema,
   createStructuredOutputConfig,
   createAgentChatSettings,
-  PromptItemType,
-  ProfileInfoPromptItem,
-  ProfileContextPromptItem,
-  DEFAULT_AGENT_MODEL_SETTINGS,
   DEFAULT_EXPLANATION_FIELD,
   DEFAULT_READY_TO_END_FIELD,
   DEFAULT_RESPONSE_FIELD,
@@ -69,32 +63,6 @@ export enum MediatorModelType {
 const GEMINI_MEDIATOR_ID = 'gemini-mediator-agent';
 const CLAUDE_MEDIATOR_ID = 'claude-mediator-agent';
 const OPENAI_MEDIATOR_ID = 'openai-mediator-agent';
-
-const FAILURE_MODE_ENUMS = [
-  'NoFailureModeDetected',
-  'LowEffortOrLowEngagement',
-  'OffTopicDrift',
-  'UnevenParticipation',
-  'NoJustificationOrPrematureConsensus',
-  'BinaryStuck',
-  'SelfContainedReasoningOnly',
-];
-
-const SOLUTION_STRATEGY_ENUMS = [
-  'NoSolutionNeeded', // No failure mode / still early
-  // LowEffortOrLowEngagement
-  'InviteBriefReasoningOrValues',
-  // OffTopicDrift
-  'GentlyRefocusOnAllocationTask',
-  // UnevenParticipation
-  'InviteQuietVoiceOpenSpace',
-  // NoJustificationOrPrematureConsensus
-  'CheckConsensusElicitOneReason',
-  // BinaryStuck
-  'ExploreMiddleGroundOrSharedGoals',
-  // SelfContainedReasoningOnly
-  'PromptEngagementWithOthers',
-];
 
 export const OOTB_CHARITY_DEBATE_METADATA = createMetadataConfig({
   name: 'Out-of-the-box Mediated Charity Debate (3 Rounds)',

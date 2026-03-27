@@ -18,15 +18,11 @@ import {
   ChatStageConfig,
   ChatStagePublicData,
   MediatorProfile,
-  MediatorStatus,
   ParticipantProfile,
   convertUnifiedTimestampToTime,
   getTimeElapsed,
 } from '@deliberation-lab/utils';
-import {
-  getChatStartTimestamp,
-  getChatTimeRemainingInSeconds,
-} from '../../shared/stage.utils';
+import {getChatStartTimestamp} from '../../shared/stage.utils';
 import {getHashBasedColor} from '../../shared/utils';
 import {styles} from './chat_info_panel.scss';
 
@@ -58,12 +54,12 @@ export class ChatPanel extends MobxLitElement {
     return html`
       <div class="side-layout">
         <stage-description .stage=${this.stage} noPadding> </stage-description>
-        ${this.renderTimer(true)} ${this.renderParticipantList()}
+        ${this.renderTimer()} ${this.renderParticipantList()}
       </div>
     `;
   }
 
-  private renderTimer(showDivider = false) {
+  private renderTimer() {
     if (!this.stage) return nothing;
 
     const publicStageData = this.cohortService.stagePublicDataMap[
