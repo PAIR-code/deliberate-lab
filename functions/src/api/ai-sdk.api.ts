@@ -18,6 +18,7 @@ import type {AssistantContent, FilePart} from '@ai-sdk/provider-utils';
 import {createOpenAI} from '@ai-sdk/openai';
 import {createAnthropic} from '@ai-sdk/anthropic';
 import {createGoogleGenerativeAI} from '@ai-sdk/google';
+import {createVertex} from '@ai-sdk/google-vertex';
 import {createOllama} from 'ollama-ai-provider-v2';
 
 // Re-export ModelMessage for use throughout functions package
@@ -32,6 +33,7 @@ import {
   APIKeyConfig,
   AgentModelSettings,
   ApiKeyType,
+  VertexAIConfig,
   isAlwaysThinkingModel,
   schemaToObject,
 } from '@deliberation-lab/utils';
@@ -44,10 +46,9 @@ import {
  * Provider factory creates a language model instance from configuration.
  * Returns LanguageModel (which can be a string or a model object).
  */
-type ProviderFactory = (config: {
-  apiKey?: string;
-  baseURL?: string;
-}) => (modelId: string) => LanguageModel;
+type ProviderFactory = (
+  config: APIKeyConfig,
+) => (modelId: string) => LanguageModel;
 
 /**
  * Registry of available AI providers.
@@ -55,21 +56,58 @@ type ProviderFactory = (config: {
  * 1. npm install @ai-sdk/[provider]
  * 2. Add one line to this registry
  */
+/**
+ * Creates a Vertex AI model factory.
+ * Supports express mode (API key) and service account auth.
+ */
+function getVertexModelFactory(
+  config?: VertexAIConfig,
+): (modelId: string) => LanguageModel {
+  if (config?.apiKey) {
+    const provider = createVertex({apiKey: config.apiKey});
+    return (modelId: string) => provider(modelId) as LanguageModel;
+  }
+  // Parse service account JSON to extract credentials
+  const serviceAccount = config?.serviceAccountJson
+    ? JSON.parse(config.serviceAccountJson)
+    : {};
+  const provider = createVertex({
+    project: config?.project || serviceAccount.project_id,
+    location: config?.location,
+    googleAuthOptions: {
+      credentials: {
+        client_email: serviceAccount.client_email,
+        private_key: serviceAccount.private_key,
+      },
+    },
+  });
+  return (modelId: string) => provider(modelId) as LanguageModel;
+}
+
 const PROVIDER_REGISTRY: Record<string, ProviderFactory> = {
-  google: ({apiKey}) => {
-    const provider = createGoogleGenerativeAI({apiKey});
+  google: (config) => {
+    const provider = createGoogleGenerativeAI({apiKey: config.geminiApiKey});
     return (modelId: string) => provider(modelId) as LanguageModel;
   },
-  openai: ({apiKey, baseURL}) => {
-    const provider = createOpenAI({apiKey, baseURL});
+  vertex: (config) => getVertexModelFactory(config.vertexAIConfig),
+  openai: (config) => {
+    const provider = createOpenAI({
+      apiKey: config.openAIApiKey?.apiKey,
+      baseURL: config.openAIApiKey?.baseUrl || undefined,
+    });
     return (modelId: string) => provider(modelId) as LanguageModel;
   },
-  anthropic: ({apiKey, baseURL}) => {
-    const provider = createAnthropic({apiKey, baseURL});
+  anthropic: (config) => {
+    const provider = createAnthropic({
+      apiKey: config.claudeApiKey?.apiKey,
+      baseURL: config.claudeApiKey?.baseUrl || undefined,
+    });
     return (modelId: string) => provider(modelId) as LanguageModel;
   },
-  ollama: ({baseURL}) => {
-    const provider = createOllama({baseURL});
+  ollama: (config) => {
+    const provider = createOllama({
+      baseURL: config.ollamaApiKey?.url,
+    });
     return (modelId: string) => provider(modelId) as LanguageModel;
   },
 };
@@ -79,40 +117,11 @@ const PROVIDER_REGISTRY: Record<string, ProviderFactory> = {
  */
 const API_TYPE_TO_PROVIDER: Record<ApiKeyType, string> = {
   [ApiKeyType.GEMINI_API_KEY]: 'google',
+  [ApiKeyType.VERTEX_AI_API_KEY]: 'vertex',
   [ApiKeyType.OPENAI_API_KEY]: 'openai',
   [ApiKeyType.CLAUDE_API_KEY]: 'anthropic',
   [ApiKeyType.OLLAMA_CUSTOM_URL]: 'ollama',
 };
-
-/**
- * Extracts credentials from APIKeyConfig based on API type.
- */
-function getCredentials(
-  apiKeyConfig: APIKeyConfig,
-  apiType: ApiKeyType,
-): {apiKey?: string; baseURL?: string} {
-  switch (apiType) {
-    case ApiKeyType.GEMINI_API_KEY:
-      return {apiKey: apiKeyConfig.geminiApiKey};
-    case ApiKeyType.OPENAI_API_KEY:
-      return {
-        apiKey: apiKeyConfig.openAIApiKey?.apiKey,
-        baseURL: apiKeyConfig.openAIApiKey?.baseUrl || undefined,
-      };
-    case ApiKeyType.CLAUDE_API_KEY:
-      return {
-        apiKey: apiKeyConfig.claudeApiKey?.apiKey,
-        baseURL: apiKeyConfig.claudeApiKey?.baseUrl || undefined,
-      };
-    case ApiKeyType.OLLAMA_CUSTOM_URL:
-      return {
-        apiKey: apiKeyConfig.ollamaApiKey?.apiKey || undefined,
-        baseURL: apiKeyConfig.ollamaApiKey?.url,
-      };
-    default:
-      return {};
-  }
-}
 
 /**
  * Gets a language model instance from the provider registry.
@@ -135,8 +144,7 @@ function getModel(
     );
   }
 
-  const credentials = getCredentials(apiKeyConfig, modelSettings.apiType);
-  return providerFactory(credentials)(modelSettings.modelName);
+  return providerFactory(apiKeyConfig)(modelSettings.modelName);
 }
 
 // ============================================================================
@@ -355,7 +363,8 @@ function getProviderOptions(
   const overrides = generationConfig.providerOptions;
 
   switch (apiType) {
-    case ApiKeyType.GEMINI_API_KEY: {
+    case ApiKeyType.GEMINI_API_KEY:
+    case ApiKeyType.VERTEX_AI_API_KEY: {
       const mapped = buildGoogleOptions(generationConfig, modelName);
       const merged = {...mapped, ...overrides?.google};
       return {google: merged};
@@ -966,6 +975,5 @@ export const _testing = {
   mapResultToModelResponse,
   extractContentFromMessages,
   mapErrorToModelResponse,
-  getCredentials,
   API_TYPE_TO_PROVIDER,
 };

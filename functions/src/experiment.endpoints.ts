@@ -7,12 +7,13 @@ import {
   Experiment,
   ExperimentDeletionData,
   ExperimentDownloadResponse,
+  ExperimentLogsDownloadResponse,
   MediatorPromptConfig,
   ParticipantPromptConfig,
   StageConfig,
   createExperimentTemplate,
 } from '@deliberation-lab/utils';
-import {getExperimentDownload} from './data';
+import {getExperimentDownload, getExperimentLogs} from './data';
 import {
   deleteExperimentById,
   forkExperimentById,
@@ -367,3 +368,34 @@ export const downloadExperiment = onCall(async (request) => {
     return {data: null};
   }
 });
+
+// ************************************************************************* //
+// downloadExperimentLogs for experimenters                                  //
+//                                                                           //
+// Input structure: { experimentId }                                         //
+// Returns: ExperimentLogsDownloadResponse                                   //
+// ************************************************************************* //
+export const downloadExperimentLogs = onCall(
+  {memory: '1GiB'},
+  async (request) => {
+    await AuthGuard.isExperimenter(request);
+    const {data} = request;
+
+    try {
+      const logs = await getExperimentLogs(app.firestore(), data.experimentId);
+
+      if (!logs) {
+        return {data: null};
+      }
+
+      const response: ExperimentLogsDownloadResponse = {
+        data: logs,
+      };
+
+      return response;
+    } catch (error) {
+      console.error('Error downloading experiment logs:', error);
+      return {data: null};
+    }
+  },
+);

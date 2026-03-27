@@ -1,9 +1,7 @@
 import {computed, makeObservable, observable} from 'mobx';
 import {
   collection,
-  getDocs,
   onSnapshot,
-  orderBy,
   query,
   Unsubscribe,
   where,
@@ -29,6 +27,7 @@ import {
   CohortParticipantConfig,
   CreateChatMessageData,
   LogEntry,
+  LogEntryType,
   MediatorProfileExtended,
   MediatorStatus,
   MetadataConfig,
@@ -58,6 +57,7 @@ import {
   sendParticipantCheckCallable,
   setExperimentCohortLockCallable,
   testAgentConfigCallable,
+  downloadExperimentLogsCallable,
   updateCohortMetadataCallable,
   updateMediatorStatusCallable,
   updateParticipantStatusCallable,
@@ -76,6 +76,7 @@ import {
 } from '../shared/file.utils';
 import {
   isObsoleteParticipant,
+  matchesStatusFilter,
   ParticipantSortOption,
   ParticipantStatusFilter,
   requiresAnonymousProfiles,
@@ -98,6 +99,12 @@ interface ServiceProvider {
  * - For experiment editor, see experiment.editor.ts
  */
 export class ExperimentManager extends Service {
+  /** Auto-filter to "in progress" when participant count exceeds this. */
+  static readonly AUTO_FILTER_PARTICIPANT_THRESHOLD = 200;
+
+  /** Max participants to render per cohort before showing "Show all" button. */
+  static readonly INITIAL_RENDER_LIMIT = 100;
+
   constructor(private readonly sp: ServiceProvider) {
     super();
     makeObservable(this);
@@ -110,7 +117,7 @@ export class ExperimentManager extends Service {
   @observable participantMap: Record<string, ParticipantProfileExtended> = {};
   @observable mediatorMap: Record<string, MediatorProfileExtended> = {};
   @observable alertMap: Record<string, AlertMessage> = {};
-  @observable logs: LogEntry[] = [];
+  @observable logMap: Record<string, LogEntry> = {};
 
   // Loading
   @observable unsubscribe: Unsubscribe[] = [];
@@ -461,6 +468,23 @@ export class ExperimentManager extends Service {
       .sort((a, b) => b.timestamp.seconds - a.timestamp.seconds);
   }
 
+  @computed get logs() {
+    return Object.values(this.logMap).sort(
+      (a, b) => b.createdTimestamp.seconds - a.createdTimestamp.seconds,
+    );
+  }
+
+  /** Set of ModelResponseStatus values that exist in the current logs. */
+  @computed get logStatusesInData(): Set<ModelResponseStatus> {
+    const statuses = new Set<ModelResponseStatus>();
+    for (const log of Object.values(this.logMap)) {
+      if (log.type === LogEntryType.MODEL) {
+        statuses.add(log.response.status);
+      }
+    }
+    return statuses;
+  }
+
   @computed get isLoading() {
     return (
       this.isCohortsLoading ||
@@ -577,6 +601,23 @@ export class ExperimentManager extends Service {
             }
           });
 
+          // On initial load, default to "in progress" filter if there are
+          // many participants to avoid slow rendering, but only if some
+          // participants are actually in progress (skip for finished experiments).
+          if (
+            this.isParticipantsLoading &&
+            Object.keys(this.participantMap).length >
+              ExperimentManager.AUTO_FILTER_PARTICIPANT_THRESHOLD &&
+            this.participantStatusFilters.size === 0 &&
+            Object.values(this.participantMap).some((p) =>
+              matchesStatusFilter(p, 'inProgress'),
+            )
+          ) {
+            this.participantStatusFilters = new Set<ParticipantStatusFilter>([
+              'inProgress',
+            ]);
+          }
+
           this.isParticipantsLoading = false;
         },
       ),
@@ -643,17 +684,21 @@ export class ExperimentManager extends Service {
     // Subscribe to logs
     this.unsubscribe.push(
       onSnapshot(
-        query(
-          collection(
-            this.sp.firebaseService.firestore,
-            'experiments',
-            id,
-            'logs',
-          ),
-          orderBy('createdTimestamp', 'desc'),
+        collection(
+          this.sp.firebaseService.firestore,
+          'experiments',
+          id,
+          'logs',
         ),
         (snapshot) => {
-          this.logs = snapshot.docs.map((doc) => doc.data() as LogEntry);
+          snapshot.docChanges().forEach((change) => {
+            if (change.type === 'removed') {
+              delete this.logMap[change.doc.id];
+            } else {
+              const data = change.doc.data() as LogEntry;
+              this.logMap[change.doc.id] = data;
+            }
+          });
           this.isLogsLoading = false;
         },
       ),
@@ -670,7 +715,7 @@ export class ExperimentManager extends Service {
     this.mediatorMap = {};
     this.agentPersonaMap = {};
     this.alertMap = {};
-    this.logs = [];
+    this.logMap = {};
   }
 
   reset() {
@@ -929,21 +974,12 @@ export class ExperimentManager extends Service {
         // Add experiment JSON to zip
         zip.file(`${experimentName}.json`, JSON.stringify(result, null, 2));
 
-        // TODO: Refactor
         // Add logs to zip
-        const logs = (
-          await getDocs(
-            query(
-              collection(
-                this.sp.firebaseService.firestore,
-                'experiments',
-                experimentId,
-                'logs',
-              ),
-              orderBy('createdTimestamp', 'asc'),
-            ),
-          )
-        ).docs.map((doc) => doc.data() as LogEntry);
+        const logsResponse = await downloadExperimentLogsCallable(
+          this.sp.firebaseService.functions,
+          experimentId,
+        );
+        const logs = logsResponse.data ?? [];
         zip.file(`${experimentName}_Logs.json`, JSON.stringify(logs, null, 2));
 
         // Add chip negotiation data

@@ -1,10 +1,7 @@
 import {Type, type Static} from '@sinclair/typebox';
 import {UnifiedTimestampSchema} from '../shared.validation';
 import {StageKind} from './stage';
-import {
-  StageProgressConfigSchema,
-  StageTextConfigSchema,
-} from './stage.validation';
+import {BaseStageConfigSchema} from './stage.schemas';
 import {StockData} from './stockinfo_stage.validation';
 
 /** Shorthand for strict TypeBox object validation */
@@ -46,16 +43,18 @@ export const AssetAllocationStockInfoConfigData = Type.Object(
 );
 
 /** AssetAllocation stage config validation. */
-export const AssetAllocationStageConfigData = Type.Object(
-  {
-    id: Type.String({minLength: 1}),
-    kind: Type.Literal(StageKind.ASSET_ALLOCATION),
-    name: Type.String({minLength: 1}),
-    descriptions: Type.Ref(StageTextConfigSchema),
-    progress: Type.Ref(StageProgressConfigSchema),
-    stockConfig: AssetAllocationStockInfoConfigData,
-  },
-  strict,
+export const AssetAllocationStageConfigData = Type.Composite(
+  [
+    BaseStageConfigSchema,
+    Type.Object(
+      {
+        kind: Type.Literal(StageKind.ASSET_ALLOCATION),
+        stockConfig: AssetAllocationStockInfoConfigData,
+      },
+      strict,
+    ),
+  ],
+  {$id: 'AssetAllocationStageConfig', ...strict},
 );
 
 /** AssetAllocation stage participant answer validation. */
@@ -81,17 +80,19 @@ export const AssetAllocationStagePublicDataData = Type.Object(
 );
 
 /** MultiAssetAllocation validation. */
-export const MultiAssetAllocationStageConfigData = Type.Object(
-  {
-    id: Type.String({minLength: 1}),
-    kind: Type.Literal(StageKind.MULTI_ASSET_ALLOCATION),
-    name: Type.String({minLength: 1}),
-    descriptions: Type.Ref(StageTextConfigSchema),
-    progress: Type.Ref(StageProgressConfigSchema),
-    stockOptions: Type.Array(StockData),
-    stockInfoStageId: Type.String(),
-  },
-  strict,
+export const MultiAssetAllocationStageConfigData = Type.Composite(
+  [
+    BaseStageConfigSchema,
+    Type.Object(
+      {
+        kind: Type.Literal(StageKind.MULTI_ASSET_ALLOCATION),
+        stockOptions: Type.Array(StockData),
+        stockInfoStageId: Type.String(),
+      },
+      strict,
+    ),
+  ],
+  {$id: 'MultiAssetAllocationStageConfig', ...strict},
 );
 
 /** MultiAssetAllocation stage participant answer validation. */

@@ -15,6 +15,7 @@ import {reaction} from 'mobx';
 import {CSSResultGroup, html, nothing} from 'lit';
 import {customElement, state} from 'lit/decorators.js';
 import {classMap} from 'lit/directives/class-map.js';
+import {repeat} from 'lit/directives/repeat.js';
 
 import {core} from '../../core/core';
 import {ButtonClick, AnalyticsService} from '../../services/analytics.service';
@@ -384,10 +385,11 @@ export class Panel extends MobxLitElement {
     `;
   }
 
+  private alertResponseMap = new Map<string, string>();
+
   private renderAlertPanel() {
     const newAlerts = this.experimentManager.newAlerts;
     const oldAlerts = this.experimentManager.oldAlerts;
-    let alertResponse = '';
 
     const renderAlert = (alert: AlertMessage) => {
       const cohort = this.experimentManager.getCohort(alert.cohortId);
@@ -401,6 +403,7 @@ export class Panel extends MobxLitElement {
           alert.participantId,
           response,
         );
+        this.alertResponseMap.delete(alert.id);
         this.isAckAlertLoading = false;
       };
 
@@ -437,10 +440,13 @@ export class Panel extends MobxLitElement {
             <div class="alert-response-options">
               <div class="alert-response-input">
                 <pr-textarea
-                  .value=${alertResponse}
+                  .value=${this.alertResponseMap.get(alert.id) ?? ''}
                   placeholder="Send a response"
                   @input=${(e: Event) => {
-                    alertResponse = (e.target as HTMLTextAreaElement).value;
+                    this.alertResponseMap.set(
+                      alert.id,
+                      (e.target as HTMLTextAreaElement).value,
+                    );
                   }}
                 >
                 </pr-textarea>
@@ -448,7 +454,7 @@ export class Panel extends MobxLitElement {
                   icon="send"
                   variant="default"
                   @click=${async () => {
-                    onAck(alertResponse);
+                    onAck(this.alertResponseMap.get(alert.id) ?? '');
                   }}
                 >
                 </pr-icon-button>
@@ -478,9 +484,17 @@ export class Panel extends MobxLitElement {
       <div class="main">
         <div class="top">
           <div class="header">New Alerts</div>
-          ${newAlerts.map((alert) => renderAlert(alert))}
+          ${repeat(
+            newAlerts,
+            (alert) => alert.id,
+            (alert) => renderAlert(alert),
+          )}
           <div class="header">Past Alerts</div>
-          ${oldAlerts.map((alert) => renderAlert(alert))}
+          ${repeat(
+            oldAlerts,
+            (alert) => alert.id,
+            (alert) => renderAlert(alert),
+          )}
         </div>
       </div>
     `;

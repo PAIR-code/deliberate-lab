@@ -1,10 +1,7 @@
 import {Type, type Static} from '@sinclair/typebox';
 import {StageKind} from './stage';
 import {ComprehensionQuestionKind} from './comprehension_stage';
-import {
-  StageProgressConfigSchema,
-  StageTextConfigSchema,
-} from './stage.validation';
+import {BaseStageConfigSchema} from './stage.schemas';
 import {MultipleChoiceItemData} from './survey_stage.validation';
 
 /** Shorthand for strict TypeBox object validation */
@@ -44,14 +41,16 @@ export const ComprehensionQuestionData = Type.Union([
 ]);
 
 /** ComprehensionStageConfig input validation. */
-export const ComprehensionStageConfigData = Type.Object(
-  {
-    id: Type.String({minLength: 1}),
-    kind: Type.Literal(StageKind.COMPREHENSION),
-    name: Type.String({minLength: 1}),
-    descriptions: Type.Ref(StageTextConfigSchema),
-    progress: Type.Ref(StageProgressConfigSchema),
-    questions: Type.Array(ComprehensionQuestionData),
-  },
-  strict,
+export const ComprehensionStageConfigData = Type.Composite(
+  [
+    BaseStageConfigSchema,
+    Type.Object(
+      {
+        kind: Type.Literal(StageKind.COMPREHENSION),
+        questions: Type.Array(ComprehensionQuestionData),
+      },
+      strict,
+    ),
+  ],
+  {$id: 'ComprehensionStageConfig', ...strict},
 );

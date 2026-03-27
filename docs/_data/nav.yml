@@ -8,6 +8,8 @@
     url: /researchers/run-experiment
   - title: Add LLM mediators to chat
     url: /researchers/add-mediator
+  - title: Add LLM agent participants to experiment
+    url: /researchers/add-agent-participant
   - title: Add Prolific integration
     url: /researchers/prolific
 - title: Developers

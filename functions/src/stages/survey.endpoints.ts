@@ -48,20 +48,6 @@ export const updateSurveyStageParticipantAnswer = onCall(
       .collection('stageData')
       .doc(data.surveyStageParticipantAnswer.id);
 
-    // Define public stage document reference
-    const publicStageDoc = app
-      .firestore()
-      .collection('experiments')
-      .doc(data.experimentId)
-      .collection('cohorts')
-      .doc(data.cohortId)
-      .collection('publicStageData')
-      .doc(data.surveyStageParticipantAnswer.id);
-
-    const participantAnswerMap = {
-      [data.participantPublicId]: data.surveyStageParticipantAnswer.answerMap,
-    };
-
     // Run document write as transaction to ensure consistency
     await app.firestore().runTransaction(async (transaction) => {
       transaction.set(participantStageDoc, data.surveyStageParticipantAnswer);

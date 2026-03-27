@@ -99,6 +99,10 @@ export interface ConditionAutoTransferConfig extends BaseAutoTransferConfig {
   type: AutoTransferType.CONDITION;
   // Transfer groups evaluated in order - participant joins first matching group
   transferGroups: TransferGroup[];
+  // When true, if multiple groups are ready for a participant, pick the group
+  // whose target cohort has the fewest participants (balanced assignment).
+  // When false (default), first matching ready group wins.
+  enableGroupBalancing?: boolean;
 }
 
 // ************************************************************************* //
@@ -182,5 +186,6 @@ export function createConditionAutoTransferConfig(
     autoCohortParticipantConfig:
       config.autoCohortParticipantConfig ?? createCohortParticipantConfig(),
     transferGroups: config.transferGroups,
+    enableGroupBalancing: config.enableGroupBalancing ?? false,
   };
 }

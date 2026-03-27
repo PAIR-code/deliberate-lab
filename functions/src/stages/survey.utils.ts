@@ -13,25 +13,19 @@ export async function addParticipantAnswerToSurveyStagePublicData(
   participant: ParticipantProfileExtended,
   answer: SurveyStageParticipantAnswer,
 ) {
-  // Run document write as transaction to ensure consistency
-  await app.firestore().runTransaction(async (transaction) => {
-    const publicDocument = app
-      .firestore()
-      .collection('experiments')
-      .doc(experimentId)
-      .collection('cohorts')
-      .doc(participant.currentCohortId)
-      .collection('publicStageData')
-      .doc(stage.id);
+  const publicDocument = app
+    .firestore()
+    .collection('experiments')
+    .doc(experimentId)
+    .collection('cohorts')
+    .doc(participant.currentCohortId)
+    .collection('publicStageData')
+    .doc(stage.id);
 
-    // Update public stage data (current participant rankings, current winner)
-    const publicStageData = (
-      await publicDocument.get()
-    ).data() as SurveyStagePublicData;
-    publicStageData.participantAnswerMap[participant.publicId] =
-      answer.answerMap;
-
-    // Write public data
-    transaction.set(publicDocument, publicStageData);
-  });
+  // Merge write: only updates this participant's entry without touching
+  // other participants' data, so concurrent invocations are safe.
+  await publicDocument.set(
+    {participantAnswerMap: {[participant.publicId]: answer.answerMap}},
+    {merge: true},
+  );
 }

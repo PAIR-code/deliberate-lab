@@ -1,10 +1,7 @@
 import {Type, type Static} from '@sinclair/typebox';
 import {UnifiedTimestampSchema} from '../shared.validation';
 import {StageKind} from './stage';
-import {
-  StageProgressConfigSchema,
-  StageTextConfigSchema,
-} from './stage.validation';
+import {BaseStageConfigSchema} from './stage.schemas';
 
 /** Shorthand for strict TypeBox object validation */
 const strict = {additionalProperties: false} as const;
@@ -25,20 +22,22 @@ export const FlipCardData = Type.Object(
 );
 
 /** FlipCard stage config validation. */
-export const FlipCardStageConfigData = Type.Object(
-  {
-    id: Type.String({minLength: 1}),
-    kind: Type.Literal(StageKind.FLIPCARD),
-    name: Type.String({minLength: 1}),
-    descriptions: Type.Ref(StageTextConfigSchema),
-    progress: Type.Ref(StageProgressConfigSchema),
-    cards: Type.Array(FlipCardData),
-    enableSelection: Type.Boolean(),
-    allowMultipleSelections: Type.Boolean(),
-    requireConfirmation: Type.Boolean(),
-    minUniqueCardsFlippedRequirement: Type.Number(),
-    shuffleCards: Type.Boolean(),
-  },
+export const FlipCardStageConfigData = Type.Composite(
+  [
+    BaseStageConfigSchema,
+    Type.Object(
+      {
+        kind: Type.Literal(StageKind.FLIPCARD),
+        cards: Type.Array(FlipCardData),
+        enableSelection: Type.Boolean(),
+        allowMultipleSelections: Type.Boolean(),
+        requireConfirmation: Type.Boolean(),
+        minUniqueCardsFlippedRequirement: Type.Number(),
+        shuffleCards: Type.Boolean(),
+      },
+      strict,
+    ),
+  ],
   {$id: 'FlipCardStageConfig', ...strict},
 );
 

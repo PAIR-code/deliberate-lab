@@ -1177,6 +1177,316 @@ describe('Cohort Definitions Integration Tests', () => {
       });
     });
 
+    describe('enableGroupBalancing', () => {
+      it('should balance participants across groups with same condition', async () => {
+        const experimentId = generateId();
+        const sourceCohortId = generateId(true);
+        const targetCohortIdA = generateId(true);
+        const targetCohortIdB = generateId(true);
+        const surveyStageId = 'survey-stage';
+        const transferStageId = 'transfer-stage';
+
+        // Create experiment with two cohort definitions
+        await createTestExperiment(experimentId, {
+          stageIds: [surveyStageId, transferStageId],
+          cohortDefinitions: [
+            {
+              id: 'def-a',
+              alias: 'group-a',
+              name: 'Group A',
+              generatedCohortId: targetCohortIdA,
+            },
+            {
+              id: 'def-b',
+              alias: 'group-b',
+              name: 'Group B',
+              generatedCohortId: targetCohortIdB,
+            },
+          ],
+        });
+
+        // Create source and target cohorts
+        await firestore.runTransaction(async (transaction) => {
+          await createCohortInternal(
+            transaction,
+            experimentId,
+            createTestCohortConfig(sourceCohortId, 'Source'),
+          );
+        });
+        await firestore.runTransaction(async (transaction) => {
+          await createCohortInternal(
+            transaction,
+            experimentId,
+            createTestCohortConfig(targetCohortIdA, 'Group A', 'group-a'),
+          );
+        });
+        await firestore.runTransaction(async (transaction) => {
+          await createCohortInternal(
+            transaction,
+            experimentId,
+            createTestCohortConfig(targetCohortIdB, 'Group B', 'group-b'),
+          );
+        });
+
+        // Create transfer stage with two groups having identical conditions
+        // but different target cohorts, with enableGroupBalancing
+        const transferStage = createTransferStage({
+          id: transferStageId,
+          autoTransferConfig: createConditionAutoTransferConfig({
+            autoCohortParticipantConfig: createCohortParticipantConfig(),
+            enableGroupBalancing: true,
+            transferGroups: [
+              createTransferGroup({
+                name: 'Group A',
+                targetCohortAlias: 'group-a',
+                composition: [
+                  createGroupComposition({
+                    id: 'anyone-a',
+                    condition: {
+                      id: 'cond-a',
+                      type: 'comparison',
+                      target: {stageId: surveyStageId, questionId: 'q1'},
+                      operator: ComparisonOperator.GREATER_THAN_OR_EQUAL,
+                      value: 0,
+                    },
+                    minCount: 1,
+                    maxCount: 1,
+                  }),
+                ],
+              }),
+              createTransferGroup({
+                name: 'Group B',
+                targetCohortAlias: 'group-b',
+                composition: [
+                  createGroupComposition({
+                    id: 'anyone-b',
+                    condition: {
+                      id: 'cond-b',
+                      type: 'comparison',
+                      target: {stageId: surveyStageId, questionId: 'q1'},
+                      operator: ComparisonOperator.GREATER_THAN_OR_EQUAL,
+                      value: 0,
+                    },
+                    minCount: 1,
+                    maxCount: 1,
+                  }),
+                ],
+              }),
+            ],
+          }),
+        });
+        await createTestTransferStage(experimentId, transferStage);
+
+        // Send 4 participants through and track which cohort each goes to
+        const transferredTo: string[] = [];
+
+        for (let i = 1; i <= 4; i++) {
+          const pId = `p${i}`;
+          const pubId = `pub-p${i}`;
+
+          const participant = await createTestParticipant(
+            experimentId,
+            pId,
+            sourceCohortId,
+            {stageId: transferStageId, publicId: pubId, connected: true},
+          );
+
+          // Set up survey data (all participants have the same answer)
+          // Re-create with all current participants' answers
+          const answers: Record<
+            string,
+            Record<string, {kind: SurveyQuestionKind; value: number}>
+          > = {};
+          for (let j = 1; j <= i; j++) {
+            answers[`pub-p${j}`] = {
+              q1: {kind: SurveyQuestionKind.SCALE, value: 5},
+            };
+          }
+          await createTestSurveyData(
+            experimentId,
+            sourceCohortId,
+            surveyStageId,
+            answers,
+          );
+
+          const result = await firestore.runTransaction(async (transaction) => {
+            return handleAutomaticTransfer(
+              transaction,
+              experimentId,
+              transferStage,
+              participant,
+            );
+          });
+
+          expect(result.directTransferInstructions).not.toBeNull();
+          transferredTo.push(result.directTransferInstructions!.targetCohortId);
+
+          // Execute the transfer so the cohort count updates
+          await executeDirectTransfers(result.directTransferInstructions!);
+        }
+
+        // Count how many went to each cohort
+        const countA = transferredTo.filter(
+          (id) => id === targetCohortIdA,
+        ).length;
+        const countB = transferredTo.filter(
+          (id) => id === targetCohortIdB,
+        ).length;
+
+        // Should be balanced: 2 and 2
+        expect(countA).toBe(2);
+        expect(countB).toBe(2);
+      });
+
+      it('should use first-match-wins when enableGroupBalancing is false', async () => {
+        const experimentId = generateId();
+        const sourceCohortId = generateId(true);
+        const targetCohortIdA = generateId(true);
+        const targetCohortIdB = generateId(true);
+        const surveyStageId = 'survey-stage';
+        const transferStageId = 'transfer-stage';
+
+        await createTestExperiment(experimentId, {
+          stageIds: [surveyStageId, transferStageId],
+          cohortDefinitions: [
+            {
+              id: 'def-a',
+              alias: 'group-a',
+              name: 'Group A',
+              generatedCohortId: targetCohortIdA,
+            },
+            {
+              id: 'def-b',
+              alias: 'group-b',
+              name: 'Group B',
+              generatedCohortId: targetCohortIdB,
+            },
+          ],
+        });
+
+        await firestore.runTransaction(async (transaction) => {
+          await createCohortInternal(
+            transaction,
+            experimentId,
+            createTestCohortConfig(sourceCohortId, 'Source'),
+          );
+        });
+        await firestore.runTransaction(async (transaction) => {
+          await createCohortInternal(
+            transaction,
+            experimentId,
+            createTestCohortConfig(targetCohortIdA, 'Group A', 'group-a'),
+          );
+        });
+        await firestore.runTransaction(async (transaction) => {
+          await createCohortInternal(
+            transaction,
+            experimentId,
+            createTestCohortConfig(targetCohortIdB, 'Group B', 'group-b'),
+          );
+        });
+
+        // Same setup but WITHOUT enableGroupBalancing
+        const transferStage = createTransferStage({
+          id: transferStageId,
+          autoTransferConfig: createConditionAutoTransferConfig({
+            autoCohortParticipantConfig: createCohortParticipantConfig(),
+            // enableGroupBalancing defaults to false
+            transferGroups: [
+              createTransferGroup({
+                name: 'Group A',
+                targetCohortAlias: 'group-a',
+                composition: [
+                  createGroupComposition({
+                    id: 'anyone-a',
+                    condition: {
+                      id: 'cond-a',
+                      type: 'comparison',
+                      target: {stageId: surveyStageId, questionId: 'q1'},
+                      operator: ComparisonOperator.GREATER_THAN_OR_EQUAL,
+                      value: 0,
+                    },
+                    minCount: 1,
+                    maxCount: 1,
+                  }),
+                ],
+              }),
+              createTransferGroup({
+                name: 'Group B',
+                targetCohortAlias: 'group-b',
+                composition: [
+                  createGroupComposition({
+                    id: 'anyone-b',
+                    condition: {
+                      id: 'cond-b',
+                      type: 'comparison',
+                      target: {stageId: surveyStageId, questionId: 'q1'},
+                      operator: ComparisonOperator.GREATER_THAN_OR_EQUAL,
+                      value: 0,
+                    },
+                    minCount: 1,
+                    maxCount: 1,
+                  }),
+                ],
+              }),
+            ],
+          }),
+        });
+        await createTestTransferStage(experimentId, transferStage);
+
+        // Send 4 participants - all should go to Group A (first match wins)
+        const transferredTo: string[] = [];
+
+        for (let i = 1; i <= 4; i++) {
+          const pId = `p${i}`;
+          const pubId = `pub-p${i}`;
+
+          const participant = await createTestParticipant(
+            experimentId,
+            pId,
+            sourceCohortId,
+            {stageId: transferStageId, publicId: pubId, connected: true},
+          );
+
+          const answers: Record<
+            string,
+            Record<string, {kind: SurveyQuestionKind; value: number}>
+          > = {};
+          for (let j = 1; j <= i; j++) {
+            answers[`pub-p${j}`] = {
+              q1: {kind: SurveyQuestionKind.SCALE, value: 5},
+            };
+          }
+          await createTestSurveyData(
+            experimentId,
+            sourceCohortId,
+            surveyStageId,
+            answers,
+          );
+
+          const result = await firestore.runTransaction(async (transaction) => {
+            return handleAutomaticTransfer(
+              transaction,
+              experimentId,
+              transferStage,
+              participant,
+            );
+          });
+
+          expect(result.directTransferInstructions).not.toBeNull();
+          transferredTo.push(result.directTransferInstructions!.targetCohortId);
+
+          await executeDirectTransfers(result.directTransferInstructions!);
+        }
+
+        // All should go to Group A (first match wins)
+        const countA = transferredTo.filter(
+          (id) => id === targetCohortIdA,
+        ).length;
+        expect(countA).toBe(4);
+      });
+    });
+
     describe('Overflow cohorts', () => {
       it('should create overflow cohort when target cohort is at capacity', async () => {
         const experimentId = generateId();

@@ -100,7 +100,7 @@ class Client:
             }
         )
 
-    def _handle_response(self, response: requests.Response) -> dict:
+    def _handle_response(self, response: requests.Response):
         """Handle API response and raise errors if needed."""
         if response.status_code >= 400:
             try:
@@ -353,6 +353,22 @@ class Client:
         """
         response = self._session.get(
             f"{self.base_url}/experiments/{experiment_id}/export",
+            timeout=(self.timeout * 3),  # Allow more time for exports
+        )
+        return self._handle_response(response)
+
+    def export_experiment_logs(self, experiment_id: str) -> list:
+        """
+        Export all model logs from an experiment.
+
+        Args:
+            experiment_id: The experiment ID to export logs for
+
+        Returns:
+            List of model log entries
+        """
+        response = self._session.get(
+            f"{self.base_url}/experiments/{experiment_id}/export/logs",
             timeout=(self.timeout * 3),  # Allow more time for exports
         )
         return self._handle_response(response)

@@ -270,7 +270,7 @@ with open("experiment_export.json", "w") as f:
 
 Here's a full working example that creates a "Restaurant Decision" demo experiment:
 
-<details>
+<details markdown="1">
 <summary><strong>View Complete Script</strong></summary>
 
 ```python

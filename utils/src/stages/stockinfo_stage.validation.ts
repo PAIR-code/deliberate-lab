@@ -1,9 +1,6 @@
 import {Type} from '@sinclair/typebox';
 import {StageKind} from './stage';
-import {
-  StageProgressConfigSchema,
-  StageTextConfigSchema,
-} from './stage.validation';
+import {BaseStageConfigSchema} from './stage.schemas';
 
 /** Shorthand for strict TypeBox object validation */
 const strict = {additionalProperties: false} as const;
@@ -47,24 +44,26 @@ export const StockData = Type.Object(
 );
 
 /** StockInfo stage config validation. */
-export const StockInfoStageConfigData = Type.Object(
-  {
-    id: Type.String({minLength: 1}),
-    kind: Type.Literal(StageKind.STOCKINFO),
-    name: Type.String({minLength: 1}),
-    descriptions: Type.Ref(StageTextConfigSchema),
-    progress: Type.Ref(StageProgressConfigSchema),
-    stocks: Type.Array(StockData),
-    visibleStockIds: Type.Optional(Type.Array(Type.String())),
-    showBestYearCard: Type.Boolean(),
-    showWorstYearCard: Type.Boolean(),
-    requireViewAllStocks: Type.Boolean(),
-    useQuarterlyMarkers: Type.Boolean(),
-    showInvestmentGrowth: Type.Boolean(),
-    useSharedYAxis: Type.Boolean(),
-    initialInvestment: Type.Number({minimum: 1, default: 1000}),
-    currency: Type.String({default: 'USD'}),
-    introText: Type.Optional(Type.String()),
-  },
-  strict,
+export const StockInfoStageConfigData = Type.Composite(
+  [
+    BaseStageConfigSchema,
+    Type.Object(
+      {
+        kind: Type.Literal(StageKind.STOCKINFO),
+        stocks: Type.Array(StockData),
+        visibleStockIds: Type.Optional(Type.Array(Type.String())),
+        showBestYearCard: Type.Boolean(),
+        showWorstYearCard: Type.Boolean(),
+        requireViewAllStocks: Type.Boolean(),
+        useQuarterlyMarkers: Type.Boolean(),
+        showInvestmentGrowth: Type.Boolean(),
+        useSharedYAxis: Type.Boolean(),
+        initialInvestment: Type.Number({minimum: 1, default: 1000}),
+        currency: Type.String({default: 'USD'}),
+        introText: Type.Optional(Type.String()),
+      },
+      strict,
+    ),
+  ],
+  {$id: 'StockInfoStageConfig', ...strict},
 );
