@@ -1,6 +1,7 @@
 import '../../pair-components/button';
 import '../../pair-components/icon';
 import '../../pair-components/icon_button';
+import '../shared/agent_model_selector';
 
 import '@material/web/textfield/filled-text-field.js';
 import '@material/web/checkbox/checkbox.js';
@@ -15,9 +16,9 @@ import {ExperimentEditor} from '../../services/experiment.editor';
 import {ExperimentService} from '../../services/experiment.service';
 
 import {
+  AgentModelSettings,
   AgentPersonaConfig,
   AgentPersonaType,
-  ApiKeyType,
   StageConfig,
   StageKind,
 } from '@deliberation-lab/utils';
@@ -53,8 +54,7 @@ export class AgentPersonaEditorComponent extends MobxLitElement {
         ${this.renderAgentPrivateName(agentConfig)}
         ${this.renderAgentPrivateDescription(agentConfig)}
         ${this.renderAgentName(agentConfig)} ${this.renderAvatars(agentConfig)}
-        ${this.renderAgentApiType(agentConfig)}
-        ${this.renderAgentModel(agentConfig)}
+        ${this.renderModelSelector(agentConfig)}
         ${this.renderMediatorCohortPreference(agentConfig)}
       </div>
       <div class="divider main">
@@ -165,77 +165,18 @@ export class AgentPersonaEditorComponent extends MobxLitElement {
     `;
   }
 
-  private renderAgentApiType(agentConfig: AgentPersonaConfig) {
-    return html`
-      <div class="section">
-        <div class="field-title">LLM API</div>
-        <div class="action-buttons">
-          ${this.renderApiTypeButton(
-            agentConfig,
-            'Gemini',
-            ApiKeyType.GEMINI_API_KEY,
-          )}
-          ${this.renderApiTypeButton(
-            agentConfig,
-            'OpenAI or compatible API',
-            ApiKeyType.OPENAI_API_KEY,
-          )}
-          ${this.renderApiTypeButton(
-            agentConfig,
-            'Claude or compatible API',
-            ApiKeyType.CLAUDE_API_KEY,
-          )}
-          ${this.renderApiTypeButton(
-            agentConfig,
-            'Ollama Server',
-            ApiKeyType.OLLAMA_CUSTOM_URL,
-          )}
-        </div>
-      </div>
-    `;
-  }
-
-  private renderApiTypeButton(
-    agentConfig: AgentPersonaConfig,
-    apiName: string,
-    apiType: ApiKeyType,
-  ) {
-    const updateAgentAPI = () => {
-      this.updatePersona({
-        defaultModelSettings: {...agentConfig.defaultModelSettings, apiType},
-      });
-    };
-
-    const isActive = apiType === agentConfig.defaultModelSettings.apiType;
-    return html`
-      <pr-button
-        color="${isActive ? 'primary' : 'neutral'}"
-        variant=${isActive ? 'tonal' : 'default'}
-        @click=${updateAgentAPI}
-      >
-        ${apiName}
-      </pr-button>
-    `;
-  }
-
-  private renderAgentModel(agent: AgentPersonaConfig) {
-    const updateModel = (e: InputEvent) => {
-      const modelName = (e.target as HTMLTextAreaElement).value;
-      this.updatePersona({
-        defaultModelSettings: {...agent.defaultModelSettings, modelName},
-      });
+  private renderModelSelector(agent: AgentPersonaConfig) {
+    const handleSettingsChange = (e: CustomEvent<AgentModelSettings>) => {
+      this.updatePersona({defaultModelSettings: e.detail});
     };
 
     return html`
-      <md-filled-text-field
-        required
-        label="Model ID"
-        .error=${!agent.defaultModelSettings.modelName}
-        .value=${agent.defaultModelSettings.modelName}
+      <agent-model-selector
+        .apiType=${agent.defaultModelSettings.apiType}
+        .modelName=${agent.defaultModelSettings.modelName}
         ?disabled=${!this.experimentEditor.canEditStages}
-        @input=${updateModel}
-      >
-      </md-filled-text-field>
+        @model-settings-change=${handleSettingsChange}
+      ></agent-model-selector>
     `;
   }
 

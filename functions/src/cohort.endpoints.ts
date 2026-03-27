@@ -151,16 +151,16 @@ export const deleteCohort = onCall(async (request) => {
     return {success: false};
   }
 
-  // Delete document
-  const doc = app
-    .firestore()
-    .doc(`experiments/${data.experimentId}/cohorts/${data.cohortId}`);
-  app.firestore().recursiveDelete(doc);
-
   // Set all participants in cohort to deleted
   await markCohortParticipantsAsDeleted(data.experimentId, data.cohortId);
 
   // TODO: Set all mediators in cohort to deleted
+
+  // Delete document (after marking participants, to avoid race conditions)
+  const doc = app
+    .firestore()
+    .doc(`experiments/${data.experimentId}/cohorts/${data.cohortId}`);
+  await app.firestore().recursiveDelete(doc);
 
   return {success: true};
 });

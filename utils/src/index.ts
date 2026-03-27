@@ -152,6 +152,7 @@ export * from './utils/cache.utils';
 export * from './utils/condition';
 export * from './utils/condition.utils';
 export * from './utils/condition.validation';
+export * from './utils/currency.utils';
 export * from './utils/object.utils';
 export * from './utils/random.utils';
 export * from './utils/string.utils';

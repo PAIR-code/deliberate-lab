@@ -1,30 +1,70 @@
 import {Type, type Static} from '@sinclair/typebox';
 import {UnifiedTimestampSchema} from '../shared.validation';
 import {StageKind} from './stage';
-import {
-  StageTextConfigSchema,
-  StageProgressConfigSchema,
-} from './stage.validation';
+import {ChatDiscussionType} from './chat_stage';
+import {BaseStageConfigSchema} from './stage.schemas';
 import {UserType} from '../participant';
 
 /** Shorthand for strict TypeBox object validation */
 const strict = {additionalProperties: false} as const;
 
 // ************************************************************************* //
-// updateChatStageConfig endpoint                                            //
+// ChatDiscussion types                                                      //
 // ************************************************************************* //
-export const ChatStageConfigData = Type.Object(
+
+/** DiscussionItem input validation. */
+export const DiscussionItemData = Type.Object(
   {
     id: Type.String(),
-    kind: Type.Literal(StageKind.CHAT),
+    imageId: Type.String(),
     name: Type.String(),
-    descriptions: Type.Ref(StageTextConfigSchema),
-    progress: Type.Ref(StageProgressConfigSchema),
-    timeLimitInMinutes: Type.Union([Type.Number(), Type.Null()]),
-    requireFullTime: Type.Union([Type.Boolean(), Type.Null()]),
-    // discussions
-    // agents
   },
+  {$id: 'DiscussionItem', ...strict},
+);
+
+/** DefaultChatDiscussion input validation. */
+export const DefaultChatDiscussionData = Type.Object(
+  {
+    id: Type.String(),
+    type: Type.Literal(ChatDiscussionType.DEFAULT),
+    description: Type.String(),
+  },
+  {$id: 'DefaultChatDiscussion', ...strict},
+);
+
+/** CompareChatDiscussion input validation. */
+export const CompareChatDiscussionData = Type.Object(
+  {
+    id: Type.String(),
+    type: Type.Literal(ChatDiscussionType.COMPARE),
+    description: Type.String(),
+    items: Type.Array(DiscussionItemData),
+  },
+  {$id: 'CompareChatDiscussion', ...strict},
+);
+
+/** ChatDiscussion input validation (discriminated union on `type`). */
+export const ChatDiscussionData = Type.Union([
+  DefaultChatDiscussionData,
+  CompareChatDiscussionData,
+]);
+
+// ************************************************************************* //
+// updateChatStageConfig endpoint                                            //
+// ************************************************************************* //
+export const ChatStageConfigData = Type.Composite(
+  [
+    BaseStageConfigSchema,
+    Type.Object(
+      {
+        kind: Type.Literal(StageKind.CHAT),
+        timeLimitInMinutes: Type.Union([Type.Number(), Type.Null()]),
+        requireFullTime: Type.Union([Type.Boolean(), Type.Null()]),
+        discussions: Type.Array(ChatDiscussionData),
+      },
+      strict,
+    ),
+  ],
   {$id: 'ChatStageConfig', ...strict},
 );
 

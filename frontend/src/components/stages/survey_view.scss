@@ -36,6 +36,7 @@
 
 .question {
   @include common.flex-column;
+  @include common.html-preview;
   gap: common.$spacing-medium;
 }
 
@@ -112,6 +113,23 @@
   &.labels {
     @include typescale.label-small;
     justify-content: space-between;
+    white-space: pre-line;
+    text-align: center;
+  }
+
+  &.slider-row {
+    display: flex;
+    align-items: center;
+    gap: common.$spacing-medium;
+    width: 100%;
+
+    md-slider {
+      flex: 1;
+    }
+
+    .slider-value {
+      @include typescale.label-medium;
+    }
   }
 
   &.slider {
@@ -145,4 +163,12 @@
 
 .required {
   color: var(--md-sys-color-error);
+}
+
+.dropdown-select {
+  width: 30%;
+
+  @include common.viewport-small {
+    width: 100%;
+  }
 }

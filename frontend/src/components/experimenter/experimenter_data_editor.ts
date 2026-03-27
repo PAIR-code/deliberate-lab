@@ -2,8 +2,8 @@ import '../../pair-components/icon_button';
 import '../../pair-components/tooltip';
 
 import {MobxLitElement} from '@adobe/lit-mobx';
-import {CSSResultGroup, html, nothing} from 'lit';
-import {customElement, property, state} from 'lit/decorators.js';
+import {CSSResultGroup, html} from 'lit';
+import {customElement, state} from 'lit/decorators.js';
 
 import '@material/web/textfield/filled-text-field.js';
 
@@ -16,15 +16,22 @@ import {styles} from './experimenter_data_editor.scss';
 import {
   ApiKeyType,
   ExperimenterData,
-  StageKind,
-  createAgentModelSettings,
-  createAgentMediatorPersonaConfig,
-  createDefaultPromptFromText,
-  createModelGenerationConfig,
   createClaudeServerConfig,
   createOpenAIServerConfig,
-  createStructuredOutputConfig,
+  ModelResponseStatus,
 } from '@deliberation-lab/utils';
+
+enum CheckApiKeyStatus {
+  NONE = 0,
+  PENDING = 1,
+  SUCCESS = 2,
+  FAILURE = 3,
+}
+
+interface CheckApiKeyResult {
+  status: number;
+  errorMessage?: string;
+}
 
 /** Editor for adjusting experimenter data */
 @customElement('experimenter-data-editor')
@@ -35,10 +42,14 @@ export class ExperimenterDataEditor extends MobxLitElement {
   private readonly experimentManager = core.getService(ExperimentManager);
   private readonly experimentService = core.getService(ExperimentService);
 
-  @state() geminiKeyResponse: null | boolean = null;
-  @state() openAIKeyResponse: null | boolean = null;
-  @state() claudeKeyResponse: null | boolean = null;
-  @state() ollamaKeyResponse: null | boolean = null;
+  @state() apiKeyResults = new Map<ApiKeyType, CheckApiKeyResult>();
+
+  /** Update a result and trigger a reactive re-render. */
+  private setApiKeyResult(apiType: ApiKeyType, result: CheckApiKeyResult) {
+    const updated = new Map(this.apiKeyResults);
+    updated.set(apiType, result);
+    this.apiKeyResults = updated;
+  }
 
   override render() {
     const experiment = this.experimentService.experiment;
@@ -60,6 +71,8 @@ export class ExperimenterDataEditor extends MobxLitElement {
       </div>
       ${this.renderGeminiKey()}
       <div class="divider"></div>
+      ${this.renderVertexAISettings()}
+      <div class="divider"></div>
       ${this.renderOpenAISettings()}
       <div class="divider"></div>
       ${this.renderClaudeSettings()}
@@ -69,51 +82,36 @@ export class ExperimenterDataEditor extends MobxLitElement {
   }
 
   private renderCheckApiKey(apiType: ApiKeyType) {
-    const agentConfig = createAgentMediatorPersonaConfig({
-      defaultModelSettings: createAgentModelSettings({apiType}),
-    });
-    const promptConfig = {
-      id: '',
-      type: StageKind.INFO,
-      prompt: createDefaultPromptFromText(
-        'Say "hello world" and tell a unique joke',
-      ),
-      generationConfig: createModelGenerationConfig(),
-      structuredOutputConfig: createStructuredOutputConfig(),
-    };
-
     const testEndpoint = async () => {
-      const result =
-        (
-          await this.experimentManager.testAgentConfig(
-            agentConfig,
-            promptConfig,
-          )
-        )?.length > 0;
-      if (apiType === ApiKeyType.GEMINI_API_KEY) {
-        this.geminiKeyResponse = result;
-      } else if (apiType === ApiKeyType.OPENAI_API_KEY) {
-        this.openAIKeyResponse = result;
-      } else if (apiType === ApiKeyType.CLAUDE_API_KEY) {
-        this.claudeKeyResponse = result;
-      } else if (apiType === ApiKeyType.OLLAMA_CUSTOM_URL) {
-        this.ollamaKeyResponse = result;
+      this.setApiKeyResult(apiType, {status: CheckApiKeyStatus.PENDING});
+
+      const response = await this.experimentManager.testApiKey(apiType);
+      this.setApiKeyResult(apiType, {
+        status:
+          response.status === ModelResponseStatus.OK
+            ? CheckApiKeyStatus.SUCCESS
+            : CheckApiKeyStatus.FAILURE,
+        errorMessage: `Error: ${response.status}: ${response.errorMessage}`,
+      });
+    };
+
+    const renderResult = (result: CheckApiKeyResult) => {
+      switch (result.status) {
+        case CheckApiKeyStatus.NONE:
+          return '';
+        case CheckApiKeyStatus.PENDING:
+          return html`<div class="banner">Sending test message...</div>`;
+        case CheckApiKeyStatus.SUCCESS:
+          return html`<div class="banner success">Valid API key</div>`;
+        case CheckApiKeyStatus.FAILURE:
+        default:
+          return html`<div class="banner error">${result.errorMessage}</div>`;
       }
     };
 
-    const getResult = () => {
-      if (apiType === ApiKeyType.GEMINI_API_KEY) {
-        return this.geminiKeyResponse;
-      } else if (apiType === ApiKeyType.OPENAI_API_KEY) {
-        return this.openAIKeyResponse;
-      } else if (apiType === ApiKeyType.CLAUDE_API_KEY) {
-        return this.claudeKeyResponse;
-      } else if (apiType === ApiKeyType.OLLAMA_CUSTOM_URL) {
-        return this.ollamaKeyResponse;
-      }
+    const result = this.apiKeyResults.get(apiType) ?? {
+      status: CheckApiKeyStatus.NONE,
     };
-
-    const result = getResult();
     return html`
       <div class="api-check">
         <pr-tooltip text="Test API key">
@@ -125,11 +123,7 @@ export class ExperimenterDataEditor extends MobxLitElement {
           >
           </pr-icon-button>
         </pr-tooltip>
-        ${result === null
-          ? ''
-          : result
-            ? html`<div class="banner success">Valid API key</div>`
-            : html`<div class="banner error">Invalid API key</div>`}
+        ${renderResult(result)}
       </div>
     `;
   }
@@ -141,7 +135,9 @@ export class ExperimenterDataEditor extends MobxLitElement {
       if (!oldData) return;
 
       const geminiKey = (e.target as HTMLTextAreaElement).value;
-      this.geminiKeyResponse = null;
+      this.setApiKeyResult(ApiKeyType.GEMINI_API_KEY, {
+        status: CheckApiKeyStatus.NONE,
+      });
       const newData = updateExperimenterData(oldData, {
         apiKeys: {...oldData.apiKeys, geminiApiKey: geminiKey},
       });
@@ -164,6 +160,67 @@ export class ExperimenterDataEditor extends MobxLitElement {
     `;
   }
 
+  // ============ Vertex AI ============
+  private renderVertexAISettings() {
+    const updateVertexAISettings = (
+      e: InputEvent,
+      field: 'apiKey' | 'project' | 'location' | 'serviceAccountJson',
+    ) => {
+      const oldData = this.authService.experimenterData;
+      if (!oldData) return;
+
+      const value = (e.target as HTMLInputElement).value;
+      this.setApiKeyResult(ApiKeyType.VERTEX_AI_API_KEY, {
+        status: CheckApiKeyStatus.NONE,
+      });
+
+      const newData = updateExperimenterData(oldData, {
+        apiKeys: {
+          ...oldData.apiKeys,
+          vertexAIConfig: {
+            ...(oldData.apiKeys?.vertexAIConfig ?? {}),
+            [field]: value,
+          },
+        },
+      });
+
+      this.authService.writeExperimenterData(newData);
+    };
+
+    const data = this.authService.experimenterData;
+    const config = data?.apiKeys.vertexAIConfig;
+    return html`
+      <div class="section">
+        <h3>Vertex AI API settings</h3>
+        <p>
+          Use either an API key (express mode) or service account credentials.
+        </p>
+        <md-filled-text-field
+          label="API key (express mode)"
+          placeholder="Add Vertex AI API key"
+          .value=${config?.apiKey ?? ''}
+          @input=${(e: InputEvent) => updateVertexAISettings(e, 'apiKey')}
+        ></md-filled-text-field>
+        <p>Or use a service account:</p>
+        <md-filled-text-field
+          type="textarea"
+          label="Service account JSON"
+          placeholder="Paste the full JSON key file contents"
+          .value=${config?.serviceAccountJson ?? ''}
+          @input=${(e: InputEvent) =>
+            updateVertexAISettings(e, 'serviceAccountJson')}
+        ></md-filled-text-field>
+        <md-filled-text-field
+          label="Location (optional, defaults to us-central1)"
+          placeholder="us-central1"
+          .value=${config?.location ?? ''}
+          @input=${(e: InputEvent) => updateVertexAISettings(e, 'location')}
+        ></md-filled-text-field>
+        ${this.renderCheckApiKey(ApiKeyType.VERTEX_AI_API_KEY)}
+      </div>
+    `;
+  }
+
   // ============ Claude ============
 
   private renderClaudeSettings() {
@@ -175,7 +232,9 @@ export class ExperimenterDataEditor extends MobxLitElement {
       if (!oldData) return;
 
       const value = (e.target as HTMLInputElement).value;
-      this.claudeKeyResponse = null;
+      this.setApiKeyResult(ApiKeyType.CLAUDE_API_KEY, {
+        status: CheckApiKeyStatus.NONE,
+      });
 
       const newData = updateExperimenterData(oldData, {
         apiKeys: {
@@ -222,7 +281,9 @@ export class ExperimenterDataEditor extends MobxLitElement {
       if (!oldData) return;
 
       const value = (e.target as HTMLInputElement).value;
-      this.openAIKeyResponse = null;
+      this.setApiKeyResult(ApiKeyType.OPENAI_API_KEY, {
+        status: CheckApiKeyStatus.NONE,
+      });
       let newData;
 
       switch (field) {
@@ -289,7 +350,9 @@ export class ExperimenterDataEditor extends MobxLitElement {
       if (!oldData) return;
 
       const value = (e.target as HTMLInputElement).value;
-      this.ollamaKeyResponse = null;
+      this.setApiKeyResult(ApiKeyType.OLLAMA_CUSTOM_URL, {
+        status: CheckApiKeyStatus.NONE,
+      });
       let newData;
 
       switch (field) {

@@ -52,6 +52,8 @@ experiments = client.list_experiments()
 data = client.export_experiment("experiment-id")
 ```
 
+> **New to the API?** Check out the [Create a Demo Experiment Codelab](./experiment-api-codelab.md) for a hands-on tutorial.
+
 ## API Reference
 
 <div id="swagger-ui"></div>

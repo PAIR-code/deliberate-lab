@@ -46,7 +46,7 @@ export async function sendErrorPrivateChatMessage(
     .collection('privateChats')
     .doc(chatMessage.id);
 
-  agentDocument.set(chatMessage);
+  await agentDocument.set(chatMessage);
 }
 
 /** Update participant answer ready to end private chat discussion. */

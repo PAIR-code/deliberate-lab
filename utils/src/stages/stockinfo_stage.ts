@@ -41,11 +41,22 @@ export interface Stock {
 export interface StockInfoStageConfig extends BaseStageConfig {
   kind: StageKind.STOCKINFO;
   stocks: Stock[];
+  /** Optional templated stock IDs for variable-based filtering.
+   *  If set, only stocks with IDs matching resolved values are shown.
+   *  Example: ["{{assigned_stock_1_id}}", "{{assigned_stock_2_id}}"]
+   */
+  visibleStockIds?: string[];
   showBestYearCard: boolean;
   showWorstYearCard: boolean;
   requireViewAllStocks: boolean;
   useQuarterlyMarkers: boolean;
   showInvestmentGrowth: boolean;
+  /** Use the same Y-axis range across all stock charts for easier comparison */
+  useSharedYAxis: boolean;
+  /** Initial investment amount for investment growth calculations (default: 1000) */
+  initialInvestment: number;
+  /** ISO 4217 currency code for display (default: 'USD') */
+  currency: string;
 }
 
 /** StockInfo stage participant answer. */
@@ -126,10 +137,14 @@ export function createStockInfoStage(
         showParticipantProgress: true,
       }),
     stocks: config.stocks ?? [createStock()],
+    visibleStockIds: config.visibleStockIds,
     showBestYearCard: config.showBestYearCard ?? true,
     showWorstYearCard: config.showWorstYearCard ?? true,
     requireViewAllStocks: config.requireViewAllStocks ?? true,
     useQuarterlyMarkers: config.useQuarterlyMarkers ?? false,
     showInvestmentGrowth: config.showInvestmentGrowth ?? false,
+    useSharedYAxis: config.useSharedYAxis ?? false,
+    initialInvestment: config.initialInvestment ?? 1000,
+    currency: config.currency ?? 'USD',
   };
 }

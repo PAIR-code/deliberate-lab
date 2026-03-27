@@ -1,8 +1,10 @@
 import {Timestamp} from 'firebase-admin/firestore';
 import {
+  AssetAllocationStageParticipantAnswer,
   AssetAllocationStagePublicData,
   AutoTransferType,
   ChipItem,
+  ChipStageParticipantAnswer,
   ChipStagePublicData,
   CohortConfig,
   ConditionAutoTransferConfig,
@@ -10,20 +12,28 @@ import {
   createCohortConfig,
   createMetadataConfig,
   createPayoutStageParticipantAnswer,
+  createSurveyStagePublicData,
   evaluateCondition,
   Experiment,
   extractAnswerValue,
   extractMultipleConditionDependencies,
+  FlipCardStageParticipantAnswer,
   FlipCardStagePublicData,
   getConditionTargetKey,
+  MultiAssetAllocationStageParticipantAnswer,
   MultiAssetAllocationStagePublicData,
   ParticipantProfileExtended,
   ParticipantStatus,
+  RankingStageParticipantAnswer,
   RankingStagePublicData,
   RoleStagePublicData,
   StageConfig,
+  STAGE_KIND_REQUIRES_TRANSFER_MIGRATION,
   StageKind,
+  StageParticipantAnswer,
+  StagePublicData,
   SurveyQuestionKind,
+  SurveyStageParticipantAnswer,
   SurveyStagePublicData,
   TransferGroup,
   TransferStageConfig,
@@ -33,6 +43,7 @@ import {
   getFirestoreActiveParticipants,
   getFirestoreCohortParticipants,
   getFirestoreExperiment,
+  getFirestoreParticipantAnswerRef,
   getFirestoreStage,
   getFirestoreStagePublicDataRef,
 } from './utils/firestore';
@@ -41,6 +52,84 @@ import {createCohortInternal} from './cohort.utils';
 import {sendSystemChatMessage} from './chat/chat.utils';
 
 import {app} from './app';
+
+/**
+ * Migration handlers for transferring participant public data between cohorts.
+ * Each handler mutates the target cohort's public data to include the
+ * transferring participant's answers.
+ *
+ * TODO: Consider standardizing all stage public data to use `participantAnswerMap`
+ * instead of varying field names (participantAllocations, participantFlipHistory, etc.)
+ * This would allow a more generic migration approach.
+ *
+ * To add a new migratable stage kind, mark it `true` in
+ * STAGE_KIND_REQUIRES_TRANSFER_MIGRATION in utils/src/stages/stage.ts and
+ * add a handler here. A test verifies these stay in sync.
+ */
+export const TRANSFER_MIGRATION_HANDLERS = {
+  [StageKind.SURVEY]: (
+    publicData: SurveyStagePublicData,
+    stage: SurveyStageParticipantAnswer,
+    publicId: string,
+  ) => {
+    publicData.participantAnswerMap[publicId] = stage.answerMap;
+  },
+  [StageKind.CHIP]: (
+    publicData: ChipStagePublicData,
+    stage: ChipStageParticipantAnswer,
+    publicId: string,
+  ) => {
+    publicData.participantChipMap[publicId] = stage.chipMap;
+    publicData.participantChipValueMap[publicId] = stage.chipValueMap;
+  },
+  [StageKind.RANKING]: (
+    publicData: RankingStagePublicData,
+    stage: RankingStageParticipantAnswer,
+    publicId: string,
+  ) => {
+    publicData.participantAnswerMap[publicId] = stage.rankingList;
+  },
+  [StageKind.ASSET_ALLOCATION]: (
+    publicData: AssetAllocationStagePublicData,
+    stage: AssetAllocationStageParticipantAnswer,
+    publicId: string,
+  ) => {
+    publicData.participantAllocations[publicId] = stage.allocation;
+  },
+  [StageKind.MULTI_ASSET_ALLOCATION]: (
+    publicData: MultiAssetAllocationStagePublicData,
+    stage: MultiAssetAllocationStageParticipantAnswer,
+    publicId: string,
+  ) => {
+    publicData.participantAnswerMap[publicId] = {
+      kind: StageKind.MULTI_ASSET_ALLOCATION,
+      id: stage.id,
+      allocationMap: stage.allocationMap,
+      isConfirmed: stage.isConfirmed,
+      confirmedTimestamp: stage.confirmedTimestamp,
+    };
+  },
+  [StageKind.FLIPCARD]: (
+    publicData: FlipCardStagePublicData,
+    stage: FlipCardStageParticipantAnswer,
+    publicId: string,
+  ) => {
+    publicData.participantFlipHistory[publicId] = stage.flipHistory ?? [];
+    publicData.participantSelections[publicId] = stage.selectedCardIds ?? [];
+  },
+  [StageKind.ROLE]: (_publicData: RoleStagePublicData) => {
+    // TODO: Assign new role to participant (or move role over)
+  },
+} as Partial<
+  Record<
+    StageKind,
+    (
+      publicData: StagePublicData,
+      stage: StageParticipantAnswer,
+      publicId: string,
+    ) => void
+  >
+>;
 
 /**
  * Instructions for executing direct transfers after a transaction commits.
@@ -230,9 +319,11 @@ export async function updateCohortStageUnlocked(
       .collection('cohorts')
       .doc(cohortId);
 
-    const cohortConfig = (await cohortDoc.get()).data() as CohortConfig;
-    if (cohortConfig.stageUnlockMap[stageId]) {
-      return; // already marked as true
+    const cohortConfig = (await cohortDoc.get()).data() as
+      | CohortConfig
+      | undefined;
+    if (!cohortConfig || cohortConfig.stageUnlockMap[stageId]) {
+      return; // cohort deleted or already unlocked
     }
 
     cohortConfig.stageUnlockMap[stageId] = true;
@@ -646,6 +737,29 @@ async function handleConditionAutoTransfer(
     }
   }
 
+  // Patch in the triggering participant's private stage data to guarantee
+  // freshness. publicStageData is populated by an async trigger
+  // (onParticipantStageDataUpdated), which may not have completed yet
+  // when this participant saves their survey answer and immediately
+  // progresses to this transfer stage in the same request sequence.
+  for (const stageId of stageIds) {
+    const privateStageDoc = getFirestoreParticipantAnswerRef(
+      experimentId,
+      participant.privateId,
+      stageId,
+    );
+    const privateData = (await transaction.get(privateStageDoc)).data() as
+      | SurveyStageParticipantAnswer
+      | undefined;
+    if (privateData?.answerMap) {
+      if (!surveyDataMap[stageId]) {
+        surveyDataMap[stageId] = createSurveyStagePublicData(stageId);
+      }
+      surveyDataMap[stageId].participantAnswerMap[participant.publicId] =
+        privateData.answerMap;
+    }
+  }
+
   // Build target values for each participant
   const participantTargetValues = new Map<string, Record<string, unknown>>();
   for (const p of connectedParticipants) {
@@ -686,10 +800,16 @@ async function handleConditionAutoTransfer(
     }
   }
 
-  // Find a group that can form a complete cohort (all composition entries have minCount)
-  // and includes the current participant
-  let readyGroup: TransferGroup | null = null;
-  let readyGroupBuckets: GroupBuckets | null = null;
+  // Find group(s) that can form a complete cohort (all composition entries have minCount)
+  // and include the current participant.
+  // When enableGroupBalancing is true, collect ALL ready groups and pick the one
+  // whose target cohort has the fewest participants (balanced assignment).
+  // When false (default), first matching ready group wins.
+  const enableBalancing = autoTransferConfig.enableGroupBalancing ?? false;
+  const readyGroupCandidates: Array<{
+    group: TransferGroup;
+    buckets: GroupBuckets;
+  }> = [];
 
   for (const group of autoTransferConfig.transferGroups) {
     const buckets = groupCompositionBuckets[group.id];
@@ -709,12 +829,11 @@ async function handleConditionAutoTransfer(
     );
 
     if (allConditionsMet) {
-      readyGroup = group;
-      readyGroupBuckets = buckets;
       console.log(
         `[CONDITION] Group "${group.name}" is ready to form a cohort`,
       );
-      break;
+      readyGroupCandidates.push({group, buckets});
+      if (!enableBalancing) break; // first match wins (existing behavior)
     } else {
       // Log which composition entries are not yet met
       for (const entry of group.composition) {
@@ -725,6 +844,55 @@ async function handleConditionAutoTransfer(
         }
       }
     }
+  }
+
+  // Select the best group from candidates
+  let readyGroup: TransferGroup | null = null;
+  let readyGroupBuckets: GroupBuckets | null = null;
+
+  if (readyGroupCandidates.length === 1 || !enableBalancing) {
+    // Single candidate or balancing disabled: use first match
+    if (readyGroupCandidates.length > 0) {
+      readyGroup = readyGroupCandidates[0].group;
+      readyGroupBuckets = readyGroupCandidates[0].buckets;
+    }
+  } else if (readyGroupCandidates.length > 1) {
+    // Balanced selection: pick group whose target cohort has fewest participants
+    const experiment = await getFirestoreExperiment(experimentId);
+
+    let minCohortSize = Infinity;
+    for (const candidate of readyGroupCandidates) {
+      let cohortSize = Infinity; // Default for groups without targetCohortAlias
+
+      if (candidate.group.targetCohortAlias && experiment) {
+        const definition = experiment.cohortDefinitions?.find(
+          (d) => d.alias === candidate.group.targetCohortAlias,
+        );
+        if (definition?.generatedCohortId) {
+          const cohortParticipants = await getFirestoreCohortParticipants(
+            experimentId,
+            definition.generatedCohortId,
+          );
+          cohortSize = cohortParticipants.length;
+        }
+      }
+
+      console.log(
+        `[CONDITION] Balanced selection: group "${candidate.group.name}" ` +
+          `(target: ${candidate.group.targetCohortAlias}) has ${cohortSize} participants`,
+      );
+
+      // Use strictly less-than for tie-breaking: first match wins on ties
+      if (cohortSize < minCohortSize) {
+        minCohortSize = cohortSize;
+        readyGroup = candidate.group;
+        readyGroupBuckets = candidate.buckets;
+      }
+    }
+
+    console.log(
+      `[CONDITION] Balanced selection chose group "${readyGroup?.name}"`,
+    );
   }
 
   if (!readyGroup || !readyGroupBuckets) {
@@ -1035,102 +1203,42 @@ async function migrateParticipantStageData(
 
   const stageAnswers = stageData.docs.map((stage) => stage.data());
 
-  // For each relevant answer, add to target cohort's public stage data
-  // TODO: Consider standardizing all stage public data to use `participantAnswerMap`
-  // instead of varying field names (participantAllocations, participantFlipHistory, etc.)
-  // This would allow a more generic migration approach.
-  for (const stage of stageAnswers) {
-    const publicDocRef = getFirestoreStagePublicDataRef(
-      experimentId,
-      targetCohortId,
-      stage.id,
-    );
+  // Filter to stages that require public data migration (see TRANSFER_MIGRATION_HANDLERS).
+  const migratableStages = stageAnswers
+    .filter(
+      (stage) =>
+        STAGE_KIND_REQUIRES_TRANSFER_MIGRATION[stage.kind as StageKind],
+    )
+    .map((stage) => ({
+      stage,
+      publicDocRef: getFirestoreStagePublicDataRef(
+        experimentId,
+        targetCohortId,
+        stage.id,
+      ),
+    }));
 
-    switch (stage.kind) {
-      case StageKind.SURVEY: {
-        const publicData = (
-          await transaction.get(publicDocRef)
-        ).data() as SurveyStagePublicData;
-        if (publicData) {
-          publicData.participantAnswerMap[publicId] = stage.answerMap;
-          transaction.set(publicDocRef, publicData);
-        }
-        break;
-      }
-      case StageKind.CHIP: {
-        const publicData = (
-          await transaction.get(publicDocRef)
-        ).data() as ChipStagePublicData;
-        if (publicData) {
-          publicData.participantChipMap[publicId] = stage.chipMap;
-          publicData.participantChipValueMap[publicId] = stage.chipValueMap;
-          transaction.set(publicDocRef, publicData);
-        }
-        break;
-      }
-      case StageKind.RANKING: {
-        const publicData = (
-          await transaction.get(publicDocRef)
-        ).data() as RankingStagePublicData;
-        if (publicData) {
-          publicData.participantAnswerMap[publicId] = stage.rankingList;
-          transaction.set(publicDocRef, publicData);
-        }
-        break;
-      }
-      case StageKind.ASSET_ALLOCATION: {
-        const publicData = (
-          await transaction.get(publicDocRef)
-        ).data() as AssetAllocationStagePublicData;
-        if (publicData) {
-          publicData.participantAllocations[publicId] = stage.allocation;
-          transaction.set(publicDocRef, publicData);
-        }
-        break;
-      }
-      case StageKind.MULTI_ASSET_ALLOCATION: {
-        const publicData = (
-          await transaction.get(publicDocRef)
-        ).data() as MultiAssetAllocationStagePublicData;
-        if (publicData) {
-          // Store the participant's answer (allocationMap, isConfirmed, etc.)
-          publicData.participantAnswerMap[publicId] = {
-            kind: StageKind.MULTI_ASSET_ALLOCATION,
-            id: stage.id,
-            allocationMap: stage.allocationMap,
-            isConfirmed: stage.isConfirmed,
-            confirmedTimestamp: stage.confirmedTimestamp,
-          };
-          transaction.set(publicDocRef, publicData);
-        }
-        break;
-      }
-      case StageKind.FLIPCARD: {
-        const publicData = (
-          await transaction.get(publicDocRef)
-        ).data() as FlipCardStagePublicData;
-        if (publicData) {
-          publicData.participantFlipHistory[publicId] = stage.flipHistory ?? [];
-          publicData.participantSelections[publicId] =
-            stage.selectedCardIds ?? [];
-          transaction.set(publicDocRef, publicData);
-        }
-        break;
-      }
-      case StageKind.ROLE: {
-        const publicData = (
-          await transaction.get(publicDocRef)
-        ).data() as RoleStagePublicData;
-        if (publicData) {
-          // TODO: Assign new role to participant (or move role over)
-          transaction.set(publicDocRef, publicData);
-        }
-        break;
-      }
-      default:
-        // Other stage types don't have participant-keyed public data
-        break;
-    }
+  // Phase 1: Perform ALL reads before any writes.
+  // Firestore transactions require all reads to be executed before all writes.
+  const migrationEntries = await Promise.all(
+    migratableStages.map(async (entry) => ({
+      ...entry,
+      publicData: (await transaction.get(entry.publicDocRef)).data(),
+    })),
+  );
+
+  // Phase 2: Apply mutations and write all changes.
+  for (const {stage, publicDocRef, publicData} of migrationEntries) {
+    if (!publicData) continue;
+
+    const handler = TRANSFER_MIGRATION_HANDLERS[stage.kind as StageKind];
+    if (!handler) continue;
+    handler(
+      publicData as StagePublicData,
+      stage as StageParticipantAnswer,
+      publicId,
+    );
+    transaction.set(publicDocRef, publicData);
   }
 }
 

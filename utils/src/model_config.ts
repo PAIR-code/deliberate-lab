@@ -7,6 +7,7 @@ import {ApiKeyType} from './providers';
 
 // Default model names for each provider
 export const GEMINI_DEFAULT_MODEL = 'gemini-3-flash-preview';
+export const VERTEX_AI_DEFAULT_MODEL = 'gemini-3-flash-preview';
 export const OPENAI_DEFAULT_MODEL = 'gpt-5-mini-2025-08-07';
 export const CLAUDE_DEFAULT_MODEL = 'claude-haiku-4-5-20251001';
 export const OLLAMA_DEFAULT_MODEL = 'ministral-3';
@@ -37,6 +38,22 @@ export const GEMINI_MODELS: ModelOption[] = [
 ];
 
 /**
+ * Suggested Vertex AI models.
+ */
+export const VERTEX_AI_MODELS: ModelOption[] = [
+  {
+    id: 'gemini-3-flash-preview',
+    displayName: 'Gemini 3 Flash Preview',
+    apiType: ApiKeyType.VERTEX_AI_API_KEY,
+  },
+  {
+    id: 'gemini-3-pro-preview',
+    displayName: 'Gemini 3 Pro Preview',
+    apiType: ApiKeyType.VERTEX_AI_API_KEY,
+  },
+];
+
+/**
  * Suggested OpenAI models.
  */
 export const OPENAI_MODELS: ModelOption[] = [
@@ -63,6 +80,7 @@ export const CLAUDE_MODELS: ModelOption[] = [
  */
 export const MODEL_OPTIONS: Record<ApiKeyType, ModelOption[]> = {
   [ApiKeyType.GEMINI_API_KEY]: GEMINI_MODELS,
+  [ApiKeyType.VERTEX_AI_API_KEY]: VERTEX_AI_MODELS,
   [ApiKeyType.OPENAI_API_KEY]: OPENAI_MODELS,
   [ApiKeyType.CLAUDE_API_KEY]: CLAUDE_MODELS,
   [ApiKeyType.OLLAMA_CUSTOM_URL]: [], // Ollama models are user-configured
@@ -75,6 +93,8 @@ export function getDefaultModelForApiType(apiType: ApiKeyType): string {
   switch (apiType) {
     case ApiKeyType.GEMINI_API_KEY:
       return GEMINI_DEFAULT_MODEL;
+    case ApiKeyType.VERTEX_AI_API_KEY:
+      return VERTEX_AI_DEFAULT_MODEL;
     case ApiKeyType.OPENAI_API_KEY:
       return OPENAI_DEFAULT_MODEL;
     case ApiKeyType.CLAUDE_API_KEY:
@@ -91,6 +111,7 @@ export function getDefaultModelForApiType(apiType: ApiKeyType): string {
  */
 export const DEFAULT_MODELS = {
   [ApiKeyType.GEMINI_API_KEY]: GEMINI_DEFAULT_MODEL,
+  [ApiKeyType.VERTEX_AI_API_KEY]: VERTEX_AI_DEFAULT_MODEL,
   [ApiKeyType.OPENAI_API_KEY]: OPENAI_DEFAULT_MODEL,
   [ApiKeyType.CLAUDE_API_KEY]: CLAUDE_DEFAULT_MODEL,
   [ApiKeyType.OLLAMA_CUSTOM_URL]: OLLAMA_DEFAULT_MODEL,

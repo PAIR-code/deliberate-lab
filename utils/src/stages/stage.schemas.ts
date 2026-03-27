@@ -1,4 +1,5 @@
 import {Type} from '@sinclair/typebox';
+import {StageKind} from './stage';
 
 /**
  * Shared schema definitions that are referenced by other stage validation schemas.
@@ -24,3 +25,12 @@ export const StageProgressConfigSchema = Type.Object(
   },
   {$id: 'StageProgressConfig'},
 );
+
+/** BaseStageConfig input validation (mirrors BaseStageConfig interface). */
+export const BaseStageConfigSchema = Type.Object({
+  id: Type.String({minLength: 1}),
+  kind: Type.Enum(StageKind),
+  name: Type.String({minLength: 1}),
+  descriptions: StageTextConfigSchema,
+  progress: StageProgressConfigSchema,
+});

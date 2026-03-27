@@ -12,8 +12,10 @@ import {
   CheckSurveyQuestion,
   Condition,
   getConditionTargetsFromStages,
+  MultipleChoiceDisplayType,
   MultipleChoiceItem,
   MultipleChoiceSurveyQuestion,
+  isMultipleChoiceImageQuestion,
   sanitizeSurveyQuestionConditions,
   ScaleSurveyQuestion,
   SurveyPerParticipantStageConfig,
@@ -376,6 +378,29 @@ export class SurveyEditor extends MobxLitElement {
       >
         Add multiple choice item
       </pr-button>
+      ${isMultipleChoiceImageQuestion(question)
+        ? nothing
+        : html`
+            <label class="checkbox-wrapper">
+              <md-checkbox
+                touch-target="wrapper"
+                ?checked=${question.displayType ===
+                MultipleChoiceDisplayType.DROPDOWN}
+                ?disabled=${!this.experimentEditor.canEditStages}
+                @click=${() => {
+                  const displayType =
+                    question.displayType === MultipleChoiceDisplayType.DROPDOWN
+                      ? MultipleChoiceDisplayType.RADIO
+                      : MultipleChoiceDisplayType.DROPDOWN;
+                  this.updateQuestion({...question, displayType}, index);
+                }}
+              >
+              </md-checkbox>
+              <span class="checkbox-label">
+                Optional: Display as a dropdown instead of radio buttons
+              </span>
+            </label>
+          `}
       ${this.renderQuestionConditionEditor(question, index)}
     `;
   }

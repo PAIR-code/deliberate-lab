@@ -8,7 +8,7 @@ import {
   ParticipantPromptConfig,
 } from './structured_prompt';
 import {ApiKeyType, ProviderOptionsMap} from './providers';
-import {GEMINI_DEFAULT_MODEL} from './model_config';
+import {getDefaultModelForApiType} from './model_config';
 
 /** Agent types and functions. */
 
@@ -142,7 +142,9 @@ export interface AgentParticipantTemplate {
 // ************************************************************************* //
 export const DEFAULT_AGENT_API_TYPE = ApiKeyType.GEMINI_API_KEY;
 
-export const DEFAULT_AGENT_API_MODEL = GEMINI_DEFAULT_MODEL;
+export const DEFAULT_AGENT_API_MODEL = getDefaultModelForApiType(
+  DEFAULT_AGENT_API_TYPE,
+);
 
 export const DEFAULT_AGENT_MODEL_SETTINGS: AgentModelSettings = {
   apiType: DEFAULT_AGENT_API_TYPE,
@@ -159,11 +161,11 @@ export const DEFAULT_AGENT_PARTICIPANT_ID = '';
 export function createAgentModelSettings(
   config: Partial<AgentModelSettings> = {},
 ): AgentModelSettings {
+  // TODO: pick first API that has a valid key?
+  const apiType = config.apiType ?? DEFAULT_AGENT_API_TYPE;
   return {
-    // TODO: pick first API that has a valid key?
-    apiType: config.apiType ?? DEFAULT_AGENT_API_TYPE,
-    // TODO: pick model name that matches API?
-    modelName: config.modelName ?? DEFAULT_AGENT_API_MODEL,
+    apiType,
+    modelName: config.modelName ?? getDefaultModelForApiType(apiType),
   };
 }
 

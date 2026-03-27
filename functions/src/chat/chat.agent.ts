@@ -163,7 +163,7 @@ export async function createAgentChatMessageFromPrompt(
       );
       return false;
     }
-    sendAgentPrivateChatMessage(
+    await sendAgentPrivateChatMessage(
       experimentId,
       privateChatParticipantId,
       stageId,
@@ -172,7 +172,7 @@ export async function createAgentChatMessageFromPrompt(
       promptConfig.chatSettings,
     );
   } else {
-    sendAgentGroupChatMessage(
+    await sendAgentGroupChatMessage(
       experimentId,
       cohortId,
       stageId,
@@ -486,7 +486,7 @@ export async function sendAgentGroupChatMessage(
     }
 
     // Otherwise, log response ID as trigger message
-    triggerResponseDoc.set({});
+    await triggerResponseDoc.set({});
   }
 
   // Send chat message
@@ -502,7 +502,7 @@ export async function sendAgentGroupChatMessage(
     .doc(chatMessage.id);
 
   chatMessage.timestamp = Timestamp.now();
-  agentDocument.set(chatMessage);
+  await agentDocument.set(chatMessage);
 
   return true;
 }
@@ -558,7 +558,7 @@ export async function sendAgentPrivateChatMessage(
     }
 
     // Otherwise, log response ID as trigger message
-    triggerResponseDoc.set({});
+    await triggerResponseDoc.set({});
   }
 
   // Send chat message
@@ -574,7 +574,7 @@ export async function sendAgentPrivateChatMessage(
     .doc(chatMessage.id);
 
   chatMessage.timestamp = Timestamp.now();
-  agentDocument.set(chatMessage);
+  await agentDocument.set(chatMessage);
 
   return true;
 }

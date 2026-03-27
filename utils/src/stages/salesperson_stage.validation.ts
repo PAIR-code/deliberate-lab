@@ -1,23 +1,22 @@
 import {Type, type Static} from '@sinclair/typebox';
 import {UnifiedTimestampSchema} from '../shared.validation';
 import {StageKind} from './stage';
-import {
-  StageTextConfigSchema,
-  StageProgressConfigSchema,
-} from './stage.validation';
+import {BaseStageConfigSchema} from './stage.schemas';
 
 /** Shorthand for strict TypeBox object validation */
 const strict = {additionalProperties: false} as const;
 
-export const SalespersonStageConfigData = Type.Object(
-  {
-    id: Type.String(),
-    kind: Type.Literal(StageKind.SALESPERSON),
-    name: Type.String(),
-    descriptions: Type.Ref(StageTextConfigSchema),
-    progress: Type.Ref(StageProgressConfigSchema),
-    // TODO: Add board
-  },
+export const SalespersonStageConfigData = Type.Composite(
+  [
+    BaseStageConfigSchema,
+    Type.Object(
+      {
+        kind: Type.Literal(StageKind.SALESPERSON),
+        // TODO: Add board
+      },
+      strict,
+    ),
+  ],
   {$id: 'SalespersonStageConfig', ...strict},
 );
 

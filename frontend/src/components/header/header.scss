@@ -42,10 +42,17 @@
     border-color: transparent;
   }
 
-  .left,
+  .left {
+    @include common.flex-row-align-center;
+    gap: common.$spacing-medium;
+    flex: 1;
+    min-width: 0;
+  }
+
   .right {
     @include common.flex-row-align-center;
     gap: common.$spacing-medium;
+    flex-shrink: 0;
   }
 }
 
@@ -54,7 +61,6 @@ h1 {
   margin: 0;
 
   &.short {
-    max-width: 200px;
     text-overflow: ellipsis;
     overflow: hidden;
     white-space: nowrap;

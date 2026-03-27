@@ -24,7 +24,6 @@ import {
   UnifiedTimestamp,
   createCohortConfig,
   createMetadataConfig,
-  createCohortParticipantConfig,
 } from '@deliberation-lab/utils';
 import {app} from '../app';
 import {createCohortInternal} from '../cohort.utils';
@@ -108,7 +107,10 @@ export async function createCohort(
   }
 
   // Verify ownership (only creator can add cohorts)
-  await verifyExperimentOwnership(experimentId, experimenterId);
+  const experiment = await verifyExperimentOwnership(
+    experimentId,
+    experimenterId,
+  );
 
   const body = req.body as CreateCohortRequest;
   const timestamp = Timestamp.now() as UnifiedTimestamp;
@@ -129,9 +131,10 @@ export async function createCohort(
     throw createHttpError(400, metadataValidation.error);
   }
 
-  // Create participant config with any provided overrides
+  // Create participant config using experiment defaults, with any provided overrides
+  // This matches the frontend's pattern.
   const participantConfig: CohortParticipantConfig = {
-    ...createCohortParticipantConfig(),
+    ...experiment.defaultCohortConfig,
     ...body.participantConfig,
   };
 

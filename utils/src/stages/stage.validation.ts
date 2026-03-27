@@ -1,10 +1,6 @@
 import {Type} from '@sinclair/typebox';
 import {StageKind} from './stage';
 import {
-  StageTextConfigSchema,
-  StageProgressConfigSchema,
-} from './stage.schemas';
-import {
   AssetAllocationStageConfigData,
   MultiAssetAllocationStageConfigData,
 } from './asset_allocation_stage.validation';
@@ -27,9 +23,6 @@ import {
 } from './survey_stage.validation';
 import {TransferStageConfigData} from './transfer_stage.validation';
 import {TOSStageConfigData} from './tos_stage.validation';
-
-// Re-export the schemas for convenience
-export {StageTextConfigSchema, StageProgressConfigSchema};
 
 // ****************************************************************************
 // Enums

@@ -16,6 +16,7 @@ import {
   createParticipantDownload,
   Experiment,
   ExperimentDownload,
+  LogEntry,
   MediatorPromptConfig,
   ParticipantProfileExtended,
   ParticipantPromptConfig,
@@ -232,4 +233,39 @@ export async function getExperimentDownload(
     experimentDownload,
   ) as ExperimentDownload;
   return normalized;
+}
+
+/**
+ * Fetch all log entries for an experiment using Firebase Admin SDK.
+ *
+ * @param firestore - Firestore instance from firebase-admin/firestore
+ * @param experimentId - ID of the experiment
+ * @returns Array of log entries ordered by createdTimestamp, or null if experiment not found
+ */
+export async function getExperimentLogs(
+  firestore: Firestore,
+  experimentId: string,
+): Promise<LogEntry[] | null> {
+  // Verify experiment exists
+  const experimentDoc = await firestore
+    .collection('experiments')
+    .doc(experimentId)
+    .get();
+
+  if (!experimentDoc.exists) {
+    return null;
+  }
+
+  // Fetch all logs ordered by createdTimestamp
+  const logs = (
+    await firestore
+      .collection('experiments')
+      .doc(experimentId)
+      .collection('logs')
+      .orderBy('createdTimestamp', 'asc')
+      .get()
+  ).docs.map((doc) => doc.data() as LogEntry);
+
+  // Convert all Timestamp objects to UnifiedTimestamp format
+  return convertTimestamps(logs) as LogEntry[];
 }

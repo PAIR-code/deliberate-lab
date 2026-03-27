@@ -1,9 +1,6 @@
 import {Type, type Static} from '@sinclair/typebox';
 import {StageKind} from './stage';
-import {
-  StageProgressConfigSchema,
-  StageTextConfigSchema,
-} from './stage.validation';
+import {BaseStageConfigSchema} from './stage.schemas';
 
 /** Shorthand for strict TypeBox object validation */
 const strict = {additionalProperties: false} as const;
@@ -25,16 +22,18 @@ export const RoleItemData = Type.Object(
 );
 
 /** RoleStageConfig input validation. */
-export const RoleStageConfigData = Type.Object(
-  {
-    id: Type.String({minLength: 1}),
-    kind: Type.Literal(StageKind.ROLE),
-    name: Type.String({minLength: 1}),
-    descriptions: Type.Ref(StageTextConfigSchema),
-    progress: Type.Ref(StageProgressConfigSchema),
-    roles: Type.Array(RoleItemData),
-  },
-  strict,
+export const RoleStageConfigData = Type.Composite(
+  [
+    BaseStageConfigSchema,
+    Type.Object(
+      {
+        kind: Type.Literal(StageKind.ROLE),
+        roles: Type.Array(RoleItemData),
+      },
+      strict,
+    ),
+  ],
+  {$id: 'RoleStageConfig', ...strict},
 );
 
 /** setParticipantRoles endpoint data validation. */

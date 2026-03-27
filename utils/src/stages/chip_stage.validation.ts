@@ -1,10 +1,7 @@
 import {Type, type Static} from '@sinclair/typebox';
 import {UnifiedTimestampSchema} from '../shared.validation';
 import {StageKind} from './stage';
-import {
-  StageTextConfigSchema,
-  StageProgressConfigSchema,
-} from './stage.validation';
+import {BaseStageConfigSchema} from './stage.schemas';
 
 /** Shorthand for strict TypeBox object validation */
 const strict = {additionalProperties: false} as const;
@@ -25,17 +22,19 @@ export const ChipItemData = Type.Object(
 );
 
 /** Chip stage config data. */
-export const ChipStageConfigData = Type.Object(
-  {
-    id: Type.String(),
-    kind: Type.Literal(StageKind.CHIP),
-    name: Type.String(),
-    descriptions: Type.Ref(StageTextConfigSchema),
-    progress: Type.Ref(StageProgressConfigSchema),
-    enableChat: Type.Boolean(),
-    numRounds: Type.Number(),
-    chips: Type.Array(ChipItemData),
-  },
+export const ChipStageConfigData = Type.Composite(
+  [
+    BaseStageConfigSchema,
+    Type.Object(
+      {
+        kind: Type.Literal(StageKind.CHIP),
+        enableChat: Type.Boolean(),
+        numRounds: Type.Number(),
+        chips: Type.Array(ChipItemData),
+      },
+      strict,
+    ),
+  ],
   {$id: 'ChipStageConfig', ...strict},
 );
 

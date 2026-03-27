@@ -42,6 +42,18 @@
   &:last-child {
     margin-bottom: 0;
   }
+
+  &.investment-settings {
+    @include common.flex-row;
+    gap: common.$spacing-large;
+    margin-left: common.$spacing-xxl;
+    padding-top: common.$spacing-small;
+
+    md-filled-text-field {
+      width: auto;
+      flex: 1;
+    }
+  }
 }
 
 .checkbox-label {

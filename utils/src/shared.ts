@@ -1,5 +1,6 @@
 import {Timestamp} from 'firebase/firestore';
 import {ExperimentDownload} from './data';
+import {LogEntry} from './log';
 import {MediatorStatus} from './mediator';
 import {ParticipantStatus} from './participant';
 
@@ -29,6 +30,10 @@ export interface ParticipantNextStageResponse {
 
 export interface ExperimentDownloadResponse {
   data: ExperimentDownload | null;
+}
+
+export interface ExperimentLogsDownloadResponse {
+  data: LogEntry[] | null;
 }
 
 // Helper for Timestamp (make it work between admin & sdk).
@@ -117,6 +122,25 @@ export function getUnifiedDurationSeconds(
 ): number | null {
   if (!start || !end) return null;
   return end.seconds - start.seconds;
+}
+
+/**
+ * Compare two optional timestamps for sorting.
+ * Returns negative if a < b, positive if a > b, 0 if equal or both null.
+ * If only one is null, the non-null timestamp is considered "less than" (comes first).
+ */
+export function compareTimestamps(
+  a: UnifiedTimestamp | null | undefined,
+  b: UnifiedTimestamp | null | undefined,
+): number {
+  if (a && b) {
+    const diff = a.seconds - b.seconds;
+    if (diff !== 0) return diff;
+    return a.nanoseconds - b.nanoseconds;
+  }
+  if (a && !b) return -1;
+  if (!a && b) return 1;
+  return 0;
 }
 
 /**

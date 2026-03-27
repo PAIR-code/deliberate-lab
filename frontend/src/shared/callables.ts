@@ -13,10 +13,11 @@ import {
   ExperimentCreationData,
   ExperimentDeletionData,
   ExperimentDownloadResponse,
+  ExperimentLogsDownloadResponse,
   ExperimentTemplate,
   InitiateParticipantTransferData,
+  ModelResponse,
   ParticipantNextStageResponse,
-  ParticipantProfile,
   RequestChipAssistanceData,
   SendAlertMessageData,
   SendChipOfferData,
@@ -126,6 +127,21 @@ export const downloadExperimentCallable = async (
   >(
     functions,
     'downloadExperiment',
+  )({experimentId});
+  return data;
+};
+
+/** Generic endpoint to download experiment logs. */
+export const downloadExperimentLogsCallable = async (
+  functions: Functions,
+  experimentId: string,
+) => {
+  const {data} = await httpsCallable<
+    {experimentId: string},
+    ExperimentLogsDownloadResponse
+  >(
+    functions,
+    'downloadExperimentLogs',
   )({experimentId});
   return data;
 };
@@ -619,15 +635,12 @@ export const updateParticipantStatusCallable = async (
   return data;
 };
 
-/** Generic endpoint for testing agent config. */
+/** Test API key by sending a simple prompt to the specified provider. */
 export const testAgentConfigCallable = async (
   functions: Functions,
   config: AgentConfigTestData,
-) => {
-  const {data} = await httpsCallable<
-    AgentConfigTestData,
-    SimpleResponse<string>
-  >(
+): Promise<ModelResponse> => {
+  const {data} = await httpsCallable<AgentConfigTestData, ModelResponse>(
     functions,
     'testAgentConfig',
   )(config);

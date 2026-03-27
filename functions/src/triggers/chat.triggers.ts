@@ -24,7 +24,12 @@ import {app} from '../app';
 
 /** When a chat message is created under publicStageData */
 export const onPublicChatMessageCreated = onDocumentCreated(
-  'experiments/{experimentId}/cohorts/{cohortId}/publicStageData/{stageId}/chats/{chatId}',
+  {
+    document:
+      'experiments/{experimentId}/cohorts/{cohortId}/publicStageData/{stageId}/chats/{chatId}',
+    memory: '1GiB',
+    timeoutSeconds: 300,
+  },
   async (event) => {
     const stage = await getFirestoreStage(
       event.params.experimentId,
@@ -108,7 +113,12 @@ export const onPublicChatMessageCreated = onDocumentCreated(
 
 /** When a chat message is created under private participant stageData */
 export const onPrivateChatMessageCreated = onDocumentCreated(
-  'experiments/{experimentId}/participants/{participantId}/stageData/{stageId}/privateChats/{chatId}',
+  {
+    document:
+      'experiments/{experimentId}/participants/{participantId}/stageData/{stageId}/privateChats/{chatId}',
+    memory: '1GiB',
+    timeoutSeconds: 300,
+  },
   async (event) => {
     // Ignore if error message
     const message = (
