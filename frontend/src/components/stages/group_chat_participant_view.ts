@@ -190,7 +190,7 @@ export class GroupChatView extends MobxLitElement {
     return html`
       <pr-tooltip
         text=${!this.isMinimumTimeMet
-          ? `You must stay on this chat for at least ${this.stage.timeMinimumInMinutes} minutes.`
+          ? `You must stay in this chat for at least ${this.minutesRemainingUntilMinimum} more minute${this.minutesRemainingUntilMinimum !== 1 ? 's' : ''}.`
           : isDisabled
             ? 'You can move on once others are also ready to move on.'
             : ''}
@@ -313,6 +313,24 @@ export class GroupChatView extends MobxLitElement {
       getTimeElapsed(publicStageData.discussionStartTimestamp, 'm') >=
       this.stage.timeMinimumInMinutes
     );
+  }
+
+  get minutesRemainingUntilMinimum(): number {
+    if (!this.stage?.timeMinimumInMinutes) return 0;
+
+    const publicStageData = this.cohortService.stagePublicDataMap[
+      this.stage.id
+    ] as ChatStagePublicData;
+
+    if (!publicStageData?.discussionStartTimestamp) {
+      return this.stage.timeMinimumInMinutes;
+    }
+
+    const elapsed = getTimeElapsed(
+      publicStageData.discussionStartTimestamp,
+      'm',
+    );
+    return Math.ceil(this.stage.timeMinimumInMinutes - elapsed);
   }
 }
 

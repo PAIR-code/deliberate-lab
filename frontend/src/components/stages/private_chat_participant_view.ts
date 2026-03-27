@@ -148,7 +148,7 @@ export class PrivateChatView extends MobxLitElement {
           ? this.renderMinTurnsMessage(participantMessageCount)
           : nothing}
         ${!minTimeMet && minTurnsMet && !isConversationOver
-          ? this.renderMinTimeMessage()
+          ? this.renderMinTimeMessage(elapsedMinutes)
           : nothing}
       </stage-footer>
     `;
@@ -223,11 +223,14 @@ export class PrivateChatView extends MobxLitElement {
     `;
   }
 
-  private renderMinTimeMessage() {
+  private renderMinTimeMessage(elapsedMinutes: number) {
+    const remaining = Math.ceil(
+      (this.stage?.timeMinimumInMinutes ?? 0) - elapsedMinutes,
+    );
     return html`
       <div class="description">
-        You must stay on this chat for at least
-        ${this.stage?.timeMinimumInMinutes} minutes.
+        You must stay in this chat for at least ${remaining} more
+        minute${remaining !== 1 ? 's' : ''}.
       </div>
     `;
   }

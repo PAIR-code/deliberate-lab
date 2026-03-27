@@ -21,6 +21,7 @@ import {
   MediatorStatus,
   ParticipantProfile,
   convertUnifiedTimestampToTime,
+  getTimeElapsed,
 } from '@deliberation-lab/utils';
 import {
   getChatStartTimestamp,
@@ -94,8 +95,20 @@ export class ChatPanel extends MobxLitElement {
       >
         ⏱️ Timer: ${this.stage.timeLimitInMinutes} minutes ${renderStatus()}
         ${this.stage.timeMinimumInMinutes &&
-        !publicStageData.discussionEndTimestamp
-          ? `You must stay on this chat for at least ${this.stage.timeMinimumInMinutes} minutes.`
+        !publicStageData.discussionEndTimestamp &&
+        publicStageData.discussionStartTimestamp &&
+        getTimeElapsed(publicStageData.discussionStartTimestamp, 'm') <
+          this.stage.timeMinimumInMinutes
+          ? (() => {
+              const remaining = Math.ceil(
+                this.stage.timeMinimumInMinutes -
+                  getTimeElapsed(
+                    publicStageData.discussionStartTimestamp!,
+                    'm',
+                  ),
+              );
+              return `You must stay in this chat for at least ${remaining} more minute${remaining !== 1 ? 's' : ''}.`;
+            })()
           : ''}
       </div>
       ${this.topLayout ? nothing : html`<div class="divider"></div>`}
