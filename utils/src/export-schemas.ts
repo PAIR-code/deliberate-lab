@@ -54,8 +54,8 @@ function collectSchemasWithId(
 }
 
 // Verify all stage configs have $id for proper naming in $defs
-for (const [key, schema] of Object.entries(CONFIG_DATA)) {
-  if (!(schema as Record<string, unknown>).$id) {
+for (const [key, entry] of Object.entries(CONFIG_DATA)) {
+  if (!(entry.schema as Record<string, unknown>).$id) {
     throw new Error(
       `Stage config "${key}" is missing $id. Add $id to its TypeBox definition.`,
     );
