@@ -100,7 +100,7 @@ class Client:
             }
         )
 
-    def _handle_response(self, response: requests.Response) -> dict:
+    def _handle_response(self, response: requests.Response):
         """Handle API response and raise errors if needed."""
         if response.status_code >= 400:
             try:
@@ -357,7 +357,7 @@ class Client:
         )
         return self._handle_response(response)
 
-    def export_experiment_logs(self, experiment_id: str) -> dict:
+    def export_experiment_logs(self, experiment_id: str) -> list:
         """
         Export all model logs from an experiment.
 
@@ -365,7 +365,7 @@ class Client:
             experiment_id: The experiment ID to export logs for
 
         Returns:
-            Dict with 'logs' list containing all model log entries
+            List of model log entries
         """
         response = self._session.get(
             f"{self.base_url}/experiments/{experiment_id}/export/logs",

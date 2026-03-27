@@ -47,6 +47,17 @@ export class CohortSummary extends MobxLitElement {
   @property() isExpanded = true;
   @state() showAgentParticipantDialog = false;
   @state() showAgentMediatorDialog = false;
+  @state() showAllParticipants = false;
+
+  private previousCohortId: string | undefined = undefined;
+
+  override updated() {
+    const currentCohortId = this.cohort?.id;
+    if (currentCohortId !== this.previousCohortId) {
+      this.previousCohortId = currentCohortId;
+      this.showAllParticipants = false;
+    }
+  }
 
   override render() {
     if (this.cohort === undefined) {
@@ -328,11 +339,19 @@ export class CohortSummary extends MobxLitElement {
       isOnTransferStage,
     });
 
+    const totalCount = sortedParticipants.length;
+    const isCapped =
+      totalCount > ExperimentManager.INITIAL_RENDER_LIMIT &&
+      !this.showAllParticipants;
+    const displayParticipants = isCapped
+      ? sortedParticipants.slice(0, ExperimentManager.INITIAL_RENDER_LIMIT)
+      : sortedParticipants;
+
     const showMediators = this.experimentManager.showMediatorsInCohortSummary;
 
     const participantSection = this.renderListSection(
       showMediators ? 'Participants' : '',
-      sortedParticipants,
+      displayParticipants,
       'No participants yet.',
       (participant) => html`
         <participant-summary .participant=${participant}></participant-summary>
@@ -353,9 +372,26 @@ export class CohortSummary extends MobxLitElement {
       {listClass: 'mediator-list'},
     );
 
+    const showAllButton = isCapped
+      ? html`
+          <div class="show-all-button">
+            <pr-button
+              color="neutral"
+              variant="default"
+              @click=${() => {
+                this.showAllParticipants = true;
+              }}
+            >
+              Show all ${totalCount} participants
+            </pr-button>
+          </div>
+        `
+      : nothing;
+
     return html`
       <div class="body">
         ${showMediators ? mediatorSection : nothing} ${participantSection}
+        ${showAllButton}
       </div>
     `;
   }

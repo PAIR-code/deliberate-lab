@@ -34,9 +34,17 @@ export interface ExperimenterData {
 
 export interface APIKeyConfig {
   geminiApiKey: string; // distinct types since we don't want to lose information when switching between them
+  vertexAIConfig?: VertexAIConfig;
   openAIApiKey?: OpenAIServerConfig;
   claudeApiKey?: ClaudeServerConfig;
   ollamaApiKey: OllamaServerConfig;
+}
+
+export interface VertexAIConfig {
+  apiKey?: string; // For express mode
+  project?: string; // For service account auth
+  location?: string; // For service account auth
+  serviceAccountJson?: string; // Paste full service account JSON
 }
 
 export interface OpenAIServerConfig {
@@ -120,6 +128,17 @@ export function checkApiKeyExists(
   if (apiKeyType === ApiKeyType.GEMINI_API_KEY) {
     // implicitly checks if geminiApiKey exists
     return experimenterData.apiKeys.geminiApiKey !== INVALID_API_KEY;
+  }
+
+  if (apiKeyType === ApiKeyType.VERTEX_AI_API_KEY) {
+    const config = experimenterData.apiKeys.vertexAIConfig;
+    if (!config) return false;
+    // Valid if express mode API key is set, or service account JSON is set
+    const hasApiKey = !!config.apiKey && config.apiKey !== INVALID_API_KEY;
+    const hasServiceAccount =
+      !!config.serviceAccountJson &&
+      config.serviceAccountJson !== INVALID_API_KEY;
+    return hasApiKey || hasServiceAccount;
   }
 
   if (apiKeyType === ApiKeyType.OPENAI_API_KEY) {

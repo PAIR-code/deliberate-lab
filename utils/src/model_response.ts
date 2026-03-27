@@ -30,6 +30,22 @@ export enum ModelResponseStatus {
   NONE = 'none',
 }
 
+/** Display labels for ModelResponseStatus values. */
+export const MODEL_RESPONSE_STATUS_LABELS: Record<ModelResponseStatus, string> =
+  {
+    [ModelResponseStatus.OK]: 'Success',
+    [ModelResponseStatus.STRUCTURED_OUTPUT_PARSE_ERROR]: 'Parse Error',
+    [ModelResponseStatus.AUTHENTICATION_ERROR]: 'Auth Error',
+    [ModelResponseStatus.QUOTA_ERROR]: 'Quota Error',
+    [ModelResponseStatus.PROVIDER_UNAVAILABLE_ERROR]: 'Provider Unavailable',
+    [ModelResponseStatus.REFUSAL_ERROR]: 'Refusal Error',
+    [ModelResponseStatus.LENGTH_ERROR]: 'Length Error',
+    [ModelResponseStatus.CONFIG_ERROR]: 'Config Error',
+    [ModelResponseStatus.INTERNAL_ERROR]: 'Internal Error',
+    [ModelResponseStatus.UNKNOWN_ERROR]: 'Unknown Error',
+    [ModelResponseStatus.NONE]: 'No Response',
+  };
+
 /**
  * Token usage information from the model response.
  */

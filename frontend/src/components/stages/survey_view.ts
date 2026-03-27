@@ -5,6 +5,8 @@ import './stage_description';
 import './stage_footer';
 
 import '@material/web/radio/radio.js';
+import '@material/web/select/outlined-select.js';
+import '@material/web/select/select-option.js';
 import '@material/web/slider/slider.js';
 import '@material/web/textfield/outlined-text-field.js';
 
@@ -16,6 +18,7 @@ import {classMap} from 'lit/directives/class-map.js';
 import {
   CheckSurveyAnswer,
   CheckSurveyQuestion,
+  MultipleChoiceDisplayType,
   MultipleChoiceItem,
   MultipleChoiceSurveyAnswer,
   MultipleChoiceSurveyQuestion,
@@ -242,11 +245,6 @@ export class SurveyView extends MobxLitElement {
   }
 
   private renderMultipleChoiceQuestion(question: MultipleChoiceSurveyQuestion) {
-    const questionWrapperClasses = classMap({
-      'radio-question-wrapper': true,
-      image: isMultipleChoiceImageQuestion(question),
-    });
-
     const titleClasses = classMap({
       required: !isSurveyAnswerComplete(
         this.participantAnswerService.getSurveyAnswer(
@@ -254,6 +252,18 @@ export class SurveyView extends MobxLitElement {
           question.id,
         ),
       ),
+    });
+
+    if (
+      question.displayType === MultipleChoiceDisplayType.DROPDOWN &&
+      !isMultipleChoiceImageQuestion(question)
+    ) {
+      return this.renderDropdownQuestion(question, titleClasses);
+    }
+
+    const questionWrapperClasses = classMap({
+      'radio-question-wrapper': true,
+      image: isMultipleChoiceImageQuestion(question),
     });
 
     return html`
@@ -266,6 +276,59 @@ export class SurveyView extends MobxLitElement {
             this.renderRadioButton(option, question.id),
           )}
         </div>
+      </div>
+    `;
+  }
+
+  private renderDropdownQuestion(
+    question: MultipleChoiceSurveyQuestion,
+    titleClasses: ReturnType<typeof classMap>,
+  ) {
+    const selectedChoiceId = (() => {
+      if (!this.stage) return '';
+      const answer = this.participantAnswerService.getSurveyAnswer(
+        this.stage.id,
+        question.id,
+      );
+      if (answer && answer.kind === SurveyQuestionKind.MULTIPLE_CHOICE) {
+        return answer.choiceId;
+      }
+      return '';
+    })();
+
+    const handleChange = (e: Event) => {
+      const value = (e.target as HTMLSelectElement).value;
+      if (!value || !this.stage) return;
+      const answer: MultipleChoiceSurveyAnswer = {
+        id: question.id,
+        kind: SurveyQuestionKind.MULTIPLE_CHOICE,
+        choiceId: value,
+      };
+      this.participantAnswerService.updateSurveyAnswer(this.stage.id, answer);
+    };
+
+    return html`
+      <div class="radio-question">
+        <div class=${titleClasses}>
+          ${unsafeHTML(convertMarkdownToHTML(question.questionTitle + '*'))}
+        </div>
+        <md-outlined-select
+          class="dropdown-select"
+          label="Select an option"
+          ?disabled=${this.participantService.disableStage}
+          @change=${handleChange}
+        >
+          ${question.options.map(
+            (option) => html`
+              <md-select-option
+                value=${option.id}
+                ?selected=${selectedChoiceId === option.id}
+              >
+                <div slot="headline">${option.text}</div>
+              </md-select-option>
+            `,
+          )}
+        </md-outlined-select>
       </div>
     `;
   }

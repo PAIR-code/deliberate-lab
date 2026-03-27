@@ -61,7 +61,12 @@ export class Header extends MobxLitElement {
       <div class=${headerClasses}>
         <div class="left">
           ${this.renderBackButton()}
-          <h1 class=${isDashboard ? 'short' : ''}>${this.renderTitle()}</h1>
+          <h1
+            class=${isDashboard ? 'short' : ''}
+            title=${isDashboard ? this.renderExperimentTitle() : ''}
+          >
+            ${this.renderTitle()}
+          </h1>
         </div>
         <div class="right">${this.renderActions()}</div>
       </div>

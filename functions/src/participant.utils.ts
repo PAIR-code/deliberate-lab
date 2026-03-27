@@ -12,6 +12,7 @@ import {
   createCohortConfig,
   createMetadataConfig,
   createPayoutStageParticipantAnswer,
+  createSurveyStagePublicData,
   evaluateCondition,
   Experiment,
   extractAnswerValue,
@@ -42,6 +43,7 @@ import {
   getFirestoreActiveParticipants,
   getFirestoreCohortParticipants,
   getFirestoreExperiment,
+  getFirestoreParticipantAnswerRef,
   getFirestoreStage,
   getFirestoreStagePublicDataRef,
 } from './utils/firestore';
@@ -732,6 +734,29 @@ async function handleConditionAutoTransfer(
 
     if (surveyStageData) {
       surveyDataMap[stageId] = surveyStageData;
+    }
+  }
+
+  // Patch in the triggering participant's private stage data to guarantee
+  // freshness. publicStageData is populated by an async trigger
+  // (onParticipantStageDataUpdated), which may not have completed yet
+  // when this participant saves their survey answer and immediately
+  // progresses to this transfer stage in the same request sequence.
+  for (const stageId of stageIds) {
+    const privateStageDoc = getFirestoreParticipantAnswerRef(
+      experimentId,
+      participant.privateId,
+      stageId,
+    );
+    const privateData = (await transaction.get(privateStageDoc)).data() as
+      | SurveyStageParticipantAnswer
+      | undefined;
+    if (privateData?.answerMap) {
+      if (!surveyDataMap[stageId]) {
+        surveyDataMap[stageId] = createSurveyStagePublicData(stageId);
+      }
+      surveyDataMap[stageId].participantAnswerMap[participant.publicId] =
+        privateData.answerMap;
     }
   }
 

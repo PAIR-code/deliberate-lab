@@ -163,6 +163,11 @@ pr-menu {
   overflow: auto;
 }
 
+.menu-divider {
+  border-top: 1px solid var(--md-sys-color-outline-variant);
+  margin: common.$spacing-xs 0;
+}
+
 pr-icon {
   padding-right: common.$spacing-small;
 }
