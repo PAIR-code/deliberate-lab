@@ -98,8 +98,18 @@ export class PrivateChatView extends MobxLitElement {
       this.stage.timeLimitInMinutes > 0 &&
       elapsedMinutes >= this.stage.timeLimitInMinutes;
 
+    // Check if minimum number of turns met for progression
+    // For turn-based chats, only count completed turns (where agent has responded)
+    const minTurnsMet = this.stage.isTurnBasedChat
+      ? participantMessageCount >= this.stage.minNumberOfTurns &&
+        !isWaitingForResponse
+      : participantMessageCount >= this.stage.minNumberOfTurns;
+
     // Check if conversation has ended
-    const isConversationOver = maxTurnsReached || maxTimeReached;
+    // Min turns takes precedence: conversation stays open until min turns is met,
+    // even if max time has elapsed.
+    const isConversationOver =
+      maxTurnsReached || (maxTimeReached && minTurnsMet);
 
     // Disable input if turn-taking is set and latest message
     // is from participant OR if conversation is over
@@ -116,13 +126,6 @@ export class PrivateChatView extends MobxLitElement {
       return isWaitingForResponse;
     };
 
-    // Check if minimum number of turns met for progression
-    // For turn-based chats, only count completed turns (where agent has responded)
-    const minTurnsMet = this.stage.isTurnBasedChat
-      ? participantMessageCount >= this.stage.minNumberOfTurns &&
-        !isWaitingForResponse
-      : participantMessageCount >= this.stage.minNumberOfTurns;
-
     // Check if minimum time is met
     const minTimeMet =
       this.stage.timeMinimumInMinutes == null ||
@@ -138,16 +141,21 @@ export class PrivateChatView extends MobxLitElement {
         ${isWaitingForResponse && !isConversationOver
           ? this.renderAgentIndicator(chatMessages)
           : nothing}
-        ${isConversationOver ? this.renderConversationEndedMessage() : nothing}
+        ${isConversationOver && minTimeMet
+          ? this.renderConversationEndedMessage()
+          : nothing}
+        ${isConversationOver && !minTimeMet
+          ? this.renderWaitingForMinTimeMessage(elapsedMinutes)
+          : nothing}
       </chat-interface>
       <stage-footer .disabled=${isNextDisabled}>
         ${this.stage.progress.showParticipantProgress
           ? html`<progress-stage-completed></progress-stage-completed>`
           : nothing}
         ${!minTurnsMet && !isConversationOver
-          ? this.renderMinTurnsMessage(participantMessageCount)
+          ? this.renderMinTurnsMessage(participantMessageCount, maxTimeReached)
           : nothing}
-        ${!minTimeMet && minTurnsMet && !isConversationOver
+        ${!minTimeMet && minTurnsMet
           ? this.renderMinTimeMessage(elapsedMinutes)
           : nothing}
       </stage-footer>
@@ -212,13 +220,26 @@ export class PrivateChatView extends MobxLitElement {
     `;
   }
 
-  private renderMinTurnsMessage(currentCount: number) {
+  private renderWaitingForMinTimeMessage(elapsedMinutes: number) {
+    const remaining = Math.ceil(
+      (this.stage?.timeMinimumInMinutes ?? 0) - elapsedMinutes,
+    );
+    return html`
+      <div class="description">
+        The conversation has ended. Please wait ${remaining} more
+        minute${remaining !== 1 ? 's' : ''} before proceeding.
+      </div>
+    `;
+  }
+
+  private renderMinTurnsMessage(currentCount: number, maxTimeReached: boolean) {
     const remaining = this.stage!.minNumberOfTurns - currentCount;
     if (remaining <= 0) return nothing;
     return html`
       <div class="description">
-        Please send at least ${remaining} more
-        message${remaining === 1 ? '' : 's'} before proceeding.
+        ${maxTimeReached ? 'Time is up, but please' : 'Please'} send at least
+        ${remaining} more message${remaining === 1 ? '' : 's'} before
+        proceeding.
       </div>
     `;
   }

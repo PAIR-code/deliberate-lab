@@ -97,7 +97,9 @@ export class ChatEditor extends MobxLitElement {
           ? html`
               <div class="number-input tab">
                 <label for="timeLimit">
-                  Maximum time in minutes (starting at first message)
+                  Maximum time in minutes (starting at first message).
+                  Participant will remain in chat until minimum messages
+                  requirement is met, even if maximum time has passed.
                 </label>
                 <input
                   type="number"
@@ -112,7 +114,8 @@ export class ChatEditor extends MobxLitElement {
               </div>
               <div class="number-input tab tab-bottom">
                 <label for="timeMinimum">
-                  Minimum time participants must stay (in minutes)
+                  Minimum time participants must stay (in minutes). Takes
+                  precedence over maximum number of messages.
                 </label>
                 <input
                   type="number"
@@ -195,12 +198,17 @@ export class ChatEditor extends MobxLitElement {
   private renderMinNumberOfTurns() {
     const minNumberOfTurns = this.stage?.minNumberOfTurns ?? 0;
 
+    const maxNumberOfTurns = this.stage?.maxNumberOfTurns ?? null;
+
     const updateNum = (e: InputEvent) => {
       if (!this.stage) return;
-      const value = Number((e.target as HTMLInputElement).value);
+      let value = Math.max(0, Number((e.target as HTMLInputElement).value));
+      if (maxNumberOfTurns !== null) {
+        value = Math.min(value, maxNumberOfTurns);
+      }
       this.experimentEditor.updateStage({
         ...this.stage,
-        minNumberOfTurns: Math.max(0, value),
+        minNumberOfTurns: value,
       });
     };
 
@@ -208,13 +216,15 @@ export class ChatEditor extends MobxLitElement {
       <div class="config-item">
         <div class="number-input">
           <label for="minTurns">
-            Minimum number of participant messages required (0 = no minimum)
+            Minimum number of participant messages required (0 = no minimum).
+            Takes precedence over maximum time limit.
           </label>
           <input
             type="number"
             id="minTurns"
             name="minTurns"
             min="0"
+            .max=${maxNumberOfTurns ?? ''}
             .value=${minNumberOfTurns}
             ?disabled=${!this.experimentEditor.canEditStages}
             @input=${updateNum}
@@ -227,14 +237,23 @@ export class ChatEditor extends MobxLitElement {
   private renderMaxNumberOfTurns() {
     const maxNumberOfTurns = this.stage?.maxNumberOfTurns;
 
+    const minNumberOfTurns = this.stage?.minNumberOfTurns ?? 0;
+
     const updateNum = (e: InputEvent) => {
       if (!this.stage) return;
       const value = (e.target as HTMLInputElement).value;
-      // If empty string, set to null; otherwise parse as number (minimum 1)
-      this.experimentEditor.updateStage({
-        ...this.stage,
-        maxNumberOfTurns: value === '' ? null : Math.max(1, Number(value)),
-      });
+      if (value === '') {
+        this.experimentEditor.updateStage({
+          ...this.stage,
+          maxNumberOfTurns: null,
+        });
+      } else {
+        const num = Math.max(minNumberOfTurns, Math.max(1, Number(value)));
+        this.experimentEditor.updateStage({
+          ...this.stage,
+          maxNumberOfTurns: num,
+        });
+      }
     };
 
     return html`
