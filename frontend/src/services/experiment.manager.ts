@@ -185,7 +185,9 @@ export class ExperimentManager extends Service {
   @computed get canEditExperimentStages() {
     return (
       (this.isCreator && Object.keys(this.cohortMap).length === 0) ||
-      this.sp.routerService.activePage === Pages.EXPERIMENT_CREATE
+      this.sp.routerService.activePage === Pages.EXPERIMENT_CREATE ||
+      this.sp.routerService.activePage === Pages.TEMPLATE_CREATE ||
+      this.sp.routerService.activePage === Pages.TEMPLATE_EDIT
     );
   }
 

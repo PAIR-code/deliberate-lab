@@ -10,6 +10,7 @@ import {core} from '../../core/core';
 import {AnalyticsService, ButtonClick} from '../../services/analytics.service';
 import {AuthService} from '../../services/auth.service';
 import {ExperimentEditor} from '../../services/experiment.editor';
+import {HomeService} from '../../services/home.service';
 
 import {
   AgentPersonaType,
@@ -36,57 +37,25 @@ import {
   createComprehensionStage,
 } from '@deliberation-lab/utils';
 import {
-  LAS_METADATA,
-  ANON_LAS_METADATA,
-  getLASStageConfigs,
-  getAnonLASStageConfigs,
-} from '../../shared/templates/lost_at_sea';
-import {
-  getChipMetadata,
-  getChipNegotiationStageConfigs,
-} from '../../shared/templates/chip_negotiation';
-import {
-  getCharityDebateTemplate,
   CharityDebateConfig,
-  createCharityDebateConfig,
   CHARITY_DEBATE_METADATA,
+  createCharityDebateConfig,
+  getCharityDebateTemplate,
 } from '../../shared/templates/charity_allocations';
 import {
-  getOOTBCharityDebateTemplate,
   OOTB_CHARITY_DEBATE_METADATA,
+  getOOTBCharityDebateTemplate,
 } from '../../shared/templates/charity_allocations_ootb';
 import {
   CONSENSUS_METADATA,
   getConsensusTopicTemplate,
 } from '../../shared/templates/debate_topics';
+
 import {
-  FRUIT_TEST_METADATA,
-  getFruitTestExperimentTemplate,
-} from '../../shared/templates/fruit_test';
-import {
-  STOCKINFO_GAME_METADATA,
-  getStockInfoGameStageConfigs,
-} from '../../shared/templates/stockinfo_template';
-import {
-  FLIPCARD_TEMPLATE_METADATA,
-  getFlipCardExperimentTemplate,
-} from '../../shared/templates/flipcard';
-import {
-  ASSET_ALLOCATION_TEMPLATE_METADATA,
-  getAssetAllocationTemplate,
-} from '../../shared/templates/asset_allocation_template';
-import {
-  CONDITIONAL_SURVEY_TEMPLATE_METADATA,
-  getConditionalSurveyTemplate,
-} from '../../shared/templates/conditional_survey_template';
-import {
-  POLICY_METADATA,
-  getPolicyExperimentTemplate,
-} from '../../shared/templates/policy';
-import {
-  INTEGRATION_METADATA,
-  getAgentParticipantIntegrationTemplate,
-} from '../../shared/templates/agent_participant_integration_template';
+  DEFAULT_TEMPLATES,
+  RESEARCH_TEMPLATES,
+  CodeBasedTemplate,
+} from '../../shared/default_templates';
 
 import {styles} from './stage_builder_dialog.scss';
 
@@ -98,6 +67,7 @@ export class StageBuilderDialog extends MobxLitElement {
   private readonly analyticsService = core.getService(AnalyticsService);
   private readonly authService = core.getService(AuthService);
   private readonly experimentEditor = core.getService(ExperimentEditor);
+  private readonly homeService = core.getService(HomeService);
 
   @property({type: Boolean})
   showTemplates: boolean = false;
@@ -107,6 +77,8 @@ export class StageBuilderDialog extends MobxLitElement {
     createCharityDebateConfig();
   // Used to populate resource allocation template
   @state() private consensusTopics: string = 'Climate Change';
+
+  @state() private searchText: string = '';
 
   override connectedCallback() {
     super.connectedCallback();
@@ -171,13 +143,36 @@ export class StageBuilderDialog extends MobxLitElement {
     `;
   }
 
+  private renderSearchBar() {
+    return html`
+      <div class="search-container">
+        <pr-icon icon="search" size="small"></pr-icon>
+        <pr-textarea
+          placeholder="Search templates"
+          variant="outlined"
+          .value=${this.searchText}
+          @input=${(e: InputEvent) => {
+            this.searchText = (e.target as HTMLTextAreaElement).value;
+          }}
+        ></pr-textarea>
+      </div>
+    `;
+  }
+
   private renderTemplateCards() {
     return html`
       <div class="banner error">
         ⚠️ Loading a template will override all existing stages in your
         configuration!
       </div>
+      ${this.renderSearchBar()}
       <div class="card-gallery-wrapper">
+        <div class="gallery-section">
+          <div class="gallery-title">Pre-defined Templates</div>
+          <div class="card-gallery-wrapper">
+            ${this.renderPredefinedTemplates()}
+          </div>
+        </div>
         ${this.experimentEditor.savedTemplates.length > 0
           ? html`
               <div class="gallery-section">
@@ -188,22 +183,33 @@ export class StageBuilderDialog extends MobxLitElement {
               </div>
             `
           : nothing}
-        <div class="gallery-section">
-          <div class="gallery-title">Pre-defined Templates</div>
-          <div class="card-gallery-wrapper">
-            ${this.renderFlipCardTemplateCard()}
-            ${this.renderFruitTestTemplateCard()}
-            ${this.renderConditionalSurveyTemplateCard()}
-            ${this.renderStockInfoGameCard()}
-            ${this.renderAssetAllocationTemplateCard()}
-            ${this.renderPolicyTemplateCard()}
-            ${this.renderAgentIntegrationCard()}
-          </div>
-        </div>
       </div>
       ${this.authService.hasResearchTemplateAccess
         ? this.renderResearchTemplateGallery()
         : nothing}
+    `;
+  }
+
+  // Refactored to allow search filtering on pre-defined templates
+  private renderPredefinedTemplates() {
+    const q = this.searchText.toLowerCase();
+    const matches = (text: string) => text.toLowerCase().includes(q);
+
+    const filtered = DEFAULT_TEMPLATES.filter(
+      (t) => !q || matches(t.name + t.description),
+    );
+
+    if (filtered.length === 0) return nothing;
+
+    return html`${filtered.map((t) => this.renderCodeBasedTemplateCard(t))}`;
+  }
+
+  private renderCodeBasedTemplateCard(t: CodeBasedTemplate) {
+    return html`
+      <div class="card" @click=${() => this.addTemplate(t.factory())}>
+        <div class="title">${t.name}</div>
+        <div>${t.description}</div>
+      </div>
     `;
   }
 
@@ -212,25 +218,25 @@ export class StageBuilderDialog extends MobxLitElement {
   // Eventually, all these templates should be migrated such that they
   // are completely created in the UI and stored in the backend.
   private renderResearchTemplateGallery() {
+    const simpleResearchTemplates = RESEARCH_TEMPLATES.filter(
+      (t) => !['consensus_debate', 'charity_debate'].includes(t.id),
+    );
+
     return html`
       <div class="banner">
         Note: Only specific experimenters have access to the following research
         templates! This list is controlled by the deployment owners.
       </div>
       <div class="gallery-section">
-        <div class="gallery-title">Lost at Sea experiments</div>
+        <div class="gallery-title">Research Templates</div>
         <div class="card-gallery-wrapper">
-          ${this.renderLASCard()} ${this.renderLASCard(true)}
+          ${simpleResearchTemplates.map((t) =>
+            this.renderCodeBasedTemplateCard(t),
+          )}
         </div>
       </div>
       <div class="gallery-section">
-        <div class="gallery-title">Negotiation games</div>
-        <div class="card-gallery-wrapper">
-          ${this.renderChipNegotiationCard()}
-        </div>
-      </div>
-      <div class="gallery-section">
-        <div class="gallery-title">Debate experiments</div>
+        <div class="gallery-title">Debate experiments (Customizable)</div>
         <div class="card-gallery-wrapper">
           ${this.renderConsensusDebateCard()}
           ${this.renderCharityDebateTemplateCard()}
@@ -241,8 +247,21 @@ export class StageBuilderDialog extends MobxLitElement {
   }
 
   private renderSavedTemplates() {
+    const q = this.searchText.toLowerCase();
+    const filtered = this.experimentEditor.savedTemplates.filter(
+      (t) =>
+        !q ||
+        t.experiment.metadata.name.toLowerCase().includes(q) ||
+        t.experiment.metadata.description.toLowerCase().includes(q),
+    );
+
+    if (filtered.length === 0) {
+      if (this.searchText) return html`<div>No matching saved templates</div>`;
+      return nothing;
+    }
+
     return html`
-      ${this.experimentEditor.savedTemplates.map(
+      ${filtered.map(
         (template) => html`
           <div class="card saved-template">
             <div
@@ -253,7 +272,10 @@ export class StageBuilderDialog extends MobxLitElement {
               <div>${template.experiment.metadata.description}</div>
               <div class="template-footer">
                 <div class="creator">
-                  By ${template.experiment.metadata.creator}
+                  By
+                  ${this.homeService.getExperimenterName(
+                    template.experiment.metadata.creator,
+                  )}
                 </div>
               </div>
             </div>
@@ -340,74 +362,6 @@ export class StageBuilderDialog extends MobxLitElement {
     this.experimentEditor.updateMetadata(metadata);
     this.experimentEditor.setStages(stages);
     this.experimentEditor.toggleStageBuilderDialog();
-  }
-
-  private renderLASCard(isAnon: boolean = false) {
-    const metadata = isAnon ? ANON_LAS_METADATA : LAS_METADATA;
-    const configs = isAnon ? getAnonLASStageConfigs() : getLASStageConfigs();
-
-    const addGame = () => {
-      this.addGame(metadata, configs);
-    };
-
-    return html`
-      <div class="card" @click=${addGame}>
-        <div class="title">${metadata.name}</div>
-        <div>
-          ${metadata.description}
-          <div></div>
-        </div>
-      </div>
-    `;
-  }
-
-  private renderAgentIntegrationCard() {
-    const addTemplate = () => {
-      this.addTemplate(getAgentParticipantIntegrationTemplate());
-    };
-    return html`
-      <div class="card" @click=${addTemplate}>
-        <div class="title">${INTEGRATION_METADATA.name}</div>
-        <div>${INTEGRATION_METADATA.description}</div>
-      </div>
-    `;
-  }
-
-  private renderChipNegotiationCard() {
-    const addGame = (numChips: number) => {
-      this.addGame(
-        getChipMetadata(numChips),
-        getChipNegotiationStageConfigs(numChips),
-      );
-    };
-
-    return html`
-      <div class="card" @click=${() => addGame(2)}>
-        <div class="title">${getChipMetadata(2).name}</div>
-        <div>${getChipMetadata(2).description}</div>
-      </div>
-      <div class="card" @click=${() => addGame(3)}>
-        <div class="title">${getChipMetadata(3).name}</div>
-        <div>${getChipMetadata(3).description}</div>
-      </div>
-      <div class="card" @click=${() => addGame(4)}>
-        <div class="title">${getChipMetadata(4).name}</div>
-        <div>${getChipMetadata(4).description}</div>
-      </div>
-    `;
-  }
-
-  private renderFruitTestTemplateCard() {
-    const addTemplate = () => {
-      this.addTemplate(getFruitTestExperimentTemplate());
-    };
-
-    return html`
-      <div class="card" @click=${addTemplate}>
-        <div class="title">${FRUIT_TEST_METADATA.name}</div>
-        <div>${FRUIT_TEST_METADATA.description}</div>
-      </div>
-    `;
   }
 
   private renderInfoCard() {
@@ -701,34 +655,6 @@ export class StageBuilderDialog extends MobxLitElement {
     `;
   }
 
-  private renderFlipCardTemplateCard() {
-    const addTemplate = () => {
-      this.addTemplate(getFlipCardExperimentTemplate());
-    };
-
-    return html`
-      <div class="card" @click=${addTemplate}>
-        <div class="title">${FLIPCARD_TEMPLATE_METADATA.name}</div>
-        <div>${FLIPCARD_TEMPLATE_METADATA.description}</div>
-      </div>
-    `;
-  }
-
-  private renderStockInfoGameCard() {
-    const addGame = () => {
-      this.addGame(STOCKINFO_GAME_METADATA, getStockInfoGameStageConfigs());
-    };
-
-    return html`
-      <div class="card" @click=${addGame}>
-        <div class="title">📈 Stock Analysis Game</div>
-        <div>
-          A demonstration of the StockInfo stage with financial data analysis.
-        </div>
-      </div>
-    `;
-  }
-
   private renderCharityCheckbox(
     field: keyof CharityDebateConfig,
     labelText: string,
@@ -875,57 +801,6 @@ export class StageBuilderDialog extends MobxLitElement {
         </div>
 
         <pr-button @click=${loadTemplate}> Load Template </pr-button>
-      </div>
-    `;
-  }
-
-  private renderAssetAllocationTemplateCard() {
-    const addGame = () => {
-      this.addGame(
-        ASSET_ALLOCATION_TEMPLATE_METADATA,
-        getAssetAllocationTemplate(),
-      );
-    };
-
-    return html`
-      <div class="card" @click=${addGame}>
-        <div class="title">💰 Investment Portfolio Game</div>
-        <div>
-          A complete investment study with stock analysis and portfolio
-          allocation decisions.
-        </div>
-      </div>
-    `;
-  }
-
-  private renderConditionalSurveyTemplateCard() {
-    const addGame = () => {
-      this.addGame(
-        CONDITIONAL_SURVEY_TEMPLATE_METADATA,
-        getConditionalSurveyTemplate(),
-      );
-    };
-
-    return html`
-      <div class="card" @click=${addGame}>
-        <div class="title">🔀 Conditional Survey Demo</div>
-        <div>
-          Advanced survey with complex conditional logic, demonstrating AND/OR
-          operators and nested conditions.
-        </div>
-      </div>
-    `;
-  }
-
-  private renderPolicyTemplateCard() {
-    const addTemplate = () => {
-      this.addTemplate(getPolicyExperimentTemplate());
-    };
-
-    return html`
-      <div class="card" @click=${addTemplate}>
-        <div class="title">${POLICY_METADATA.name}</div>
-        <div>${POLICY_METADATA.description}</div>
       </div>
     `;
   }

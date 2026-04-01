@@ -73,10 +73,16 @@ service cloud.firestore {
     }
 
     // Experiment templates (experimenter only)
+    // Experiment templates (experimenter only)
     match /experimentTemplates/{templateId} {
       allow list: if isExperimenter();
-      allow get: if isExperimenter() && (isPublic() || isCreator() || isReader() || isAdmin());
-
+      allow get: if isExperimenter() && (
+        resource.data.visibility == "public" || 
+        lowerEquals(resource.data.experiment.metadata.creator, request.auth.token.email) ||
+        (resource.data.sharedWith != null && resource.data.sharedWith.hasAny([request.auth.token.email])) ||
+        isAdmin()
+      );
+      
       // Experiments can use `writeExperiment`, `deleteExperiment` endpoints
       allow write: if false;
     }

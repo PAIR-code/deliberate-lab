@@ -43,6 +43,7 @@ export class RouterService extends Service {
       name: Pages.SETTINGS,
       path: '/settings',
     },
+
     {
       name: Pages.EXPERIMENT,
       path: '/e/:experiment',
@@ -50,6 +51,18 @@ export class RouterService extends Service {
     {
       name: Pages.EXPERIMENT_CREATE,
       path: '/new_experiment',
+    },
+    {
+      name: Pages.TEMPLATE_CREATE,
+      path: '/templates/new_template',
+    },
+    {
+      name: Pages.TEMPLATE_EDIT,
+      path: '/templates/:template/edit',
+    },
+    {
+      name: Pages.EXPERIMENT_EDIT,
+      path: '/e/:experiment/edit',
     },
     {
       name: Pages.PARTICIPANT,
@@ -117,7 +130,7 @@ export class RouterService extends Service {
       this.sp.participantService.updateForRoute(
         params['experiment'],
         params['participant'],
-        params['stage'], // if defined, this sets current stage viewed
+        params['stage'],
       );
       this.sp.experimentManager.updateForRoute(params['experiment']);
       this.sp.experimentService.updateForRoute(params['experiment']);
@@ -125,6 +138,10 @@ export class RouterService extends Service {
       this.sp.experimentManager.updateForRoute(params['experiment']);
       this.sp.experimentService.updateForRoute(params['experiment']);
       this.sp.participantService.reset();
+
+      if (this.activePage === Pages.EXPERIMENT_EDIT) {
+        this.sp.experimentManager.setIsEditing(true);
+      }
     } else {
       this.sp.experimentManager.reset();
       this.sp.experimentService.reset();
@@ -183,7 +200,10 @@ export enum Pages {
   ADMIN = 'ADMIN',
   HOME = 'HOME',
   EXPERIMENT = 'EXPERIMENT',
+  EXPERIMENT_EDIT = 'EXPERIMENT_EDIT',
   EXPERIMENT_CREATE = 'EXPERIMENT_CREATE',
+  TEMPLATE_CREATE = 'TEMPLATE_CREATE',
+  TEMPLATE_EDIT = 'TEMPLATE_EDIT',
   PARTICIPANT = 'PARTICIPANT',
   PARTICIPANT_JOIN_COHORT = 'PARTICIPANT_JOIN_COHORT',
   // Deprecated (but included for backwards compatibility):
@@ -216,6 +236,7 @@ export const NAV_ITEMS: NavItem[] = [
     isParticipantPage: false,
     isPrimaryPage: true,
   },
+
   {
     page: Pages.EXPERIMENT_CREATE,
     title: 'New experiment',

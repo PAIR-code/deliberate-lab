@@ -11,15 +11,18 @@ import {repeat} from 'lit/directives/repeat.js';
 import {core} from '../../core/core';
 import {AuthService} from '../../services/auth.service';
 import {ExperimentEditor} from '../../services/experiment.editor';
-import {HomeService} from '../../services/home.service';
+import {HomeService, HomeTab} from '../../services/home.service';
 import {Pages, RouterService} from '../../services/router.service';
 
 import {
   Experiment,
+  ExperimentTemplate,
   SortMode,
   sortLabel,
   sortExperiments,
+  Visibility,
 } from '@deliberation-lab/utils';
+import {GalleryItem} from '../../shared/types';
 import {convertExperimentToGalleryItem} from '../../shared/experiment.utils';
 import {
   getQuickstartAgentGroupChatTemplate,
@@ -108,44 +111,24 @@ export class HomeGallery extends MobxLitElement {
     const renderExperiment = (experiment: Experiment) => {
       const item = convertExperimentToGalleryItem(experiment);
       const href = `#/e/${experiment.id}`;
+
       return html`<a href=${href} class="gallery-link">
         <gallery-card .item=${item}></gallery-card>
       </a>`;
     };
 
-    let experiments = [...this.homeService.experiments];
+    const list = this.getList();
 
-    if (this.homeService.searchQuery.trim()) {
-      const q = this.homeService.searchQuery.toLowerCase();
-      experiments = experiments.filter((e) =>
-        e.metadata.name?.toLowerCase().includes(q),
-      );
-    }
-
-    experiments = sortExperiments(experiments, this.sortMode);
-
-    const yourExperiments = experiments.filter(
-      (e) => e.metadata.creator === this.authService.userEmail,
-    );
-    const otherExperiments = experiments.filter(
-      (e) =>
-        e.metadata.creator !== this.authService.userEmail &&
-        this.authService.isViewedExperiment(e.id),
-    );
-
-    const list = this.homeService.showMyExperiments
-      ? yourExperiments
-      : otherExperiments;
-
-    const banner = this.homeService.showMyExperiments
-      ? nothing
-      : html`
-          <div class="banner">
-            Experiments by others will only be shown in this tab if they are
-            shared publicly and have been viewed by you before. Ask the creator
-            to share the link with you.
-          </div>
-        `;
+    const banner =
+      this.homeService.activeTab !== HomeTab.SHARED_WITH_ME
+        ? nothing
+        : html`
+            <div class="banner">
+              Experiments by others will only be shown in this tab if they are
+              shared publicly and have been viewed by you before. Ask the
+              creator to share the link with you.
+            </div>
+          `;
 
     return html`
       <home-gallery-tabs>
@@ -156,7 +139,7 @@ export class HomeGallery extends MobxLitElement {
         ${repeat(
           list,
           (e) => e.id,
-          (e) => renderExperiment(e),
+          (e: Experiment) => renderExperiment(e),
         )}
       </div>
 
@@ -164,9 +147,39 @@ export class HomeGallery extends MobxLitElement {
     `;
   }
 
-  private renderEmptyMessage(experiments: Experiment[]) {
-    if (experiments.length > 0) return nothing;
-    return html`<div class="empty-message">No experiments yet</div>`;
+  private getList() {
+    let experiments = [...this.homeService.experiments];
+
+    // 1. Filter by search
+    if (this.homeService.searchQuery.trim()) {
+      const q = this.homeService.searchQuery.toLowerCase();
+      experiments = experiments.filter((e) =>
+        e.metadata.name?.toLowerCase().includes(q),
+      );
+    }
+
+    // 2. Sort
+    experiments = sortExperiments(experiments, this.sortMode);
+
+    // 3. Filter by tab
+    if (this.homeService.activeTab === HomeTab.MY_EXPERIMENTS) {
+      return experiments.filter(
+        (e) => e.metadata.creator === this.authService.userEmail,
+      );
+    } else if (this.homeService.activeTab === HomeTab.SHARED_WITH_ME) {
+      return experiments.filter(
+        (e) =>
+          e.metadata.creator !== this.authService.userEmail &&
+          this.authService.isViewedExperiment(e.id),
+      );
+    } else {
+      return [];
+    }
+  }
+
+  private renderEmptyMessage(list: Experiment[]) {
+    if (list.length > 0) return nothing;
+    return html`<div class="empty-message">No items found</div>`;
   }
 }
 
@@ -180,18 +193,22 @@ export class HomeGalleryTabs extends MobxLitElement {
       <div class="gallery-header-row">
         <div class="gallery-tabs">
           <div
-            class="gallery-tab ${this.homeService.showMyExperiments
+            class="gallery-tab ${this.homeService.activeTab ===
+            HomeTab.MY_EXPERIMENTS
               ? 'active'
               : ''}"
-            @click=${() => this.homeService.setShowMyExperiments(true)}
+            @click=${() =>
+              this.homeService.setActiveTab(HomeTab.MY_EXPERIMENTS)}
           >
             My experiments
           </div>
           <div
-            class="gallery-tab ${!this.homeService.showMyExperiments
+            class="gallery-tab ${this.homeService.activeTab ===
+            HomeTab.SHARED_WITH_ME
               ? 'active'
               : ''}"
-            @click=${() => this.homeService.setShowMyExperiments(false)}
+            @click=${() =>
+              this.homeService.setActiveTab(HomeTab.SHARED_WITH_ME)}
           >
             Shared with me
           </div>
@@ -210,6 +227,7 @@ export class QuickStartGallery extends MobxLitElement {
 
   private readonly experimentEditor = core.getService(ExperimentEditor);
   private readonly routerService = core.getService(RouterService);
+  public readonly homeService: HomeService = core.getService(HomeService);
 
   override render() {
     return html`
@@ -259,6 +277,15 @@ export class QuickStartGallery extends MobxLitElement {
           >
             <pr-icon icon="groups" color="neutral" size="large"></pr-icon>
             <div>Group chat with<br />no agents</div>
+          </div>
+          <div
+            class="quick-start-card outlined"
+            @click=${() => {
+              this.homeService.setTemplatesOpen(true);
+            }}
+          >
+            <pr-icon icon="dataset" color="neutral" size="large"></pr-icon>
+            <div>Browse all<br />templates</div>
           </div>
         </div>
       </div>
