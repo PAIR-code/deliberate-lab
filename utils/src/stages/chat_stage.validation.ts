@@ -62,10 +62,14 @@ export const ChatStageConfigData = Type.Composite(
     Type.Object(
       {
         kind: Type.Literal(StageKind.CHAT),
-        timeLimitInMinutes: Type.Union([Type.Number(), Type.Null()]),
-        timeMinimumInMinutes: Type.Optional(
-          Type.Union([Type.Number(), Type.Null()]),
-        ),
+        timeLimitInMinutes: Type.Union([
+          Type.Integer({minimum: 1}),
+          Type.Null(),
+        ]),
+        timeMinimumInMinutes: Type.Union([
+          Type.Integer({minimum: 1}),
+          Type.Null(),
+        ]),
         discussions: Type.Array(ChatDiscussionData),
       },
       strict,

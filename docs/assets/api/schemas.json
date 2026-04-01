@@ -13,26 +13,12 @@
       ],
       "properties": {
         "minParticipantsPerCohort": {
-          "anyOf": [
-            {
-              "type": "null"
-            },
-            {
-              "minimum": 0,
-              "type": "integer"
-            }
-          ]
+          "minimum": 0,
+          "type": ["null", "integer"]
         },
         "maxParticipantsPerCohort": {
-          "anyOf": [
-            {
-              "type": "null"
-            },
-            {
-              "minimum": 1,
-              "type": "integer"
-            }
-          ]
+          "minimum": 1,
+          "type": ["null", "integer"]
         },
         "includeAllParticipantsInCohortCount": {
           "type": "boolean"
@@ -674,6 +660,7 @@
         "descriptions",
         "progress",
         "timeLimitInMinutes",
+        "timeMinimumInMinutes",
         "discussions"
       ],
       "properties": {
@@ -696,24 +683,12 @@
           "$ref": "#/$defs/StageProgressConfig"
         },
         "timeLimitInMinutes": {
-          "anyOf": [
-            {
-              "type": "number"
-            },
-            {
-              "type": "null"
-            }
-          ]
+          "minimum": 1,
+          "type": ["integer", "null"]
         },
         "timeMinimumInMinutes": {
-          "anyOf": [
-            {
-              "type": "number"
-            },
-            {
-              "type": "null"
-            }
-          ]
+          "minimum": 1,
+          "type": ["integer", "null"]
         },
         "discussions": {
           "type": "array",
@@ -1307,27 +1282,13 @@
           "type": "number"
         },
         "rankingStageId": {
-          "anyOf": [
-            {
-              "type": "null"
-            },
-            {
-              "type": "string"
-            }
-          ]
+          "type": ["null", "string"]
         },
         "questionMap": {
           "type": "object",
           "patternProperties": {
             "^(.*)$": {
-              "anyOf": [
-                {
-                  "type": "number"
-                },
-                {
-                  "type": "null"
-                }
-              ]
+              "type": ["number", "null"]
             }
           },
           "title": "QuestionMap"
@@ -1344,7 +1305,8 @@
         "name",
         "descriptions",
         "progress",
-        "timeLimitInMinutes"
+        "timeLimitInMinutes",
+        "timeMinimumInMinutes"
       ],
       "properties": {
         "id": {
@@ -1366,24 +1328,12 @@
           "$ref": "#/$defs/StageProgressConfig"
         },
         "timeLimitInMinutes": {
-          "anyOf": [
-            {
-              "type": "number"
-            },
-            {
-              "type": "null"
-            }
-          ]
+          "minimum": 1,
+          "type": ["integer", "null"]
         },
         "timeMinimumInMinutes": {
-          "anyOf": [
-            {
-              "type": "number"
-            },
-            {
-              "type": "null"
-            }
-          ]
+          "minimum": 1,
+          "type": ["integer", "null"]
         },
         "isTurnBasedChat": {
           "type": "boolean"
@@ -1392,14 +1342,7 @@
           "type": "number"
         },
         "maxNumberOfTurns": {
-          "anyOf": [
-            {
-              "type": "number"
-            },
-            {
-              "type": "null"
-            }
-          ]
+          "type": ["number", "null"]
         },
         "preventCancellation": {
           "type": "boolean"
@@ -1825,14 +1768,7 @@
                 "type": "integer"
               },
               "maxParticipants": {
-                "anyOf": [
-                  {
-                    "type": "integer"
-                  },
-                  {
-                    "type": "null"
-                  }
-                ]
+                "type": ["integer", "null"]
               }
             },
             "title": "Role"
@@ -2107,17 +2043,7 @@
           ]
         },
         "value": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "number"
-            },
-            {
-              "type": "boolean"
-            }
-          ]
+          "type": ["string", "number", "boolean"]
         }
       }
     },
@@ -2279,14 +2205,7 @@
           }
         },
         "correctAnswerId": {
-          "anyOf": [
-            {
-              "type": "null"
-            },
-            {
-              "type": "string"
-            }
-          ]
+          "type": ["null", "string"]
         },
         "displayType": {
           "title": "MultipleChoiceDisplayType",
@@ -2804,34 +2723,13 @@
       "required": ["pronouns", "avatar", "name"],
       "properties": {
         "pronouns": {
-          "anyOf": [
-            {
-              "type": "null"
-            },
-            {
-              "type": "string"
-            }
-          ]
+          "type": ["null", "string"]
         },
         "avatar": {
-          "anyOf": [
-            {
-              "type": "null"
-            },
-            {
-              "type": "string"
-            }
-          ]
+          "type": ["null", "string"]
         },
         "name": {
-          "anyOf": [
-            {
-              "type": "null"
-            },
-            {
-              "type": "string"
-            }
-          ]
+          "type": ["null", "string"]
         }
       }
     },
@@ -3141,14 +3039,7 @@
           ]
         },
         "reasoningBudget": {
-          "anyOf": [
-            {
-              "type": "integer"
-            },
-            {
-              "type": "null"
-            }
-          ]
+          "type": ["integer", "null"]
         },
         "includeReasoning": {
           "type": "boolean"
@@ -3790,14 +3681,7 @@
       ],
       "properties": {
         "wordsPerMinute": {
-          "anyOf": [
-            {
-              "type": "number"
-            },
-            {
-              "type": "null"
-            }
-          ]
+          "type": ["number", "null"]
         },
         "minMessagesBeforeResponding": {
           "type": "integer"
@@ -3806,14 +3690,7 @@
           "type": "boolean"
         },
         "maxResponses": {
-          "anyOf": [
-            {
-              "type": "integer"
-            },
-            {
-              "type": "null"
-            }
-          ]
+          "type": ["integer", "null"]
         },
         "initialMessage": {
           "type": "string"

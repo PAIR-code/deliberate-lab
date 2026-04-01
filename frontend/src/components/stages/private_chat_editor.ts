@@ -41,43 +41,35 @@ export class ChatEditor extends MobxLitElement {
   }
 
   private renderTimeLimit() {
-    const timeLimit = this.stage?.timeLimitInMinutes ?? null;
+    const timeLimit = this.stage?.timeLimitInMinutes;
 
     const updateCheck = () => {
-      if (!this.stage) return;
-      if (this.stage.timeLimitInMinutes) {
-        this.experimentEditor.updateStage({
-          ...this.stage,
-          timeLimitInMinutes: null,
-          timeMinimumInMinutes: null,
-        });
-      } else {
-        this.experimentEditor.updateStage({
-          ...this.stage,
-          timeLimitInMinutes: 20, // Default to 20 if checked
-        });
-      }
+      const isSet = this.stage?.timeLimitInMinutes != null;
+      this.experimentEditor.updateStage({
+        ...this.stage!,
+        timeLimitInMinutes: isSet ? null : 20,
+        timeMinimumInMinutes: null,
+      });
     };
 
     const updateMaxTime = (e: InputEvent) => {
-      if (!this.stage) return;
-      const timeLimit = Math.floor(
-        Number((e.target as HTMLTextAreaElement).value),
-      );
+      const val = (e.target as HTMLInputElement).valueAsNumber;
+      const timeLimitInMinutes = val > 0 ? Math.floor(val) : null;
       this.experimentEditor.updateStage({
-        ...this.stage,
-        timeLimitInMinutes: timeLimit,
+        ...this.stage!,
+        timeLimitInMinutes,
       });
     };
 
     const updateMinTime = (e: InputEvent) => {
-      if (!this.stage) return;
-      const val = Math.floor(Number((e.target as HTMLInputElement).value));
-      const max = this.stage.timeLimitInMinutes;
-      const clamped = max !== null ? Math.min(val, max) : val;
+      const val = (e.target as HTMLInputElement).valueAsNumber;
+      const minTime = val > 0 ? Math.floor(val) : null;
+      const max = this.stage?.timeLimitInMinutes;
+      const timeMinimumInMinutes =
+        minTime != null && max != null ? Math.min(minTime, max) : minTime;
       this.experimentEditor.updateStage({
-        ...this.stage,
-        timeMinimumInMinutes: clamped > 0 ? clamped : null,
+        ...this.stage!,
+        timeMinimumInMinutes,
       });
     };
 
@@ -86,14 +78,14 @@ export class ChatEditor extends MobxLitElement {
         <div class="checkbox-wrapper">
           <md-checkbox
             touch-target="wrapper"
-            ?checked=${timeLimit !== null}
+            ?checked=${timeLimit != null}
             ?disabled=${!this.experimentEditor.canEditStages}
             @click=${updateCheck}
           >
           </md-checkbox>
           <div>Disable conversation after a fixed amount of time</div>
         </div>
-        ${timeLimit !== null
+        ${timeLimit != null
           ? html`
               <div class="number-input tab">
                 <label for="timeLimit">
@@ -105,7 +97,7 @@ export class ChatEditor extends MobxLitElement {
                   type="number"
                   id="timeLimit"
                   name="timeLimit"
-                  min="0"
+                  min="1"
                   step="1"
                   .value=${timeLimit}
                   ?disabled=${!this.experimentEditor.canEditStages}
@@ -121,7 +113,7 @@ export class ChatEditor extends MobxLitElement {
                   type="number"
                   id="timeMinimum"
                   name="timeMinimum"
-                  min="0"
+                  min="1"
                   step="1"
                   .max=${timeLimit ?? ''}
                   .value=${this.stage?.timeMinimumInMinutes ?? ''}
