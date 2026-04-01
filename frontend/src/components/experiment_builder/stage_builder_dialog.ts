@@ -83,6 +83,7 @@ import {
   POLICY_METADATA,
   getPolicyExperimentTemplate,
 } from '../../shared/templates/policy';
+import {getPolicyMediationTemplate} from '../../shared/templates/policy_mediation';
 import {
   INTEGRATION_METADATA,
   getAgentParticipantIntegrationTemplate,
@@ -115,6 +116,22 @@ export class StageBuilderDialog extends MobxLitElement {
   @state() private consensusTopics: string = 'Climate Change';
   // Used to populate book club template
   @state() private bookClubConfig: BookClubConfig = createBookClubConfig();
+
+  // Used to populate policy mediation template
+  @state() private policyMediationTopic:
+    | 'all'
+    | 'publicbroadcast'
+    | 'medicaid'
+    | 'fr' = 'all';
+  @state() private policyMediationMediator:
+    | 'all'
+    | 'neutral'
+    | 'adversarial_0'
+    | 'adversarial_100' = 'all';
+  @state() private policyMediationTransferStrategy:
+    | 'random'
+    | 'mixed'
+    | 'extremes' = 'random';
 
   override render() {
     return html`
@@ -187,7 +204,7 @@ export class StageBuilderDialog extends MobxLitElement {
         ${this.renderStockInfoGameCard()}
         ${this.renderAssetAllocationTemplateCard()}
         ${this.renderPolicyTemplateCard()} ${this.renderAgentIntegrationCard()}
-        ${this.renderBookClubTemplateCard()}
+        ${this.renderBookClubTemplateCard()} ${this.renderPolicyMediationCard()}
       </div>
       ${this.authService.hasResearchTemplateAccess
         ? this.renderResearchTemplateGallery()
@@ -269,6 +286,100 @@ export class StageBuilderDialog extends MobxLitElement {
     `;
   }
 
+  private renderPolicyMediationCard() {
+    const loadTemplate = () => {
+      // Configuration based on UI inputs
+      this.addTemplate(
+        getPolicyMediationTemplate({
+          minParticipants: 3,
+          maxParticipants: 3,
+          topicId:
+            this.policyMediationTopic === 'all'
+              ? undefined
+              : this.policyMediationTopic,
+          mediatorMode:
+            this.policyMediationMediator === 'all'
+              ? undefined
+              : this.policyMediationMediator,
+          transferStrategy: this.policyMediationTransferStrategy,
+        }),
+      );
+    };
+
+    return html`
+      <div class="card large-card">
+        <div class="title">🤖 Policy Mediation TEMPLATE</div>
+        <div>
+          Policy Template generated via JSON. Features N=3 gating participants
+          logic. You can use the options below to optionally restrict the
+          pipeline to a specific format.
+        </div>
+
+        <div class="template-controls">
+          <div class="subtitle">Policy Topic</div>
+          <select
+            class="custom-select"
+            .value=${this.policyMediationTopic}
+            @change=${(e: Event) => {
+              this.policyMediationTopic = (e.target as HTMLSelectElement)
+                .value as 'all' | 'publicbroadcast' | 'medicaid' | 'fr';
+            }}
+          >
+            <option value="all">Unrestricted (All Topics)</option>
+            <option value="publicbroadcast">
+              Public Broadcasting (NPR/PBS)
+            </option>
+            <option value="medicaid">Medicaid Work Requirements</option>
+            <option value="fr">Facial Recognition</option>
+          </select>
+
+          <div class="subtitle" style="margin-top: 10px;">
+            Mediator Strategy
+          </div>
+          <select
+            class="custom-select"
+            .value=${this.policyMediationMediator}
+            @change=${(e: Event) => {
+              this.policyMediationMediator = (e.target as HTMLSelectElement)
+                .value as
+                | 'all'
+                | 'neutral'
+                | 'adversarial_0'
+                | 'adversarial_100';
+            }}
+          >
+            <option value="all">Unrestricted (All Strategies)</option>
+            <option value="neutral">Neutral Facilitator</option>
+            <option value="adversarial_0">
+              Adversarial (Persuade to Oppose)
+            </option>
+            <option value="adversarial_100">
+              Adversarial (Persuade to Support)
+            </option>
+          </select>
+
+          <div class="subtitle" style="margin-top: 10px;">
+            Transfer Strategy
+          </div>
+          <select
+            class="custom-select"
+            .value=${this.policyMediationTransferStrategy}
+            @change=${(e: Event) => {
+              this.policyMediationTransferStrategy = (
+                e.target as HTMLSelectElement
+              ).value as 'random' | 'mixed' | 'extremes';
+            }}
+          >
+            <option value="random">Randomized (Default)</option>
+            <option value="mixed">Mixed (Heterogeneous)</option>
+            <option value="extremes">Extremes (Homogeneous Cohorts)</option>
+          </select>
+        </div>
+
+        <pr-button @click=${loadTemplate}> Load Template </pr-button>
+      </div>
+    `;
+  }
   private addStage(stage: StageConfig) {
     this.analyticsService.trackButtonClick(ButtonClick.STAGE_ADD);
     this.experimentEditor.addStage(stage);
