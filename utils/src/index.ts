@@ -73,6 +73,7 @@ export * from './stages/stage.handler';
 export * from './stages/stage.manager';
 export * from './stages/stage.prompts';
 export * from './stages/stage.validation';
+export * from './stages/stage.schemas';
 
 export * from './stages/chat_stage';
 export * from './stages/chat_stage.manager';

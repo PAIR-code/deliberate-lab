@@ -6,6 +6,11 @@ import {StageKind} from './stage';
  * These are defined in a separate file to ensure they're bundled before Type.Ref() calls.
  */
 
+/** Result type for cross-field stage config validators. */
+export type StageValidationResult =
+  | {valid: true}
+  | {valid: false; error: string};
+
 /** StageTextConfig input validation. */
 export const StageTextConfigSchema = Type.Object(
   {

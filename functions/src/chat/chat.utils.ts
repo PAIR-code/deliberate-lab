@@ -1,7 +1,12 @@
 import {
   ChatMessage,
+  ChatStageConfig,
+  ChatStagePublicData,
+  ChatStageParticipantAnswer,
   createChatMessage,
+  createChatStageParticipantAnswer,
   createSystemChatMessage,
+  getTimeElapsed,
 } from '@deliberation-lab/utils';
 import {Timestamp} from 'firebase-admin/firestore';
 import {app} from '../app';
@@ -14,12 +19,6 @@ import {
   getFirestoreExperiment,
   getFirestoreParticipantRef,
 } from '../utils/firestore';
-import {
-  ChatStageConfig,
-  ChatStagePublicData,
-  ChatStageParticipantAnswer,
-  createChatStageParticipantAnswer,
-} from '@deliberation-lab/utils';
 import {updateParticipantNextStage} from '../participant.utils';
 
 /** Used for private chats if model response fails. */
@@ -71,6 +70,35 @@ export async function updateParticipantReadyToEndChat(
   );
   if (!publicStageData) return;
 
+  const minTime = (stage as ChatStageConfig).timeMinimumInMinutes;
+  if (minTime != null && minTime > 0) {
+    let startTimestamp = (publicStageData as ChatStagePublicData)
+      .discussionStartTimestamp;
+
+    // For private chats, fall back to the first message timestamp
+    if (stage.kind === 'privateChat' && !startTimestamp) {
+      const results = await app
+        .firestore()
+        .collection('experiments')
+        .doc(experimentId)
+        .collection('participants')
+        .doc(participantId)
+        .collection('stageData')
+        .doc(stage.id)
+        .collection('privateChats')
+        .orderBy('timestamp', 'asc')
+        .limit(1)
+        .get();
+
+      if (!results.empty) {
+        startTimestamp = results.docs[0].data().timestamp as Timestamp;
+      }
+    }
+
+    if (!startTimestamp) return;
+    if (getTimeElapsed(startTimestamp, 'm') < minTime) return;
+  }
+
   const participantAnswerDoc = getFirestoreParticipantAnswerRef(
     experimentId,
     participantId,
@@ -111,6 +139,7 @@ export async function updateParticipantReadyToEndChat(
   } else {
     // Otherwise, move to next stage
     const experiment = await getFirestoreExperiment(experimentId);
+    if (!experiment) return;
     await updateParticipantNextStage(
       experimentId,
       participant,

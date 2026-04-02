@@ -15,6 +15,7 @@ import {
   ProlificConfig,
   Visibility,
   createExperimentConfig,
+  createPrivateChatStage,
 } from '@deliberation-lab/utils';
 import {
   TestContext,
@@ -893,6 +894,27 @@ describe('API Experiment Creation Integration Tests', () => {
         const forkStage = normalizeStageForComparison(forkedExp.stages[i]);
         expect(forkStage).toEqual(origStage);
       }
+    });
+  });
+
+  // ==========================================================================
+  // Stage Validation Tests
+  // ==========================================================================
+
+  describe('Stage validation', () => {
+    it('should reject experiment creation with invalid stage config (minTurns > maxTurns)', async () => {
+      const invalidStage = createPrivateChatStage({
+        name: 'Invalid chat',
+        minNumberOfTurns: 10,
+        maxNumberOfTurns: 3,
+      });
+
+      const response = await apiRequest('POST', '/v1/experiments', {
+        name: 'Invalid experiment',
+        stages: JSON.parse(JSON.stringify([invalidStage])),
+      });
+
+      expect(response.ok).toBe(false);
     });
   });
 });

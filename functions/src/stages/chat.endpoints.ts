@@ -1,13 +1,19 @@
 import {Value} from '@sinclair/typebox/value';
 import {
+  ChatStageConfig,
+  ChatStagePublicData,
   StageKind,
   UpdateChatStageParticipantAnswerData,
+  getTimeElapsed,
 } from '@deliberation-lab/utils';
 import {Timestamp} from 'firebase-admin/firestore';
 import {onCall, HttpsError} from 'firebase-functions/v2/https';
 
 import {app} from '../app';
-import {getFirestoreStage} from '../utils/firestore';
+import {
+  getFirestoreStage,
+  getFirestoreStagePublicData,
+} from '../utils/firestore';
 import {
   checkConfigDataUnionOnPath,
   isUnionError,
@@ -112,6 +118,28 @@ export const updateChatStageParticipantAnswer = onCall(async (request) => {
   const validInput = Value.Check(UpdateChatStageParticipantAnswerData, data);
   if (!validInput) {
     handleUpdateChatStageParticipantAnswerValidationErrors(data);
+  }
+
+  // Check minimum time enforcement
+  const stageId = data.chatStageParticipantAnswer.id;
+  const stage = await getFirestoreStage(data.experimentId, stageId);
+  if (stage) {
+    const minTime = (stage as ChatStageConfig).timeMinimumInMinutes;
+    if (minTime != null && minTime > 0) {
+      const publicStageData = await getFirestoreStagePublicData(
+        data.experimentId,
+        data.cohortId,
+        stageId,
+      );
+      const startTimestamp = (publicStageData as ChatStagePublicData)
+        ?.discussionStartTimestamp;
+      if (!startTimestamp || getTimeElapsed(startTimestamp, 'm') < minTime) {
+        throw new HttpsError(
+          'failed-precondition',
+          'Minimum time requirement has not been met.',
+        );
+      }
+    }
   }
 
   // Define document reference

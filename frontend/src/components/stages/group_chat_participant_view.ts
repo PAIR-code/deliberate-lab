@@ -26,6 +26,7 @@ import {
   ChatStageConfig,
   DiscussionItem,
   StageKind,
+  getTimeElapsed,
 } from '@deliberation-lab/utils';
 
 import {styles} from './group_chat_participant_view.scss';
@@ -164,7 +165,7 @@ export class GroupChatView extends MobxLitElement {
     }
 
     const onClick = async () => {
-      if (!this.stage) return;
+      if (!this.stage || !this.isMinimumTimeMet) return;
 
       this.readyToEndDiscussionLoading = true;
       try {
@@ -183,13 +184,16 @@ export class GroupChatView extends MobxLitElement {
       this.participantService.isReadyToEndChatDiscussion(
         this.stage.id,
         currentDiscussionId,
-      );
+      ) ||
+      !this.isMinimumTimeMet;
 
     return html`
       <pr-tooltip
-        text=${isDisabled
-          ? 'You can move on once others are also ready to move on.'
-          : ''}
+        text=${!this.isMinimumTimeMet
+          ? `You must stay in this chat for at least ${this.minutesRemainingUntilMinimum} more minute${this.minutesRemainingUntilMinimum !== 1 ? 's' : ''}.`
+          : isDisabled
+            ? 'You can move on once others are also ready to move on.'
+            : ''}
         position="TOP_END"
       >
         <pr-button
@@ -215,10 +219,6 @@ export class GroupChatView extends MobxLitElement {
 
   private renderIndicators() {
     if (!this.stage) return nothing;
-
-    const publicStageData = this.cohortService.stagePublicDataMap[
-      this.stage.id
-    ] as ChatStagePublicData;
 
     // Check if all other participants have completed the stage
     const completed = this.cohortService.getStageCompletedParticipants(
@@ -252,20 +252,7 @@ export class GroupChatView extends MobxLitElement {
     );
 
     // Determine if Next Stage button should be disabled
-    let disableNext = false;
-    const requireFullTime = this.stage.requireFullTime;
-    const publicStageData = this.cohortService.stagePublicDataMap[
-      this.stage.id
-    ] as ChatStagePublicData;
-    if (
-      publicStageData &&
-      requireFullTime &&
-      this.stage.timeLimitInMinutes !== null
-    ) {
-      if (!publicStageData.discussionEndTimestamp) {
-        disableNext = true;
-      }
-    }
+    const disableNext = !this.isMinimumTimeMet;
 
     const renderProgress = () => {
       if (!this.stage?.progress.showParticipantProgress) {
@@ -305,6 +292,41 @@ export class GroupChatView extends MobxLitElement {
         ${this.renderEndDiscussionButton(currentDiscussionId)}
       </stage-footer>
     `;
+  }
+
+  get isMinimumTimeMet() {
+    if (!this.stage || !this.stage.timeMinimumInMinutes) return true;
+
+    const publicStageData = this.cohortService.stagePublicDataMap[
+      this.stage.id
+    ] as ChatStagePublicData;
+
+    if (!publicStageData?.discussionStartTimestamp) {
+      return false;
+    }
+
+    return (
+      getTimeElapsed(publicStageData.discussionStartTimestamp, 'm') >=
+      this.stage.timeMinimumInMinutes
+    );
+  }
+
+  get minutesRemainingUntilMinimum(): number {
+    if (!this.stage?.timeMinimumInMinutes) return 0;
+
+    const publicStageData = this.cohortService.stagePublicDataMap[
+      this.stage.id
+    ] as ChatStagePublicData;
+
+    if (!publicStageData?.discussionStartTimestamp) {
+      return this.stage.timeMinimumInMinutes;
+    }
+
+    const elapsed = getTimeElapsed(
+      publicStageData.discussionStartTimestamp,
+      'm',
+    );
+    return Math.ceil(this.stage.timeMinimumInMinutes - elapsed);
   }
 }
 

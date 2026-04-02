@@ -18,14 +18,11 @@ import {
   ChatStageConfig,
   ChatStagePublicData,
   MediatorProfile,
-  MediatorStatus,
   ParticipantProfile,
   convertUnifiedTimestampToTime,
+  getTimeElapsed,
 } from '@deliberation-lab/utils';
-import {
-  getChatStartTimestamp,
-  getChatTimeRemainingInSeconds,
-} from '../../shared/stage.utils';
+import {getChatStartTimestamp} from '../../shared/stage.utils';
 import {getHashBasedColor} from '../../shared/utils';
 import {styles} from './chat_info_panel.scss';
 
@@ -57,12 +54,12 @@ export class ChatPanel extends MobxLitElement {
     return html`
       <div class="side-layout">
         <stage-description .stage=${this.stage} noPadding> </stage-description>
-        ${this.renderTimer(true)} ${this.renderParticipantList()}
+        ${this.renderTimer()} ${this.renderParticipantList()}
       </div>
     `;
   }
 
-  private renderTimer(showDivider = false) {
+  private renderTimer() {
     if (!this.stage) return nothing;
 
     const publicStageData = this.cohortService.stagePublicDataMap[
@@ -93,8 +90,21 @@ export class ChatPanel extends MobxLitElement {
         class=${`countdown ${publicStageData.discussionEndTimestamp ? 'ended' : ''}`}
       >
         ⏱️ Timer: ${this.stage.timeLimitInMinutes} minutes ${renderStatus()}
-        ${this.stage.requireFullTime && !publicStageData.discussionEndTimestamp
-          ? 'You must stay on this chat for the full time.'
+        ${this.stage.timeMinimumInMinutes &&
+        !publicStageData.discussionEndTimestamp &&
+        publicStageData.discussionStartTimestamp &&
+        getTimeElapsed(publicStageData.discussionStartTimestamp, 'm') <
+          this.stage.timeMinimumInMinutes
+          ? (() => {
+              const remaining = Math.ceil(
+                this.stage.timeMinimumInMinutes -
+                  getTimeElapsed(
+                    publicStageData.discussionStartTimestamp!,
+                    'm',
+                  ),
+              );
+              return `You must stay in this chat for at least ${remaining} more minute${remaining !== 1 ? 's' : ''}.`;
+            })()
           : ''}
       </div>
       ${this.topLayout ? nothing : html`<div class="divider"></div>`}

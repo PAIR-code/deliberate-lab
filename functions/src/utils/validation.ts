@@ -1,6 +1,7 @@
 /** Pretty printing and analysis utils for typebox validation */
 
 import {
+  BaseStageConfig,
   CONFIG_DATA,
   CohortParticipantConfig,
   CohortParticipantConfigSchema,
@@ -111,12 +112,17 @@ export const checkUnionErrorOnPath = (
     : Value.Errors(validator, value);
 };
 
+/** Schema-only map extracted from CONFIG_DATA for union error resolution. */
+const CONFIG_DATA_SCHEMAS: Record<Index, TSchema> = Object.fromEntries(
+  Object.entries(CONFIG_DATA).map(([key, entry]) => [key, entry.schema]),
+);
+
 // Variants
 export const checkConfigDataUnionOnPath = (
   data: unknown,
   path: string,
   references?: TSchema[],
-) => checkUnionErrorOnPath(data, path, CONFIG_DATA, references);
+) => checkUnionErrorOnPath(data, path, CONFIG_DATA_SCHEMAS, references);
 
 // ************************************************************************* //
 // STAGE VALIDATION                                                          //
@@ -179,12 +185,25 @@ export function validateStages(stages: unknown[]): ValidationResult {
                 `  - ${nestedError.path}: ${nestedError.message}`,
               );
             }
-          } catch (err) {
+          } catch {
             // If drilling into union fails, fall back to generic error
             errorMessages.push(`  - ${error.path}: ${error.message}`);
           }
         } else {
           errorMessages.push(`  - ${error.path}: ${error.message}`);
+        }
+      }
+    } else {
+      // Schema passed — run cross-field business rule validation
+      const stageObj = stage as BaseStageConfig;
+      const entry = CONFIG_DATA[stageObj.kind as string];
+      if (entry?.validate) {
+        const result = entry.validate(stageObj);
+        if (!result.valid) {
+          const stageName = stageObj?.name || 'unnamed';
+          errorMessages.push(
+            `Stage ${i} (name: "${stageName}", kind: "${stageObj.kind}"): ${result.error}`,
+          );
         }
       }
     }

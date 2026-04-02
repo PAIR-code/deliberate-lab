@@ -1,8 +1,6 @@
 import {
-  createTextPromptItem,
   createChatStage,
   createDefaultMediatorGroupChatPrompt,
-  createDefaultStageContextPromptItem,
   AgentMediatorTemplate,
   MediatorPromptConfig,
   createAgentMediatorPersonaConfig,
@@ -11,9 +9,6 @@ import {
   StructuredOutputSchema,
   createStructuredOutputConfig,
   createAgentChatSettings,
-  PromptItemType,
-  ProfileInfoPromptItem,
-  ProfileContextPromptItem,
   DEFAULT_AGENT_MODEL_SETTINGS,
   DEFAULT_EXPLANATION_FIELD,
   DEFAULT_READY_TO_END_FIELD,
@@ -461,9 +456,6 @@ export function getCharityDebateTemplate(
         discussionStageId,
         `${EMOJIS[roundNum - 1]} Round ${roundNum}: Discussion`,
         setting,
-        {
-          persona: {id: mediatorAgentId, name: mediatorFriendlyName},
-        } as AgentMediatorTemplate,
       );
     } else {
       discussionStage = createAllocationDiscussionStage(
@@ -554,7 +546,6 @@ function createDiscussionStageWithMediator(
   stageId: string,
   stageName: string,
   setting: string,
-  mediatorTemplate: AgentMediatorTemplate,
 ): StageConfig {
   const mediatorText = `\n\n🤖 An AI-based facilitator will be present in this discussion.`;
   const discussionText = `Discuss the ideal allocation of ${setting}.${mediatorText}`;
@@ -565,7 +556,7 @@ function createDiscussionStageWithMediator(
     descriptions: createStageTextConfig({primaryText: discussionText}),
     progress: createStageProgressConfig({waitForAllParticipants: true}),
     timeLimitInMinutes: 5,
-    requireFullTime: true, // Setting this to True causes the timeLimit to be a min AND maximum.
+    timeMinimumInMinutes: 5,
   });
 }
 
@@ -935,7 +926,7 @@ function createAllocationDiscussionStage(
     descriptions: createStageTextConfig({primaryText: discussionText}),
     progress: createStageProgressConfig({waitForAllParticipants: true}),
     timeLimitInMinutes: 5,
-    requireFullTime: true,
+    timeMinimumInMinutes: 5,
   });
 }
 

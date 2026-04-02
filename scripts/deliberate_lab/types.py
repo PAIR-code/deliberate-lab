@@ -61,26 +61,12 @@ class CohortDefinition(BaseModel):
     maxParticipantsPerCohort: Annotated[int | None, Field(ge=1)] = None
 
 
-class MinParticipantsPerCohort(RootModel[int]):
-    model_config = ConfigDict(
-        populate_by_name=True,
-    )
-    root: Annotated[int, Field(ge=0)]
-
-
-class MaxParticipantsPerCohort(RootModel[int]):
-    model_config = ConfigDict(
-        populate_by_name=True,
-    )
-    root: Annotated[int, Field(ge=1)]
-
-
 class CohortParticipantConfig(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    minParticipantsPerCohort: MinParticipantsPerCohort | None = None
-    maxParticipantsPerCohort: MaxParticipantsPerCohort | None = None
+    minParticipantsPerCohort: Annotated[int | None, Field(ge=0)] = None
+    maxParticipantsPerCohort: Annotated[int | None, Field(ge=1)] = None
     includeAllParticipantsInCohortCount: bool
     botProtection: bool
 
@@ -365,8 +351,8 @@ class PrivateChatStageConfig(BaseModel):
     name: Annotated[str, Field(min_length=1)]
     descriptions: StageTextConfig
     progress: StageProgressConfig
-    timeLimitInMinutes: float | None = None
-    requireFullTime: bool | None = None
+    timeLimitInMinutes: Annotated[int | None, Field(ge=1)] = None
+    timeMinimumInMinutes: Annotated[int | None, Field(ge=1)] = None
     isTurnBasedChat: bool | None = None
     minNumberOfTurns: float | None = None
     maxNumberOfTurns: float | None = None
@@ -986,8 +972,8 @@ class ChatStageConfig(BaseModel):
     name: Annotated[str, Field(min_length=1)]
     descriptions: StageTextConfig
     progress: StageProgressConfig
-    timeLimitInMinutes: float | None = None
-    requireFullTime: bool | None = None
+    timeLimitInMinutes: Annotated[int | None, Field(ge=1)] = None
+    timeMinimumInMinutes: Annotated[int | None, Field(ge=1)] = None
     discussions: list[DefaultChatDiscussion | CompareChatDiscussion]
 
 

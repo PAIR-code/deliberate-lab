@@ -1,17 +1,24 @@
-import {Type} from '@sinclair/typebox';
-import {StageKind} from './stage';
+import {Type, type TSchema} from '@sinclair/typebox';
+import {BaseStageConfig, StageKind} from './stage';
+import {type StageValidationResult} from './stage.schemas';
 import {
   AssetAllocationStageConfigData,
   MultiAssetAllocationStageConfigData,
 } from './asset_allocation_stage.validation';
-import {ChatStageConfigData} from './chat_stage.validation';
+import {
+  ChatStageConfigData,
+  validateChatStageConfig,
+} from './chat_stage.validation';
 import {ChipStageConfigData} from './chip_stage.validation';
 import {ComprehensionStageConfigData} from './comprehension_stage.validation';
 import {FlipCardStageConfigData} from './flipcard_stage.validation';
 import {RankingStageConfigData} from './ranking_stage.validation';
 import {InfoStageConfigData} from './info_stage.validation';
 import {PayoutStageConfigData} from './payout_stage.validation';
-import {PrivateChatStageConfigData} from './private_chat_stage.validation';
+import {
+  PrivateChatStageConfigData,
+  validatePrivateChatStageConfig,
+} from './private_chat_stage.validation';
 import {ProfileStageConfigData} from './profile_stage.validation';
 import {RevealStageConfigData} from './reveal_stage.validation';
 import {RoleStageConfigData} from './role_stage.validation';
@@ -35,28 +42,39 @@ export const StageKindData = Type.Enum(StageKind, {$id: 'StageKind'});
 // writeExperiment, updateStageConfig endpoints                              //
 // ************************************************************************* //
 
-/** Map of stage kinds to their validators */
-export const CONFIG_DATA = {
-  assetAllocation: AssetAllocationStageConfigData,
-  multiAssetAllocation: MultiAssetAllocationStageConfigData,
-  chat: ChatStageConfigData,
-  chip: ChipStageConfigData,
-  comprehension: ComprehensionStageConfigData,
-  flipcard: FlipCardStageConfigData,
-  info: InfoStageConfigData,
-  payout: PayoutStageConfigData,
-  privateChat: PrivateChatStageConfigData,
-  profile: ProfileStageConfigData,
-  ranking: RankingStageConfigData,
-  reveal: RevealStageConfigData,
-  role: RoleStageConfigData,
-  salesperson: SalespersonStageConfigData,
-  stockinfo: StockInfoStageConfigData,
-  surveyPerParticipant: SurveyPerParticipantStageConfigData,
-  survey: SurveyStageConfigData,
-  tos: TOSStageConfigData,
-  transfer: TransferStageConfigData,
+/** Stage config entry with schema and optional cross-field validator. */
+export interface StageConfigEntry {
+  schema: TSchema;
+  validate?: (stage: BaseStageConfig) => StageValidationResult;
+}
+
+/** Map of stage kinds to their schema and optional validator */
+export const CONFIG_DATA: Record<string, StageConfigEntry> = {
+  assetAllocation: {schema: AssetAllocationStageConfigData},
+  multiAssetAllocation: {schema: MultiAssetAllocationStageConfigData},
+  chat: {schema: ChatStageConfigData, validate: validateChatStageConfig},
+  chip: {schema: ChipStageConfigData},
+  comprehension: {schema: ComprehensionStageConfigData},
+  flipcard: {schema: FlipCardStageConfigData},
+  info: {schema: InfoStageConfigData},
+  payout: {schema: PayoutStageConfigData},
+  privateChat: {
+    schema: PrivateChatStageConfigData,
+    validate: validatePrivateChatStageConfig,
+  },
+  profile: {schema: ProfileStageConfigData},
+  ranking: {schema: RankingStageConfigData},
+  reveal: {schema: RevealStageConfigData},
+  role: {schema: RoleStageConfigData},
+  salesperson: {schema: SalespersonStageConfigData},
+  stockinfo: {schema: StockInfoStageConfigData},
+  surveyPerParticipant: {schema: SurveyPerParticipantStageConfigData},
+  survey: {schema: SurveyStageConfigData},
+  tos: {schema: TOSStageConfigData},
+  transfer: {schema: TransferStageConfigData},
 };
 
 /** StageConfig input validation (union of all stage types) */
-export const StageConfigData = Type.Union(Object.values(CONFIG_DATA));
+export const StageConfigData = Type.Union(
+  Object.values(CONFIG_DATA).map((entry) => entry.schema),
+);

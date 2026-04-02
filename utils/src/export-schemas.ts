@@ -54,8 +54,8 @@ function collectSchemasWithId(
 }
 
 // Verify all stage configs have $id for proper naming in $defs
-for (const [key, schema] of Object.entries(CONFIG_DATA)) {
-  if (!(schema as Record<string, unknown>).$id) {
+for (const [key, entry] of Object.entries(CONFIG_DATA)) {
+  if (!(entry.schema as Record<string, unknown>).$id) {
     throw new Error(
       `Stage config "${key}" is missing $id. Add $id to its TypeBox definition.`,
     );
@@ -266,7 +266,80 @@ function simplifyAllOf(obj: unknown): unknown {
   return result;
 }
 
-const simplifiedSchema = simplifyAllOf(fixedSchema) as Record<string, unknown>;
+/**
+ * Simplify unions that consist only of simple primitive types (plus null).
+ *
+ * Pattern: anyOf: [{type: 'integer', ...}, {type: 'null'}]
+ * Simplified: {type: ['integer', 'null'], ...}
+ *
+ * This allows datamodel-codegen to inline these as Optional[primitive] instead
+ * of creating RootModels or subclasses. It safely avoids collapsing enums or literals.
+ */
+function simplifyUnions(obj: unknown): unknown {
+  if (obj === null || typeof obj !== 'object') {
+    return obj;
+  }
+
+  if (Array.isArray(obj)) {
+    return obj.map((item) => simplifyUnions(item));
+  }
+
+  const record = obj as Record<string, unknown>;
+
+  // Check if this is an anyOf that can be simplified
+  if (Array.isArray(record.anyOf) && record.anyOf.length > 0) {
+    const members = record.anyOf as Record<string, unknown>[];
+
+    // Check if all members are simple primitives (no objects, no arrays, no enums/consts)
+    const canCollapse = members.every(
+      (m) =>
+        m.type &&
+        typeof m.type === 'string' &&
+        m.type !== 'object' &&
+        m.type !== 'array' &&
+        !m.const &&
+        !m.enum &&
+        !m.$ref &&
+        !m.anyOf &&
+        !m.oneOf &&
+        !m.allOf,
+    );
+
+    if (canCollapse) {
+      // Separate members into those with constraints and those without (pure types)
+      const constrained = members.filter((m) => Object.keys(m).length > 1);
+
+      // Only collapse if there's at most one member with constraints (e.g. integer + null)
+      // to avoid merging conflicting rules (like two different patterns).
+      if (constrained.length <= 1) {
+        const types = [...new Set(members.map((m) => m.type as string))];
+        const base = constrained.length === 1 ? constrained[0] : members[0];
+        const result: Record<string, unknown> = {
+          ...base,
+          type: types.length === 1 ? types[0] : types,
+        };
+
+        // Preserve title if it exists on the union itself
+        if (record.title) result.title = record.title;
+
+        return simplifyUnions(result);
+      }
+    }
+  }
+
+  // Recursively process all properties
+  const result: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(record)) {
+    result[key] = simplifyUnions(value);
+  }
+  return result;
+}
+
+const simplifiedAllOf = simplifyAllOf(fixedSchema) as Record<string, unknown>;
+const simplifiedSchema = simplifyUnions(simplifiedAllOf) as Record<
+  string,
+  unknown
+>;
 simplifiedSchema.$id = 'DeliberateLabSchemas';
 
 /**

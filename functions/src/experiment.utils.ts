@@ -22,6 +22,7 @@ import {getExperimentDownload} from './data';
 import {generateVariablesForScope} from './variables.utils';
 import {AuthGuard} from './utils/auth-guard';
 import {createCohortFromDefinition} from './cohort.utils';
+import {validateStages} from './utils/validation';
 
 /**
  * Create cohorts from cohort definitions and update the definitions with generated IDs.
@@ -79,6 +80,12 @@ export async function writeExperimentFromTemplate(
   options: WriteExperimentOptions = {},
 ): Promise<string> {
   const {collectionName = 'experiments'} = options;
+
+  // Validate stage configs (schema + cross-field business rules)
+  const stageValidation = validateStages(template.stageConfigs);
+  if (!stageValidation.valid) {
+    throw new Error(`Invalid stage configuration: ${stageValidation.error}`);
+  }
 
   // Set up experiment config with stageIds
   const experimentConfig = createExperimentConfig(
@@ -298,7 +305,11 @@ export interface UpdateExperimentOptions {
  */
 export interface UpdateExperimentResult {
   success: boolean;
-  error?: 'not-found' | 'not-owner' | 'cohort-definitions-locked';
+  error?:
+    | 'not-found'
+    | 'not-owner'
+    | 'cohort-definitions-locked'
+    | 'invalid-stages';
 }
 
 /**
@@ -321,6 +332,12 @@ export async function updateExperimentFromTemplate(
   options: UpdateExperimentOptions = {},
 ): Promise<UpdateExperimentResult> {
   const {collectionName = 'experiments'} = options;
+
+  // Validate stage configs (schema + cross-field business rules)
+  const stageValidation = validateStages(template.stageConfigs);
+  if (!stageValidation.valid) {
+    return {success: false, error: 'invalid-stages'};
+  }
 
   // Set up experiment config with stageIds
   const experimentConfig = createExperimentConfig(

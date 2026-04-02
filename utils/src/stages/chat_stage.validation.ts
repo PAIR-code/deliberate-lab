@@ -1,9 +1,13 @@
 import {Type, type Static} from '@sinclair/typebox';
 import {UnifiedTimestampSchema} from '../shared.validation';
-import {StageKind} from './stage';
+import {BaseStageConfig, StageKind} from './stage';
 import {ChatDiscussionType} from './chat_stage';
-import {BaseStageConfigSchema} from './stage.schemas';
+import {
+  BaseStageConfigSchema,
+  type StageValidationResult,
+} from './stage.schemas';
 import {UserType} from '../participant';
+import {ChatStageConfig} from './chat_stage';
 
 /** Shorthand for strict TypeBox object validation */
 const strict = {additionalProperties: false} as const;
@@ -58,8 +62,14 @@ export const ChatStageConfigData = Type.Composite(
     Type.Object(
       {
         kind: Type.Literal(StageKind.CHAT),
-        timeLimitInMinutes: Type.Union([Type.Number(), Type.Null()]),
-        requireFullTime: Type.Union([Type.Boolean(), Type.Null()]),
+        timeLimitInMinutes: Type.Union([
+          Type.Integer({minimum: 1}),
+          Type.Null(),
+        ]),
+        timeMinimumInMinutes: Type.Union([
+          Type.Integer({minimum: 1}),
+          Type.Null(),
+        ]),
         discussions: Type.Array(ChatDiscussionData),
       },
       strict,
@@ -67,6 +77,23 @@ export const ChatStageConfigData = Type.Composite(
   ],
   {$id: 'ChatStageConfig', ...strict},
 );
+
+/** Validate cross-field business rules for chat time configs. */
+export function validateChatStageConfig(
+  stage: BaseStageConfig,
+): StageValidationResult {
+  const {timeMinimumInMinutes: min, timeLimitInMinutes: max} =
+    stage as ChatStageConfig;
+
+  if (min != null && max != null && min > max) {
+    return {
+      valid: false,
+      error: `timeMinimumInMinutes (${min}) cannot exceed timeLimitInMinutes (${max})`,
+    };
+  }
+
+  return {valid: true};
+}
 
 // ************************************************************************* //
 // updateChatMessage endpoint                                                //
