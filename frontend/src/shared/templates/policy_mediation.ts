@@ -2243,6 +2243,9 @@ To inform your decisions, you'll interact with a group and your discussion will 
 The entire process should take approximately {{study_details.study_duration_minutes}}.
 
 Your responses will be kept confidential and used for research purposes only.
+
+## Flagging issues
+If at any point in the experiment you experience harmful dialogue or have concerns about the process or fellow participants, please click the red "?" icon to the top right of your interface. 
 `,
     ],
     youtubeVideoId: undefined,
