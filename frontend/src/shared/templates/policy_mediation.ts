@@ -564,7 +564,7 @@ export function getPolicyMediationTemplate(
   stages.push(createPolicyOutroStage(config));
   stages.push(createDebriefVideoStage(config));
   stages.push(createDebriefPurposeStage(config));
-  stages.push(createDebriefStudyDetailsStage(config));
+  // stages.push(createDebriefStudyDetailsStage(config));
   // stages.push(createDebriefAboutExperienceStage(config));
   // stages.push(createDebriefResearchMethodStage(config));
   stages.push(createDebriefPolicyDecisionsStage(config));

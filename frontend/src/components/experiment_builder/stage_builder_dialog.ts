@@ -308,11 +308,10 @@ export class StageBuilderDialog extends MobxLitElement {
 
     return html`
       <div class="card large-card">
-        <div class="title">🤖 Policy Mediation TEMPLATE</div>
+        <div class="title">🤖 Policy Mediation</div>
         <div>
-          Policy Template generated via JSON. Features N=3 gating participants
-          logic. You can use the options below to optionally restrict the
-          pipeline to a specific format.
+          A study where participants discuss various policy decisions with or
+          without the presence of a mediator.
         </div>
 
         <div class="template-controls">
