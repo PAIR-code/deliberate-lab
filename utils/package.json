@@ -33,6 +33,7 @@
     "picomatch": "^4.0.4",
     "ts-jest": "^29.4.6",
     "tsup": "^8.5.1",
+    "tsx": "^4.21.0",
     "typescript": "^5.9.3"
   },
   "dependencies": {

@@ -3953,6 +3953,7 @@
           ]
         },
         "experimentTemplate": {
+          "additionalProperties": false,
           "type": "object",
           "required": [
             "id",
