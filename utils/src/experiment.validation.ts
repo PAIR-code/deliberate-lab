@@ -73,36 +73,71 @@ export const CohortDefinitionSchema = Type.Object(
   strict,
 );
 
+export const ExperimentTemplateSchema = Type.Object(
+  {
+    id: Type.String(),
+    experiment: Type.Object(
+      {
+        id: Type.String(),
+        versionId: Type.Number(),
+        metadata: MetadataConfigSchema,
+        permissions: PermissionsConfigSchema,
+        defaultCohortConfig: CohortParticipantConfigSchema,
+        prolificConfig: ProlificConfigSchema,
+        stageIds: Type.Array(Type.String()),
+        cohortLockMap: Type.Record(Type.String(), Type.Boolean()),
+        variableConfigs: Type.Optional(Type.Array(VariableConfigData)),
+        variableMap: Type.Optional(Type.Record(Type.String(), Type.String())),
+        cohortDefinitions: Type.Optional(Type.Array(CohortDefinitionSchema)),
+      },
+      strict,
+    ),
+    stageConfigs: Type.Array(StageConfigData),
+    agentMediators: Type.Array(AgentMediatorTemplateData),
+    agentParticipants: Type.Array(AgentParticipantTemplateData),
+  },
+  strict,
+);
+
 export const ExperimentCreationData = Type.Object(
   {
     // Firestore collection name to save experiment under
     // (e.g., 'experimentTemplates' if the experiment is a template)
     collectionName: FirestoreCollectionData,
-    experimentTemplate: Type.Object({
-      id: Type.String(),
-      // Experiment config (excluding ordered stage IDs)
-      experiment: Type.Object(
-        {
-          id: Type.String(),
-          versionId: Type.Number(),
-          metadata: MetadataConfigSchema,
-          permissions: PermissionsConfigSchema,
-          defaultCohortConfig: CohortParticipantConfigSchema,
-          prolificConfig: ProlificConfigSchema,
-          stageIds: Type.Array(Type.String()),
-          cohortLockMap: Type.Record(Type.String(), Type.Boolean()),
-          variableConfigs: Type.Optional(Type.Array(VariableConfigData)),
-          variableMap: Type.Optional(Type.Record(Type.String(), Type.String())),
-          cohortDefinitions: Type.Optional(Type.Array(CohortDefinitionSchema)),
-        },
-        strict,
-      ),
-      stageConfigs: Type.Array(StageConfigData),
-      agentMediators: Type.Array(AgentMediatorTemplateData),
-      agentParticipants: Type.Array(AgentParticipantTemplateData),
-    }),
+    experimentTemplate: ExperimentTemplateSchema,
   },
   strict,
 );
 
 export type ExperimentCreationData = Static<typeof ExperimentCreationData>;
+
+export const CreateExperimentRequestData = Type.Union(
+  [
+    // Template Mode
+    Type.Object(
+      {
+        template: ExperimentTemplateSchema,
+      },
+      strict,
+    ),
+    // Simple Mode
+    Type.Object(
+      {
+        name: Type.String({minLength: 1}),
+        description: Type.Optional(Type.String()),
+        stages: Type.Optional(Type.Array(StageConfigData)),
+        prolificConfig: Type.Optional(ProlificConfigSchema),
+        agentMediators: Type.Optional(Type.Array(AgentMediatorTemplateData)),
+        agentParticipants: Type.Optional(
+          Type.Array(AgentParticipantTemplateData),
+        ),
+      },
+      strict,
+    ),
+  ],
+  {$id: 'CreateExperimentRequest'},
+);
+
+export type CreateExperimentRequestData = Static<
+  typeof CreateExperimentRequestData
+>;

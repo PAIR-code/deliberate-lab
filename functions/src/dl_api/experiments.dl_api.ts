@@ -4,6 +4,7 @@
 
 import {Response} from 'express';
 import createHttpError from 'http-errors';
+import {Value} from '@sinclair/typebox/value';
 import {app} from '../app';
 import {
   DeliberateLabAPIRequest,
@@ -16,6 +17,7 @@ import {
   AgentParticipantTemplate,
   createExperimentConfig,
   createExperimentTemplate,
+  CreateExperimentRequestData,
   Experiment,
   ExperimentTemplate,
   MetadataConfig,
@@ -130,13 +132,29 @@ export async function createExperiment(
 
   const body = req.body as CreateExperimentRequest;
 
+  // Validate request body against schema
+  if (!Value.Check(CreateExperimentRequestData, body)) {
+    const error = [...Value.Errors(CreateExperimentRequestData, body)]
+      .map((e) => `${e.path || '/'}: ${e.message}`)
+      .join('; ');
+    throw createHttpError(400, `Invalid request body: ${error}`);
+  }
+
   // If a full template is provided, use the shared utility
   if (body.template) {
-    const experimentId = await writeExperimentFromTemplate(
-      app.firestore(),
-      body.template,
-      experimenterId,
-    );
+    let experimentId;
+    try {
+      experimentId = await writeExperimentFromTemplate(
+        app.firestore(),
+        body.template,
+        experimenterId,
+      );
+    } catch (error: unknown) {
+      throw createHttpError(
+        400,
+        error instanceof Error ? error.message : String(error),
+      );
+    }
 
     if (!experimentId) {
       throw createHttpError(409, 'Experiment with this ID already exists');
@@ -188,11 +206,19 @@ export async function createExperiment(
   });
 
   // Use shared utility to write experiment
-  const experimentId = await writeExperimentFromTemplate(
-    app.firestore(),
-    template,
-    experimenterId,
-  );
+  let experimentId;
+  try {
+    experimentId = await writeExperimentFromTemplate(
+      app.firestore(),
+      template,
+      experimenterId,
+    );
+  } catch (error: unknown) {
+    throw createHttpError(
+      400,
+      error instanceof Error ? error.message : String(error),
+    );
+  }
 
   if (!experimentId) {
     throw createHttpError(409, 'Experiment with this ID already exists');
@@ -306,6 +332,10 @@ export async function updateExperiment(
           400,
           'Cannot modify cohort definitions after participants have joined',
         );
+      } else if (result.error === 'invalid-stages') {
+        throw createHttpError(400, 'Invalid stage configuration');
+      } else if (result.error === 'duplicate-cohort-aliases') {
+        throw createHttpError(400, 'Duplicate cohort aliases found');
       }
     }
 
@@ -403,6 +433,10 @@ export async function updateExperiment(
         400,
         'Cannot modify cohort definitions after participants have joined',
       );
+    } else if (result.error === 'invalid-stages') {
+      throw createHttpError(400, 'Invalid stage configuration');
+    } else if (result.error === 'duplicate-cohort-aliases') {
+      throw createHttpError(400, 'Duplicate cohort aliases found');
     }
   }
 

@@ -916,5 +916,35 @@ describe('API Experiment Creation Integration Tests', () => {
 
       expect(response.ok).toBe(false);
     });
+
+    it('should reject experiment creation with duplicate stage IDs', async () => {
+      const stage1 = createPrivateChatStage({id: 'stage-1', name: 'Chat 1'});
+      const stage2 = createPrivateChatStage({id: 'stage-1', name: 'Chat 2'}); // Duplicate ID
+
+      const response = await apiRequest('POST', '/v1/experiments', {
+        name: 'Duplicate Id Experiment',
+        stages: JSON.parse(JSON.stringify([stage1, stage2])),
+      });
+
+      expect(response.status).toBe(400);
+      const data = await response.json();
+      expect(data.error).toContain('Duplicate stage ID');
+    });
+
+    it('should reject experiment creation with duplicate cohort aliases in template', async () => {
+      const template = getFlipCardExperimentTemplate();
+      template.experiment.cohortDefinitions = [
+        {id: '1', alias: 'arm1', name: 'Arm 1'},
+        {id: '2', alias: 'arm1', name: 'Arm 2'}, // Duplicate alias
+      ];
+
+      const response = await apiRequest('POST', '/v1/experiments', {
+        template: JSON.parse(JSON.stringify(template)),
+      });
+
+      expect(response.status).toBe(400);
+      const data = await response.json();
+      expect(data.error).toContain('Duplicate cohort alias found');
+    });
   });
 });
