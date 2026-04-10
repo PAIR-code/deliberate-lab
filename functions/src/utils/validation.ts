@@ -167,7 +167,6 @@ export function validateStages(stages: unknown[]): ValidationResult {
     let isValid = false;
     try {
       isValid = Value.Check(StageConfigData, references, stage);
-      console.log(`validateStages: stage ${i} isValid =`, isValid);
     } catch (error: unknown) {
       // If validation throws an error, treat as invalid
       console.error('TypeBox validation error:', error);
