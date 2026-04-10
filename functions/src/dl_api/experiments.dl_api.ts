@@ -320,25 +320,10 @@ export async function updateExperiment(
     );
 
     if (!result.success) {
-      if (result.error === 'not-found') {
-        throw createHttpError(404, 'Experiment not found');
-      } else if (result.error === 'not-owner') {
-        throw createHttpError(
-          403,
-          'Only the creator can update the experiment',
-        );
-      } else if (result.error === 'cohort-definitions-locked') {
-        throw createHttpError(
-          400,
-          'Cannot modify cohort definitions after participants have joined',
-        );
-      } else if (result.error === 'invalid-stages') {
-        throw createHttpError(400, 'Invalid stage configuration');
-      } else if (result.error === 'invalid-variables') {
-        throw createHttpError(400, 'Invalid variable configuration');
-      } else if (result.error === 'duplicate-cohort-aliases') {
-        throw createHttpError(400, 'Duplicate cohort aliases found');
-      }
+      throw createHttpError(
+        result.errorCode || 500,
+        result.errorMessage || 'Failed to update experiment',
+      );
     }
 
     res.status(200).json({
@@ -426,22 +411,10 @@ export async function updateExperiment(
   );
 
   if (!result.success) {
-    if (result.error === 'not-found') {
-      throw createHttpError(404, 'Experiment not found');
-    } else if (result.error === 'not-owner') {
-      throw createHttpError(403, 'Only the creator can update the experiment');
-    } else if (result.error === 'cohort-definitions-locked') {
-      throw createHttpError(
-        400,
-        'Cannot modify cohort definitions after participants have joined',
-      );
-    } else if (result.error === 'invalid-stages') {
-      throw createHttpError(400, 'Invalid stage configuration');
-    } else if (result.error === 'invalid-variables') {
-      throw createHttpError(400, 'Invalid variable configuration');
-    } else if (result.error === 'duplicate-cohort-aliases') {
-      throw createHttpError(400, 'Duplicate cohort aliases found');
-    }
+    throw createHttpError(
+      result.errorCode || 500,
+      result.errorMessage || 'Failed to update experiment',
+    );
   }
 
   res.status(200).json({

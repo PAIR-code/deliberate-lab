@@ -335,6 +335,8 @@ export interface UpdateExperimentResult {
     | 'invalid-stages'
     | 'invalid-variables'
     | 'duplicate-cohort-aliases';
+  errorCode?: number;
+  errorMessage?: string;
 }
 
 /**
@@ -361,7 +363,12 @@ export async function updateExperimentFromTemplate(
   // Validate stage configs (schema + cross-field business rules)
   const stageValidation = validateStages(template.stageConfigs);
   if (!stageValidation.valid) {
-    return {success: false, error: 'invalid-stages'};
+    return {
+      success: false,
+      error: 'invalid-stages',
+      errorCode: 400,
+      errorMessage: `Invalid stage configuration: ${stageValidation.error}`,
+    };
   }
 
   // Validate variables
@@ -370,7 +377,12 @@ export async function updateExperimentFromTemplate(
       template.experiment.variableConfigs,
     );
     if (!variableValidation.valid) {
-      return {success: false, error: 'invalid-variables'};
+      return {
+        success: false,
+        error: 'invalid-variables',
+        errorCode: 400,
+        errorMessage: `Invalid variable configuration: ${variableValidation.error}`,
+      };
     }
   }
 
@@ -379,7 +391,12 @@ export async function updateExperimentFromTemplate(
     const seenAliases = new Set<string>();
     for (const def of template.experiment.cohortDefinitions) {
       if (seenAliases.has(def.alias)) {
-        return {success: false, error: 'duplicate-cohort-aliases'};
+        return {
+          success: false,
+          error: 'duplicate-cohort-aliases',
+          errorCode: 400,
+          errorMessage: `Duplicate cohort alias found: "${def.alias}"`,
+        };
       }
       seenAliases.add(def.alias);
     }
@@ -399,7 +416,12 @@ export async function updateExperimentFromTemplate(
   // Check if experiment exists
   const oldExperiment = await document.get();
   if (!oldExperiment.exists) {
-    return {success: false, error: 'not-found'};
+    return {
+      success: false,
+      error: 'not-found',
+      errorCode: 404,
+      errorMessage: 'Experiment not found',
+    };
   }
 
   // Verify that the experimenter is the creator or an admin
@@ -407,7 +429,12 @@ export async function updateExperimentFromTemplate(
     const isAdmin = await AuthGuard.isAdminEmail(firestore, experimenterId);
 
     if (!isAdmin) {
-      return {success: false, error: 'not-owner'};
+      return {
+        success: false,
+        error: 'not-owner',
+        errorCode: 403,
+        errorMessage: 'Only the creator or an admin can update the experiment',
+      };
     }
   }
 
@@ -452,7 +479,13 @@ export async function updateExperimentFromTemplate(
 
   if (lockedFieldsChanged && hasParticipants) {
     // Can't change locked fields after participants join
-    return {success: false, error: 'cohort-definitions-locked'};
+    return {
+      success: false,
+      error: 'cohort-definitions-locked',
+      errorCode: 400,
+      errorMessage:
+        'Cannot modify cohort definitions after participants have joined',
+    };
   }
 
   if (!lockedFieldsChanged) {
