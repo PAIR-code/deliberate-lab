@@ -87,6 +87,17 @@ export async function writeExperimentFromTemplate(
     throw new Error(`Invalid stage configuration: ${stageValidation.error}`);
   }
 
+  // Validate cohort definitions
+  if (template.experiment.cohortDefinitions) {
+    const seenAliases = new Set<string>();
+    for (const def of template.experiment.cohortDefinitions) {
+      if (seenAliases.has(def.alias)) {
+        throw new Error(`Duplicate cohort alias found: "${def.alias}"`);
+      }
+      seenAliases.add(def.alias);
+    }
+  }
+
   // Set up experiment config with stageIds
   const experimentConfig = createExperimentConfig(
     template.stageConfigs,
@@ -309,7 +320,8 @@ export interface UpdateExperimentResult {
     | 'not-found'
     | 'not-owner'
     | 'cohort-definitions-locked'
-    | 'invalid-stages';
+    | 'invalid-stages'
+    | 'duplicate-cohort-aliases';
 }
 
 /**
@@ -337,6 +349,17 @@ export async function updateExperimentFromTemplate(
   const stageValidation = validateStages(template.stageConfigs);
   if (!stageValidation.valid) {
     return {success: false, error: 'invalid-stages'};
+  }
+
+  // Validate cohort definitions
+  if (template.experiment.cohortDefinitions) {
+    const seenAliases = new Set<string>();
+    for (const def of template.experiment.cohortDefinitions) {
+      if (seenAliases.has(def.alias)) {
+        return {success: false, error: 'duplicate-cohort-aliases'};
+      }
+      seenAliases.add(def.alias);
+    }
   }
 
   // Set up experiment config with stageIds

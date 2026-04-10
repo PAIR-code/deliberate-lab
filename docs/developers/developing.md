@@ -26,3 +26,13 @@ have `npm run typecheck`, but the build process will also do typechecking there.
 
 As of time of writing, `functions` has a lot of typechecking errors: you may
 want to `npm run typecheck 2>&1 | grep src/file.you.changed.ts`.
+
+## Schema Generation
+
+We use JSON schemas to share types between TypeScript and Python. If you modify types in `utils/src/`, you need to regenerate the schemas and Python types:
+
+```bash
+npm run update-schemas
+```
+
+**Prerequisites:** This requires `uv` to be installed on your system. You can install it via `curl -LsSf https://astral.sh/uv/install.sh | sh` or `brew install uv`.

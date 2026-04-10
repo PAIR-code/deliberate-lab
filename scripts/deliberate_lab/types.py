@@ -1048,6 +1048,7 @@ class Experiment(BaseModel):
 
 class ExperimentTemplate(BaseModel):
     model_config = ConfigDict(
+        extra="forbid",
         populate_by_name=True,
     )
     id: str

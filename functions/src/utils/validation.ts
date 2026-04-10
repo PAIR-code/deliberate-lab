@@ -140,6 +140,7 @@ export function validateStages(stages: unknown[]): ValidationResult {
   }
 
   const errorMessages: string[] = [];
+  const seenIds = new Set<string>();
 
   // Pass schema references array for $ref resolution
   const references: TSchema[] = [
@@ -149,6 +150,17 @@ export function validateStages(stages: unknown[]): ValidationResult {
 
   for (let i = 0; i < stages.length; i++) {
     const stage = stages[i];
+    const stageObj = stage as Record<string, unknown>;
+    const stageId = stageObj?.id as string;
+
+    if (stageId) {
+      if (seenIds.has(stageId)) {
+        errorMessages.push(
+          `Stage ${i} (name: "${stageObj?.name}", kind: "${stageObj?.kind}"): Duplicate stage ID "${stageId}" found`,
+        );
+      }
+      seenIds.add(stageId);
+    }
 
     let isValid = false;
     try {
