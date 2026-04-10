@@ -9,6 +9,8 @@ import {
   StageConfigData,
   StageTextConfigSchema,
   StageProgressConfigSchema,
+  requiresValues,
+  VariableConfigType,
 } from '@deliberation-lab/utils';
 import {type TSchema} from '@sinclair/typebox';
 import {
@@ -284,7 +286,7 @@ export function validateVariables(configs: unknown[]): ValidationResult {
       ((config?.definition as Record<string, unknown>)?.name as string) ||
       'unnamed';
 
-    if (type === 'random_permutation' || type === 'balanced_assignment') {
+    if (requiresValues(type as VariableConfigType)) {
       const values = config?.values;
       if (!Array.isArray(values) || values.length === 0) {
         errorMessages.push(

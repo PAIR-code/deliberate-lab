@@ -321,7 +321,7 @@ export async function updateExperiment(
 
     if (!result.success) {
       throw createHttpError(
-        result.errorCode || 500,
+        result.httpErrorCode || 500,
         result.errorMessage || 'Failed to update experiment',
       );
     }
@@ -412,7 +412,7 @@ export async function updateExperiment(
 
   if (!result.success) {
     throw createHttpError(
-      result.errorCode || 500,
+      result.httpErrorCode || 500,
       result.errorMessage || 'Failed to update experiment',
     );
   }

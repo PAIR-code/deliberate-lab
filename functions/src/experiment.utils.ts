@@ -335,7 +335,7 @@ export interface UpdateExperimentResult {
     | 'invalid-stages'
     | 'invalid-variables'
     | 'duplicate-cohort-aliases';
-  errorCode?: number;
+  httpErrorCode?: number;
   errorMessage?: string;
 }
 
@@ -366,7 +366,7 @@ export async function updateExperimentFromTemplate(
     return {
       success: false,
       error: 'invalid-stages',
-      errorCode: 400,
+      httpErrorCode: 400,
       errorMessage: `Invalid stage configuration: ${stageValidation.error}`,
     };
   }
@@ -380,7 +380,7 @@ export async function updateExperimentFromTemplate(
       return {
         success: false,
         error: 'invalid-variables',
-        errorCode: 400,
+        httpErrorCode: 400,
         errorMessage: `Invalid variable configuration: ${variableValidation.error}`,
       };
     }
@@ -394,7 +394,7 @@ export async function updateExperimentFromTemplate(
         return {
           success: false,
           error: 'duplicate-cohort-aliases',
-          errorCode: 400,
+          httpErrorCode: 400,
           errorMessage: `Duplicate cohort alias found: "${def.alias}"`,
         };
       }
@@ -419,7 +419,7 @@ export async function updateExperimentFromTemplate(
     return {
       success: false,
       error: 'not-found',
-      errorCode: 404,
+      httpErrorCode: 404,
       errorMessage: 'Experiment not found',
     };
   }
@@ -432,7 +432,7 @@ export async function updateExperimentFromTemplate(
       return {
         success: false,
         error: 'not-owner',
-        errorCode: 403,
+        httpErrorCode: 403,
         errorMessage: 'Only the creator or an admin can update the experiment',
       };
     }
@@ -482,7 +482,7 @@ export async function updateExperimentFromTemplate(
     return {
       success: false,
       error: 'cohort-definitions-locked',
-      errorCode: 400,
+      httpErrorCode: 400,
       errorMessage:
         'Cannot modify cohort definitions after participants have joined',
     };

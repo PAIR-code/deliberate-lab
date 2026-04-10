@@ -105,6 +105,14 @@ export function getVariableConfigTypeDescription(
   }
 }
 
+/** Returns whether a variable config type requires a non-empty values pool */
+export function requiresValues(type: VariableConfigType): boolean {
+  return (
+    type === VariableConfigType.RANDOM_PERMUTATION ||
+    type === VariableConfigType.BALANCED_ASSIGNMENT
+  );
+}
+
 /**
  * Strategy for balancing assignments across participants.
  */

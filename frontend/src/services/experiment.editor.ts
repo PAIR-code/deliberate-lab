@@ -17,6 +17,7 @@ import {
   StageKind,
   StageManager,
   VariableConfig,
+  requiresValues,
   STAGE_MANAGER,
   checkApiKeyExists,
   createAgentMediatorPersonaConfig,
@@ -131,10 +132,7 @@ export class ExperimentEditor extends Service {
     }
 
     for (const config of this.experiment.variableConfigs ?? []) {
-      if (
-        config.type === 'random_permutation' ||
-        config.type === 'balanced_assignment'
-      ) {
+      if (requiresValues(config.type)) {
         if (config.values.length === 0) {
           errors.push(
             `Variable "${config.definition.name}" must contain at least one value`,
