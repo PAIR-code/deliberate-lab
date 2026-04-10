@@ -22,7 +22,7 @@ import {getExperimentDownload} from './data';
 import {generateVariablesForScope} from './variables.utils';
 import {AuthGuard} from './utils/auth-guard';
 import {createCohortFromDefinition} from './cohort.utils';
-import {validateStages} from './utils/validation';
+import {validateStages, validateVariables} from './utils/validation';
 
 /**
  * Create cohorts from cohort definitions and update the definitions with generated IDs.
@@ -85,6 +85,18 @@ export async function writeExperimentFromTemplate(
   const stageValidation = validateStages(template.stageConfigs);
   if (!stageValidation.valid) {
     throw new Error(`Invalid stage configuration: ${stageValidation.error}`);
+  }
+
+  // Validate variables
+  if (template.experiment.variableConfigs) {
+    const variableValidation = validateVariables(
+      template.experiment.variableConfigs,
+    );
+    if (!variableValidation.valid) {
+      throw new Error(
+        `Invalid variable configuration: ${variableValidation.error}`,
+      );
+    }
   }
 
   // Validate cohort definitions
@@ -321,6 +333,7 @@ export interface UpdateExperimentResult {
     | 'not-owner'
     | 'cohort-definitions-locked'
     | 'invalid-stages'
+    | 'invalid-variables'
     | 'duplicate-cohort-aliases';
 }
 
@@ -349,6 +362,16 @@ export async function updateExperimentFromTemplate(
   const stageValidation = validateStages(template.stageConfigs);
   if (!stageValidation.valid) {
     return {success: false, error: 'invalid-stages'};
+  }
+
+  // Validate variables
+  if (template.experiment.variableConfigs) {
+    const variableValidation = validateVariables(
+      template.experiment.variableConfigs,
+    );
+    if (!variableValidation.valid) {
+      return {success: false, error: 'invalid-variables'};
+    }
   }
 
   // Validate cohort definitions

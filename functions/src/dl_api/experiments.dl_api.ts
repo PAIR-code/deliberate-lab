@@ -334,6 +334,8 @@ export async function updateExperiment(
         );
       } else if (result.error === 'invalid-stages') {
         throw createHttpError(400, 'Invalid stage configuration');
+      } else if (result.error === 'invalid-variables') {
+        throw createHttpError(400, 'Invalid variable configuration');
       } else if (result.error === 'duplicate-cohort-aliases') {
         throw createHttpError(400, 'Duplicate cohort aliases found');
       }
@@ -435,6 +437,8 @@ export async function updateExperiment(
       );
     } else if (result.error === 'invalid-stages') {
       throw createHttpError(400, 'Invalid stage configuration');
+    } else if (result.error === 'invalid-variables') {
+      throw createHttpError(400, 'Invalid variable configuration');
     } else if (result.error === 'duplicate-cohort-aliases') {
       throw createHttpError(400, 'Duplicate cohort aliases found');
     }

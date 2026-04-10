@@ -129,6 +129,20 @@ export class ExperimentEditor extends Service {
           break;
       }
     }
+
+    for (const config of this.experiment.variableConfigs ?? []) {
+      if (
+        config.type === 'random_permutation' ||
+        config.type === 'balanced_assignment'
+      ) {
+        if (config.values.length === 0) {
+          errors.push(
+            `Variable "${config.definition.name}" must contain at least one value`,
+          );
+        }
+      }
+    }
+
     return errors;
   }
 
