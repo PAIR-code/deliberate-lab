@@ -17,6 +17,7 @@ import {
   StageKind,
   StageManager,
   VariableConfig,
+  MultiValueVariableConfigType,
   requiresValues,
   STAGE_MANAGER,
   checkApiKeyExists,
@@ -133,9 +134,10 @@ export class ExperimentEditor extends Service {
 
     for (const config of this.experiment.variableConfigs ?? []) {
       if (requiresValues(config.type)) {
-        if (config.values.length === 0) {
+        const multiConfig = config as MultiValueVariableConfigType;
+        if (multiConfig.values.length === 0) {
           errors.push(
-            `Variable "${config.definition.name}" must contain at least one value`,
+            `Variable "${multiConfig.definition.name}" must contain at least one value`,
           );
         }
       }
