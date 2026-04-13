@@ -9,6 +9,8 @@ import {
   StageConfigData,
   StageTextConfigSchema,
   StageProgressConfigSchema,
+  requiresValues,
+  VariableConfigType,
 } from '@deliberation-lab/utils';
 import {type TSchema} from '@sinclair/typebox';
 import {
@@ -256,5 +258,45 @@ export function validateCohortParticipantConfig(
     };
   }
 
+  return {valid: true};
+}
+
+// ************************************************************************* //
+// VARIABLE VALIDATION                                                       //
+// ************************************************************************* //
+
+/**
+ * Validate variable configurations to ensure multi-value variables have non-empty values
+ */
+export function validateVariables(configs: unknown[]): ValidationResult {
+  if (!Array.isArray(configs)) {
+    return {
+      valid: false,
+      error: 'Invalid variable configurations: must be an array',
+    };
+  }
+
+  const errorMessages: string[] = [];
+
+  for (let i = 0; i < configs.length; i++) {
+    const config = configs[i] as Record<string, unknown>;
+    const type = config?.type as string;
+    const name =
+      ((config?.definition as Record<string, unknown>)?.name as string) ||
+      'unnamed';
+
+    if (requiresValues(type as VariableConfigType)) {
+      const values = config?.values;
+      if (!Array.isArray(values) || values.length === 0) {
+        errorMessages.push(
+          `Variable "${name}" (${type}): values array must contain at least one item`,
+        );
+      }
+    }
+  }
+
+  if (errorMessages.length > 0) {
+    return {valid: false, error: errorMessages.join('\n')};
+  }
   return {valid: true};
 }

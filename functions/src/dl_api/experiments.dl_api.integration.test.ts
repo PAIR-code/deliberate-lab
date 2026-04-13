@@ -946,5 +946,72 @@ describe('API Experiment Creation Integration Tests', () => {
       const data = await response.json();
       expect(data.error).toContain('Duplicate cohort alias found');
     });
+
+    it('should reject experiment creation with invalid variable configuration (empty values array)', async () => {
+      const template = getFlipCardExperimentTemplate();
+      template.experiment.variableConfigs = [
+        {
+          id: 'var1',
+          type: 'random_permutation',
+          scope: 'experiment',
+          values: [],
+          shuffleConfig: {
+            shuffle: true,
+            seed: 'experiment',
+            customSeed: '',
+          },
+          definition: {
+            name: 'Empty Random Permutation',
+            description: '',
+            schema: {type: 'string'},
+          },
+        },
+      ];
+
+      const response = await apiRequest('POST', '/v1/experiments', {
+        template: JSON.parse(JSON.stringify(template)),
+      });
+
+      expect(response.status).toBe(400);
+      const data = await response.json();
+      expect(data.error).toContain(
+        'values array must contain at least one item',
+      );
+    });
+
+    it('should accept experiment creation with valid variable configuration', async () => {
+      const template = getFlipCardExperimentTemplate();
+      template.experiment.variableConfigs = [
+        {
+          id: 'var1',
+          type: 'random_permutation',
+          scope: 'experiment',
+          values: ['item1', 'item2'],
+          shuffleConfig: {
+            shuffle: true,
+            seed: 'experiment',
+            customSeed: '',
+          },
+          definition: {
+            name: 'Valid Random Permutation',
+            description: '',
+            schema: {type: 'string'},
+          },
+        },
+      ];
+
+      const response = await apiRequest('POST', '/v1/experiments', {
+        template: JSON.parse(JSON.stringify(template)),
+      });
+
+      expect(response.status).toBe(201);
+      const data = await response.json();
+      expect(data.experiment).toBeDefined();
+      expect(data.experiment.variableConfigs).toHaveLength(1);
+      expect(data.experiment.variableConfigs[0].values).toEqual([
+        'item1',
+        'item2',
+      ]);
+    });
   });
 });

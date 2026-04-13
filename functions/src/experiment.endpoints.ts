@@ -101,7 +101,7 @@ export const updateExperiment = onCall(async (request) => {
     {collectionName: data.collectionName},
   );
 
-  return {success: result.success, error: result.error};
+  return {success: result.success};
 });
 
 // ************************************************************************* //

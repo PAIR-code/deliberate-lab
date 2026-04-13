@@ -17,6 +17,8 @@ import {
   StageKind,
   StageManager,
   VariableConfig,
+  MultiValueVariableConfigType,
+  requiresValues,
   STAGE_MANAGER,
   checkApiKeyExists,
   createAgentMediatorPersonaConfig,
@@ -129,6 +131,18 @@ export class ExperimentEditor extends Service {
           break;
       }
     }
+
+    for (const config of this.experiment.variableConfigs ?? []) {
+      if (requiresValues(config.type)) {
+        const multiConfig = config as MultiValueVariableConfigType;
+        if (multiConfig.values.length === 0) {
+          errors.push(
+            `Variable "${multiConfig.definition.name}" must contain at least one value`,
+          );
+        }
+      }
+    }
+
     return errors;
   }
 
