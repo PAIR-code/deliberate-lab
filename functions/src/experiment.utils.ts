@@ -328,13 +328,6 @@ export interface UpdateExperimentOptions {
  */
 export interface UpdateExperimentResult {
   success: boolean;
-  error?:
-    | 'not-found'
-    | 'not-owner'
-    | 'cohort-definitions-locked'
-    | 'invalid-stages'
-    | 'invalid-variables'
-    | 'duplicate-cohort-aliases';
   httpErrorCode?: number;
   errorMessage?: string;
 }
@@ -365,7 +358,6 @@ export async function updateExperimentFromTemplate(
   if (!stageValidation.valid) {
     return {
       success: false,
-      error: 'invalid-stages',
       httpErrorCode: 400,
       errorMessage: `Invalid stage configuration: ${stageValidation.error}`,
     };
@@ -379,7 +371,6 @@ export async function updateExperimentFromTemplate(
     if (!variableValidation.valid) {
       return {
         success: false,
-        error: 'invalid-variables',
         httpErrorCode: 400,
         errorMessage: `Invalid variable configuration: ${variableValidation.error}`,
       };
@@ -393,7 +384,6 @@ export async function updateExperimentFromTemplate(
       if (seenAliases.has(def.alias)) {
         return {
           success: false,
-          error: 'duplicate-cohort-aliases',
           httpErrorCode: 400,
           errorMessage: `Duplicate cohort alias found: "${def.alias}"`,
         };
@@ -418,7 +408,6 @@ export async function updateExperimentFromTemplate(
   if (!oldExperiment.exists) {
     return {
       success: false,
-      error: 'not-found',
       httpErrorCode: 404,
       errorMessage: 'Experiment not found',
     };
@@ -431,7 +420,6 @@ export async function updateExperimentFromTemplate(
     if (!isAdmin) {
       return {
         success: false,
-        error: 'not-owner',
         httpErrorCode: 403,
         errorMessage: 'Only the creator or an admin can update the experiment',
       };
