@@ -1,7 +1,11 @@
 name: Auto-merge Dependabot PRs
 
+# Uses pull_request (not pull_request_target) intentionally. This workflow
+# never checks out PR code — it only calls gh CLI commands — so the reduced
+# token permissions of pull_request are sufficient and safer.
 on: pull_request
 
+# Required for gh pr review (pull-requests: write) and gh pr merge (contents: write).
 permissions:
   contents: write
   pull-requests: write
@@ -17,6 +21,9 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
+      # Auto-merge patch and minor updates only. Major version bumps are
+      # excluded because they are more likely to contain breaking changes
+      # and should be reviewed manually.
       - name: Approve and auto-merge (patch and minor only)
         if: steps.metadata.outputs.update-type != 'version-update:semver-major'
         run: |
