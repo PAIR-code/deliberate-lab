@@ -13,6 +13,35 @@ convention) before proceeding. Whichever direction is chosen, update the
 relevant `AGENTS.md` file(s) to match so documentation and code stay in
 sync.
 
+## Git safety
+
+Users control the pipeline from **edited → saved → staged → committed →
+pushed**. Do not advance code along this pipeline without explicit intent
+from the user.
+
+> [!CAUTION]
+> **Never run destructive or hard-to-reverse git commands** without the
+> user's explicit permission. This includes but is not limited to:
+>
+> - `git push --force` / `--force-with-lease`
+> - `git rebase` (rewrites history)
+> - `git reset --hard`
+> - `git clean -fd`
+> - `git branch -D` (force-delete)
+>
+> Before performing any of these, explain what will happen and confirm
+> the user wants to proceed. When in doubt, prefer the safer alternative
+> (e.g. `git stash` over `git reset`, `git branch -d` over `-D`).
+
+As a general rule:
+
+- **Reading** git state (`status`, `log`, `diff`, `branch`) is always safe.
+- **Fetching** is safe (`git fetch` does not modify the working tree).
+- **Staging and committing** — ask first unless the user has clearly
+  indicated they want you to commit.
+- **Pushing** — always confirm. Never push to a shared branch without
+  explicit approval.
+
 ## Architecture
 
 This is an npm workspaces monorepo with three packages:
