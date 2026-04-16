@@ -62,13 +62,34 @@ This script will:
 2. `git fetch --all --prune`
 3. Check out `main`, fast-forward to `upstream/main`
 4. Push `main` to `origin`
-5. Print a list of local feature branches that are behind `main`
+5. List local branches whose upstream was deleted (merged)
+6. List local feature branches that are behind `main`
 
 If the script exits with an error, report it to the user and stop.
 
-### Step 2 — Rebase feature branches
+### Step 2 — Clean up merged branches
 
-After the script completes, it will list branches that are behind `main`.
+The script will list local branches whose upstream tracking branch has been
+deleted (i.e., the PR was merged and the branch removed on GitHub). For each:
+
+1. **Ask the user** which branches they want to delete.
+
+2. **Check for worktrees** — if the script reports a branch has an attached
+   worktree, tell the user to remove the worktree first:
+   ```sh
+   git worktree remove <path>
+   ```
+
+3. **Delete with `-d`** (safe delete):
+   ```sh
+   git branch -d <branch>
+   ```
+   This will refuse if git doesn't consider the branch fully merged —
+   which is an extra safety net. Never use `-D` here.
+
+### Step 3 — Rebase feature branches
+
+The script will also list branches that are behind `main`.
 For each branch:
 
 1. **Ask the user** which branches they want to rebase (they may not want
@@ -102,7 +123,7 @@ For each branch:
     - If any conflict is ambiguous, abort the entire rebase — do not
       partially resolve
 
-### Step 3 — Return to the original branch
+### Step 4 — Return to the original branch
 
 After processing all branches, check out whichever branch the user was on
 when the skill was invoked.
@@ -115,5 +136,7 @@ when the skill was invoked.
   rebase (unless they already specified).
 - **Abort on ambiguity** — if a conflict resolution is uncertain, abort the
   rebase and ask the user rather than guessing.
+- **Use `-d` not `-D`** for merged branch cleanup — let git's safety check
+  confirm the branch is fully merged before deleting.
 - **Stash gracefully** — if the user has uncommitted changes on the current
   branch, either stash them or warn and skip.

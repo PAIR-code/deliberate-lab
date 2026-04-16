@@ -94,7 +94,44 @@ if [ "$ORIGINAL_BRANCH" != "main" ]; then
   fi
 fi
 
-# --- Step 5: Report feature branches behind main ---
+# --- Step 5: Report merged branches (upstream deleted) ---
+
+echo ""
+echo "=== Merged branches (upstream deleted) ==="
+echo ""
+
+MERGED_COUNT=0
+MERGED_BRANCHES=()
+for branch in $(git for-each-ref --format='%(refname:short)' refs/heads/ | grep -v '^main$'); do
+  # Skip if the remote-tracking branch still exists
+  if git rev-parse --verify "origin/$branch" &>/dev/null; then
+    continue
+  fi
+
+  # Skip if not fully merged into main
+  if ! git merge-base --is-ancestor "$branch" main 2>/dev/null; then
+    continue
+  fi
+
+  MERGED_BRANCHES+=("$branch")
+  MERGED_COUNT=$((MERGED_COUNT + 1))
+
+  # Check if a worktree is using this branch
+  if git worktree list | grep -q "\[$branch\]"; then
+    printf "  %-50s merged (has worktree — remove worktree first)\n" "$branch"
+  else
+    printf "  %-50s merged (safe to delete)\n" "$branch"
+  fi
+done
+
+if [ "$MERGED_COUNT" -eq 0 ]; then
+  info "No merged branches to clean up."
+else
+  echo ""
+  echo "$MERGED_COUNT branch(es) merged and upstream deleted. Cleanup recommended."
+fi
+
+# --- Step 6: Report feature branches behind main ---
 
 echo ""
 echo "=== Feature branches behind main ==="
@@ -102,6 +139,13 @@ echo ""
 
 BEHIND_COUNT=0
 for branch in $(git for-each-ref --format='%(refname:short)' refs/heads/ | grep -v '^main$'); do
+  # Skip branches already reported as merged
+  for merged in "${MERGED_BRANCHES[@]+"${MERGED_BRANCHES[@]}"}"; do
+    if [ "$branch" = "$merged" ]; then
+      continue 2
+    fi
+  done
+
   # How many commits is this branch behind main?
   BEHIND=$(git rev-list --count "$branch..main" 2>/dev/null || echo 0)
   if [ "$BEHIND" -gt 0 ]; then
