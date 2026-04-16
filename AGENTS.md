@@ -156,6 +156,16 @@ Adding a new stage type touches **all three workspaces**:
 
 See each workspace's `AGENTS.md` for detailed guidance.
 
+## Skills
+
+Reusable AI agent skills are defined in `.gemini/skills/`. Each skill is a
+directory containing a `SKILL.md` instruction file (with YAML frontmatter)
+and optional helper scripts, examples, and resources.
+
+| Skill | Purpose |
+|-------|---------|
+| [`sync-fork`](.gemini/skills/sync-fork/SKILL.md) | Sync fork's `main` with upstream and rebase feature branches |
+
 ## Common pitfalls
 
 1. **Forgetting to rebuild `utils`** — `frontend` and `functions` consume
