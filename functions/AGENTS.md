@@ -66,7 +66,14 @@ New stage endpoints must be exported from `src/index.ts`.
 | `src/index.ts` | Registers all Cloud Functions (callables + triggers) |
 | `src/app.ts` | Initializes `StageManager` — maps stage types to handlers |
 | `src/data.ts` | Firestore data access layer (reads/exports) |
-| `src/participant.utils.ts` | Participant lifecycle — stage progression, transfers, cohort assignment (~1400 lines, the largest and most complex backend file). Handles complex Firestore transaction chains; changes here carry a high risk of subtle race conditions. |
+| `src/participant.utils.ts` | Participant lifecycle — stage progression, transfers, cohort assignment |
+
+> [!CAUTION]
+> **`participant.utils.ts`** is ~1400 lines and the most complex backend
+> file. It handles Firestore transaction chains for stage progression,
+> cohort assignment, and participant transfers. Changes here carry a high
+> risk of subtle race conditions. Proceed with extra care and test
+> thoroughly.
 
 ## Trigger system
 

@@ -9,9 +9,8 @@ monorepo structure, conventions, and workflows.
 These `AGENTS.md` files document conventions that should be followed by
 default. If a user request conflicts with the guidance here, **raise the
 concern** — ask which takes precedence (their idea or the documented
-convention) before proceeding. Whichever direction is chosen, update the
-relevant `AGENTS.md` file(s) to match so documentation and code stay in
-sync.
+convention) before proceeding. Do not modify `AGENTS.md` files unless the
+user explicitly asks you to.
 
 ## Git safety
 
@@ -59,6 +58,9 @@ Other top-level directories:
 - `scripts/` — pip-installable Python API client (`deliberate_lab`) with auto-generated Pydantic types + a Node.js doctor script (see `scripts/AGENTS.md`)
 - `emulator_test_config/` — Static config for Firebase emulator imports
 
+The Firestore data model (document hierarchy, trigger paths) is documented
+in `functions/AGENTS.md`.
+
 ### Dependency graph
 
 ```
@@ -76,7 +78,7 @@ utils ──► frontend
 
 - **Node ≥22** is required (see `.nvmrc`)
 - Install all dependencies from the repo root: `npm ci`
-- Run everything locally: `./run_locally.sh`
+- Run everything locally: `./run_locally.sh` (in the repo root)
 - Diagnose setup problems: `npm run doctor`
 
 `run_locally.sh` copies required config files (`.firebaserc`,
@@ -190,6 +192,11 @@ See each workspace's `AGENTS.md` for detailed guidance.
 Reusable AI agent skills are defined in `.gemini/skills/`. Each skill is a
 directory containing a `SKILL.md` instruction file (with YAML frontmatter)
 and optional helper scripts, examples, and resources.
+
+> [!NOTE]
+> Files under `.gemini/` may not appear in file search results due to
+> dot-directory filtering. Use the paths in the table below to access
+> skills directly.
 
 | Skill | Purpose |
 |-------|---------|

@@ -89,18 +89,18 @@ For each branch:
    git push origin <branch> --force-with-lease
    ```
 
-5. **If there are conflicts** — resolve them using codebase context:
-   - Read the conflicting files
-   - Understand the intent of both sides (the branch's changes and main's
-     changes)
-   - Resolve the conflicts
-   - `git add` the resolved files
-   - `git rebase --continue`
-   - After all conflicts are resolved, force-push with lease
-
-6. **If a rebase cannot be cleanly resolved** — abort with
-   `git rebase --abort` and tell the user which branch needs manual
-   attention.
+5. **If there are conflicts** — abort by default:
+    - Run `git rebase --abort`
+    - Tell the user which branch has conflicts and what files are affected
+    - **Exception**: if the conflicts are trivially obvious (e.g., import
+      ordering, adjacent non-overlapping additions), you may attempt to
+      resolve them:
+      - Read the conflicting files
+      - Resolve only conflicts where both sides' intent is unambiguous
+      - `git add` the resolved files and `git rebase --continue`
+      - After all conflicts are resolved, force-push with lease
+    - If any conflict is ambiguous, abort the entire rebase — do not
+      partially resolve
 
 ### Step 3 — Return to the original branch
 
