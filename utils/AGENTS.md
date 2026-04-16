@@ -123,9 +123,3 @@ placeholders with their resolved values.
 1. **Forgetting to update union types** — when adding a new stage, you must
    add it to the `StageConfig`, `StageParticipantAnswer`, and
    `StagePublicData` unions in `src/stages/stage.ts`.
-2. **Forgetting to rebuild** — `frontend` and `functions` consume compiled
-   output from `utils/dist/`. After changing source, rebuild with
-   `npm run build -w utils` or rely on the watcher started by
-   `run_locally.sh`.
-3. **Editing `scripts/deliberate_lab/types.py` by hand** — this file is
-   auto-generated. Run `npm run update-schemas` instead.

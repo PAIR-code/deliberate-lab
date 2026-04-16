@@ -87,23 +87,16 @@ utils ──► frontend
 (with seed data from `emulator_test_config/`), and serves the frontend at
 `http://localhost:4201`.
 
-> [!IMPORTANT]
-> Always run **npm** commands from the **repository root** using the
-> `--workspace` (or `-w`) flag. Do **not** `cd` into subdirectories for
-> npm operations.
->
-> ```sh
-> npm run build -w utils
-> npm test -w functions
-> npm run start -w frontend
-> ```
->
-> This matches the convention used in `cloudbuild.yaml` and ensures
-> consistent dependency resolution via npm workspaces.
->
-> Python tooling (`uv`, `pyright`) in `scripts/` is the exception — those
-> commands expect to run from the `scripts/` directory where
-> `pyproject.toml` lives.
+Run npm commands from the repo root using `--workspace` (or `-w`):
+
+```sh
+npm run build -w utils
+npm test -w functions
+npm run start -w frontend
+```
+
+Python tooling (`uv`, `pyright`) in `scripts/` is the exception — run
+those from the `scripts/` directory where `pyproject.toml` lives.
 
 ## Linting & formatting
 
