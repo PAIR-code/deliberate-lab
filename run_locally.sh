@@ -102,6 +102,19 @@ if [ "$NODE_VERSION" -lt 22 ]; then
 fi
 echo "Node.js version: $(node -v)"
 
+# Ensure Java 21 is available (required by Firebase emulators)
+if [ -z "$JAVA_HOME" ]; then
+    if [ -d "/usr/lib/jvm/java-21-openjdk-amd64" ]; then
+        export JAVA_HOME="/usr/lib/jvm/java-21-openjdk-amd64"
+        echo "Auto-detected JAVA_HOME: $JAVA_HOME"
+    fi
+else
+    echo "Using provided JAVA_HOME: $JAVA_HOME"
+fi
+if [ -n "$JAVA_HOME" ]; then
+    export PATH="$JAVA_HOME/bin:$PATH"
+fi
+
 if [ ! -d "node_modules" ]; then
     echo ""
     echo "node_modules not found."
