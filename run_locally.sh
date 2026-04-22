@@ -166,21 +166,21 @@ fi
 
 # --- Clean up ports ---
 
-# echo ""
-# echo "=== Cleaning up ports ==="
+echo ""
+echo "=== Cleaning up ports ==="
 
 # Ports from firebase.json and webpack.config.ts
 # 4000: Emulator UI
-# 4202: Frontend
+# 4201: Frontend
 # 5001: Functions
 # 8080: Firestore
 # 9000: Database
 # 9099: Auth
 # 9199: Storage
-# PORTS=(4000 4202 5001 8080 9000 9099 9199)
-# for port in "${PORTS[@]}"; do
-#     kill_port $port
-# done
+PORTS=(4000 4201 5001 8080 9000 9099 9199)
+for port in "${PORTS[@]}"; do
+    kill_port $port
+done
 
 # --- Start services ---
 
@@ -218,7 +218,7 @@ tail -f /dev/null | npx firebase emulators:start --import ./emulator_test_config
 EMULATORS_PID=$!
 
 # Wait for emulators to be ready
-wait_for_port 8081 "Firestore"
+wait_for_port 8080 "Firestore"
 wait_for_port 5001 "Functions"
 wait_for_port 4000 "Emulator UI"
 
@@ -226,7 +226,6 @@ wait_for_port 4000 "Emulator UI"
 echo "--- [4/4] Starting frontend ---"
 cd frontend
 # npm run start includes 'npm run build' and 'npm run serve'
-export PORT=4300
 tail -f /dev/null | npm run start &
 FRONTEND_PID=$!
 cd ..
@@ -239,7 +238,7 @@ echo "Emulators PID: $EMULATORS_PID"
 echo "Frontend PID: $FRONTEND_PID"
 echo ""
 echo "Access the emulator suite at http://localhost:4000"
-echo "Access the frontend app at http://localhost:4300"
+echo "Access the frontend app at http://localhost:4201"
 echo ""
 echo "Press Ctrl+C to stop all services."
 
