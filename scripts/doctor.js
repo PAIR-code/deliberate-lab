@@ -8,7 +8,7 @@
 const fs = require('fs');
 const path = require('path');
 const readline = require('readline');
-const {execSync} = require('child_process');
+const { execSync } = require('child_process');
 
 const ROOT = path.join(__dirname, '..');
 
@@ -57,15 +57,15 @@ function fixNodeModules() {
   for (const dir of dirs) {
     if (fs.existsSync(dir)) {
       console.log(`Deleting ${path.relative(ROOT, dir)}...`);
-      fs.rmSync(dir, {recursive: true, force: true});
+      fs.rmSync(dir, { recursive: true, force: true });
     }
   }
 
   console.log('Clearing npm cache...');
-  execSync('npm cache clean --force', {stdio: 'inherit'});
+  execSync('npm cache clean --force', { stdio: 'inherit' });
 
   console.log('\nRunning npm ci...');
-  execSync('npm ci', {stdio: 'inherit', cwd: ROOT});
+  execSync('npm ci', { stdio: 'inherit', cwd: ROOT });
 }
 
 async function main() {
@@ -118,7 +118,7 @@ async function main() {
     },
   ];
 
-  for (const {path: filePath, example} of configFiles) {
+  for (const { path: filePath, example } of configFiles) {
     const fullPath = path.join(ROOT, filePath);
     const examplePath = path.join(ROOT, example);
     if (fs.existsSync(fullPath)) {
@@ -155,7 +155,7 @@ async function main() {
     console.log('\x1b[31mThere are errors that must be fixed.\x1b[0m\n');
 
     const answer = await prompt(
-      'Would you like to fix this by reinstalling dependencies? (y/n) ',
+      'Would you like to fix this by reinstalling dependencies? (y/n) '
     );
     if (answer === 'y' || answer === 'yes') {
       console.log('');

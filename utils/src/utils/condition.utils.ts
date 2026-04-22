@@ -62,18 +62,13 @@ export function getConditionDependencyValues(
     } else if (stageAnswer.kind === StageKind.SURVEY_PER_PARTICIPANT) {
       // For SurveyPerParticipant stages, we need targetParticipantId to know which answer to use
       if (targetParticipantId) {
-        const map = (stageAnswer as SurveyPerParticipantStageParticipantAnswer)
-          .answerMap;
-        // Try Participant-first (Schema standard)
-        let answer = map[targetParticipantId]?.[targetRef.questionId];
-
-        // Fallback to Question-first
-        if (!answer) {
-          answer = map[targetRef.questionId]?.[targetParticipantId];
-        }
-
-        if (answer) {
-          values[dataKey] = extractAnswerValue(answer);
+        const surveyAnswer =
+          stageAnswer as SurveyPerParticipantStageParticipantAnswer;
+        const participantAnswers = surveyAnswer.answerMap[targetRef.questionId];
+        if (participantAnswers && participantAnswers[targetParticipantId]) {
+          values[dataKey] = extractAnswerValue(
+            participantAnswers[targetParticipantId],
+          );
         }
       }
     }
