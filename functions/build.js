@@ -1,12 +1,12 @@
 const esbuild = require('esbuild');
-const {dependencies} = require('./package.json');
+const { dependencies } = require('./package.json');
 
 // List of dependencies to bundle (local packages)
 const BUNDLE_DEPS = ['@deliberation-lab/utils'];
 
 // Create list of externals (everything else in dependencies)
 const external = Object.keys(dependencies).filter(
-  (dep) => !BUNDLE_DEPS.includes(dep),
+  (dep) => !BUNDLE_DEPS.includes(dep)
 );
 
 const isWatch = process.argv.includes('--watch');

@@ -37,7 +37,7 @@
       "timeout": 540
     },
     "firestore": {
-      "port": 8081
+      "port": 8080
     },
     "storage": {
       "port": 9199

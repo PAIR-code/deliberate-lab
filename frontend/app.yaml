@@ -1,13 +1,13 @@
 runtime: python312
 
-default_expiration: '1m'
+default_expiration: "1m"
 
 handlers:
   - url: /(.*\.(js|css|scss|md|ico|png|gif|jpg|jpeg|svg|txt|map|json|wav|mp4|mp3|woff|woff2))
     static_files: dist/\1
     upload: dist/(.*\.(js|css|scss|md|ico|png|gif|jpg|jpeg|svg|txt|map|json|wav|mp4|mp3|woff|woff2))
     http_headers:
-      Access-Control-Allow-Origin: '*'
+      Access-Control-Allow-Origin: "*"
 
   - url: /(index\.html)?
     static_files: dist/index.html
