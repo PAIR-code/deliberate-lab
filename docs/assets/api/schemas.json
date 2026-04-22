@@ -1959,21 +1959,28 @@
           "type": "string"
         },
         "condition": {
-          "title": "Condition",
           "anyOf": [
             {
-              "$ref": "#/$defs/ComparisonCondition"
+              "type": "null"
             },
             {
-              "$ref": "#/$defs/ConditionGroup"
+              "title": "Condition",
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/ComparisonCondition"
+                },
+                {
+                  "$ref": "#/$defs/ConditionGroup"
+                }
+              ]
             }
           ]
         },
         "minCharCount": {
-          "type": "number"
+          "type": ["null", "number"]
         },
         "maxCharCount": {
-          "type": "number"
+          "type": ["null", "number"]
         }
       }
     },
@@ -2169,13 +2176,20 @@
           "type": "boolean"
         },
         "condition": {
-          "title": "Condition",
           "anyOf": [
             {
-              "$ref": "#/$defs/ComparisonCondition"
+              "type": "null"
             },
             {
-              "$ref": "#/$defs/ConditionGroup"
+              "title": "Condition",
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/ComparisonCondition"
+                },
+                {
+                  "$ref": "#/$defs/ConditionGroup"
+                }
+              ]
             }
           ]
         }
@@ -2221,13 +2235,20 @@
           ]
         },
         "condition": {
-          "title": "Condition",
           "anyOf": [
             {
-              "$ref": "#/$defs/ComparisonCondition"
+              "type": "null"
             },
             {
-              "$ref": "#/$defs/ConditionGroup"
+              "title": "Condition",
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/ComparisonCondition"
+                },
+                {
+                  "$ref": "#/$defs/ConditionGroup"
+                }
+              ]
             }
           ]
         }
@@ -2294,13 +2315,20 @@
           "type": "number"
         },
         "condition": {
-          "title": "Condition",
           "anyOf": [
             {
-              "$ref": "#/$defs/ComparisonCondition"
+              "type": "null"
             },
             {
-              "$ref": "#/$defs/ConditionGroup"
+              "title": "Condition",
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/ComparisonCondition"
+                },
+                {
+                  "$ref": "#/$defs/ConditionGroup"
+                }
+              ]
             }
           ]
         }
