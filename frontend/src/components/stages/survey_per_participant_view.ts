@@ -139,12 +139,22 @@ export class SurveyView extends MobxLitElement {
     const wrapperStyle = this.renderSummaryView
       ? 'questions-wrapper-condensed'
       : 'questions-wrapper';
+    const participants = this.getParticipants();
+
     return html`
       ${this.renderSummaryView
         ? ''
         : html`<stage-description .stage=${this.stage}></stage-description>`}
       <div class="${wrapperStyle}">
-        ${this.stage.questions.map((question) => this.renderQuestion(question))}
+        ${participants.map(
+          (participant) => html`
+            <div class="participant-group">
+              ${this.stage?.questions.map((question) =>
+                this.renderQuestionForParticipant(question, participant),
+              )}
+            </div>
+          `,
+        )}
       </div>
       ${this.renderSummaryView
         ? ''
@@ -159,32 +169,23 @@ export class SurveyView extends MobxLitElement {
     `;
   }
 
-  private renderQuestion(question: SurveyQuestion) {
-    const allParticipants = this.getParticipants();
+  private renderQuestionForParticipant(
+    question: SurveyQuestion,
+    participant: ParticipantProfile,
+  ) {
+    if (!this.isQuestionVisibleForParticipant(question, participant)) {
+      return nothing;
+    }
 
-    // Filter participants to only those where this question should be visible
-    const participants = allParticipants.filter((participant) =>
-      this.isQuestionVisibleForParticipant(question, participant),
-    );
-
-    // Render the appropriate question type for each visible participant
     switch (question.kind) {
       case SurveyQuestionKind.CHECK:
-        return participants.map((participant) =>
-          this.renderCheckQuestion(question, participant),
-        );
+        return this.renderCheckQuestion(question, participant);
       case SurveyQuestionKind.MULTIPLE_CHOICE:
-        return participants.map((participant) =>
-          this.renderMultipleChoiceQuestion(question, participant),
-        );
+        return this.renderMultipleChoiceQuestion(question, participant);
       case SurveyQuestionKind.SCALE:
-        return participants.map((participant) =>
-          this.renderScaleQuestion(question, participant),
-        );
+        return this.renderScaleQuestion(question, participant);
       case SurveyQuestionKind.TEXT:
-        return participants.map((participant) =>
-          this.renderTextQuestion(question, participant),
-        );
+        return this.renderTextQuestion(question, participant);
       default:
         return nothing;
     }
@@ -325,7 +326,6 @@ export class SurveyView extends MobxLitElement {
           .minLength=${minCount ?? nothing}
           .maxLength=${maxCount ?? nothing}
           .error=${isTooShort}
-          .errorText=${errorText}
           .counter=${maxCount !== null}
         >
         </md-outlined-text-field>

@@ -1,5 +1,5 @@
-@use "../../sass/common";
-@use "../../sass/typescale";
+@use '../../sass/common';
+@use '../../sass/typescale';
 
 :host {
   @include common.flex-column;
@@ -74,12 +74,12 @@
   padding: common.$spacing-xl;
 }
 
-.drag-zone{
+.drag-zone {
   padding: common.$spacing-medium;
 
   &.drag-over {
     height: 80px;
-    transition: height .25s ease-out;
+    transition: height 0.25s ease-out;
   }
 
   &.fill {

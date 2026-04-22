@@ -250,6 +250,40 @@ describe('condition.utils', () => {
         expect(result).toEqual({'stage1::q1': 8});
       });
 
+      test('extracts answer for specific target participant (Participant-first structure)', () => {
+        const stageAnswers: Record<
+          string,
+          SurveyPerParticipantStageParticipantAnswer
+        > = {
+          stage1: createPerParticipantStageAnswer('stage1', {
+            participant1: {
+              q1: {
+                id: 'q1',
+                kind: SurveyQuestionKind.SCALE,
+                value: 8,
+              },
+            },
+            participant2: {
+              q1: {
+                id: 'q1',
+                kind: SurveyQuestionKind.SCALE,
+                value: 3,
+              },
+            },
+          }),
+        };
+        const dependencies: ConditionTargetReference[] = [
+          {stageId: 'stage1', questionId: 'q1'},
+        ];
+
+        const result = getConditionDependencyValues(
+          dependencies,
+          stageAnswers,
+          'participant1',
+        );
+        expect(result).toEqual({'stage1::q1': 8});
+      });
+
       test('returns empty if no targetParticipantId provided', () => {
         const stageAnswers: Record<
           string,

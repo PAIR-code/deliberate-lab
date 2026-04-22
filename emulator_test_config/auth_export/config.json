@@ -1,4 +1,4 @@
 {
-  "signIn": { "allowDuplicateEmails": false },
-  "emailPrivacyConfig": { "enableImprovedEmailPrivacy": false }
+  "signIn": {"allowDuplicateEmails": false},
+  "emailPrivacyConfig": {"enableImprovedEmailPrivacy": false}
 }

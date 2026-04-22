@@ -1,5 +1,5 @@
-@use "../../sass/common";
-@use "../../sass/typescale";
+@use '../../sass/common';
+@use '../../sass/typescale';
 
 :host {
   @include common.flex-column;
@@ -15,7 +15,6 @@ h3 {
   @include typescale.title-small;
   margin: 0;
 }
-
 
 .reveal-wrapper {
   @include common.flex-column;

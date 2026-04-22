@@ -269,8 +269,8 @@ paths:
                       name: Welcome
                       descriptions:
                         primaryText: Welcome to the experiment
-                        infoText: ""
-                        helpText: ""
+                        infoText: ''
+                        helpText: ''
                       progress:
                         minParticipants: 1
                         waitForAllParticipants: false
@@ -284,8 +284,8 @@ paths:
                       name: Demographics Survey
                       descriptions:
                         primaryText: Please complete this survey
-                        infoText: ""
-                        helpText: ""
+                        infoText: ''
+                        helpText: ''
                       progress:
                         minParticipants: 1
                         waitForAllParticipants: false
@@ -298,7 +298,7 @@ paths:
                           upperValue: 10
                           lowerText: Not at all
                           upperText: Extremely
-                          middleText: ""
+                          middleText: ''
                           useSlider: false
                           stepSize: 1
       responses:
@@ -756,7 +756,7 @@ components:
           description: Tags for categorization
           items:
             type: string
-          example: ["research", "decision-making"]
+          example: ['research', 'decision-making']
         creator:
           type: string
           description: Experimenter ID who created the experiment
@@ -802,13 +802,13 @@ components:
               description: List of experimenter IDs with read access
               items:
                 type: string
-              example: ["experimenter123"]
+              example: ['experimenter123']
         stageIds:
           type: array
           description: Ordered list of stage IDs (stages are stored in a subcollection, not returned in this response)
           items:
             type: string
-          example: ["stage1", "stage2"]
+          example: ['stage1', 'stage2']
         defaultCohortConfig:
           type: object
           description: Default cohort configuration
@@ -854,7 +854,7 @@ components:
           additionalProperties:
             type: string
           example:
-            condition: "control"
+            condition: 'control'
 
     CohortParticipantConfig:
       type: object
@@ -956,8 +956,8 @@ components:
             additionalProperties: true
           example:
             stage1:
-              question1: "Answer text"
-              question2: "5"
+              question1: 'Answer text'
+              question2: '5'
 
     CohortDownload:
       type: object
@@ -1056,7 +1056,7 @@ components:
           schema:
             $ref: '#/components/schemas/Error'
           example:
-            error: "Invalid Authorization header format. Use: Authorization Bearer YOUR_API_KEY"
+            error: 'Invalid Authorization header format. Use: Authorization Bearer YOUR_API_KEY'
 
     ForbiddenError:
       description: Forbidden - Insufficient permissions or browser access attempted
@@ -1065,7 +1065,7 @@ components:
           schema:
             $ref: '#/components/schemas/Error'
           example:
-            error: "Browser access not allowed. Use API keys from server-side applications only."
+            error: 'Browser access not allowed. Use API keys from server-side applications only.'
 
     NotFoundError:
       description: Not found - Resource doesn't exist

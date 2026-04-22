@@ -17,9 +17,9 @@ export const TextSurveyQuestionData = Type.Object(
     id: Type.String({minLength: 1}),
     kind: Type.Literal(SurveyQuestionKind.TEXT),
     questionTitle: Type.String(),
-    condition: Type.Optional(ConditionSchema),
-    minCharCount: Type.Optional(Type.Number()),
-    maxCharCount: Type.Optional(Type.Number()),
+    condition: Type.Optional(Type.Union([Type.Null(), ConditionSchema])),
+    minCharCount: Type.Optional(Type.Union([Type.Null(), Type.Number()])),
+    maxCharCount: Type.Optional(Type.Union([Type.Null(), Type.Number()])),
   },
   {$id: 'TextSurveyQuestion', ...strict},
 );
@@ -31,7 +31,7 @@ export const CheckSurveyQuestionData = Type.Object(
     kind: Type.Literal(SurveyQuestionKind.CHECK),
     questionTitle: Type.String(),
     isRequired: Type.Boolean(),
-    condition: Type.Optional(ConditionSchema),
+    condition: Type.Optional(Type.Union([Type.Null(), ConditionSchema])),
   },
   {$id: 'CheckSurveyQuestion', ...strict},
 );
@@ -57,7 +57,7 @@ export const MultipleChoiceSurveyQuestionData = Type.Object(
     displayType: Type.Optional(
       Type.Enum(MultipleChoiceDisplayType, {$id: 'MultipleChoiceDisplayType'}),
     ),
-    condition: Type.Optional(ConditionSchema),
+    condition: Type.Optional(Type.Union([Type.Null(), ConditionSchema])),
   },
   {$id: 'MultipleChoiceSurveyQuestion', ...strict},
 );
@@ -75,7 +75,7 @@ export const ScaleSurveyQuestionData = Type.Object(
     middleText: Type.Optional(Type.String()),
     useSlider: Type.Optional(Type.Boolean()),
     stepSize: Type.Optional(Type.Number({minimum: 1})),
-    condition: Type.Optional(ConditionSchema),
+    condition: Type.Optional(Type.Union([Type.Null(), ConditionSchema])),
   },
   {$id: 'ScaleSurveyQuestion', ...strict},
 );

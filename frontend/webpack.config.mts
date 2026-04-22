@@ -21,8 +21,8 @@ import HtmlWebpackPlugin from 'html-webpack-plugin';
 import {CleanWebpackPlugin} from 'clean-webpack-plugin';
 import * as path from 'path';
 import webpack from 'webpack';
-import { fileURLToPath } from 'url';
-import { createRequire } from 'module';
+import {fileURLToPath} from 'url';
+import {createRequire} from 'module';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -126,7 +126,7 @@ export default (
       },
       compress: true,
       allowedHosts: 'all',
-      port: 4201,
+      port: 4300,
     },
     // enable external sourcemaps in prod, for debugging
     devtool: isProd ? 'hidden-source-map' : 'eval-source-map',
