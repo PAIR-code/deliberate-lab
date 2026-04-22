@@ -1,0 +1,32 @@
+{
+  "remote.portsAttributes": {
+    "4000": {
+      "label": "Firebase Emulator Suite",
+      "onAutoForward": "notify"
+    },
+    "4201": {
+      "label": "Deliberate Lab Frontend",
+      "onAutoForward": "notify"
+    },
+    "5001": {
+      "label": "Functions Emulator",
+      "onAutoForward": "notify"
+    },
+    "8080": {
+      "label": "Firestore Emulator",
+      "onAutoForward": "notify"
+    },
+    "9000": {
+      "label": "RTDB Emulator",
+      "onAutoForward": "notify"
+    },
+    "9099": {
+      "label": "Auth Emulator",
+      "onAutoForward": "notify"
+    },
+    "9199": {
+      "label": "Storage Emulator",
+      "onAutoForward": "notify"
+    }
+  }
+}
