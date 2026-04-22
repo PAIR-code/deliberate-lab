@@ -1,5 +1,5 @@
-@use '../../sass/common';
-@use '../../sass/typescale';
+@use "../../sass/common";
+@use "../../sass/typescale";
 
 :host {
   @include common.flex-column;
@@ -19,7 +19,7 @@
   user-select: none;
 
   &.disabled {
-    opacity: 0.3;
+    opacity:.3; 
   }
 
   &.small {
