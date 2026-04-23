@@ -192,24 +192,20 @@ trap cleanup SIGINT SIGTERM
 
 # 1. Build utils (needed for backend and frontend)
 echo "--- [1/4] Building utils ---"
-cd utils
-npm run build
+npm run build -w utils
 # Start utils watcher in background
 echo "Starting utils watcher..."
 # Use tail -f /dev/null to keep stdin open, preventing premature exit
-tail -f /dev/null | npm run build:watch &
+tail -f /dev/null | npm run build:watch -w utils &
 UTILS_PID=$!
-cd ..
 
 # 2. Build functions (needed for backend)
 echo "--- [2/4] Building functions ---"
-cd functions
-npm run build
+npm run build -w functions
 # Start functions watcher in background
 echo "Starting functions watcher..."
-tail -f /dev/null | npm run build:watch &
+tail -f /dev/null | npm run build:watch -w functions &
 FUNCTIONS_PID=$!
-cd ..
 
 # 3. Start Firebase emulators
 echo "--- [3/4] Starting Firebase emulators ---"
@@ -228,11 +224,9 @@ wait_for_port 9199 "Storage"
 
 # 4. Start frontend web app
 echo "--- [4/4] Starting frontend ---"
-cd frontend
 # npm run start includes 'npm run build' and 'npm run serve'
-tail -f /dev/null | npm run start &
+tail -f /dev/null | npm run start -w frontend &
 FRONTEND_PID=$!
-cd ..
 
 echo ""
 echo "=== All services started ==="

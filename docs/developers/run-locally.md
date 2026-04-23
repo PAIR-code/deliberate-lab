@@ -95,8 +95,7 @@ NOTE: The `utils` directory builds as the package `@deliberation-lab/utils`,
 which can then be used in `/functions` and `/frontend`.
 
 ```bash
-cd utils  # If navigating from top level
-npm run build:watch  # Build and listen to changes
+npm run build:watch -w utils  # Build and listen to changes
 ```
 
 The shared utilities are built using [`tsup`](https://tsup.egoist.dev) to
@@ -109,8 +108,7 @@ the directory that requires the utils (e.g., `frontend` or `functions`).
 ### 3. Build functions (needed for backend)
 
 ```bash
-cd functions  # If navigating from top level
-npm run build:watch  # Build and listen to changes
+npm run build:watch -w functions  # Build and listen to changes
 ```
 
 ### 4. Start Firebase emulators (used as backend)
@@ -150,18 +148,16 @@ http://localhost:4000.
 ### 5. Start frontend web app
 
 ```bash
-cd frontend  # If navigating from top level
-
 # Create an index.html file and (optionally) replace the placeholder
 # analytics ID (see TODOs in example file) with your Google Analytics ID
-cp index.example.html index.html
+cp frontend/index.example.html frontend/index.html
 
 # If you didn't already create a firebase_config.ts when setting up
 # the emulator, do so now:
 #
-# cp firebase_config.example.ts firebase_config.ts
+# cp frontend/firebase_config.example.ts frontend/firebase_config.ts
 
-npm run start
+npm run start -w frontend
 ```
 
 Then, view the app at http://localhost:4201.
