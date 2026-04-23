@@ -140,8 +140,15 @@ export const createParticipant = onCall(async (request) => {
       ) as ProfileStageConfig | undefined;
       const profileType =
         profileStage?.profileType || ProfileType.ANONYMOUS_ANIMAL;
+      const informalNameStyle = profileStage?.informalNameStyle ?? false;
 
-      setProfile(numParticipants, participantConfig, true, profileType);
+      setProfile(
+        numParticipants,
+        participantConfig,
+        true,
+        profileType,
+        informalNameStyle,
+      );
     } else {
       setProfile(numParticipants, participantConfig, false);
     }

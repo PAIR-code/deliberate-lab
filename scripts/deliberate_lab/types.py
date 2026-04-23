@@ -380,6 +380,7 @@ class ProfileStageConfig(BaseModel):
     descriptions: StageTextConfig
     progress: StageProgressConfig
     profileType: ProfileType
+    informalNameStyle: bool | None = False
 
 
 class Strategy(StrEnum):
