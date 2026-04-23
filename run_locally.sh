@@ -218,9 +218,13 @@ tail -f /dev/null | npx firebase emulators:start --import ./emulator_test_config
 EMULATORS_PID=$!
 
 # Wait for emulators to be ready
-wait_for_port 8080 "Firestore"
-wait_for_port 5001 "Functions"
 wait_for_port 4000 "Emulator UI"
+wait_for_port 5001 "Functions"
+wait_for_port 8080 "Firestore"
+wait_for_port 9000 "Database"
+wait_for_port 9099 "Auth"
+wait_for_port 9199 "Storage"
+
 
 # 4. Start frontend web app
 echo "--- [4/4] Starting frontend ---"

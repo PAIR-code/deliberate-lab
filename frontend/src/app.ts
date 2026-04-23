@@ -48,6 +48,9 @@ export class App extends MobxLitElement {
 
     switch (this.routerService.activePage) {
       case Pages.HOME:
+        if (this.authService.firestoreConnectionError) {
+          return this.renderConnectionError();
+        }
         if (!this.authService.isExperimenter) {
           return this.render403();
         }
@@ -71,6 +74,9 @@ export class App extends MobxLitElement {
           </div>
         `;
       case Pages.EXPERIMENT:
+        if (this.authService.firestoreConnectionError) {
+          return this.renderConnectionError();
+        }
         if (!this.authService.isExperimenter) {
           return this.render403();
         }
@@ -79,6 +85,9 @@ export class App extends MobxLitElement {
 
         return html` <experiment-dashboard></experiment-dashboard> `;
       case Pages.EXPERIMENT_CREATE:
+        if (this.authService.firestoreConnectionError) {
+          return this.renderConnectionError();
+        }
         if (!this.authService.isExperimenter) {
           return this.render403();
         }
@@ -86,6 +95,7 @@ export class App extends MobxLitElement {
           <page-header></page-header>
           <experiment-builder></experiment-builder>
         `;
+
       case Pages.PARTICIPANT:
         this.presenceService.setupPresence(
           this.routerService.activeRoute.params['experiment'],
@@ -146,6 +156,33 @@ export class App extends MobxLitElement {
             have them add your email address to the allowlist.
           </div>
           ${renderLogoutButton()}
+        </div>
+      </div>
+    `;
+  }
+
+  private renderConnectionError() {
+    const isDev = process.env.NODE_ENV === 'development';
+
+    return html`
+      <div class="error-wrapper">
+        <div class="error">
+          <div><strong>Unable to connect to Firestore.</strong></div>
+          ${isDev
+            ? html`
+                <div>
+                  If you are running the application remotely (e.g., via SSH or
+                  VS Code Remote), please ensure that ports
+                  <strong>8080</strong> and <strong>9099</strong> are forwarded.
+                </div>
+              `
+            : html`
+                <div>
+                  We are unable to connect to our database at this time. Please
+                  try again later. If the problem persists, contact the site
+                  administrator.
+                </div>
+              `}
         </div>
       </div>
     `;

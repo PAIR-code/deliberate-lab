@@ -49,38 +49,46 @@ export class AuthService extends Service {
           // https://firebase.google.com/docs/reference/js/auth.user
           this.user = user;
 
-          const allowlistDoc = await getDoc(
-            doc(
-              this.sp.firebaseService.firestore,
-              'allowlist',
-              user.email ?? '',
-            ),
-          );
+          try {
+            const allowlistDoc = await getDoc(
+              doc(
+                this.sp.firebaseService.firestore,
+                'allowlist',
+                user.email ?? '',
+              ),
+            );
 
-          if (allowlistDoc.exists()) {
-            this.isExperimenter = true;
-            this.subscribe();
-            this.writeExperimenterProfile(user);
-            this.sp.homeService.subscribe();
-            const experimentId = this.sp.experimentManager.experimentId;
-            if (experimentId) {
-              this.sp.experimentManager.loadExperimentData(experimentId);
-            }
+            if (allowlistDoc.exists()) {
+              this.isExperimenter = true;
+              this.subscribe();
+              this.writeExperimenterProfile(user);
+              this.sp.homeService.subscribe();
+              const experimentId = this.sp.experimentManager.experimentId;
+              if (experimentId) {
+                this.sp.experimentManager.loadExperimentData(experimentId);
+              }
 
-            // Check if admin
-            if (allowlistDoc.data().isAdmin) {
-              this.sp.adminService.subscribe();
-              this.isAdmin = true;
+              // Check if admin
+              if (allowlistDoc.data().isAdmin) {
+                this.sp.adminService.subscribe();
+                this.isAdmin = true;
+              } else {
+                this.isAdmin = false;
+              }
+              // Check if user has access to research templates
+              if (allowlistDoc.data().hasResearchTemplateAccess) {
+                this.hasResearchTemplateAccess = true;
+              } else {
+                this.hasResearchTemplateAccess = false;
+              }
             } else {
+              this.isExperimenter = false;
               this.isAdmin = false;
             }
-            // Check if user has access to research templates
-            if (allowlistDoc.data().hasResearchTemplateAccess) {
-              this.hasResearchTemplateAccess = true;
-            } else {
-              this.hasResearchTemplateAccess = false;
-            }
-          } else {
+            this.firestoreConnectionError = false; // Reset on success
+          } catch (error) {
+            console.error('Failed to fetch allowlist', error);
+            this.firestoreConnectionError = true;
             this.isExperimenter = false;
             this.isAdmin = false;
           }
@@ -95,6 +103,8 @@ export class AuthService extends Service {
 
   @observable user: User | null | undefined = undefined;
   @observable isAdmin: boolean | null = null;
+  @observable firestoreConnectionError = false;
+
   @observable hasResearchTemplateAccess: boolean | null = null;
   @observable isExperimenter: boolean | null = null;
   @observable canEdit = false;
