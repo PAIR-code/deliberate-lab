@@ -366,6 +366,31 @@ export const updateParticipantToNextStage = onCall(
         await participantDoc.get()
       ).data() as ParticipantProfileExtended;
 
+      // Check minimum time enforcement for chat stages
+      const currentStageId = participant.currentStageId;
+      const stage = await getFirestoreStage(data.experimentId, currentStageId);
+      if (stage && stage.kind === StageKind.CHAT) {
+        const minTime = (stage as ChatStageConfig).timeMinimumInMinutes;
+        if (minTime != null && minTime > 0) {
+          const publicStageData = await getFirestoreStagePublicData(
+            data.experimentId,
+            participant.currentCohortId,
+            currentStageId,
+          );
+          const startTimestamp = (publicStageData as ChatStagePublicData)
+            ?.discussionStartTimestamp;
+          if (
+            !startTimestamp ||
+            getTimeElapsed(startTimestamp, 'm') < minTime
+          ) {
+            throw new HttpsError(
+              'failed-precondition',
+              'Minimum time requirement has not been met.',
+            );
+          }
+        }
+      }
+
       response = await updateParticipantNextStage(
         data.experimentId,
         participant,
