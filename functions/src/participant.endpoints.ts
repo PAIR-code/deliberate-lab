@@ -13,7 +13,14 @@ import {
   createParticipantProfileExtended,
   setProfile,
   VariableScope,
+  getTimeElapsed,
+  ChatStageConfig,
+  ChatStagePublicData,
 } from '@deliberation-lab/utils';
+import {
+  getFirestoreStage,
+  getFirestoreStagePublicData,
+} from './utils/firestore';
 import {
   updateCohortStageUnlocked,
   updateParticipantNextStage,
