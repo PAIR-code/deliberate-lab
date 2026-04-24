@@ -326,6 +326,7 @@ export class SurveyView extends MobxLitElement {
           .minLength=${minCount ?? nothing}
           .maxLength=${maxCount ?? nothing}
           .error=${isTooShort}
+          .errorText=${errorText}
           .counter=${maxCount !== null}
         >
         </md-outlined-text-field>
