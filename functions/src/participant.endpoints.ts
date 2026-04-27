@@ -20,6 +20,7 @@ import {
 import {
   getFirestoreStage,
   getFirestoreStagePublicData,
+  getFirestorePrivateChatMessages,
 } from './utils/firestore';
 import {
   updateCohortStageUnlocked,
@@ -376,16 +377,33 @@ export const updateParticipantToNextStage = onCall(
       // Check minimum time enforcement for chat stages
       const currentStageId = participant.currentStageId;
       const stage = await getFirestoreStage(data.experimentId, currentStageId);
-      if (stage && stage.kind === StageKind.CHAT) {
+      if (
+        stage &&
+        (stage.kind === StageKind.CHAT || stage.kind === StageKind.PRIVATE_CHAT)
+      ) {
         const minTime = (stage as ChatStageConfig).timeMinimumInMinutes;
         if (minTime != null && minTime > 0) {
-          const publicStageData = await getFirestoreStagePublicData(
-            data.experimentId,
-            participant.currentCohortId,
-            currentStageId,
-          );
-          const startTimestamp = (publicStageData as ChatStagePublicData)
-            ?.discussionStartTimestamp;
+          let startTimestamp: {seconds: number; nanoseconds: number} | null =
+            null;
+
+          if (stage.kind === StageKind.CHAT) {
+            const publicStageData = await getFirestoreStagePublicData(
+              data.experimentId,
+              participant.currentCohortId,
+              currentStageId,
+            );
+            startTimestamp =
+              (publicStageData as ChatStagePublicData)
+                ?.discussionStartTimestamp ?? null;
+          } else if (stage.kind === StageKind.PRIVATE_CHAT) {
+            const messages = await getFirestorePrivateChatMessages(
+              data.experimentId,
+              participant.privateId,
+              currentStageId,
+            );
+            startTimestamp = messages.length > 0 ? messages[0].timestamp : null;
+          }
+
           if (
             !startTimestamp ||
             getTimeElapsed(startTimestamp, 'm') < minTime
