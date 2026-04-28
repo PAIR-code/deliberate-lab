@@ -14,7 +14,6 @@ import {
   setProfile,
   VariableScope,
   getTimeElapsed,
-  ChatStageConfig,
   ChatStagePublicData,
 } from '@deliberation-lab/utils';
 import {
@@ -377,36 +376,44 @@ export const updateParticipantToNextStage = onCall(
       // Check minimum time enforcement for chat stages
       const currentStageId = participant.currentStageId;
       const stage = await getFirestoreStage(data.experimentId, currentStageId);
-      if (
-        stage &&
-        (stage.kind === StageKind.CHAT || stage.kind === StageKind.PRIVATE_CHAT)
-      ) {
-        const minTime = (stage as ChatStageConfig).timeMinimumInMinutes;
-        if (minTime != null && minTime > 0) {
+      if (stage) {
+        const minTimeMinutes = (stage as {timeMinimumInMinutes?: number | null})
+          .timeMinimumInMinutes;
+        if (minTimeMinutes != null && minTimeMinutes > 0) {
           let startTimestamp: {seconds: number; nanoseconds: number} | null =
             null;
 
-          if (stage.kind === StageKind.CHAT) {
-            const publicStageData = await getFirestoreStagePublicData(
-              data.experimentId,
-              participant.currentCohortId,
-              currentStageId,
-            );
-            startTimestamp =
-              (publicStageData as ChatStagePublicData)
-                ?.discussionStartTimestamp ?? null;
-          } else if (stage.kind === StageKind.PRIVATE_CHAT) {
-            const messages = await getFirestorePrivateChatMessages(
-              data.experimentId,
-              participant.privateId,
-              currentStageId,
-            );
-            startTimestamp = messages.length > 0 ? messages[0].timestamp : null;
+          switch (stage.kind) {
+            case StageKind.CHAT: {
+              const publicStageData = await getFirestoreStagePublicData(
+                data.experimentId,
+                participant.currentCohortId,
+                currentStageId,
+              );
+              startTimestamp =
+                (publicStageData as ChatStagePublicData)
+                  ?.discussionStartTimestamp ?? null;
+              break;
+            }
+            case StageKind.PRIVATE_CHAT: {
+              const messages = await getFirestorePrivateChatMessages(
+                data.experimentId,
+                participant.privateId,
+                currentStageId,
+              );
+              startTimestamp =
+                messages.length > 0 ? messages[0].timestamp : null;
+              break;
+            }
+            default:
+              // Fallback for any other stage type: use the time they reached the stage
+              startTimestamp =
+                participant.timestamps.readyStages[currentStageId] ?? null;
           }
 
           if (
             !startTimestamp ||
-            getTimeElapsed(startTimestamp, 'm') < minTime
+            getTimeElapsed(startTimestamp, 'm') < minTimeMinutes
           ) {
             throw new HttpsError(
               'failed-precondition',
