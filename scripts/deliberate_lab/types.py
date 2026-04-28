@@ -1202,9 +1202,7 @@ class TextSurveyQuestion(BaseModel):
     id: Annotated[str, Field(min_length=1)]
     kind: Literal["text"] = "text"
     questionTitle: str
-    condition: Annotated[
-        ComparisonCondition | ConditionGroup | None, Field(title="Condition")
-    ] = None
+    condition: ComparisonCondition | ConditionGroup | None = None
     minCharCount: float | None = None
     maxCharCount: float | None = None
 
@@ -1229,9 +1227,7 @@ class CheckSurveyQuestion(BaseModel):
     kind: Literal["check"] = "check"
     questionTitle: str
     isRequired: bool
-    condition: Annotated[
-        ComparisonCondition | ConditionGroup | None, Field(title="Condition")
-    ] = None
+    condition: ComparisonCondition | ConditionGroup | None = None
 
 
 class MultipleChoiceSurveyQuestion(BaseModel):
@@ -1247,9 +1243,7 @@ class MultipleChoiceSurveyQuestion(BaseModel):
     displayType: Annotated[
         MultipleChoiceDisplayType | None, Field(title="MultipleChoiceDisplayType")
     ] = None
-    condition: Annotated[
-        ComparisonCondition | ConditionGroup | None, Field(title="Condition")
-    ] = None
+    condition: ComparisonCondition | ConditionGroup | None = None
 
 
 class ScaleSurveyQuestion(BaseModel):
@@ -1267,9 +1261,7 @@ class ScaleSurveyQuestion(BaseModel):
     middleText: str | None = None
     useSlider: bool | None = None
     stepSize: Annotated[float | None, Field(ge=1.0)] = None
-    condition: Annotated[
-        ComparisonCondition | ConditionGroup | None, Field(title="Condition")
-    ] = None
+    condition: ComparisonCondition | ConditionGroup | None = None
 
 
 class SurveyStageConfig(BaseModel):
