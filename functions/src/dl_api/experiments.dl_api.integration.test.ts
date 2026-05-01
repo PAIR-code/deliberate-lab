@@ -1061,6 +1061,7 @@ describe('API Experiment Creation Integration Tests', () => {
             lowerText: '',
             upperValue: 5.5,
             upperText: '',
+            middleText: '',
             stepSize: 1,
             useSlider: false,
           },
@@ -1074,7 +1075,9 @@ describe('API Experiment Creation Integration Tests', () => {
 
       expect(response.status).toBe(422);
       const data = await response.json();
-      expect(data.error).toContain('must be integers');
+      expect(data.error).toContain(
+        'lower value, upper value, and step size must be integers',
+      );
     });
 
     it('should reject experiment creation with scale question step size equal to 0', async () => {
@@ -1089,6 +1092,7 @@ describe('API Experiment Creation Integration Tests', () => {
             lowerText: '',
             upperValue: 5,
             upperText: '',
+            middleText: '',
             stepSize: 0,
             useSlider: false,
           },
@@ -1102,7 +1106,7 @@ describe('API Experiment Creation Integration Tests', () => {
 
       expect(response.status).toBe(422);
       const data = await response.json();
-      expect(data.error).toContain('must be greater than 0');
+      expect(data.error).toContain('step size (0) must be greater than 0');
     });
 
     it('should reject experiment creation with scale question step size out of bounds', async () => {
