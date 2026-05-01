@@ -16,6 +16,8 @@ import {
   Visibility,
   createExperimentConfig,
   createPrivateChatStage,
+  createSurveyStage,
+  SurveyQuestionKind,
 } from '@deliberation-lab/utils';
 import {
   TestContext,
@@ -926,7 +928,7 @@ describe('API Experiment Creation Integration Tests', () => {
         stages: JSON.parse(JSON.stringify([stage1, stage2])),
       });
 
-      expect(response.status).toBe(400);
+      expect(response.status).toBe(422);
       const data = await response.json();
       expect(data.error).toContain('Duplicate stage ID');
     });
@@ -942,7 +944,7 @@ describe('API Experiment Creation Integration Tests', () => {
         template: JSON.parse(JSON.stringify(template)),
       });
 
-      expect(response.status).toBe(400);
+      expect(response.status).toBe(422);
       const data = await response.json();
       expect(data.error).toContain('Duplicate cohort alias found');
     });
@@ -972,11 +974,191 @@ describe('API Experiment Creation Integration Tests', () => {
         template: JSON.parse(JSON.stringify(template)),
       });
 
-      expect(response.status).toBe(400);
+      expect(response.status).toBe(422);
       const data = await response.json();
       expect(data.error).toContain(
         'values array must contain at least one item',
       );
+    });
+
+    it('should reject experiment creation with invalid survey stage (scale lower >= upper bounds)', async () => {
+      const stage = createSurveyStage({
+        id: 'survey-1',
+        questions: [
+          {
+            id: 'q1',
+            kind: SurveyQuestionKind.SCALE,
+            questionTitle: 'Bad Scale',
+            lowerValue: 10,
+            lowerText: '',
+            upperValue: 5,
+            upperText: '',
+            stepSize: 1,
+            useSlider: false,
+          },
+        ],
+      });
+
+      const response = await apiRequest('POST', '/v1/experiments', {
+        name: 'Bad Survey bounds Experiment',
+        stages: JSON.parse(JSON.stringify([stage])),
+      });
+
+      expect(response.status).toBe(422);
+      const data = await response.json();
+      expect(data.error).toContain('greater than or equal to upper value');
+    });
+
+    it('should reject experiment creation with invalid multiple choice survey question (no options)', async () => {
+      const stage = createSurveyStage({
+        id: 'survey-2',
+        questions: [
+          {
+            id: 'q2',
+            kind: SurveyQuestionKind.MULTIPLE_CHOICE,
+            questionTitle: 'Empty Options',
+            options: [],
+            correctAnswerId: null,
+          },
+        ],
+      });
+
+      const response = await apiRequest('POST', '/v1/experiments', {
+        name: 'Bad MC Experiment',
+        stages: JSON.parse(JSON.stringify([stage])),
+      });
+
+      expect(response.status).toBe(422);
+      const data = await response.json();
+      expect(data.error).toContain('must have at least one option');
+    });
+
+    it('should reject experiment creation with survey stage containing no questions', async () => {
+      const stage = createSurveyStage({
+        id: 'survey-3',
+        questions: [],
+      });
+
+      const response = await apiRequest('POST', '/v1/experiments', {
+        name: 'Empty Survey Questions Experiment',
+        stages: JSON.parse(JSON.stringify([stage])),
+      });
+
+      expect(response.status).toBe(422);
+      const data = await response.json();
+      expect(data.error).toContain('must contain at least one question');
+    });
+
+    it('should reject experiment creation with non-integer scale question values', async () => {
+      const stage = createSurveyStage({
+        id: 'survey-4',
+        questions: [
+          {
+            id: 'q4',
+            kind: SurveyQuestionKind.SCALE,
+            questionTitle: 'Non-Integer Scale',
+            lowerValue: 1.5,
+            lowerText: '',
+            upperValue: 5.5,
+            upperText: '',
+            stepSize: 1,
+            useSlider: false,
+          },
+        ],
+      });
+
+      const response = await apiRequest('POST', '/v1/experiments', {
+        name: 'Non-Integer Experiment',
+        stages: JSON.parse(JSON.stringify([stage])),
+      });
+
+      expect(response.status).toBe(422);
+      const data = await response.json();
+      expect(data.error).toContain('must be integers');
+    });
+
+    it('should reject experiment creation with scale question step size equal to 0', async () => {
+      const stage = createSurveyStage({
+        id: 'survey-7',
+        questions: [
+          {
+            id: 'q7',
+            kind: SurveyQuestionKind.SCALE,
+            questionTitle: 'Step Size 0',
+            lowerValue: 1,
+            lowerText: '',
+            upperValue: 5,
+            upperText: '',
+            stepSize: 0,
+            useSlider: false,
+          },
+        ],
+      });
+
+      const response = await apiRequest('POST', '/v1/experiments', {
+        name: 'Step Size 0 Experiment',
+        stages: JSON.parse(JSON.stringify([stage])),
+      });
+
+      expect(response.status).toBe(422);
+      const data = await response.json();
+      expect(data.error).toContain('must be greater than 0');
+    });
+
+    it('should reject experiment creation with scale question step size out of bounds', async () => {
+      const stage = createSurveyStage({
+        id: 'survey-5',
+        questions: [
+          {
+            id: 'q5',
+            kind: SurveyQuestionKind.SCALE,
+            questionTitle: 'Bad Step Size',
+            lowerValue: 1,
+            lowerText: '',
+            upperValue: 5,
+            upperText: '',
+            stepSize: 6,
+            useSlider: false,
+          },
+        ],
+      });
+
+      const response = await apiRequest('POST', '/v1/experiments', {
+        name: 'Bad Step Size Experiment',
+        stages: JSON.parse(JSON.stringify([stage])),
+      });
+
+      expect(response.status).toBe(422);
+      const data = await response.json();
+      expect(data.error).toContain('must divide max-min');
+    });
+
+    it('should reject experiment creation with scale question step size not dividing range exactly', async () => {
+      const stage = createSurveyStage({
+        id: 'survey-6',
+        questions: [
+          {
+            id: 'q6',
+            kind: SurveyQuestionKind.SCALE,
+            questionTitle: 'Undivisible Step Size',
+            lowerValue: 1,
+            lowerText: '',
+            upperValue: 5,
+            upperText: '',
+            stepSize: 3,
+            useSlider: false,
+          },
+        ],
+      });
+
+      const response = await apiRequest('POST', '/v1/experiments', {
+        name: 'Undivisible Range Experiment',
+        stages: JSON.parse(JSON.stringify([stage])),
+      });
+
+      expect(response.status).toBe(422);
+      const data = await response.json();
+      expect(data.error).toContain('must divide max-min');
     });
 
     it('should accept experiment creation with valid variable configuration', async () => {

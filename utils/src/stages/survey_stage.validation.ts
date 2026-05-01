@@ -1,7 +1,16 @@
 import {Type, type Static} from '@sinclair/typebox';
-import {StageKind} from './stage';
-import {BaseStageConfigSchema} from './stage.schemas';
-import {MultipleChoiceDisplayType, SurveyQuestionKind} from './survey_stage';
+import {BaseStageConfig, StageKind} from './stage';
+import {
+  BaseStageConfigSchema,
+  type StageValidationResult,
+} from './stage.schemas';
+import {
+  MultipleChoiceDisplayType,
+  SurveyQuestionKind,
+  SurveyStageConfig,
+  SurveyPerParticipantStageConfig,
+  SurveyQuestion,
+} from './survey_stage';
 import {ConditionSchema} from '../utils/condition.validation';
 
 /** Shorthand for strict TypeBox object validation */
@@ -74,7 +83,7 @@ export const ScaleSurveyQuestionData = Type.Object(
     lowerText: Type.String(),
     middleText: Type.Optional(Type.String()),
     useSlider: Type.Optional(Type.Boolean()),
-    stepSize: Type.Optional(Type.Number({minimum: 1})),
+    stepSize: Type.Optional(Type.Number()),
     condition: Type.Optional(Type.Union([Type.Null(), ConditionSchema])),
   },
   {$id: 'ScaleSurveyQuestion', ...strict},
@@ -224,3 +233,82 @@ export const UpdateSurveyPerParticipantStageParticipantAnswerData = Type.Object(
 export type UpdateSurveyPerParticipantStageParticipantAnswerData = Static<
   typeof UpdateSurveyPerParticipantStageParticipantAnswerData
 >;
+
+/** Validate multiple choice and scale questions inside survey stages. */
+export function validateSurveyQuestions(
+  questions: SurveyQuestion[],
+): StageValidationResult {
+  if (!questions || questions.length === 0) {
+    return {
+      valid: false,
+      error: 'Survey stage must contain at least one question',
+    };
+  }
+
+  for (const q of questions) {
+    if (q.kind === SurveyQuestionKind.SCALE) {
+      if (
+        !Number.isInteger(q.lowerValue) ||
+        !Number.isInteger(q.upperValue) ||
+        (q.stepSize !== undefined && !Number.isInteger(q.stepSize))
+      ) {
+        return {
+          valid: false,
+          error: `Scale question "${q.questionTitle}" lower value, upper value, and step size must be integers`,
+        };
+      }
+      if (q.lowerValue >= q.upperValue) {
+        return {
+          valid: false,
+          error: `Scale question "${q.questionTitle}" has lower value (${q.lowerValue}) greater than or equal to upper value (${q.upperValue})`,
+        };
+      }
+      const range = q.upperValue - q.lowerValue;
+      const step = q.stepSize ?? 1;
+      if (step <= 0) {
+        return {
+          valid: false,
+          error: `Scale question "${q.questionTitle}" step size (${step}) must be greater than 0`,
+        };
+      }
+      if (range % step !== 0) {
+        return {
+          valid: false,
+          error: `Scale question "${q.questionTitle}" step size (${step}) must divide max-min (${range}) exactly`,
+        };
+      }
+    }
+    if (q.kind === SurveyQuestionKind.MULTIPLE_CHOICE) {
+      if (!q.options || q.options.length === 0) {
+        return {
+          valid: false,
+          error: `Multiple choice question "${q.questionTitle}" must have at least one option`,
+        };
+      }
+      if (q.correctAnswerId != null && q.correctAnswerId !== '') {
+        const hasOption = q.options.some((opt) => opt.id === q.correctAnswerId);
+        if (!hasOption) {
+          return {
+            valid: false,
+            error: `Multiple choice question "${q.questionTitle}" has a correct answer ID "${q.correctAnswerId}" that doesn't match any option ID`,
+          };
+        }
+      }
+    }
+  }
+  return {valid: true};
+}
+
+export function validateSurveyStageConfig(
+  stage: BaseStageConfig,
+): StageValidationResult {
+  const {questions} = stage as SurveyStageConfig;
+  return validateSurveyQuestions(questions);
+}
+
+export function validateSurveyPerParticipantStageConfig(
+  stage: BaseStageConfig,
+): StageValidationResult {
+  const {questions} = stage as SurveyPerParticipantStageConfig;
+  return validateSurveyQuestions(questions);
+}

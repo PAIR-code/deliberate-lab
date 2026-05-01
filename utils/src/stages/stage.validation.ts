@@ -27,6 +27,8 @@ import {StockInfoStageConfigData} from './stockinfo_stage.validation';
 import {
   SurveyPerParticipantStageConfigData,
   SurveyStageConfigData,
+  validateSurveyStageConfig,
+  validateSurveyPerParticipantStageConfig,
 } from './survey_stage.validation';
 import {TransferStageConfigData} from './transfer_stage.validation';
 import {TOSStageConfigData} from './tos_stage.validation';
@@ -68,8 +70,14 @@ export const CONFIG_DATA: Record<string, StageConfigEntry> = {
   role: {schema: RoleStageConfigData},
   salesperson: {schema: SalespersonStageConfigData},
   stockinfo: {schema: StockInfoStageConfigData},
-  surveyPerParticipant: {schema: SurveyPerParticipantStageConfigData},
-  survey: {schema: SurveyStageConfigData},
+  surveyPerParticipant: {
+    schema: SurveyPerParticipantStageConfigData,
+    validate: validateSurveyPerParticipantStageConfig,
+  },
+  survey: {
+    schema: SurveyStageConfigData,
+    validate: validateSurveyStageConfig,
+  },
   tos: {schema: TOSStageConfigData},
   transfer: {schema: TransferStageConfigData},
 };

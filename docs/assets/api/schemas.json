@@ -2311,7 +2311,6 @@
           "type": "boolean"
         },
         "stepSize": {
-          "minimum": 1,
           "type": "number"
         },
         "condition": {

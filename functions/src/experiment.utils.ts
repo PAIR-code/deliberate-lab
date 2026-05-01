@@ -358,7 +358,7 @@ export async function updateExperimentFromTemplate(
   if (!stageValidation.valid) {
     return {
       success: false,
-      httpErrorCode: 400,
+      httpErrorCode: 422,
       errorMessage: `Invalid stage configuration: ${stageValidation.error}`,
     };
   }
@@ -371,7 +371,7 @@ export async function updateExperimentFromTemplate(
     if (!variableValidation.valid) {
       return {
         success: false,
-        httpErrorCode: 400,
+        httpErrorCode: 422,
         errorMessage: `Invalid variable configuration: ${variableValidation.error}`,
       };
     }
@@ -384,7 +384,7 @@ export async function updateExperimentFromTemplate(
       if (seenAliases.has(def.alias)) {
         return {
           success: false,
-          httpErrorCode: 400,
+          httpErrorCode: 422,
           errorMessage: `Duplicate cohort alias found: "${def.alias}"`,
         };
       }
@@ -470,7 +470,7 @@ export async function updateExperimentFromTemplate(
     return {
       success: false,
       error: 'cohort-definitions-locked',
-      httpErrorCode: 400,
+      httpErrorCode: 422,
       errorMessage:
         'Cannot modify cohort definitions after participants have joined',
     };

@@ -137,7 +137,7 @@ export async function createExperiment(
     const error = [...Value.Errors(CreateExperimentRequestData, body)]
       .map((e) => `${e.path || '/'}: ${e.message}`)
       .join('; ');
-    throw createHttpError(400, `Invalid request body: ${error}`);
+    throw createHttpError(422, `Invalid request body: ${error}`);
   }
 
   // If a full template is provided, use the shared utility
@@ -151,7 +151,7 @@ export async function createExperiment(
       );
     } catch (error: unknown) {
       throw createHttpError(
-        400,
+        422,
         error instanceof Error ? error.message : String(error),
       );
     }
@@ -173,7 +173,7 @@ export async function createExperiment(
   // Simple creation mode: name is required
   if (!body.name) {
     throw createHttpError(
-      400,
+      422,
       'Invalid request body: name is required (or provide template)',
     );
   }
@@ -215,7 +215,7 @@ export async function createExperiment(
     );
   } catch (error: unknown) {
     throw createHttpError(
-      400,
+      422,
       error instanceof Error ? error.message : String(error),
     );
   }
@@ -306,7 +306,7 @@ export async function updateExperiment(
       body.template.experiment.id !== experimentId
     ) {
       throw createHttpError(
-        400,
+        422,
         'Template experiment ID does not match URL parameter',
       );
     }

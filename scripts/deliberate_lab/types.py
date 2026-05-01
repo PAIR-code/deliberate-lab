@@ -1260,7 +1260,7 @@ class ScaleSurveyQuestion(BaseModel):
     lowerText: str
     middleText: str | None = None
     useSlider: bool | None = None
-    stepSize: Annotated[float | None, Field(ge=1.0)] = None
+    stepSize: float | None = None
     condition: ComparisonCondition | ConditionGroup | None = None
 
 
