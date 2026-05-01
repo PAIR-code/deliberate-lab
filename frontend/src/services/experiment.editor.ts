@@ -21,6 +21,8 @@ import {
   requiresValues,
   STAGE_MANAGER,
   checkApiKeyExists,
+  SurveyQuestion,
+  MultipleChoiceItem,
   createAgentMediatorPersonaConfig,
   createAgentParticipantPersonaConfig,
   createExperimentConfig,
@@ -125,7 +127,7 @@ export class ExperimentEditor extends Service {
         if (!stage.questions || stage.questions.length === 0) {
           errors.push(`${stage.name} must contain at least one question`);
         }
-        stage.questions.forEach((question, index) => {
+        stage.questions.forEach((question: SurveyQuestion, index: number) => {
           if (question.questionTitle === '') {
             errors.push(
               `${stage.name} question ${index + 1} is missing a title`,
@@ -171,7 +173,8 @@ export class ExperimentEditor extends Service {
               question.correctAnswerId !== ''
             ) {
               const hasOption = question.options.some(
-                (opt) => opt.id === question.correctAnswerId,
+                (opt: MultipleChoiceItem) =>
+                  opt.id === question.correctAnswerId,
               );
               if (!hasOption) {
                 errors.push(
