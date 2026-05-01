@@ -1254,13 +1254,13 @@ class ScaleSurveyQuestion(BaseModel):
     id: Annotated[str, Field(min_length=1)]
     kind: Literal["scale"] = "scale"
     questionTitle: str
-    upperValue: float
+    upperValue: int
     upperText: str
-    lowerValue: float
+    lowerValue: int
     lowerText: str
     middleText: str | None = None
     useSlider: bool | None = None
-    stepSize: float | None = None
+    stepSize: Annotated[int | None, Field(ge=1)] = None
     condition: ComparisonCondition | ConditionGroup | None = None
 
 

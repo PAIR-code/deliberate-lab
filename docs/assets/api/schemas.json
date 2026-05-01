@@ -2293,13 +2293,13 @@
           "type": "string"
         },
         "upperValue": {
-          "type": "number"
+          "type": "integer"
         },
         "upperText": {
           "type": "string"
         },
         "lowerValue": {
-          "type": "number"
+          "type": "integer"
         },
         "lowerText": {
           "type": "string"
@@ -2311,7 +2311,8 @@
           "type": "boolean"
         },
         "stepSize": {
-          "type": "number"
+          "minimum": 1,
+          "type": "integer"
         },
         "condition": {
           "anyOf": [
