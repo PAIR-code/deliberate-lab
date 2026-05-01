@@ -2293,13 +2293,13 @@
           "type": "string"
         },
         "upperValue": {
-          "type": "number"
+          "type": "integer"
         },
         "upperText": {
           "type": "string"
         },
         "lowerValue": {
-          "type": "number"
+          "type": "integer"
         },
         "lowerText": {
           "type": "string"
@@ -2312,7 +2312,7 @@
         },
         "stepSize": {
           "minimum": 1,
-          "type": "number"
+          "type": "integer"
         },
         "condition": {
           "anyOf": [

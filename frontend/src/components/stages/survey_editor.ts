@@ -463,19 +463,18 @@ export class SurveyEditor extends MobxLitElement {
     };
 
     const updateLowerValue = (e: InputEvent) => {
-      const lowerValue =
-        parseInt((e.target as HTMLInputElement).value, 10) || 0;
+      const lowerValue = parseFloat((e.target as HTMLInputElement).value) || 0;
       this.updateQuestion({...question, lowerValue}, index);
     };
 
     const updateUpperValue = (e: InputEvent) => {
-      const upperValue =
-        parseInt((e.target as HTMLInputElement).value, 10) || 10;
+      const upperValue = parseFloat((e.target as HTMLInputElement).value) || 10;
       this.updateQuestion({...question, upperValue}, index);
     };
 
     const updateStepSize = (e: InputEvent) => {
-      const stepSize = parseInt((e.target as HTMLInputElement).value, 10) || 1;
+      const val = parseFloat((e.target as HTMLInputElement).value);
+      const stepSize = isNaN(val) ? 1 : val;
       this.updateQuestion({...question, stepSize}, index);
     };
 

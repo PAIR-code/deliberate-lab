@@ -280,7 +280,13 @@ export class Header extends MobxLitElement {
         if (this.experimentManager.isEditingFull) {
           if (!this.experimentManager.isCreator) return nothing;
 
+          const editorErrors =
+            this.experimentEditor.getExperimentConfigErrors();
+
           return html`
+            ${editorErrors.length === 0
+              ? nothing
+              : html` <div class="error">⚠️ ${editorErrors.join(', ')}</div> `}
             <pr-button
               color="tertiary"
               variant="default"
@@ -291,7 +297,8 @@ export class Header extends MobxLitElement {
             <pr-button
               color="tertiary"
               variant="tonal"
-              ?disabled=${!this.experimentManager.isCreator}
+              ?disabled=${!this.experimentManager.isCreator ||
+              editorErrors.length > 0}
               @click=${() => {
                 this.analyticsService.trackButtonClick(
                   ButtonClick.EXPERIMENT_SAVE_EXISTING,

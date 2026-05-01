@@ -21,6 +21,8 @@ import {
   requiresValues,
   STAGE_MANAGER,
   checkApiKeyExists,
+  SurveyQuestion,
+  MultipleChoiceItem,
   createAgentMediatorPersonaConfig,
   createAgentParticipantPersonaConfig,
   createExperimentConfig,
@@ -118,17 +120,70 @@ export class ExperimentEditor extends Service {
     renderApiErrorMessage(ApiKeyType.OLLAMA_CUSTOM_URL);
 
     for (const stage of this.stages) {
-      switch (stage.kind) {
-        case StageKind.SURVEY:
-          // Ensure all questions have a non-empty title
-          stage.questions.forEach((question, index) => {
-            if (question.questionTitle === '') {
+      if (
+        stage.kind === StageKind.SURVEY ||
+        stage.kind === StageKind.SURVEY_PER_PARTICIPANT
+      ) {
+        if (!stage.questions || stage.questions.length === 0) {
+          errors.push(`${stage.name} must contain at least one question`);
+        }
+        stage.questions.forEach((question: SurveyQuestion, index: number) => {
+          if (question.questionTitle === '') {
+            errors.push(
+              `${stage.name} question ${index + 1} is missing a title`,
+            );
+          }
+          if (question.kind === 'scale') {
+            if (
+              !Number.isInteger(question.lowerValue) ||
+              !Number.isInteger(question.upperValue) ||
+              (question.stepSize !== undefined &&
+                !Number.isInteger(question.stepSize))
+            ) {
               errors.push(
-                `${stage.name} question ${index + 1} is missing a title`,
+                `${stage.name} question ${index + 1} ("${question.questionTitle}"): values must be integers`,
               );
             }
-          });
-          break;
+            if (question.lowerValue >= question.upperValue) {
+              errors.push(
+                `${stage.name} question ${index + 1} ("${question.questionTitle}"): lower value must be less than upper value`,
+              );
+            }
+            const range = question.upperValue - question.lowerValue;
+            const step = question.stepSize ?? 1;
+            if (step <= 0) {
+              errors.push(
+                `${stage.name} question ${index + 1} ("${question.questionTitle}"): step size must be greater than 0`,
+              );
+            }
+            if (range % step !== 0) {
+              errors.push(
+                `${stage.name} question ${index + 1} ("${question.questionTitle}"): step size must divide max-min (${range}) exactly`,
+              );
+            }
+          }
+          if (question.kind === 'mc') {
+            if (!question.options || question.options.length === 0) {
+              errors.push(
+                `${stage.name} question ${index + 1} ("${question.questionTitle}"): must have at least one option`,
+              );
+            }
+            if (
+              question.correctAnswerId != null &&
+              question.correctAnswerId !== ''
+            ) {
+              const hasOption = question.options.some(
+                (opt: MultipleChoiceItem) =>
+                  opt.id === question.correctAnswerId,
+              );
+              if (!hasOption) {
+                errors.push(
+                  `${stage.name} question ${index + 1} ("${question.questionTitle}"): correct answer ID doesn't match any option ID`,
+                );
+              }
+            }
+          }
+        });
       }
     }
 
