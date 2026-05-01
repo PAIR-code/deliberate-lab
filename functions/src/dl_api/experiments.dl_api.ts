@@ -137,7 +137,7 @@ export async function createExperiment(
     const error = [...Value.Errors(CreateExperimentRequestData, body)]
       .map((e) => `${e.path || '/'}: ${e.message}`)
       .join('; ');
-    throw createHttpError(422, `Invalid request body: ${error}`);
+    throw createHttpError(400, `Invalid request body: ${error}`);
   }
 
   // If a full template is provided, use the shared utility
@@ -150,10 +150,12 @@ export async function createExperiment(
         experimenterId,
       );
     } catch (error: unknown) {
-      throw createHttpError(
-        422,
-        error instanceof Error ? error.message : String(error),
-      );
+      const msg = error instanceof Error ? error.message : String(error);
+      const isValidationError =
+        msg.includes('Invalid stage configuration') ||
+        msg.includes('Invalid variable configuration') ||
+        msg.includes('Duplicate cohort alias found');
+      throw createHttpError(isValidationError ? 422 : 500, msg);
     }
 
     if (!experimentId) {
@@ -173,7 +175,7 @@ export async function createExperiment(
   // Simple creation mode: name is required
   if (!body.name) {
     throw createHttpError(
-      422,
+      400,
       'Invalid request body: name is required (or provide template)',
     );
   }
@@ -214,10 +216,12 @@ export async function createExperiment(
       experimenterId,
     );
   } catch (error: unknown) {
-    throw createHttpError(
-      422,
-      error instanceof Error ? error.message : String(error),
-    );
+    const msg = error instanceof Error ? error.message : String(error);
+    const isValidationError =
+      msg.includes('Invalid stage configuration') ||
+      msg.includes('Invalid variable configuration') ||
+      msg.includes('Duplicate cohort alias found');
+    throw createHttpError(isValidationError ? 422 : 500, msg);
   }
 
   if (!experimentId) {
@@ -306,7 +310,7 @@ export async function updateExperiment(
       body.template.experiment.id !== experimentId
     ) {
       throw createHttpError(
-        422,
+        400,
         'Template experiment ID does not match URL parameter',
       );
     }

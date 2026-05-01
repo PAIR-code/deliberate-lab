@@ -1073,7 +1073,7 @@ describe('API Experiment Creation Integration Tests', () => {
         stages: JSON.parse(JSON.stringify([stage])),
       });
 
-      expect(response.status).toBe(422);
+      expect(response.status).toBe(400);
       const data = await response.json();
       expect(data.error).toContain('Expected union value');
     });
@@ -1102,7 +1102,7 @@ describe('API Experiment Creation Integration Tests', () => {
         stages: JSON.parse(JSON.stringify([stage])),
       });
 
-      expect(response.status).toBe(422);
+      expect(response.status).toBe(400);
       const data = await response.json();
       expect(data.error).toContain('Expected union value');
     });
