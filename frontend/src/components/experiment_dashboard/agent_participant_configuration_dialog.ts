@@ -103,24 +103,23 @@ export class AgentParticipantDialog extends MobxLitElement {
     const handlePersonaTextChange = async (
       e: CustomEvent<{text: string; mode: string}>,
     ) => {
-      if (e.detail.mode === 'generate') {
-        // Generate overwrites the full field
-        this.promptContext = e.detail.text;
+      const {text, mode} = e.detail;
+      if (mode === 'generate' || mode === 'refresh') {
+        // Generate (merge-expand) and Refresh both replace the full field
+        this.promptContext = text;
       } else {
-        // Embellish appends to existing text
+        // Enhance appends episodic memories to existing text
         const separator = this.promptContext.trim() ? '\n\n' : '';
-        this.promptContext = this.promptContext + separator + e.detail.text;
-      }
+        this.promptContext = this.promptContext + separator + text;
 
-      // Wait for render to update rows and content
-      await this.updateComplete;
-
-      // Scroll to the bottom of the textarea
-      const textField = this.textFieldRef.value;
-      if (textField) {
-        const textarea = textField.shadowRoot?.querySelector('textarea');
-        if (textarea) {
-          textarea.scrollTop = textarea.scrollHeight;
+        // Scroll to bottom only for Enhance (text is appended)
+        await this.updateComplete;
+        const textField = this.textFieldRef.value;
+        if (textField) {
+          const textarea = textField.shadowRoot?.querySelector('textarea');
+          if (textarea) {
+            textarea.scrollTop = textarea.scrollHeight;
+          }
         }
       }
     };

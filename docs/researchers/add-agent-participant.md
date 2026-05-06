@@ -53,14 +53,15 @@ to the agent. The prompt context may be useful for e.g. giving different
 personalities or instructions to different agents. These settings will apply for
 that agent across all experiment stages.
 
-### Generating and Embellishing Personas
+### Generating and Enhancing Personas
 
-To help create diverse and high-fidelity personas, you can use the AI-assisted generation tools in the configuration window:
+To help create diverse and high-fidelity personas, the configuration window includes three AI-assisted tools:
 
-- **🪄 Generate**: Creates a fresh character sketch (approx. 200–250 words) covering demographics, Big Five personality traits, values, and communication style. It uses a dry, factual, dossier-style tone to ensure the agent focuses on substance rather than literary style.
-- **✨ Embellish**: Appends factual details (approx. 50 words) to fill in missing dimensions from your priority list (e.g., if you only provide a name, it will fill in age/occupation first).
+- **🪄 Generate**: Creates a full character sketch (~200–250 words) covering demographics, Big Five personality traits, values, cognitive style, and communication style. Uses a dry, factual, dossier-style tone. If you have already started writing a persona (e.g., "Your name is Joe"), Generate will expand it into a complete sketch while preserving what you wrote. Each generation samples a unique combination of age, education level, pronouns, setting, and verbosity to ensure diversity.
+- **✨ Enhance**: Appends 1–2 short, concrete episodic memories or personal experiences to the existing sketch (e.g., a past job conflict or a life event). These "memories" give the agent something specific to draw on during conversation, making it feel more like a real person and less like an LLM. Only available when there is existing text.
+- **🔄 Refresh**: Erases the current persona and generates a brand new one from scratch. Disabled when the field is empty.
 
-*Note: You must have a model selected and a valid API key configured to use these features. If text already exists in the field, clicking Generate will show a warning as it will overwrite the current content.*
+*Note: You must have a model selected and a valid API key configured to use these features.*
 
 ## Supported Stages
 

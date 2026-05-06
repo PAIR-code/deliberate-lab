@@ -1,4 +1,5 @@
 import '../../pair-components/button';
+import '../../pair-components/icon_button';
 import '../../pair-components/tooltip';
 
 import {MobxLitElement} from '@adobe/lit-mobx';
@@ -19,15 +20,17 @@ import {generatePersonaContextCallable} from '../../shared/callables';
 import {styles} from './persona_generation_buttons.scss';
 
 /**
- * Renders 🪄 Generate and ✨ Embellish buttons for AI-assisted persona writing.
+ * Renders 🪄 Generate, ✨ Enhance, and 🔄 Refresh buttons for AI-assisted
+ * persona writing.
  *
- * - Generate: writes a full character sketch covering all 8 simulacra
- *   dimensions. Shows an overwrite warning if the field already has text.
- * - Embellish: appends a short, coherent addition to the existing sketch.
- *   On an empty field, behaves identically to Generate.
+ * - Generate: writes a full character sketch on empty field; merge-expands on
+ *   existing text to incorporate it into a full ~250-word sketch.
+ * - Enhance: appends 1-2 specific episodic memories to existing sketch.
+ *   Disabled when field is empty.
+ * - Refresh: ⚠️ clears and regenerates from scratch. Shows warning if text.
  *
  * Fires a `persona-text-change` CustomEvent with `{ text, mode }` on success.
- * The parent is responsible for applying the text (replacing or appending).
+ * The parent is responsible for applying the text.
  */
 @customElement('persona-generation-buttons')
 export class PersonaGenerationButtons extends MobxLitElement {
@@ -42,7 +45,8 @@ export class PersonaGenerationButtons extends MobxLitElement {
   @property({type: Boolean}) disabled = false;
 
   @state() private isGenerating = false;
-  @state() private isEmbellishing = false;
+  @state() private isEnhancing = false;
+  @state() private isRefreshing = false;
   @state() private errorMessage = '';
 
   private get creatorId(): string {
@@ -54,18 +58,15 @@ export class PersonaGenerationButtons extends MobxLitElement {
   }
 
   private get isAnyLoading(): boolean {
-    return this.isGenerating || this.isEmbellishing;
+    return this.isGenerating || this.isEnhancing || this.isRefreshing;
   }
 
   private async runGeneration(mode: PersonaGenerationMode) {
     if (!this.modelSettings || this.modelDisabled || this.disabled) return;
 
-    const isGenerating = mode === 'generate';
-    if (isGenerating) {
-      this.isGenerating = true;
-    } else {
-      this.isEmbellishing = true;
-    }
+    if (mode === 'generate') this.isGenerating = true;
+    else if (mode === 'enhance') this.isEnhancing = true;
+    else if (mode === 'refresh') this.isRefreshing = true;
     this.errorMessage = '';
 
     try {
@@ -100,21 +101,27 @@ export class PersonaGenerationButtons extends MobxLitElement {
       this.errorMessage = 'An error occurred. Please try again.';
     } finally {
       this.isGenerating = false;
-      this.isEmbellishing = false;
+      this.isEnhancing = false;
+      this.isRefreshing = false;
     }
   }
 
   override render() {
+    const hasExistingText = this.currentText.trim().length > 0;
+
     const modelTooltip = this.modelDisabled
       ? 'Select a model to use this feature'
       : '';
 
-    const hasExistingText = this.currentText.trim().length > 0;
     const generateTooltip = this.modelDisabled
       ? modelTooltip
+      : 'Generate or fill out your persona prompt';
+
+    const refreshTooltip = this.modelDisabled
+      ? modelTooltip
       : hasExistingText
-        ? 'This will overwrite your current persona text'
-        : '';
+        ? '⚠️ Erase and regenerate persona from scratch'
+        : 'Regenerate persona from scratch';
 
     const isButtonsDisabled =
       this.disabled || this.modelDisabled || this.isAnyLoading;
@@ -133,12 +140,14 @@ export class PersonaGenerationButtons extends MobxLitElement {
             ?loading=${this.isGenerating}
             @click=${() => this.runGeneration('generate')}
           >
-            ${hasExistingText && !this.modelDisabled ? '⚠️ ' : '🪄 '}Generate
+            🪄 Generate
           </pr-button>
         </pr-tooltip>
 
         <pr-tooltip
-          text=${modelTooltip}
+          text=${this.modelDisabled
+            ? modelTooltip
+            : 'Add episodic memories to enrich this persona'}
           position="TOP_START"
           displayMode="inline-flex"
         >
@@ -146,11 +155,27 @@ export class PersonaGenerationButtons extends MobxLitElement {
             color="secondary"
             variant="outlined"
             ?disabled=${isButtonsDisabled || !hasExistingText}
-            ?loading=${this.isEmbellishing}
-            @click=${() => this.runGeneration('embellish')}
+            ?loading=${this.isEnhancing}
+            @click=${() => this.runGeneration('enhance')}
           >
-            ✨ Embellish
+            ✨ Enhance
           </pr-button>
+        </pr-tooltip>
+
+        <pr-tooltip
+          text=${refreshTooltip}
+          position="TOP_START"
+          displayMode="inline-flex"
+        >
+          <pr-icon-button
+            icon="refresh"
+            color="neutral"
+            variant="default"
+            ?disabled=${isButtonsDisabled || !hasExistingText}
+            ?loading=${this.isRefreshing}
+            @click=${() => this.runGeneration('refresh')}
+          >
+          </pr-icon-button>
         </pr-tooltip>
       </div>
       ${this.errorMessage

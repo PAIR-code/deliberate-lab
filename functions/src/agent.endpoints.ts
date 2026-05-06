@@ -3,7 +3,8 @@ import {
   ModelResponseStatus,
   PersonaGenerationMode,
   buildGeneratePersonaPrompt,
-  buildEmbellishPersonaPrompt,
+  buildMergePersonaPrompt,
+  buildEnhancePersonaPrompt,
   createAgentModelSettings,
   createModelGenerationConfig,
 } from '@deliberation-lab/utils';
@@ -55,8 +56,12 @@ export const testAgentConfig = onCall(
 );
 
 // ****************************************************************************
-// Generate or embellish an agent persona context (character sketch)
+// Generate or enhance an agent persona context (character sketch)
 // Input structure: { creatorId, mode, currentText, apiType, modelName }
+// Modes:
+//   'generate' — fresh sketch (empty) or merge-expand (has text)
+//   'enhance'  — appends episodic memories to existing sketch
+//   'refresh'  — ignores existing text, always generates fresh
 // ****************************************************************************
 export const generatePersonaContext = onCall(
   async (request): Promise<ModelResponse> => {
@@ -87,12 +92,16 @@ export const generatePersonaContext = onCall(
     }
 
     // Build prompt based on mode
-    // Embellish on empty text behaves like generate
-    const isFirstGeneration = mode === 'generate' || !currentText.trim();
-
     let prompt = '';
 
-    if (isFirstGeneration) {
+    if (mode === 'enhance') {
+      // Enhance: append episodic memories to existing sketch
+      prompt = buildEnhancePersonaPrompt(currentText);
+    } else {
+      // Generate or Refresh: sample random parameters
+      // Refresh always ignores existing text; Generate merge-expands if text exists
+      const isRefresh = mode === 'refresh';
+
       // 1. Random Age (18 to 85)
       const age = Math.floor(Math.random() * (85 - 18 + 1)) + 18;
 
@@ -138,25 +147,28 @@ export const generatePersonaContext = onCall(
       const settings = ['Urban', 'Suburban', 'Rural', 'Remote/Isolated'];
       const setting = settings[Math.floor(Math.random() * settings.length)];
 
-      prompt = buildGeneratePersonaPrompt({
-        age,
-        pronouns,
-        education,
-        big5,
-        setting,
-      });
-    } else {
-      prompt = buildEmbellishPersonaPrompt(currentText);
+      // 6. Random verbosity (1-5, uniform — no census prior applies here)
+      const verbosity = Math.ceil(Math.random() * 5);
+
+      const params = {age, pronouns, education, big5, setting, verbosity};
+
+      if (!isRefresh && currentText.trim()) {
+        // Generate with existing text: merge-expand
+        prompt = buildMergePersonaPrompt(currentText, params);
+      } else {
+        // Fresh generate or refresh: write from scratch
+        prompt = buildGeneratePersonaPrompt(params);
+      }
     }
 
     const modelSettings = createAgentModelSettings({apiType, modelName});
-    // Generate: no maxTokens cap — the prompt instructs ~200-250 words so the
-    // model stops naturally. A cap risks LENGTH_ERROR and partial output.
-    // Embellish: small cap (200 tokens ≈ 150 words) to prevent runaway additions.
+    // Generate/Refresh: no maxTokens cap — prompt instructs ~200-250 words.
+    // Enhance: small cap (200 tokens ≈ 150 words) to prevent runaway additions.
     // Reasoning/thinking is explicitly disabled for speed.
+    const isEnhanceMode = mode === 'enhance';
     const generationConfig = createModelGenerationConfig({
-      temperature: isFirstGeneration ? 1.0 : 0.7,
-      ...(isFirstGeneration ? {} : {maxTokens: 200}),
+      temperature: isEnhanceMode ? 0.7 : 1.0,
+      ...(isEnhanceMode ? {maxTokens: 200} : {}),
       includeReasoning: false,
       // Force thinkingBudget: 0 for Gemini 2.5+ (always-thinking models)
       // and disable thinking for Anthropic. This overrides any auto-enable.
