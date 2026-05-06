@@ -39,14 +39,19 @@ export interface PersonaGenerationParams {
     agreeableness: string;
     neuroticism: string;
   };
+  // High-entropy seed dimensions sampled from census/BLS-proportional distributions.
+  // These are injected as hard constraints to break LLM name/occupation attractors.
+  culturalBackground: string; // e.g. "Irish-American", "Chinese-American"
+  occupationSector: string; // e.g. "Construction & skilled trades"
+  lifeCircumstance: string; // e.g. "Caring for an aging parent"
 }
 
 const VERBOSITY_DESCRIPTIONS: Record<number, string> = {
-  1: 'extremely terse — single short sentences, often just a few words, never explains',
-  2: 'brief — 1 to 2 sentences per turn, gets straight to the point',
-  3: 'moderate — 2 to 3 sentences, adds some context when relevant',
-  4: 'expansive — multiple sentences, elaborates and adds detail',
-  5: 'verbose — long paragraph responses, rarely stops at the first thought',
+  1: 'very terse on average — usually just a few words or a single short sentence, rarely explains themselves; but occasionally says more when something actually gets to them',
+  2: 'brief on average — typically 1 to 2 sentences, gets to the point; will sometimes add a sentence when they feel strongly about something',
+  3: 'moderate — usually 2 to 3 sentences, adds some context when it feels relevant',
+  4: 'expansive on average — tends toward multiple sentences and elaboration, though not always',
+  5: 'verbose on average — often writes long responses and rarely stops at the first thought, though may be brief when the moment calls for it',
 };
 
 /**
@@ -95,15 +100,21 @@ function buildDimensionsList(verbosity: number): string {
 export function buildGeneratePersonaPrompt(
   params: PersonaGenerationParams,
 ): string {
+  const birthDecade =
+    Math.floor((new Date().getFullYear() - params.age) / 10) * 10 + 's';
+
   return `You are helping configure an AI research agent that will simulate a real human participant in an online study.
 
 You MUST write a character sketch that fits the following randomly generated profile parameters. Do not ignore them or default to a standard profile.
 
 Profile Parameters:
-- Age: ${params.age}
+- Age: ${params.age} (born in the ${birthDecade})
 - Pronouns: ${params.pronouns}
 - Education level: ${params.education}
 - Living environment: ${params.setting}
+- Cultural background: ${params.culturalBackground}
+- Occupation sector: ${params.occupationSector}
+- Current life circumstance: ${params.lifeCircumstance}
 - Verbosity when communicating: ${params.verbosity}/5 — ${VERBOSITY_DESCRIPTIONS[params.verbosity]}
 - Personality (Big Five scale 1-10):
   - Openness to experience: ${params.big5.openness}
@@ -112,7 +123,14 @@ Profile Parameters:
   - Agreeableness: ${params.big5.agreeableness}
   - Neuroticism: ${params.big5.neuroticism}
 
-Write a character sketch for this agent to use as its persona. The sketch must begin with "You are [Name]," and be written in second person throughout — this text will be used verbatim as a system prompt.
+Begin the sketch by completing this opening sentence (it becomes the first line):
+"You are [FirstName LastName], a [specific, non-generic job title within the occupation sector above] who is [2–3 adjectives]."
+
+For the name: choose a first name that feels authentic to someone of ${params.culturalBackground} background born in the ${birthDecade}. Do NOT mention the cultural background label anywhere in the sketch — let it be implicit in the name, family context, and life details.
+
+For the job: pick a specific, concrete role within "${params.occupationSector}" (e.g. not "works in healthcare" but "a wound care nurse at a VA hospital").
+
+Then continue the full character sketch in second person throughout — this text will be used verbatim as a system prompt.
 
 Write in a clear, matter-of-fact, and realistic style (like a sociological profile or background dossier). Avoid flowery prose, metaphors, or overly dramatic descriptions. Focus on concrete facts, specific attitudes, behavioral tendencies, and social dynamics that logically flow from the parameters above.
 
@@ -133,6 +151,9 @@ export function buildMergePersonaPrompt(
   existingText: string,
   params: PersonaGenerationParams,
 ): string {
+  const birthDecade =
+    Math.floor((new Date().getFullYear() - params.age) / 10) * 10 + 's';
+
   return `You are helping configure an AI research agent that will simulate a real human participant in an online study.
 
 The experimenter has started writing a persona for this agent:
@@ -143,10 +164,13 @@ ${existingText}
 Expand this into a complete character sketch, incorporating and staying consistent with everything already written. Do not contradict or erase any existing details. Fill in what is missing using the randomly generated profile parameters below.
 
 Profile Parameters (fill in missing dimensions only — do NOT override what is already written):
-- Age: ${params.age}
+- Age: ${params.age} (born in the ${birthDecade})
 - Pronouns: ${params.pronouns}
 - Education level: ${params.education}
 - Living environment: ${params.setting}
+- Cultural background: ${params.culturalBackground}
+- Occupation sector: ${params.occupationSector}
+- Current life circumstance: ${params.lifeCircumstance}
 - Verbosity when communicating: ${params.verbosity}/5 — ${VERBOSITY_DESCRIPTIONS[params.verbosity]}
 - Personality (Big Five scale 1-10):
   - Openness to experience: ${params.big5.openness}
@@ -154,6 +178,11 @@ Profile Parameters (fill in missing dimensions only — do NOT override what is 
   - Extraversion: ${params.big5.extraversion}
   - Agreeableness: ${params.big5.agreeableness}
   - Neuroticism: ${params.big5.neuroticism}
+
+If the existing text doesn't already have a full name and specific job title, begin the expanded sketch with:
+"You are [FirstName LastName], a [specific job title within the occupation sector above] who is [2–3 adjectives]."
+For the name: choose one authentic to someone of ${params.culturalBackground} background born in the ${birthDecade} — but do NOT mention the cultural background label in the text.
+For the job: be specific (e.g. "a night auditor at a Marriott" not "works in hospitality").
 
 Write the full resulting character sketch in second person ("You are...").
 

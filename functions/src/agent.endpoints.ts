@@ -9,6 +9,7 @@ import {
   createModelGenerationConfig,
 } from '@deliberation-lab/utils';
 import {getAgentResponse} from './agent.utils';
+import {samplePersonaParams} from './agent_persona_sampling';
 import {getExperimenterData} from './utils/firestore';
 
 import {onCall} from 'firebase-functions/v2/https';
@@ -98,65 +99,14 @@ export const generatePersonaContext = onCall(
       // Enhance: append episodic memories to existing sketch
       prompt = buildEnhancePersonaPrompt(currentText);
     } else {
-      // Generate or Refresh: sample random parameters
-      // Refresh always ignores existing text; Generate merge-expands if text exists
+      // Generate or Refresh: sample random parameters.
+      // All sampling logic lives in agent_persona_sampling.ts.
       const isRefresh = mode === 'refresh';
-
-      // 1. Random Age (18 to 85)
-      const age = Math.floor(Math.random() * (85 - 18 + 1)) + 18;
-
-      // 2. Random Pronouns (Census-aligned weighted distribution)
-      const rand = Math.random();
-      let pronouns = 'she/her';
-      if (rand < 0.5) {
-        pronouns = 'she/her';
-      } else if (rand < 0.98) {
-        pronouns = 'he/him';
-      } else {
-        pronouns = 'they/them';
-      }
-
-      // 3. Random Education (US Census weighted distribution)
-      const randEd = Math.random();
-      let education = '';
-      if (randEd < 0.1) {
-        education = 'No high school diploma';
-      } else if (randEd < 0.38) {
-        education = 'High school diploma';
-      } else if (randEd < 0.64) {
-        education = "Some college or Associate's degree";
-      } else if (randEd < 0.86) {
-        education = "Bachelor's degree";
-      } else if (randEd < 0.96) {
-        education = "Master's degree";
-      } else {
-        education = 'Doctorate or Professional degree';
-      }
-
-      // 4. Random Big Five Profile (Scores on a 1-10 scale)
-      const generateScore = () => `${Math.floor(Math.random() * 10) + 1}/10`;
-      const big5 = {
-        openness: generateScore(),
-        conscientiousness: generateScore(),
-        extraversion: generateScore(),
-        agreeableness: generateScore(),
-        neuroticism: generateScore(),
-      };
-
-      // 5. Random setting to break the "urban professional" bias
-      const settings = ['Urban', 'Suburban', 'Rural', 'Remote/Isolated'];
-      const setting = settings[Math.floor(Math.random() * settings.length)];
-
-      // 6. Random verbosity (1-5, uniform — no census prior applies here)
-      const verbosity = Math.ceil(Math.random() * 5);
-
-      const params = {age, pronouns, education, big5, setting, verbosity};
+      const params = samplePersonaParams();
 
       if (!isRefresh && currentText.trim()) {
-        // Generate with existing text: merge-expand
         prompt = buildMergePersonaPrompt(currentText, params);
       } else {
-        // Fresh generate or refresh: write from scratch
         prompt = buildGeneratePersonaPrompt(params);
       }
     }
