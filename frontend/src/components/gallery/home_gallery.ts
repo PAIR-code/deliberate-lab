@@ -26,6 +26,7 @@ import {
   getQuickstartGroupChatTemplate,
 } from '../../shared/templates/quickstart_group_chat';
 import {getQuickstartPrivateChatTemplate} from '../../shared/templates/quickstart_private_chat';
+import {getAgentParticipantsDemoTemplate} from '../../shared/templates/quickstart_agent_participants_demo';
 
 import {styles} from './home_gallery.scss';
 
@@ -247,6 +248,18 @@ export class QuickStartGallery extends MobxLitElement {
           >
             <pr-icon icon="3p" color="neutral" size="large"></pr-icon>
             <div>Private chat with agent</div>
+          </div>
+          <div
+            class="quick-start-card"
+            @click=${() => {
+              this.routerService.navigate(Pages.EXPERIMENT_CREATE);
+              this.experimentEditor.loadTemplate(
+                getAgentParticipantsDemoTemplate(),
+              );
+            }}
+          >
+            <pr-icon icon="diversity_3" color="neutral" size="large"></pr-icon>
+            <div>Group agent participants demo</div>
           </div>
           <div
             class="quick-start-card"
