@@ -107,17 +107,22 @@ export const generatePersonaContext = onCall(
         pronouns = 'they/them';
       }
 
-      // 3. Random Education
-      const educationOptions = [
-        'No high school diploma',
-        'High school diploma',
-        'Some college',
-        "Bachelor's degree",
-        "Master's degree",
-        'Doctorate',
-      ];
-      const education =
-        educationOptions[Math.floor(Math.random() * educationOptions.length)];
+      // 3. Random Education (US Census weighted distribution)
+      const randEd = Math.random();
+      let education = '';
+      if (randEd < 0.1) {
+        education = 'No high school diploma';
+      } else if (randEd < 0.38) {
+        education = 'High school diploma';
+      } else if (randEd < 0.64) {
+        education = "Some college or Associate's degree";
+      } else if (randEd < 0.86) {
+        education = "Bachelor's degree";
+      } else if (randEd < 0.96) {
+        education = "Master's degree";
+      } else {
+        education = 'Doctorate or Professional degree';
+      }
 
       // 4. Random Big Five Profile (Scores on a 1-10 scale)
       const generateScore = () => `${Math.floor(Math.random() * 10) + 1}/10`;
