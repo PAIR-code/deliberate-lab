@@ -10,6 +10,7 @@ import {customElement, property} from 'lit/decorators.js';
 
 import {core} from '../../core/core';
 import {AnalyticsService, ButtonClick} from '../../services/analytics.service';
+import {AuthService} from '../../services/auth.service';
 import {ExperimentEditor} from '../../services/experiment.editor';
 import {ExperimentManager} from '../../services/experiment.manager';
 
@@ -29,6 +30,7 @@ export class AgentParticipantDialog extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
 
   private readonly analyticsService = core.getService(AnalyticsService);
+  private readonly authService = core.getService(AuthService);
   private readonly experimentManager = core.getService(ExperimentManager);
   private readonly experimentEditor = core.getService(ExperimentEditor);
 
@@ -85,6 +87,7 @@ export class AgentParticipantDialog extends MobxLitElement {
       <agent-model-selector
         .apiType=${this.modelSettings.apiType}
         .modelName=${this.modelSettings.modelName}
+        .experimenterData=${this.authService.experimenterData}
         @model-settings-change=${handleSettingsChange}
       ></agent-model-selector>
       ${this.renderPromptContext()}

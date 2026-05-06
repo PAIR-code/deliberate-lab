@@ -4,7 +4,12 @@ import '@material/web/textfield/filled-text-field.js';
 import {LitElement, CSSResultGroup, html} from 'lit';
 import {customElement, property} from 'lit/decorators.js';
 
-import {ApiKeyType, getDefaultModelForApiType} from '@deliberation-lab/utils';
+import {
+  ApiKeyType,
+  ExperimenterData,
+  checkApiKeyExists,
+  getDefaultModelForApiType,
+} from '@deliberation-lab/utils';
 
 import {styles} from './agent_model_selector.scss';
 
@@ -16,6 +21,10 @@ export class AgentModelSelector extends LitElement {
   @property() apiType: ApiKeyType = ApiKeyType.GEMINI_API_KEY;
   @property() modelName: string = '';
   @property({type: Boolean}) disabled = false;
+  @property({type: Object}) experimenterData:
+    | ExperimenterData
+    | null
+    | undefined = undefined;
 
   private emitChange(apiType: ApiKeyType, modelName: string) {
     this.dispatchEvent(
@@ -57,16 +66,29 @@ export class AgentModelSelector extends LitElement {
 
   private renderApiTypeButton(label: string, apiType: ApiKeyType) {
     const isActive = apiType === this.apiType;
+    // Only perform the key check when experimenterData is explicitly provided.
+    const hasKey =
+      this.experimenterData === undefined ||
+      checkApiKeyExists(apiType, this.experimenterData);
+    const isDisabled = this.disabled || !hasKey;
+    const tooltipText = !hasKey
+      ? apiType === ApiKeyType.OLLAMA_CUSTOM_URL
+        ? "You haven't added a compatible server URL"
+        : "You haven't added a compatible API key"
+      : '';
     return html`
       <pr-button
         color="${isActive ? 'primary' : 'neutral'}"
         variant=${isActive ? 'tonal' : 'default'}
-        ?disabled=${this.disabled}
+        ?disabled=${isDisabled}
+        title=${tooltipText}
+        style=${!hasKey ? 'opacity: 0.45;' : ''}
         @click=${() => {
+          if (!hasKey) return;
           this.emitChange(apiType, getDefaultModelForApiType(apiType));
         }}
       >
-        ${label}
+        ${!hasKey ? html`⚠️ ` : ''}${label}
       </pr-button>
     `;
   }

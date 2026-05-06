@@ -12,6 +12,7 @@ import {customElement, property, state} from 'lit/decorators.js';
 import 'emoji-picker-element';
 
 import {core} from '../../core/core';
+import {AuthService} from '../../services/auth.service';
 import {ExperimentEditor} from '../../services/experiment.editor';
 import {ExperimentService} from '../../services/experiment.service';
 
@@ -32,6 +33,7 @@ import {styles} from './agent_editor.scss';
 export class AgentPersonaEditorComponent extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
 
+  private readonly authService = core.getService(AuthService);
   private readonly experimentEditor = core.getService(ExperimentEditor);
   private readonly experimentService = core.getService(ExperimentService);
 
@@ -174,6 +176,7 @@ export class AgentPersonaEditorComponent extends MobxLitElement {
       <agent-model-selector
         .apiType=${agent.defaultModelSettings.apiType}
         .modelName=${agent.defaultModelSettings.modelName}
+        .experimenterData=${this.authService.experimenterData}
         ?disabled=${!this.experimentEditor.canEditStages}
         @model-settings-change=${handleSettingsChange}
       ></agent-model-selector>
