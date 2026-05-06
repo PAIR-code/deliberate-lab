@@ -44,6 +44,7 @@ import {
   UpdateRankingStageParticipantAnswerData,
   UpdateSurveyPerParticipantStageParticipantAnswerData,
   UpdateSurveyStageParticipantAnswerData,
+  PersonaGenerationMode,
 } from '@deliberation-lab/utils';
 
 import {Functions, httpsCallable} from 'firebase/functions';
@@ -643,6 +644,33 @@ export const testAgentConfigCallable = async (
   const {data} = await httpsCallable<AgentConfigTestData, ModelResponse>(
     functions,
     'testAgentConfig',
+  )(config);
+  return data;
+};
+
+/** Generate, enhance, or refresh an agent persona character sketch using an LLM. */
+export const generatePersonaContextCallable = async (
+  functions: Functions,
+  config: {
+    creatorId: string;
+    mode: PersonaGenerationMode;
+    currentText: string;
+    apiType: string;
+    modelName: string;
+  },
+): Promise<ModelResponse> => {
+  const {data} = await httpsCallable<
+    {
+      creatorId: string;
+      mode: PersonaGenerationMode;
+      currentText: string;
+      apiType: string;
+      modelName: string;
+    },
+    ModelResponse
+  >(
+    functions,
+    'generatePersonaContext',
   )(config);
   return data;
 };

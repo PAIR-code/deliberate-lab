@@ -1,0 +1,24 @@
+@use '../../sass/common';
+@use '../../sass/typescale';
+
+:host {
+  display: contents;
+}
+
+.persona-generation-row {
+  @include common.flex-row-align-center;
+  gap: common.$spacing-medium;
+  flex-wrap: wrap;
+}
+
+.generate-wrapper {
+  @include common.flex-row-align-center;
+  gap: common.$spacing-small;
+  position: relative;
+}
+
+.error-message {
+  @include typescale.body-small;
+  color: var(--md-sys-color-error);
+  margin-top: common.$spacing-small;
+}

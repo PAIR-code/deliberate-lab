@@ -54,7 +54,8 @@ export class Preview extends MobxLitElement {
     }
 
     return html`
-      ${this.renderChips()} ${this.renderTable()} ${this.renderStats()}
+      ${this.renderChips()} ${this.renderPersonaPrompt()} ${this.renderTable()}
+      ${this.renderStats()}
       <div class="divider"></div>
       ${this.renderStageDatas()}
     `;
@@ -251,6 +252,28 @@ export class Preview extends MobxLitElement {
       ${Object.keys(this.profile.anonymousProfiles).map((profile) =>
         renderProfile(profile),
       )}
+    `;
+  }
+
+  private renderPersonaPrompt() {
+    const promptContext = this.profile?.agentConfig?.promptContext;
+    if (!promptContext) return nothing;
+
+    return html`
+      <div style="padding: 0 16px;">
+        <details open>
+          <summary
+            style="cursor:pointer; color: var(--md-sys-color-primary); font-size: 0.9em; font-weight: 500;"
+          >
+            Persona prompt (${promptContext.split(' ').length} words)
+          </summary>
+          <div
+            style="white-space: pre-wrap; margin-top: 8px; font-size: 0.85em; line-height: 1.6; padding: 8px; background: var(--md-sys-color-surface-variant); border-radius: 6px;"
+          >
+            ${promptContext.trim()}
+          </div>
+        </details>
+      </div>
     `;
   }
 

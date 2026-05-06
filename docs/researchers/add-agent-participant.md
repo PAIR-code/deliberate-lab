@@ -53,6 +53,16 @@ to the agent. The prompt context may be useful for e.g. giving different
 personalities or instructions to different agents. These settings will apply for
 that agent across all experiment stages.
 
+### Generating and Enhancing Personas
+
+To help create diverse and high-fidelity personas, the configuration window includes three AI-assisted tools:
+
+- **🪄 Generate**: Creates a full character sketch (~200–250 words) covering demographics, Big Five personality traits, values, cognitive style, and communication style. Uses a dry, factual, dossier-style tone. If you have already started writing a persona (e.g., "Your name is Joe"), Generate will expand it into a complete sketch while preserving what you wrote. Each generation samples a unique combination of age, education level, pronouns, setting, and verbosity to ensure diversity.
+- **✨ Enhance**: Appends 1–2 short, concrete episodic memories or personal experiences to the existing sketch (e.g., a past job conflict or a life event). These "memories" give the agent something specific to draw on during conversation, making it feel more like a real person and less like an LLM. Only available when there is existing text.
+- **🔄 Refresh**: Erases the current persona and generates a brand new one from scratch. Disabled when the field is empty.
+
+*Note: You must have a model selected and a valid API key configured to use these features.*
+
 ## Supported Stages
 
 - Terms of Service
