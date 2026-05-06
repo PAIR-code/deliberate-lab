@@ -82,6 +82,11 @@
   justify-content: end;
 }
 
+.buttons-wrapper-spaced {
+  @include common.flex-row-align-center;
+  justify-content: space-between;
+}
+
 /* Used in agent-participant-configuration-dialog */
 .agent-persona-wrapper {
   @include common.flex-row;

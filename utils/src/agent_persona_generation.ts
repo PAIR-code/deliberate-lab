@@ -29,16 +29,46 @@ export interface PersonaGenerationResult {
  * prompts (Park et al. 2023, and conventions from LLM role-play research).
  * The output is used directly as a promptContext prepended to agent calls.
  */
-export function buildGeneratePersonaPrompt(): string {
+export interface PersonaGenerationParams {
+  age: number;
+  pronouns: string;
+  education: string;
+  setting: string;
+  big5: {
+    openness: string;
+    conscientiousness: string;
+    extraversion: string;
+    agreeableness: string;
+    neuroticism: string;
+  };
+}
+
+export function buildGeneratePersonaPrompt(
+  params: PersonaGenerationParams,
+): string {
   return `You are helping configure an AI research agent that will simulate a real human participant in an online study.
+
+You MUST write a character sketch that fits the following randomly generated profile parameters. Do not ignore them or default to a standard profile.
+
+Profile Parameters:
+- Age: ${params.age}
+- Pronouns: ${params.pronouns}
+- Education level: ${params.education}
+- Living environment: ${params.setting}
+- Personality (Big Five scale 1-10):
+  - Openness to experience: ${params.big5.openness}
+  - Conscientiousness: ${params.big5.conscientiousness}
+  - Extraversion: ${params.big5.extraversion}
+  - Agreeableness: ${params.big5.agreeableness}
+  - Neuroticism: ${params.big5.neuroticism}
 
 Write a character sketch for this agent to use as its persona. The sketch must begin with "You are" and be written in second person throughout, as if directly addressing the AI agent — this text will be used verbatim as a system prompt.
 
-Write in a clear, matter-of-fact, and realistic style (like a sociological profile or a background dossier). Avoid flowery prose, metaphors, or overly dramatic descriptions. Focus on concrete facts, specific attitudes, behavioral tendencies, and social dynamics.
+Write in a clear, matter-of-fact, and realistic style (like a sociological profile or a background dossier). Avoid flowery prose, metaphors, or overly dramatic descriptions. Focus on concrete facts, specific attitudes, behavioral tendencies, and social dynamics that logically flow from the parameters above.
 
 Cover all of the following dimensions:
-- Who you are: age, occupation, education, location
-- Personality: specific Big Five traits and how they manifest in behavior
+- Who you are: age, occupation (must fit education level), location
+- Personality: how the Big Five scores above manifest in your behavior
 - Core values and beliefs: specific stances on social, political, or personal issues
 - Motivations and goals: what drives you in daily life and in interactions
 - Cognitive style: how you process information, your areas of knowledge, and your biases
@@ -48,7 +78,7 @@ Cover all of the following dimensions:
 
 Keep it concise — aim for 200–250 words.
 
-CRITICAL requirement: Choose a highly specific person. Vary age, class, geography, culture, and personality profile dramatically. Each sketch you write should feel completely unlike the last.
+CRITICAL requirement: Your character must strictly adhere to the parameters provided above. Each sketch you write should feel completely unlike the last due to the random parameter combinations.
 
 Write ONLY the character sketch text, starting directly with "You are". No preamble, no labels, no meta-commentary.`;
 }

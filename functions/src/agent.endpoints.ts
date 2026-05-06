@@ -89,18 +89,68 @@ export const generatePersonaContext = onCall(
     // Build prompt based on mode
     // Embellish on empty text behaves like generate
     const isFirstGeneration = mode === 'generate' || !currentText.trim();
-    const prompt = isFirstGeneration
-      ? buildGeneratePersonaPrompt()
-      : buildEmbellishPersonaPrompt(currentText);
+
+    let prompt = '';
+
+    if (isFirstGeneration) {
+      // 1. Random Age (18 to 85)
+      const age = Math.floor(Math.random() * (85 - 18 + 1)) + 18;
+
+      // 2. Random Pronouns (Census-aligned weighted distribution)
+      const rand = Math.random();
+      let pronouns = 'she/her';
+      if (rand < 0.5) {
+        pronouns = 'she/her';
+      } else if (rand < 0.98) {
+        pronouns = 'he/him';
+      } else {
+        pronouns = 'they/them';
+      }
+
+      // 3. Random Education
+      const educationOptions = [
+        'No high school diploma',
+        'High school diploma',
+        'Some college',
+        "Bachelor's degree",
+        "Master's degree",
+        'Doctorate',
+      ];
+      const education =
+        educationOptions[Math.floor(Math.random() * educationOptions.length)];
+
+      // 4. Random Big Five Profile (Scores on a 1-10 scale)
+      const generateScore = () => `${Math.floor(Math.random() * 10) + 1}/10`;
+      const big5 = {
+        openness: generateScore(),
+        conscientiousness: generateScore(),
+        extraversion: generateScore(),
+        agreeableness: generateScore(),
+        neuroticism: generateScore(),
+      };
+
+      // 5. Random setting to break the "urban professional" bias
+      const settings = ['Urban', 'Suburban', 'Rural', 'Remote/Isolated'];
+      const setting = settings[Math.floor(Math.random() * settings.length)];
+
+      prompt = buildGeneratePersonaPrompt({
+        age,
+        pronouns,
+        education,
+        big5,
+        setting,
+      });
+    } else {
+      prompt = buildEmbellishPersonaPrompt(currentText);
+    }
 
     const modelSettings = createAgentModelSettings({apiType, modelName});
     // Generate: no maxTokens cap — the prompt instructs ~200-250 words so the
     // model stops naturally. A cap risks LENGTH_ERROR and partial output.
     // Embellish: small cap (200 tokens ≈ 150 words) to prevent runaway additions.
-    // Reasoning/thinking is explicitly disabled for speed — persona generation
-    // is a creative writing task that doesn't benefit from extended reasoning.
+    // Reasoning/thinking is explicitly disabled for speed.
     const generationConfig = createModelGenerationConfig({
-      temperature: isFirstGeneration ? 0.9 : 0.7,
+      temperature: isFirstGeneration ? 1.0 : 0.7,
       ...(isFirstGeneration ? {} : {maxTokens: 200}),
       includeReasoning: false,
       // Force thinkingBudget: 0 for Gemini 2.5+ (always-thinking models)

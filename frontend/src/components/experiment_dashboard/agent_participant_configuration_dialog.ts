@@ -8,6 +8,7 @@ import '@material/web/textfield/filled-text-field.js';
 import {MobxLitElement} from '@adobe/lit-mobx';
 import {CSSResultGroup, html, nothing} from 'lit';
 import {customElement, property} from 'lit/decorators.js';
+import {Ref, createRef, ref} from 'lit/directives/ref.js';
 
 import {core} from '../../core/core';
 import {AnalyticsService, ButtonClick} from '../../services/analytics.service';
@@ -45,8 +46,16 @@ export class AgentParticipantDialog extends MobxLitElement {
   @property({type: Object}) modelSettings: AgentModelSettings =
     createAgentModelSettings();
 
+  private readonly textFieldRef: Ref<HTMLElement> = createRef();
+
   private close() {
     this.dispatchEvent(new CustomEvent('close'));
+  }
+
+  private resetFields() {
+    this.agentId = '';
+    this.promptContext = '';
+    this.modelSettings = createAgentModelSettings();
   }
 
   override render() {
@@ -67,19 +76,14 @@ export class AgentParticipantDialog extends MobxLitElement {
           </pr-icon-button>
         </div>
         <div class="body">
-          ${this.isSuccess ? this.renderSuccess() : this.renderEdit()}
+          ${this.isSuccess ? this.renderSuccess() : this.renderEditContent()}
         </div>
+        ${this.isSuccess ? nothing : this.renderFooter()}
       </div>
     `;
   }
 
-  private resetFields() {
-    this.agentId = '';
-    this.promptContext = '';
-    this.modelSettings = createAgentModelSettings();
-  }
-
-  private renderEdit() {
+  private renderEditContent() {
     const handleSettingsChange = (e: CustomEvent<AgentModelSettings>) => {
       this.modelSettings = e.detail;
     };
@@ -92,7 +96,43 @@ export class AgentParticipantDialog extends MobxLitElement {
         @model-settings-change=${handleSettingsChange}
       ></agent-model-selector>
       ${this.renderPromptContext()}
-      <div class="buttons-wrapper">
+    `;
+  }
+
+  private renderFooter() {
+    const handlePersonaTextChange = async (
+      e: CustomEvent<{text: string; mode: string}>,
+    ) => {
+      if (e.detail.mode === 'generate') {
+        // Generate overwrites the full field
+        this.promptContext = e.detail.text;
+      } else {
+        // Embellish appends to existing text
+        const separator = this.promptContext.trim() ? '\n\n' : '';
+        this.promptContext = this.promptContext + separator + e.detail.text;
+      }
+
+      // Wait for render to update rows and content
+      await this.updateComplete;
+
+      // Scroll to the bottom of the textarea
+      const textField = this.textFieldRef.value;
+      if (textField) {
+        const textarea = textField.shadowRoot?.querySelector('textarea');
+        if (textarea) {
+          textarea.scrollTop = textarea.scrollHeight;
+        }
+      }
+    };
+
+    return html`
+      <div class="footer">
+        <persona-generation-buttons
+          .currentText=${this.promptContext}
+          .modelSettings=${this.modelSettings}
+          ?disabled=${this.isLoading}
+          @persona-text-change=${handlePersonaTextChange}
+        ></persona-generation-buttons>
         <pr-button
           ?disabled=${!this.modelSettings.modelName}
           ?loading=${this.isLoading}
@@ -142,27 +182,9 @@ export class AgentParticipantDialog extends MobxLitElement {
       this.promptContext = content;
     };
 
-    const handlePersonaTextChange = (
-      e: CustomEvent<{text: string; mode: string}>,
-    ) => {
-      if (e.detail.mode === 'generate') {
-        // Generate overwrites the full field
-        this.promptContext = e.detail.text;
-      } else {
-        // Embellish appends to existing text
-        const separator = this.promptContext.trim() ? '\n\n' : '';
-        this.promptContext = this.promptContext + separator + e.detail.text;
-      }
-    };
-
     return html`
-      <persona-generation-buttons
-        .currentText=${this.promptContext}
-        .modelSettings=${this.modelSettings}
-        ?disabled=${this.isLoading}
-        @persona-text-change=${handlePersonaTextChange}
-      ></persona-generation-buttons>
       <md-filled-text-field
+        ${ref(this.textFieldRef)}
         ?disabled=${this.isLoading}
         type="textarea"
         rows=${Math.min(
