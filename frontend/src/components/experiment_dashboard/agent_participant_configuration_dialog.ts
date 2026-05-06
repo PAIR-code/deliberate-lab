@@ -1,6 +1,7 @@
 import '../../pair-components/button';
 import '../../pair-components/icon_button';
 import '../shared/agent_model_selector';
+import '../shared/persona_generation_buttons';
 
 import '@material/web/textfield/filled-text-field.js';
 
@@ -141,11 +142,38 @@ export class AgentParticipantDialog extends MobxLitElement {
       this.promptContext = content;
     };
 
+    const handlePersonaTextChange = (
+      e: CustomEvent<{text: string; mode: string}>,
+    ) => {
+      if (e.detail.mode === 'generate') {
+        // Generate overwrites the full field
+        this.promptContext = e.detail.text;
+      } else {
+        // Embellish appends to existing text
+        const separator = this.promptContext.trim() ? '\n\n' : '';
+        this.promptContext = this.promptContext + separator + e.detail.text;
+      }
+    };
+
     return html`
+      <persona-generation-buttons
+        .currentText=${this.promptContext}
+        .modelSettings=${this.modelSettings}
+        ?disabled=${this.isLoading}
+        @persona-text-change=${handlePersonaTextChange}
+      ></persona-generation-buttons>
       <md-filled-text-field
         ?disabled=${this.isLoading}
         type="textarea"
-        label="Prompt context for this specific agent participant (optional)"
+        rows=${Math.min(
+          Math.max(
+            3,
+            (this.promptContext.match(/\n/g) ?? []).length + 1,
+            Math.ceil(this.promptContext.length / 72),
+          ),
+          18,
+        )}
+        label="Add an optional persona prompt for this specific agent participant (e.g. You are ...)"
         .value=${this.promptContext}
         @input=${updatePromptContext}
       >

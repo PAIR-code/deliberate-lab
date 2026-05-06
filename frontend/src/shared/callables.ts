@@ -647,6 +647,33 @@ export const testAgentConfigCallable = async (
   return data;
 };
 
+/** Generate or embellish an agent persona character sketch using an LLM. */
+export const generatePersonaContextCallable = async (
+  functions: Functions,
+  config: {
+    creatorId: string;
+    mode: 'generate' | 'embellish';
+    currentText: string;
+    apiType: string;
+    modelName: string;
+  },
+): Promise<ModelResponse> => {
+  const {data} = await httpsCallable<
+    {
+      creatorId: string;
+      mode: 'generate' | 'embellish';
+      currentText: string;
+      apiType: string;
+      modelName: string;
+    },
+    ModelResponse
+  >(
+    functions,
+    'generatePersonaContext',
+  )(config);
+  return data;
+};
+
 /** Generic endpoint for sending alert message. */
 export const sendAlertMessageCallable = async (
   functions: Functions,
