@@ -117,7 +117,7 @@ export const generatePersonaContext = onCall(
     // Reasoning/thinking is explicitly disabled for speed.
     const isEnhanceMode = mode === 'enhance';
     const generationConfig = createModelGenerationConfig({
-      temperature: isEnhanceMode ? 0.7 : 1.0,
+      temperature: 1.0,
       ...(isEnhanceMode ? {maxTokens: 200} : {}),
       includeReasoning: false,
       // Force thinkingBudget: 0 for Gemini 2.5+ (always-thinking models)

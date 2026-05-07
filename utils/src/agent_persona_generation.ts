@@ -252,12 +252,12 @@ ${currentText}
 ${instructions[selectedMode]}
 
 Rules:
-1. Never contradict anything already stated.
-2. Keep the exact same second-person voice ("You...").
-3. Be specific and concrete — grounded in this specific person, not a generic human.
-4. Keep it brief — aim for 30–60 words total.
-5. Write plainly. No metaphors, no flowery language.
-6. Do not summarize or repeat what's already written.
+1. Before writing anything: read the full sketch above and identify what's already there. Do NOT add anything already present — even if phrased differently. If the sketch already has a memory, add a different memory. If it already has a trigger, add something else.
+2. Never contradict anything already stated.
+3. Keep the exact same second-person voice ("You...").
+4. Be specific and concrete — grounded in this specific person, not a generic human.
+5. Keep it brief — aim for 30–60 words total.
+6. Write plainly. No metaphors, no flowery language.
 7. Do not use headers or bullet points.
 
 Return ONLY the new sentences. Do not repeat or include the original text.`;

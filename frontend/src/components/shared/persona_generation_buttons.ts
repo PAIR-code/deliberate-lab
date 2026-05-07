@@ -132,6 +132,7 @@ export class PersonaGenerationButtons extends MobxLitElement {
           text=${generateTooltip}
           position="TOP_START"
           displayMode="inline-flex"
+          ?longDelay=${true}
         >
           <pr-button
             color="secondary"
@@ -150,6 +151,7 @@ export class PersonaGenerationButtons extends MobxLitElement {
             : 'Add episodic memories to enrich this persona'}
           position="TOP_START"
           displayMode="inline-flex"
+          ?longDelay=${true}
         >
           <pr-button
             color="secondary"
@@ -166,6 +168,7 @@ export class PersonaGenerationButtons extends MobxLitElement {
           text=${refreshTooltip}
           position="TOP_START"
           displayMode="inline-flex"
+          ?longDelay=${true}
         >
           <pr-icon-button
             icon="refresh"
