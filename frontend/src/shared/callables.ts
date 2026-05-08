@@ -657,6 +657,14 @@ export const generatePersonaContextCallable = async (
     currentText: string;
     apiType: string;
     modelName: string;
+    /**
+     * Optional. 0-based index of this generate call within the current session
+     * (0 for the first Generate press, 1 for the second, etc.). Passed to the
+     * backend so successive agents traverse the Halton sequence in order,
+     * provably covering the Big Five trait space as the batch grows.
+     * Omit for a random offset fallback.
+     */
+    batchIndex?: number;
   },
 ): Promise<ModelResponse> => {
   const {data} = await httpsCallable<
@@ -666,6 +674,7 @@ export const generatePersonaContextCallable = async (
       currentText: string;
       apiType: string;
       modelName: string;
+      batchIndex?: number;
     },
     ModelResponse
   >(

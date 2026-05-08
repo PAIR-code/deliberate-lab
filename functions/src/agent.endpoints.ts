@@ -72,6 +72,12 @@ export const generatePersonaContext = onCall(
     const currentText: string = data.currentText ?? '';
     const apiType = data.apiType;
     const modelName: string = data.modelName ?? '';
+    // batchIndex: the frontend passes 0, 1, 2, ... for successive generates
+    // within a session. Forwarded to samplePersonaParams so the Halton
+    // sequence is traversed in order, guaranteeing each new agent fills
+    // the biggest gap in Big Five trait space left by prior ones.
+    const batchIndex: number | undefined =
+      typeof data.batchIndex === 'number' ? data.batchIndex : undefined;
 
     // Only allow experimenters to use this endpoint
     await AuthGuard.isExperimenter(request);
@@ -102,7 +108,7 @@ export const generatePersonaContext = onCall(
       // Generate or Refresh: sample random parameters.
       // All sampling logic lives in agent_persona_sampling.ts.
       const isRefresh = mode === 'refresh';
-      const params = samplePersonaParams();
+      const params = samplePersonaParams(batchIndex);
 
       if (!isRefresh && currentText.trim()) {
         prompt = buildMergePersonaPrompt(currentText, params);

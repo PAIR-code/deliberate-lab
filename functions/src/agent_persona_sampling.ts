@@ -17,6 +17,51 @@ import {PersonaGenerationParams} from '@deliberation-lab/utils';
  */
 
 // ============================================================================
+// QUASI-RANDOM SAMPLING (Halton sequence)
+//
+// Big Five traits are sampled via a Halton low-discrepancy sequence rather than
+// independent Math.random() calls. Independent draws have no memory between
+// calls, so N generates can accidentally cluster — e.g. three agents all
+// scoring 5-7 on every trait. The Halton sequence is deterministic: each new
+// index fills the *largest gap* left by prior samples, so any contiguous slice
+// of the sequence is evenly spread across [0, 1).
+//
+// Each trait uses a different prime base so the five dimensions are
+// mathematically uncorrelated — coprime bases are guaranteed incommensurable,
+// meaning no two traits will accidentally move in lockstep.
+//
+// Motivation: Paglieri et al. 2026 (arXiv:2602.03545) found that quasi-random
+// Monte Carlo sampling in Stage 1 of their persona generator consistently
+// outperformed independent random draws on all six diversity metrics.
+// Sequence math: Halton 1960 (Numerische Mathematik 2, 84–90).
+// ============================================================================
+
+/**
+ * Returns the n-th term of the Halton sequence in the given base.
+ * Result is in [0, 1). n=0 returns 0; n=1 returns 1/base; etc.
+ */
+function halton(n: number, base: number): number {
+  let result = 0;
+  let f = 1;
+  let i = n;
+  while (i > 0) {
+    f /= base;
+    result += f * (i % base);
+    i = Math.floor(i / base);
+  }
+  return result;
+}
+
+/**
+ * Maps a Halton value to a Big Five score string on the 1–10 scale.
+ * halton() returns [0, 1), so Math.floor(h * 10) gives 0–9; +1 → 1–10.
+ */
+function haltonBig5Score(n: number, base: number): string {
+  const score = Math.floor(halton(n, base) * 10) + 1;
+  return `${score}/10`;
+}
+
+// ============================================================================
 // TYPES
 // ============================================================================
 
@@ -327,8 +372,19 @@ const LIFE_CIRCUMSTANCES: WeightedItem[] = [
  * life-stage archetype to avoid incoherent combinations. Cultural background,
  * occupation sector, and life circumstance are sampled independently from
  * census/BLS-proportional distributions to maximize name and persona diversity.
+ *
+ * @param batchIndex - Optional. Pass 0, 1, 2, ... for successive generates
+ *   within a session. Used as the Halton sequence index for Big Five sampling,
+ *   so each new agent fills the biggest gap in the joint trait space left by
+ *   previous ones. Omit for a random offset (good for isolated single calls).
  */
-export function samplePersonaParams(): PersonaGenerationParams {
+export function samplePersonaParams(
+  batchIndex?: number,
+): PersonaGenerationParams {
+  // Halton index: sequential when batchIndex is provided (guarantees spread
+  // across a session); random prime-offset fallback for isolated calls.
+  // 997 is prime — avoids period aliasing with the sequence bases.
+  const haltonIndex = batchIndex ?? Math.floor(Math.random() * 997);
   // 1. Pick life-stage archetype (correlated: age + education + setting)
   const archetypeRand = Math.random();
   let cumulative = 0;
@@ -364,14 +420,19 @@ export function samplePersonaParams(): PersonaGenerationParams {
   // 5. Setting — correlated with archetype
   const setting = weightedPick(selectedArchetype.settingWeights);
 
-  // 6. Big Five — independent (no strong demographic prior)
-  const score = () => `${Math.floor(Math.random() * 10) + 1}/10`;
+  // 6. Big Five — quasi-random Halton sampling (Halton 1960; Paglieri et al. 2026)
+  // Prime bases keep the five dimensions mathematically uncorrelated.
+  //   Openness:          base 2
+  //   Conscientiousness: base 3
+  //   Extraversion:      base 5
+  //   Agreeableness:     base 7
+  //   Neuroticism:       base 11
   const big5 = {
-    openness: score(),
-    conscientiousness: score(),
-    extraversion: score(),
-    agreeableness: score(),
-    neuroticism: score(),
+    openness: haltonBig5Score(haltonIndex, 2),
+    conscientiousness: haltonBig5Score(haltonIndex, 3),
+    extraversion: haltonBig5Score(haltonIndex, 5),
+    agreeableness: haltonBig5Score(haltonIndex, 7),
+    neuroticism: haltonBig5Score(haltonIndex, 11),
   };
 
   // 7. Verbosity — 1–5, uniform
