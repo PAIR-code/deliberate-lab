@@ -48,6 +48,11 @@ export class PersonaGenerationButtons extends MobxLitElement {
   @state() private isEnhancing = false;
   @state() private isRefreshing = false;
   @state() private errorMessage = '';
+  // Counts successful Generate/Refresh calls in this session. Passed to the
+  // backend as batchIndex so successive agents traverse the Halton sequence
+  // in order — each new agent fills the biggest gap in Big Five trait space
+  // left by the previous ones. Resets on component remount.
+  @state() private generateCount = 0;
 
   private get creatorId(): string {
     return this.authService.experimenterData?.email ?? '';
@@ -78,6 +83,8 @@ export class PersonaGenerationButtons extends MobxLitElement {
           currentText: this.currentText,
           apiType: this.modelSettings.apiType,
           modelName: this.modelSettings.modelName,
+          // Enhance doesn't sample Big Five so batchIndex has no effect there.
+          ...(mode !== 'enhance' ? {batchIndex: this.generateCount} : {}),
         },
       );
 
@@ -86,6 +93,7 @@ export class PersonaGenerationButtons extends MobxLitElement {
           response.status === ModelResponseStatus.LENGTH_ERROR) &&
         response.text
       ) {
+        if (mode !== 'enhance') this.generateCount++;
         this.dispatchEvent(
           new CustomEvent('persona-text-change', {
             detail: {text: response.text, mode},
