@@ -40,7 +40,7 @@ export const PromptItemTypeData = Type.Union(
 
 /** Base prompt item fields */
 const BasePromptItemFields = {
-  condition: Type.Optional(ConditionSchema),
+  condition: Type.Optional(Type.Union([Type.Null(), ConditionSchema])),
 };
 
 /** Text prompt item */
@@ -128,10 +128,10 @@ export const PromptItemData = Type.Union([
 /** Agent chat settings - defined here to avoid circular imports with agent.validation.ts */
 export const AgentChatSettingsData = Type.Object(
   {
-    wordsPerMinute: Type.Union([Type.Number(), Type.Null()]),
+    wordsPerMinute: Type.Optional(Type.Union([Type.Number(), Type.Null()])),
     minMessagesBeforeResponding: Type.Integer(),
     canSelfTriggerCalls: Type.Boolean(),
-    maxResponses: Type.Union([Type.Integer(), Type.Null()]),
+    maxResponses: Type.Optional(Type.Union([Type.Integer(), Type.Null()])),
     initialMessage: Type.String(),
   },
   {$id: 'AgentChatSettings', ...strict},

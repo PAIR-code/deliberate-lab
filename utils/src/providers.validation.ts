@@ -182,29 +182,35 @@ export const CustomRequestBodyFieldData = Type.Object(
     name: Type.String(),
     value: Type.String(),
   },
-  strict,
+  {$id: 'CustomRequestBodyField', ...strict},
 );
 
 /** Model generation config */
 export const ModelGenerationConfigData = Type.Object(
   {
     // Universal settings
-    maxTokens: Type.Optional(Type.Integer()),
-    stopSequences: Type.Optional(Type.Array(Type.String())),
-    temperature: Type.Optional(Type.Number()),
-    topP: Type.Optional(Type.Number()),
-    frequencyPenalty: Type.Optional(Type.Number()),
-    presencePenalty: Type.Optional(Type.Number()),
+    maxTokens: Type.Optional(Type.Union([Type.Null(), Type.Integer()])),
+    stopSequences: Type.Optional(
+      Type.Union([Type.Null(), Type.Array(Type.String())]),
+    ),
+    temperature: Type.Optional(Type.Union([Type.Null(), Type.Number()])),
+    topP: Type.Optional(Type.Union([Type.Null(), Type.Number()])),
+    frequencyPenalty: Type.Optional(Type.Union([Type.Null(), Type.Number()])),
+    presencePenalty: Type.Optional(Type.Union([Type.Null(), Type.Number()])),
     // Reasoning settings
-    reasoningLevel: Type.Optional(ReasoningLevelData),
+    reasoningLevel: Type.Optional(
+      Type.Union([Type.Null(), ReasoningLevelData]),
+    ),
     reasoningBudget: Type.Optional(Type.Union([Type.Integer(), Type.Null()])),
     includeReasoning: Type.Optional(Type.Boolean()),
     disableSafetyFilters: Type.Optional(Type.Boolean()),
     // Provider-specific options
-    providerOptions: Type.Optional(ProviderOptionsMapData),
+    providerOptions: Type.Optional(
+      Type.Union([Type.Null(), ProviderOptionsMapData]),
+    ),
     // Legacy
     customRequestBodyFields: Type.Optional(
-      Type.Array(CustomRequestBodyFieldData),
+      Type.Union([Type.Null(), Type.Array(CustomRequestBodyFieldData)]),
     ),
   },
   {$id: 'ModelGenerationConfig', ...strict},

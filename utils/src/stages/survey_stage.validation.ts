@@ -53,9 +53,14 @@ export const MultipleChoiceSurveyQuestionData = Type.Object(
     kind: Type.Literal(SurveyQuestionKind.MULTIPLE_CHOICE),
     questionTitle: Type.String(),
     options: Type.Array(MultipleChoiceItemData),
-    correctAnswerId: Type.Union([Type.Null(), Type.String()]),
+    correctAnswerId: Type.Optional(Type.Union([Type.Null(), Type.String()])),
     displayType: Type.Optional(
-      Type.Enum(MultipleChoiceDisplayType, {$id: 'MultipleChoiceDisplayType'}),
+      Type.Union([
+        Type.Null(),
+        Type.Enum(MultipleChoiceDisplayType, {
+          $id: 'MultipleChoiceDisplayType',
+        }),
+      ]),
     ),
     condition: Type.Optional(Type.Union([Type.Null(), ConditionSchema])),
   },
@@ -72,9 +77,11 @@ export const ScaleSurveyQuestionData = Type.Object(
     upperText: Type.String(),
     lowerValue: Type.Number(),
     lowerText: Type.String(),
-    middleText: Type.Optional(Type.String()),
-    useSlider: Type.Optional(Type.Boolean()),
-    stepSize: Type.Optional(Type.Number({minimum: 1})),
+    middleText: Type.Optional(Type.Union([Type.Null(), Type.String()])),
+    useSlider: Type.Optional(Type.Union([Type.Null(), Type.Boolean()])),
+    stepSize: Type.Optional(
+      Type.Union([Type.Null(), Type.Number({minimum: 1})]),
+    ),
     condition: Type.Optional(Type.Union([Type.Null(), ConditionSchema])),
   },
   {$id: 'ScaleSurveyQuestion', ...strict},

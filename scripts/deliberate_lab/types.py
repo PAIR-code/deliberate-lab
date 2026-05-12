@@ -51,19 +51,6 @@ class ProlificConfig(BaseModel):
     bootedRedirectCode: str
 
 
-class CohortDefinition(BaseModel):
-    model_config = ConfigDict(
-        extra="forbid",
-        populate_by_name=True,
-    )
-    id: Annotated[str, Field(min_length=1)]
-    alias: Annotated[str, Field(min_length=1)]
-    name: Annotated[str, Field(min_length=1)]
-    description: str | None = None
-    generatedCohortId: str | None = None
-    maxParticipantsPerCohort: Annotated[int | None, Field(ge=1)] = None
-
-
 class CohortParticipantConfig(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
@@ -144,6 +131,19 @@ class BalanceStrategy(StrEnum):
 class BalanceAcross(StrEnum):
     experiment = "experiment"
     cohort = "cohort"
+
+
+class CohortDefinition(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+        populate_by_name=True,
+    )
+    id: Annotated[str, Field(min_length=1)]
+    alias: Annotated[str, Field(min_length=1)]
+    name: Annotated[str, Field(min_length=1)]
+    description: str | None = None
+    generatedCohortId: str | None = None
+    maxParticipantsPerCohort: Annotated[int | None, Field(ge=1)] = None
 
 
 class StageTextConfig(BaseModel):
@@ -623,15 +623,6 @@ class ReasoningLevel(StrEnum):
     high = "high"
 
 
-class CustomRequestBodyField(BaseModel):
-    model_config = ConfigDict(
-        extra="forbid",
-        populate_by_name=True,
-    )
-    name: str
-    value: str
-
-
 class GoogleThinkingLevel(StrEnum):
     minimal = "minimal"
     low = "low"
@@ -728,6 +719,15 @@ class OllamaProviderOptions(BaseModel):
     )
     numCtx: int | None = None
     numPredict: int | None = None
+
+
+class CustomRequestBodyField(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+        populate_by_name=True,
+    )
+    name: str
+    value: str
 
 
 class StructuredOutputType(StrEnum):
@@ -1014,9 +1014,7 @@ class ModelGenerationConfig(BaseModel):
     topP: float | None = None
     frequencyPenalty: float | None = None
     presencePenalty: float | None = None
-    reasoningLevel: Annotated[ReasoningLevel | None, Field(title="ReasoningLevel")] = (
-        None
-    )
+    reasoningLevel: ReasoningLevel | None = None
     reasoningBudget: int | None = None
     includeReasoning: bool | None = None
     disableSafetyFilters: bool | None = None
@@ -1107,7 +1105,7 @@ class StaticVariableConfig(BaseModel):
     scope: Scope
     definition: VariableDefinition
     value: str
-    cohortValues: Annotated[dict[str, str] | None, Field(title="CohortValues")] = None
+    cohortValues: dict[str, str] | None = None
 
 
 class Object(BaseModel):
@@ -1240,9 +1238,7 @@ class MultipleChoiceSurveyQuestion(BaseModel):
     questionTitle: str
     options: list[MultipleChoiceItem]
     correctAnswerId: str | None = None
-    displayType: Annotated[
-        MultipleChoiceDisplayType | None, Field(title="MultipleChoiceDisplayType")
-    ] = None
+    displayType: MultipleChoiceDisplayType | None = None
     condition: ComparisonCondition | ConditionGroup | None = None
 
 
@@ -1375,9 +1371,7 @@ class TextPromptItem(BaseModel):
     )
     type: Literal["TEXT"] = "TEXT"
     text: str
-    condition: Annotated[
-        ComparisonCondition | ConditionGroup | None, Field(title="Condition")
-    ] = None
+    condition: ComparisonCondition | ConditionGroup | None = None
 
 
 class ProfileInfoPromptItem(BaseModel):
@@ -1386,9 +1380,7 @@ class ProfileInfoPromptItem(BaseModel):
         populate_by_name=True,
     )
     type: Literal["PROFILE_INFO"] = "PROFILE_INFO"
-    condition: Annotated[
-        ComparisonCondition | ConditionGroup | None, Field(title="Condition")
-    ] = None
+    condition: ComparisonCondition | ConditionGroup | None = None
 
 
 class ProfileContextPromptItem(BaseModel):
@@ -1397,9 +1389,7 @@ class ProfileContextPromptItem(BaseModel):
         populate_by_name=True,
     )
     type: Literal["PROFILE_CONTEXT"] = "PROFILE_CONTEXT"
-    condition: Annotated[
-        ComparisonCondition | ConditionGroup | None, Field(title="Condition")
-    ] = None
+    condition: ComparisonCondition | ConditionGroup | None = None
 
 
 class StageContextPromptItem(BaseModel):
@@ -1414,9 +1404,7 @@ class StageContextPromptItem(BaseModel):
     includeHelpText: bool
     includeStageDisplay: bool
     includeParticipantAnswers: bool
-    condition: Annotated[
-        ComparisonCondition | ConditionGroup | None, Field(title="Condition")
-    ] = None
+    condition: ComparisonCondition | ConditionGroup | None = None
 
 
 class PromptItemGroup(BaseModel):
@@ -1434,9 +1422,7 @@ class PromptItemGroup(BaseModel):
         | PromptItemGroup
     ]
     shuffleConfig: ShuffleConfig | None = None
-    condition: Annotated[
-        ComparisonCondition | ConditionGroup | None, Field(title="Condition")
-    ] = None
+    condition: ComparisonCondition | ConditionGroup | None = None
 
 
 class StructuredOutputConfig(BaseModel):

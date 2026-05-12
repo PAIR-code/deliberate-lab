@@ -70,7 +70,7 @@ export const CohortDefinitionSchema = Type.Object(
     generatedCohortId: Type.Optional(Type.String()),
     maxParticipantsPerCohort: Type.Optional(Type.Integer({minimum: 1})),
   },
-  strict,
+  {$id: 'CohortDefinition', ...strict},
 );
 
 export const ExperimentTemplateSchema = Type.Object(

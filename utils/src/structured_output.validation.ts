@@ -51,20 +51,26 @@ export const StructuredOutputSchemaData = Type.Recursive(
     Type.Object(
       {
         type: StructuredOutputDataTypeData,
-        description: Type.Optional(Type.String()),
+        description: Type.Optional(Type.Union([Type.Null(), Type.String()])),
         properties: Type.Optional(
-          Type.Array(
-            Type.Object(
-              {
-                name: Type.String(),
-                schema: This,
-              },
-              {$id: 'StructuredOutputSchemaProperty', ...strict},
+          Type.Union([
+            Type.Null(),
+            Type.Array(
+              Type.Object(
+                {
+                  name: Type.String(),
+                  schema: This,
+                },
+                {$id: 'StructuredOutputSchemaProperty', ...strict},
+              ),
             ),
-          ),
+          ]),
         ),
-        arrayItems: Type.Optional(This),
-        enumItems: Type.Optional(Type.Array(Type.String())),
+
+        arrayItems: Type.Optional(Type.Union([Type.Null(), This])),
+        enumItems: Type.Optional(
+          Type.Union([Type.Null(), Type.Array(Type.String())]),
+        ),
       },
       strict,
     ),
@@ -79,7 +85,9 @@ export const StructuredOutputConfigData = Type.Object(
   {
     enabled: Type.Boolean(),
     type: StructuredOutputTypeData,
-    schema: Type.Optional(StructuredOutputSchemaData),
+    schema: Type.Optional(
+      Type.Union([Type.Null(), StructuredOutputSchemaData]),
+    ),
     appendToPrompt: Type.Boolean(),
   },
   {$id: 'StructuredOutputConfig', ...strict},
@@ -99,7 +107,9 @@ export const ChatMediatorStructuredOutputConfigData = Type.Object(
   {
     enabled: Type.Boolean(),
     type: StructuredOutputTypeData,
-    schema: Type.Optional(StructuredOutputSchemaData),
+    schema: Type.Optional(
+      Type.Union([Type.Null(), StructuredOutputSchemaData]),
+    ),
     appendToPrompt: Type.Boolean(),
     shouldRespondField: Type.String(),
     messageField: Type.String(),
