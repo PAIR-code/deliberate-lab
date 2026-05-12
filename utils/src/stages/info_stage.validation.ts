@@ -18,7 +18,7 @@ export const InfoStageConfigData = Type.Composite(
         kind: Type.Literal(StageKind.INFO),
         infoLines: Type.Array(Type.String()),
         // Optional YouTube video ID to display
-        youtubeVideoId: Type.Optional(Type.String()),
+        youtubeVideoId: Type.Optional(Type.Union([Type.Null(), Type.String()])),
       },
       strict,
     ),

@@ -31,14 +31,12 @@ export const PermissionsConfigSchema = Type.Object({
 /** CohortParticipantConfig input validation. */
 export const CohortParticipantConfigSchema = Type.Object(
   {
-    minParticipantsPerCohort: Type.Union([
-      Type.Null(),
-      Type.Integer({minimum: 0}),
-    ]),
-    maxParticipantsPerCohort: Type.Union([
-      Type.Null(),
-      Type.Integer({minimum: 1}),
-    ]),
+    minParticipantsPerCohort: Type.Optional(
+      Type.Union([Type.Null(), Type.Integer({minimum: 0})]),
+    ),
+    maxParticipantsPerCohort: Type.Optional(
+      Type.Union([Type.Null(), Type.Integer({minimum: 1})]),
+    ),
     includeAllParticipantsInCohortCount: Type.Boolean(),
     botProtection: Type.Boolean(),
   },

@@ -5,12 +5,7 @@
     "CohortParticipantConfig": {
       "title": "CohortParticipantConfig",
       "type": "object",
-      "required": [
-        "minParticipantsPerCohort",
-        "maxParticipantsPerCohort",
-        "includeAllParticipantsInCohortCount",
-        "botProtection"
-      ],
+      "required": ["includeAllParticipantsInCohortCount", "botProtection"],
       "properties": {
         "minParticipantsPerCohort": {
           "minimum": 0,
@@ -65,13 +60,20 @@
           "type": "string"
         },
         "cohortValues": {
-          "type": "object",
-          "patternProperties": {
-            "^(.*)$": {
-              "type": "string"
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "object",
+              "patternProperties": {
+                "^(.*)$": {
+                  "type": "string"
+                }
+              },
+              "title": "AnyOf"
             }
-          },
-          "title": "CohortValues"
+          ]
         }
       }
     },
@@ -440,6 +442,36 @@
         }
       }
     },
+    "CohortDefinition": {
+      "title": "CohortDefinition",
+      "additionalProperties": false,
+      "type": "object",
+      "required": ["id", "alias", "name"],
+      "properties": {
+        "id": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "alias": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "name": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "generatedCohortId": {
+          "type": "string"
+        },
+        "maxParticipantsPerCohort": {
+          "minimum": 1,
+          "type": "integer"
+        }
+      }
+    },
     "AssetAllocationStageConfig": {
       "title": "AssetAllocationStageConfig",
       "additionalProperties": false,
@@ -659,8 +691,6 @@
         "name",
         "descriptions",
         "progress",
-        "timeLimitInMinutes",
-        "timeMinimumInMinutes",
         "discussions"
       ],
       "properties": {
@@ -1086,7 +1116,7 @@
           }
         },
         "youtubeVideoId": {
-          "type": "string"
+          "type": ["null", "string"]
         }
       }
     },
@@ -1299,15 +1329,7 @@
       "title": "PrivateChatStageConfig",
       "additionalProperties": false,
       "type": "object",
-      "required": [
-        "id",
-        "kind",
-        "name",
-        "descriptions",
-        "progress",
-        "timeLimitInMinutes",
-        "timeMinimumInMinutes"
-      ],
+      "required": ["id", "kind", "name", "descriptions", "progress"],
       "properties": {
         "id": {
           "minLength": 1,
@@ -2199,7 +2221,7 @@
       "title": "MultipleChoiceSurveyQuestion",
       "additionalProperties": false,
       "type": "object",
-      "required": ["id", "kind", "questionTitle", "options", "correctAnswerId"],
+      "required": ["id", "kind", "questionTitle", "options"],
       "properties": {
         "id": {
           "minLength": 1,
@@ -2222,15 +2244,22 @@
           "type": ["null", "string"]
         },
         "displayType": {
-          "title": "MultipleChoiceDisplayType",
           "anyOf": [
             {
-              "const": "radio",
-              "type": "string"
+              "type": "null"
             },
             {
-              "const": "dropdown",
-              "type": "string"
+              "title": "MultipleChoiceDisplayType",
+              "anyOf": [
+                {
+                  "const": "radio",
+                  "type": "string"
+                },
+                {
+                  "const": "dropdown",
+                  "type": "string"
+                }
+              ]
             }
           ]
         },
@@ -2305,14 +2334,14 @@
           "type": "string"
         },
         "middleText": {
-          "type": "string"
+          "type": ["null", "string"]
         },
         "useSlider": {
-          "type": "boolean"
+          "type": ["null", "boolean"]
         },
         "stepSize": {
           "minimum": 1,
-          "type": "number"
+          "type": ["null", "number"]
         },
         "condition": {
           "anyOf": [
@@ -2748,7 +2777,6 @@
       "title": "ParticipantProfileBase",
       "additionalProperties": false,
       "type": "object",
-      "required": ["pronouns", "avatar", "name"],
       "properties": {
         "pronouns": {
           "type": ["null", "string"]
@@ -2857,13 +2885,20 @@
           "type": "string"
         },
         "condition": {
-          "title": "Condition",
           "anyOf": [
             {
-              "$ref": "#/$defs/ComparisonCondition"
+              "type": "null"
             },
             {
-              "$ref": "#/$defs/ConditionGroup"
+              "title": "Condition",
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/ComparisonCondition"
+                },
+                {
+                  "$ref": "#/$defs/ConditionGroup"
+                }
+              ]
             }
           ]
         }
@@ -2880,13 +2915,20 @@
           "type": "string"
         },
         "condition": {
-          "title": "Condition",
           "anyOf": [
             {
-              "$ref": "#/$defs/ComparisonCondition"
+              "type": "null"
             },
             {
-              "$ref": "#/$defs/ConditionGroup"
+              "title": "Condition",
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/ComparisonCondition"
+                },
+                {
+                  "$ref": "#/$defs/ConditionGroup"
+                }
+              ]
             }
           ]
         }
@@ -2903,13 +2945,20 @@
           "type": "string"
         },
         "condition": {
-          "title": "Condition",
           "anyOf": [
             {
-              "$ref": "#/$defs/ComparisonCondition"
+              "type": "null"
             },
             {
-              "$ref": "#/$defs/ConditionGroup"
+              "title": "Condition",
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/ComparisonCondition"
+                },
+                {
+                  "$ref": "#/$defs/ConditionGroup"
+                }
+              ]
             }
           ]
         }
@@ -2952,13 +3001,20 @@
           "type": "boolean"
         },
         "condition": {
-          "title": "Condition",
           "anyOf": [
             {
-              "$ref": "#/$defs/ComparisonCondition"
+              "type": "null"
             },
             {
-              "$ref": "#/$defs/ConditionGroup"
+              "title": "Condition",
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/ComparisonCondition"
+                },
+                {
+                  "$ref": "#/$defs/ConditionGroup"
+                }
+              ]
             }
           ]
         }
@@ -3003,13 +3059,20 @@
           "$ref": "#/$defs/ShuffleConfig"
         },
         "condition": {
-          "title": "Condition",
           "anyOf": [
             {
-              "$ref": "#/$defs/ComparisonCondition"
+              "type": "null"
             },
             {
-              "$ref": "#/$defs/ConditionGroup"
+              "title": "Condition",
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/ComparisonCondition"
+                },
+                {
+                  "$ref": "#/$defs/ConditionGroup"
+                }
+              ]
             }
           ]
         }
@@ -3021,48 +3084,62 @@
       "type": "object",
       "properties": {
         "maxTokens": {
-          "type": "integer"
+          "type": ["null", "integer"]
         },
         "stopSequences": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "temperature": {
-          "type": "number"
-        },
-        "topP": {
-          "type": "number"
-        },
-        "frequencyPenalty": {
-          "type": "number"
-        },
-        "presencePenalty": {
-          "type": "number"
-        },
-        "reasoningLevel": {
-          "title": "ReasoningLevel",
           "anyOf": [
             {
-              "const": "off",
-              "type": "string"
+              "type": "null"
             },
             {
-              "const": "minimal",
-              "type": "string"
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          ]
+        },
+        "temperature": {
+          "type": ["null", "number"]
+        },
+        "topP": {
+          "type": ["null", "number"]
+        },
+        "frequencyPenalty": {
+          "type": ["null", "number"]
+        },
+        "presencePenalty": {
+          "type": ["null", "number"]
+        },
+        "reasoningLevel": {
+          "anyOf": [
+            {
+              "type": "null"
             },
             {
-              "const": "low",
-              "type": "string"
-            },
-            {
-              "const": "medium",
-              "type": "string"
-            },
-            {
-              "const": "high",
-              "type": "string"
+              "title": "ReasoningLevel",
+              "anyOf": [
+                {
+                  "const": "off",
+                  "type": "string"
+                },
+                {
+                  "const": "minimal",
+                  "type": "string"
+                },
+                {
+                  "const": "low",
+                  "type": "string"
+                },
+                {
+                  "const": "medium",
+                  "type": "string"
+                },
+                {
+                  "const": "high",
+                  "type": "string"
+                }
+              ]
             }
           ]
         },
@@ -3076,24 +3153,27 @@
           "type": "boolean"
         },
         "providerOptions": {
-          "$ref": "#/$defs/ProviderOptionsMap"
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/$defs/ProviderOptionsMap"
+            }
+          ]
         },
         "customRequestBodyFields": {
-          "type": "array",
-          "items": {
-            "additionalProperties": false,
-            "type": "object",
-            "required": ["name", "value"],
-            "properties": {
-              "name": {
-                "type": "string"
-              },
-              "value": {
-                "type": "string"
-              }
+          "anyOf": [
+            {
+              "type": "null"
             },
-            "title": "CustomRequestBodyField"
-          }
+            {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/CustomRequestBodyField"
+              }
+            }
+          ]
         }
       }
     },
@@ -3485,6 +3565,20 @@
         }
       }
     },
+    "CustomRequestBodyField": {
+      "title": "CustomRequestBodyField",
+      "additionalProperties": false,
+      "type": "object",
+      "required": ["name", "value"],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string"
+        }
+      }
+    },
     "StructuredOutputConfig": {
       "title": "StructuredOutputConfig",
       "additionalProperties": false,
@@ -3512,7 +3606,14 @@
           ]
         },
         "schema": {
-          "$ref": "#/$defs/StructuredOutputSchema"
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/$defs/StructuredOutputSchema"
+            }
+          ]
         },
         "appendToPrompt": {
           "type": "boolean"
@@ -3576,22 +3677,43 @@
           ]
         },
         "description": {
-          "type": "string"
+          "type": ["null", "string"]
         },
         "properties": {
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/StructuredOutputSchemaProperty"
-          }
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/StructuredOutputSchemaProperty"
+              }
+            }
+          ]
         },
         "arrayItems": {
-          "$ref": "#/$defs/StructuredOutputSchema"
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/$defs/StructuredOutputSchema"
+            }
+          ]
         },
         "enumItems": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          ]
         }
       }
     },
@@ -3677,7 +3799,14 @@
           ]
         },
         "schema": {
-          "$ref": "#/$defs/StructuredOutputSchema"
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/$defs/StructuredOutputSchema"
+            }
+          ]
         },
         "appendToPrompt": {
           "type": "boolean"
@@ -3701,10 +3830,8 @@
       "additionalProperties": false,
       "type": "object",
       "required": [
-        "wordsPerMinute",
         "minMessagesBeforeResponding",
         "canSelfTriggerCalls",
-        "maxResponses",
         "initialMessage"
       ],
       "properties": {
@@ -4131,34 +4258,7 @@
                 "cohortDefinitions": {
                   "type": "array",
                   "items": {
-                    "additionalProperties": false,
-                    "type": "object",
-                    "required": ["id", "alias", "name"],
-                    "properties": {
-                      "id": {
-                        "minLength": 1,
-                        "type": "string"
-                      },
-                      "alias": {
-                        "minLength": 1,
-                        "type": "string"
-                      },
-                      "name": {
-                        "minLength": 1,
-                        "type": "string"
-                      },
-                      "description": {
-                        "type": "string"
-                      },
-                      "generatedCohortId": {
-                        "type": "string"
-                      },
-                      "maxParticipantsPerCohort": {
-                        "minimum": 1,
-                        "type": "integer"
-                      }
-                    },
-                    "title": "CohortDefinition"
+                    "$ref": "#/$defs/CohortDefinition"
                   }
                 }
               },

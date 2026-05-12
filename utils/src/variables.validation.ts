@@ -97,7 +97,9 @@ export const StaticVariableConfigData = Type.Composite(
           default: VariableConfigType.STATIC,
         }),
         value: Type.String(),
-        cohortValues: Type.Optional(Type.Record(Type.String(), Type.String())),
+        cohortValues: Type.Optional(
+          Type.Union([Type.Null(), Type.Record(Type.String(), Type.String())]),
+        ),
       },
       strict,
     ),
