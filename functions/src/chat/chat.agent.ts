@@ -30,7 +30,10 @@ import {
   shouldUseMessageFormat,
   MessageRole,
 } from './message_converter.utils';
-import {updateParticipantReadyToEndChat} from '../chat/chat.utils';
+import {
+  updateParticipantReadyToEndChat,
+  sendSystemPrivateChatMessage,
+} from '../chat/chat.utils';
 import {
   getExperimenterDataFromExperiment,
   getFirestorePublicStageChatMessages,
@@ -219,6 +222,35 @@ export async function getAgentChatMessage(
   // Confirm that agent can send chat messages based on prompt config
   const chatSettings = promptConfig.chatSettings;
   if (!canSendAgentChatMessage(user.publicId, chatSettings, chatMessages)) {
+    // If a mediator in a private chat can no longer respond (e.g., maxResponses
+    // reached), send a system message so the frontend stops showing the spinner
+    // and agent participants get unblocked. (Fixes #1011)
+    // Use trigger log to send only once per mediator.
+    if (
+      stage.kind === StageKind.PRIVATE_CHAT &&
+      user.type === UserType.MEDIATOR
+    ) {
+      const leftChatLogRef = getPrivateChatTriggerLogRef(
+        experimentId,
+        participantIds[0],
+        stageId,
+        `left-chat-${user.publicId}`,
+      );
+      const alreadySent = (await leftChatLogRef.get()).exists;
+      if (!alreadySent) {
+        await leftChatLogRef.set({timestamp: Timestamp.now()});
+        await sendSystemPrivateChatMessage(
+          experimentId,
+          participantIds[0],
+          stageId,
+          {
+            message: `${user.name ?? 'Mediator'} has left the chat.`,
+            senderId: user.publicId,
+            profile: createParticipantProfileBase(user),
+          },
+        );
+      }
+    }
     return {message: null, success: true};
   }
 
@@ -340,13 +372,15 @@ export async function getAgentChatMessage(
     }
   }
 
-  // No text and no files = failure
-  if (!response.text && (!response.files || response.files.length === 0)) {
+  // No text and no files = failure, unless the agent explicitly chose not
+  // to respond or signaled readyToEndChat (empty text is expected then).
+  if (
+    shouldRespond &&
+    !readyToEndChat &&
+    !response.text &&
+    (!response.files || response.files.length === 0)
+  ) {
     return {message: null, success: false};
-  }
-
-  if (!shouldRespond) {
-    // Logic for not responding (handled below)
   }
 
   // Only if agent participant is ready to end chat
@@ -368,18 +402,39 @@ export async function getAgentChatMessage(
   }
 
   if (!shouldRespond) {
-    // If agent decides not to respond in private chat, they are ready to end
-    if (
-      stage.kind === StageKind.PRIVATE_CHAT &&
-      user.type === UserType.PARTICIPANT &&
-      chatMessages.length > 0
-    ) {
-      const participantAnswerDoc = getFirestoreParticipantAnswerRef(
-        experimentId,
-        user.privateId,
-        stageId,
-      );
-      await participantAnswerDoc.set({readyToEndChat: true}, {merge: true});
+    if (stage.kind === StageKind.PRIVATE_CHAT && chatMessages.length > 0) {
+      if (user.type === UserType.PARTICIPANT) {
+        // Agent participant is ready to end chat
+        const participantAnswerDoc = getFirestoreParticipantAnswerRef(
+          experimentId,
+          user.privateId,
+          stageId,
+        );
+        await participantAnswerDoc.set({readyToEndChat: true}, {merge: true});
+      } else if (user.type === UserType.MEDIATOR) {
+        // Mediator chose not to respond — send a system message so the
+        // frontend spinner stops and agent participants get unblocked. (#938)
+        const leftChatLogRef = getPrivateChatTriggerLogRef(
+          experimentId,
+          participantIds[0],
+          stageId,
+          `left-chat-${user.publicId}`,
+        );
+        const alreadySent = (await leftChatLogRef.get()).exists;
+        if (!alreadySent) {
+          await leftChatLogRef.set({timestamp: Timestamp.now()});
+          await sendSystemPrivateChatMessage(
+            experimentId,
+            participantIds[0],
+            stageId,
+            {
+              message: `${user.name ?? 'Mediator'} has left the chat.`,
+              senderId: user.publicId,
+              profile: createParticipantProfileBase(user),
+            },
+          );
+        }
+      }
     }
     return {message: null, success: true};
   }
