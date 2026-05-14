@@ -1,9 +1,7 @@
-import {observable} from 'mobx';
 import {MobxLitElement} from '@adobe/lit-mobx';
 
-import {CSSResultGroup, html, nothing} from 'lit';
-import {customElement, property} from 'lit/decorators.js';
-import {classMap} from 'lit/directives/class-map.js';
+import {CSSResultGroup, html} from 'lit';
+import {customElement, property, state} from 'lit/decorators.js';
 
 import {core} from '../../core/core';
 import {ParticipantAnswerService} from '../../services/participant.answer';
@@ -40,6 +38,7 @@ export class ChatInputComponent extends MobxLitElement {
   };
   @property() isDisabled = false;
   @property() isLoading = false;
+  @state() hasFocusedOnce = false;
 
   override render() {
     const sendInput = async () => {
@@ -73,18 +72,20 @@ export class ChatInputComponent extends MobxLitElement {
       }
     };
 
-    const autoFocus = () => {
-      // Only auto-focus chat input if on desktop
-      return navigator.maxTouchPoints === 0;
+    const shouldFocus = () => {
+      if (this.hasFocusedOnce || this.isDisabled) return false;
+      if (navigator.maxTouchPoints > 0) return false; // mobile
+      this.hasFocusedOnce = true;
+      return true;
     };
 
     return html`
-      <div class="input">
+      <div class="input ${this.isDisabled ? 'disabled' : ''}">
         <pr-textarea
           size="small"
           placeholder="Send message"
           .value=${this.getUserInput()}
-          ?focused=${autoFocus()}
+          ?focused=${shouldFocus()}
           ?disabled=${this.isDisabled}
           @keydown=${handleKeyDown}
           @input=${handleInput}

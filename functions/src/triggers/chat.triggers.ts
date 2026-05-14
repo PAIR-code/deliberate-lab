@@ -1,10 +1,13 @@
 import {onDocumentCreated} from 'firebase-functions/v2/firestore';
 import {
   ChatMessage,
+  ChatStageConfig,
+  ChatStagePublicData,
   ParticipantStatus,
   StageKind,
   UserType,
   createParticipantProfileBase,
+  shuffleWithSeed,
 } from '@deliberation-lab/utils';
 import {
   getFirestoreActiveMediators,
@@ -51,7 +54,7 @@ export const onPublicChatMessageCreated = onDocumentCreated(
         startTimeElapsed(
           event.params.experimentId,
           event.params.cohortId,
-          publicStageData,
+          publicStageData as ChatStagePublicData,
         );
         break;
       case StageKind.SALESPERSON:
@@ -71,43 +74,261 @@ export const onPublicChatMessageCreated = onDocumentCreated(
 
     const allParticipantIds = allParticipants.map((p) => p.privateId);
 
-    // Send agent mediator messages
-    const mediators = await getFirestoreActiveMediators(
-      event.params.experimentId,
-      event.params.cohortId,
-      stage.id,
-      true,
-    );
-    await Promise.all(
-      mediators.map((mediator) =>
-        createAgentChatMessageFromPrompt(
-          event.params.experimentId,
-          event.params.cohortId,
-          allParticipantIds, // Provide all participant IDs for full context
-          stage.id,
-          event.params.chatId,
-          mediator,
-        ),
-      ),
-    );
+    const chatStage = stage as ChatStageConfig;
+    const chatPublicData = publicStageData as ChatStagePublicData;
 
-    // Send agent participant messages for agents who are still completing
-    // the experiment
-    const agentParticipants = allParticipants.filter(
-      (p) => p.agentConfig && p.currentStatus === ParticipantStatus.IN_PROGRESS,
-    );
-    await Promise.all(
-      agentParticipants.map((participant) =>
-        createAgentChatMessageFromPrompt(
+    if (chatStage.isTurnBased) {
+      const message = event.data?.data() as ChatMessage;
+      if (!message) return;
+
+      let turnOrder = chatPublicData.turnOrder ?? [];
+      let currentTurnParticipantId = chatPublicData.currentTurnParticipantId;
+      let cycleIndex = chatPublicData.cycleIndex ?? 0;
+
+      // Get active IDs for validation and filtering
+      const allPublicParticipantIds = allParticipants.map((p) => p.publicId);
+      const mediators = await getFirestoreActiveMediators(
+        event.params.experimentId,
+        event.params.cohortId,
+        stage.id,
+        true, // get AI mediators
+      );
+      const allMediatorIds = mediators.map((m) => m.publicId);
+      const activeIds = [...allMediatorIds, ...allPublicParticipantIds];
+
+      // Filter turnOrder to only include currently active/non-dropped-out IDs
+      const originalTurnOrder = [...turnOrder];
+      turnOrder = turnOrder.filter((id: string) => activeIds.includes(id));
+
+      // If the current turn holder is no longer active (e.g., dropped out), auto-advance!
+      if (
+        currentTurnParticipantId &&
+        !activeIds.includes(currentTurnParticipantId)
+      ) {
+        const oldIndex = originalTurnOrder.indexOf(currentTurnParticipantId);
+        let nextActiveId: string | null = null;
+        if (oldIndex !== -1) {
+          for (let k = oldIndex + 1; k < originalTurnOrder.length; k++) {
+            const candidate = originalTurnOrder[k];
+            if (activeIds.includes(candidate)) {
+              nextActiveId = candidate;
+              break;
+            }
+          }
+        }
+
+        if (nextActiveId) {
+          currentTurnParticipantId = nextActiveId;
+        } else {
+          // No active participants left in this cycle, start a new cycle!
+          cycleIndex += 1;
+          const seedString = `${event.params.cohortId}-${cycleIndex}`;
+          const shuffledParticipants = shuffleWithSeed(
+            allPublicParticipantIds,
+            seedString,
+          );
+          turnOrder = [...allMediatorIds, ...shuffledParticipants];
+          currentTurnParticipantId = turnOrder[0] ?? null;
+        }
+
+        // Update Firestore immediately
+        const publicStageDataRef = app
+          .firestore()
+          .collection('experiments')
+          .doc(event.params.experimentId)
+          .collection('cohorts')
+          .doc(event.params.cohortId)
+          .collection('publicStageData')
+          .doc(event.params.stageId);
+
+        await publicStageDataRef.set(
+          {
+            currentTurnParticipantId,
+            turnOrder,
+            cycleIndex,
+          },
+          {merge: true},
+        );
+      }
+
+      // 1. Initialize turn order if uninitialized or empty
+      if (!currentTurnParticipantId || turnOrder.length === 0) {
+        cycleIndex = 0;
+        const seedString = `${event.params.cohortId}-${cycleIndex}`;
+        const shuffledParticipants = shuffleWithSeed(
+          allPublicParticipantIds,
+          seedString,
+        );
+
+        turnOrder = [...allMediatorIds, ...shuffledParticipants];
+        currentTurnParticipantId = turnOrder[0] ?? null;
+
+        // Update Firestore immediately
+        const publicStageDataRef = app
+          .firestore()
+          .collection('experiments')
+          .doc(event.params.experimentId)
+          .collection('cohorts')
+          .doc(event.params.cohortId)
+          .collection('publicStageData')
+          .doc(event.params.stageId);
+
+        await publicStageDataRef.set(
+          {
+            currentTurnParticipantId,
+            turnOrder,
+            cycleIndex,
+          },
+          {merge: true},
+        );
+      }
+
+      // 2. If it is not the message sender's turn, do not advance
+      if (message.senderId !== currentTurnParticipantId) {
+        // Delete any out-of-turn messages
+        const messageRef = event.data?.ref;
+        if (messageRef) {
+          await messageRef.delete();
+        }
+
+        // Fallback to trigger mediator message if it hasn't spoken yet
+        if (
+          currentTurnParticipantId &&
+          turnOrder.indexOf(currentTurnParticipantId) === 0
+        ) {
+          const mediator = mediators.find(
+            (m) => m.publicId === currentTurnParticipantId,
+          );
+          if (mediator) {
+            await createAgentChatMessageFromPrompt(
+              event.params.experimentId,
+              event.params.cohortId,
+              allParticipants.map((p) => p.privateId),
+              stage.id,
+              '', // empty triggerChatId indicates initial message
+              mediator,
+            );
+          }
+        }
+        return;
+      }
+
+      // 3. Advance turn
+      const currentIndex = turnOrder.indexOf(message.senderId);
+
+      // If it's the last person in the turn order
+      if (currentIndex === -1 || currentIndex === turnOrder.length - 1) {
+        // Cycle repeats!
+        cycleIndex += 1;
+
+        const seedString = `${event.params.cohortId}-${cycleIndex}`;
+        const shuffledParticipants = shuffleWithSeed(
+          allPublicParticipantIds,
+          seedString,
+        );
+
+        turnOrder = [...allMediatorIds, ...shuffledParticipants];
+        currentTurnParticipantId = turnOrder[0] ?? null;
+      } else {
+        // Move to next person in the list
+        currentTurnParticipantId = turnOrder[currentIndex + 1];
+      }
+
+      // Update publicStageData in Firestore
+      const publicStageDataRef = app
+        .firestore()
+        .collection('experiments')
+        .doc(event.params.experimentId)
+        .collection('cohorts')
+        .doc(event.params.cohortId)
+        .collection('publicStageData')
+        .doc(event.params.stageId);
+
+      await publicStageDataRef.set(
+        {
+          currentTurnParticipantId,
+          turnOrder,
+          cycleIndex,
+        },
+        {merge: true},
+      );
+
+      // Trigger the next AI agent if applicable
+      const nextTurnHolder = allParticipants.find(
+        (p) => p.publicId === currentTurnParticipantId,
+      );
+
+      if (!nextTurnHolder) {
+        // Check if it's a mediator!
+        const mediators = await getFirestoreActiveMediators(
           event.params.experimentId,
           event.params.cohortId,
-          [participant.privateId], // Pass agent's own ID as array
           stage.id,
-          event.params.chatId,
-          participant,
+          true,
+        );
+        const mediator = mediators.find(
+          (m) => m.publicId === currentTurnParticipantId,
+        );
+        if (mediator) {
+          await createAgentChatMessageFromPrompt(
+            event.params.experimentId,
+            event.params.cohortId,
+            allParticipants.map((p) => p.privateId),
+            stage.id,
+            message.id,
+            mediator,
+          );
+        }
+      } else if (nextTurnHolder.agentConfig) {
+        await createAgentChatMessageFromPrompt(
+          event.params.experimentId,
+          event.params.cohortId,
+          [nextTurnHolder.privateId],
+          stage.id,
+          message.id,
+          nextTurnHolder,
+        );
+      }
+    } else {
+      // Send agent mediator messages
+      const mediators = await getFirestoreActiveMediators(
+        event.params.experimentId,
+        event.params.cohortId,
+        stage.id,
+        true,
+      );
+      await Promise.all(
+        mediators.map((mediator) =>
+          createAgentChatMessageFromPrompt(
+            event.params.experimentId,
+            event.params.cohortId,
+            allParticipantIds, // Provide all participant IDs for full context
+            stage.id,
+            event.params.chatId,
+            mediator,
+          ),
         ),
-      ),
-    );
+      );
+
+      // Send agent participant messages for agents who are still completing
+      // the experiment
+      const agentParticipants = allParticipants.filter(
+        (p) =>
+          p.agentConfig && p.currentStatus === ParticipantStatus.IN_PROGRESS,
+      );
+      await Promise.all(
+        agentParticipants.map((participant) =>
+          createAgentChatMessageFromPrompt(
+            event.params.experimentId,
+            event.params.cohortId,
+            [participant.privateId], // Pass agent's own ID as array
+            stage.id,
+            event.params.chatId,
+            participant,
+          ),
+        ),
+      );
+    }
   },
 );
 

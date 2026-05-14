@@ -3,6 +3,7 @@ import {
   ChatMediatorStructuredOutputConfig,
   ChatMessage,
   ChatPromptConfig,
+  ChatStageConfig,
   ChatStagePublicData,
   extractChatMediatorStructuredFields,
   getStructuredOutput,
@@ -16,6 +17,7 @@ import {
   createChatMessage,
   createParticipantProfileBase,
   sanitizeRawResponseForLogging,
+  shuffleWithSeed,
 } from '@deliberation-lab/utils';
 import {Timestamp} from 'firebase-admin/firestore';
 import {processModelResponse} from '../agent.utils';
@@ -64,11 +66,17 @@ export async function createAgentChatMessageFromPrompt(
   // Profile of agent who will be sending the chat message
   user: ParticipantProfileExtended | MediatorProfileExtended,
 ) {
-  if (!user.agentConfig) return false;
+  if (!user.agentConfig) {
+    console.log(`[chat.agent] User ${user.publicId} has no agentConfig`);
+    return false;
+  }
 
   // Stage (in order to determine stage kind)
   const stage = await getFirestoreStage(experimentId, stageId);
-  if (!stage) return false;
+  if (!stage) {
+    console.log(`[chat.agent] Stage ${stageId} not found`);
+    return false;
+  }
 
   // Fetches stored (else default) prompt config for given stage
   const promptConfig = (await getStructuredPromptConfig(
@@ -78,6 +86,9 @@ export async function createAgentChatMessageFromPrompt(
   )) as ChatPromptConfig | undefined;
 
   if (!promptConfig) {
+    console.log(
+      `[chat.agent] PromptConfig not found for user ${user.publicId} in stage ${stageId}`,
+    );
     return false;
   }
 
@@ -150,6 +161,37 @@ export async function createAgentChatMessageFromPrompt(
     );
     message = response.message;
     if (!message) {
+      if (triggerChatId === '') {
+        const triggerLogId = `initial-${user.publicId}`;
+        console.log(
+          `[chat.agent] getAgentChatMessage failed for initial message. Deleting trigger log: ${triggerLogId}`,
+        );
+        const isTurnBased =
+          stage?.kind === StageKind.CHAT &&
+          (stage as ChatStageConfig).isTurnBased;
+
+        let triggerLogRef;
+        if (isTurnBased) {
+          triggerLogRef = getGroupChatTriggerLogRef(
+            experimentId,
+            cohortId,
+            stageId,
+            triggerLogId,
+          );
+        } else {
+          triggerLogRef = app
+            .firestore()
+            .collection('experiments')
+            .doc(experimentId)
+            .collection('cohorts')
+            .doc(cohortId)
+            .collection('publicStageData')
+            .doc(stageId)
+            .collection('agentInitialTriggerLog')
+            .doc(triggerLogId);
+        }
+        await triggerLogRef.delete();
+      }
       return response.success;
     }
   }
@@ -215,6 +257,23 @@ export async function getAgentChatMessage(
           cohortId,
           stageId,
         );
+
+  // For turn-based conversation, ensure it is the agent's turn
+  const chatStage = stage as ChatStageConfig;
+  if (chatStage.isTurnBased) {
+    const publicStageData = await getFirestoreStagePublicData(
+      experimentId,
+      cohortId,
+      stageId,
+    );
+    const chatPublicData = publicStageData as ChatStagePublicData;
+    if (
+      chatPublicData &&
+      chatPublicData.currentTurnParticipantId !== user.publicId
+    ) {
+      return {message: null, success: true};
+    }
+  }
 
   // Confirm that agent can send chat messages based on prompt config
   const chatSettings = promptConfig.chatSettings;
@@ -675,6 +734,89 @@ async function sendInitialGroupChatMessages(
     stageId,
     true, // checkIsAgent = true
   );
+
+  const stage = await getFirestoreStage(experimentId, stageId);
+  const chatStage = stage as ChatStageConfig;
+
+  if (chatStage.isTurnBased) {
+    const publicStageData = await getFirestoreStagePublicData(
+      experimentId,
+      cohortId,
+      stageId,
+    );
+    const chatPublicData = publicStageData as ChatStagePublicData;
+
+    // If uninitialized
+    if (!chatPublicData || !chatPublicData.currentTurnParticipantId) {
+      const allPublicParticipantIds = allParticipants.map((p) => p.publicId);
+      const allMediatorIds = agentMediators.map((m) => m.publicId);
+
+      // Shuffle participants with seed
+      const seedString = `${cohortId}-0`;
+      const shuffledParticipants = shuffleWithSeed(
+        allPublicParticipantIds,
+        seedString,
+      );
+
+      const turnOrder = [...allMediatorIds, ...shuffledParticipants];
+      const currentTurnParticipantId = turnOrder[0] ?? null;
+
+      // Update Firestore publicStageData
+      const publicStageDataRef = app
+        .firestore()
+        .collection('experiments')
+        .doc(experimentId)
+        .collection('cohorts')
+        .doc(cohortId)
+        .collection('publicStageData')
+        .doc(stageId);
+
+      await publicStageDataRef.set(
+        {
+          currentTurnParticipantId,
+          turnOrder,
+          cycleIndex: 0,
+        },
+        {merge: true},
+      );
+
+      // Trigger the mediator message (which is first!)
+      if (
+        currentTurnParticipantId &&
+        allMediatorIds.includes(currentTurnParticipantId)
+      ) {
+        const mediator = agentMediators.find(
+          (m) => m.publicId === currentTurnParticipantId,
+        );
+        if (mediator) {
+          // Delete trigger log to ensure mediator can speak!
+          const triggerLogId = `initial-${currentTurnParticipantId}`;
+          const triggerLogRef = app
+            .firestore()
+            .collection('experiments')
+            .doc(experimentId)
+            .collection('cohorts')
+            .doc(cohortId)
+            .collection('publicStageData')
+            .doc(stageId)
+            .collection('triggerLogs')
+            .doc(triggerLogId);
+
+          await triggerLogRef.delete();
+
+          await createAgentChatMessageFromPrompt(
+            experimentId,
+            cohortId,
+            allParticipantIds,
+            stageId,
+            '', // empty triggerChatId
+            mediator,
+          );
+        }
+      }
+      return; // Return so we don't run the default broadcast below!
+    }
+  }
 
   for (const mediator of agentMediators) {
     await createAgentChatMessageFromPrompt(

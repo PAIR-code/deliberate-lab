@@ -732,6 +732,9 @@
               }
             ]
           }
+        },
+        "isTurnBased": {
+          "type": "boolean"
         }
       }
     },

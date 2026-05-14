@@ -32,15 +32,12 @@ export const updateAgentParticipant = onDocumentUpdated(
     const after = event.data.after.data() as ParticipantProfileExtended;
 
     if (before.currentStageId !== after.currentStageId) {
-      // Only send initial messages if the stage is unlocked
       const cohort = await getFirestoreCohort(
         experimentId,
         after.currentCohortId,
       );
 
-      // Check if the stage is unlocked before sending initial messages
-      // This prevents sending messages for stages that are gated by "waiting"
-      // where all participants must be on the current stage first
+      // Only send initial message if the stage if unlocked
       if (cohort?.stageUnlockMap[after.currentStageId]) {
         await sendInitialChatMessages(
           experimentId,

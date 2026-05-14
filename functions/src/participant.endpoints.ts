@@ -15,12 +15,14 @@ import {
   VariableScope,
   getTimeElapsed,
   ChatStagePublicData,
+  ChatStageConfig,
 } from '@deliberation-lab/utils';
 import {
   getFirestoreStage,
   getFirestoreStagePublicData,
   getFirestorePrivateChatMessages,
 } from './utils/firestore';
+import {sendInitialChatMessages} from './chat/chat.agent';
 import {
   updateCohortStageUnlocked,
   updateParticipantNextStage,
@@ -488,6 +490,9 @@ export const acceptParticipantExperimentStart = onCall(
       .collection('participants')
       .doc(privateId);
 
+    let currentCohortId = '';
+    let currentStageId = '';
+
     // Run document write as transaction to ensure consistency
     await app.firestore().runTransaction(async (transaction) => {
       const participant = (
@@ -495,8 +500,10 @@ export const acceptParticipantExperimentStart = onCall(
       ).data() as ParticipantProfileExtended;
       participant.timestamps.startExperiment = Timestamp.now();
 
+      currentCohortId = participant.currentCohortId;
+      currentStageId = participant.currentStageId;
+
       // Set current stage as ready to start
-      const currentStageId = participant.currentStageId;
       participant.timestamps.readyStages[currentStageId] = Timestamp.now();
 
       // If all active participants have reached the next stage,
@@ -510,6 +517,23 @@ export const acceptParticipantExperimentStart = onCall(
 
       transaction.set(document, participant);
     });
+
+    // If the initial stage is a turn-based chat stage, trigger initial messages immediately
+    // since there is no prior stage progression to fire onParticipantStageDataUpdated.
+    const stage = await getFirestoreStage(data.experimentId, currentStageId);
+    const isTurnBased =
+      stage?.kind === StageKind.CHAT && (stage as ChatStageConfig).isTurnBased;
+    if (isTurnBased) {
+      console.log(
+        `[participant.endpoints] Initial stage ${currentStageId} is turn-based. Triggering sendInitialChatMessages!`,
+      );
+      await sendInitialChatMessages(
+        data.experimentId,
+        currentCohortId,
+        currentStageId,
+        privateId,
+      );
+    }
 
     return {success: true};
   },

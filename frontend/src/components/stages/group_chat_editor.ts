@@ -30,13 +30,39 @@ export class ChatEditor extends MobxLitElement {
 
     return html`
       <div class="title">Conversation settings</div>
-      ${this.renderTimeLimit()}
+      ${this.renderTimeLimit()} ${this.renderTurnBasedSetting()}
       <div class="divider"></div>
       <div class="title">Agent mediators</div>
       <div class="description">
         Navigate to "Agent mediators" tab to add or edit mediators
       </div>
       ${this.renderMediators()}
+    `;
+  }
+
+  private renderTurnBasedSetting() {
+    return html`
+      <div class="config-item">
+        <div class="checkbox-wrapper">
+          <md-checkbox
+            touch-target="wrapper"
+            ?checked=${this.stage?.isTurnBased ?? false}
+            ?disabled=${!this.experimentEditor.canEditStages}
+            @change=${(e: Event) => {
+              const checked = (e.target as HTMLInputElement).checked;
+              this.experimentEditor.updateStage({
+                ...this.stage!,
+                isTurnBased: checked,
+              });
+            }}
+          >
+          </md-checkbox>
+          <div>
+            Turn-based conversation: The mediator speaks, then each agent speaks
+            in a random order.
+          </div>
+        </div>
+      </div>
     `;
   }
 
