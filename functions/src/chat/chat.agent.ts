@@ -54,6 +54,13 @@ import {updateModelLogFiles} from '../log.utils';
 // Functions for preparing, querying, and organizing agent chat responses.
 // ****************************************************************************
 
+/** Result of an agent's attempt to send a chat message. */
+export enum AgentMessageResult {
+  SENT = 'sent',
+  DECLINED = 'declined',
+  ERROR = 'error',
+}
+
 /** Use persona chat prompt to create and send agent chat message. */
 export async function createAgentChatMessageFromPrompt(
   experimentId: string,
@@ -64,11 +71,11 @@ export async function createAgentChatMessageFromPrompt(
   // Profile of agent who will be sending the chat message
   user: ParticipantProfileExtended | MediatorProfileExtended,
 ) {
-  if (!user.agentConfig) return false;
+  if (!user.agentConfig) return AgentMessageResult.ERROR;
 
   // Stage (in order to determine stage kind)
   const stage = await getFirestoreStage(experimentId, stageId);
-  if (!stage) return false;
+  if (!stage) return AgentMessageResult.ERROR;
 
   // Fetches stored (else default) prompt config for given stage
   const promptConfig = (await getStructuredPromptConfig(
@@ -78,7 +85,7 @@ export async function createAgentChatMessageFromPrompt(
   )) as ChatPromptConfig | undefined;
 
   if (!promptConfig) {
-    return false;
+    return AgentMessageResult.ERROR;
   }
 
   const isPrivateChat = stage.kind === StageKind.PRIVATE_CHAT;
@@ -105,7 +112,7 @@ export async function createAgentChatMessageFromPrompt(
 
     const hasAlreadySent = (await triggerLogRef.get()).exists;
     if (hasAlreadySent) {
-      return false; // Already sent initial message
+      return AgentMessageResult.DECLINED; // Already sent initial message
     }
 
     // Mark that we're sending the initial message
@@ -150,7 +157,9 @@ export async function createAgentChatMessageFromPrompt(
     );
     message = response.message;
     if (!message) {
-      return response.success;
+      return response.success
+        ? AgentMessageResult.DECLINED
+        : AgentMessageResult.ERROR;
     }
   }
 
@@ -161,7 +170,7 @@ export async function createAgentChatMessageFromPrompt(
       console.error(
         'No participant ID provided for private chat message storage',
       );
-      return false;
+      return AgentMessageResult.ERROR;
     }
     await sendAgentPrivateChatMessage(
       experimentId,
@@ -182,7 +191,7 @@ export async function createAgentChatMessageFromPrompt(
     );
   }
 
-  return true;
+  return AgentMessageResult.SENT;
 }
 
 /** Query for and return chat message for given agent and chat prompt configs. */
@@ -345,10 +354,6 @@ export async function getAgentChatMessage(
     return {message: null, success: false};
   }
 
-  if (!shouldRespond) {
-    // Logic for not responding (handled below)
-  }
-
   // Only if agent participant is ready to end chat
   if (readyToEndChat && user.type === UserType.PARTICIPANT) {
     // Ensure we don't end chat on the very first message
@@ -368,19 +373,6 @@ export async function getAgentChatMessage(
   }
 
   if (!shouldRespond) {
-    // If agent decides not to respond in private chat, they are ready to end
-    if (
-      stage.kind === StageKind.PRIVATE_CHAT &&
-      user.type === UserType.PARTICIPANT &&
-      chatMessages.length > 0
-    ) {
-      const participantAnswerDoc = getFirestoreParticipantAnswerRef(
-        experimentId,
-        user.privateId,
-        stageId,
-      );
-      await participantAnswerDoc.set({readyToEndChat: true}, {merge: true});
-    }
     return {message: null, success: true};
   }
 

@@ -9,12 +9,19 @@ import {
 import {
   getFirestoreActiveMediators,
   getFirestoreActiveParticipants,
+  getFirestoreExperiment,
   getFirestoreParticipant,
+  getFirestoreParticipantAnswerRef,
+  getFirestoreParticipantRef,
   getFirestoreStage,
   getFirestoreStagePublicData,
 } from '../utils/firestore';
-import {createAgentChatMessageFromPrompt} from '../chat/chat.agent';
+import {
+  createAgentChatMessageFromPrompt,
+  AgentMessageResult,
+} from '../chat/chat.agent';
 import {sendErrorPrivateChatMessage} from '../chat/chat.utils';
+import {updateParticipantNextStage} from '../participant.utils';
 import {startTimeElapsed} from '../stages/chat.time';
 import {app} from '../app';
 
@@ -158,7 +165,8 @@ export const onPrivateChatMessageCreated = onDocumentCreated(
       true,
     );
 
-    await Promise.all(
+    // Send agent mediator messages and collect results
+    const results = await Promise.all(
       mediators.map(async (mediator) => {
         const result = await createAgentChatMessageFromPrompt(
           event.params.experimentId,
@@ -169,7 +177,7 @@ export const onPrivateChatMessageCreated = onDocumentCreated(
           mediator,
         );
 
-        if (!result) {
+        if (result === AgentMessageResult.ERROR) {
           await sendErrorPrivateChatMessage(
             event.params.experimentId,
             participant.privateId,
@@ -184,12 +192,14 @@ export const onPrivateChatMessageCreated = onDocumentCreated(
             },
           );
         }
+
+        return result;
       }),
     );
 
-    // If no mediator, return error (otherwise participant may wait
-    // indefinitely for a response).
-    if (mediators.length === 0) {
+    // Only send "No mediators found" error for human participants.
+    // Agent participants will be advanced by the allMediatorsDone check below.
+    if (mediators.length === 0 && !participant.agentConfig) {
       await sendErrorPrivateChatMessage(
         event.params.experimentId,
         participant.privateId,
@@ -201,11 +211,16 @@ export const onPrivateChatMessageCreated = onDocumentCreated(
       );
     }
 
+    const allMediatorsDone =
+      mediators.length === 0 ||
+      results.every((r) => r === AgentMessageResult.DECLINED);
+
     // Send agent participant messages (if participant is an agent)
+    let agentResult: AgentMessageResult | null = null;
     if (participant.agentConfig) {
       // Ensure agent only responds to mediator, not themselves
       if (message.type === UserType.MEDIATOR) {
-        await createAgentChatMessageFromPrompt(
+        agentResult = await createAgentChatMessageFromPrompt(
           event.params.experimentId,
           participant.currentCohortId,
           [participant.privateId], // Pass agent's own ID as array
@@ -213,6 +228,58 @@ export const onPrivateChatMessageCreated = onDocumentCreated(
           event.params.chatId,
           participant,
         );
+      }
+    }
+
+    // Advance agent participant if the conversation is dead:
+    // - All mediators declined AND the triggering message is not from a mediator
+    //   (a mediator "declining" to respond to its own message is not the same
+    //   as being permanently done — it just means canSelfTriggerCalls is false)
+    // - OR all mediators declined AND the agent also declined (both sides done)
+    //
+    // Guard on currentStageId to prevent double-advancement if the trigger
+    // fires twice (Cloud Functions at-least-once delivery).
+    // Use updateParticipantNextStage directly because private chat stages
+    // typically don't have publicStageData (which updateParticipantReadyToEndChat
+    // requires).
+    const shouldAdvanceAgent =
+      allMediatorsDone &&
+      participant.agentConfig &&
+      participant.currentStageId === event.params.stageId &&
+      (message.type !== UserType.MEDIATOR ||
+        agentResult === AgentMessageResult.DECLINED);
+
+    if (shouldAdvanceAgent) {
+      // Advance to next stage
+      const experiment = await getFirestoreExperiment(
+        event.params.experimentId,
+      );
+      if (experiment) {
+        // Set readyToEndChat first for data consistency with the normal
+        // end-of-chat flow. If advancement fails after this point, the state
+        // matches a human participant who clicked "end chat" but hasn't
+        // been advanced yet — a recoverable state.
+        const participantAnswerDoc = getFirestoreParticipantAnswerRef(
+          event.params.experimentId,
+          participant.privateId,
+          event.params.stageId,
+        );
+        await participantAnswerDoc.set({readyToEndChat: true}, {merge: true});
+
+        await updateParticipantNextStage(
+          event.params.experimentId,
+          participant,
+          experiment.stageIds,
+        );
+        // updateParticipantNextStage mutates the participant in place but does
+        // not write to Firestore — the caller must write.
+        const participantDoc = getFirestoreParticipantRef(
+          event.params.experimentId,
+          participant.privateId,
+        );
+        await app.firestore().runTransaction(async (transaction) => {
+          transaction.set(participantDoc, participant);
+        });
       }
     }
   },
