@@ -746,6 +746,55 @@ async function sendInitialGroupChatMessages(
     );
     const chatPublicData = publicStageData as ChatStagePublicData;
 
+    // If already initialized, check for late joiners and place them in their respective queues
+    if (chatPublicData && chatPublicData.currentTurnParticipantId) {
+      const turnOrder = chatPublicData.turnOrder ?? [];
+      const allPublicParticipantIds = allParticipants.map((p) => p.publicId);
+      const allMediatorIds = agentMediators.map((m) => m.publicId);
+      const activeIds = [...allMediatorIds, ...allPublicParticipantIds];
+
+      // Filter turnOrder to only include currently active IDs
+      const filteredTurnOrder = turnOrder.filter((id: string) =>
+        activeIds.includes(id),
+      );
+
+      const currentMediators = filteredTurnOrder.filter((id) =>
+        allMediatorIds.includes(id),
+      );
+      const missingMediators = allMediatorIds.filter(
+        (id) => !filteredTurnOrder.includes(id),
+      );
+      const currentParticipants = filteredTurnOrder.filter((id) =>
+        allPublicParticipantIds.includes(id),
+      );
+      const missingParticipants = allPublicParticipantIds.filter(
+        (id) => !filteredTurnOrder.includes(id),
+      );
+
+      const updatedTurnOrder = [
+        ...currentMediators,
+        ...missingMediators,
+        ...currentParticipants,
+        ...missingParticipants,
+      ];
+
+      if (JSON.stringify(turnOrder) !== JSON.stringify(updatedTurnOrder)) {
+        const publicStageDataRef = app
+          .firestore()
+          .collection('experiments')
+          .doc(experimentId)
+          .collection('cohorts')
+          .doc(cohortId)
+          .collection('publicStageData')
+          .doc(stageId);
+
+        await publicStageDataRef.update({
+          turnOrder: updatedTurnOrder,
+        });
+      }
+      return;
+    }
+
     // If uninitialized
     if (!chatPublicData || !chatPublicData.currentTurnParticipantId) {
       const allPublicParticipantIds = allParticipants.map((p) => p.publicId);
@@ -758,7 +807,13 @@ async function sendInitialGroupChatMessages(
         seedString,
       );
 
-      const turnOrder = [...allMediatorIds, ...shuffledParticipants];
+      // Shuffle mediator order when conversation begins (only if multiple)
+      const shuffledMediators =
+        allMediatorIds.length > 1
+          ? shuffleWithSeed(allMediatorIds, `${cohortId}-mediators`)
+          : allMediatorIds;
+
+      const turnOrder = [...shuffledMediators, ...shuffledParticipants];
       const currentTurnParticipantId = turnOrder[0] ?? null;
 
       // Update Firestore publicStageData

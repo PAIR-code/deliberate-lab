@@ -98,7 +98,47 @@ export const onPublicChatMessageCreated = onDocumentCreated(
 
       // Filter turnOrder to only include currently active/non-dropped-out IDs
       const originalTurnOrder = [...turnOrder];
-      turnOrder = turnOrder.filter((id: string) => activeIds.includes(id));
+      const filteredTurnOrder = turnOrder.filter((id: string) =>
+        activeIds.includes(id),
+      );
+
+      const currentMediators = filteredTurnOrder.filter((id) =>
+        allMediatorIds.includes(id),
+      );
+      const missingMediators = allMediatorIds.filter(
+        (id) => !filteredTurnOrder.includes(id),
+      );
+      const currentParticipants = filteredTurnOrder.filter((id) =>
+        allPublicParticipantIds.includes(id),
+      );
+      const missingParticipants = allPublicParticipantIds.filter(
+        (id) => !filteredTurnOrder.includes(id),
+      );
+
+      turnOrder = [
+        ...currentMediators,
+        ...missingMediators,
+        ...currentParticipants,
+        ...missingParticipants,
+      ];
+
+      if (JSON.stringify(originalTurnOrder) !== JSON.stringify(turnOrder)) {
+        const publicStageDataRef = app
+          .firestore()
+          .collection('experiments')
+          .doc(event.params.experimentId)
+          .collection('cohorts')
+          .doc(event.params.cohortId)
+          .collection('publicStageData')
+          .doc(event.params.stageId);
+
+        await publicStageDataRef.set(
+          {
+            turnOrder,
+          },
+          {merge: true},
+        );
+      }
 
       // If the current turn holder is no longer active (e.g., dropped out), auto-advance!
       if (
@@ -122,12 +162,45 @@ export const onPublicChatMessageCreated = onDocumentCreated(
         } else {
           // No active participants left in this cycle, start a new cycle!
           cycleIndex += 1;
-          const seedString = `${event.params.cohortId}-${cycleIndex}`;
-          const shuffledParticipants = shuffleWithSeed(
-            allPublicParticipantIds,
-            seedString,
-          );
-          turnOrder = [...allMediatorIds, ...shuffledParticipants];
+          let nextTurnOrder = [...turnOrder];
+          const hasMediators = allMediatorIds.length > 0;
+          if (hasMediators) {
+            const currentMediators = turnOrder.filter((id) =>
+              allMediatorIds.includes(id),
+            );
+            const missingMediators = allMediatorIds.filter(
+              (id) => !turnOrder.includes(id),
+            );
+            const shuffledMissingMediators =
+              missingMediators.length > 1
+                ? shuffleWithSeed(
+                    missingMediators,
+                    `${event.params.cohortId}-new-mediators-${cycleIndex}`,
+                  )
+                : missingMediators;
+            const nextMediators = [
+              ...currentMediators,
+              ...shuffledMissingMediators,
+            ];
+
+            const hadMediators = turnOrder.some((id) =>
+              allMediatorIds.includes(id),
+            );
+            if (hadMediators) {
+              const seedString = `${event.params.cohortId}-${cycleIndex}`;
+              const shuffledParticipants = shuffleWithSeed(
+                allPublicParticipantIds,
+                seedString,
+              );
+              nextTurnOrder = [...nextMediators, ...shuffledParticipants];
+            } else {
+              const currentParticipants = turnOrder.filter((id) =>
+                allPublicParticipantIds.includes(id),
+              );
+              nextTurnOrder = [...nextMediators, ...currentParticipants];
+            }
+          }
+          turnOrder = nextTurnOrder;
           currentTurnParticipantId = turnOrder[0] ?? null;
         }
 
@@ -160,7 +233,16 @@ export const onPublicChatMessageCreated = onDocumentCreated(
           seedString,
         );
 
-        turnOrder = [...allMediatorIds, ...shuffledParticipants];
+        // Shuffle mediator order when conversation begins (only if multiple)
+        const shuffledMediators =
+          allMediatorIds.length > 1
+            ? shuffleWithSeed(
+                allMediatorIds,
+                `${event.params.cohortId}-mediators`,
+              )
+            : allMediatorIds;
+
+        turnOrder = [...shuffledMediators, ...shuffledParticipants];
         currentTurnParticipantId = turnOrder[0] ?? null;
 
         // Update Firestore immediately
@@ -221,13 +303,49 @@ export const onPublicChatMessageCreated = onDocumentCreated(
         // Cycle repeats!
         cycleIndex += 1;
 
-        const seedString = `${event.params.cohortId}-${cycleIndex}`;
-        const shuffledParticipants = shuffleWithSeed(
-          allPublicParticipantIds,
-          seedString,
-        );
+        let nextTurnOrder = [...turnOrder];
+        const hasMediators = allMediatorIds.length > 0;
+        if (hasMediators) {
+          const currentMediators = turnOrder.filter((id) =>
+            allMediatorIds.includes(id),
+          );
+          const missingMediators = allMediatorIds.filter(
+            (id) => !turnOrder.includes(id),
+          );
+          const shuffledMissingMediators =
+            missingMediators.length > 1
+              ? shuffleWithSeed(
+                  missingMediators,
+                  `${event.params.cohortId}-new-mediators-${cycleIndex}`,
+                )
+              : missingMediators;
+          const nextMediators = [
+            ...currentMediators,
+            ...shuffledMissingMediators,
+          ];
 
-        turnOrder = [...allMediatorIds, ...shuffledParticipants];
+          // Check if the previous turnOrder had mediators
+          const hadMediators = turnOrder.some((id) =>
+            allMediatorIds.includes(id),
+          );
+
+          if (hadMediators) {
+            const seedString = `${event.params.cohortId}-${cycleIndex}`;
+            const shuffledParticipants = shuffleWithSeed(
+              allPublicParticipantIds,
+              seedString,
+            );
+            nextTurnOrder = [...nextMediators, ...shuffledParticipants];
+          } else {
+            // Preserve the stable human ordering
+            const currentParticipants = turnOrder.filter((id) =>
+              allPublicParticipantIds.includes(id),
+            );
+            nextTurnOrder = [...nextMediators, ...currentParticipants];
+          }
+        }
+
+        turnOrder = nextTurnOrder;
         currentTurnParticipantId = turnOrder[0] ?? null;
       } else {
         // Move to next person in the list

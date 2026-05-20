@@ -58,8 +58,8 @@ export class ChatEditor extends MobxLitElement {
           >
           </md-checkbox>
           <div>
-            Turn-based conversation: The mediator speaks, then each agent speaks
-            in a random order.
+            Turn-based conversation: Each participant speaks in a random order,
+            beginning with the mediators if at least one is present.
           </div>
         </div>
       </div>
