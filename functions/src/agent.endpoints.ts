@@ -141,8 +141,6 @@ export const generatePersonaContext = onCall(
       generationConfig,
     );
 
-    console.log('GENERATE PERSONA CONTEXT\n', mode, response);
-
     return response;
   },
 );
