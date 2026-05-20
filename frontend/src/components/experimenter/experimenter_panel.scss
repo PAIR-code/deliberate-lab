@@ -233,7 +233,7 @@ pr-button pr-icon {
   gap: common.$spacing-xs;
 }
 
-.alert-response-input {
+.alert-input-wrapper {
   @include common.flex-row-align-center;
   border: 1px solid var(--md-sys-color-outline);
   border-radius: common.$spacing-small;
