@@ -8,6 +8,7 @@ import {
   UserType,
   createParticipantProfileBase,
   shuffleWithSeed,
+  ChatPromptConfig,
 } from '@deliberation-lab/utils';
 import {
   getFirestoreActiveMediators,
@@ -15,10 +16,15 @@ import {
   getFirestoreParticipant,
   getFirestoreStage,
   getFirestoreStagePublicData,
+  getFirestorePublicStageChatMessages,
 } from '../utils/firestore';
-import {createAgentChatMessageFromPrompt} from '../chat/chat.agent';
+import {
+  createAgentChatMessageFromPrompt,
+  canSendAgentChatMessage,
+} from '../chat/chat.agent';
 import {sendErrorPrivateChatMessage} from '../chat/chat.utils';
 import {startTimeElapsed} from '../stages/chat.time';
+import {getStructuredPromptConfig} from '../structured_prompt.utils';
 import {app} from '../app';
 
 // ************************************************************************* //
@@ -80,6 +86,12 @@ export const onPublicChatMessageCreated = onDocumentCreated(
     if (chatStage.isTurnBased) {
       const message = event.data?.data() as ChatMessage;
       if (!message) return;
+
+      const chatMessages = await getFirestorePublicStageChatMessages(
+        event.params.experimentId,
+        event.params.cohortId,
+        event.params.stageId,
+      );
 
       let turnOrder = chatPublicData.turnOrder ?? [];
       let currentTurnParticipantId = chatPublicData.currentTurnParticipantId;
@@ -296,61 +308,124 @@ export const onPublicChatMessageCreated = onDocumentCreated(
       }
 
       // 3. Advance turn
-      const currentIndex = turnOrder.indexOf(message.senderId);
+      let nextTurnParticipantId = currentTurnParticipantId;
+      let nextIndex = turnOrder.indexOf(message.senderId);
+      let attempts = 0;
 
-      // If it's the last person in the turn order
-      if (currentIndex === -1 || currentIndex === turnOrder.length - 1) {
-        // Cycle repeats!
-        cycleIndex += 1;
+      while (attempts < turnOrder.length) {
+        if (nextIndex === -1 || nextIndex === turnOrder.length - 1) {
+          // Cycle repeats!
+          cycleIndex += 1;
 
-        let nextTurnOrder = [...turnOrder];
-        const hasMediators = allMediatorIds.length > 0;
-        if (hasMediators) {
-          const currentMediators = turnOrder.filter((id) =>
-            allMediatorIds.includes(id),
-          );
-          const missingMediators = allMediatorIds.filter(
-            (id) => !turnOrder.includes(id),
-          );
-          const shuffledMissingMediators =
-            missingMediators.length > 1
-              ? shuffleWithSeed(
-                  missingMediators,
-                  `${event.params.cohortId}-new-mediators-${cycleIndex}`,
-                )
-              : missingMediators;
-          const nextMediators = [
-            ...currentMediators,
-            ...shuffledMissingMediators,
-          ];
-
-          // Check if the previous turnOrder had mediators
-          const hadMediators = turnOrder.some((id) =>
-            allMediatorIds.includes(id),
-          );
-
-          if (hadMediators) {
-            const seedString = `${event.params.cohortId}-${cycleIndex}`;
-            const shuffledParticipants = shuffleWithSeed(
-              allPublicParticipantIds,
-              seedString,
+          let nextTurnOrder = [...turnOrder];
+          const hasMediators = allMediatorIds.length > 0;
+          if (hasMediators) {
+            const currentMediators = turnOrder.filter((id) =>
+              allMediatorIds.includes(id),
             );
-            nextTurnOrder = [...nextMediators, ...shuffledParticipants];
-          } else {
-            // Preserve the stable human ordering
-            const currentParticipants = turnOrder.filter((id) =>
-              allPublicParticipantIds.includes(id),
+            const missingMediators = allMediatorIds.filter(
+              (id) => !turnOrder.includes(id),
             );
-            nextTurnOrder = [...nextMediators, ...currentParticipants];
+            const shuffledMissingMediators =
+              missingMediators.length > 1
+                ? shuffleWithSeed(
+                    missingMediators,
+                    `${event.params.cohortId}-new-mediators-${cycleIndex}`,
+                  )
+                : missingMediators;
+            const nextMediators = [
+              ...currentMediators,
+              ...shuffledMissingMediators,
+            ];
+
+            // Check if the previous turnOrder had mediators
+            const hadMediators = turnOrder.some((id) =>
+              allMediatorIds.includes(id),
+            );
+
+            if (hadMediators) {
+              const seedString = `${event.params.cohortId}-${cycleIndex}`;
+              const shuffledParticipants = shuffleWithSeed(
+                allPublicParticipantIds,
+                seedString,
+              );
+              nextTurnOrder = [...nextMediators, ...shuffledParticipants];
+            } else {
+              // Preserve the stable human ordering
+              const currentParticipants = turnOrder.filter((id) =>
+                allPublicParticipantIds.includes(id),
+              );
+              nextTurnOrder = [...nextMediators, ...currentParticipants];
+            }
+          }
+
+          turnOrder = nextTurnOrder;
+          nextIndex = 0;
+        } else {
+          nextIndex += 1;
+        }
+
+        nextTurnParticipantId = turnOrder[nextIndex];
+
+        // Check if the candidate is active and exists
+        const candidate =
+          allParticipants.find((p) => p.publicId === nextTurnParticipantId) ||
+          (
+            await getFirestoreActiveMediators(
+              event.params.experimentId,
+              event.params.cohortId,
+              stage.id,
+              false,
+            )
+          ).find((m) => m.publicId === nextTurnParticipantId);
+
+        if (!candidate || !activeIds.includes(nextTurnParticipantId)) {
+          attempts++;
+          continue;
+        }
+
+        // If the candidate is an AI agent, check response limits
+        if (candidate.agentConfig) {
+          const promptConfig = (await getStructuredPromptConfig(
+            event.params.experimentId,
+            stage,
+            candidate,
+          )) as ChatPromptConfig | undefined;
+
+          if (promptConfig) {
+            const chatSettings = promptConfig.chatSettings;
+            const chatsByAgent = (chatMessages ?? []).filter(
+              (chat) => chat.senderId === candidate.publicId,
+            );
+
+            let reason: string | null = null;
+            if (
+              chatSettings.maxResponses !== null &&
+              chatsByAgent.length >= chatSettings.maxResponses
+            ) {
+              reason = `maxResponses = ${chatSettings.maxResponses}`;
+            } else if (
+              chatSettings.minMessagesBeforeResponding !== null &&
+              (chatMessages ?? []).length <
+                chatSettings.minMessagesBeforeResponding
+            ) {
+              reason = `minMessagesBeforeResponding = ${chatSettings.minMessagesBeforeResponding}`;
+            }
+
+            if (reason) {
+              console.warn(
+                `Skipped turn for ${candidate.publicId} due to ${reason}`,
+              );
+              attempts++;
+              continue;
+            }
           }
         }
 
-        turnOrder = nextTurnOrder;
-        currentTurnParticipantId = turnOrder[0] ?? null;
-      } else {
-        // Move to next person in the list
-        currentTurnParticipantId = turnOrder[currentIndex + 1];
+        break;
       }
+
+      currentTurnParticipantId = nextTurnParticipantId;
 
       // Update publicStageData in Firestore
       const publicStageDataRef = app
