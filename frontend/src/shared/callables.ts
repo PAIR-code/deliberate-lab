@@ -20,6 +20,8 @@ import {
   ParticipantNextStageResponse,
   RequestChipAssistanceData,
   SendAlertMessageData,
+  SendExperimenterAlertData,
+  AckExperimenterAlertData,
   SendChipOfferData,
   SendChipResponseData,
   SendParticipantCheckData,
@@ -762,5 +764,35 @@ export const revokeDeliberateLabAPIKeyCallable = async (
     functions,
     'revokeDeliberateLabAPIKey',
   )({keyId});
+  return data;
+};
+
+/** Send experimenter-initiated alert. */
+export const sendExperimenterAlertCallable = async (
+  functions: Functions,
+  config: SendExperimenterAlertData,
+) => {
+  const {data} = await httpsCallable<
+    SendExperimenterAlertData,
+    SimpleResponse<string>
+  >(
+    functions,
+    'sendExperimenterAlert',
+  )(config);
+  return data;
+};
+
+/** Acknowledge experimenter-initiated alert (called by participant). */
+export const ackExperimenterAlertCallable = async (
+  functions: Functions,
+  config: AckExperimenterAlertData,
+) => {
+  const {data} = await httpsCallable<
+    AckExperimenterAlertData,
+    SimpleResponse<string>
+  >(
+    functions,
+    'ackExperimenterAlert',
+  )(config);
   return data;
 };

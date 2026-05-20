@@ -43,6 +43,7 @@ import {
 
 import {
   ackAlertMessageCallable,
+  sendExperimenterAlertCallable,
   bootParticipantCallable,
   createChatMessageCallable,
   createCohortCallable,
@@ -143,6 +144,26 @@ export class ExperimentManager extends Service {
   @observable showCohortList = false;
   @observable showParticipantStats = false;
   @observable showParticipantPreview = true;
+  @observable activePanel:
+    | 'default'
+    | 'alerts'
+    | 'manual_chat'
+    | 'api_key'
+    | 'participant_search'
+    | 'logs' = 'default';
+  @observable alertComposeTarget: string | undefined = undefined;
+
+  setActivePanel(
+    panel:
+      | 'default'
+      | 'alerts'
+      | 'manual_chat'
+      | 'api_key'
+      | 'participant_search'
+      | 'logs',
+  ) {
+    this.activePanel = panel;
+  }
   @observable hideLockedCohorts = false;
   @observable expandAllCohorts = true;
   @observable showMediatorsInCohortSummary = false;
@@ -1086,6 +1107,29 @@ export class ExperimentManager extends Service {
           participantId,
           alertId,
           response,
+        },
+      );
+    }
+    return output;
+  }
+
+  /** Send experimenter-initiated alert message. */
+  async sendExperimenterAlert(
+    participantId: string,
+    message: string,
+    cohortId = '',
+    stageId = '',
+  ) {
+    let output = {};
+    if (this.experimentId) {
+      output = await sendExperimenterAlertCallable(
+        this.sp.firebaseService.functions,
+        {
+          experimentId: this.experimentId,
+          cohortId,
+          stageId,
+          participantId,
+          message,
         },
       );
     }

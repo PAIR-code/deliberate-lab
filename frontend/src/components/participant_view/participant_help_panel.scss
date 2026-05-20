@@ -66,3 +66,51 @@
 .error {
   color: var(--md-sys-color-error);
 }
+
+.alert.experimenter-alert {
+  background: var(--md-sys-color-primary-container-low);
+  border-color: var(--md-sys-color-primary-container);
+  color: var(--md-sys-color-on-primary-container-low);
+
+  .subtitle {
+    color: var(--md-sys-color-primary);
+  }
+}
+
+.alert-header {
+  @include common.flex-row-align-center;
+  justify-content: space-between;
+  gap: common.$spacing-small;
+  margin-bottom: common.$spacing-small;
+}
+
+.message-label {
+  @include typescale.label-small;
+  color: var(--md-sys-color-outline);
+  font-weight: bold;
+  text-transform: uppercase;
+  margin-top: common.$spacing-small;
+}
+
+.responses-list {
+  @include common.flex-column;
+  gap: common.$spacing-xs;
+  padding-left: common.$spacing-medium;
+  border-left: 2px solid var(--md-sys-color-outline-variant);
+  margin-top: common.$spacing-xs;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  font-size: 9px;
+  font-weight: bold;
+  padding: 1px 5px;
+  border-radius: 3px;
+  text-transform: uppercase;
+
+  &.experimenter-badge {
+    background: var(--md-sys-color-primary);
+    color: var(--md-sys-color-on-primary);
+  }
+}

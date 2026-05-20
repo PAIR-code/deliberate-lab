@@ -312,3 +312,63 @@ pr-button pr-icon {
     gap: common.$spacing-small;
   }
 }
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  font-size: 10px;
+  font-weight: bold;
+  padding: 2px 6px;
+  border-radius: 4px;
+  text-transform: uppercase;
+
+  &.outgoing-badge {
+    background: var(--md-sys-color-secondary);
+    color: var(--md-sys-color-on-secondary);
+  }
+}
+
+.alert.outgoing {
+  background: var(--md-sys-color-secondary-container);
+  color: var(--md-sys-color-on-secondary-container);
+  border-color: var(--md-sys-color-secondary);
+
+  .alert-top {
+    border-bottom: 2px solid var(--md-sys-color-outline-variant);
+  }
+}
+
+.compose-section {
+  @include common.flex-column;
+  background: var(--md-sys-color-surface-variant);
+  border: 1px solid var(--md-sys-color-outline-variant);
+  border-radius: common.$spacing-medium;
+  gap: common.$spacing-medium;
+  padding: common.$spacing-large;
+  margin-bottom: common.$spacing-large;
+
+  .compose-header {
+    @include typescale.title-small;
+    color: var(--md-sys-color-on-surface-variant);
+  }
+
+  .compose-fields {
+    @include common.flex-column;
+    gap: common.$spacing-medium;
+  }
+
+  .participant-select {
+    @include typescale.body-medium;
+    background: var(--md-sys-color-surface);
+    border: 1px solid var(--md-sys-color-outline);
+    border-radius: common.$spacing-small;
+    color: var(--md-sys-color-on-surface);
+    padding: common.$spacing-medium;
+    width: 100%;
+    outline: none;
+
+    &:focus {
+      border-color: var(--md-sys-color-primary);
+    }
+  }
+}

@@ -7,12 +7,11 @@ import {AlertMessage, AlertStatus} from '@deliberation-lab/utils';
 
 import {MobxLitElement} from '@adobe/lit-mobx';
 import {CSSResultGroup, html, nothing} from 'lit';
-import {customElement, property, state} from 'lit/decorators.js';
+import {customElement, state} from 'lit/decorators.js';
 import {classMap} from 'lit/directives/class-map.js';
 
 import {core} from '../../core/core';
 import {AuthService} from '../../services/auth.service';
-import {HomeService} from '../../services/home.service';
 import {ParticipantService} from '../../services/participant.service';
 
 import {convertUnifiedTimestampToDate} from '../../shared/utils';
@@ -30,10 +29,6 @@ export class HelpPanel extends MobxLitElement {
   @state() message = '';
 
   override render() {
-    const close = () => {
-      this.participantService.setShowHelpPanel(false);
-    };
-
     const classes = classMap({
       nav: true,
       'full-view': !this.authService.isExperimenter,
@@ -91,16 +86,54 @@ export class HelpPanel extends MobxLitElement {
     `;
   }
 
+  override updated(changedProperties: Map<PropertyKey, unknown>) {
+    super.updated(changedProperties);
+
+    // Auto-acknowledge new experimenter-initiated alerts when the help panel is open.
+    const unackedAlerts = this.participantService.alerts.filter(
+      (alert) =>
+        alert.isExperimenterInitiated && alert.status === AlertStatus.NEW,
+    );
+    for (const alert of unackedAlerts) {
+      this.participantService.ackExperimenterAlert(alert.id);
+    }
+  }
+
   renderAlert(alert: AlertMessage) {
+    const isExperimenterAlert = alert.isExperimenterInitiated === true;
+
     return html`
-      <div class="alert">
-        <div class="subtitle">
-          ${convertUnifiedTimestampToDate(alert.timestamp)}
+      <div class="alert ${isExperimenterAlert ? 'experimenter-alert' : ''}">
+        <div class="alert-header">
+          <div class="subtitle">
+            ${convertUnifiedTimestampToDate(alert.timestamp)}
+          </div>
+          ${isExperimenterAlert
+            ? html`<span class="chip experimenter-badge"
+                >Experimenter Message</span
+              >`
+            : nothing}
+        </div>
+        <div class="message-label">
+          ${isExperimenterAlert ? 'Message' : 'Your request'}
         </div>
         <div class="message">${alert.message}</div>
-        <div class="subtitle">Experimenter response</div>
-        ${alert.responses.map((response) => html`<div>${response}</div>`)}
-        ${this.renderAlertStatus(alert)}
+
+        ${alert.responses.length > 0
+          ? html`
+              <div class="subtitle">
+                ${isExperimenterAlert
+                  ? 'Your replies'
+                  : 'Experimenter response'}
+              </div>
+              <div class="responses-list">
+                ${alert.responses.map(
+                  (response) => html`<div>${response}</div>`,
+                )}
+              </div>
+            `
+          : nothing}
+        ${!isExperimenterAlert ? this.renderAlertStatus(alert) : nothing}
       </div>
     `;
   }

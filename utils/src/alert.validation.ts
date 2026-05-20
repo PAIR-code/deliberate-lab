@@ -37,3 +37,39 @@ export const AckAlertMessageData = Type.Object(
 );
 
 export type AckAlertMessageData = Static<typeof AckAlertMessageData>;
+
+// ****************************************************************************
+// sendExperimenterAlert
+// ****************************************************************************
+
+/** SendExperimenterAlert input validation. */
+export const SendExperimenterAlertData = Type.Object(
+  {
+    experimentId: Type.String({minLength: 1}),
+    cohortId: Type.String(),
+    stageId: Type.String(),
+    participantId: Type.String({minLength: 1}),
+    message: Type.String({minLength: 1}),
+  },
+  strict,
+);
+
+export type SendExperimenterAlertData = Static<
+  typeof SendExperimenterAlertData
+>;
+
+// ****************************************************************************
+// ackExperimenterAlert
+// ****************************************************************************
+
+/** AckExperimenterAlert input validation. */
+export const AckExperimenterAlertData = Type.Object(
+  {
+    experimentId: Type.String({minLength: 1}),
+    participantId: Type.String({minLength: 1}),
+    alertId: Type.String({minLength: 1}),
+  },
+  strict,
+);
+
+export type AckExperimenterAlertData = Static<typeof AckExperimenterAlertData>;
