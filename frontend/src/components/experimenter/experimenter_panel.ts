@@ -14,11 +14,10 @@ import {MobxLitElement} from '@adobe/lit-mobx';
 import {reaction} from 'mobx';
 import {CSSResultGroup, html, nothing} from 'lit';
 import {customElement, state} from 'lit/decorators.js';
-import {classMap} from 'lit/directives/class-map.js';
 import {repeat} from 'lit/directives/repeat.js';
 
 import {core} from '../../core/core';
-import {ButtonClick, AnalyticsService} from '../../services/analytics.service';
+import {AnalyticsService} from '../../services/analytics.service';
 import {AuthService} from '../../services/auth.service';
 import {ExperimentManager} from '../../services/experiment.manager';
 import {ExperimentService} from '../../services/experiment.service';
@@ -35,6 +34,7 @@ import {
 
 import {styles} from './experimenter_panel.scss';
 import {convertUnifiedTimestampToDate} from '../../shared/utils';
+import {isObsoleteParticipant} from '../../shared/participant.utils';
 
 enum PanelView {
   DEFAULT = 'default',
@@ -57,11 +57,28 @@ export class Panel extends MobxLitElement {
   private readonly participantService = core.getService(ParticipantService);
   private readonly routerService = core.getService(RouterService);
 
-  @state() panelView: PanelView = PanelView.DEFAULT;
+  get panelView() {
+    return this.experimentManager.activePanel as PanelView;
+  }
+
+  set panelView(val: PanelView) {
+    this.experimentManager.setActivePanel(
+      val as
+        | 'default'
+        | 'alerts'
+        | 'manual_chat'
+        | 'api_key'
+        | 'participant_search'
+        | 'logs',
+    );
+  }
   @state() isLoading = false;
   @state() isAckAlertLoading = false;
   @state() participantSearchQuery = '';
   @state() showToast = false;
+  @state() private composeParticipantId = '';
+  @state() private composeMessage = '';
+  @state() private isSendingComposeAlert = false;
 
   private titleInterval: number | undefined = undefined;
   private originalTitle = document.title;
@@ -412,8 +429,14 @@ export class Panel extends MobxLitElement {
         this.isAckAlertLoading = false;
       };
 
+      const isOutgoing = alert.isExperimenterInitiated === true;
+
       return html`
-        <div class="alert ${alert.status === AlertStatus.NEW ? 'new' : ''}">
+        <div
+          class="alert ${alert.status === AlertStatus.NEW
+            ? 'new'
+            : ''} ${isOutgoing ? 'outgoing' : ''}"
+        >
           <div
             class="alert-top clickable"
             @click=${() => {
@@ -430,6 +453,9 @@ export class Panel extends MobxLitElement {
                 <div class="subtitle">
                   (${cohort?.metadata.name ?? 'Unknown cohort'})
                 </div>
+                ${isOutgoing
+                  ? html`<div class="chip outgoing-badge">Outgoing Alert</div>`
+                  : nothing}
               </div>
               <div class="subtitle">
                 ${convertUnifiedTimestampToDate(alert.timestamp)}
@@ -438,48 +464,60 @@ export class Panel extends MobxLitElement {
             <div class="alert-content">${alert.message}</div>
           </div>
           <div class="alert-bottom">
-            <div class="subtitle">Your responses</div>
-            ${alert.responses.map(
-              (response) => html` <div class="response">${response}</div> `,
-            )}
-            <div class="alert-response-options">
-              <div class="alert-response-input">
-                <pr-textarea
-                  .value=${this.alertResponseMap.get(alert.id) ?? ''}
-                  placeholder="Send a response"
-                  @input=${(e: Event) => {
-                    this.alertResponseMap.set(
-                      alert.id,
-                      (e.target as HTMLTextAreaElement).value,
-                    );
-                  }}
-                >
-                </pr-textarea>
-                <pr-icon-button
-                  icon="send"
-                  variant="default"
-                  @click=${async () => {
-                    onAck(this.alertResponseMap.get(alert.id) ?? '');
-                  }}
-                >
-                </pr-icon-button>
-              </div>
-              ${alert.status === AlertStatus.NEW
-                ? html`
-                    <pr-tooltip text="Mark as read" position="TOP_END">
+            ${alert.responses.length > 0
+              ? html`
+                  <div class="subtitle">
+                    ${isOutgoing ? 'Participant replies' : 'Your responses'}
+                  </div>
+                  ${alert.responses.map(
+                    (response) => html`
+                      <div class="response">${response}</div>
+                    `,
+                  )}
+                `
+              : nothing}
+            ${!isOutgoing
+              ? html`
+                  <div class="alert-response-options">
+                    <div class="alert-response-input">
+                      <pr-textarea
+                        .value=${this.alertResponseMap.get(alert.id) ?? ''}
+                        placeholder="Send a response"
+                        @input=${(e: Event) => {
+                          this.alertResponseMap.set(
+                            alert.id,
+                            (e.target as HTMLTextAreaElement).value,
+                          );
+                        }}
+                      >
+                      </pr-textarea>
                       <pr-icon-button
-                        icon="check_circle"
+                        icon="send"
                         variant="default"
-                        ?loading=${this.isAckAlertLoading}
-                        @click=${() => {
-                          onAck('');
+                        @click=${async () => {
+                          onAck(this.alertResponseMap.get(alert.id) ?? '');
                         }}
                       >
                       </pr-icon-button>
-                    </pr-tooltip>
-                  `
-                : nothing}
-            </div>
+                    </div>
+                    ${alert.status === AlertStatus.NEW
+                      ? html`
+                          <pr-tooltip text="Mark as read" position="TOP_END">
+                            <pr-icon-button
+                              icon="check_circle"
+                              variant="default"
+                              ?loading=${this.isAckAlertLoading}
+                              @click=${() => {
+                                onAck('');
+                              }}
+                            >
+                            </pr-icon-button>
+                          </pr-tooltip>
+                        `
+                      : nothing}
+                  </div>
+                `
+              : nothing}
           </div>
         </div>
       `;
@@ -488,6 +526,7 @@ export class Panel extends MobxLitElement {
     return html`
       <div class="main">
         <div class="top">
+          ${this.renderComposeSection()}
           <div class="header">New Alerts</div>
           ${repeat(
             newAlerts,
@@ -500,6 +539,81 @@ export class Panel extends MobxLitElement {
             (alert) => alert.id,
             (alert) => renderAlert(alert),
           )}
+        </div>
+      </div>
+    `;
+  }
+
+  private renderComposeSection() {
+    const targetParticipantId =
+      this.composeParticipantId ||
+      this.experimentManager.alertComposeTarget ||
+      '';
+    const participants = Object.values(this.experimentManager.participantMap)
+      .filter((p) => !isObsoleteParticipant(p))
+      .sort((a, b) =>
+        (a.name || a.publicId).localeCompare(b.name || b.publicId),
+      );
+
+    const onSend = async () => {
+      if (!targetParticipantId || !this.composeMessage.trim()) return;
+      this.isSendingComposeAlert = true;
+      try {
+        const participant =
+          this.experimentManager.participantMap[targetParticipantId];
+        await this.experimentManager.sendExperimenterAlert(
+          targetParticipantId,
+          this.composeMessage.trim(),
+          participant?.currentCohortId || '',
+          participant?.currentStageId || '',
+        );
+        this.composeMessage = '';
+        this.experimentManager.alertComposeTarget = undefined;
+        this.composeParticipantId = '';
+      } catch (err) {
+        console.error('Failed to send alert', err);
+      } finally {
+        this.isSendingComposeAlert = false;
+      }
+    };
+
+    return html`
+      <div class="compose-section">
+        <div class="compose-header">Send Alert to Participant</div>
+        <div class="compose-fields">
+          <select
+            class="participant-select"
+            .value=${targetParticipantId}
+            @change=${(e: Event) => {
+              const val = (e.target as HTMLSelectElement).value;
+              this.composeParticipantId = val;
+              this.experimentManager.alertComposeTarget = val || undefined;
+            }}
+          >
+            <option value="">-- Select Participant --</option>
+            ${participants.map(
+              (p) => html`
+                <option value=${p.privateId}>
+                  ${p.name ? `${p.name} (${p.publicId})` : p.publicId}
+                </option>
+              `,
+            )}
+          </select>
+          <pr-textarea
+            placeholder="Type your message here..."
+            .value=${this.composeMessage}
+            @input=${(e: Event) => {
+              this.composeMessage = (e.target as HTMLTextAreaElement).value;
+            }}
+          >
+          </pr-textarea>
+          <pr-button
+            ?disabled=${!targetParticipantId || !this.composeMessage.trim()}
+            ?loading=${this.isSendingComposeAlert}
+            @click=${onSend}
+          >
+            Send Alert Message
+          </pr-button>
         </div>
       </div>
     `;
