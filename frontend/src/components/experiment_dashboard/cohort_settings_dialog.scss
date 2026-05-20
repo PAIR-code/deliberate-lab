@@ -82,6 +82,18 @@
   justify-content: end;
 }
 
+.buttons-wrapper-spaced {
+  @include common.flex-row-align-center;
+  justify-content: space-between;
+}
+
+/* Success screen button row in agent-participant-configuration-dialog */
+.button-row {
+  @include common.flex-row-align-center;
+  gap: common.$spacing-medium;
+  margin-top: common.$spacing-small;
+}
+
 /* Used in agent-participant-configuration-dialog */
 .agent-persona-wrapper {
   @include common.flex-row;

@@ -28,7 +28,7 @@ export function createProfileStructuredOutputConfig(profileType: ProfileType) {
           name: 'name',
           schema: {
             type: StructuredOutputDataType.STRING,
-            description: 'Your name',
+            description: 'Your first name only (not your full name)',
           },
         },
         {

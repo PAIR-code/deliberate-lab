@@ -1,10 +1,15 @@
 import {
   ModelResponse,
   ModelResponseStatus,
+  PersonaGenerationMode,
+  buildGeneratePersonaPrompt,
+  buildMergePersonaPrompt,
+  buildEnhancePersonaPrompt,
   createAgentModelSettings,
   createModelGenerationConfig,
 } from '@deliberation-lab/utils';
 import {getAgentResponse} from './agent.utils';
+import {samplePersonaParams} from './agent_persona_sampling';
 import {getExperimenterData} from './utils/firestore';
 
 import {onCall} from 'firebase-functions/v2/https';
@@ -46,6 +51,95 @@ export const testAgentConfig = onCall(
     );
 
     console.log('TESTING AGENT CONFIG\n', apiType, response);
+
+    return response;
+  },
+);
+
+// ****************************************************************************
+// Generate or enhance an agent persona context (character sketch)
+// Input structure: { creatorId, mode, currentText, apiType, modelName }
+// Modes:
+//   'generate' — fresh sketch (empty) or merge-expand (has text)
+//   'enhance'  — appends episodic memories to existing sketch
+//   'refresh'  — ignores existing text, always generates fresh
+// ****************************************************************************
+export const generatePersonaContext = onCall(
+  async (request): Promise<ModelResponse> => {
+    const {data} = request;
+    const creatorId: string = data.creatorId;
+    const mode: PersonaGenerationMode = data.mode;
+    const currentText: string = data.currentText ?? '';
+    const apiType = data.apiType;
+    const modelName: string = data.modelName ?? '';
+    // batchIndex: the frontend passes 0, 1, 2, ... for successive generates
+    // within a session. Forwarded to samplePersonaParams so the Halton
+    // sequence is traversed in order, guaranteeing each new agent fills
+    // the biggest gap in Big Five trait space left by prior ones.
+    const batchIndex: number | undefined =
+      typeof data.batchIndex === 'number' ? data.batchIndex : undefined;
+
+    // Only allow experimenters to use this endpoint
+    await AuthGuard.isExperimenter(request);
+
+    if (!modelName) {
+      return {
+        status: ModelResponseStatus.INTERNAL_ERROR,
+        errorMessage: 'No model selected',
+      };
+    }
+
+    // Fetch experimenter's API keys
+    const experimenterData = await getExperimenterData(creatorId);
+    if (!experimenterData) {
+      return {
+        status: ModelResponseStatus.INTERNAL_ERROR,
+        errorMessage: 'Experimenter data not found',
+      };
+    }
+
+    // Build prompt based on mode
+    let prompt = '';
+
+    if (mode === 'enhance') {
+      // Enhance: append episodic memories to existing sketch
+      prompt = buildEnhancePersonaPrompt(currentText);
+    } else {
+      // Generate or Refresh: sample random parameters.
+      // All sampling logic lives in agent_persona_sampling.ts.
+      const isRefresh = mode === 'refresh';
+      const params = samplePersonaParams(batchIndex);
+
+      if (!isRefresh && currentText.trim()) {
+        prompt = buildMergePersonaPrompt(currentText, params);
+      } else {
+        prompt = buildGeneratePersonaPrompt(params);
+      }
+    }
+
+    const modelSettings = createAgentModelSettings({apiType, modelName});
+    // Generate/Refresh: no maxTokens cap — prompt instructs ~200-250 words.
+    // Enhance: small cap (200 tokens ≈ 150 words) to prevent runaway additions.
+    // Reasoning/thinking is explicitly disabled for speed.
+    const isEnhanceMode = mode === 'enhance';
+    const generationConfig = createModelGenerationConfig({
+      temperature: 1.0,
+      ...(isEnhanceMode ? {maxTokens: 200} : {}),
+      includeReasoning: false,
+      // Force thinkingBudget: 0 for Gemini 2.5+ (always-thinking models)
+      // and disable thinking for Anthropic. This overrides any auto-enable.
+      providerOptions: {
+        google: {thinkingConfig: {thinkingBudget: 0}},
+        anthropic: {thinking: {type: 'disabled'}},
+      },
+    });
+
+    const response = await getAgentResponse(
+      experimenterData.apiKeys,
+      prompt,
+      modelSettings,
+      generationConfig,
+    );
 
     return response;
   },
