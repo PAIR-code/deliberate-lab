@@ -13,7 +13,9 @@ import {
 import {ChatStageConfig} from './chat_stage';
 import {
   DEFAULT_MEDIATOR_GROUP_CHAT_PROMPT_INSTRUCTIONS,
+  DEFAULT_MEDIATOR_GROUP_CHAT_TURN_TAKING_PROMPT_INSTRUCTIONS,
   DEFAULT_AGENT_PARTICIPANT_CHAT_PROMPT,
+  DEFAULT_AGENT_PARTICIPANT_CHAT_TURN_TAKING_PROMPT,
   createChatPromptConfig,
   createDefaultMediatorGroupChatPrompt,
   getChatPromptMessageHistory,
@@ -75,18 +77,26 @@ export class GroupChatStageHandler extends BaseStageHandler {
   getDefaultMediatorStructuredPrompt(
     stage: ChatStageConfig,
   ): MediatorPromptConfig | undefined {
+    const instructions = stage.isTurnBased
+      ? DEFAULT_MEDIATOR_GROUP_CHAT_TURN_TAKING_PROMPT_INSTRUCTIONS
+      : DEFAULT_MEDIATOR_GROUP_CHAT_PROMPT_INSTRUCTIONS;
     return createChatPromptConfig(stage.id, StageKind.CHAT, {
-      prompt: createDefaultMediatorGroupChatPrompt(stage.id),
+      prompt: createDefaultMediatorGroupChatPrompt(
+        stage.id,
+        undefined, // use default text
+        instructions,
+      ),
     });
   }
 
   getDefaultParticipantStructuredPrompt(
     stage: ChatStageConfig,
   ): ParticipantPromptConfig | undefined {
+    const text = stage.isTurnBased
+      ? DEFAULT_AGENT_PARTICIPANT_CHAT_TURN_TAKING_PROMPT
+      : DEFAULT_AGENT_PARTICIPANT_CHAT_PROMPT;
     return createChatPromptConfig(stage.id, StageKind.CHAT, {
-      prompt: createDefaultParticipantPrompt(
-        DEFAULT_AGENT_PARTICIPANT_CHAT_PROMPT,
-      ),
+      prompt: createDefaultParticipantPrompt(text),
     });
   }
 }
