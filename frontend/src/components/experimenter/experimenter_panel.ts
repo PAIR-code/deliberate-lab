@@ -479,7 +479,7 @@ export class Panel extends MobxLitElement {
             ${!isOutgoing
               ? html`
                   <div class="alert-response-options">
-                    <div class="alert-response-input">
+                    <div class="alert-input-wrapper">
                       <pr-textarea
                         .value=${this.alertResponseMap.get(alert.id) ?? ''}
                         placeholder="Send a response"
@@ -599,21 +599,24 @@ export class Panel extends MobxLitElement {
               `,
             )}
           </select>
-          <pr-textarea
-            placeholder="Type your message here..."
-            .value=${this.composeMessage}
-            @input=${(e: Event) => {
-              this.composeMessage = (e.target as HTMLTextAreaElement).value;
-            }}
-          >
-          </pr-textarea>
-          <pr-button
-            ?disabled=${!targetParticipantId || !this.composeMessage.trim()}
-            ?loading=${this.isSendingComposeAlert}
-            @click=${onSend}
-          >
-            Send Alert Message
-          </pr-button>
+          <div class="alert-input-wrapper">
+            <pr-textarea
+              placeholder="Type your message here..."
+              .value=${this.composeMessage}
+              @input=${(e: Event) => {
+                this.composeMessage = (e.target as HTMLTextAreaElement).value;
+              }}
+            >
+            </pr-textarea>
+            <pr-icon-button
+              icon="send"
+              variant="default"
+              ?disabled=${!targetParticipantId || !this.composeMessage.trim()}
+              ?loading=${this.isSendingComposeAlert}
+              @click=${onSend}
+            >
+            </pr-icon-button>
+          </div>
         </div>
       </div>
     `;
