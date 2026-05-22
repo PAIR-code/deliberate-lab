@@ -7,6 +7,7 @@ import {CSSResultGroup, html, nothing} from 'lit';
 import {customElement, property, state} from 'lit/decorators.js';
 
 import {core} from '../../core/core';
+import {AnalyticsService, ButtonClick} from '../../services/analytics.service';
 import {AuthService} from '../../services/auth.service';
 import {FirebaseService} from '../../services/firebase.service';
 
@@ -36,6 +37,7 @@ import {styles} from './persona_generation_buttons.scss';
 export class PersonaGenerationButtons extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
 
+  private readonly analyticsService = core.getService(AnalyticsService);
   private readonly authService = core.getService(AuthService);
   private readonly firebaseService = core.getService(FirebaseService);
 
@@ -69,9 +71,16 @@ export class PersonaGenerationButtons extends MobxLitElement {
   private async runGeneration(mode: PersonaGenerationMode) {
     if (!this.modelSettings || this.modelDisabled || this.disabled) return;
 
-    if (mode === 'generate') this.isGenerating = true;
-    else if (mode === 'enhance') this.isEnhancing = true;
-    else if (mode === 'refresh') this.isRefreshing = true;
+    if (mode === 'generate') {
+      this.isGenerating = true;
+      this.analyticsService.trackButtonClick(ButtonClick.PERSONA_GENERATE);
+    } else if (mode === 'enhance') {
+      this.isEnhancing = true;
+      this.analyticsService.trackButtonClick(ButtonClick.PERSONA_ENHANCE);
+    } else if (mode === 'refresh') {
+      this.isRefreshing = true;
+      this.analyticsService.trackButtonClick(ButtonClick.PERSONA_REFRESH);
+    }
     this.errorMessage = '';
 
     try {

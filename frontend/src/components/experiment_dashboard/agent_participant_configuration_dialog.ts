@@ -193,7 +193,9 @@ export class AgentParticipantDialog extends MobxLitElement {
         promptContext: text,
         modelSettings: this.modelSettings,
       });
-      this.analyticsService.trackButtonClick(ButtonClick.AGENT_PARTICIPANT_ADD);
+      this.analyticsService.trackButtonClick(
+        ButtonClick.AGENT_PARTICIPANT_QUICK_ADD,
+      );
     } finally {
       this.isQuickAdding = false;
     }

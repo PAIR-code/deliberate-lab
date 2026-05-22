@@ -231,6 +231,9 @@ export class ExperimentBuilder extends MobxLitElement {
           aria-disabled=${disabled ? 'true' : 'false'}
           @click=${() => {
             if (disabled) return;
+            this.analyticsService.trackButtonClick(
+              ButtonClick.AGENT_MEDIATOR_PERSONA_ADD,
+            );
             this.experimentEditor.addAgentMediator();
           }}
         >
@@ -543,6 +546,7 @@ export class ExperimentBuilder extends MobxLitElement {
         variant="default"
         ?disabled=${forkDisabled}
         @click=${() => {
+          this.analyticsService.trackButtonClick(ButtonClick.STAGE_COPY);
           const {id, ...stageWithoutId} = stage;
           this.experimentEditor.addStage({id: generateId(), ...stageWithoutId});
           this.experimentEditor.jumpToLastStage();
@@ -709,6 +713,7 @@ export class ExperimentBuilder extends MobxLitElement {
 export class AlphaToggle extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
 
+  private readonly analyticsService = core.getService(AnalyticsService);
   private readonly authService = core.getService(AuthService);
 
   override render() {
@@ -726,6 +731,9 @@ export class AlphaToggle extends MobxLitElement {
             ?checked=${this.authService.showAlphaFeatures}
             @change=${(e: Event) => {
               const checked = (e.target as HTMLInputElement).checked;
+              this.analyticsService.trackButtonClick(
+                ButtonClick.ALPHA_FEATURES_TOGGLE,
+              );
               this.authService.updateAlphaToggle(checked);
             }}
           />

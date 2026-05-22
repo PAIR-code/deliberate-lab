@@ -14,6 +14,7 @@ import {CSSResultGroup, html, nothing} from 'lit';
 import {customElement, property, state} from 'lit/decorators.js';
 
 import {core} from '../../core/core';
+import {AnalyticsService, ButtonClick} from '../../services/analytics.service';
 import {AuthService} from '../../services/auth.service';
 import {CohortService} from '../../services/cohort.service';
 import {ExperimentService} from '../../services/experiment.service';
@@ -36,6 +37,7 @@ import {styles} from './group_chat_participant_view.scss';
 export class GroupChatView extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
 
+  private readonly analyticsService = core.getService(AnalyticsService);
   private readonly authService = core.getService(AuthService);
   private readonly cohortService = core.getService(CohortService);
   private readonly experimentService = core.getService(ExperimentService);
@@ -169,6 +171,7 @@ export class GroupChatView extends MobxLitElement {
 
       this.readyToEndDiscussionLoading = true;
       try {
+        this.analyticsService.trackButtonClick(ButtonClick.DISCUSSION_END);
         await this.participantService.updateReadyToEndChatDiscussion(
           this.stage.id,
           currentDiscussionId,

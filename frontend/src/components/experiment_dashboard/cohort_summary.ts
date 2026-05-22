@@ -97,6 +97,7 @@ export class CohortSummary extends MobxLitElement {
     const link = `${basePath}/#/e/${this.experimentManager.experimentId}/c/${this.cohort.id}`;
 
     await navigator.clipboard.writeText(link);
+    this.analyticsService.trackButtonClick(ButtonClick.COHORT_LINK_COPY);
     alert('Link copied to clipboard!');
   }
 
@@ -266,6 +267,9 @@ export class CohortSummary extends MobxLitElement {
 
     const onClick = async () => {
       if (!this.cohort) return;
+      this.analyticsService.trackButtonClick(
+        isLocked ? ButtonClick.COHORT_UNLOCK : ButtonClick.COHORT_LOCK,
+      );
       await this.experimentManager.setCohortLock(this.cohort.id, !isLocked);
     };
 

@@ -16,6 +16,7 @@ import {toJS} from 'mobx';
 import {Type, type TSchema} from '@sinclair/typebox';
 
 import {core} from '../../core/core';
+import {AnalyticsService, ButtonClick} from '../../services/analytics.service';
 import {ExperimentEditor} from '../../services/experiment.editor';
 
 import {
@@ -60,6 +61,7 @@ import {styles} from './variable_editor.scss';
 export class VariableEditor extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
 
+  private readonly analyticsService = core.getService(AnalyticsService);
   private readonly experimentEditor = core.getService(ExperimentEditor);
 
   override render() {
@@ -90,10 +92,12 @@ export class VariableEditor extends MobxLitElement {
           this.renderVariableConfig(config, i),
         )}
         <md-outlined-button
-          @click=${() =>
+          @click=${() => {
+            this.analyticsService.trackButtonClick(ButtonClick.VARIABLE_ADD);
             this.experimentEditor.addVariableConfig(
               createRandomPermutationVariableConfig(),
-            )}
+            );
+          }}
         >
           <pr-icon icon="add" slot="icon"></pr-icon>
           Add new variable config
@@ -648,6 +652,7 @@ export class VariableEditor extends MobxLitElement {
 
   private deleteVariableConfig(index: number) {
     if (!confirm('Delete this variable config?')) return;
+    this.analyticsService.trackButtonClick(ButtonClick.VARIABLE_DELETE);
     const exp = this.experimentEditor.experiment;
     if (!exp?.variableConfigs) return;
     exp.variableConfigs = [
