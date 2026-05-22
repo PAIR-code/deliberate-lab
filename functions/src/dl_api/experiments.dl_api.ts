@@ -150,10 +150,12 @@ export async function createExperiment(
         experimenterId,
       );
     } catch (error: unknown) {
-      throw createHttpError(
-        400,
-        error instanceof Error ? error.message : String(error),
-      );
+      const msg = error instanceof Error ? error.message : String(error);
+      const isValidationError =
+        msg.includes('Invalid stage configuration') ||
+        msg.includes('Invalid variable configuration') ||
+        msg.includes('Duplicate cohort alias found');
+      throw createHttpError(isValidationError ? 422 : 500, msg);
     }
 
     if (!experimentId) {
@@ -214,10 +216,12 @@ export async function createExperiment(
       experimenterId,
     );
   } catch (error: unknown) {
-    throw createHttpError(
-      400,
-      error instanceof Error ? error.message : String(error),
-    );
+    const msg = error instanceof Error ? error.message : String(error);
+    const isValidationError =
+      msg.includes('Invalid stage configuration') ||
+      msg.includes('Invalid variable configuration') ||
+      msg.includes('Duplicate cohort alias found');
+    throw createHttpError(isValidationError ? 422 : 500, msg);
   }
 
   if (!experimentId) {

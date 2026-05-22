@@ -2,7 +2,6 @@ import {
   AgentMediatorTemplate,
   AgentMediatorPersonaConfig,
   AgentParticipantPersonaConfig,
-  AgentPersonaType,
   AgentParticipantTemplate,
   ApiKeyType,
   CohortParticipantConfig,
@@ -15,18 +14,17 @@ import {
   ProlificConfig,
   StageConfig,
   StageKind,
-  StageManager,
   VariableConfig,
   MultiValueVariableConfigType,
   requiresValues,
   STAGE_MANAGER,
   checkApiKeyExists,
+  SurveyQuestion,
+  SurveyQuestionKind,
+  MultipleChoiceItem,
   createAgentMediatorPersonaConfig,
   createAgentParticipantPersonaConfig,
   createExperimentConfig,
-  createMetadataConfig,
-  createPermissionsConfig,
-  createProlificConfig,
   generateId,
 } from '@deliberation-lab/utils';
 import {Timestamp} from 'firebase/firestore';
@@ -106,6 +104,76 @@ export class ExperimentEditor extends Service {
       );
     };
 
+    const validateSurveyQuestion = (
+      question: SurveyQuestion,
+      stageName: string,
+      index: number,
+    ): string[] => {
+      const errors: string[] = [];
+      const questionPrefix = `${stageName} question ${index + 1}`;
+
+      if (question.questionTitle === '') {
+        errors.push(`${questionPrefix} is missing a title`);
+      }
+
+      if (question.kind === SurveyQuestionKind.SCALE) {
+        if (
+          !Number.isInteger(question.lowerValue) ||
+          !Number.isInteger(question.upperValue) ||
+          (question.stepSize !== undefined &&
+            !Number.isInteger(question.stepSize))
+        ) {
+          errors.push(
+            `${questionPrefix} ("${question.questionTitle}"): values must be integers`,
+          );
+          return errors;
+        }
+        if (question.lowerValue >= question.upperValue) {
+          errors.push(
+            `${questionPrefix} ("${question.questionTitle}"): lower value must be less than upper value`,
+          );
+          return errors;
+        }
+        const range = question.upperValue - question.lowerValue;
+        const step = question.stepSize ?? 1;
+        if (step <= 0) {
+          errors.push(
+            `${questionPrefix} ("${question.questionTitle}"): step size must be greater than 0`,
+          );
+          return errors;
+        }
+        if (range % step !== 0) {
+          errors.push(
+            `${questionPrefix} ("${question.questionTitle}"): step size must divide max-min (${range}) exactly`,
+          );
+        }
+      }
+
+      if (question.kind === SurveyQuestionKind.MULTIPLE_CHOICE) {
+        if (!question.options || question.options.length === 0) {
+          errors.push(
+            `${questionPrefix} ("${question.questionTitle}"): must have at least one option`,
+          );
+          return errors;
+        }
+        if (
+          question.correctAnswerId != null &&
+          question.correctAnswerId !== ''
+        ) {
+          const hasOption = question.options.some(
+            (opt: MultipleChoiceItem) => opt.id === question.correctAnswerId,
+          );
+          if (!hasOption) {
+            errors.push(
+              `${questionPrefix} ("${question.questionTitle}"): correct answer ID doesn't match any option ID`,
+            );
+          }
+        }
+      }
+
+      return errors;
+    };
+
     const renderApiErrorMessage = (apiType: ApiKeyType) => {
       if (hasAgentsWithApiType(apiType)) {
         errors.push(
@@ -118,17 +186,16 @@ export class ExperimentEditor extends Service {
     renderApiErrorMessage(ApiKeyType.OLLAMA_CUSTOM_URL);
 
     for (const stage of this.stages) {
-      switch (stage.kind) {
-        case StageKind.SURVEY:
-          // Ensure all questions have a non-empty title
-          stage.questions.forEach((question, index) => {
-            if (question.questionTitle === '') {
-              errors.push(
-                `${stage.name} question ${index + 1} is missing a title`,
-              );
-            }
-          });
-          break;
+      if (
+        stage.kind === StageKind.SURVEY ||
+        stage.kind === StageKind.SURVEY_PER_PARTICIPANT
+      ) {
+        if (!stage.questions || stage.questions.length === 0) {
+          errors.push(`${stage.name} must contain at least one question`);
+        }
+        stage.questions.forEach((question: SurveyQuestion, index: number) => {
+          errors.push(...validateSurveyQuestion(question, stage.name, index));
+        });
       }
     }
 
