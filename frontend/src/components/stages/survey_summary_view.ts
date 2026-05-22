@@ -189,7 +189,9 @@ export class SurveyView extends MobxLitElement {
           disabled
         >
         </md-radio>
-        <label for=${id}>${choice.text}</label>
+        <label for=${id}
+          >${unsafeHTML(convertMarkdownToHTML(choice.text))}</label
+        >
       </div>
     `;
   }
