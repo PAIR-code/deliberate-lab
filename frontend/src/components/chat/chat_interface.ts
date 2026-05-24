@@ -73,38 +73,29 @@ export class ChatInterface extends MobxLitElement {
     const config = this.stage as ChatStageConfig;
     if (!config.isTurnBased) return true;
 
-    const data = this.stagePublicData;
-    // If turn-based but public data is not loaded yet, lock the input to prevent race conditions
-    if (!data || !data.currentTurnParticipantId) return false;
-
-    // AI Agents cannot speak inside the browser UI
-    if (this.participantService.profile?.agentConfig) return false;
-
-    return (
-      data.currentTurnParticipantId ===
-      this.participantService.profile?.publicId
-    );
+    return this.turnIndicatorState?.isMyTurn ?? false;
   }
 
-  @computed get currentTurnName() {
-    const data = this.stagePublicData;
-    if (!data || !data.currentTurnParticipantId) return '';
+  @computed get turnIndicatorState() {
+    if (!this.stage || this.stage.kind !== StageKind.CHAT) return null;
+    const config = this.stage as ChatStageConfig;
+    if (!config.isTurnBased) return null;
 
-    const participantProfile =
-      this.cohortService.participantMap[data.currentTurnParticipantId];
-    if (participantProfile && participantProfile.name)
-      return participantProfile.name;
-
-    const mediatorProfile =
-      this.cohortService.mediatorMap[data.currentTurnParticipantId];
-    if (mediatorProfile && mediatorProfile.name) return mediatorProfile.name;
-
-    return data.currentTurnParticipantId;
-  }
-
-  @computed get currentTurnProfile() {
     const data = this.stagePublicData;
     if (!data || !data.currentTurnParticipantId) return null;
+
+    const id = data.currentTurnParticipantId;
+
+    // If the latest message is already from the current turn holder, the
+    // backend trigger hasn't advanced the turn yet — hide the indicator to
+    // avoid a stale "Waiting for X" flash immediately after X just spoke.
+    const messages = this.cohortService.chatMap[this.stage.id] ?? [];
+    const latest = messages[messages.length - 1];
+    if (latest?.senderId === id) return null;
+
+    const isMyTurn =
+      !this.participantService.profile?.agentConfig &&
+      id === this.participantService.profile?.publicId;
 
     const participantProfile =
       this.cohortService.participantMap[data.currentTurnParticipantId];
@@ -113,7 +104,8 @@ export class ChatInterface extends MobxLitElement {
         name: participantProfile.name,
         avatar: participantProfile.avatar,
         isMediator: false,
-        id: data.currentTurnParticipantId,
+        id,
+        isMyTurn,
       };
     }
 
@@ -124,38 +116,36 @@ export class ChatInterface extends MobxLitElement {
         name: mediatorProfile.name,
         avatar: mediatorProfile.avatar ?? '🤖',
         isMediator: true,
-        id: data.currentTurnParticipantId,
+        id,
+        isMyTurn,
       };
     }
 
     return {
-      name: data.currentTurnParticipantId,
+      name: id,
       avatar: '👤',
       isMediator: false,
-      id: data.currentTurnParticipantId,
+      id,
+      isMyTurn,
     };
   }
 
   private renderTypingIndicator() {
-    if (this.stage?.kind !== StageKind.CHAT) return nothing;
-    const stage = this.stage as ChatStageConfig;
-    if (!stage.isTurnBased) return nothing;
+    const turnState = this.turnIndicatorState;
+    if (!turnState) return nothing;
 
     // Do not show typing indicator if it is the current user's turn (they type in the textarea instead!)
-    if (this.isMyTurn) return nothing;
+    if (turnState.isMyTurn) return nothing;
 
-    const profile = this.currentTurnProfile;
-    if (!profile) return nothing;
-
-    const color = profile.isMediator
-      ? getHashBasedColor(profile.id)
-      : getProfileBasedColor(profile.id, profile.avatar ?? '');
+    const color = turnState.isMediator
+      ? getHashBasedColor(turnState.id)
+      : getProfileBasedColor(turnState.id, turnState.avatar ?? '');
 
     return html`
       <div class="chat-message typing-msg">
-        <avatar-icon .emoji=${profile.avatar} .color=${color}> </avatar-icon>
+        <avatar-icon .emoji=${turnState.avatar} .color=${color}> </avatar-icon>
         <div class="content">
-          <div class="label">${profile.name}</div>
+          <div class="label">${turnState.name}</div>
           <div class="chat-bubble typing-bubble">
             <div class="typing-dots">
               <span></span>
@@ -199,22 +189,16 @@ export class ChatInterface extends MobxLitElement {
   }
 
   private renderTurnBanner() {
-    if (this.stage?.kind !== StageKind.CHAT) return nothing;
-    const stage = this.stage as ChatStageConfig;
-    if (!stage.isTurnBased) return nothing;
+    const turnState = this.turnIndicatorState;
+    if (!turnState) return nothing;
 
-    const isMyTurn = this.isMyTurn;
-
-    if (isMyTurn) {
+    if (turnState.isMyTurn) {
       return html` <div class="banner success">It's your turn to speak!</div> `;
     }
 
-    const currentSpeaker = this.currentTurnName;
-    if (!currentSpeaker) return nothing;
-
     return html`
       <div class="banner warning">
-        Waiting for <strong>${currentSpeaker}</strong> to speak...
+        Waiting for <strong>${turnState.name}</strong> to speak...
       </div>
     `;
   }
