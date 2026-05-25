@@ -13,6 +13,7 @@ import {
   makeStructuredOutputPrompt,
 } from '../structured_output';
 import {
+  ChatMediatorInstructionsPromptItem,
   ChatPromptConfig,
   PromptItem,
   PromptItemType,
@@ -159,7 +160,6 @@ export function createChatPromptConfig(
 export function createDefaultMediatorGroupChatPrompt(
   stageId: string = '', // defaults to context from past + current stages
   text = 'Your instructions are to facilitate this group chat. Make sure all participants have a chance to speak and that everyone is polite to one another.',
-  instructions = DEFAULT_MEDIATOR_GROUP_CHAT_PROMPT_INSTRUCTIONS,
 ): PromptItem[] {
   return [
     createTextPromptItem(
@@ -167,7 +167,9 @@ export function createDefaultMediatorGroupChatPrompt(
     ),
     {type: PromptItemType.PROFILE_INFO},
     {type: PromptItemType.PROFILE_CONTEXT},
-    createTextPromptItem(instructions),
+    {
+      type: PromptItemType.CHAT_MEDIATOR_INSTRUCTIONS,
+    } as ChatMediatorInstructionsPromptItem,
     createDefaultStageContextPromptItem(stageId),
     createTextPromptItem(text),
   ];

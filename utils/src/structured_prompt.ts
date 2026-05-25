@@ -96,7 +96,9 @@ export type PromptItem =
   | ProfileContextPromptItem
   | ProfileInfoPromptItem
   | StageContextPromptItem
-  | PromptItemGroup;
+  | PromptItemGroup
+  | ChatMediatorInstructionsPromptItem
+  | ChatParticipantInstructionsPromptItem;
 
 export interface BasePromptItem {
   type: PromptItemType;
@@ -117,6 +119,10 @@ export enum PromptItemType {
   STAGE_CONTEXT = 'STAGE_CONTEXT',
   // Group of prompt items
   GROUP = 'GROUP',
+  // Chat-specific instruction components — resolved at prompt-build time
+  // to the turn-based or free-form variant based on stage config.
+  CHAT_MEDIATOR_INSTRUCTIONS = 'CHAT_MEDIATOR_INSTRUCTIONS',
+  CHAT_PARTICIPANT_INSTRUCTIONS = 'CHAT_PARTICIPANT_INSTRUCTIONS',
 }
 
 export interface TextPromptItem extends BasePromptItem {
@@ -164,6 +170,16 @@ export interface PromptItemGroup extends BasePromptItem {
   title: string;
   items: PromptItem[];
   shuffleConfig?: ShuffleConfig;
+}
+
+/** Group chat mediator behavior instructions, resolved at build time. */
+export interface ChatMediatorInstructionsPromptItem extends BasePromptItem {
+  type: PromptItemType.CHAT_MEDIATOR_INSTRUCTIONS;
+}
+
+/** Group chat participant behavior instructions, resolved at build time. */
+export interface ChatParticipantInstructionsPromptItem extends BasePromptItem {
+  type: PromptItemType.CHAT_PARTICIPANT_INSTRUCTIONS;
 }
 
 // ****************************************************************************

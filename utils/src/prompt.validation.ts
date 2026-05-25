@@ -30,6 +30,8 @@ export const PromptItemTypeData = Type.Union(
     Type.Literal('PROFILE_CONTEXT'),
     Type.Literal('STAGE_CONTEXT'),
     Type.Literal('GROUP'),
+    Type.Literal('CHAT_MEDIATOR_INSTRUCTIONS'),
+    Type.Literal('CHAT_PARTICIPANT_INSTRUCTIONS'),
   ],
   {$id: 'PromptItemType'},
 );
@@ -86,6 +88,24 @@ export const StageContextPromptItemData = Type.Object(
   {$id: 'StageContextPromptItem', ...strict},
 );
 
+/** Chat mediator behavior instructions prompt item */
+export const ChatMediatorInstructionsPromptItemData = Type.Object(
+  {
+    type: Type.Literal('CHAT_MEDIATOR_INSTRUCTIONS'),
+    ...BasePromptItemFields,
+  },
+  {$id: 'ChatMediatorInstructionsPromptItem', ...strict},
+);
+
+/** Chat participant behavior instructions prompt item */
+export const ChatParticipantInstructionsPromptItemData = Type.Object(
+  {
+    type: Type.Literal('CHAT_PARTICIPANT_INSTRUCTIONS'),
+    ...BasePromptItemFields,
+  },
+  {$id: 'ChatParticipantInstructionsPromptItem', ...strict},
+);
+
 /** Prompt item group (recursive).
  * Uses Type.Recursive to properly handle nested groups in items array.
  */
@@ -101,6 +121,8 @@ export const PromptItemGroupData = Type.Recursive(
             ProfileInfoPromptItemData,
             ProfileContextPromptItemData,
             StageContextPromptItemData,
+            ChatMediatorInstructionsPromptItemData,
+            ChatParticipantInstructionsPromptItemData,
             This,
           ]),
         ),
@@ -118,6 +140,8 @@ export const PromptItemData = Type.Union([
   ProfileInfoPromptItemData,
   ProfileContextPromptItemData,
   StageContextPromptItemData,
+  ChatMediatorInstructionsPromptItemData,
+  ChatParticipantInstructionsPromptItemData,
   PromptItemGroupData,
 ]);
 

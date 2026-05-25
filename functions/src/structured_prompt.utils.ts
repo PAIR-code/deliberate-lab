@@ -603,30 +603,40 @@ async function processPromptItems(
     }
 
     switch (promptItem.type) {
-      case PromptItemType.TEXT:
-        let text = promptItem.text;
-        const stage = promptData.data[stageId]?.stage;
-        const isTurnBased =
-          stage?.kind === StageKind.CHAT &&
-          (stage as ChatStageConfig).isTurnBased;
-        if (isTurnBased) {
-          text = text.replace(
-            DEFAULT_AGENT_PARTICIPANT_CHAT_PROMPT,
-            DEFAULT_AGENT_PARTICIPANT_CHAT_TURN_TAKING_PROMPT,
-          );
-          text = text.replace(
-            DEFAULT_MEDIATOR_GROUP_CHAT_PROMPT_INSTRUCTIONS,
-            DEFAULT_MEDIATOR_GROUP_CHAT_TURN_TAKING_PROMPT_INSTRUCTIONS,
-          );
-        }
+      case PromptItemType.TEXT: {
         // Resolve template variables in text prompt items
         const resolvedText = resolveTemplateVariables(
-          text,
+          promptItem.text,
           variableDefinitions,
           valueMap,
         );
         items.push(resolvedText);
         break;
+      }
+      case PromptItemType.CHAT_MEDIATOR_INSTRUCTIONS: {
+        const stage = promptData.data[stageId]?.stage;
+        const isTurnBased =
+          stage?.kind === StageKind.CHAT &&
+          (stage as ChatStageConfig).isTurnBased;
+        items.push(
+          isTurnBased
+            ? DEFAULT_MEDIATOR_GROUP_CHAT_TURN_TAKING_PROMPT_INSTRUCTIONS
+            : DEFAULT_MEDIATOR_GROUP_CHAT_PROMPT_INSTRUCTIONS,
+        );
+        break;
+      }
+      case PromptItemType.CHAT_PARTICIPANT_INSTRUCTIONS: {
+        const stage = promptData.data[stageId]?.stage;
+        const isTurnBased =
+          stage?.kind === StageKind.CHAT &&
+          (stage as ChatStageConfig).isTurnBased;
+        items.push(
+          isTurnBased
+            ? DEFAULT_AGENT_PARTICIPANT_CHAT_TURN_TAKING_PROMPT
+            : DEFAULT_AGENT_PARTICIPANT_CHAT_PROMPT,
+        );
+        break;
+      }
       case PromptItemType.PROFILE_CONTEXT:
         const profileContext = getProfileContextForPrompt(
           userProfile,
