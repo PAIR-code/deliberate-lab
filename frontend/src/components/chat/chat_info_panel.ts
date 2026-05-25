@@ -141,16 +141,28 @@ export class ChatPanel extends MobxLitElement {
     `;
   }
 
+  private get currentTurnParticipantId(): string | null {
+    if (!this.stage?.isTurnBased) return null;
+    const data = this.cohortService.stagePublicDataMap[this.stage.id] as
+      | ChatStagePublicData
+      | undefined;
+    return data?.currentTurnParticipantId ?? null;
+  }
+
   private renderMediator(profile: MediatorProfile, small = false) {
     // TODO: Calculate if mediator is out of messages (maxResponses)
+    const isCurrentTurn = this.currentTurnParticipantId === profile.publicId;
     return html`
-      <div class="profile">
-        <profile-display
-          .profile=${profile}
-          .color=${getHashBasedColor(profile.publicId ?? '')}
-          displayType=${small ? 'chatSmall' : 'chat'}
-        >
-        </profile-display>
+      <div class="profile-row">
+        <span class="turn-indicator ${isCurrentTurn ? 'visible' : ''}">👉</span>
+        <div class="profile">
+          <profile-display
+            .profile=${profile}
+            .color=${getHashBasedColor(profile.publicId ?? '')}
+            displayType=${small ? 'chatSmall' : 'chat'}
+          >
+          </profile-display>
+        </div>
       </div>
     `;
   }
@@ -158,13 +170,17 @@ export class ChatPanel extends MobxLitElement {
   private renderProfile(profile: ParticipantProfile, small = false) {
     const isCurrent =
       profile.publicId === this.participantService.profile?.publicId;
+    const isCurrentTurn = this.currentTurnParticipantId === profile.publicId;
     return html`
-      <participant-profile-display
-        .profile=${profile}
-        .showIsSelf=${isCurrent}
-        displayType=${small ? 'chatSmall' : 'chat'}
-      >
-      </participant-profile-display>
+      <div class="profile-row">
+        <span class="turn-indicator ${isCurrentTurn ? 'visible' : ''}">👉</span>
+        <participant-profile-display
+          .profile=${profile}
+          .showIsSelf=${isCurrent}
+          displayType=${small ? 'chatSmall' : 'chat'}
+        >
+        </participant-profile-display>
+      </div>
     `;
   }
 }

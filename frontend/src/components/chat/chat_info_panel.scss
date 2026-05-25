@@ -50,6 +50,21 @@
   color: var(--md-sys-color-tertiary);
 }
 
+.profile-row {
+  @include common.flex-row-align-center;
+  gap: common.$spacing-small;
+}
+
+.turn-indicator {
+  flex-shrink: 0;
+  font-size: 14px;
+  visibility: hidden;
+
+  &.visible {
+    visibility: visible;
+  }
+}
+
 .profile {
   @include common.flex-row-align-center;
   gap: common.$spacing-medium;
