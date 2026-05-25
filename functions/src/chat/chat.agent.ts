@@ -16,6 +16,7 @@ import {
   awaitTypingDelay,
   createChatMessage,
   createParticipantProfileBase,
+  createSystemChatMessage,
   sanitizeRawResponseForLogging,
   shuffleWithSeed,
 } from '@deliberation-lab/utils';
@@ -56,6 +57,9 @@ import {updateModelLogFiles} from '../log.utils';
 // Functions for preparing, querying, and organizing agent chat responses.
 // ****************************************************************************
 
+// 300s cloud function timeout minus 10s buffer for skip handler.
+const TURN_BASED_AGENT_RETRY_TIMEOUT_MS = 290000;
+
 /** Use persona chat prompt to create and send agent chat message. */
 export async function createAgentChatMessageFromPrompt(
   experimentId: string,
@@ -65,6 +69,7 @@ export async function createAgentChatMessageFromPrompt(
   triggerChatId: string, // ID of chat that is being responded to (empty string for initial message)
   // Profile of agent who will be sending the chat message
   user: ParticipantProfileExtended | MediatorProfileExtended,
+  turnBasedRetryDeadlineMs?: number,
 ) {
   if (!user.agentConfig) {
     console.log(`[chat.agent] User ${user.publicId} has no agentConfig`);
@@ -93,6 +98,13 @@ export async function createAgentChatMessageFromPrompt(
   }
 
   const isPrivateChat = stage.kind === StageKind.PRIVATE_CHAT;
+  const isTurnBasedGroupChat =
+    stage.kind === StageKind.CHAT && (stage as ChatStageConfig).isTurnBased;
+  const retryDeadlineMs =
+    turnBasedRetryDeadlineMs ??
+    (isTurnBasedGroupChat
+      ? Date.now() + TURN_BASED_AGENT_RETRY_TIMEOUT_MS
+      : undefined);
 
   // Check if this is an initial message request (empty triggerChatId)
   if (triggerChatId === '') {
@@ -114,13 +126,19 @@ export async function createAgentChatMessageFromPrompt(
           triggerLogId,
         );
 
-    const hasAlreadySent = (await triggerLogRef.get()).exists;
-    if (hasAlreadySent) {
+    const shouldSendInitialMessage = await app
+      .firestore()
+      .runTransaction(async (transaction) => {
+        const triggerLog = await transaction.get(triggerLogRef);
+        if (triggerLog.exists) return false;
+
+        transaction.create(triggerLogRef, {timestamp: Timestamp.now()});
+        return true;
+      });
+
+    if (!shouldSendInitialMessage) {
       return false; // Already sent initial message
     }
-
-    // Mark that we're sending the initial message
-    await triggerLogRef.set({timestamp: Timestamp.now()});
   }
 
   // Get the chat message (either initial or response)
@@ -158,9 +176,33 @@ export async function createAgentChatMessageFromPrompt(
       stage,
       user,
       promptConfig,
+      retryDeadlineMs,
     );
     message = response.message;
     if (!message) {
+      if (isTurnBasedGroupChat && response.retryTimedOut) {
+        // Clean up the initial trigger log lock if it timed out and we are skipping the agent
+        if (triggerChatId === '') {
+          const triggerLogId = `initial-${user.publicId}`;
+          const triggerLogRef = getGroupChatTriggerLogRef(
+            experimentId,
+            cohortId,
+            stageId,
+            triggerLogId,
+          );
+          await triggerLogRef.delete();
+        }
+
+        await skipTimedOutTurnBasedAgentTurn(
+          experimentId,
+          cohortId,
+          stage,
+          triggerChatId,
+          user,
+        );
+        return true;
+      }
+
       if (triggerChatId === '') {
         const triggerLogId = `initial-${user.publicId}`;
         console.log(
@@ -528,6 +570,225 @@ export async function getAgentChatMessage(
   }
 
   return {message: chatMessage, success: true, retryTimedOut};
+}
+
+async function getNextTurnBasedSpeakerAfterSkippedAgent(
+  experimentId: string,
+  cohortId: string,
+  stage: ChatStageConfig,
+  publicStageData: ChatStagePublicData,
+  skippedPublicId: string,
+  activeParticipants: ParticipantProfileExtended[],
+  activeMediators: MediatorProfileExtended[],
+  chatMessages: ChatMessage[],
+): Promise<{
+  currentTurnParticipantId: string;
+  turnOrder: string[];
+  cycleIndex: number;
+  agent: ParticipantProfileExtended | MediatorProfileExtended | null;
+} | null> {
+  const participantIds = activeParticipants.map((p) => p.publicId);
+  const mediatorIds = activeMediators.map((m) => m.publicId);
+  const activeIds = new Set([...mediatorIds, ...participantIds]);
+
+  let turnOrder = (publicStageData.turnOrder ?? []).filter((id) =>
+    activeIds.has(id),
+  );
+  let cycleIndex = publicStageData.cycleIndex ?? 0;
+  let nextIndex = turnOrder.indexOf(skippedPublicId);
+  let attempts = 0;
+
+  while (attempts < turnOrder.length) {
+    if (nextIndex === -1 || nextIndex === turnOrder.length - 1) {
+      cycleIndex += 1;
+
+      let nextTurnOrder = [...turnOrder];
+      if (mediatorIds.length > 0) {
+        const currentMediators = turnOrder.filter((id) =>
+          mediatorIds.includes(id),
+        );
+        const missingMediators = mediatorIds.filter(
+          (id) => !turnOrder.includes(id),
+        );
+        const shuffledMissingMediators =
+          missingMediators.length > 1
+            ? shuffleWithSeed(
+                missingMediators,
+                `${cohortId}-new-mediators-${cycleIndex}`,
+              )
+            : missingMediators;
+        const nextMediators = [
+          ...currentMediators,
+          ...shuffledMissingMediators,
+        ];
+
+        const hadMediators = turnOrder.some((id) => mediatorIds.includes(id));
+        if (hadMediators) {
+          const shuffledParticipants = shuffleWithSeed(
+            participantIds,
+            `${cohortId}-${cycleIndex}`,
+          );
+          nextTurnOrder = [...nextMediators, ...shuffledParticipants];
+        } else {
+          const currentParticipants = turnOrder.filter((id) =>
+            participantIds.includes(id),
+          );
+          nextTurnOrder = [...nextMediators, ...currentParticipants];
+        }
+      }
+
+      turnOrder = nextTurnOrder;
+      nextIndex = 0;
+    } else {
+      nextIndex += 1;
+    }
+
+    const nextPublicId = turnOrder[nextIndex];
+    const candidate =
+      activeParticipants.find((p) => p.publicId === nextPublicId) ??
+      activeMediators.find((m) => m.publicId === nextPublicId);
+
+    if (
+      !candidate ||
+      candidate.publicId === skippedPublicId ||
+      !activeIds.has(candidate.publicId)
+    ) {
+      attempts++;
+      continue;
+    }
+
+    if (candidate.agentConfig) {
+      const promptConfig = (await getStructuredPromptConfig(
+        experimentId,
+        stage,
+        candidate,
+      )) as ChatPromptConfig | undefined;
+
+      if (
+        promptConfig &&
+        !canSendAgentChatMessage(
+          candidate.publicId,
+          promptConfig.chatSettings,
+          chatMessages,
+        )
+      ) {
+        attempts++;
+        continue;
+      }
+    }
+
+    return {
+      currentTurnParticipantId: candidate.publicId,
+      turnOrder,
+      cycleIndex,
+      agent: candidate.agentConfig ? candidate : null,
+    };
+  }
+
+  return null;
+}
+
+export async function skipTimedOutTurnBasedAgentTurn(
+  experimentId: string,
+  cohortId: string,
+  stage: ChatStageConfig,
+  triggerChatId: string,
+  user: ParticipantProfileExtended | MediatorProfileExtended,
+  skipReason = 'a model error',
+) {
+  const [publicStageData, activeParticipants, activeMediators, chatMessages] =
+    await Promise.all([
+      getFirestoreStagePublicData(experimentId, cohortId, stage.id) as Promise<
+        ChatStagePublicData | undefined
+      >,
+      getFirestoreActiveParticipants(experimentId, cohortId, stage.id, false),
+      getFirestoreActiveMediators(experimentId, cohortId, stage.id, true),
+      getFirestorePublicStageChatMessages(experimentId, cohortId, stage.id),
+    ]);
+
+  if (publicStageData?.currentTurnParticipantId !== user.publicId) return;
+
+  const nextSpeaker = await getNextTurnBasedSpeakerAfterSkippedAgent(
+    experimentId,
+    cohortId,
+    stage,
+    publicStageData,
+    user.publicId,
+    activeParticipants,
+    activeMediators,
+    chatMessages,
+  );
+  if (!nextSpeaker) return;
+
+  const publicStageDataRef = app
+    .firestore()
+    .collection('experiments')
+    .doc(experimentId)
+    .collection('cohorts')
+    .doc(cohortId)
+    .collection('publicStageData')
+    .doc(stage.id);
+
+  const didAdvance = await app
+    .firestore()
+    .runTransaction(async (transaction) => {
+      const snapshot = await transaction.get(publicStageDataRef);
+      const currentPublicStageData = snapshot.data() as
+        | ChatStagePublicData
+        | undefined;
+      if (currentPublicStageData?.currentTurnParticipantId !== user.publicId) {
+        return false;
+      }
+
+      transaction.set(
+        publicStageDataRef,
+        {
+          currentTurnParticipantId: nextSpeaker.currentTurnParticipantId,
+          turnOrder: nextSpeaker.turnOrder,
+          cycleIndex: nextSpeaker.cycleIndex,
+        },
+        {merge: true},
+      );
+      return true;
+    });
+
+  if (!didAdvance) return;
+
+  console.warn(
+    `[chat.agent] Skipped timed-out turn for ${user.publicId}; next turn is ${nextSpeaker.currentTurnParticipantId}`,
+  );
+
+  const skipMessage = createSystemChatMessage({
+    message: `${user.name ?? user.publicId} was skipped due to ${skipReason}.`,
+  });
+  await app
+    .firestore()
+    .collection('experiments')
+    .doc(experimentId)
+    .collection('cohorts')
+    .doc(cohortId)
+    .collection('publicStageData')
+    .doc(stage.id)
+    .collection('chats')
+    .doc(skipMessage.id)
+    .set(skipMessage);
+
+  if (!nextSpeaker.agent) return;
+
+  // The skip system message is now the latest message; use its id as the
+  // trigger so the downstream "conversation has moved on" check in
+  // sendAgentGroupChatMessage doesn't bail on the stale pre-skip id.
+  const nextTriggerChatId = skipMessage.id;
+  await createAgentChatMessageFromPrompt(
+    experimentId,
+    cohortId,
+    nextSpeaker.agent.type === UserType.MEDIATOR
+      ? activeParticipants.map((p) => p.privateId)
+      : [nextSpeaker.agent.privateId],
+    stage.id,
+    nextTriggerChatId,
+    nextSpeaker.agent,
+  );
 }
 
 /** Sends agent chat message after typing delay and duplicate check. */
