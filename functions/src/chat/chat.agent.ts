@@ -236,13 +236,20 @@ export async function getAgentChatMessage(
   // Agent who will be sending the message
   user: ParticipantProfileExtended | MediatorProfileExtended,
   promptConfig: ChatPromptConfig,
-): Promise<{message: ChatMessage | null; success: boolean}> {
+  turnBasedRetryDeadlineMs?: number,
+): Promise<{
+  message: ChatMessage | null;
+  success: boolean;
+  retryTimedOut: boolean;
+}> {
   const stageId = stage.id;
 
   // Fetch experiment creator's API key.
   const experimenterData =
     await getExperimenterDataFromExperiment(experimentId);
-  if (!experimenterData) return {message: null, success: false};
+  if (!experimenterData) {
+    return {message: null, success: false, retryTimedOut: false};
+  }
 
   // Get chat messages from private/public data based on stage kind
   const chatMessages =
@@ -259,8 +266,9 @@ export async function getAgentChatMessage(
         );
 
   // For turn-based conversation, ensure it is the agent's turn
-  const chatStage = stage as ChatStageConfig;
-  if (chatStage.isTurnBased) {
+  const isTurnBasedGroupChat =
+    stage.kind === StageKind.CHAT && (stage as ChatStageConfig).isTurnBased;
+  if (isTurnBasedGroupChat) {
     const publicStageData = await getFirestoreStagePublicData(
       experimentId,
       cohortId,
@@ -271,19 +279,19 @@ export async function getAgentChatMessage(
       chatPublicData &&
       chatPublicData.currentTurnParticipantId !== user.publicId
     ) {
-      return {message: null, success: true};
+      return {message: null, success: true, retryTimedOut: false};
     }
   }
 
   // Confirm that agent can send chat messages based on prompt config
   const chatSettings = promptConfig.chatSettings;
   if (!canSendAgentChatMessage(user.publicId, chatSettings, chatMessages)) {
-    return {message: null, success: true};
+    return {message: null, success: true, retryTimedOut: false};
   }
 
   // Ensure user has agent config
   if (!user.agentConfig) {
-    return {message: null, success: false};
+    return {message: null, success: false, retryTimedOut: false};
   }
 
   // Use provided participant IDs for prompt context
@@ -333,7 +341,34 @@ export async function getAgentChatMessage(
     prompt = structuredPrompt;
   }
 
-  const {response, logId} = await processModelResponse(
+  const retryDurationMs =
+    isTurnBasedGroupChat && turnBasedRetryDeadlineMs !== undefined
+      ? Math.max(0, turnBasedRetryDeadlineMs - Date.now())
+      : null;
+
+  // In turn-based mode the agent always responds when called — strip shouldRespond
+  // from the API-level schema constraint so the model isn't forced to output a
+  // field whose "stay silent" path would freeze the turn. The prompt text is
+  // already filtered in structured_prompt.utils.ts; this keeps the two in sync.
+  const effectiveStructuredOutputConfig = (() => {
+    const config = promptConfig.structuredOutputConfig as
+      | ChatMediatorStructuredOutputConfig
+      | undefined;
+    if (!isTurnBasedGroupChat || !config?.schema?.properties) return config;
+    const shouldRespondFieldName = config.shouldRespondField || 'shouldRespond';
+    return {
+      ...config,
+      schema: {
+        ...config.schema,
+        properties: config.schema.properties.filter(
+          (p) => p.name !== shouldRespondFieldName,
+        ),
+      },
+      shouldRespondField: '',
+    } as ChatMediatorStructuredOutputConfig;
+  })();
+
+  const {response, logId, retryTimedOut} = await processModelResponse(
     experimentId,
     cohortId,
     participantIds[0] || '', // Use first participant ID for logging/tracking
@@ -346,8 +381,9 @@ export async function getAgentChatMessage(
     prompt,
     user.agentConfig.modelSettings,
     promptConfig.generationConfig,
-    promptConfig.structuredOutputConfig,
-    promptConfig.numRetries ?? 0, // Pass numRetries from config
+    effectiveStructuredOutputConfig,
+    isTurnBasedGroupChat ? null : (promptConfig.numRetries ?? 0),
+    retryDurationMs,
   );
 
   // Log response with sanitized rawResponse and files to avoid overwhelming console with file/image data
@@ -370,10 +406,10 @@ export async function getAgentChatMessage(
 
   // Process response
   if (response.status !== ModelResponseStatus.OK) {
-    return {message: null, success: false};
+    return {message: null, success: false, retryTimedOut};
   }
 
-  const structured = promptConfig.structuredOutputConfig as
+  const structured = effectiveStructuredOutputConfig as
     | ChatMediatorStructuredOutputConfig
     | undefined;
 
@@ -401,7 +437,7 @@ export async function getAgentChatMessage(
 
   // No text and no files = failure
   if (!response.text && (!response.files || response.files.length === 0)) {
-    return {message: null, success: false};
+    return {message: null, success: false, retryTimedOut};
   }
 
   if (!shouldRespond) {
@@ -440,7 +476,7 @@ export async function getAgentChatMessage(
       );
       await participantAnswerDoc.set({readyToEndChat: true}, {merge: true});
     }
-    return {message: null, success: true};
+    return {message: null, success: true, retryTimedOut};
   }
 
   // If stage includes discussions, figure out what discussion ID should be
@@ -491,7 +527,7 @@ export async function getAgentChatMessage(
     }
   }
 
-  return {message: chatMessage, success: true};
+  return {message: chatMessage, success: true, retryTimedOut};
 }
 
 /** Sends agent chat message after typing delay and duplicate check. */
