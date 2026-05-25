@@ -7,6 +7,7 @@ import {
   StageKind,
   UserType,
   createParticipantProfileBase,
+  createSystemChatMessage,
   shuffleWithSeed,
   ChatPromptConfig,
 } from '@deliberation-lab/utils';
@@ -86,6 +87,8 @@ export const onPublicChatMessageCreated = onDocumentCreated(
     if (chatStage.isTurnBased) {
       const message = event.data?.data() as ChatMessage;
       if (!message) return;
+      if (message.type === UserType.SYSTEM) return;
+      if (message.type === UserType.EXPERIMENTER) return;
 
       const chatMessages = await getFirestorePublicStageChatMessages(
         event.params.experimentId,
@@ -257,7 +260,11 @@ export const onPublicChatMessageCreated = onDocumentCreated(
         turnOrder = [...shuffledMediators, ...shuffledParticipants];
         currentTurnParticipantId = turnOrder[0] ?? null;
 
-        // Update Firestore immediately
+        // Update Firestore immediately (omit currentTurnParticipantId when the
+        // sender is the initial turn holder — the advance block writes it once,
+        // preventing a double-write flash in the UI on the first turn).
+        const senderIsInitialTurnHolder =
+          message.senderId === currentTurnParticipantId;
         const publicStageDataRef = app
           .firestore()
           .collection('experiments')
@@ -269,7 +276,7 @@ export const onPublicChatMessageCreated = onDocumentCreated(
 
         await publicStageDataRef.set(
           {
-            currentTurnParticipantId,
+            ...(senderIsInitialTurnHolder ? {} : {currentTurnParticipantId}),
             turnOrder,
             cycleIndex,
           },
@@ -285,7 +292,7 @@ export const onPublicChatMessageCreated = onDocumentCreated(
           await messageRef.delete();
         }
 
-        // Fallback to trigger mediator message if it hasn't spoken yet
+        // Fallback to trigger initial agent message if first turn holder hasn't spoken
         if (
           currentTurnParticipantId &&
           turnOrder.indexOf(currentTurnParticipantId) === 0
@@ -293,14 +300,21 @@ export const onPublicChatMessageCreated = onDocumentCreated(
           const mediator = mediators.find(
             (m) => m.publicId === currentTurnParticipantId,
           );
-          if (mediator) {
+          const participant = allParticipants.find(
+            (p) => p.publicId === currentTurnParticipantId,
+          );
+          const agent =
+            mediator ?? (participant?.agentConfig ? participant : null);
+          if (agent) {
             await createAgentChatMessageFromPrompt(
               event.params.experimentId,
               event.params.cohortId,
-              allParticipants.map((p) => p.privateId),
+              mediator
+                ? allParticipants.map((p) => p.privateId)
+                : [agent.privateId],
               stage.id,
               '', // empty triggerChatId indicates initial message
-              mediator,
+              agent,
             );
           }
         }
@@ -311,6 +325,7 @@ export const onPublicChatMessageCreated = onDocumentCreated(
       let nextTurnParticipantId = currentTurnParticipantId;
       let nextIndex = turnOrder.indexOf(message.senderId);
       let attempts = 0;
+      let foundCandidate = false;
 
       while (attempts < turnOrder.length) {
         if (nextIndex === -1 || nextIndex === turnOrder.length - 1) {
@@ -367,24 +382,19 @@ export const onPublicChatMessageCreated = onDocumentCreated(
 
         nextTurnParticipantId = turnOrder[nextIndex];
 
-        // Check if the candidate is active and exists
+        // Check if the candidate is active and exists. Use the cached active
+        // mediator list (AI-only — same source as activeIds) instead of
+        // re-querying Firestore for every iteration of this loop.
         const candidate =
           allParticipants.find((p) => p.publicId === nextTurnParticipantId) ||
-          (
-            await getFirestoreActiveMediators(
-              event.params.experimentId,
-              event.params.cohortId,
-              stage.id,
-              false,
-            )
-          ).find((m) => m.publicId === nextTurnParticipantId);
+          mediators.find((m) => m.publicId === nextTurnParticipantId);
 
         if (!candidate || !activeIds.includes(nextTurnParticipantId)) {
           attempts++;
           continue;
         }
 
-        // If the candidate is an AI agent, check response limits
+        // If the candidate is an AI agent, check whether it can send a message
         if (candidate.agentConfig) {
           const promptConfig = (await getStructuredPromptConfig(
             event.params.experimentId,
@@ -392,37 +402,55 @@ export const onPublicChatMessageCreated = onDocumentCreated(
             candidate,
           )) as ChatPromptConfig | undefined;
 
-          if (promptConfig) {
-            const chatSettings = promptConfig.chatSettings;
-            const chatsByAgent = (chatMessages ?? []).filter(
-              (chat) => chat.senderId === candidate.publicId,
-            );
-
-            let reason: string | null = null;
-            if (
-              chatSettings.maxResponses !== null &&
-              chatsByAgent.length >= chatSettings.maxResponses
-            ) {
-              reason = `maxResponses = ${chatSettings.maxResponses}`;
-            } else if (
-              chatSettings.minMessagesBeforeResponding !== null &&
-              (chatMessages ?? []).length <
-                chatSettings.minMessagesBeforeResponding
-            ) {
-              reason = `minMessagesBeforeResponding = ${chatSettings.minMessagesBeforeResponding}`;
-            }
-
-            if (reason) {
-              console.warn(
-                `Skipped turn for ${candidate.publicId} due to ${reason}`,
-              );
-              attempts++;
-              continue;
-            }
+          if (
+            !promptConfig ||
+            !canSendAgentChatMessage(
+              candidate.publicId,
+              promptConfig.chatSettings,
+              chatMessages ?? [],
+            )
+          ) {
+            console.warn(`Skipped turn for ${candidate.publicId}`);
+            attempts++;
+            continue;
           }
         }
 
+        foundCandidate = true;
         break;
+      }
+
+      if (!foundCandidate) {
+        // No eligible next speaker (e.g., all agents at maxResponses, all
+        // humans inactive). Leave currentTurnParticipantId unchanged so the
+        // chat does not get pinned to a non-eligible candidate. Emit a
+        // system message once so participants understand the wait.
+        const previousMessage = (chatMessages ?? [])[
+          (chatMessages ?? []).length - 2
+        ];
+        if (
+          previousMessage?.type !== UserType.SYSTEM ||
+          !previousMessage?.message?.startsWith(
+            'Error: Nobody is eligible to speak.',
+          )
+        ) {
+          const noticeMessage = createSystemChatMessage({
+            message:
+              'Error: Nobody is eligible to speak. Waiting for someone to be eligible...',
+          });
+          await app
+            .firestore()
+            .collection('experiments')
+            .doc(event.params.experimentId)
+            .collection('cohorts')
+            .doc(event.params.cohortId)
+            .collection('publicStageData')
+            .doc(event.params.stageId)
+            .collection('chats')
+            .doc(noticeMessage.id)
+            .set(noticeMessage);
+        }
+        return;
       }
 
       currentTurnParticipantId = nextTurnParticipantId;
