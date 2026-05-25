@@ -18,6 +18,7 @@ import {
   ChatStageConfig,
 } from '@deliberation-lab/utils';
 import {
+  getFirestoreCohort,
   getFirestoreStage,
   getFirestoreStagePublicData,
   getFirestorePrivateChatMessages,
@@ -523,7 +524,8 @@ export const acceptParticipantExperimentStart = onCall(
     const stage = await getFirestoreStage(data.experimentId, currentStageId);
     const isTurnBased =
       stage?.kind === StageKind.CHAT && (stage as ChatStageConfig).isTurnBased;
-    if (isTurnBased) {
+    const cohort = await getFirestoreCohort(data.experimentId, currentCohortId);
+    if (isTurnBased && cohort?.stageUnlockMap?.[currentStageId]) {
       console.log(
         `[participant.endpoints] Initial stage ${currentStageId} is turn-based. Triggering sendInitialChatMessages!`,
       );

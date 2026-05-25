@@ -1043,52 +1043,62 @@ async function sendInitialGroupChatMessages(
     );
     const chatPublicData = publicStageData as ChatStagePublicData;
 
-    // If already initialized, check for late joiners and place them in their respective queues
+    // If already initialized, append any new participants to the end of the
+    // current turn order, and any new mediators to the end of the mediator
+    // phase (after existing mediators, before participants). Never touch
+    // currentTurnParticipantId — the in-flight onPublicChatMessageCreated
+    // trigger already owns turn advancement.
     if (chatPublicData && chatPublicData.currentTurnParticipantId) {
-      const turnOrder = chatPublicData.turnOrder ?? [];
-      const allPublicParticipantIds = allParticipants.map((p) => p.publicId);
-      const allMediatorIds = agentMediators.map((m) => m.publicId);
-      const activeIds = [...allMediatorIds, ...allPublicParticipantIds];
+      const publicStageDataRef = app
+        .firestore()
+        .collection('experiments')
+        .doc(experimentId)
+        .collection('cohorts')
+        .doc(cohortId)
+        .collection('publicStageData')
+        .doc(stageId);
 
-      // Filter turnOrder to only include currently active IDs
-      const filteredTurnOrder = turnOrder.filter((id: string) =>
-        activeIds.includes(id),
-      );
+      await app.firestore().runTransaction(async (transaction) => {
+        const snapshot = await transaction.get(publicStageDataRef);
+        const currentData = snapshot.data() as ChatStagePublicData | undefined;
+        if (!currentData || !currentData.currentTurnParticipantId) return;
 
-      const currentMediators = filteredTurnOrder.filter((id) =>
-        allMediatorIds.includes(id),
-      );
-      const missingMediators = allMediatorIds.filter(
-        (id) => !filteredTurnOrder.includes(id),
-      );
-      const currentParticipants = filteredTurnOrder.filter((id) =>
-        allPublicParticipantIds.includes(id),
-      );
-      const missingParticipants = allPublicParticipantIds.filter(
-        (id) => !filteredTurnOrder.includes(id),
-      );
+        const turnOrder = currentData.turnOrder ?? [];
+        const existingIds = new Set(turnOrder);
+        const allMediatorIds = new Set(agentMediators.map((m) => m.publicId));
 
-      const updatedTurnOrder = [
-        ...currentMediators,
-        ...missingMediators,
-        ...currentParticipants,
-        ...missingParticipants,
-      ];
+        const newMediatorIds = agentMediators
+          .map((m) => m.publicId)
+          .filter((id) => !existingIds.has(id));
+        const newParticipantIds = allParticipants
+          .map((p) => p.publicId)
+          .filter((id) => !existingIds.has(id));
 
-      if (JSON.stringify(turnOrder) !== JSON.stringify(updatedTurnOrder)) {
-        const publicStageDataRef = app
-          .firestore()
-          .collection('experiments')
-          .doc(experimentId)
-          .collection('cohorts')
-          .doc(cohortId)
-          .collection('publicStageData')
-          .doc(stageId);
+        if (newMediatorIds.length === 0 && newParticipantIds.length === 0) {
+          return;
+        }
 
-        await publicStageDataRef.update({
-          turnOrder: updatedTurnOrder,
-        });
-      }
+        // New mediators go after the last existing mediator (end of the
+        // mediator phase); new participants go at the very end.
+        const lastMediatorIdx = turnOrder.reduce(
+          (last, id, i) => (allMediatorIds.has(id) ? i : last),
+          -1,
+        );
+
+        const updatedTurnOrder = [
+          ...turnOrder.slice(0, lastMediatorIdx + 1),
+          ...newMediatorIds,
+          ...turnOrder.slice(lastMediatorIdx + 1),
+          ...newParticipantIds,
+        ];
+
+        transaction.set(
+          publicStageDataRef,
+          {turnOrder: updatedTurnOrder},
+          {merge: true},
+        );
+      });
+
       return;
     }
 
@@ -1111,7 +1121,42 @@ async function sendInitialGroupChatMessages(
           : allMediatorIds;
 
       const turnOrder = [...shuffledMediators, ...shuffledParticipants];
-      const currentTurnParticipantId = turnOrder[0] ?? null;
+
+      // Find the first eligible initial turn holder, skipping agents that
+      // can't send yet (e.g., minMessagesBeforeResponding > 0).
+      let currentTurnParticipantId: string | null = null;
+      for (const id of turnOrder) {
+        const mediatorCandidate = agentMediators.find((m) => m.publicId === id);
+        const participantCandidate = allParticipants.find(
+          (p) => p.publicId === id,
+        );
+        const candidate = mediatorCandidate ?? participantCandidate;
+        if (!candidate) continue;
+
+        if (candidate.agentConfig) {
+          const candidatePromptConfig = (await getStructuredPromptConfig(
+            experimentId,
+            chatStage,
+            candidate,
+          )) as ChatPromptConfig | undefined;
+          if (
+            candidatePromptConfig &&
+            !canSendAgentChatMessage(
+              id,
+              candidatePromptConfig.chatSettings,
+              [], // no messages yet
+            )
+          ) {
+            continue; // not eligible yet, try next
+          }
+        }
+
+        currentTurnParticipantId = id;
+        break;
+      }
+      if (!currentTurnParticipantId && turnOrder.length > 0) {
+        currentTurnParticipantId = turnOrder[0];
+      }
 
       // Update Firestore publicStageData
       const publicStageDataRef = app
@@ -1132,37 +1177,25 @@ async function sendInitialGroupChatMessages(
         {merge: true},
       );
 
-      // Trigger the mediator message (which is first!)
-      if (
-        currentTurnParticipantId &&
-        allMediatorIds.includes(currentTurnParticipantId)
-      ) {
+      // Trigger an initial message if the first turn holder is an agent.
+      if (currentTurnParticipantId) {
         const mediator = agentMediators.find(
           (m) => m.publicId === currentTurnParticipantId,
         );
-        if (mediator) {
-          // Delete trigger log to ensure mediator can speak!
-          const triggerLogId = `initial-${currentTurnParticipantId}`;
-          const triggerLogRef = app
-            .firestore()
-            .collection('experiments')
-            .doc(experimentId)
-            .collection('cohorts')
-            .doc(cohortId)
-            .collection('publicStageData')
-            .doc(stageId)
-            .collection('triggerLogs')
-            .doc(triggerLogId);
+        const participant = allParticipants.find(
+          (p) => p.publicId === currentTurnParticipantId,
+        );
+        const agent =
+          mediator ?? (participant?.agentConfig ? participant : null);
 
-          await triggerLogRef.delete();
-
+        if (agent) {
           await createAgentChatMessageFromPrompt(
             experimentId,
             cohortId,
-            allParticipantIds,
+            mediator ? allParticipantIds : [agent.privateId],
             stageId,
             '', // empty triggerChatId
-            mediator,
+            agent,
           );
         }
       }

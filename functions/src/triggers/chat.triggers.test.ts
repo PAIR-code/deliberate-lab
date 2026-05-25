@@ -57,9 +57,23 @@ jest.mock('../app', () => {
     };
   });
 
+  const mockRunTransaction = jest
+    .fn()
+    .mockImplementation(async (callback: (txn: any) => Promise<any>) => {
+      const txn = {
+        get: (ref: any) => ref.get(),
+        create: (ref: any, data: any) => mockSet(ref.path, data, {}),
+        set: (ref: any, data: any, options: any) =>
+          mockSet(ref.path, data, options),
+        delete: (ref: any) => mockDelete(ref.path),
+      };
+      return callback(txn);
+    });
+
   const mockFirestore = jest.fn().mockReturnValue({
     collection: (col: string) => mockCollection(col),
     doc: (doc: string) => mockDoc(doc),
+    runTransaction: mockRunTransaction,
   });
 
   return {
@@ -501,10 +515,10 @@ describe('Chat Triggers - Turn Taking Mechanics', () => {
   });
 
   // ---------------------------------------------------------------------------
-  // 4. MEDIATOR AUTO-TRIGGERING & LOG CLEANUP
+  // 4. MEDIATOR AUTO-TRIGGERING
   // ---------------------------------------------------------------------------
-  describe('4. Mediator Auto-Triggering & Log Cleanup', () => {
-    it('initializes turn-based chat, deletes the initial trigger log, and triggers mediator', async () => {
+  describe('4. Mediator Auto-Triggering', () => {
+    it('initializes turn-based chat and triggers mediator', async () => {
       // Mock getFirestoreStagePublicData returning null (meaning uninitialized)
       mockGetFirestoreStagePublicData.mockResolvedValue(null);
 
@@ -551,11 +565,6 @@ describe('Chat Triggers - Turn Taking Mechanics', () => {
           cycleIndex: 0,
         },
         {merge: true},
-      );
-
-      // Assert that it deletes the initial trigger log for mediator 'm1'
-      expect(__mocks__.deleteMock).toHaveBeenCalledWith(
-        'experiments/exp123/cohorts/cohort123/publicStageData/stage123/triggerLogs/initial-m1',
       );
 
       // Assert mediator's message is constructed and saved to Firestore chats collection
