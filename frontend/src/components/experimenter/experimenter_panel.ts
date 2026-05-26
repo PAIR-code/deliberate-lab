@@ -550,7 +550,7 @@ export class Panel extends MobxLitElement {
       this.experimentManager.alertComposeTarget ||
       '';
     const participants = Object.values(this.experimentManager.participantMap)
-      .filter((p) => !isObsoleteParticipant(p))
+      .filter((p) => !isObsoleteParticipant(p) && !p.agentConfig)
       .sort((a, b) =>
         (a.name || a.publicId).localeCompare(b.name || b.publicId),
       );

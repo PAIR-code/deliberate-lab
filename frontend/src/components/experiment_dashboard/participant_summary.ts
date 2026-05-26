@@ -335,6 +335,10 @@ export class ParticipantSummary extends MobxLitElement {
   }
 
   private renderMessageButton() {
+    if (!this.participant || this.participant.agentConfig) {
+      return nothing;
+    }
+
     const messageParticipant = () => {
       if (!this.participant) return;
       this.analyticsService.trackButtonClick(ButtonClick.PARTICIPANT_MESSAGE);
