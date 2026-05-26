@@ -194,6 +194,7 @@ and optional helper scripts, examples, and resources.
 | Skill | Purpose |
 |-------|---------|
 | [`sync-fork`](.gemini/skills/sync-fork/SKILL.md) | Sync fork's `main` with upstream and rebase feature branches |
+| [`eval-pr`](.gemini/skills/eval-pr/SKILL.md) | Set up a git worktree to run and evaluate an upstream Pull Request locally |
 
 ## Common pitfalls
 
