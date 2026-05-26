@@ -593,7 +593,10 @@ export class Panel extends MobxLitElement {
             <option value="">-- Select Participant --</option>
             ${participants.map(
               (p) => html`
-                <option value=${p.privateId}>
+                <option
+                  value=${p.privateId}
+                  ?selected=${p.privateId === targetParticipantId}
+                >
                   ${p.name ? `${p.name} (${p.publicId})` : p.publicId}
                 </option>
               `,
