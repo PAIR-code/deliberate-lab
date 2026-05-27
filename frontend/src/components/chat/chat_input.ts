@@ -42,6 +42,7 @@ export class ChatInputComponent extends MobxLitElement {
 
   override render() {
     const sendInput = async () => {
+      if (this.isLoading || this.isDisabled) return;
       this.isLoading = true;
       await this.sendUserInput(this.getUserInput());
       this.isLoading = false;
