@@ -398,6 +398,11 @@ export class Panel extends MobxLitElement {
 
       const onAck = (response: string) => {
         this.isAckAlertLoading = true;
+        if (response.trim().length > 0) {
+          this.analyticsService.trackButtonClick(ButtonClick.ALERT_RESPOND);
+        } else {
+          this.analyticsService.trackButtonClick(ButtonClick.ALERT_ACKNOWLEDGE);
+        }
         this.experimentManager.ackAlertMessage(
           alert.id,
           alert.participantId,

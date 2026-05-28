@@ -223,7 +223,9 @@ export class Header extends MobxLitElement {
               color="secondary"
               variant="default"
               @click=${() => {
-                // TODO: Add Analytics tracking for documentation click
+                this.analyticsService.trackButtonClick(
+                  ButtonClick.DOCUMENTATION_CLICK,
+                );
                 window.open(DOCUMENTATION_URL, '_blank');
               }}
             >
@@ -235,7 +237,9 @@ export class Header extends MobxLitElement {
               color="secondary"
               variant="default"
               @click=${() => {
-                // TODO: Add Analytics tracking for bug report click
+                this.analyticsService.trackButtonClick(
+                  ButtonClick.BUG_REPORT_CLICK,
+                );
                 window.open(BUG_REPORT_URL, '_blank');
               }}
             >
@@ -325,6 +329,7 @@ export class Header extends MobxLitElement {
 
   private renderExperimentDownloadButton() {
     const onClick = async () => {
+      this.analyticsService.trackButtonClick(ButtonClick.EXPERIMENT_DOWNLOAD);
       this.isDownloading = true;
       await this.experimentManager.downloadExperiment();
       this.isDownloading = false;
@@ -441,6 +446,9 @@ export class Header extends MobxLitElement {
           color="neutral"
           variant="default"
           @click=${() => {
+            this.analyticsService.trackButtonClick(
+              ButtonClick.DEBUG_MODE_TOGGLE,
+            );
             this.authService.setDebugMode(!debugMode);
           }}
         >

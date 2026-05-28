@@ -47,6 +47,7 @@ export class Footer extends MobxLitElement {
     const isLast = this.participantService.isLastStage();
 
     const handleNext = async () => {
+      this.analyticsService.trackButtonClick(ButtonClick.STAGE_NEXT);
       this.isLoadingNext = true;
       await this.onNextClick();
       this.isLoadingNext = false;

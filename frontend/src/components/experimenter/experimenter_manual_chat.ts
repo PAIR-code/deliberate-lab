@@ -12,6 +12,7 @@ import {CSSResultGroup, html, nothing} from 'lit';
 import {customElement, state} from 'lit/decorators.js';
 
 import {core} from '../../core/core';
+import {AnalyticsService, ButtonClick} from '../../services/analytics.service';
 import {AuthService} from '../../services/auth.service';
 import {ExperimentManager} from '../../services/experiment.manager';
 import {ParticipantService} from '../../services/participant.service';
@@ -25,6 +26,7 @@ import {styles} from './experimenter_manual_chat.scss';
 export class Chat extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
 
+  private readonly analyticsService = core.getService(AnalyticsService);
   private readonly authService = core.getService(AuthService);
   private readonly experimentManager = core.getService(ExperimentManager);
   private readonly participantService = core.getService(ParticipantService);
@@ -86,6 +88,7 @@ export class Chat extends MobxLitElement {
         .sendUserInput=${async (input: string) => {
           if (input.trim() === '') return;
           this.isLoading = true;
+          this.analyticsService.trackButtonClick(ButtonClick.MANUAL_CHAT_SEND);
           // Send chat message
           await this.experimentManager.createManualChatMessage(
             this.participantService.currentStageViewId ?? '',
