@@ -158,6 +158,19 @@ export const onPublicChatMessageCreated = onDocumentCreated(
             p.timestamps?.completedStages?.[event.params.stageId] !== undefined;
           return !isExplicitlyInactive && !isExplicitlyCompleted;
         });
+
+        if (activeParticipants.length === 0) {
+          transaction.set(
+            publicStageDataRef,
+            {
+              currentTurnParticipantId: null,
+              turnOrder: [],
+            },
+            {merge: true},
+          );
+          return;
+        }
+
         const allPublicParticipantIds = activeParticipants.map(
           (p) => p.publicId,
         );

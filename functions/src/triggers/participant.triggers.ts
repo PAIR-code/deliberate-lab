@@ -86,20 +86,27 @@ async function advanceTurnBasedChatIfCurrentParticipantLeft(
   const wasCurrentSpeaker =
     publicStageData?.currentTurnParticipantId === before.publicId;
 
-  const [activeParticipants, activeMediators] = await Promise.all([
+  const [allActiveParticipants, activeMediators] = await Promise.all([
     getFirestoreActiveParticipants(experimentId, cohortId, stageId, false),
     getFirestoreActiveMediators(experimentId, cohortId, stageId, true),
   ]);
+  const activeParticipants = allActiveParticipants.filter(
+    (p) => p.timestamps?.completedStages?.[stageId] === undefined,
+  );
   const activeIds = new Set([
     ...activeMediators.map((mediator) => mediator.publicId),
     ...activeParticipants.map((participant) => participant.publicId),
   ]);
 
+  const isAfterCompleted =
+    after.timestamps?.completedStages?.[stageId] !== undefined;
+
   const isAfterActive =
     after.currentCohortId === cohortId &&
     after.currentStageId === stageId &&
     (after.currentStatus === ParticipantStatus.IN_PROGRESS ||
-      after.currentStatus === ParticipantStatus.ATTENTION_CHECK);
+      after.currentStatus === ParticipantStatus.ATTENTION_CHECK) &&
+    !isAfterCompleted;
 
   if (!isAfterActive) {
     activeIds.delete(after.publicId);
@@ -117,6 +124,18 @@ async function advanceTurnBasedChatIfCurrentParticipantLeft(
         | ChatStagePublicData
         | undefined;
       if (!currentPublicStageData) {
+        return null;
+      }
+
+      if (activeParticipants.length === 0) {
+        transaction.set(
+          publicStageDataRef,
+          {
+            currentTurnParticipantId: null,
+            turnOrder: [],
+          },
+          {merge: true},
+        );
         return null;
       }
 

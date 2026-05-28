@@ -815,9 +815,12 @@ export async function sendAgentGroupChatMessage(
       cohortId,
       stageId,
     );
+    const nonSystemHistory = chatHistory.filter(
+      (m) => m.type !== UserType.SYSTEM,
+    );
     if (
-      chatHistory.length > 0 &&
-      chatHistory[chatHistory.length - 1].id !== triggerChatId
+      nonSystemHistory.length > 0 &&
+      nonSystemHistory[nonSystemHistory.length - 1].id !== triggerChatId
     ) {
       // TODO: Write chat log
       console.log('Conversation has moved on');
@@ -887,9 +890,12 @@ export async function sendAgentPrivateChatMessage(
       participantId,
       stageId,
     );
+    const nonSystemHistory = chatHistory.filter(
+      (m) => m.type !== UserType.SYSTEM,
+    );
     if (
-      chatHistory.length > 0 &&
-      chatHistory[chatHistory.length - 1].id !== triggerChatId
+      nonSystemHistory.length > 0 &&
+      nonSystemHistory[nonSystemHistory.length - 1].id !== triggerChatId
     ) {
       // TODO: Write chat log
       console.log('Conversation has moved on');
