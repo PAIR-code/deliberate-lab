@@ -31,11 +31,22 @@ jest.mock('@deliberation-lab/utils', () => {
 jest.mock('../app', () => {
   const mockSet = jest.fn().mockResolvedValue(undefined);
   const mockDelete = jest.fn().mockResolvedValue(undefined);
-  const mockGet = jest.fn().mockImplementation((path: string) => {
-    return Promise.resolve({
+  const mockGet = jest.fn().mockImplementation(async (path: string) => {
+    if (path.includes('/publicStageData/')) {
+      const mockGetFirestoreStagePublicData =
+        require('../utils/firestore').getFirestoreStagePublicData;
+      const data = await mockGetFirestoreStagePublicData();
+      if (data !== undefined && data !== null) {
+        return {
+          exists: true,
+          data: () => data,
+        };
+      }
+    }
+    return {
       exists: false,
       data: () => ({}),
-    });
+    };
   });
 
   const mockDoc = jest.fn().mockImplementation((path: string) => {
