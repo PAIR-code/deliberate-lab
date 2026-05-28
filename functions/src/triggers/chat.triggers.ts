@@ -10,6 +10,8 @@ import {
   createSystemChatMessage,
   shuffleWithSeed,
   ChatPromptConfig,
+  ParticipantProfileExtended,
+  MediatorProfileExtended,
 } from '@deliberation-lab/utils';
 import {
   getFirestoreActiveMediators,
@@ -96,12 +98,6 @@ export const onPublicChatMessageCreated = onDocumentCreated(
         event.params.stageId,
       );
 
-      let turnOrder = chatPublicData.turnOrder ?? [];
-      let currentTurnParticipantId = chatPublicData.currentTurnParticipantId;
-      let cycleIndex = chatPublicData.cycleIndex ?? 0;
-
-      // Get active IDs for validation and filtering
-      const allPublicParticipantIds = allParticipants.map((p) => p.publicId);
       const mediators = await getFirestoreActiveMediators(
         event.params.experimentId,
         event.params.cohortId,
@@ -109,199 +105,395 @@ export const onPublicChatMessageCreated = onDocumentCreated(
         true, // get AI mediators
       );
       const allMediatorIds = mediators.map((m) => m.publicId);
-      const activeIds = [...allMediatorIds, ...allPublicParticipantIds];
 
-      // Filter turnOrder to only include currently active/non-dropped-out IDs
-      const originalTurnOrder = [...turnOrder];
-      const filteredTurnOrder = turnOrder.filter((id: string) =>
-        activeIds.includes(id),
-      );
+      let nextTurnParticipantId: string | null = null;
+      let shouldTriggerAgent = false;
+      let nextTurnHolder: ParticipantProfileExtended | null | undefined = null;
+      let nextMediatorHolder: MediatorProfileExtended | null | undefined = null;
+      let wasTurnHolderDroppedOut = false;
 
-      const currentMediators = filteredTurnOrder.filter((id) =>
-        allMediatorIds.includes(id),
-      );
-      const missingMediators = allMediatorIds.filter(
-        (id) => !filteredTurnOrder.includes(id),
-      );
-      const currentParticipants = filteredTurnOrder.filter((id) =>
-        allPublicParticipantIds.includes(id),
-      );
-      const missingParticipants = allPublicParticipantIds.filter(
-        (id) => !filteredTurnOrder.includes(id),
-      );
+      const publicStageDataRef = app
+        .firestore()
+        .collection('experiments')
+        .doc(event.params.experimentId)
+        .collection('cohorts')
+        .doc(event.params.cohortId)
+        .collection('publicStageData')
+        .doc(event.params.stageId);
 
-      turnOrder = [
-        ...currentMediators,
-        ...missingMediators,
-        ...currentParticipants,
-        ...missingParticipants,
-      ];
+      await app.firestore().runTransaction(async (transaction) => {
+        // Reset closure variables on every retry attempt to prevent retry contamination!
+        shouldTriggerAgent = false;
+        nextTurnHolder = null;
+        nextMediatorHolder = null;
+        wasTurnHolderDroppedOut = false;
 
-      if (JSON.stringify(originalTurnOrder) !== JSON.stringify(turnOrder)) {
-        const publicStageDataRef = app
-          .firestore()
-          .collection('experiments')
-          .doc(event.params.experimentId)
-          .collection('cohorts')
-          .doc(event.params.cohortId)
-          .collection('publicStageData')
-          .doc(event.params.stageId);
+        const snapshot = await transaction.get(publicStageDataRef);
+        const chatPublicData = snapshot.data() as
+          | ChatStagePublicData
+          | undefined;
+        if (!chatPublicData) return;
 
-        await publicStageDataRef.set(
-          {
-            turnOrder,
-          },
-          {merge: true},
+        let turnOrder = chatPublicData.turnOrder ?? [];
+        let currentTurnParticipantId = chatPublicData.currentTurnParticipantId;
+        let cycleIndex = chatPublicData.cycleIndex ?? 0;
+
+        // Get active IDs for validation and filtering. Filter out completed/booted/timed-out participants.
+        const activeParticipants = allParticipants.filter((p) => {
+          if (
+            p.currentCohortId !== undefined &&
+            p.currentCohortId !== event.params.cohortId
+          )
+            return false;
+          if (
+            p.currentStageId !== undefined &&
+            p.currentStageId !== event.params.stageId
+          )
+            return false;
+          const isExplicitlyInactive =
+            p.currentStatus !== undefined &&
+            p.currentStatus !== ParticipantStatus.IN_PROGRESS &&
+            p.currentStatus !== ParticipantStatus.ATTENTION_CHECK;
+          const isExplicitlyCompleted =
+            p.timestamps?.completedStages?.[event.params.stageId] !== undefined;
+          return !isExplicitlyInactive && !isExplicitlyCompleted;
+        });
+        const allPublicParticipantIds = activeParticipants.map(
+          (p) => p.publicId,
         );
-      }
+        const activeIds = [...allMediatorIds, ...allPublicParticipantIds];
 
-      // If the current turn holder is no longer active (e.g., dropped out), auto-advance!
-      if (
-        currentTurnParticipantId &&
-        !activeIds.includes(currentTurnParticipantId)
-      ) {
-        const oldIndex = originalTurnOrder.indexOf(currentTurnParticipantId);
-        let nextActiveId: string | null = null;
-        if (oldIndex !== -1) {
-          for (let k = oldIndex + 1; k < originalTurnOrder.length; k++) {
-            const candidate = originalTurnOrder[k];
-            if (activeIds.includes(candidate)) {
-              nextActiveId = candidate;
-              break;
+        // Filter turnOrder to only include currently active/non-dropped-out IDs
+        const originalTurnOrder = [...turnOrder];
+        const filteredTurnOrder = turnOrder.filter((id: string) =>
+          activeIds.includes(id),
+        );
+
+        const currentMediators = filteredTurnOrder.filter((id) =>
+          allMediatorIds.includes(id),
+        );
+        const missingMediators = allMediatorIds.filter(
+          (id) => !filteredTurnOrder.includes(id),
+        );
+        const currentParticipants = filteredTurnOrder.filter((id) =>
+          allPublicParticipantIds.includes(id),
+        );
+        const missingParticipants = allPublicParticipantIds.filter(
+          (id) => !filteredTurnOrder.includes(id),
+        );
+
+        turnOrder = [
+          ...currentMediators,
+          ...missingMediators,
+          ...currentParticipants,
+          ...missingParticipants,
+        ];
+
+        // If the current turn holder is no longer active (e.g., dropped out), auto-advance!
+        if (
+          currentTurnParticipantId &&
+          !activeIds.includes(currentTurnParticipantId)
+        ) {
+          wasTurnHolderDroppedOut = true;
+          const oldIndex = originalTurnOrder.indexOf(currentTurnParticipantId);
+          let nextActiveId: string | null = null;
+          if (oldIndex !== -1) {
+            for (let k = oldIndex + 1; k < originalTurnOrder.length; k++) {
+              const candidate = originalTurnOrder[k];
+              if (activeIds.includes(candidate)) {
+                nextActiveId = candidate;
+                break;
+              }
             }
+          }
+
+          if (nextActiveId) {
+            currentTurnParticipantId = nextActiveId;
+          } else {
+            // No active participants left in this cycle, start a new cycle!
+            cycleIndex += 1;
+            let nextTurnOrder = [...turnOrder];
+            const hasMediators = allMediatorIds.length > 0;
+            if (hasMediators) {
+              const currentMediators = turnOrder.filter((id) =>
+                allMediatorIds.includes(id),
+              );
+              const missingMediators = allMediatorIds.filter(
+                (id) => !turnOrder.includes(id),
+              );
+              const shuffledMissingMediators =
+                missingMediators.length > 1
+                  ? shuffleWithSeed(
+                      missingMediators,
+                      `${event.params.cohortId}-new-mediators-${cycleIndex}`,
+                    )
+                  : missingMediators;
+              const nextMediators = [
+                ...currentMediators,
+                ...shuffledMissingMediators,
+              ];
+
+              const hadMediators = turnOrder.some((id) =>
+                allMediatorIds.includes(id),
+              );
+              if (hadMediators) {
+                const seedString = `${event.params.cohortId}-${cycleIndex}`;
+                const shuffledParticipants = shuffleWithSeed(
+                  allPublicParticipantIds,
+                  seedString,
+                );
+                nextTurnOrder = [...nextMediators, ...shuffledParticipants];
+              } else {
+                const currentParticipants = turnOrder.filter((id) =>
+                  allPublicParticipantIds.includes(id),
+                );
+                nextTurnOrder = [...nextMediators, ...currentParticipants];
+              }
+            }
+            turnOrder = nextTurnOrder;
+            currentTurnParticipantId = turnOrder[0] ?? null;
           }
         }
 
-        if (nextActiveId) {
-          currentTurnParticipantId = nextActiveId;
-        } else {
-          // No active participants left in this cycle, start a new cycle!
-          cycleIndex += 1;
-          let nextTurnOrder = [...turnOrder];
-          const hasMediators = allMediatorIds.length > 0;
-          if (hasMediators) {
-            const currentMediators = turnOrder.filter((id) =>
-              allMediatorIds.includes(id),
-            );
-            const missingMediators = allMediatorIds.filter(
-              (id) => !turnOrder.includes(id),
-            );
-            const shuffledMissingMediators =
-              missingMediators.length > 1
-                ? shuffleWithSeed(
-                    missingMediators,
-                    `${event.params.cohortId}-new-mediators-${cycleIndex}`,
-                  )
-                : missingMediators;
-            const nextMediators = [
-              ...currentMediators,
-              ...shuffledMissingMediators,
-            ];
+        // 1. Initialize turn order if uninitialized or empty
+        if (!currentTurnParticipantId || turnOrder.length === 0) {
+          cycleIndex = 0;
+          const seedString = `${event.params.cohortId}-${cycleIndex}`;
+          const shuffledParticipants = shuffleWithSeed(
+            allPublicParticipantIds,
+            seedString,
+          );
 
-            const hadMediators = turnOrder.some((id) =>
-              allMediatorIds.includes(id),
-            );
-            if (hadMediators) {
-              const seedString = `${event.params.cohortId}-${cycleIndex}`;
-              const shuffledParticipants = shuffleWithSeed(
-                allPublicParticipantIds,
-                seedString,
-              );
-              nextTurnOrder = [...nextMediators, ...shuffledParticipants];
-            } else {
-              const currentParticipants = turnOrder.filter((id) =>
-                allPublicParticipantIds.includes(id),
-              );
-              nextTurnOrder = [...nextMediators, ...currentParticipants];
-            }
-          }
-          turnOrder = nextTurnOrder;
+          // Shuffle mediator order when conversation begins (only if multiple)
+          const shuffledMediators =
+            allMediatorIds.length > 1
+              ? shuffleWithSeed(
+                  allMediatorIds,
+                  `${event.params.cohortId}-mediators`,
+                )
+              : allMediatorIds;
+
+          turnOrder = [...shuffledMediators, ...shuffledParticipants];
           currentTurnParticipantId = turnOrder[0] ?? null;
+
+          const senderIsInitialTurnHolder =
+            message.senderId === currentTurnParticipantId;
+
+          transaction.set(
+            publicStageDataRef,
+            {
+              ...(senderIsInitialTurnHolder ? {} : {currentTurnParticipantId}),
+              turnOrder,
+              cycleIndex,
+            },
+            {merge: true},
+          );
         }
 
-        // Update Firestore immediately
-        const publicStageDataRef = app
-          .firestore()
-          .collection('experiments')
-          .doc(event.params.experimentId)
-          .collection('cohorts')
-          .doc(event.params.cohortId)
-          .collection('publicStageData')
-          .doc(event.params.stageId);
+        // 2. If it is not the message sender's turn, do not advance
+        const isSenderActive =
+          mediators.some((m) => m.publicId === message.senderId) ||
+          allParticipants.some((p) => p.publicId === message.senderId);
 
-        await publicStageDataRef.set(
-          {
-            currentTurnParticipantId,
-            turnOrder,
-            cycleIndex,
-          },
-          {merge: true},
-        );
-      }
+        const turnOrderChanged =
+          JSON.stringify(originalTurnOrder) !== JSON.stringify(turnOrder);
+        const turnHolderChanged =
+          chatPublicData?.currentTurnParticipantId !== currentTurnParticipantId;
 
-      // 1. Initialize turn order if uninitialized or empty
-      if (!currentTurnParticipantId || turnOrder.length === 0) {
-        cycleIndex = 0;
-        const seedString = `${event.params.cohortId}-${cycleIndex}`;
-        const shuffledParticipants = shuffleWithSeed(
-          allPublicParticipantIds,
-          seedString,
-        );
+        if (message.senderId !== currentTurnParticipantId && isSenderActive) {
+          if (turnOrderChanged || turnHolderChanged) {
+            transaction.set(
+              publicStageDataRef,
+              {
+                currentTurnParticipantId,
+                turnOrder,
+                cycleIndex,
+              },
+              {merge: true},
+            );
 
-        // Shuffle mediator order when conversation begins (only if multiple)
-        const shuffledMediators =
-          allMediatorIds.length > 1
-            ? shuffleWithSeed(
-                allMediatorIds,
-                `${event.params.cohortId}-mediators`,
-              )
-            : allMediatorIds;
+            shouldTriggerAgent = true;
+            nextTurnHolder = allParticipants.find(
+              (p) => p.publicId === currentTurnParticipantId,
+            );
+            nextMediatorHolder = mediators.find(
+              (m) => m.publicId === currentTurnParticipantId,
+            );
+          }
+          return;
+        }
 
-        turnOrder = [...shuffledMediators, ...shuffledParticipants];
-        currentTurnParticipantId = turnOrder[0] ?? null;
+        if (message.senderId === currentTurnParticipantId || !isSenderActive) {
+          // 3. Advance turn
+          nextTurnParticipantId = currentTurnParticipantId;
+          let nextIndex = turnOrder.indexOf(message.senderId);
 
-        // Update Firestore immediately (omit currentTurnParticipantId when the
-        // sender is the initial turn holder — the advance block writes it once,
-        // preventing a double-write flash in the UI on the first turn).
-        const senderIsInitialTurnHolder =
-          message.senderId === currentTurnParticipantId;
-        const publicStageDataRef = app
-          .firestore()
-          .collection('experiments')
-          .doc(event.params.experimentId)
-          .collection('cohorts')
-          .doc(event.params.cohortId)
-          .collection('publicStageData')
-          .doc(event.params.stageId);
+          // GRACEFUL OMISSION:
+          // If nextIndex is -1 (the sender completed/left/booted and is no longer in turnOrder),
+          // do NOT reset/scramble cycleIndex or turnOrder!
+          // Instead, gracefully set nextIndex to the current turn position or find the first active speaker!
+          if (nextIndex === -1) {
+            nextIndex = turnOrder.indexOf(currentTurnParticipantId);
+            if (nextIndex === -1) nextIndex = 0;
+          }
 
-        await publicStageDataRef.set(
-          {
-            ...(senderIsInitialTurnHolder ? {} : {currentTurnParticipantId}),
-            turnOrder,
-            cycleIndex,
-          },
-          {merge: true},
-        );
-      }
+          let attempts = 0;
+          let foundCandidate = false;
 
-      // 2. If it is not the message sender's turn, do not advance
-      if (message.senderId !== currentTurnParticipantId) {
-        // Delete any out-of-turn messages
+          while (attempts < turnOrder.length) {
+            if (nextIndex === turnOrder.length - 1) {
+              // Cycle repeats!
+              cycleIndex += 1;
+
+              let nextTurnOrder = [...turnOrder];
+              const hasMediators = allMediatorIds.length > 0;
+              if (hasMediators) {
+                const currentMediators = turnOrder.filter((id) =>
+                  allMediatorIds.includes(id),
+                );
+                const missingMediators = allMediatorIds.filter(
+                  (id) => !turnOrder.includes(id),
+                );
+                const shuffledMissingMediators =
+                  missingMediators.length > 1
+                    ? shuffleWithSeed(
+                        missingMediators,
+                        `${event.params.cohortId}-new-mediators-${cycleIndex}`,
+                      )
+                    : missingMediators;
+                const nextMediators = [
+                  ...currentMediators,
+                  ...shuffledMissingMediators,
+                ];
+
+                const hadMediators = turnOrder.some((id) =>
+                  allMediatorIds.includes(id),
+                );
+
+                if (hadMediators) {
+                  const seedString = `${event.params.cohortId}-${cycleIndex}`;
+                  const shuffledParticipants = shuffleWithSeed(
+                    allPublicParticipantIds,
+                    seedString,
+                  );
+                  nextTurnOrder = [...nextMediators, ...shuffledParticipants];
+                } else {
+                  // Preserve the stable human ordering
+                  const currentParticipants = turnOrder.filter((id) =>
+                    allPublicParticipantIds.includes(id),
+                  );
+                  nextTurnOrder = [...nextMediators, ...currentParticipants];
+                }
+              }
+
+              turnOrder = nextTurnOrder;
+              nextIndex = 0;
+            } else {
+              nextIndex += 1;
+            }
+
+            nextTurnParticipantId = turnOrder[nextIndex];
+
+            const candidate =
+              allParticipants.find(
+                (p) => p.publicId === nextTurnParticipantId,
+              ) || mediators.find((m) => m.publicId === nextTurnParticipantId);
+
+            if (!candidate || !activeIds.includes(nextTurnParticipantId)) {
+              attempts++;
+              continue;
+            }
+
+            // If the candidate is an AI agent, check whether it can send a message
+            if (candidate.agentConfig) {
+              const promptConfig = (await getStructuredPromptConfig(
+                event.params.experimentId,
+                stage,
+                candidate,
+              )) as ChatPromptConfig | undefined;
+
+              if (
+                !promptConfig ||
+                !canSendAgentChatMessage(
+                  candidate.publicId,
+                  promptConfig.chatSettings,
+                  chatMessages ?? [],
+                )
+              ) {
+                attempts++;
+                continue;
+              }
+            }
+
+            foundCandidate = true;
+            break;
+          }
+
+          if (foundCandidate) {
+            currentTurnParticipantId = nextTurnParticipantId;
+
+            transaction.set(
+              publicStageDataRef,
+              {
+                currentTurnParticipantId,
+                turnOrder,
+                cycleIndex,
+              },
+              {merge: true},
+            );
+
+            shouldTriggerAgent = true;
+            nextTurnHolder = allParticipants.find(
+              (p) => p.publicId === currentTurnParticipantId,
+            );
+            nextMediatorHolder = mediators.find(
+              (m) => m.publicId === currentTurnParticipantId,
+            );
+          }
+        }
+      });
+
+      // 4. Outside Transaction: Trigger the next speaker or delete out-of-turn messages
+      const currentSnapshot = await publicStageDataRef.get();
+      const updatedPublicStageData = currentSnapshot.data() as
+        | ChatStagePublicData
+        | undefined;
+      const updatedTurnParticipantId =
+        updatedPublicStageData?.currentTurnParticipantId;
+      const updatedTurnOrder = updatedPublicStageData?.turnOrder ?? [];
+      const isSenderActive =
+        mediators.some((m) => m.publicId === message.senderId) ||
+        allParticipants.some((p) => p.publicId === message.senderId);
+
+      const originalTurnParticipantId =
+        publicStageData?.currentTurnParticipantId;
+
+      if (
+        message.senderId !== originalTurnParticipantId &&
+        message.senderId !== updatedTurnParticipantId &&
+        isSenderActive
+      ) {
+        // Delete out-of-turn messages
         const messageRef = event.data?.ref;
         if (messageRef) {
           await messageRef.delete();
         }
 
         // Fallback to trigger initial agent message if first turn holder hasn't spoken
+        // and the conversation is empty (excluding system messages).
+        const nonSystemMessages = (chatMessages ?? []).filter(
+          (m) => m.type !== UserType.SYSTEM,
+        );
         if (
-          currentTurnParticipantId &&
-          turnOrder.indexOf(currentTurnParticipantId) === 0
+          nonSystemMessages.length === 0 &&
+          updatedTurnParticipantId &&
+          updatedTurnOrder.indexOf(updatedTurnParticipantId) === 0
         ) {
           const mediator = mediators.find(
-            (m) => m.publicId === currentTurnParticipantId,
+            (m) => m.publicId === updatedTurnParticipantId,
           );
           const participant = allParticipants.find(
-            (p) => p.publicId === currentTurnParticipantId,
+            (p) => p.publicId === updatedTurnParticipantId,
           );
           const agent =
             mediator ?? (participant?.agentConfig ? participant : null);
@@ -318,197 +510,29 @@ export const onPublicChatMessageCreated = onDocumentCreated(
             );
           }
         }
-        return;
       }
 
-      // 3. Advance turn
-      let nextTurnParticipantId = currentTurnParticipantId;
-      let nextIndex = turnOrder.indexOf(message.senderId);
-      let attempts = 0;
-      let foundCandidate = false;
-
-      while (attempts < turnOrder.length) {
-        if (nextIndex === -1 || nextIndex === turnOrder.length - 1) {
-          // Cycle repeats!
-          cycleIndex += 1;
-
-          let nextTurnOrder = [...turnOrder];
-          const hasMediators = allMediatorIds.length > 0;
-          if (hasMediators) {
-            const currentMediators = turnOrder.filter((id) =>
-              allMediatorIds.includes(id),
-            );
-            const missingMediators = allMediatorIds.filter(
-              (id) => !turnOrder.includes(id),
-            );
-            const shuffledMissingMediators =
-              missingMediators.length > 1
-                ? shuffleWithSeed(
-                    missingMediators,
-                    `${event.params.cohortId}-new-mediators-${cycleIndex}`,
-                  )
-                : missingMediators;
-            const nextMediators = [
-              ...currentMediators,
-              ...shuffledMissingMediators,
-            ];
-
-            // Check if the previous turnOrder had mediators
-            const hadMediators = turnOrder.some((id) =>
-              allMediatorIds.includes(id),
-            );
-
-            if (hadMediators) {
-              const seedString = `${event.params.cohortId}-${cycleIndex}`;
-              const shuffledParticipants = shuffleWithSeed(
-                allPublicParticipantIds,
-                seedString,
-              );
-              nextTurnOrder = [...nextMediators, ...shuffledParticipants];
-            } else {
-              // Preserve the stable human ordering
-              const currentParticipants = turnOrder.filter((id) =>
-                allPublicParticipantIds.includes(id),
-              );
-              nextTurnOrder = [...nextMediators, ...currentParticipants];
-            }
-          }
-
-          turnOrder = nextTurnOrder;
-          nextIndex = 0;
-        } else {
-          nextIndex += 1;
-        }
-
-        nextTurnParticipantId = turnOrder[nextIndex];
-
-        // Check if the candidate is active and exists. Use the cached active
-        // mediator list (AI-only — same source as activeIds) instead of
-        // re-querying Firestore for every iteration of this loop.
-        const candidate =
-          allParticipants.find((p) => p.publicId === nextTurnParticipantId) ||
-          mediators.find((m) => m.publicId === nextTurnParticipantId);
-
-        if (!candidate || !activeIds.includes(nextTurnParticipantId)) {
-          attempts++;
-          continue;
-        }
-
-        // If the candidate is an AI agent, check whether it can send a message
-        if (candidate.agentConfig) {
-          const promptConfig = (await getStructuredPromptConfig(
-            event.params.experimentId,
-            stage,
-            candidate,
-          )) as ChatPromptConfig | undefined;
-
-          if (
-            !promptConfig ||
-            !canSendAgentChatMessage(
-              candidate.publicId,
-              promptConfig.chatSettings,
-              chatMessages ?? [],
-            )
-          ) {
-            console.warn(`Skipped turn for ${candidate.publicId}`);
-            attempts++;
-            continue;
-          }
-        }
-
-        foundCandidate = true;
-        break;
-      }
-
-      if (!foundCandidate) {
-        // No eligible next speaker (e.g., all agents at maxResponses, all
-        // humans inactive). Leave currentTurnParticipantId unchanged so the
-        // chat does not get pinned to a non-eligible candidate. Emit a
-        // system message once so participants understand the wait.
-        const previousMessage = (chatMessages ?? [])[
-          (chatMessages ?? []).length - 2
-        ];
-        if (
-          previousMessage?.type !== UserType.SYSTEM ||
-          !previousMessage?.message?.startsWith(
-            'Error: Nobody is eligible to speak.',
-          )
-        ) {
-          const noticeMessage = createSystemChatMessage({
-            message:
-              'Error: Nobody is eligible to speak. Waiting for someone to be eligible...',
-          });
-          await app
-            .firestore()
-            .collection('experiments')
-            .doc(event.params.experimentId)
-            .collection('cohorts')
-            .doc(event.params.cohortId)
-            .collection('publicStageData')
-            .doc(event.params.stageId)
-            .collection('chats')
-            .doc(noticeMessage.id)
-            .set(noticeMessage);
-        }
-        return;
-      }
-
-      currentTurnParticipantId = nextTurnParticipantId;
-
-      // Update publicStageData in Firestore
-      const publicStageDataRef = app
-        .firestore()
-        .collection('experiments')
-        .doc(event.params.experimentId)
-        .collection('cohorts')
-        .doc(event.params.cohortId)
-        .collection('publicStageData')
-        .doc(event.params.stageId);
-
-      await publicStageDataRef.set(
-        {
-          currentTurnParticipantId,
-          turnOrder,
-          cycleIndex,
-        },
-        {merge: true},
-      );
-
-      // Trigger the next AI agent if applicable
-      const nextTurnHolder = allParticipants.find(
-        (p) => p.publicId === currentTurnParticipantId,
-      );
-
-      if (!nextTurnHolder) {
-        // Check if it's a mediator!
-        const mediators = await getFirestoreActiveMediators(
-          event.params.experimentId,
-          event.params.cohortId,
-          stage.id,
-          true,
-        );
-        const mediator = mediators.find(
-          (m) => m.publicId === currentTurnParticipantId,
-        );
-        if (mediator) {
+      if (shouldTriggerAgent && updatedTurnParticipantId) {
+        const finalTriggerChatId = wasTurnHolderDroppedOut ? '' : message.id;
+        if (nextMediatorHolder) {
           await createAgentChatMessageFromPrompt(
             event.params.experimentId,
             event.params.cohortId,
             allParticipants.map((p) => p.privateId),
             stage.id,
-            message.id,
-            mediator,
+            finalTriggerChatId,
+            nextMediatorHolder,
+          );
+        } else if (nextTurnHolder?.agentConfig) {
+          await createAgentChatMessageFromPrompt(
+            event.params.experimentId,
+            event.params.cohortId,
+            [nextTurnHolder.privateId],
+            stage.id,
+            finalTriggerChatId,
+            nextTurnHolder,
           );
         }
-      } else if (nextTurnHolder.agentConfig) {
-        await createAgentChatMessageFromPrompt(
-          event.params.experimentId,
-          event.params.cohortId,
-          [nextTurnHolder.privateId],
-          stage.id,
-          message.id,
-          nextTurnHolder,
-        );
       }
     } else {
       // Send agent mediator messages

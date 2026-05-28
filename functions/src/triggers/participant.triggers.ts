@@ -8,6 +8,7 @@ import {
   ChatStageConfig,
   ChatStagePublicData,
   ParticipantProfileExtended,
+  ParticipantStatus,
   StageConfig,
   StageKind,
   shuffleWithSeed,
@@ -82,7 +83,8 @@ async function advanceTurnBasedChatIfCurrentParticipantLeft(
   const publicStageData = (await publicStageDataRef.get()).data() as
     | ChatStagePublicData
     | undefined;
-  if (publicStageData?.currentTurnParticipantId !== before.publicId) return;
+  const wasCurrentSpeaker =
+    publicStageData?.currentTurnParticipantId === before.publicId;
 
   const [activeParticipants, activeMediators] = await Promise.all([
     getFirestoreActiveParticipants(experimentId, cohortId, stageId, false),
@@ -93,11 +95,17 @@ async function advanceTurnBasedChatIfCurrentParticipantLeft(
     ...activeParticipants.map((participant) => participant.publicId),
   ]);
 
-  if (
+  const isAfterActive =
     after.currentCohortId === cohortId &&
     after.currentStageId === stageId &&
-    activeIds.has(after.publicId)
-  ) {
+    (after.currentStatus === ParticipantStatus.IN_PROGRESS ||
+      after.currentStatus === ParticipantStatus.ATTENTION_CHECK);
+
+  if (!isAfterActive) {
+    activeIds.delete(after.publicId);
+  }
+
+  if (isAfterActive && activeIds.has(after.publicId)) {
     return;
   }
 
@@ -108,64 +116,70 @@ async function advanceTurnBasedChatIfCurrentParticipantLeft(
       const currentPublicStageData = snapshot.data() as
         | ChatStagePublicData
         | undefined;
-      if (
-        currentPublicStageData?.currentTurnParticipantId !== before.publicId
-      ) {
+      if (!currentPublicStageData) {
         return null;
       }
 
       const turnOrder = currentPublicStageData.turnOrder ?? [];
-      const oldIndex = turnOrder.indexOf(before.publicId);
-      const filteredTurnOrder = turnOrder.filter((id) => activeIds.has(id));
-      const nextActiveId =
-        oldIndex === -1
-          ? filteredTurnOrder[0]
-          : turnOrder.slice(oldIndex + 1).find((id) => activeIds.has(id));
+      let nextTurnOrder = turnOrder.filter((id) => id !== before.publicId);
 
+      let currentTurnParticipantId =
+        currentPublicStageData.currentTurnParticipantId;
       let cycleIndex = currentPublicStageData.cycleIndex ?? 0;
-      let nextTurnOrder = filteredTurnOrder;
-      let currentTurnParticipantId = nextActiveId ?? null;
-      if (!currentTurnParticipantId && filteredTurnOrder.length > 0) {
-        cycleIndex += 1;
-        const allMediatorIds = activeMediators.map((m) => m.publicId);
-        const allPublicParticipantIds = activeParticipants.map(
-          (p) => p.publicId,
-        );
-        if (allMediatorIds.length > 0) {
-          const currentMediators = filteredTurnOrder.filter((id) =>
-            allMediatorIds.includes(id),
+
+      if (currentTurnParticipantId === before.publicId) {
+        const oldIndex = turnOrder.indexOf(before.publicId);
+        const filteredTurnOrder = nextTurnOrder;
+        const nextActiveId =
+          oldIndex === -1
+            ? filteredTurnOrder[0]
+            : turnOrder.slice(oldIndex + 1).find((id) => activeIds.has(id));
+
+        let nextTurnOrderNew = filteredTurnOrder;
+        currentTurnParticipantId = nextActiveId ?? null;
+        if (!currentTurnParticipantId && filteredTurnOrder.length > 0) {
+          cycleIndex += 1;
+          const allMediatorIds = activeMediators.map((m) => m.publicId);
+          const allPublicParticipantIds = activeParticipants.map(
+            (p) => p.publicId,
           );
-          const missingMediators = allMediatorIds.filter(
-            (id) => !filteredTurnOrder.includes(id),
-          );
-          const shuffledMissingMediators =
-            missingMediators.length > 1
-              ? shuffleWithSeed(
-                  missingMediators,
-                  `${cohortId}-new-mediators-${cycleIndex}`,
-                )
-              : missingMediators;
-          const nextMediators = [
-            ...currentMediators,
-            ...shuffledMissingMediators,
-          ];
-          const hadMediators = filteredTurnOrder.some((id) =>
-            allMediatorIds.includes(id),
-          );
-          if (hadMediators) {
-            const shuffledParticipants = shuffleWithSeed(
-              allPublicParticipantIds,
-              `${cohortId}-${cycleIndex}`,
+          if (allMediatorIds.length > 0) {
+            const currentMediators = filteredTurnOrder.filter((id) =>
+              allMediatorIds.includes(id),
             );
-            nextTurnOrder = [...nextMediators, ...shuffledParticipants];
-          } else {
-            const currentParticipants = filteredTurnOrder.filter((id) =>
-              allPublicParticipantIds.includes(id),
+            const missingMediators = allMediatorIds.filter(
+              (id) => !filteredTurnOrder.includes(id),
             );
-            nextTurnOrder = [...nextMediators, ...currentParticipants];
+            const shuffledMissingMediators =
+              missingMediators.length > 1
+                ? shuffleWithSeed(
+                    missingMediators,
+                    `${cohortId}-new-mediators-${cycleIndex}`,
+                  )
+                : missingMediators;
+            const nextMediators = [
+              ...currentMediators,
+              ...shuffledMissingMediators,
+            ];
+            const hadMediators = filteredTurnOrder.some((id) =>
+              allMediatorIds.includes(id),
+            );
+            if (hadMediators) {
+              const shuffledParticipants = shuffleWithSeed(
+                allPublicParticipantIds,
+                `${cohortId}-${cycleIndex}`,
+              );
+              nextTurnOrderNew = [...nextMediators, ...shuffledParticipants];
+            } else {
+              const currentParticipants = filteredTurnOrder.filter((id) =>
+                allPublicParticipantIds.includes(id),
+              );
+              nextTurnOrderNew = [...nextMediators, ...currentParticipants];
+            }
           }
+          currentTurnParticipantId = nextTurnOrderNew[0] ?? null;
+          nextTurnOrder = nextTurnOrderNew;
         }
-        currentTurnParticipantId = nextTurnOrder[0] ?? null;
       }
 
       transaction.set(
@@ -181,7 +195,7 @@ async function advanceTurnBasedChatIfCurrentParticipantLeft(
       return currentTurnParticipantId;
     });
 
-  if (!currentTurnParticipantId) return;
+  if (!currentTurnParticipantId || !wasCurrentSpeaker) return;
 
   const mediator = activeMediators.find(
     (m) => m.publicId === currentTurnParticipantId,
@@ -251,11 +265,26 @@ export const onParticipantReconnect = onDocumentUpdated(
     const before = event.data.before.data() as ParticipantProfileExtended;
     const after = event.data.after.data() as ParticipantProfileExtended;
 
-    await advanceTurnBasedChatIfCurrentParticipantLeft(
-      experimentId,
-      before,
-      after,
-    );
+    const stageDoc = app
+      .firestore()
+      .collection('experiments')
+      .doc(experimentId)
+      .collection('stages')
+      .doc(before.currentStageId);
+    const stageConfig = (await stageDoc.get()).data() as
+      | StageConfig
+      | undefined;
+
+    if (
+      stageConfig?.kind === StageKind.CHAT &&
+      (stageConfig as ChatStageConfig).isTurnBased
+    ) {
+      await advanceTurnBasedChatIfCurrentParticipantLeft(
+        experimentId,
+        before,
+        after,
+      );
+    }
 
     // Check if participant reconnected
     if (!before.connected && after.connected) {
