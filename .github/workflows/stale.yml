@@ -1,7 +1,5 @@
 # Automatically close stale issues and pull requests.
 # https://github.com/actions/stale
-#
-# Resolves: https://github.com/PAIR-code/deliberate-lab/issues/1081
 
 name: 'Close stale issues and PRs'
 
