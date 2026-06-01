@@ -460,21 +460,24 @@ steps:
 
     # Fetch Firestore rules from the Firebase Rules REST API.
     fetch_firestore_rules() {
+      local token_json
+      token_json=$(retry curl -sf -H "Metadata-Flavor: Google" \
+        "http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/token")
       local token
-      token=$(retry curl -sf -H "Metadata-Flavor: Google" \
-        "http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/token" \
-        | node -p 'JSON.parse(require("fs").readFileSync(0,"utf-8")).access_token')
+      token=$(node -p 'JSON.parse(require("fs").readFileSync(0,"utf-8")).access_token' <<< "$token_json")
 
+      local release_json
+      release_json=$(retry curl -sf \
+        -H "Authorization: Bearer $token" \
+        "https://firebaserules.googleapis.com/v1/projects/${PROJECT_ID}/releases/cloud.firestore")
       local ruleset_name
-      ruleset_name=$(retry curl -sf \
-        -H "Authorization: Bearer $token" \
-        "https://firebaserules.googleapis.com/v1/projects/${PROJECT_ID}/releases/cloud.firestore" \
-        | node -p 'JSON.parse(require("fs").readFileSync(0,"utf-8")).rulesetName')
+      ruleset_name=$(node -p 'JSON.parse(require("fs").readFileSync(0,"utf-8")).rulesetName' <<< "$release_json")
 
-      retry curl -sf \
+      local ruleset_json
+      ruleset_json=$(retry curl -sf \
         -H "Authorization: Bearer $token" \
-        "https://firebaserules.googleapis.com/v1/${ruleset_name}" \
-        | node -p 'JSON.parse(require("fs").readFileSync(0,"utf-8")).source.files[0].content'
+        "https://firebaserules.googleapis.com/v1/${ruleset_name}")
+      node -p 'JSON.parse(require("fs").readFileSync(0,"utf-8")).source.files[0].content' <<< "$ruleset_json"
     }
 
     if [[ "${DEPLOYMENT_TYPES}" == *" ${_DEPLOYMENT_TYPE} "* ]]; then
@@ -550,10 +553,11 @@ steps:
 
     # Fetch Database rules from the Realtime Database REST API.
     fetch_database_rules() {
+      local token_json
+      token_json=$(retry curl -sf -H "Metadata-Flavor: Google" \
+        "http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/token")
       local token
-      token=$(retry curl -sf -H "Metadata-Flavor: Google" \
-        "http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/token" \
-        | node -p 'JSON.parse(require("fs").readFileSync(0,"utf-8")).access_token')
+      token=$(node -p 'JSON.parse(require("fs").readFileSync(0,"utf-8")).access_token' <<< "$token_json")
 
       retry curl -sf \
         -H "Authorization: Bearer $token" \
@@ -633,21 +637,24 @@ steps:
 
     # Fetch Storage rules from the Firebase Rules REST API.
     fetch_storage_rules() {
+      local token_json
+      token_json=$(retry curl -sf -H "Metadata-Flavor: Google" \
+        "http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/token")
       local token
-      token=$(retry curl -sf -H "Metadata-Flavor: Google" \
-        "http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/token" \
-        | node -p 'JSON.parse(require("fs").readFileSync(0,"utf-8")).access_token')
+      token=$(node -p 'JSON.parse(require("fs").readFileSync(0,"utf-8")).access_token' <<< "$token_json")
 
+      local release_json
+      release_json=$(retry curl -sf \
+        -H "Authorization: Bearer $token" \
+        "https://firebaserules.googleapis.com/v1/projects/${PROJECT_ID}/releases/firebase.storage")
       local ruleset_name
-      ruleset_name=$(retry curl -sf \
-        -H "Authorization: Bearer $token" \
-        "https://firebaserules.googleapis.com/v1/projects/${PROJECT_ID}/releases/firebase.storage" \
-        | node -p 'JSON.parse(require("fs").readFileSync(0,"utf-8")).rulesetName')
+      ruleset_name=$(node -p 'JSON.parse(require("fs").readFileSync(0,"utf-8")).rulesetName' <<< "$release_json")
 
-      retry curl -sf \
+      local ruleset_json
+      ruleset_json=$(retry curl -sf \
         -H "Authorization: Bearer $token" \
-        "https://firebaserules.googleapis.com/v1/${ruleset_name}" \
-        | node -p 'JSON.parse(require("fs").readFileSync(0,"utf-8")).source.files[0].content'
+        "https://firebaserules.googleapis.com/v1/${ruleset_name}")
+      node -p 'JSON.parse(require("fs").readFileSync(0,"utf-8")).source.files[0].content' <<< "$ruleset_json"
     }
 
     if [[ "${DEPLOYMENT_TYPES}" == *" ${_DEPLOYMENT_TYPE} "* ]]; then
