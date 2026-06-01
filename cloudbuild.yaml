@@ -448,10 +448,10 @@ steps:
         "$@" && return 0
         local exit_code=$?
         if (( attempt >= retries )); then
-          echo "❌ Command failed after $retries attempts: $*"
+          echo "❌ Command failed after $retries attempts: $*" >&2
           return $exit_code
         fi
-        echo "⚠️ Attempt $attempt/$retries failed (exit code $exit_code). Retrying in ${delay}s..."
+        echo "⚠️ Attempt $attempt/$retries failed (exit code $exit_code). Retrying in ${delay}s..." >&2
         sleep "$delay"
         delay=$(( delay * 2 ))
         attempt=$(( attempt + 1 ))
@@ -538,10 +538,10 @@ steps:
         "$@" && return 0
         local exit_code=$?
         if (( attempt >= retries )); then
-          echo "❌ Command failed after $retries attempts: $*"
+          echo "❌ Command failed after $retries attempts: $*" >&2
           return $exit_code
         fi
-        echo "⚠️ Attempt $attempt/$retries failed (exit code $exit_code). Retrying in ${delay}s..."
+        echo "⚠️ Attempt $attempt/$retries failed (exit code $exit_code). Retrying in ${delay}s..." >&2
         sleep "$delay"
         delay=$(( delay * 2 ))
         attempt=$(( attempt + 1 ))
@@ -621,10 +621,10 @@ steps:
         "$@" && return 0
         local exit_code=$?
         if (( attempt >= retries )); then
-          echo "❌ Command failed after $retries attempts: $*"
+          echo "❌ Command failed after $retries attempts: $*" >&2
           return $exit_code
         fi
-        echo "⚠️ Attempt $attempt/$retries failed (exit code $exit_code). Retrying in ${delay}s..."
+        echo "⚠️ Attempt $attempt/$retries failed (exit code $exit_code). Retrying in ${delay}s..." >&2
         sleep "$delay"
         delay=$(( delay * 2 ))
         attempt=$(( attempt + 1 ))
@@ -711,10 +711,10 @@ steps:
         "$@" && return 0
         local exit_code=$?
         if (( attempt >= retries )); then
-          echo "❌ Command failed after $retries attempts: $*"
+          echo "❌ Command failed after $retries attempts: $*" >&2
           return $exit_code
         fi
-        echo "⚠️ Attempt $attempt/$retries failed (exit code $exit_code). Retrying in ${delay}s..."
+        echo "⚠️ Attempt $attempt/$retries failed (exit code $exit_code). Retrying in ${delay}s..." >&2
         sleep "$delay"
         delay=$(( delay * 2 ))
         attempt=$(( attempt + 1 ))
