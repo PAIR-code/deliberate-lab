@@ -17,7 +17,7 @@ import {customElement, state} from 'lit/decorators.js';
 import {repeat} from 'lit/directives/repeat.js';
 
 import {core} from '../../core/core';
-import {AnalyticsService} from '../../services/analytics.service';
+import {AnalyticsService, ButtonClick} from '../../services/analytics.service';
 import {AuthService} from '../../services/auth.service';
 import {ExperimentManager} from '../../services/experiment.manager';
 import {ExperimentService} from '../../services/experiment.service';
