@@ -195,6 +195,7 @@ and optional helper scripts, examples, and resources.
 |-------|---------|
 | [`sync-fork`](.gemini/skills/sync-fork/SKILL.md) | Sync fork's `main` with upstream and rebase feature branches |
 | [`eval-pr`](.gemini/skills/eval-pr/SKILL.md) | Set up a git worktree to run and evaluate an upstream Pull Request locally |
+| [`read-github`](.gemini/skills/read-github/SKILL.md) | Read GitHub issues and PRs via the REST API instead of scraping HTML |
 
 ## Common pitfalls
 
