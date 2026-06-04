@@ -1,4 +1,3 @@
-import {Timestamp} from 'firebase/firestore';
 import {generateId, UnifiedTimestamp} from '../shared';
 import {
   BaseStageConfig,
@@ -8,10 +7,6 @@ import {
   createStageTextConfig,
   createStageProgressConfig,
 } from './stage';
-import {
-  ParticipantProfileBase,
-  createParticipantProfileBase,
-} from '../participant';
 
 /** Group chat stage types and functions. */
 // TODO: Rename file to group_chat_stage.ts
@@ -31,6 +26,7 @@ export interface ChatStageConfig extends BaseStageConfig {
   // TODO: Migrate to seconds for internal storage to avoid fractional-minute ambiguity.
   timeLimitInMinutes: number | null; // Maximum duration in minutes (integer), or null if no limit.
   timeMinimumInMinutes: number | null; // Minimum time participants must stay in minutes (integer), or null if no minimum.
+  isTurnBased?: boolean; // Whether the conversation is turn-based
 }
 
 /** Chat discussion. */
@@ -99,6 +95,9 @@ export interface ChatStagePublicData extends BaseStagePublicData {
   discussionCheckpointTimestamp: UnifiedTimestamp | null;
   // If the end timestamp is not null, the conversation has ended.
   discussionEndTimestamp: UnifiedTimestamp | null;
+  currentTurnParticipantId?: string | null; // ID of the participant whose turn it is
+  turnOrder?: string[]; // Array of participant IDs defining the turn order
+  cycleIndex?: number; // Counter to track turn cycles for seeded random
 }
 
 // ************************************************************************* //
@@ -120,6 +119,7 @@ export function createChatStage(
     discussions: config.discussions ?? [],
     timeLimitInMinutes: config.timeLimitInMinutes ?? null,
     timeMinimumInMinutes: config.timeMinimumInMinutes ?? null,
+    isTurnBased: config.isTurnBased ?? false,
   };
 }
 
@@ -172,5 +172,8 @@ export function createChatStagePublicData(
     discussionStartTimestamp: null,
     discussionCheckpointTimestamp: null,
     discussionEndTimestamp: null,
+    currentTurnParticipantId: null,
+    turnOrder: [],
+    cycleIndex: 0,
   };
 }

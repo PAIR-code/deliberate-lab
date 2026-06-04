@@ -732,6 +732,9 @@
               }
             ]
           }
+        },
+        "isTurnBased": {
+          "type": "boolean"
         }
       }
     },
@@ -2829,6 +2832,12 @@
                 "$ref": "#/$defs/StageContextPromptItem"
               },
               {
+                "$ref": "#/$defs/ChatMediatorInstructionsPromptItem"
+              },
+              {
+                "$ref": "#/$defs/ChatParticipantInstructionsPromptItem"
+              },
+              {
                 "$ref": "#/$defs/PromptItemGroup"
               }
             ]
@@ -3020,6 +3029,66 @@
         }
       }
     },
+    "ChatMediatorInstructionsPromptItem": {
+      "title": "ChatMediatorInstructionsPromptItem",
+      "additionalProperties": false,
+      "type": "object",
+      "required": ["type"],
+      "properties": {
+        "type": {
+          "const": "CHAT_MEDIATOR_INSTRUCTIONS",
+          "type": "string"
+        },
+        "condition": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "title": "Condition",
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/ComparisonCondition"
+                },
+                {
+                  "$ref": "#/$defs/ConditionGroup"
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    "ChatParticipantInstructionsPromptItem": {
+      "title": "ChatParticipantInstructionsPromptItem",
+      "additionalProperties": false,
+      "type": "object",
+      "required": ["type"],
+      "properties": {
+        "type": {
+          "const": "CHAT_PARTICIPANT_INSTRUCTIONS",
+          "type": "string"
+        },
+        "condition": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "title": "Condition",
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/ComparisonCondition"
+                },
+                {
+                  "$ref": "#/$defs/ConditionGroup"
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
     "PromptItemGroup": {
       "title": "PromptItemGroup",
       "additionalProperties": false,
@@ -3048,6 +3117,12 @@
               },
               {
                 "$ref": "#/$defs/StageContextPromptItem"
+              },
+              {
+                "$ref": "#/$defs/ChatMediatorInstructionsPromptItem"
+              },
+              {
+                "$ref": "#/$defs/ChatParticipantInstructionsPromptItem"
               },
               {
                 "$ref": "#/$defs/PromptItemGroup"
@@ -3958,6 +4033,12 @@
               },
               {
                 "$ref": "#/$defs/StageContextPromptItem"
+              },
+              {
+                "$ref": "#/$defs/ChatMediatorInstructionsPromptItem"
+              },
+              {
+                "$ref": "#/$defs/ChatParticipantInstructionsPromptItem"
               },
               {
                 "$ref": "#/$defs/PromptItemGroup"

@@ -69,6 +69,7 @@ export const ChatStageConfigData = Type.Composite(
           Type.Union([Type.Integer({minimum: 1}), Type.Null()]),
         ),
         discussions: Type.Array(ChatDiscussionData),
+        isTurnBased: Type.Optional(Type.Boolean()),
       },
       strict,
     ),

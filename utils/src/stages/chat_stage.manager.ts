@@ -6,14 +6,16 @@ import {
   PROFILE_SET_NATURE_ID,
 } from '../profile_sets';
 import {
+  ChatParticipantInstructionsPromptItem,
+  DEFAULT_AGENT_PARTICIPANT_PROMPT_INSTRUCTIONS,
   MediatorPromptConfig,
   ParticipantPromptConfig,
-  createDefaultParticipantPrompt,
+  PromptItemType,
+  createDefaultStageContextPromptItem,
+  createTextPromptItem,
 } from '../structured_prompt';
 import {ChatStageConfig} from './chat_stage';
 import {
-  DEFAULT_MEDIATOR_GROUP_CHAT_PROMPT_INSTRUCTIONS,
-  DEFAULT_AGENT_PARTICIPANT_CHAT_PROMPT,
   createChatPromptConfig,
   createDefaultMediatorGroupChatPrompt,
   getChatPromptMessageHistory,
@@ -84,9 +86,16 @@ export class GroupChatStageHandler extends BaseStageHandler {
     stage: ChatStageConfig,
   ): ParticipantPromptConfig | undefined {
     return createChatPromptConfig(stage.id, StageKind.CHAT, {
-      prompt: createDefaultParticipantPrompt(
-        DEFAULT_AGENT_PARTICIPANT_CHAT_PROMPT,
-      ),
+      prompt: [
+        createTextPromptItem(DEFAULT_AGENT_PARTICIPANT_PROMPT_INSTRUCTIONS),
+        createTextPromptItem('--- Participant description ---'),
+        {type: PromptItemType.PROFILE_INFO},
+        {type: PromptItemType.PROFILE_CONTEXT},
+        createDefaultStageContextPromptItem(''),
+        {
+          type: PromptItemType.CHAT_PARTICIPANT_INSTRUCTIONS,
+        } as ChatParticipantInstructionsPromptItem,
+      ],
     });
   }
 }

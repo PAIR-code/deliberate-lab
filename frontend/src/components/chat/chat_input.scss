@@ -21,4 +21,21 @@
   pr-textarea {
     flex-grow: 1;
   }
+
+  &.disabled {
+    background: var(--md-sys-color-surface-container-low, #f5f5f5);
+    opacity: 0.7;
+    cursor: not-allowed;
+    border-color: var(--md-sys-color-outline-variant);
+
+    pr-textarea {
+      cursor: not-allowed;
+      pointer-events: none;
+    }
+
+    pr-icon-button {
+      cursor: not-allowed;
+      pointer-events: none;
+    }
+  }
 }

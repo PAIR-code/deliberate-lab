@@ -3,6 +3,7 @@ import {
   ChatMediatorStructuredOutputConfig,
   ChatMessage,
   ChatPromptConfig,
+  ChatStageConfig,
   ChatStagePublicData,
   extractChatMediatorStructuredFields,
   getStructuredOutput,
@@ -15,7 +16,9 @@ import {
   awaitTypingDelay,
   createChatMessage,
   createParticipantProfileBase,
+  createSystemChatMessage,
   sanitizeRawResponseForLogging,
+  shuffleWithSeed,
 } from '@deliberation-lab/utils';
 import {Timestamp} from 'firebase-admin/firestore';
 import {processModelResponse} from '../agent.utils';
@@ -54,6 +57,9 @@ import {updateModelLogFiles} from '../log.utils';
 // Functions for preparing, querying, and organizing agent chat responses.
 // ****************************************************************************
 
+// 300s cloud function timeout minus 10s buffer for skip handler.
+const TURN_BASED_AGENT_RETRY_TIMEOUT_MS = 290000;
+
 /** Use persona chat prompt to create and send agent chat message. */
 export async function createAgentChatMessageFromPrompt(
   experimentId: string,
@@ -63,12 +69,19 @@ export async function createAgentChatMessageFromPrompt(
   triggerChatId: string, // ID of chat that is being responded to (empty string for initial message)
   // Profile of agent who will be sending the chat message
   user: ParticipantProfileExtended | MediatorProfileExtended,
+  turnBasedRetryDeadlineMs?: number,
 ) {
-  if (!user.agentConfig) return false;
+  if (!user.agentConfig) {
+    console.log(`[chat.agent] User ${user.publicId} has no agentConfig`);
+    return false;
+  }
 
   // Stage (in order to determine stage kind)
   const stage = await getFirestoreStage(experimentId, stageId);
-  if (!stage) return false;
+  if (!stage) {
+    console.log(`[chat.agent] Stage ${stageId} not found`);
+    return false;
+  }
 
   // Fetches stored (else default) prompt config for given stage
   const promptConfig = (await getStructuredPromptConfig(
@@ -78,10 +91,20 @@ export async function createAgentChatMessageFromPrompt(
   )) as ChatPromptConfig | undefined;
 
   if (!promptConfig) {
+    console.log(
+      `[chat.agent] PromptConfig not found for user ${user.publicId} in stage ${stageId}`,
+    );
     return false;
   }
 
   const isPrivateChat = stage.kind === StageKind.PRIVATE_CHAT;
+  const isTurnBasedGroupChat =
+    stage.kind === StageKind.CHAT && (stage as ChatStageConfig).isTurnBased;
+  const retryDeadlineMs =
+    turnBasedRetryDeadlineMs ??
+    (isTurnBasedGroupChat
+      ? Date.now() + TURN_BASED_AGENT_RETRY_TIMEOUT_MS
+      : undefined);
 
   // Check if this is an initial message request (empty triggerChatId)
   if (triggerChatId === '') {
@@ -103,13 +126,19 @@ export async function createAgentChatMessageFromPrompt(
           triggerLogId,
         );
 
-    const hasAlreadySent = (await triggerLogRef.get()).exists;
-    if (hasAlreadySent) {
+    const shouldSendInitialMessage = await app
+      .firestore()
+      .runTransaction(async (transaction) => {
+        const triggerLog = await transaction.get(triggerLogRef);
+        if (triggerLog.exists) return false;
+
+        transaction.create(triggerLogRef, {timestamp: Timestamp.now()});
+        return true;
+      });
+
+    if (!shouldSendInitialMessage) {
       return false; // Already sent initial message
     }
-
-    // Mark that we're sending the initial message
-    await triggerLogRef.set({timestamp: Timestamp.now()});
   }
 
   // Get the chat message (either initial or response)
@@ -147,9 +176,64 @@ export async function createAgentChatMessageFromPrompt(
       stage,
       user,
       promptConfig,
+      retryDeadlineMs,
     );
     message = response.message;
     if (!message) {
+      if (isTurnBasedGroupChat && response.retryTimedOut) {
+        // Clean up the initial trigger log lock if it timed out and we are skipping the agent
+        if (triggerChatId === '') {
+          const triggerLogId = `initial-${user.publicId}`;
+          const triggerLogRef = getGroupChatTriggerLogRef(
+            experimentId,
+            cohortId,
+            stageId,
+            triggerLogId,
+          );
+          await triggerLogRef.delete();
+        }
+
+        await skipTimedOutTurnBasedAgentTurn(
+          experimentId,
+          cohortId,
+          stage,
+          triggerChatId,
+          user,
+        );
+        return true;
+      }
+
+      if (triggerChatId === '') {
+        const triggerLogId = `initial-${user.publicId}`;
+        console.log(
+          `[chat.agent] getAgentChatMessage failed for initial message. Deleting trigger log: ${triggerLogId}`,
+        );
+        const isTurnBased =
+          stage?.kind === StageKind.CHAT &&
+          (stage as ChatStageConfig).isTurnBased;
+
+        let triggerLogRef;
+        if (isTurnBased) {
+          triggerLogRef = getGroupChatTriggerLogRef(
+            experimentId,
+            cohortId,
+            stageId,
+            triggerLogId,
+          );
+        } else {
+          triggerLogRef = app
+            .firestore()
+            .collection('experiments')
+            .doc(experimentId)
+            .collection('cohorts')
+            .doc(cohortId)
+            .collection('publicStageData')
+            .doc(stageId)
+            .collection('agentInitialTriggerLog')
+            .doc(triggerLogId);
+        }
+        await triggerLogRef.delete();
+      }
       return response.success;
     }
   }
@@ -194,13 +278,20 @@ export async function getAgentChatMessage(
   // Agent who will be sending the message
   user: ParticipantProfileExtended | MediatorProfileExtended,
   promptConfig: ChatPromptConfig,
-): Promise<{message: ChatMessage | null; success: boolean}> {
+  turnBasedRetryDeadlineMs?: number,
+): Promise<{
+  message: ChatMessage | null;
+  success: boolean;
+  retryTimedOut: boolean;
+}> {
   const stageId = stage.id;
 
   // Fetch experiment creator's API key.
   const experimenterData =
     await getExperimenterDataFromExperiment(experimentId);
-  if (!experimenterData) return {message: null, success: false};
+  if (!experimenterData) {
+    return {message: null, success: false, retryTimedOut: false};
+  }
 
   // Get chat messages from private/public data based on stage kind
   const chatMessages =
@@ -216,15 +307,33 @@ export async function getAgentChatMessage(
           stageId,
         );
 
+  // For turn-based conversation, ensure it is the agent's turn
+  const isTurnBasedGroupChat =
+    stage.kind === StageKind.CHAT && (stage as ChatStageConfig).isTurnBased;
+  if (isTurnBasedGroupChat) {
+    const publicStageData = await getFirestoreStagePublicData(
+      experimentId,
+      cohortId,
+      stageId,
+    );
+    const chatPublicData = publicStageData as ChatStagePublicData;
+    if (
+      chatPublicData &&
+      chatPublicData.currentTurnParticipantId !== user.publicId
+    ) {
+      return {message: null, success: true, retryTimedOut: false};
+    }
+  }
+
   // Confirm that agent can send chat messages based on prompt config
   const chatSettings = promptConfig.chatSettings;
   if (!canSendAgentChatMessage(user.publicId, chatSettings, chatMessages)) {
-    return {message: null, success: true};
+    return {message: null, success: true, retryTimedOut: false};
   }
 
   // Ensure user has agent config
   if (!user.agentConfig) {
-    return {message: null, success: false};
+    return {message: null, success: false, retryTimedOut: false};
   }
 
   // Use provided participant IDs for prompt context
@@ -274,7 +383,34 @@ export async function getAgentChatMessage(
     prompt = structuredPrompt;
   }
 
-  const {response, logId} = await processModelResponse(
+  const retryDurationMs =
+    isTurnBasedGroupChat && turnBasedRetryDeadlineMs !== undefined
+      ? Math.max(0, turnBasedRetryDeadlineMs - Date.now())
+      : null;
+
+  // In turn-based mode the agent always responds when called — strip shouldRespond
+  // from the API-level schema constraint so the model isn't forced to output a
+  // field whose "stay silent" path would freeze the turn. The prompt text is
+  // already filtered in structured_prompt.utils.ts; this keeps the two in sync.
+  const effectiveStructuredOutputConfig = (() => {
+    const config = promptConfig.structuredOutputConfig as
+      | ChatMediatorStructuredOutputConfig
+      | undefined;
+    if (!isTurnBasedGroupChat || !config?.schema?.properties) return config;
+    const shouldRespondFieldName = config.shouldRespondField || 'shouldRespond';
+    return {
+      ...config,
+      schema: {
+        ...config.schema,
+        properties: config.schema.properties.filter(
+          (p) => p.name !== shouldRespondFieldName,
+        ),
+      },
+      shouldRespondField: '',
+    } as ChatMediatorStructuredOutputConfig;
+  })();
+
+  const {response, logId, retryTimedOut} = await processModelResponse(
     experimentId,
     cohortId,
     participantIds[0] || '', // Use first participant ID for logging/tracking
@@ -287,8 +423,9 @@ export async function getAgentChatMessage(
     prompt,
     user.agentConfig.modelSettings,
     promptConfig.generationConfig,
-    promptConfig.structuredOutputConfig,
-    promptConfig.numRetries ?? 0, // Pass numRetries from config
+    effectiveStructuredOutputConfig,
+    isTurnBasedGroupChat ? null : (promptConfig.numRetries ?? 0),
+    retryDurationMs,
   );
 
   // Log response with sanitized rawResponse and files to avoid overwhelming console with file/image data
@@ -311,10 +448,10 @@ export async function getAgentChatMessage(
 
   // Process response
   if (response.status !== ModelResponseStatus.OK) {
-    return {message: null, success: false};
+    return {message: null, success: false, retryTimedOut};
   }
 
-  const structured = promptConfig.structuredOutputConfig as
+  const structured = effectiveStructuredOutputConfig as
     | ChatMediatorStructuredOutputConfig
     | undefined;
 
@@ -342,7 +479,7 @@ export async function getAgentChatMessage(
 
   // No text and no files = failure
   if (!response.text && (!response.files || response.files.length === 0)) {
-    return {message: null, success: false};
+    return {message: null, success: false, retryTimedOut};
   }
 
   if (!shouldRespond) {
@@ -381,7 +518,7 @@ export async function getAgentChatMessage(
       );
       await participantAnswerDoc.set({readyToEndChat: true}, {merge: true});
     }
-    return {message: null, success: true};
+    return {message: null, success: true, retryTimedOut};
   }
 
   // If stage includes discussions, figure out what discussion ID should be
@@ -432,7 +569,226 @@ export async function getAgentChatMessage(
     }
   }
 
-  return {message: chatMessage, success: true};
+  return {message: chatMessage, success: true, retryTimedOut};
+}
+
+async function getNextTurnBasedSpeakerAfterSkippedAgent(
+  experimentId: string,
+  cohortId: string,
+  stage: ChatStageConfig,
+  publicStageData: ChatStagePublicData,
+  skippedPublicId: string,
+  activeParticipants: ParticipantProfileExtended[],
+  activeMediators: MediatorProfileExtended[],
+  chatMessages: ChatMessage[],
+): Promise<{
+  currentTurnParticipantId: string;
+  turnOrder: string[];
+  cycleIndex: number;
+  agent: ParticipantProfileExtended | MediatorProfileExtended | null;
+} | null> {
+  const participantIds = activeParticipants.map((p) => p.publicId);
+  const mediatorIds = activeMediators.map((m) => m.publicId);
+  const activeIds = new Set([...mediatorIds, ...participantIds]);
+
+  let turnOrder = (publicStageData.turnOrder ?? []).filter((id) =>
+    activeIds.has(id),
+  );
+  let cycleIndex = publicStageData.cycleIndex ?? 0;
+  let nextIndex = turnOrder.indexOf(skippedPublicId);
+  let attempts = 0;
+
+  while (attempts < turnOrder.length) {
+    if (nextIndex === -1 || nextIndex === turnOrder.length - 1) {
+      cycleIndex += 1;
+
+      let nextTurnOrder = [...turnOrder];
+      if (mediatorIds.length > 0) {
+        const currentMediators = turnOrder.filter((id) =>
+          mediatorIds.includes(id),
+        );
+        const missingMediators = mediatorIds.filter(
+          (id) => !turnOrder.includes(id),
+        );
+        const shuffledMissingMediators =
+          missingMediators.length > 1
+            ? shuffleWithSeed(
+                missingMediators,
+                `${cohortId}-new-mediators-${cycleIndex}`,
+              )
+            : missingMediators;
+        const nextMediators = [
+          ...currentMediators,
+          ...shuffledMissingMediators,
+        ];
+
+        const hadMediators = turnOrder.some((id) => mediatorIds.includes(id));
+        if (hadMediators) {
+          const shuffledParticipants = shuffleWithSeed(
+            participantIds,
+            `${cohortId}-${cycleIndex}`,
+          );
+          nextTurnOrder = [...nextMediators, ...shuffledParticipants];
+        } else {
+          const currentParticipants = turnOrder.filter((id) =>
+            participantIds.includes(id),
+          );
+          nextTurnOrder = [...nextMediators, ...currentParticipants];
+        }
+      }
+
+      turnOrder = nextTurnOrder;
+      nextIndex = 0;
+    } else {
+      nextIndex += 1;
+    }
+
+    const nextPublicId = turnOrder[nextIndex];
+    const candidate =
+      activeParticipants.find((p) => p.publicId === nextPublicId) ??
+      activeMediators.find((m) => m.publicId === nextPublicId);
+
+    if (
+      !candidate ||
+      candidate.publicId === skippedPublicId ||
+      !activeIds.has(candidate.publicId)
+    ) {
+      attempts++;
+      continue;
+    }
+
+    if (candidate.agentConfig) {
+      const promptConfig = (await getStructuredPromptConfig(
+        experimentId,
+        stage,
+        candidate,
+      )) as ChatPromptConfig | undefined;
+
+      if (
+        promptConfig &&
+        !canSendAgentChatMessage(
+          candidate.publicId,
+          promptConfig.chatSettings,
+          chatMessages,
+        )
+      ) {
+        attempts++;
+        continue;
+      }
+    }
+
+    return {
+      currentTurnParticipantId: candidate.publicId,
+      turnOrder,
+      cycleIndex,
+      agent: candidate.agentConfig ? candidate : null,
+    };
+  }
+
+  return null;
+}
+
+export async function skipTimedOutTurnBasedAgentTurn(
+  experimentId: string,
+  cohortId: string,
+  stage: ChatStageConfig,
+  triggerChatId: string,
+  user: ParticipantProfileExtended | MediatorProfileExtended,
+  skipReason = 'a model error',
+) {
+  const [publicStageData, activeParticipants, activeMediators, chatMessages] =
+    await Promise.all([
+      getFirestoreStagePublicData(experimentId, cohortId, stage.id) as Promise<
+        ChatStagePublicData | undefined
+      >,
+      getFirestoreActiveParticipants(experimentId, cohortId, stage.id, false),
+      getFirestoreActiveMediators(experimentId, cohortId, stage.id, true),
+      getFirestorePublicStageChatMessages(experimentId, cohortId, stage.id),
+    ]);
+
+  if (publicStageData?.currentTurnParticipantId !== user.publicId) return;
+
+  const nextSpeaker = await getNextTurnBasedSpeakerAfterSkippedAgent(
+    experimentId,
+    cohortId,
+    stage,
+    publicStageData,
+    user.publicId,
+    activeParticipants,
+    activeMediators,
+    chatMessages,
+  );
+  if (!nextSpeaker) return;
+
+  const publicStageDataRef = app
+    .firestore()
+    .collection('experiments')
+    .doc(experimentId)
+    .collection('cohorts')
+    .doc(cohortId)
+    .collection('publicStageData')
+    .doc(stage.id);
+
+  const didAdvance = await app
+    .firestore()
+    .runTransaction(async (transaction) => {
+      const snapshot = await transaction.get(publicStageDataRef);
+      const currentPublicStageData = snapshot.data() as
+        | ChatStagePublicData
+        | undefined;
+      if (currentPublicStageData?.currentTurnParticipantId !== user.publicId) {
+        return false;
+      }
+
+      transaction.set(
+        publicStageDataRef,
+        {
+          currentTurnParticipantId: nextSpeaker.currentTurnParticipantId,
+          turnOrder: nextSpeaker.turnOrder,
+          cycleIndex: nextSpeaker.cycleIndex,
+        },
+        {merge: true},
+      );
+      return true;
+    });
+
+  if (!didAdvance) return;
+
+  console.warn(
+    `[chat.agent] Skipped timed-out turn for ${user.publicId}; next turn is ${nextSpeaker.currentTurnParticipantId}`,
+  );
+
+  const skipMessage = createSystemChatMessage({
+    message: `${user.name ?? user.publicId} was skipped due to ${skipReason}.`,
+  });
+  await app
+    .firestore()
+    .collection('experiments')
+    .doc(experimentId)
+    .collection('cohorts')
+    .doc(cohortId)
+    .collection('publicStageData')
+    .doc(stage.id)
+    .collection('chats')
+    .doc(skipMessage.id)
+    .set(skipMessage);
+
+  if (!nextSpeaker.agent) return;
+
+  // The skip system message is now the latest message; use its id as the
+  // trigger so the downstream "conversation has moved on" check in
+  // sendAgentGroupChatMessage doesn't bail on the stale pre-skip id.
+  const nextTriggerChatId = skipMessage.id;
+  await createAgentChatMessageFromPrompt(
+    experimentId,
+    cohortId,
+    nextSpeaker.agent.type === UserType.MEDIATOR
+      ? activeParticipants.map((p) => p.privateId)
+      : [nextSpeaker.agent.privateId],
+    stage.id,
+    nextTriggerChatId,
+    nextSpeaker.agent,
+  );
 }
 
 /** Sends agent chat message after typing delay and duplicate check. */
@@ -459,9 +815,12 @@ export async function sendAgentGroupChatMessage(
       cohortId,
       stageId,
     );
+    const nonSystemHistory = chatHistory.filter(
+      (m) => m.type !== UserType.SYSTEM,
+    );
     if (
-      chatHistory.length > 0 &&
-      chatHistory[chatHistory.length - 1].id !== triggerChatId
+      nonSystemHistory.length > 0 &&
+      nonSystemHistory[nonSystemHistory.length - 1].id !== triggerChatId
     ) {
       // TODO: Write chat log
       console.log('Conversation has moved on');
@@ -531,9 +890,12 @@ export async function sendAgentPrivateChatMessage(
       participantId,
       stageId,
     );
+    const nonSystemHistory = chatHistory.filter(
+      (m) => m.type !== UserType.SYSTEM,
+    );
     if (
-      chatHistory.length > 0 &&
-      chatHistory[chatHistory.length - 1].id !== triggerChatId
+      nonSystemHistory.length > 0 &&
+      nonSystemHistory[nonSystemHistory.length - 1].id !== triggerChatId
     ) {
       // TODO: Write chat log
       console.log('Conversation has moved on');
@@ -675,6 +1037,177 @@ async function sendInitialGroupChatMessages(
     stageId,
     true, // checkIsAgent = true
   );
+
+  const stage = await getFirestoreStage(experimentId, stageId);
+  const chatStage = stage as ChatStageConfig;
+
+  if (chatStage.isTurnBased) {
+    const publicStageData = await getFirestoreStagePublicData(
+      experimentId,
+      cohortId,
+      stageId,
+    );
+    const chatPublicData = publicStageData as ChatStagePublicData;
+
+    // If already initialized, append any new participants to the end of the
+    // current turn order, and any new mediators to the end of the mediator
+    // phase (after existing mediators, before participants). Never touch
+    // currentTurnParticipantId — the in-flight onPublicChatMessageCreated
+    // trigger already owns turn advancement.
+    if (chatPublicData && chatPublicData.currentTurnParticipantId) {
+      const publicStageDataRef = app
+        .firestore()
+        .collection('experiments')
+        .doc(experimentId)
+        .collection('cohorts')
+        .doc(cohortId)
+        .collection('publicStageData')
+        .doc(stageId);
+
+      await app.firestore().runTransaction(async (transaction) => {
+        const snapshot = await transaction.get(publicStageDataRef);
+        const currentData = snapshot.data() as ChatStagePublicData | undefined;
+        if (!currentData || !currentData.currentTurnParticipantId) return;
+
+        const turnOrder = currentData.turnOrder ?? [];
+        const existingIds = new Set(turnOrder);
+        const allMediatorIds = new Set(agentMediators.map((m) => m.publicId));
+
+        const newMediatorIds = agentMediators
+          .map((m) => m.publicId)
+          .filter((id) => !existingIds.has(id));
+        const newParticipantIds = allParticipants
+          .map((p) => p.publicId)
+          .filter((id) => !existingIds.has(id));
+
+        if (newMediatorIds.length === 0 && newParticipantIds.length === 0) {
+          return;
+        }
+
+        // New mediators go after the last existing mediator (end of the
+        // mediator phase); new participants go at the very end.
+        const lastMediatorIdx = turnOrder.reduce(
+          (last, id, i) => (allMediatorIds.has(id) ? i : last),
+          -1,
+        );
+
+        const updatedTurnOrder = [
+          ...turnOrder.slice(0, lastMediatorIdx + 1),
+          ...newMediatorIds,
+          ...turnOrder.slice(lastMediatorIdx + 1),
+          ...newParticipantIds,
+        ];
+
+        transaction.set(
+          publicStageDataRef,
+          {turnOrder: updatedTurnOrder},
+          {merge: true},
+        );
+      });
+
+      return;
+    }
+
+    // If uninitialized
+    if (!chatPublicData || !chatPublicData.currentTurnParticipantId) {
+      const allPublicParticipantIds = allParticipants.map((p) => p.publicId);
+      const allMediatorIds = agentMediators.map((m) => m.publicId);
+
+      // Shuffle participants with seed
+      const seedString = `${cohortId}-0`;
+      const shuffledParticipants = shuffleWithSeed(
+        allPublicParticipantIds,
+        seedString,
+      );
+
+      // Shuffle mediator order when conversation begins (only if multiple)
+      const shuffledMediators =
+        allMediatorIds.length > 1
+          ? shuffleWithSeed(allMediatorIds, `${cohortId}-mediators`)
+          : allMediatorIds;
+
+      const turnOrder = [...shuffledMediators, ...shuffledParticipants];
+
+      // Find the first eligible initial turn holder, skipping agents that
+      // can't send yet (e.g., minMessagesBeforeResponding > 0).
+      let currentTurnParticipantId: string | null = null;
+      for (const id of turnOrder) {
+        const mediatorCandidate = agentMediators.find((m) => m.publicId === id);
+        const participantCandidate = allParticipants.find(
+          (p) => p.publicId === id,
+        );
+        const candidate = mediatorCandidate ?? participantCandidate;
+        if (!candidate) continue;
+
+        if (candidate.agentConfig) {
+          const candidatePromptConfig = (await getStructuredPromptConfig(
+            experimentId,
+            chatStage,
+            candidate,
+          )) as ChatPromptConfig | undefined;
+          if (
+            candidatePromptConfig &&
+            !canSendAgentChatMessage(
+              id,
+              candidatePromptConfig.chatSettings,
+              [], // no messages yet
+            )
+          ) {
+            continue; // not eligible yet, try next
+          }
+        }
+
+        currentTurnParticipantId = id;
+        break;
+      }
+      if (!currentTurnParticipantId && turnOrder.length > 0) {
+        currentTurnParticipantId = turnOrder[0];
+      }
+
+      // Update Firestore publicStageData
+      const publicStageDataRef = app
+        .firestore()
+        .collection('experiments')
+        .doc(experimentId)
+        .collection('cohorts')
+        .doc(cohortId)
+        .collection('publicStageData')
+        .doc(stageId);
+
+      await publicStageDataRef.set(
+        {
+          currentTurnParticipantId,
+          turnOrder,
+          cycleIndex: 0,
+        },
+        {merge: true},
+      );
+
+      // Trigger an initial message if the first turn holder is an agent.
+      if (currentTurnParticipantId) {
+        const mediator = agentMediators.find(
+          (m) => m.publicId === currentTurnParticipantId,
+        );
+        const participant = allParticipants.find(
+          (p) => p.publicId === currentTurnParticipantId,
+        );
+        const agent =
+          mediator ?? (participant?.agentConfig ? participant : null);
+
+        if (agent) {
+          await createAgentChatMessageFromPrompt(
+            experimentId,
+            cohortId,
+            mediator ? allParticipantIds : [agent.privateId],
+            stageId,
+            '', // empty triggerChatId
+            agent,
+          );
+        }
+      }
+      return; // Return so we don't run the default broadcast below!
+    }
+  }
 
   for (const mediator of agentMediators) {
     await createAgentChatMessageFromPrompt(

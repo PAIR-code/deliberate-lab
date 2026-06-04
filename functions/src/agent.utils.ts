@@ -13,6 +13,27 @@ import {
 import {generateAIResponse, ModelMessage} from './api/ai-sdk.api';
 import {formatPromptForLog, writeModelLogEntry} from './log.utils';
 
+class RetryTimeoutError extends Error {
+  constructor() {
+    super('Retry deadline reached before model response succeeded');
+    this.name = 'RetryTimeoutError';
+  }
+}
+
+async function withRetryTimeout<T>(
+  promise: Promise<T>,
+  timeoutMs: number,
+): Promise<T> {
+  let timeout: ReturnType<typeof setTimeout> | undefined;
+  const timeoutPromise = new Promise<T>((_, reject) => {
+    timeout = setTimeout(() => reject(new RetryTimeoutError()), timeoutMs);
+  });
+
+  return Promise.race([promise, timeoutPromise]).finally(() => {
+    if (timeout) clearTimeout(timeout);
+  });
+}
+
 /** Calls API and writes ModelLogEntry to experiment. */
 export async function processModelResponse(
   experimentId: string,
@@ -28,17 +49,28 @@ export async function processModelResponse(
   modelSettings: AgentModelSettings,
   generationConfig: ModelGenerationConfig,
   structuredOutputConfig?: StructuredOutputConfig,
-  numRetries: number = 0,
-): Promise<{response: ModelResponse; logId: string}> {
+  numRetries: number | null = 0,
+  maxRetryDurationMs: number | null = null,
+): Promise<{
+  response: ModelResponse;
+  logId: string;
+  retryTimedOut: boolean;
+}> {
   let response = {status: ModelResponseStatus.NONE};
   let lastError: Error | undefined;
+  let retryTimedOut = false;
   const maxRetries = numRetries;
   const initialDelay = 1000; // 1 second initial delay
   let logId = '';
+  const retryStartMs = Date.now();
 
   // Convert prompt to string for logging (reused across retries)
   const promptForLog = formatPromptForLog(prompt);
-  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+  for (
+    let attempt = 0;
+    maxRetries === null || attempt <= maxRetries;
+    attempt++
+  ) {
     // Create a new log entry for each attempt
     const log = createModelLogEntry({
       experimentId,
@@ -57,14 +89,25 @@ export async function processModelResponse(
     logId = log.id;
 
     try {
+      const remainingRetryMs =
+        maxRetryDurationMs === null
+          ? null
+          : maxRetryDurationMs - (Date.now() - retryStartMs);
+      if (remainingRetryMs !== null && remainingRetryMs <= 0) {
+        throw new RetryTimeoutError();
+      }
+
       const queryTimestamp = Timestamp.now();
-      response = (await getAgentResponse(
+      const request = getAgentResponse(
         apiKeyConfig,
         prompt,
         modelSettings,
         generationConfig,
         structuredOutputConfig,
-      )) as ModelResponse;
+      );
+      response = (await (remainingRetryMs === null
+        ? request
+        : withRetryTimeout(request, remainingRetryMs))) as ModelResponse;
       const responseTimestamp = Timestamp.now();
 
       log.response = response;
@@ -73,10 +116,13 @@ export async function processModelResponse(
     } catch (error) {
       lastError = error instanceof Error ? error : new Error(String(error));
       console.log(error);
+      retryTimedOut = error instanceof RetryTimeoutError;
 
       // Log the error response
       log.response = {
-        status: ModelResponseStatus.UNKNOWN_ERROR,
+        status: retryTimedOut
+          ? ModelResponseStatus.PROVIDER_UNAVAILABLE_ERROR
+          : ModelResponseStatus.UNKNOWN_ERROR,
         errorMessage: lastError.message,
       };
       log.queryTimestamp = Timestamp.now();
@@ -88,15 +134,29 @@ export async function processModelResponse(
 
     // Check if we should retry
     const shouldRetry =
-      attempt < maxRetries &&
+      !retryTimedOut &&
+      (maxRetries === null || attempt < maxRetries) &&
       (response.status === ModelResponseStatus.PROVIDER_UNAVAILABLE_ERROR ||
         response.status === ModelResponseStatus.INTERNAL_ERROR ||
         response.status === ModelResponseStatus.UNKNOWN_ERROR);
 
     if (shouldRetry) {
-      const delay = initialDelay * Math.pow(2, attempt);
+      const baseDelay = initialDelay * Math.pow(2, attempt);
+      // Clamp to remaining budget so the next attempt fires before the deadline.
+      const delay =
+        maxRetryDurationMs === null
+          ? baseDelay
+          : Math.max(
+              0,
+              Math.min(
+                baseDelay,
+                maxRetryDurationMs - (Date.now() - retryStartMs),
+              ),
+            );
+      const retryCount =
+        maxRetries === null ? `${attempt + 1}` : `${attempt + 1}/${maxRetries}`;
       console.log(
-        `API error (${response.status}), retrying after ${delay}ms (attempt ${attempt + 1}/${maxRetries})`,
+        `API error (${response.status}), retrying after ${delay}ms (attempt ${retryCount})`,
       );
       await new Promise((resolve) => setTimeout(resolve, delay));
     } else {
@@ -107,10 +167,12 @@ export async function processModelResponse(
 
   // If we exhausted all retries with an error, log it
   if (lastError && response.status === ModelResponseStatus.NONE) {
-    console.error(`Failed after ${numRetries} retries:`, lastError);
+    const retryDescription =
+      maxRetries === null ? 'unlimited retries' : `${numRetries} retries`;
+    console.error(`Failed after ${retryDescription}:`, lastError);
   }
 
-  return {response, logId};
+  return {response, logId, retryTimedOut};
 }
 
 /**

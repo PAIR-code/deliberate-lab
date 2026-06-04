@@ -978,6 +978,7 @@ class ChatStageConfig(BaseModel):
     timeLimitInMinutes: Annotated[int | None, Field(ge=1)] = None
     timeMinimumInMinutes: Annotated[int | None, Field(ge=1)] = None
     discussions: list[DefaultChatDiscussion | CompareChatDiscussion]
+    isTurnBased: bool | None = None
 
 
 class RankingStageConfig(
@@ -1353,6 +1354,8 @@ class ChatPromptConfig(BaseModel):
         | ProfileInfoPromptItem
         | ProfileContextPromptItem
         | StageContextPromptItem
+        | ChatMediatorInstructionsPromptItem
+        | ChatParticipantInstructionsPromptItem
         | PromptItemGroup
     ]
     includeScaffoldingInPrompt: bool | None = None
@@ -1407,6 +1410,24 @@ class StageContextPromptItem(BaseModel):
     condition: ComparisonCondition | ConditionGroup | None = None
 
 
+class ChatMediatorInstructionsPromptItem(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+        populate_by_name=True,
+    )
+    type: Literal["CHAT_MEDIATOR_INSTRUCTIONS"] = "CHAT_MEDIATOR_INSTRUCTIONS"
+    condition: ComparisonCondition | ConditionGroup | None = None
+
+
+class ChatParticipantInstructionsPromptItem(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+        populate_by_name=True,
+    )
+    type: Literal["CHAT_PARTICIPANT_INSTRUCTIONS"] = "CHAT_PARTICIPANT_INSTRUCTIONS"
+    condition: ComparisonCondition | ConditionGroup | None = None
+
+
 class PromptItemGroup(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
@@ -1419,6 +1440,8 @@ class PromptItemGroup(BaseModel):
         | ProfileInfoPromptItem
         | ProfileContextPromptItem
         | StageContextPromptItem
+        | ChatMediatorInstructionsPromptItem
+        | ChatParticipantInstructionsPromptItem
         | PromptItemGroup
     ]
     shuffleConfig: ShuffleConfig | None = None
@@ -1484,6 +1507,8 @@ class GenericPromptConfig(BaseModel):
         | ProfileInfoPromptItem
         | ProfileContextPromptItem
         | StageContextPromptItem
+        | ChatMediatorInstructionsPromptItem
+        | ChatParticipantInstructionsPromptItem
         | PromptItemGroup
     ]
     includeScaffoldingInPrompt: bool | None = None

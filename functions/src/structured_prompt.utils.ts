@@ -29,6 +29,11 @@ import {
   resolveTemplateVariables,
   shuffleWithSeed,
   StageParticipantAnswer,
+  DEFAULT_AGENT_PARTICIPANT_CHAT_PROMPT,
+  DEFAULT_AGENT_PARTICIPANT_CHAT_TURN_TAKING_PROMPT,
+  DEFAULT_MEDIATOR_GROUP_CHAT_PROMPT_INSTRUCTIONS,
+  DEFAULT_MEDIATOR_GROUP_CHAT_TURN_TAKING_PROMPT_INSTRUCTIONS,
+  ChatStageConfig,
 } from '@deliberation-lab/utils';
 import {
   getAgentMediatorPrompt,
@@ -340,9 +345,25 @@ export async function getPromptFromConfig(
   );
 
   // Add structured output if relevant
-  const structuredOutput = makeStructuredOutputPrompt(
-    promptConfig.structuredOutputConfig,
-  );
+  const stage = promptData.data[stageId]?.stage;
+  const isTurnBased =
+    stage?.kind === StageKind.CHAT && (stage as ChatStageConfig).isTurnBased;
+  let structuredOutputConfig = promptConfig.structuredOutputConfig;
+
+  if (isTurnBased && structuredOutputConfig?.schema?.properties) {
+    const sanitizedProperties = structuredOutputConfig.schema.properties.filter(
+      (prop) => prop.name !== 'shouldRespond',
+    );
+    structuredOutputConfig = {
+      ...structuredOutputConfig,
+      schema: {
+        ...structuredOutputConfig.schema,
+        properties: sanitizedProperties,
+      },
+    };
+  }
+
+  const structuredOutput = makeStructuredOutputPrompt(structuredOutputConfig);
 
   return structuredOutput ? `${promptText}\n${structuredOutput}` : promptText;
 }
@@ -582,7 +603,7 @@ async function processPromptItems(
     }
 
     switch (promptItem.type) {
-      case PromptItemType.TEXT:
+      case PromptItemType.TEXT: {
         // Resolve template variables in text prompt items
         const resolvedText = resolveTemplateVariables(
           promptItem.text,
@@ -591,6 +612,31 @@ async function processPromptItems(
         );
         items.push(resolvedText);
         break;
+      }
+      case PromptItemType.CHAT_MEDIATOR_INSTRUCTIONS: {
+        const stage = promptData.data[stageId]?.stage;
+        const isTurnBased =
+          stage?.kind === StageKind.CHAT &&
+          (stage as ChatStageConfig).isTurnBased;
+        items.push(
+          isTurnBased
+            ? DEFAULT_MEDIATOR_GROUP_CHAT_TURN_TAKING_PROMPT_INSTRUCTIONS
+            : DEFAULT_MEDIATOR_GROUP_CHAT_PROMPT_INSTRUCTIONS,
+        );
+        break;
+      }
+      case PromptItemType.CHAT_PARTICIPANT_INSTRUCTIONS: {
+        const stage = promptData.data[stageId]?.stage;
+        const isTurnBased =
+          stage?.kind === StageKind.CHAT &&
+          (stage as ChatStageConfig).isTurnBased;
+        items.push(
+          isTurnBased
+            ? DEFAULT_AGENT_PARTICIPANT_CHAT_TURN_TAKING_PROMPT
+            : DEFAULT_AGENT_PARTICIPANT_CHAT_PROMPT,
+        );
+        break;
+      }
       case PromptItemType.PROFILE_CONTEXT:
         const profileContext = getProfileContextForPrompt(
           userProfile,
