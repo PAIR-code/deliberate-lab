@@ -69,6 +69,44 @@ options:
   automapSubstitutions: true
 
 steps:
+# Write Shared Script
+# Writes a shared.sh file with reusable shell helpers (e.g. retry logic for
+# transient network failures). Later steps source this file instead of
+# duplicating the same functions inline.
+- name: 'bash:5'
+  id: WriteSharedScript
+  script: |
+    #!/usr/bin/env bash
+    set -euo pipefail
+    cat > shared.sh << 'SHARED_SCRIPT'
+    # shared.sh — Reusable shell helpers for Cloud Build steps.
+    # Source this file at the top of any step that needs these utilities:
+    #   source ./shared.sh
+
+    # Retry helper for transient network failures (read-only commands only).
+    # Usage: retry <command> [args...]
+    # Honors the RETRIES env var (default: 3). Uses exponential backoff
+    # starting at 5 seconds.
+    retry() {
+      local retries="${RETRIES:-3}" delay=5 attempt=1
+      while true; do
+        "$@" && return 0
+        local exit_code=$?
+        if (( attempt >= retries )); then
+          echo "❌ Command failed after $retries attempts: $*" >&2
+          return $exit_code
+        fi
+        echo "⚠️ Attempt $attempt/$retries failed (exit code $exit_code). Retrying in ${delay}s..." >&2
+        sleep "$delay"
+        delay=$(( delay * 2 ))
+        attempt=$(( attempt + 1 ))
+      done
+    }
+    SHARED_SCRIPT
+    chmod +x shared.sh
+    echo "shared.sh written successfully."
+  waitFor: ['-']  # No dependencies, runs immediately.
+  dir: '.'
 # Validate Substitution Values
 - name: 'node:22'
   id: ValidateSubstitutionValues
@@ -441,22 +479,7 @@ steps:
     set -euo pipefail
     trap 'echo "❌ STEP FAILED: Command \"$BASH_COMMAND\" exited with code $?"' ERR
 
-    # Retry helper for transient network failures (read-only commands only).
-    retry() {
-      local retries="${RETRIES:-3}" delay=5 attempt=1
-      while true; do
-        "$@" && return 0
-        local exit_code=$?
-        if (( attempt >= retries )); then
-          echo "❌ Command failed after $retries attempts: $*" >&2
-          return $exit_code
-        fi
-        echo "⚠️ Attempt $attempt/$retries failed (exit code $exit_code). Retrying in ${delay}s..." >&2
-        sleep "$delay"
-        delay=$(( delay * 2 ))
-        attempt=$(( attempt + 1 ))
-      done
-    }
+    source ./shared.sh
 
     # Fetch Firestore rules from the Firebase Rules REST API.
     fetch_firestore_rules() {
@@ -521,7 +544,7 @@ steps:
     else
       echo "Skipping Firestore rules deploy for '${_DEPLOYMENT_TYPE}' deployment."
     fi
-  waitFor: ['TestFunctions']
+  waitFor: ['TestFunctions', 'WriteSharedScript']
   dir: '.'
 
 # Deploy Database Rules Step
@@ -534,22 +557,7 @@ steps:
     set -euo pipefail
     trap 'echo "❌ STEP FAILED: Command \"$BASH_COMMAND\" exited with code $?"' ERR
 
-    # Retry helper for transient network failures (read-only commands only).
-    retry() {
-      local retries="${RETRIES:-3}" delay=5 attempt=1
-      while true; do
-        "$@" && return 0
-        local exit_code=$?
-        if (( attempt >= retries )); then
-          echo "❌ Command failed after $retries attempts: $*" >&2
-          return $exit_code
-        fi
-        echo "⚠️ Attempt $attempt/$retries failed (exit code $exit_code). Retrying in ${delay}s..." >&2
-        sleep "$delay"
-        delay=$(( delay * 2 ))
-        attempt=$(( attempt + 1 ))
-      done
-    }
+    source ./shared.sh
 
     # Fetch Database rules from the Realtime Database REST API.
     fetch_database_rules() {
@@ -605,7 +613,7 @@ steps:
     else
       echo "Skipping Database rules deploy for '${_DEPLOYMENT_TYPE}' deployment."
     fi
-  waitFor: ['TestFunctions']
+  waitFor: ['TestFunctions', 'WriteSharedScript']
   dir: '.'
 
 # Deploy Storage Rules Step
@@ -618,22 +626,7 @@ steps:
     set -euo pipefail
     trap 'echo "❌ STEP FAILED: Command \"$BASH_COMMAND\" exited with code $?"' ERR
 
-    # Retry helper for transient network failures (read-only commands only).
-    retry() {
-      local retries="${RETRIES:-3}" delay=5 attempt=1
-      while true; do
-        "$@" && return 0
-        local exit_code=$?
-        if (( attempt >= retries )); then
-          echo "❌ Command failed after $retries attempts: $*" >&2
-          return $exit_code
-        fi
-        echo "⚠️ Attempt $attempt/$retries failed (exit code $exit_code). Retrying in ${delay}s..." >&2
-        sleep "$delay"
-        delay=$(( delay * 2 ))
-        attempt=$(( attempt + 1 ))
-      done
-    }
+    source ./shared.sh
 
     # Fetch Storage rules from the Firebase Rules REST API.
     fetch_storage_rules() {
@@ -698,7 +691,7 @@ steps:
     else
       echo "Skipping Storage rules deploy for '${_DEPLOYMENT_TYPE}' deployment."
     fi
-  waitFor: ['TestFunctions']
+  waitFor: ['TestFunctions', 'WriteSharedScript']
   dir: '.'
 
 # Deploy Indexes Step
@@ -711,22 +704,7 @@ steps:
     set -euo pipefail
     trap 'echo "❌ STEP FAILED: Command \"$BASH_COMMAND\" exited with code $?"' ERR
 
-    # Retry helper for transient network failures (read-only commands only).
-    retry() {
-      local retries="${RETRIES:-3}" delay=5 attempt=1
-      while true; do
-        "$@" && return 0
-        local exit_code=$?
-        if (( attempt >= retries )); then
-          echo "❌ Command failed after $retries attempts: $*" >&2
-          return $exit_code
-        fi
-        echo "⚠️ Attempt $attempt/$retries failed (exit code $exit_code). Retrying in ${delay}s..." >&2
-        sleep "$delay"
-        delay=$(( delay * 2 ))
-        attempt=$(( attempt + 1 ))
-      done
-    }
+    source ./shared.sh
 
     if [[ "${DEPLOYMENT_TYPES}" == *" ${_DEPLOYMENT_TYPE} "* ]]; then
 
@@ -773,7 +751,7 @@ steps:
     else
       echo "Skipping Firebase indexes deploy for '${_DEPLOYMENT_TYPE}' deployment."
     fi
-  waitFor: ['TestFunctions']
+  waitFor: ['TestFunctions', 'WriteSharedScript']
   dir: '.'
 
 # Deploy Frontend
