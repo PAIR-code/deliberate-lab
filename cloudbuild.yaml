@@ -102,6 +102,16 @@ steps:
         attempt=$(( attempt + 1 ))
       done
     }
+
+    # Fetch a GCP access token from the instance metadata server.
+    # Outputs the raw token string to stdout.
+    # Usage: local token; token=$(fetch_gcp_token)
+    fetch_gcp_token() {
+      local token_json
+      token_json=$(retry curl -sSf -H "Metadata-Flavor: Google" \
+        "http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/token")
+      node -p 'JSON.parse(require("fs").readFileSync(0,"utf-8")).access_token' <<< "$token_json"
+    }
     SHARED_SCRIPT
     chmod +x shared.sh
     echo "shared.sh written successfully."
@@ -483,11 +493,8 @@ steps:
 
     # Fetch Firestore rules from the Firebase Rules REST API.
     fetch_firestore_rules() {
-      local token_json
-      token_json=$(retry curl -sSf -H "Metadata-Flavor: Google" \
-        "http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/token")
       local token
-      token=$(node -p 'JSON.parse(require("fs").readFileSync(0,"utf-8")).access_token' <<< "$token_json")
+      token=$(fetch_gcp_token)
 
       local release_json
       release_json=$(retry curl -sSf \
@@ -561,11 +568,8 @@ steps:
 
     # Fetch Database rules from the Realtime Database REST API.
     fetch_database_rules() {
-      local token_json
-      token_json=$(retry curl -sSf -H "Metadata-Flavor: Google" \
-        "http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/token")
       local token
-      token=$(node -p 'JSON.parse(require("fs").readFileSync(0,"utf-8")).access_token' <<< "$token_json")
+      token=$(fetch_gcp_token)
 
       retry curl -sSf \
         -H "Authorization: Bearer $token" \
@@ -630,11 +634,8 @@ steps:
 
     # Fetch Storage rules from the Firebase Rules REST API.
     fetch_storage_rules() {
-      local token_json
-      token_json=$(retry curl -sSf -H "Metadata-Flavor: Google" \
-        "http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/token")
       local token
-      token=$(node -p 'JSON.parse(require("fs").readFileSync(0,"utf-8")).access_token' <<< "$token_json")
+      token=$(fetch_gcp_token)
 
       local release_json
       release_json=$(retry curl -sSf \
