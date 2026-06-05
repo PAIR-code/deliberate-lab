@@ -26,7 +26,6 @@ import {
   SeedStrategy,
   ShuffleConfig,
   StageContextPromptItem,
-  StageKind,
   TextPromptItem,
 } from '@deliberation-lab/utils';
 
@@ -52,12 +51,6 @@ export class EditorComponent extends MobxLitElement {
       this.stageId,
       {includeCurrentStage: true},
     );
-  }
-
-  /** Check if the current stage supports conditions (only private chat, not group chat). */
-  private supportsConditions(): boolean {
-    const stage = this.experimentEditor.getStage(this.stageId);
-    return stage?.kind === StageKind.PRIVATE_CHAT;
   }
 
   override render() {
@@ -213,8 +206,7 @@ export class EditorComponent extends MobxLitElement {
     }
 
     const conditionTargets = this.getConditionTargets();
-    const supportsConditions =
-      this.supportsConditions() && conditionTargets.length > 0;
+    const hasConditionTargets = conditionTargets.length > 0;
 
     return items.map((item, index) => {
       const hasCondition = item.condition !== undefined;
@@ -224,7 +216,7 @@ export class EditorComponent extends MobxLitElement {
           <div class="prompt-item-row">
             <div class="prompt-item-editor">${this.renderItemEditor(item)}</div>
             <div class="prompt-item-actions">
-              ${supportsConditions && item.type !== PromptItemType.GROUP
+              ${hasConditionTargets && item.type !== PromptItemType.GROUP
                 ? html`
                     <pr-icon-button
                       icon="rule"
