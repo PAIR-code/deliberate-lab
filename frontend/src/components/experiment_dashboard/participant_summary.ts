@@ -14,7 +14,7 @@ import {core} from '../../core/core';
 import {AnalyticsService, ButtonClick} from '../../services/analytics.service';
 import {ExperimentManager} from '../../services/experiment.manager';
 import {ExperimentService} from '../../services/experiment.service';
-import {Pages, RouterService} from '../../services/router.service';
+import {RouterService} from '../../services/router.service';
 
 import {
   ParticipantProfileExtended,
@@ -81,7 +81,8 @@ export class ParticipantSummary extends MobxLitElement {
           >
           </participant-progress-bar>
           ${this.renderPauseButton()} ${this.renderCopyButton()}
-          ${this.renderAttentionButton()} ${this.renderBootButton()}
+          ${this.renderMessageButton()} ${this.renderAttentionButton()}
+          ${this.renderBootButton()}
         </div>
       </div>
     `;
@@ -327,6 +328,40 @@ export class ParticipantSummary extends MobxLitElement {
           variant="default"
           ?disabled=${!this.participant}
           @click=${this.copyParticipantLink}
+        >
+        </pr-icon-button>
+      </pr-tooltip>
+    `;
+  }
+
+  private renderMessageButton() {
+    if (!this.participant || this.participant.agentConfig) {
+      return nothing;
+    }
+
+    const messageParticipant = () => {
+      if (!this.participant) return;
+      this.analyticsService.trackButtonClick(ButtonClick.PARTICIPANT_MESSAGE);
+
+      // Select the participant
+      this.experimentManager.setCurrentParticipantId(
+        this.participant.privateId,
+      );
+      // Open the alerts panel
+      this.experimentManager.setActivePanel('alerts');
+      // Pre-populate alert compose target
+      this.experimentManager.alertComposeTarget = this.participant.privateId;
+    };
+
+    return html`
+      <pr-tooltip text="Message participant" position="LEFT_START">
+        <pr-icon-button
+          icon="mail"
+          color="neutral"
+          variant="default"
+          ?disabled=${!this.participant ||
+          isParticipantEndedExperiment(this.participant)}
+          @click=${messageParticipant}
         >
         </pr-icon-button>
       </pr-tooltip>
