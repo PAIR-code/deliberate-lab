@@ -28,6 +28,7 @@ import {
   RankingStagePublicData,
   RoleStagePublicData,
   StageConfig,
+  SYSTEM_VARIABLE_NAMESPACE,
   STAGE_KIND_REQUIRES_TRANSFER_MIGRATION,
   StageKind,
   StageParticipantAnswer,
@@ -1260,6 +1261,29 @@ function buildTargetValuesForParticipant(
     for (const [questionId, answer] of Object.entries(participantAnswers)) {
       const key = getConditionTargetKey({stageId, questionId});
       targetValues[key] = extractAnswerValue(answer);
+    }
+  }
+
+  if (participant.variableMap) {
+    for (const [varName, varValue] of Object.entries(participant.variableMap)) {
+      try {
+        const parsed = JSON.parse(varValue);
+        if (typeof parsed === 'object' && parsed !== null) {
+          for (const [key, val] of Object.entries(parsed)) {
+            const targetKey = getConditionTargetKey({
+              stageId: SYSTEM_VARIABLE_NAMESPACE,
+              questionId: `${varName}.${key}`,
+            });
+            targetValues[targetKey] = val;
+          }
+        }
+      } catch (e) {
+        const targetKey = getConditionTargetKey({
+          stageId: SYSTEM_VARIABLE_NAMESPACE,
+          questionId: varName,
+        });
+        targetValues[targetKey] = varValue;
+      }
     }
   }
 

@@ -30,6 +30,8 @@ export interface ConditionGroup extends BaseCondition {
 }
 
 // Structured representation of a condition target
+export const SYSTEM_VARIABLE_NAMESPACE = '__system_variables__';
+
 export interface ConditionTargetReference {
   stageId: string;
   questionId: string;
