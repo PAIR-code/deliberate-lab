@@ -64,6 +64,15 @@ substitutions:
   #       WILL NOT be directed to the newly deployed frontend automatically.
   _AUTO_PROMOTE: 'false'
 
+  # Domain for the App Engine Storage bucket. The default changed in 2024 from
+  # 'appspot.com' to 'firebasestorage.app'.
+  # Allowed values:
+  #   - 'appspot.com':
+  #       Pre-2024 domain.
+  #   - 'firebasestorage.app' (default):
+  #       Post-2024 domain.
+  _STORAGE_BUCKET_DOMAIN: 'firebasestorage.app'
+
 options:
   logging: CLOUD_LOGGING_ONLY
   automapSubstitutions: true
@@ -171,6 +180,13 @@ steps:
           }
         '
       echo "Validation Passed: All Frontend configuration values are present."
+    fi
+    if [[ " all rules " == *" ${_DEPLOYMENT_TYPE} "* ]]; then
+      if [[ "${_STORAGE_BUCKET_DOMAIN}" != "appspot.com" && "${_STORAGE_BUCKET_DOMAIN}" != "firebasestorage.app" ]]; then
+        echo "Validation Failed: '_STORAGE_BUCKET_DOMAIN' must be 'appspot.com' or 'firebasestorage.app'. Got: '${_STORAGE_BUCKET_DOMAIN}'"
+        exit 1
+      fi
+      echo "Validation Passed: '_STORAGE_BUCKET_DOMAIN' is '${_STORAGE_BUCKET_DOMAIN}'."
     fi
   dir: '.'
 
@@ -640,7 +656,7 @@ steps:
       local release_json
       release_json=$(retry curl -sSf \
         -H "Authorization: Bearer $token" \
-        "https://firebaserules.googleapis.com/v1/projects/${PROJECT_ID}/releases/firebase.storage/${PROJECT_ID}.appspot.com")
+        "https://firebaserules.googleapis.com/v1/projects/${PROJECT_ID}/releases/firebase.storage/${PROJECT_ID}.${_STORAGE_BUCKET_DOMAIN}")
       local ruleset_name
       ruleset_name=$(node -p 'JSON.parse(require("fs").readFileSync(0,"utf-8")).rulesetName' <<< "$release_json")
 
