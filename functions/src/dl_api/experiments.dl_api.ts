@@ -18,6 +18,7 @@ import {
   createExperimentConfig,
   createExperimentTemplate,
   CreateExperimentRequestData,
+  DEFAULT_LOGS_PAGE_SIZE,
   Experiment,
   ExperimentTemplate,
   LogEntry,
@@ -535,7 +536,7 @@ export async function exportExperimentLogs(
   // Paginate through all log pages to build the full result.
   // The DL API streams via JsonStreamStringify (no response size limit),
   // but getExperimentLogs() now returns pages of 500 by default.
-  const PAGE_SIZE = 500;
+  const PAGE_SIZE = DEFAULT_LOGS_PAGE_SIZE;
   const allLogs: LogEntry[] = [];
   let cursor: UnifiedTimestamp | undefined;
   let hasMore = true;

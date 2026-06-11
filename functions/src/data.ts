@@ -14,6 +14,7 @@ import {
   createCohortDownload,
   createExperimentDownload,
   createParticipantDownload,
+  DEFAULT_LOGS_PAGE_SIZE,
   Experiment,
   ExperimentDownload,
   LogEntry,
@@ -243,7 +244,7 @@ export interface GetExperimentLogsOptions {
   /** Cursor for pagination: the createdTimestamp of the last entry in the
    *  previous page. Omit to start from the beginning. */
   cursor?: UnifiedTimestamp;
-  /** Max entries to return per page. Defaults to 500. */
+  /** Max entries to return per page. Defaults to DEFAULT_LOGS_PAGE_SIZE. */
   limit?: number;
 }
 
@@ -262,7 +263,7 @@ export async function getExperimentLogs(
   experimentId: string,
   options: GetExperimentLogsOptions = {},
 ): Promise<LogEntry[] | null> {
-  const pageSize = options.limit ?? 500;
+  const pageSize = options.limit ?? DEFAULT_LOGS_PAGE_SIZE;
 
   // Verify experiment exists
   const experimentDoc = await firestore

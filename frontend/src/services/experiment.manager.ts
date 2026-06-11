@@ -26,6 +26,7 @@ import {
   CohortConfig,
   CohortParticipantConfig,
   CreateChatMessageData,
+  DEFAULT_LOGS_PAGE_SIZE,
   LogEntry,
   LogEntryType,
   MediatorProfileExtended,
@@ -977,7 +978,7 @@ export class ExperimentManager extends Service {
 
         // Add logs to zip (fetched via cursor-based pagination to avoid
         // exceeding the ~32 MB Cloud Functions response size limit).
-        const PAGE_SIZE = 500;
+        const PAGE_SIZE = DEFAULT_LOGS_PAGE_SIZE;
         const allLogs: LogEntry[] = [];
         let cursor: UnifiedTimestamp | undefined;
         let hasMore = true;
