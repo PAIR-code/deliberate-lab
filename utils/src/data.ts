@@ -26,7 +26,7 @@ import {
 // ************************************************************************* //
 
 /** Default page size when fetching experiment logs in batches. */
-export const DEFAULT_LOGS_PAGE_SIZE = 50;
+export const DEFAULT_LOGS_PAGE_SIZE = 500;
 
 // ************************************************************************* //
 // TYPES                                                                     //
