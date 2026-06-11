@@ -32,6 +32,16 @@ export interface ExperimentDownloadResponse {
   data: ExperimentDownload | null;
 }
 
+/** Request params for paginated log downloads. */
+export interface ExperimentLogsDownloadRequest {
+  experimentId: string;
+  /** Cursor for pagination: the createdTimestamp of the last entry in the
+   *  previous page. Omit to start from the beginning. */
+  cursor?: UnifiedTimestamp;
+  /** Max entries to return per page. Defaults to 500 on the backend. */
+  limit?: number;
+}
+
 export interface ExperimentLogsDownloadResponse {
   data: LogEntry[] | null;
 }

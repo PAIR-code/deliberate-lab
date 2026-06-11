@@ -20,6 +20,7 @@ import {
   CreateExperimentRequestData,
   Experiment,
   ExperimentTemplate,
+  LogEntry,
   MetadataConfig,
   StageConfig,
   ProlificConfig,
@@ -531,14 +532,33 @@ export async function exportExperimentLogs(
   // Verify access permissions
   await verifyExperimentAccess(experimentId, experimenterId);
 
-  const logs = await getExperimentLogs(app.firestore(), experimentId);
+  // Paginate through all log pages to build the full result.
+  // The DL API streams via JsonStreamStringify (no response size limit),
+  // but getExperimentLogs() now returns pages of 500 by default.
+  const PAGE_SIZE = 500;
+  const allLogs: LogEntry[] = [];
+  let cursor: {seconds: number; nanoseconds: number} | undefined;
+  let hasMore = true;
 
-  if (!logs) {
-    throw createHttpError(500, 'Failed to load experiment logs');
+  while (hasMore) {
+    const page = await getExperimentLogs(app.firestore(), experimentId, {
+      cursor,
+      limit: PAGE_SIZE,
+    });
+
+    if (page === null) {
+      throw createHttpError(500, 'Failed to load experiment logs');
+    }
+
+    allLogs.push(...page);
+    hasMore = page.length === PAGE_SIZE;
+    if (page.length > 0) {
+      cursor = page[page.length - 1].createdTimestamp;
+    }
   }
 
   res.status(200).setHeader('Content-Type', 'application/json');
-  new JsonStreamStringify(logs).pipe(res);
+  new JsonStreamStringify(allLogs).pipe(res);
 }
 
 /**

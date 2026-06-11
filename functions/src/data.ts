@@ -2,7 +2,7 @@
  * Data download utilities for Firebase Admin SDK
  */
 
-import {Firestore} from 'firebase-admin/firestore';
+import {Firestore, Query, Timestamp} from 'firebase-admin/firestore';
 import {
   AgentMediatorPersonaConfig,
   AgentMediatorTemplate,
@@ -236,16 +236,33 @@ export async function getExperimentDownload(
 }
 
 /**
- * Fetch all log entries for an experiment using Firebase Admin SDK.
+ * Options for getExperimentLogs pagination.
+ */
+export interface GetExperimentLogsOptions {
+  /** Cursor for pagination: the createdTimestamp of the last entry in the
+   *  previous page. Omit to start from the beginning. */
+  cursor?: {seconds: number; nanoseconds: number};
+  /** Max entries to return per page. Defaults to 500. */
+  limit?: number;
+}
+
+/**
+ * Fetch log entries for an experiment using Firebase Admin SDK.
+ * Supports cursor-based pagination to avoid exceeding the ~32 MB
+ * Cloud Functions onCall response size limit.
  *
  * @param firestore - Firestore instance from firebase-admin/firestore
  * @param experimentId - ID of the experiment
+ * @param options - Pagination options (cursor and limit)
  * @returns Array of log entries ordered by createdTimestamp, or null if experiment not found
  */
 export async function getExperimentLogs(
   firestore: Firestore,
   experimentId: string,
+  options: GetExperimentLogsOptions = {},
 ): Promise<LogEntry[] | null> {
+  const pageSize = options.limit ?? 500;
+
   // Verify experiment exists
   const experimentDoc = await firestore
     .collection('experiments')
@@ -256,15 +273,25 @@ export async function getExperimentLogs(
     return null;
   }
 
-  // Fetch all logs ordered by createdTimestamp
-  const logs = (
-    await firestore
-      .collection('experiments')
-      .doc(experimentId)
-      .collection('logs')
-      .orderBy('createdTimestamp', 'asc')
-      .get()
-  ).docs.map((doc) => doc.data() as LogEntry);
+  // Build paginated query
+  let logsQuery: Query = firestore
+    .collection('experiments')
+    .doc(experimentId)
+    .collection('logs')
+    .orderBy('createdTimestamp', 'asc')
+    .limit(pageSize);
+
+  if (options.cursor) {
+    const cursorTimestamp = Timestamp.fromMillis(
+      options.cursor.seconds * 1000 + options.cursor.nanoseconds / 1e6,
+    );
+    logsQuery = logsQuery.startAfter(cursorTimestamp);
+  }
+
+  // Fetch paginated logs
+  const logs = (await logsQuery.get()).docs.map(
+    (doc) => doc.data() as LogEntry,
+  );
 
   // Convert all Timestamp objects to UnifiedTimestamp format
   return convertTimestamps(logs) as LogEntry[];
