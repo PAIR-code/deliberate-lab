@@ -324,7 +324,9 @@ export class SurveyView extends MobxLitElement {
                 value=${option.id}
                 ?selected=${selectedChoiceId === option.id}
               >
-                <div slot="headline">${option.text}</div>
+                <div slot="headline">
+                  ${unsafeHTML(convertMarkdownToHTML(option.text))}
+                </div>
               </md-select-option>
             `,
           )}
@@ -381,7 +383,9 @@ export class SurveyView extends MobxLitElement {
               ?disabled=${this.participantService.disableStage}
             >
             </md-radio>
-            <label for=${id}>${choice.text}</label>
+            <label for=${id}
+              >${unsafeHTML(convertMarkdownToHTML(choice.text))}</label
+            >
           </div>
         </div>
       `;
@@ -399,7 +403,9 @@ export class SurveyView extends MobxLitElement {
           @change=${handleMultipleChoiceClick}
         >
         </md-radio>
-        <label for=${id}>${choice.text}</label>
+        <label for=${id}
+          >${unsafeHTML(convertMarkdownToHTML(choice.text))}</label
+        >
       </div>
     `;
   }
