@@ -1067,13 +1067,15 @@ export class ExperimentManager extends Service {
         );
 
         // Generate zip and trigger download
-        zip.generateAsync({type: 'blob'}).then((blob) => {
-          const link = document.createElement('a');
-          link.href = URL.createObjectURL(blob);
-          link.download = `${experimentName}_data.zip`;
-          link.click();
-          URL.revokeObjectURL(link.href);
-        });
+        zip
+          .generateAsync({type: 'blob', compression: 'DEFLATE'})
+          .then((blob) => {
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `${experimentName}_data.zip`;
+            link.click();
+            URL.revokeObjectURL(link.href);
+          });
 
         data = result;
       }
