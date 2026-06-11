@@ -2,7 +2,7 @@
  * Data download utilities for Firebase Admin SDK
  */
 
-import {Firestore, Query, Timestamp} from 'firebase-admin/firestore';
+import {Firestore, Query} from 'firebase-admin/firestore';
 import {
   AgentMediatorPersonaConfig,
   AgentMediatorTemplate,
@@ -24,6 +24,7 @@ import {
   StageKind,
   StageParticipantAnswer,
   StagePublicData,
+  UnifiedTimestamp,
 } from '@deliberation-lab/utils';
 import {convertTimestamps} from './data.utils';
 
@@ -241,7 +242,7 @@ export async function getExperimentDownload(
 export interface GetExperimentLogsOptions {
   /** Cursor for pagination: the createdTimestamp of the last entry in the
    *  previous page. Omit to start from the beginning. */
-  cursor?: {seconds: number; nanoseconds: number};
+  cursor?: UnifiedTimestamp;
   /** Max entries to return per page. Defaults to 500. */
   limit?: number;
 }
@@ -282,10 +283,10 @@ export async function getExperimentLogs(
     .limit(pageSize);
 
   if (options.cursor) {
-    const cursorTimestamp = Timestamp.fromMillis(
-      options.cursor.seconds * 1000 + options.cursor.nanoseconds / 1e6,
-    );
-    logsQuery = logsQuery.startAfter(cursorTimestamp);
+    const cursorMs =
+      options.cursor.seconds * 1000 +
+      Math.floor(options.cursor.nanoseconds / 1e6);
+    logsQuery = logsQuery.startAfter(new Date(cursorMs));
   }
 
   // Fetch paginated logs

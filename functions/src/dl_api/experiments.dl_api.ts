@@ -537,7 +537,7 @@ export async function exportExperimentLogs(
   // but getExperimentLogs() now returns pages of 500 by default.
   const PAGE_SIZE = 500;
   const allLogs: LogEntry[] = [];
-  let cursor: {seconds: number; nanoseconds: number} | undefined;
+  let cursor: UnifiedTimestamp | undefined;
   let hasMore = true;
 
   while (hasMore) {
