@@ -372,17 +372,20 @@ export const downloadExperiment = onCall(async (request) => {
 // ************************************************************************* //
 // downloadExperimentLogs for experimenters                                  //
 //                                                                           //
-// Input structure: { experimentId }                                         //
+// Input structure: { experimentId, cursor?, limit? }                        //
 // Returns: ExperimentLogsDownloadResponse                                   //
 // ************************************************************************* //
 export const downloadExperimentLogs = onCall(
   {memory: '1GiB'},
   async (request) => {
     await AuthGuard.isExperimenter(request);
-    const {data} = request;
+    const {experimentId, cursor, limit} = request.data;
 
     try {
-      const logs = await getExperimentLogs(app.firestore(), data.experimentId);
+      const logs = await getExperimentLogs(app.firestore(), experimentId, {
+        cursor,
+        limit,
+      });
 
       if (!logs) {
         return {data: null};

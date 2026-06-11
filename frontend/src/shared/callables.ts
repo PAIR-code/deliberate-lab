@@ -13,7 +13,9 @@ import {
   ExperimentCreationData,
   ExperimentDeletionData,
   ExperimentDownloadResponse,
+  ExperimentLogsDownloadRequest,
   ExperimentLogsDownloadResponse,
+  UnifiedTimestamp,
   ExperimentTemplate,
   InitiateParticipantTransferData,
   ModelResponse,
@@ -132,18 +134,20 @@ export const downloadExperimentCallable = async (
   return data;
 };
 
-/** Generic endpoint to download experiment logs. */
+/** Generic endpoint to download experiment logs (paginated). */
 export const downloadExperimentLogsCallable = async (
   functions: Functions,
   experimentId: string,
+  cursor?: UnifiedTimestamp,
+  limit?: number,
 ) => {
   const {data} = await httpsCallable<
-    {experimentId: string},
+    ExperimentLogsDownloadRequest,
     ExperimentLogsDownloadResponse
   >(
     functions,
     'downloadExperimentLogs',
-  )({experimentId});
+  )({experimentId, cursor, limit});
   return data;
 };
 

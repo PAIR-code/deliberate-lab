@@ -26,6 +26,7 @@ import {
   CohortConfig,
   CohortParticipantConfig,
   CreateChatMessageData,
+  DEFAULT_LOGS_PAGE_SIZE,
   LogEntry,
   LogEntryType,
   MediatorProfileExtended,
@@ -37,6 +38,7 @@ import {
   ParticipantStatus,
   ProfileAgentConfig,
   StageKind,
+  UnifiedTimestamp,
   createCohortConfig,
   createExperimenterChatMessage,
 } from '@deliberation-lab/utils';
@@ -974,13 +976,32 @@ export class ExperimentManager extends Service {
         // Add experiment JSON to zip
         zip.file(`${experimentName}.json`, JSON.stringify(result, null, 2));
 
-        // Add logs to zip
-        const logsResponse = await downloadExperimentLogsCallable(
-          this.sp.firebaseService.functions,
-          experimentId,
+        // Add logs to zip (fetched via cursor-based pagination to avoid
+        // exceeding the ~32 MB Cloud Functions response size limit).
+        const PAGE_SIZE = DEFAULT_LOGS_PAGE_SIZE;
+        const allLogs: LogEntry[] = [];
+        let cursor: UnifiedTimestamp | undefined;
+        let hasMore = true;
+
+        while (hasMore) {
+          const logsResponse = await downloadExperimentLogsCallable(
+            this.sp.firebaseService.functions,
+            experimentId,
+            cursor,
+            PAGE_SIZE,
+          );
+          const logs = logsResponse.data ?? [];
+          allLogs.push(...logs);
+          hasMore = logs.length === PAGE_SIZE;
+          if (logs.length > 0) {
+            cursor = logs[logs.length - 1].createdTimestamp;
+          }
+        }
+
+        zip.file(
+          `${experimentName}_Logs.json`,
+          JSON.stringify(allLogs, null, 2),
         );
-        const logs = logsResponse.data ?? [];
-        zip.file(`${experimentName}_Logs.json`, JSON.stringify(logs, null, 2));
 
         // Add chip negotiation data
         const chipData = getChipNegotiationData(result);
@@ -1046,13 +1067,15 @@ export class ExperimentManager extends Service {
         );
 
         // Generate zip and trigger download
-        zip.generateAsync({type: 'blob'}).then((blob) => {
-          const link = document.createElement('a');
-          link.href = URL.createObjectURL(blob);
-          link.download = `${experimentName}_data.zip`;
-          link.click();
-          URL.revokeObjectURL(link.href);
-        });
+        zip
+          .generateAsync({type: 'blob', compression: 'DEFLATE'})
+          .then((blob) => {
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `${experimentName}_data.zip`;
+            link.click();
+            URL.revokeObjectURL(link.href);
+          });
 
         data = result;
       }
