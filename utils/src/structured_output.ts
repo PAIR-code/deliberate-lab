@@ -58,6 +58,7 @@ export interface ChatMediatorStructuredFields {
   message: string | null; // The message to send (null if not responding)
   explanation: string | null; // Why the mediator made this decision
   readyToEndChat: boolean; // Is the mediator ready to end the conversation?
+  _reasoning: string | null; // Auto-injected reasoning field when {{_reasoning}} is in prompt
 }
 
 /**
@@ -93,11 +94,46 @@ export function extractChatMediatorStructuredFields(
     ? Boolean(parsed[config.readyToEndField])
     : false;
 
+  const _reasoning =
+    typeof parsed['_reasoning'] === 'string'
+      ? (parsed['_reasoning'] as string)
+      : null;
+
   return {
     shouldRespond,
     message,
     explanation,
     readyToEndChat,
+    _reasoning,
+  };
+}
+
+/**
+ * Prepend the `_reasoning` field to the structured output schema when:
+ * (a) the field is not already present, and
+ * (b) reasoning placeholders are in use.
+ */
+export function injectReasoningField<
+  T extends StructuredOutputConfig | undefined,
+>(config: T): T {
+  if (!config?.schema?.properties) return config;
+  if (config.schema.properties.some((p) => p.name === '_reasoning')) {
+    return config;
+  }
+  const reasoningProperty = {
+    name: '_reasoning',
+    schema: {
+      type: StructuredOutputDataType.STRING,
+      description:
+        'Your private reasoning for this turn. This field is shown back to you in later turns, so you can, for example, make plans and test beliefs.',
+    },
+  };
+  return {
+    ...config,
+    schema: {
+      ...config.schema,
+      properties: [reasoningProperty, ...config.schema.properties],
+    },
   };
 }
 
