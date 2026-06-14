@@ -34,6 +34,7 @@ import {
   DEFAULT_MEDIATOR_GROUP_CHAT_PROMPT_INSTRUCTIONS,
   DEFAULT_MEDIATOR_GROUP_CHAT_TURN_TAKING_PROMPT_INSTRUCTIONS,
   ChatStageConfig,
+  SYSTEM_VARIABLE_NAMESPACE,
 } from '@deliberation-lab/utils';
 import {
   getAgentMediatorPrompt,
@@ -452,7 +453,9 @@ async function fetchConditionDependencies(
   data: Record<string, StageContextData>,
 ): Promise<void> {
   const dependencies = extractConditionDependencies(condition);
-  const requiredStageIds = [...new Set(dependencies.map((dep) => dep.stageId))];
+  const requiredStageIds = [
+    ...new Set(dependencies.map((dep) => dep.stageId)),
+  ].filter((id) => id !== SYSTEM_VARIABLE_NAMESPACE);
 
   // Find stages not already in data
   const missingStageIds = requiredStageIds.filter((stageId) => !data[stageId]);
@@ -519,7 +522,12 @@ function shouldIncludePromptItem(
     stageContextData,
     participants[0].publicId,
   );
-  return evaluateConditionWithStageAnswers(promptItem.condition, stageAnswers);
+  return evaluateConditionWithStageAnswers(
+    promptItem.condition,
+    stageAnswers,
+    undefined,
+    participants[0].variableMap,
+  );
 }
 
 /**

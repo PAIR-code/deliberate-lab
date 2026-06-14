@@ -217,7 +217,12 @@ export class SurveyEditor extends MobxLitElement {
     const targets = getConditionTargetsFromStages(
       this.experimentEditor.stages,
       this.stage.id,
-      {includeCurrentStage: true, currentStageQuestionIndex: index},
+      {
+        includeCurrentStage: true,
+        currentStageQuestionIndex: index,
+        variableConfigs:
+          this.experimentEditor.experiment?.variableConfigs ?? [],
+      },
     );
 
     return renderConditionEditor({
