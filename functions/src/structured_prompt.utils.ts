@@ -15,6 +15,7 @@ import {
   PromptItemGroup,
   PromptItemType,
   StageConfig,
+  TextPromptItem,
   StageContextData,
   StageContextPromptItem,
   StageKind,
@@ -34,6 +35,7 @@ import {
   DEFAULT_MEDIATOR_GROUP_CHAT_PROMPT_INSTRUCTIONS,
   DEFAULT_MEDIATOR_GROUP_CHAT_TURN_TAKING_PROMPT_INSTRUCTIONS,
   ChatStageConfig,
+  injectReasoningField,
 } from '@deliberation-lab/utils';
 import {
   getAgentMediatorPrompt,
@@ -49,6 +51,23 @@ import {
   getFirestorePrivateChatMessages,
 } from './utils/firestore';
 import {stageManager} from './app';
+
+// Recursively check whether `{{_reasoning}}` appears in prompt
+export function containsReasoningPlaceholder(items: PromptItem[]): boolean {
+  return items.some((item) => {
+    if (item.type === PromptItemType.TEXT) {
+      return (item as TextPromptItem).text?.includes('{{_reasoning}}') ?? false;
+    }
+    if (item.type === PromptItemType.GROUP) {
+      const group = item as PromptItemGroup;
+      return (
+        (group.title?.includes('{{_reasoning}}') ?? false) ||
+        containsReasoningPlaceholder(group.items ?? [])
+      );
+    }
+    return false;
+  });
+}
 
 /** Attempts to fetch corresponding prompt config from storage,
  * else returns the stage's default config.
@@ -363,6 +382,15 @@ export async function getPromptFromConfig(
     };
   }
 
+  // Auto-inject _reasoning at the start of the schema when {{_reasoning}} is present
+  const usesReasoningPlaceholder =
+    (userProfile.agentConfig?.promptContext?.includes('{{_reasoning}}') ??
+      false) ||
+    containsReasoningPlaceholder(promptConfig.prompt);
+  if (usesReasoningPlaceholder) {
+    structuredOutputConfig = injectReasoningField(structuredOutputConfig);
+  }
+
   const structuredOutput = makeStructuredOutputPrompt(structuredOutputConfig);
 
   return structuredOutput ? `${promptText}\n${structuredOutput}` : promptText;
@@ -589,6 +617,61 @@ async function processPromptItems(
     participantForVariables,
   );
 
+  // When referenced, inject the agent's past reasoning history
+  let reasoningText = '';
+  const usesReasoning =
+    (userProfile.agentConfig?.promptContext?.includes('{{_reasoning}}') ??
+      false) ||
+    containsReasoningPlaceholder(promptItems);
+  const chatContext = usesReasoning ? promptData.data[stageId] : undefined;
+  const messages = chatContext
+    ? stageKind === StageKind.PRIVATE_CHAT
+      ? (chatContext.privateChatMap[promptData.participants[0]?.publicId] ?? [])
+      : chatContext.publicChatMessages
+    : [];
+
+  if (messages && messages.length > 0) {
+    const maxReasoningChars = 20000; // Approx 5,000 tokens (4 chars per token)
+
+    // Filter messages sent by this agent that have reasoning
+    // Not msg.reasoning (the model's internal API reasoning, which is only available with some models)
+    const agentReasonings: {round: number; reasoning: string}[] = [];
+    messages.forEach((msg, idx) => {
+      if (
+        msg.senderId === userProfile.publicId &&
+        msg._reasoning &&
+        msg._reasoning.trim() !== ''
+      ) {
+        agentReasonings.push({round: idx + 1, reasoning: msg._reasoning});
+      }
+    });
+
+    if (agentReasonings.length > 0) {
+      const recentLines: string[] = [];
+      let charCount = 0;
+
+      // Begin with most recent context
+      for (let i = agentReasonings.length - 1; i >= 0; i--) {
+        const {reasoning} = agentReasonings[i];
+        const roundLine = `#${i + 1}\n${reasoning}\n\n`;
+        if (charCount + roundLine.length <= maxReasoningChars) {
+          recentLines.unshift(roundLine);
+          charCount += roundLine.length;
+        } else {
+          break;
+        }
+      }
+      if (recentLines.length > 0) {
+        reasoningText =
+          'Each line shows your reasoning for your messages sent in this conversation, in order:\n\n' +
+          recentLines.join('');
+        reasoningText = reasoningText.trim();
+      }
+    }
+  }
+
+  valueMap['_reasoning'] = reasoningText;
+
   for (const promptItem of promptItems) {
     // Check condition if present (only for private chat contexts)
     if (
@@ -643,7 +726,11 @@ async function processPromptItems(
           includeScaffolding,
         );
         if (profileContext) {
-          items.push(profileContext);
+          const resolvedProfileContext = profileContext.replaceAll(
+            '{{_reasoning}}',
+            valueMap['_reasoning'] ?? '',
+          );
+          items.push(resolvedProfileContext);
         }
         break;
       case PromptItemType.PROFILE_INFO:
