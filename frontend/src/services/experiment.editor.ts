@@ -200,6 +200,12 @@ export class ExperimentEditor extends Service {
     }
 
     for (const config of this.experiment.variableConfigs ?? []) {
+      // Block save and inform experimenter to avoid reasoning history name collision.
+      if (config.definition.name === '_reasoning') {
+        errors.push(
+          'The variable name "_reasoning" is reserved for tracking the system\'s reasoning history. Please rename it.',
+        );
+      }
       if (requiresValues(config.type)) {
         const multiConfig = config as MultiValueVariableConfigType;
         if (multiConfig.values.length === 0) {
