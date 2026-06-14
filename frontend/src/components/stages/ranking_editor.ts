@@ -12,6 +12,8 @@ import {
   createRankingItem,
   ParticipantRankingStage,
   ItemRankingStage,
+  LRRankingStage,
+  RankingType,
 } from '@deliberation-lab/utils';
 import {styles} from './ranking_editor.scss';
 
@@ -38,6 +40,16 @@ export class RankingEditorComponent extends MobxLitElement {
       .enableSelfVoting;
     const isElection = this.stage.strategy === ElectionStrategy.CONDORCET;
     const isParticipantRanking = this.stage.rankingType === 'participants';
+    const isLRRanking = this.stage.rankingType === RankingType.LR;
+
+    console.debug(
+      '[LR] renderRankingSettings, isElection=',
+      isElection,
+      ', isParticipantRanking=',
+      isParticipantRanking,
+      ', isLRRanking=',
+      isLRRanking,
+    );
 
     const updateRankingType = () => {
       if (!this.stage) return;
@@ -61,7 +73,7 @@ export class RankingEditorComponent extends MobxLitElement {
     };
 
     const toggleElectionStrategy = () => {
-      if (!this.stage) return;
+      if (!this.stage || this.stage.rankingType === RankingType.LR) return;
       const newStrategy = isElection
         ? ElectionStrategy.NONE
         : ElectionStrategy.CONDORCET;
@@ -80,6 +92,24 @@ export class RankingEditorComponent extends MobxLitElement {
     </div>`;
     const waitForAllParticipants = this.stage.progress.waitForAllParticipants;
 
+    console.debug(
+      '[LR] renderRankingSettings bis, isElection=',
+      isElection,
+      ', isParticipantRanking=',
+      isParticipantRanking,
+      ', isLRRanking=',
+      isLRRanking,
+    );
+
+    // RankingType.LR
+    if (isLRRanking) {
+      return html`
+        <div class="section">
+          <div class="title">LR does not require specific settings</div>
+        </div>
+      `;
+    }
+    // RankingType.ITEMS RankingType.PARTICIPANTS :
     return html`
       <div class="section">
         <div class="title">Ranking Settings</div>
