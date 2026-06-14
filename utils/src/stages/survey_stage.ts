@@ -327,6 +327,7 @@ export function getVisibleSurveyQuestions(
   currentStageAnswers: Record<string, SurveyAnswer>,
   allStageAnswers?: Record<string, StageParticipantAnswer>, // Map of stageId to answer data
   targetParticipantId?: string, // For survey-per-participant: which participant is being evaluated
+  variableMap?: Record<string, string>,
 ): SurveyQuestion[] {
   // Extract all dependencies from all question conditions
   const allDependencies = extractMultipleConditionDependencies(
@@ -340,6 +341,7 @@ export function getVisibleSurveyQuestions(
     currentStageAnswers,
     allStageAnswers,
     targetParticipantId,
+    variableMap,
   );
 
   return questions.filter((question) => {
@@ -357,6 +359,7 @@ export function isQuestionVisible(
   currentStageAnswers: Record<string, SurveyAnswer>,
   allStageAnswers?: Record<string, StageParticipantAnswer>,
   targetParticipantId?: string, // For survey-per-participant: which participant is being evaluated
+  variableMap?: Record<string, string>,
 ): boolean {
   if (!question.condition) {
     return true; // No condition means always show
@@ -372,6 +375,7 @@ export function isQuestionVisible(
     currentStageAnswers,
     allStageAnswers,
     targetParticipantId,
+    variableMap,
   );
 
   return evaluateCondition(question.condition, targetValues);
