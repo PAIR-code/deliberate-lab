@@ -53,7 +53,7 @@ export class PrivateChatStageHandler extends BaseStageHandler {
   getDefaultMediatorStructuredPrompt(
     stage: PrivateChatStageConfig,
   ): MediatorPromptConfig | undefined {
-    return createChatPromptConfig(stage.id, StageKind.CHAT, {
+    return createChatPromptConfig(stage.id, StageKind.PRIVATE_CHAT, {
       prompt: createDefaultPromptFromText(
         DEFAULT_AGENT_PRIVATE_MEDIATOR_CHAT_PROMPT,
       ),
@@ -63,7 +63,7 @@ export class PrivateChatStageHandler extends BaseStageHandler {
   getDefaultParticipantStructuredPrompt(
     stage: PrivateChatStageConfig,
   ): ParticipantPromptConfig | undefined {
-    return createChatPromptConfig(stage.id, StageKind.CHAT, {
+    return createChatPromptConfig(stage.id, StageKind.PRIVATE_CHAT, {
       prompt: createDefaultParticipantPrompt(
         DEFAULT_AGENT_PARTICIPANT_CHAT_PROMPT,
       ),
