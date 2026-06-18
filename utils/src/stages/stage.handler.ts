@@ -24,7 +24,12 @@ export class BaseStageHandler {
     variableDefinitions: Record<string, VariableDefinition>,
     valueMap: Record<string, string>,
   ) {
-    // By default, resolve variables in stage descriptions
+    // By default, resolve variables in the stage name and descriptions
+    const name = resolveTemplateVariables(
+      stage.name,
+      variableDefinitions,
+      valueMap,
+    );
     const primaryText = resolveTemplateVariables(
       stage.descriptions.primaryText,
       variableDefinitions,
@@ -36,7 +41,7 @@ export class BaseStageHandler {
       valueMap,
     );
     const descriptions = {...stage.descriptions, primaryText, infoText};
-    return {...stage, descriptions};
+    return {...stage, name, descriptions};
   }
 
   getAgentParticipantActionsForStage(
