@@ -78,6 +78,53 @@ export function getConditionDependencyValues(
 }
 
 /**
+ * Build aggregated values for condition evaluation.
+ *
+ * Returns a map where each target key maps to an array of all values from all participants.
+ * This structure is used for aggregation conditions (ANY, ALL, COUNT, etc.).
+ *
+ * @param dependencies - The condition target references to resolve
+ * @param allParticipantAnswers - Map of participantId to their stage answers
+ * @returns Map of targetKey to array of values from all participants
+ */
+export function buildAllValues(
+  dependencies: ConditionTargetReference[],
+  allParticipantAnswers: Record<string, Record<string, StageParticipantAnswer>>,
+): Record<string, unknown[]> {
+  const result: Record<string, unknown[]> = {};
+
+  // Initialize arrays for each target
+  for (const targetRef of dependencies) {
+    const dataKey = getConditionTargetKey(targetRef);
+    result[dataKey] = [];
+  }
+
+  // Collect values from all participants
+  for (const stageAnswers of Object.values(allParticipantAnswers)) {
+    for (const targetRef of dependencies) {
+      const dataKey = getConditionTargetKey(targetRef);
+      const stageAnswer = stageAnswers[targetRef.stageId];
+
+      if (!stageAnswer || !('answerMap' in stageAnswer)) {
+        continue;
+      }
+
+      if (stageAnswer.kind === StageKind.SURVEY) {
+        const surveyAnswer = stageAnswer as SurveyStageParticipantAnswer;
+        const answer = surveyAnswer.answerMap[targetRef.questionId];
+        if (answer) {
+          result[dataKey].push(extractAnswerValue(answer));
+        }
+      }
+      // Note: SurveyPerParticipant stages are more complex for aggregation
+      // as they have answers per-participant already. For now, we skip these.
+    }
+  }
+
+  return result;
+}
+
+/**
  * Get condition dependency values, including current stage answers that may not be persisted yet.
  *
  * Use this when evaluating conditions during active survey completion, where the current
@@ -122,31 +169,96 @@ export function getConditionDependencyValuesWithCurrentStage(
 }
 
 /**
+ * Build aggregated values, including current stage answers that may not be persisted yet.
+ *
+ * This is used during active survey completion where we need to:
+ * 1. Include all participants' persisted answers (for aggregation conditions)
+ * 2. Merge in the current participant's unsaved answers for the current stage
+ *
+ * @param dependencies - The condition target references to resolve
+ * @param currentStageId - The ID of the stage currently being worked on
+ * @param currentStageAnswers - Map of questionId to SurveyAnswer for the current stage (unsaved)
+ * @param currentParticipantId - The current participant's ID (to include their unsaved answers)
+ * @param allParticipantAnswers - Map of participantId to their stage answers (for aggregation)
+ * @returns Map of targetKey to array of values
+ */
+export function buildAllValuesWithCurrentStage(
+  dependencies: ConditionTargetReference[],
+  currentStageId: string,
+  currentStageAnswers: Record<string, SurveyAnswer>,
+  currentParticipantId?: string,
+  allParticipantAnswers?: Record<
+    string,
+    Record<string, StageParticipantAnswer>
+  >,
+): Record<string, unknown[]> {
+  // Start with all participants' persisted values
+  const result: Record<string, unknown[]> = allParticipantAnswers
+    ? buildAllValues(dependencies, allParticipantAnswers)
+    : {};
+
+  // Initialize arrays for any missing targets
+  for (const targetRef of dependencies) {
+    const dataKey = getConditionTargetKey(targetRef);
+    if (!result[dataKey]) {
+      result[dataKey] = [];
+    }
+  }
+
+  // Add current participant's unsaved answers for the current stage
+  if (currentParticipantId) {
+    for (const targetRef of dependencies) {
+      if (targetRef.stageId === currentStageId) {
+        const dataKey = getConditionTargetKey(targetRef);
+        const answer = currentStageAnswers[targetRef.questionId];
+        if (answer) {
+          result[dataKey].push(extractAnswerValue(answer));
+        }
+      }
+    }
+  }
+
+  return result;
+}
+
+/**
  * Evaluate a condition against stage answers.
  *
  * Convenience function that combines dependency extraction, value resolution,
  * and condition evaluation in one call.
  *
  * @param condition - The condition to evaluate
- * @param stageAnswers - Map of stageId to StageParticipantAnswer
+ * @param stageAnswers - Map of stageId to StageParticipantAnswer (for current participant)
  * @param targetParticipantId - For SurveyPerParticipant stages, which participant's answers to use
+ * @param allParticipantAnswers - Map of participantId to their stage answers (for aggregation)
  * @returns true if condition passes (or if condition is undefined)
  */
 export function evaluateConditionWithStageAnswers(
   condition: Condition | undefined,
   stageAnswers: Record<string, StageParticipantAnswer>,
   targetParticipantId?: string,
+  allParticipantAnswers?: Record<
+    string,
+    Record<string, StageParticipantAnswer>
+  >,
 ): boolean {
   if (!condition) return true;
 
   const dependencies = extractMultipleConditionDependencies([condition]);
+
+  // Get target values for comparison conditions
   const targetValues = getConditionDependencyValues(
     dependencies,
     stageAnswers,
     targetParticipantId,
   );
 
-  return evaluateCondition(condition, targetValues);
+  // Build aggregated values for aggregation conditions (if multi-participant data provided)
+  const allValues = allParticipantAnswers
+    ? buildAllValues(dependencies, allParticipantAnswers)
+    : undefined;
+
+  return evaluateCondition(condition, targetValues, allValues);
 }
 
 /**
@@ -155,14 +267,19 @@ export function evaluateConditionWithStageAnswers(
  * Generic utility to filter any array of items that have optional conditions.
  *
  * @param items - Array of items, each potentially having a `condition` property
- * @param stageAnswers - Map of stageId to StageParticipantAnswer
+ * @param stageAnswers - Map of stageId to StageParticipantAnswer (for current participant)
  * @param targetParticipantId - For SurveyPerParticipant stages, which participant's answers to use
+ * @param allParticipantAnswers - Map of participantId to their stage answers (for aggregation)
  * @returns Filtered array containing only items whose conditions pass
  */
 export function filterByCondition<T extends {condition?: Condition}>(
   items: T[],
   stageAnswers: Record<string, StageParticipantAnswer>,
   targetParticipantId?: string,
+  allParticipantAnswers?: Record<
+    string,
+    Record<string, StageParticipantAnswer>
+  >,
 ): T[] {
   // Extract all dependencies upfront for efficiency
   const allConditions = items
@@ -174,15 +291,22 @@ export function filterByCondition<T extends {condition?: Condition}>(
   }
 
   const allDependencies = extractMultipleConditionDependencies(allConditions);
+
+  // Get target values for comparison conditions
   const targetValues = getConditionDependencyValues(
     allDependencies,
     stageAnswers,
     targetParticipantId,
   );
 
+  // Build aggregated values for aggregation conditions (if multi-participant data provided)
+  const allValues = allParticipantAnswers
+    ? buildAllValues(allDependencies, allParticipantAnswers)
+    : undefined;
+
   return items.filter((item) => {
     if (!item.condition) return true;
-    return evaluateCondition(item.condition, targetValues);
+    return evaluateCondition(item.condition, targetValues, allValues);
   });
 }
 

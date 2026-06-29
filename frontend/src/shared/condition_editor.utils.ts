@@ -9,6 +9,8 @@ export interface RenderConditionEditorOptions {
   targets: ConditionTarget[];
   canEdit: boolean;
   onConditionChange: (condition: Condition | undefined) => void;
+  /** Whether to allow aggregation conditions (defaults to true) */
+  allowAggregation?: boolean;
 }
 
 /**
@@ -16,7 +18,13 @@ export interface RenderConditionEditorOptions {
  * Returns nothing if there are no valid targets.
  */
 export function renderConditionEditor(options: RenderConditionEditorOptions) {
-  const {condition, targets, canEdit, onConditionChange} = options;
+  const {
+    condition,
+    targets,
+    canEdit,
+    onConditionChange,
+    allowAggregation = true,
+  } = options;
 
   if (targets.length === 0) return nothing;
 
@@ -25,6 +33,7 @@ export function renderConditionEditor(options: RenderConditionEditorOptions) {
       .condition=${condition}
       .targets=${targets}
       .disabled=${!canEdit}
+      .allowAggregation=${allowAggregation}
       .onConditionChange=${onConditionChange}
     ></condition-editor>
   `;
