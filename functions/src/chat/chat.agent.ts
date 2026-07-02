@@ -8,7 +8,10 @@ import {
   PrivateChatStageConfig,
   extractChatMediatorStructuredFields,
   getStructuredOutput,
+  getTurnCycleInfo,
+  getTurnCycleStatusForPrompt,
   MediatorProfileExtended,
+  ModelResponse,
   ModelResponseStatus,
   ParticipantProfileExtended,
   StageConfig,
@@ -101,6 +104,41 @@ async function getPrivateChatRepProfileOverride(
     return null;
   }
   return getRepresentativeProfile(String(human.name || human.publicId));
+}
+
+// Fast-failing transient gRPC status codes for which a Firestore write is worth
+// retrying: UNKNOWN(2), DEADLINE_EXCEEDED(4), ABORTED(10), INTERNAL(13),
+// UNAVAILABLE(14). Under load the local emulator intermittently fails a commit
+// with "2 UNKNOWN" or blows the ~60s client deadline ("4 DEADLINE_EXCEEDED");
+// without a retry that surfaces as an unhandled error that kills the function
+// and stalls the turn-based chat (the message is never written, the turn never
+// advances). A fresh commit on retry typically succeeds once the load clears,
+// so retrying beats letting the chat go silent.
+const TRANSIENT_FIRESTORE_CODES = new Set([2, 4, 10, 13, 14]);
+async function firestoreWriteWithRetry<T>(
+  op: () => Promise<T>,
+  attempts = 4,
+): Promise<T> {
+  let lastError: unknown;
+  for (let i = 0; i < attempts; i++) {
+    try {
+      return await op();
+    } catch (error) {
+      lastError = error;
+      const code = (error as {code?: number})?.code;
+      if (
+        !TRANSIENT_FIRESTORE_CODES.has(code as number) ||
+        i === attempts - 1
+      ) {
+        throw error;
+      }
+      console.warn(
+        `[chat.agent] Transient Firestore write error (code ${code}); retry ${i + 1}/${attempts - 1}`,
+      );
+      await new Promise((resolve) => setTimeout(resolve, 250 * (i + 1)));
+    }
+  }
+  throw lastError;
 }
 
 /** Use persona chat prompt to create and send agent chat message. */
@@ -389,13 +427,13 @@ export async function getAgentChatMessage(
   const isTurnBasedPrivateChat =
     stage.kind === StageKind.PRIVATE_CHAT &&
     (stage as PrivateChatStageConfig).isTurnBasedChatGroupStyle;
+  let chatPublicData: ChatStagePublicData | undefined;
   if (isTurnBasedGroupChat) {
-    const publicStageData = await getFirestoreStagePublicData(
+    chatPublicData = (await getFirestoreStagePublicData(
       experimentId,
       cohortId,
       stageId,
-    );
-    const chatPublicData = publicStageData as ChatStagePublicData;
+    )) as ChatStagePublicData;
     if (
       chatPublicData &&
       chatPublicData.currentTurnParticipantId !== user.publicId
@@ -417,7 +455,7 @@ export async function getAgentChatMessage(
 
   // Use provided participant IDs for prompt context
   // Get structured prompt
-  const structuredPrompt = await getPromptFromConfig(
+  let structuredPrompt = await getPromptFromConfig(
     experimentId,
     cohortId,
     stageId,
@@ -425,6 +463,22 @@ export async function getAgentChatMessage(
     promptConfig,
     participantIds, // Pass participant IDs to limit context scope (e.g., for private chats)
   );
+
+  // For a turn-based group chat with a fixed message cap, tell the agent
+  // (participant or mediator) which cycle it is in and how many remain, so it
+  // can pace its contribution. No-op when not turn-based or there is no cap.
+  if (isTurnBasedGroupChat) {
+    const cycleInfo = getTurnCycleInfo(
+      chatPublicData,
+      stage as ChatStageConfig,
+    );
+    if (cycleInfo) {
+      structuredPrompt += `\n\n${getTurnCycleStatusForPrompt(
+        cycleInfo.currentCycle,
+        cycleInfo.totalCycles,
+      )}`;
+    }
+  }
 
   // Check if we should use message-based format
   // Only for private chat with exactly one participant AND one mediator
@@ -849,6 +903,10 @@ export async function skipTimedOutTurnBasedAgentTurn(
 
   const skipMessage = createSystemChatMessage({
     message: `${user.name ?? user.publicId} was skipped due to ${skipReason}.`,
+    // Use the firebase-admin Timestamp for this backend write: the util's
+    // default timestamp is a client-SDK (firebase/firestore) Timestamp, which
+    // firebase-admin cannot serialize (crashes the write, stalling the chat).
+    timestamp: Timestamp.now(),
   });
   await app
     .firestore()
@@ -889,21 +947,78 @@ export async function sendAgentGroupChatMessage(
   chatMessage: ChatMessage,
   chatSettings: AgentChatSettings,
 ) {
+  const capStage = await getFirestoreStage(experimentId, stageId);
+  const isTurnBasedGroup =
+    capStage?.kind === StageKind.CHAT &&
+    (capStage as ChatStageConfig).isTurnBased === true;
+
   // TODO: Decrease typing delay to account for LLM API call latencies?
   // TODO: Don't send message if conversation continues while agent is typing?
   if (chatSettings.wordsPerMinute) {
-    await awaitTypingDelay(chatMessage.message, chatSettings.wordsPerMinute);
+    // A turn-based chat's first message posts immediately.
+    const isFirstMessage =
+      isTurnBasedGroup &&
+      triggerChatId === '' &&
+      (
+        await getFirestorePublicStageChatMessages(
+          experimentId,
+          cohortId,
+          stageId,
+        )
+      ).every((m) => m.type === UserType.SYSTEM);
+    if (!isFirstMessage) {
+      await awaitTypingDelay(chatMessage.message, chatSettings.wordsPerMinute);
+    }
+  }
+
+  // Read the live cohort state once for both the cap guard and the
+  // conversation-moved-on check (avoids reading the chat history twice).
+  const [capPublicData, chatHistory] = await Promise.all([
+    getFirestoreStagePublicData(experimentId, cohortId, stageId) as Promise<
+      ChatStagePublicData | undefined
+    >,
+    getFirestorePublicStageChatMessages(experimentId, cohortId, stageId),
+  ]);
+
+  // Hard cap: never append a message past the effective message limit. The
+  // turn trigger ends the chat once the cap is reached, but an agent that began
+  // generating beforehand (or a slow/duplicate call) must not post its now-stale
+  // message past the limit. Drop it if the discussion already ended or the
+  // cohort is already at the cap. The count excludes the message we are
+  // about to write, so a message that itself reaches the cap is allowed.
+  if (capPublicData?.discussionEndTimestamp) {
+    console.log(
+      'Discussion already ended; dropping message to respect the cap',
+    );
+    return true;
+  }
+  const effectiveCap =
+    capPublicData?.effectiveMaxNumberOfMessages ??
+    (capStage?.kind === StageKind.CHAT
+      ? (capStage as ChatStageConfig).maxNumberOfMessages
+      : null);
+  if (effectiveCap != null) {
+    const capCount = chatHistory.filter(
+      (m) =>
+        m.type !== UserType.SYSTEM &&
+        !m.isError &&
+        !(m as {isReasoningOnly?: boolean}).isReasoningOnly,
+    ).length;
+    if (capCount >= effectiveCap) {
+      console.log(
+        'Cohort at message cap; dropping message to respect the limit',
+      );
+      return true;
+    }
   }
 
   // Check if the conversation has moved on,
-  // i.e., trigger chat ID is no longer that latest message
-  // Skip this check for initial messages (empty triggerChatId)
-  if (triggerChatId !== '') {
-    const chatHistory = await getFirestorePublicStageChatMessages(
-      experimentId,
-      cohortId,
-      stageId,
-    );
+  // i.e., trigger chat ID is no longer that latest message.
+  // Skip this check for initial messages (empty triggerChatId).
+  // Also skip it entirely for turn-based group chats: the turn order is
+  // deterministic, so a newer message never means this agent's turn was
+  // superseded. Dropping here would stall the whole turn-based chat.
+  if (triggerChatId !== '' && !isTurnBasedGroup) {
     const nonSystemHistory = chatHistory.filter(
       (m) => m.type !== UserType.SYSTEM,
     );
@@ -934,7 +1049,7 @@ export async function sendAgentGroupChatMessage(
     }
 
     // Otherwise, log response ID as trigger message
-    await triggerResponseDoc.set({});
+    await firestoreWriteWithRetry(() => triggerResponseDoc.set({}));
   }
 
   // Send chat message
@@ -950,7 +1065,7 @@ export async function sendAgentGroupChatMessage(
     .doc(chatMessage.id);
 
   chatMessage.timestamp = Timestamp.now();
-  await agentDocument.set(chatMessage);
+  await firestoreWriteWithRetry(() => agentDocument.set(chatMessage));
 
   return true;
 }
@@ -1030,7 +1145,7 @@ export async function sendAgentPrivateChatMessage(
     }
 
     // Otherwise, log response ID as trigger message
-    await triggerResponseDoc.set({});
+    await firestoreWriteWithRetry(() => triggerResponseDoc.set({}));
   }
 
   // Send chat message
@@ -1046,7 +1161,7 @@ export async function sendAgentPrivateChatMessage(
     .doc(chatMessage.id);
 
   chatMessage.timestamp = Timestamp.now();
-  await agentDocument.set(chatMessage);
+  await firestoreWriteWithRetry(() => agentDocument.set(chatMessage));
 
   return true;
 }

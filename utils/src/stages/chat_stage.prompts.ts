@@ -71,6 +71,19 @@ First, react: read the last 1-2 messages and ask yourself how this specific pers
 
 ${DEFAULT_AGENT_PARTICIPANT_CHAT_STYLE_INSTRUCTIONS}`;
 
+/**
+ * One-line round/cycle status appended to a turn-based agent's chat prompt (for
+ * both participants and mediators) so they know which cycle they are in and how
+ * many remain before the discussion ends. See `getTurnCycleInfo` for how the
+ * numbers are derived.
+ */
+export function getTurnCycleStatusForPrompt(
+  currentCycle: number,
+  totalCycles: number,
+): string {
+  return `This is cycle ${currentCycle} of ${totalCycles} cycles, where each participant speaks once per cycle. The discussion ends after cycle ${totalCycles}, so pace your contribution accordingly.`;
+}
+
 /** Hardcoded text used in stage display of chat transcript. */
 export const CHAT_PROMPT_TRANSCRIPT_EXPLANATION = `Below is the transcript of your discussion. Messages are shown in chronological order; new messages appear at the bottom. Each message / turn follows the format: (HH:MM) Name: message.`;
 

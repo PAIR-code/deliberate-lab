@@ -741,6 +741,14 @@
         },
         "additionalParticipantInstructions": {
           "type": "string"
+        },
+        "minNumberOfMessages": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "maxNumberOfMessages": {
+          "minimum": 1,
+          "type": ["integer", "null"]
         }
       }
     },
@@ -3969,6 +3977,14 @@
           "type": "boolean"
         },
         "maxResponses": {
+          "type": ["integer", "null"]
+        },
+        "maxNumberOfMessages": {
+          "minimum": 1,
+          "type": ["integer", "null"]
+        },
+        "minNumberOfMessages": {
+          "minimum": 0,
           "type": ["integer", "null"]
         },
         "initialMessage": {
