@@ -1366,6 +1366,9 @@
         "isTurnBasedChat": {
           "type": "boolean"
         },
+        "isTurnBasedChatGroupStyle": {
+          "type": "boolean"
+        },
         "minNumberOfTurns": {
           "type": "number"
         },

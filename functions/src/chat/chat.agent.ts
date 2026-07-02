@@ -5,6 +5,7 @@ import {
   ChatPromptConfig,
   ChatStageConfig,
   ChatStagePublicData,
+  PrivateChatStageConfig,
   extractChatMediatorStructuredFields,
   getStructuredOutput,
   MediatorProfileExtended,
@@ -161,9 +162,15 @@ export async function createAgentChatMessageFromPrompt(
   const isPrivateChat = stage.kind === StageKind.PRIVATE_CHAT;
   const isTurnBasedGroupChat =
     stage.kind === StageKind.CHAT && (stage as ChatStageConfig).isTurnBased;
+  // Group-style turn-based private chats retry transient model errors until
+  // the deadline too: the participant is blocked waiting on the mediator, so
+  // we mirror the group-chat turn-based behavior rather than erroring out.
+  const isTurnBasedPrivateChat =
+    stage.kind === StageKind.PRIVATE_CHAT &&
+    (stage as PrivateChatStageConfig).isTurnBasedChatGroupStyle;
   const retryDeadlineMs =
     turnBasedRetryDeadlineMs ??
-    (isTurnBasedGroupChat
+    (isTurnBasedGroupChat || isTurnBasedPrivateChat
       ? Date.now() + TURN_BASED_AGENT_RETRY_TIMEOUT_MS
       : undefined);
 
@@ -379,6 +386,9 @@ export async function getAgentChatMessage(
   // For turn-based conversation, ensure it is the agent's turn
   const isTurnBasedGroupChat =
     stage.kind === StageKind.CHAT && (stage as ChatStageConfig).isTurnBased;
+  const isTurnBasedPrivateChat =
+    stage.kind === StageKind.PRIVATE_CHAT &&
+    (stage as PrivateChatStageConfig).isTurnBasedChatGroupStyle;
   if (isTurnBasedGroupChat) {
     const publicStageData = await getFirestoreStagePublicData(
       experimentId,
@@ -454,7 +464,8 @@ export async function getAgentChatMessage(
   }
 
   const retryDurationMs =
-    isTurnBasedGroupChat && turnBasedRetryDeadlineMs !== undefined
+    (isTurnBasedGroupChat || isTurnBasedPrivateChat) &&
+    turnBasedRetryDeadlineMs !== undefined
       ? Math.max(0, turnBasedRetryDeadlineMs - Date.now())
       : null;
 
@@ -494,7 +505,9 @@ export async function getAgentChatMessage(
     user.agentConfig.modelSettings,
     promptConfig.generationConfig,
     effectiveStructuredOutputConfig,
-    isTurnBasedGroupChat ? null : (promptConfig.numRetries ?? 0),
+    isTurnBasedGroupChat || isTurnBasedPrivateChat
+      ? null
+      : (promptConfig.numRetries ?? 0),
     retryDurationMs,
   );
 
@@ -951,16 +964,37 @@ export async function sendAgentPrivateChatMessage(
   chatMessage: ChatMessage,
   chatSettings: AgentChatSettings,
 ) {
+  const privateStage = await getFirestoreStage(experimentId, stageId);
+  const isTurnBasedPrivate =
+    privateStage?.kind === StageKind.PRIVATE_CHAT &&
+    (privateStage as PrivateChatStageConfig).isTurnBasedChatGroupStyle === true;
+
   // TODO: Decrease typing delay to account for LLM API call latencies?
   // TODO: Don't send message if conversation continues while agent is typing?
   if (chatSettings.wordsPerMinute) {
-    await awaitTypingDelay(chatMessage.message, chatSettings.wordsPerMinute);
+    // A turn-based chat's first message posts immediately.
+    const isFirstMessage =
+      isTurnBasedPrivate &&
+      triggerChatId === '' &&
+      (
+        await getFirestorePrivateChatMessages(
+          experimentId,
+          participantId,
+          stageId,
+        )
+      ).every((m) => m.type === UserType.SYSTEM);
+    if (!isFirstMessage) {
+      await awaitTypingDelay(chatMessage.message, chatSettings.wordsPerMinute);
+    }
   }
 
   // Check if the conversation has moved on,
-  // i.e., trigger chat ID is no longer that latest message
-  // Skip this check for initial messages (empty triggerChatId)
-  if (triggerChatId !== '') {
+  // i.e., trigger chat ID is no longer that latest message.
+  // Skip this check for initial messages (empty triggerChatId).
+  // Also skip it entirely for group-style turn-based private chats: the turn
+  // order is deterministic, so a newer message never means this agent's turn
+  // was superseded. Dropping here would stall the whole turn-based chat.
+  if (triggerChatId !== '' && !isTurnBasedPrivate) {
     const chatHistory = await getFirestorePrivateChatMessages(
       experimentId,
       participantId,
