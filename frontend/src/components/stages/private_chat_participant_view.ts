@@ -8,15 +8,19 @@ import {CSSResultGroup, html, nothing} from 'lit';
 import {customElement, property} from 'lit/decorators.js';
 
 import {core} from '../../core/core';
+import {ExperimentService} from '../../services/experiment.service';
 import {ParticipantService} from '../../services/participant.service';
+import {CohortService} from '../../services/cohort.service';
 
 import {
   ChatMessage,
   PrivateChatStageConfig,
+  StageKind,
+  TransferStageConfig,
   UserType,
   getTimeElapsed,
 } from '@deliberation-lab/utils';
-import {getHashBasedColor} from '../../shared/utils';
+import {getHashBasedColor, getProfileBasedColor} from '../../shared/utils';
 import {ResponseTimeoutTracker} from '../../shared/response_timeout';
 
 import {styles} from './group_chat_participant_view.scss';
@@ -27,6 +31,8 @@ export class PrivateChatView extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
 
   private readonly participantService = core.getService(ParticipantService);
+  private readonly cohortService = core.getService(CohortService);
+  private readonly experimentService = core.getService(ExperimentService);
 
   @property() stage: PrivateChatStageConfig | undefined = undefined;
 
@@ -162,15 +168,99 @@ export class PrivateChatView extends MobxLitElement {
     `;
   }
 
+  /**
+   * If this private chat is conducted by the participant's
+   * representative (a `_hasRepresentative` round), returns the
+   * representative's display name, avatar, and color, so it shows consistently
+   * before and after its first message and matches the group chat. Returns
+   * null otherwise.
+   */
+  private get repPrivateChatProfile(): {
+    name: string;
+    avatar: string;
+    color: string;
+  } | null {
+    const profile = this.participantService.profile;
+    if (!profile || !this.stage) return null;
+    const stages = this.experimentService.stages;
+    const idx = stages.findIndex((s) => s.id === this.stage?.id);
+    if (idx < 0) return null;
+    // The round is identified by the next transfer's treatmentIndex.
+    let treatmentIndex: number | null = null;
+    for (let i = idx + 1; i < stages.length; i++) {
+      const s = stages[i];
+      if (s.kind === StageKind.TRANSFER) {
+        const ti = (s as TransferStageConfig).treatmentIndex;
+        treatmentIndex = typeof ti === 'number' ? ti : null;
+        break;
+      }
+      if (s.kind === StageKind.PRIVATE_CHAT) return null;
+    }
+    if (treatmentIndex === null) return null;
+    if (!this.roundHasRepresentative(profile.variableMap, treatmentIndex)) {
+      return null;
+    }
+    return {
+      name: `${profile.name ?? profile.publicId}'s Agent (yours)`,
+      avatar: '🤖',
+      // Colour the representative from its own robot avatar, not the observer's
+      // (possibly gendered) avatar, so it matches the group-chat representative
+      // and is never given a mediator/gendered colour.
+      color: getProfileBasedColor(profile.publicId ?? '', '🤖'),
+    };
+  }
+
+  /** True if the treatment selected for `index` sets `_hasRepresentative`. */
+  private roundHasRepresentative(
+    variableMap: Record<string, string> | undefined,
+    index: number,
+  ): boolean {
+    if (!variableMap) return false;
+    for (const [name, value] of Object.entries(variableMap)) {
+      let parsed: unknown;
+      try {
+        parsed = JSON.parse(value);
+      } catch {
+        continue;
+      }
+      let treatment: unknown;
+      if (Array.isArray(parsed)) {
+        treatment = parsed[index];
+      } else if (parsed && typeof parsed === 'object') {
+        const suffix = name.match(/_(\d+)$/);
+        if (suffix && Number(suffix[1]) !== index + 1) continue;
+        treatment = parsed;
+      } else {
+        continue;
+      }
+      if (
+        treatment &&
+        typeof treatment === 'object' &&
+        (treatment as Record<string, unknown>)._hasRepresentative === true
+      ) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   private renderAgentIndicator(chatMessages: ChatMessage[]) {
-    // Get avatar/color from last mediator message
-    const lastMediator = [...chatMessages]
+    const lastMediatorMsg = [...chatMessages]
       .reverse()
       .find((msg) => msg.type === UserType.MEDIATOR);
-    const avatar = lastMediator?.profile?.avatar;
-    const color = lastMediator
-      ? getHashBasedColor(lastMediator.senderId ?? '')
-      : undefined;
+    const assignedMediator = this.cohortService.getMediatorsForStage(
+      this.stage?.id ?? '',
+    )[0];
+
+    const rep = this.repPrivateChatProfile;
+    const avatar =
+      rep?.avatar ??
+      lastMediatorMsg?.profile?.avatar ??
+      assignedMediator?.avatar;
+    const colorKey =
+      lastMediatorMsg?.senderId ?? assignedMediator?.publicId ?? '';
+    const color =
+      rep?.color ?? (colorKey ? getHashBasedColor(colorKey) : undefined);
 
     const renderCancelButton = () => {
       if (this.stage?.preventCancellation) {
@@ -209,7 +299,10 @@ export class PrivateChatView extends MobxLitElement {
     if (chatMessage.isError) {
       return html`<div class="description error">${chatMessage.message}</div>`;
     }
-    return html`<chat-message .chat=${chatMessage}></chat-message>`;
+    return html`<chat-message
+      .chat=${chatMessage}
+      .colorOverride=${this.repPrivateChatProfile?.color ?? ''}
+    ></chat-message>`;
   }
 
   private renderConversationEndedMessage() {

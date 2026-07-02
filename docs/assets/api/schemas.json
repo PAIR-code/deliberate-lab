@@ -735,6 +735,9 @@
         },
         "isTurnBased": {
           "type": "boolean"
+        },
+        "personaPositionPrompt": {
+          "type": "string"
         }
       }
     },
@@ -2515,6 +2518,10 @@
               "type": "null"
             }
           ]
+        },
+        "treatmentIndex": {
+          "minimum": 0,
+          "type": "integer"
         }
       }
     },
@@ -2838,6 +2845,9 @@
                 "$ref": "#/$defs/ChatParticipantInstructionsPromptItem"
               },
               {
+                "$ref": "#/$defs/OtherProfileContextsPromptItem"
+              },
+              {
                 "$ref": "#/$defs/PromptItemGroup"
               }
             ]
@@ -3089,6 +3099,36 @@
         }
       }
     },
+    "OtherProfileContextsPromptItem": {
+      "title": "OtherProfileContextsPromptItem",
+      "additionalProperties": false,
+      "type": "object",
+      "required": ["type"],
+      "properties": {
+        "type": {
+          "const": "OTHER_PROFILE_CONTEXTS",
+          "type": "string"
+        },
+        "condition": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "title": "Condition",
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/ComparisonCondition"
+                },
+                {
+                  "$ref": "#/$defs/ConditionGroup"
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
     "PromptItemGroup": {
       "title": "PromptItemGroup",
       "additionalProperties": false,
@@ -3123,6 +3163,9 @@
               },
               {
                 "$ref": "#/$defs/ChatParticipantInstructionsPromptItem"
+              },
+              {
+                "$ref": "#/$defs/OtherProfileContextsPromptItem"
               },
               {
                 "$ref": "#/$defs/PromptItemGroup"
@@ -4039,6 +4082,9 @@
               },
               {
                 "$ref": "#/$defs/ChatParticipantInstructionsPromptItem"
+              },
+              {
+                "$ref": "#/$defs/OtherProfileContextsPromptItem"
               },
               {
                 "$ref": "#/$defs/PromptItemGroup"

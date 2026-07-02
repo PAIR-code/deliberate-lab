@@ -27,6 +27,10 @@ export interface ChatStageConfig extends BaseStageConfig {
   timeLimitInMinutes: number | null; // Maximum duration in minutes (integer), or null if no limit.
   timeMinimumInMinutes: number | null; // Minimum time participants must stay in minutes (integer), or null if no minimum.
   isTurnBased?: boolean; // Whether the conversation is turn-based
+  // When agents are spawned into this stage with generated personas, this
+  // optional prompt elicits each persona's position (appended after the
+  // persona text in a single generation). Empty/unset = persona only.
+  personaPositionPrompt?: string;
 }
 
 /** Chat discussion. */
@@ -120,6 +124,7 @@ export function createChatStage(
     timeLimitInMinutes: config.timeLimitInMinutes ?? null,
     timeMinimumInMinutes: config.timeMinimumInMinutes ?? null,
     isTurnBased: config.isTurnBased ?? false,
+    personaPositionPrompt: config.personaPositionPrompt ?? '',
   };
 }
 

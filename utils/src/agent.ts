@@ -26,6 +26,16 @@ export interface ProfileAgentConfig {
   agentId: string; // ID of agent persona used
   promptContext: string; // Additional text to concatenate to agent prompts
   modelSettings: AgentModelSettings;
+  needsPersonaGeneration?: boolean;
+  // Stable key used to store/retrieve this agent's generated persona so it is
+  // reused across cohorts. Unset for agents that should not reuse a stored
+  // persona (e.g. representatives).
+  personaSlotKey?: string;
+  // If true, this agent exists only to supply persona context to other agents'
+  // prompts (via OTHER_PROFILE_CONTEXTS). It never posts chat messages, never
+  // takes a turn, and is not counted when deciding whether a cohort can unlock
+  // or advance a stage.
+  isInactivePersona?: boolean;
 }
 
 /** Reasoning level - mapped to provider-specific options by backend */

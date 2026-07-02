@@ -19,7 +19,12 @@ import {CohortService} from '../../services/cohort.service';
 import {ParticipantService} from '../../services/participant.service';
 
 import {styles} from './chat_interface.scss';
-import {getHashBasedColor, getProfileBasedColor} from '../../shared/utils';
+import {
+  getHashBasedColor,
+  getProfileBasedColor,
+  variableAssignmentsIncludeObserver,
+  MEDIATOR_OBSERVER_COLOR,
+} from '../../shared/utils';
 
 /** Chat interface component */
 @customElement('chat-interface')
@@ -29,6 +34,15 @@ export class ChatInterface extends MobxLitElement {
   private readonly cohortService = core.getService(CohortService);
   private readonly participantService = core.getService(ParticipantService);
   private readonly authService = core.getService(AuthService);
+
+  // When the experiment assigns the `_isObserver` treatment variable, the
+  // mediator is shown in blue (avatar, bubble, and typing indicator) and blue
+  // is reserved away from other speakers.
+  private get reserveMediatorColor(): boolean {
+    return variableAssignmentsIncludeObserver(
+      this.cohortService.activeParticipants,
+    );
+  }
 
   @property({type: Object}) stage: StageConfig | undefined = undefined;
   @property({type: Boolean}) showPanel = false;
@@ -130,6 +144,15 @@ export class ChatInterface extends MobxLitElement {
     };
   }
 
+  // True when the given turn-holder id is the viewing participant or their
+  // representative (publicId `${publicId}-agent`), so their typing indicator
+  // and name label sit on their own side of the chat, like their messages.
+  private isOwnSideTurn(id: string | undefined): boolean {
+    const myId = this.participantService.profile?.publicId;
+    if (!myId || !id) return false;
+    return id === myId || id === `${myId}-agent`;
+  }
+
   private renderTypingIndicator() {
     const turnState = this.turnIndicatorState;
     if (!turnState) return nothing;
@@ -137,16 +160,33 @@ export class ChatInterface extends MobxLitElement {
     // Do not show typing indicator if it is the current user's turn (they type in the textarea instead!)
     if (turnState.isMyTurn) return nothing;
 
+    const reserve = this.reserveMediatorColor;
+    // The mediator's typing indicator uses the same reserved blue as its
+    // avatar/bubble; other speakers keep their own color (with blue reserved
+    // away).
+    const useMediatorColor = reserve && turnState.isMediator;
     const color = turnState.isMediator
-      ? getHashBasedColor(turnState.id)
-      : getProfileBasedColor(turnState.id, turnState.avatar ?? '');
+      ? useMediatorColor
+        ? MEDIATOR_OBSERVER_COLOR
+        : getHashBasedColor(turnState.id)
+      : getProfileBasedColor(
+          turnState.id,
+          turnState.avatar ?? '',
+          reserve ? [MEDIATOR_OBSERVER_COLOR] : [],
+        );
+
+    const ownSide = this.isOwnSideTurn(turnState.id);
 
     return html`
-      <div class="chat-message typing-msg">
+      <div class="chat-message typing-msg ${ownSide ? 'current-user' : ''}">
         <avatar-icon .emoji=${turnState.avatar} .color=${color}> </avatar-icon>
         <div class="content">
           <div class="label">${turnState.name}</div>
-          <div class="chat-bubble typing-bubble">
+          <div
+            class="chat-bubble typing-bubble ${useMediatorColor
+              ? 'mediator'
+              : ''}"
+          >
             <div class="typing-dots">
               <span></span>
               <span></span>
@@ -182,6 +222,7 @@ export class ChatInterface extends MobxLitElement {
             : html`<chat-input
                 .stageId=${this.stage?.id ?? ''}
                 .isDisabled=${this.disableInput || !this.isMyTurn}
+                .isTurnBased=${this.isTurnBasedMode}
               ></chat-input>`}
         </div>
       </div>

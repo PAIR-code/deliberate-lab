@@ -19,11 +19,16 @@ import {
   ChatStagePublicData,
   MediatorProfile,
   ParticipantProfile,
+  ParticipantProfileExtended,
   convertUnifiedTimestampToTime,
   getTimeElapsed,
 } from '@deliberation-lab/utils';
 import {getChatStartTimestamp} from '../../shared/stage.utils';
-import {getHashBasedColor} from '../../shared/utils';
+import {
+  getHashBasedColor,
+  variableAssignmentsIncludeObserver,
+  MEDIATOR_OBSERVER_COLOR,
+} from '../../shared/utils';
 import {styles} from './chat_info_panel.scss';
 
 /** Chat panel view with stage info, timer, participants. */
@@ -39,6 +44,15 @@ export class ChatPanel extends MobxLitElement {
   @property() stage: ChatStageConfig | null = null;
   @property({type: Boolean}) topLayout = false;
   @state() isStatusLoading = false;
+
+  // Observer-specific avatar coloring (mediators shown blue; that blue
+  // reserved away from other participants) only applies when the experiment
+  // assigns the `_isObserver` treatment variable.
+  private get reserveMediatorColor(): boolean {
+    return variableAssignmentsIncludeObserver(
+      this.cohortService.activeParticipants,
+    );
+  }
 
   override render() {
     if (!this.stage) {
@@ -112,7 +126,16 @@ export class ChatPanel extends MobxLitElement {
   }
 
   private renderParticipantList(topLayout = false) {
-    const activeParticipants = this.cohortService.activeParticipants;
+    const activeParticipants = this.cohortService.activeParticipants.filter(
+      // Inactive personas supply stored content to agents and never appear
+      // in the chat, so exclude them from the roster too. The map is
+      // populated from the full participant docs (see cohort.service), so
+      // agentConfig is present at runtime even though the static type is the
+      // public ParticipantProfile.
+      (p) =>
+        !p.isObserver &&
+        !(p as ParticipantProfileExtended).agentConfig?.isInactivePersona,
+    );
     const mediators = this.cohortService.getMediatorsForStage(
       this.stage?.id ?? '',
     );
@@ -158,7 +181,9 @@ export class ChatPanel extends MobxLitElement {
         <div class="profile">
           <profile-display
             .profile=${profile}
-            .color=${getHashBasedColor(profile.publicId ?? '')}
+            .color=${this.reserveMediatorColor
+              ? MEDIATOR_OBSERVER_COLOR
+              : getHashBasedColor(profile.publicId ?? '')}
             displayType=${small ? 'chatSmall' : 'chat'}
           >
           </profile-display>
@@ -177,6 +202,9 @@ export class ChatPanel extends MobxLitElement {
         <participant-profile-display
           .profile=${profile}
           .showIsSelf=${isCurrent}
+          .excludeColors=${this.reserveMediatorColor
+            ? [MEDIATOR_OBSERVER_COLOR]
+            : []}
           displayType=${small ? 'chatSmall' : 'chat'}
         >
         </participant-profile-display>

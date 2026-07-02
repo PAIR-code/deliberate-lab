@@ -70,6 +70,7 @@ export const ChatStageConfigData = Type.Composite(
         ),
         discussions: Type.Array(ChatDiscussionData),
         isTurnBased: Type.Optional(Type.Boolean()),
+        personaPositionPrompt: Type.Optional(Type.String()),
       },
       strict,
     ),

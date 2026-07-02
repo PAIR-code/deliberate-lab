@@ -37,11 +37,13 @@ export const updateAgentParticipant = onDocumentUpdated(
         experimentId,
         after.currentCohortId,
       );
-
-      // Check if the stage is unlocked before sending initial messages
+      // Check if the stage is unlocked before sending initial messages.
       // This prevents sending messages for stages that are gated by "waiting"
-      // where all participants must be on the current stage first
-      if (cohort?.stageUnlockMap[after.currentStageId]) {
+      // where all participants must be on the current stage first. Observers
+      // bypass the waiting phase.
+      const isStageUnlocked = cohort?.stageUnlockMap[after.currentStageId];
+
+      if (isStageUnlocked || after.isObserver) {
         await sendInitialChatMessages(
           experimentId,
           after.currentCohortId,

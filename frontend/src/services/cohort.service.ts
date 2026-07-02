@@ -458,14 +458,13 @@ export class CohortService extends Service {
           or(where('currentCohortId', '==', this.cohortId)),
         ),
         (snapshot) => {
-          let changedDocs = snapshot.docChanges().map((change) => change.doc);
-          if (changedDocs.length === 0) {
-            changedDocs = snapshot.docs;
-          }
-
-          changedDocs.forEach((doc) => {
-            const profile = doc.data() as MediatorProfile;
-            this.mediatorMap[profile.publicId] = profile;
+          snapshot.docChanges().forEach((change) => {
+            const profile = change.doc.data() as MediatorProfile;
+            if (change.type === 'removed') {
+              delete this.mediatorMap[profile.publicId];
+            } else {
+              this.mediatorMap[profile.publicId] = profile;
+            }
           });
           this.isMediatorsLoading = false;
         },

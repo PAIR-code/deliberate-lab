@@ -128,14 +128,84 @@ export async function getFirestoreDataForStructuredPrompt(
         getFirestoreParticipant(experimentId, id),
       ),
     )) as ParticipantProfileExtended[];
+    // A group-chat mediator must also see any observers: contextParticipantIds
+    // is built from the non-observer turn-order list (chat.triggers strips
+    // observers), so an observer's answers would otherwise be missing from the
+    // mediator's prompt. Re-add any cohort observers not already present; with
+    // no observers this adds nothing. Gated to group CHAT so
+    // single-participant private chats (and the rep-suffix re-add below) are
+    // unaffected.
+    if (
+      userProfile.type === UserType.MEDIATOR &&
+      promptConfig.type === StageKind.CHAT
+    ) {
+      const cohortObservers = await getFirestoreActiveParticipants(
+        experimentId,
+        cohortId,
+        null,
+        false,
+        true, // includeObservers
+      );
+      for (const observer of cohortObservers) {
+        if (
+          observer.isObserver &&
+          !answerParticipants.some((a) => a.publicId === observer.publicId)
+        ) {
+          answerParticipants.push(observer);
+        }
+      }
+    }
   } else if (userProfile.type === UserType.PARTICIPANT) {
-    // Participant only needs their own context
+    // Participant only needs their own context.
     answerParticipants = [
       (await getFirestoreParticipant(experimentId, userProfile.privateId))!,
     ];
   } else if (userProfile.type === UserType.MEDIATOR) {
-    // Mediator in group context needs all participants
-    answerParticipants = activeParticipants;
+    // A mediator in a group context needs all participants, including
+    // observers: an observer's variables and prior-stage answers can drive
+    // the prompt, and observers are otherwise filtered out of
+    // activeParticipants.
+    answerParticipants = await getFirestoreActiveParticipants(
+      experimentId,
+      cohortId,
+      null,
+      false,
+      true, // includeObservers
+    );
+  }
+
+  // A representative agent (spawned with publicId `${observer.publicId}-agent`
+  // in the observer's cohort) also needs the observer it stands in for, so
+  // its prompt surfaces the observer's prior-stage answers. This runs
+  // regardless of how answerParticipants was built above: the rep's own id is
+  // normally passed as contextParticipantIds, so it cannot live in the
+  // PARTICIPANT branch alone.
+  const repSuffix = '-agent';
+  if (
+    answerParticipants.some(
+      (p) => p?.agentConfig && p.publicId?.endsWith(repSuffix),
+    )
+  ) {
+    const cohortMembers = await getFirestoreActiveParticipants(
+      experimentId,
+      cohortId,
+      null,
+      false,
+      true, // includeObservers
+    );
+    for (const rep of [...answerParticipants]) {
+      if (!(rep?.agentConfig && rep.publicId?.endsWith(repSuffix))) continue;
+      const observerPublicId = rep.publicId.slice(0, -repSuffix.length);
+      const observer = cohortMembers.find(
+        (m) => m.publicId === observerPublicId && m.isObserver,
+      );
+      if (
+        observer &&
+        !answerParticipants.some((a) => a.publicId === observer.publicId)
+      ) {
+        answerParticipants.push(observer);
+      }
+    }
   }
 
   for (const item of promptConfig.prompt) {
@@ -637,7 +707,7 @@ async function processPromptItems(
         );
         break;
       }
-      case PromptItemType.PROFILE_CONTEXT:
+      case PromptItemType.PROFILE_CONTEXT: {
         const profileContext = getProfileContextForPrompt(
           userProfile,
           includeScaffolding,
@@ -646,6 +716,7 @@ async function processPromptItems(
           items.push(profileContext);
         }
         break;
+      }
       case PromptItemType.PROFILE_INFO:
         items.push(
           getProfileInfoForPrompt(userProfile, includeScaffolding, stageId),
@@ -686,6 +757,7 @@ async function processPromptItems(
               resolvedStageContext,
               promptItem,
               includeScaffolding,
+              cohortId,
             ),
           );
         }
@@ -729,6 +801,25 @@ async function processPromptItems(
         );
         if (groupText) items.push(groupText);
         break;
+      case PromptItemType.OTHER_PROFILE_CONTEXTS: {
+        // Render each other agent participant's persona context, labeled with
+        // its display name.
+        const others = promptData.participants.filter(
+          (p) =>
+            p.agentConfig?.promptContext && p.publicId !== userProfile.publicId,
+        );
+        if (others.length > 0) {
+          items.push(
+            others
+              .map(
+                (p) =>
+                  `${p.name ?? p.publicId}:\n${p.agentConfig?.promptContext}`,
+              )
+              .join('\n\n'),
+          );
+        }
+        break;
+      }
       default:
         break;
     }
@@ -749,6 +840,7 @@ function getStageContextForPrompt(
   stageContext: StageContextData,
   item: StageContextPromptItem,
   includeScaffolding: boolean,
+  cohortId: string,
 ): string {
   const stage = stageContext.stage;
   const textItems: string[] = [];
@@ -766,13 +858,50 @@ function getStageContextForPrompt(
   }
   // Note: Help text not included since the field has been deprecated
 
-  // Always include stage display (with answers if specified by prompt item)
-  const stageDisplay = stageManager.getStageDisplayForPrompt(
-    stage,
-    item.includeParticipantAnswers ? participants : [],
-    stageContext,
-    includeScaffolding,
-  );
+  // Render participant answers for this stage.
+  //
+  // Inactive personas carry stored content in agentConfig.promptContext; it
+  // is self-describing and is included as-is inside this same stage block,
+  // alongside the human, in a per-cohort shuffled order, so a mediator sees
+  // every participant's block in one uniform list. With no persona agents
+  // this is byte-identical to the prior output.
+  const realParticipants = item.includeParticipantAnswers
+    ? participants.filter((p) => !p.agentConfig?.isInactivePersona)
+    : [];
+  // Inactive personas' content must be included whenever participant answers
+  // are (mirroring realParticipants above), not just when the rendered stage
+  // is a private chat; otherwise a summarizing mediator would silently drop
+  // them.
+  const personaAgents = item.includeParticipantAnswers
+    ? participants.filter(
+        (p) => p.agentConfig?.isInactivePersona && p.agentConfig?.promptContext,
+      )
+    : [];
+
+  let stageDisplay: string;
+  if (personaAgents.length === 0) {
+    stageDisplay = stageManager.getStageDisplayForPrompt(
+      stage,
+      realParticipants,
+      stageContext,
+      includeScaffolding,
+    );
+  } else {
+    const blocks: string[] = [
+      ...realParticipants.map((p) =>
+        stageManager.getStageDisplayForPrompt(
+          stage,
+          [p],
+          stageContext,
+          includeScaffolding,
+        ),
+      ),
+      ...personaAgents.map((p) => p.agentConfig?.promptContext ?? ''),
+    ];
+    stageDisplay = shuffleWithSeed(blocks, `${cohortId}::${stage.id}`).join(
+      '\n\n',
+    );
+  }
   textItems.push(stageDisplay);
 
   return textItems.join('\n');

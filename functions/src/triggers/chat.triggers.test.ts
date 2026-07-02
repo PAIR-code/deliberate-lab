@@ -6,6 +6,7 @@ import {
   UserType,
   ChatMessage,
   shuffleWithSeed,
+  ParticipantStatus,
 } from '@deliberation-lab/utils';
 
 // -----------------------------------------------------------------------------
@@ -777,6 +778,76 @@ describe('Chat Triggers - Turn Taking Mechanics', () => {
         ['priv1'], // all remaining participants for context
         'stage123',
         '', // empty triggerChatId indicates initial/reset mediator message
+        expect.objectContaining({publicId: 'm1', type: UserType.MEDIATOR}),
+      );
+    });
+  });
+
+  // ---------------------------------------------------------------------------
+  // 7. OBSERVER TURN TAKING ROBUSTNESS
+  // ---------------------------------------------------------------------------
+  describe('7. Observer Turn Taking Robustness', () => {
+    it('allows turn-taking to continue if there is an observer but zero active participants', async () => {
+      mockGetFirestoreActiveParticipants.mockResolvedValue([
+        {
+          publicId: 'obs1',
+          privateId: 'priv-obs1',
+          isObserver: true,
+          agentConfig: null,
+          currentCohortId: 'cohort123',
+          currentStageId: 'stage123',
+          currentStatus: ParticipantStatus.IN_PROGRESS,
+        },
+      ]);
+
+      mockGetFirestoreStagePublicData.mockResolvedValue({
+        id: 'stage123',
+        currentTurnParticipantId: 'm1',
+        turnOrder: ['m1'],
+        cycleIndex: 0,
+      });
+
+      const chatMessage = {
+        id: 'msg123',
+        senderId: 'm1',
+        message: 'Hello observer.',
+        type: UserType.MEDIATOR,
+        timestamp: {} as any,
+      } as ChatMessage;
+
+      const event = {
+        data: {
+          data: () => chatMessage,
+          exists: true,
+        },
+        params: {
+          experimentId: 'exp123',
+          cohortId: 'cohort123',
+          stageId: 'stage123',
+          chatId: 'msg123',
+        },
+      };
+
+      await onPublicChatMessageCreated.run(event as any);
+
+      // Assert turnOrder stays ['m1'], currentTurnParticipantId stays 'm1', cycleIndex increments to 1
+      expect(__mocks__.setMock).toHaveBeenCalledWith(
+        'experiments/exp123/cohorts/cohort123/publicStageData/stage123',
+        {
+          currentTurnParticipantId: 'm1',
+          turnOrder: ['m1'],
+          cycleIndex: 1,
+        },
+        {merge: true},
+      );
+
+      // Assert mediator is auto-triggered!
+      expect(mockInternalCreateAgentChatMessage).toHaveBeenCalledWith(
+        'exp123',
+        'cohort123',
+        [], // observer is filtered out of recipient private IDs for context
+        'stage123',
+        'msg123',
         expect.objectContaining({publicId: 'm1', type: UserType.MEDIATOR}),
       );
     });

@@ -57,6 +57,10 @@ export class ParticipantProfileDisplay extends MobxLitElement {
   // Display (you) indicator that the profile is the current user
   @property() showIsSelf = false;
 
+  // Avatar colors to exclude from id/hash-based selection (e.g. blue when it
+  // is reserved for mediators).
+  @property({type: Array}) excludeColors: string[] = [];
+
   override render() {
     if (!this.profile) return nothing;
 
@@ -68,13 +72,14 @@ export class ParticipantProfileDisplay extends MobxLitElement {
 
     // Use profile ID to determine color
     const color = () => {
-      // If publicId is in format animal-color-number, extract color
+      // If publicId is in format animal-color-number, extract color (unless it
+      // is excluded, e.g. blue reserved for mediators)
       const splitId = (this.profile?.publicId ?? '').split('-');
-      if (splitId.length >= 3) {
+      if (splitId.length >= 3 && !this.excludeColors.includes(splitId[1])) {
         return splitId[1];
       }
       // Otherwise, use publicId as hash
-      return getHashBasedColor(this.profile?.publicId);
+      return getHashBasedColor(this.profile?.publicId, this.excludeColors);
     };
 
     // If alternate profile ID in stage ID, use anonymous profile

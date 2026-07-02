@@ -79,9 +79,12 @@ export const onPublicChatMessageCreated = onDocumentCreated(
       event.params.cohortId,
       stage.id,
       false, // Get all participants, not just agents
+      true, // Include observers
     );
 
-    const allParticipantIds = allParticipants.map((p) => p.privateId);
+    const allParticipantIds = allParticipants
+      .filter((p) => !p.isObserver)
+      .map((p) => p.privateId);
 
     const chatStage = stage as ChatStageConfig;
     const chatPublicData = publicStageData as ChatStagePublicData;
@@ -103,6 +106,7 @@ export const onPublicChatMessageCreated = onDocumentCreated(
         event.params.cohortId,
         stage.id,
         true, // get AI mediators
+        stage,
       );
       const allMediatorIds = mediators.map((m) => m.publicId);
 
@@ -138,8 +142,10 @@ export const onPublicChatMessageCreated = onDocumentCreated(
         let currentTurnParticipantId = chatPublicData.currentTurnParticipantId;
         let cycleIndex = chatPublicData.cycleIndex ?? 0;
 
-        // Get active IDs for validation and filtering. Filter out completed/booted/timed-out participants.
+        // Get active IDs for validation and filtering. Filter out completed/booted/timed-out participants and observers.
         const activeParticipants = allParticipants.filter((p) => {
+          if (p.isObserver) return false;
+          if (p.agentConfig?.isInactivePersona) return false;
           if (
             p.currentCohortId !== undefined &&
             p.currentCohortId !== event.params.cohortId
@@ -159,7 +165,15 @@ export const onPublicChatMessageCreated = onDocumentCreated(
           return !isExplicitlyInactive && !isExplicitlyCompleted;
         });
 
-        if (activeParticipants.length === 0) {
+        // Pause turn-taking once there are no active (non-observer)
+        // participants left, unless an observer is present to watch the
+        // agents. Without an observer, the chat pauses as before so the
+        // mediator does not monologue after every participant has left.
+        const hasObserver = allParticipants.some((p) => p.isObserver);
+        if (
+          activeParticipants.length === 0 &&
+          (allMediatorIds.length === 0 || !hasObserver)
+        ) {
           transaction.set(
             publicStageDataRef,
             {
@@ -514,9 +528,7 @@ export const onPublicChatMessageCreated = onDocumentCreated(
             await createAgentChatMessageFromPrompt(
               event.params.experimentId,
               event.params.cohortId,
-              mediator
-                ? allParticipants.map((p) => p.privateId)
-                : [agent.privateId],
+              mediator ? allParticipantIds : [agent.privateId],
               stage.id,
               '', // empty triggerChatId indicates initial message
               agent,
@@ -531,7 +543,7 @@ export const onPublicChatMessageCreated = onDocumentCreated(
           await createAgentChatMessageFromPrompt(
             event.params.experimentId,
             event.params.cohortId,
-            allParticipants.map((p) => p.privateId),
+            allParticipantIds,
             stage.id,
             finalTriggerChatId,
             nextMediatorHolder,
@@ -554,6 +566,7 @@ export const onPublicChatMessageCreated = onDocumentCreated(
         event.params.cohortId,
         stage.id,
         true,
+        stage,
       );
       await Promise.all(
         mediators.map((mediator) =>
@@ -572,7 +585,9 @@ export const onPublicChatMessageCreated = onDocumentCreated(
       // the experiment
       const agentParticipants = allParticipants.filter(
         (p) =>
-          p.agentConfig && p.currentStatus === ParticipantStatus.IN_PROGRESS,
+          p.agentConfig &&
+          !p.agentConfig.isInactivePersona &&
+          p.currentStatus === ParticipantStatus.IN_PROGRESS,
       );
       await Promise.all(
         agentParticipants.map((participant) =>
@@ -635,6 +650,7 @@ export const onPrivateChatMessageCreated = onDocumentCreated(
       participant.currentCohortId,
       stage.id,
       true,
+      stage,
     );
 
     await Promise.all(

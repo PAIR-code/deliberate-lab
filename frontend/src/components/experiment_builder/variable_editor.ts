@@ -26,6 +26,8 @@ import {
   type VariableConfig,
   BalanceAcross,
   BalanceStrategy,
+  RESERVED_TREATMENT_VARIABLE_KEYS,
+  RESERVED_TREATMENT_VARIABLE_GITHUB_URL,
   VariableConfigType,
   VariableScope,
   createBalancedAssignmentVariableConfig,
@@ -142,6 +144,30 @@ export class VariableEditor extends MobxLitElement {
   }
 
   // ===== Variable Config =====
+
+  /**
+   * Inline warning shown directly under a property (or variable) name input
+   * when that name is a reserved treatment key
+   * (RESERVED_TREATMENT_VARIABLE_KEYS), since those are hoisted onto
+   * participants and modify behavior. Matches the field-level
+   * validation-error style.
+   */
+  private renderReservedKeyWarning(name: string) {
+    const reserved: readonly string[] = RESERVED_TREATMENT_VARIABLE_KEYS;
+    if (!reserved.includes(name)) return nothing;
+    return html`
+      <div class="validation-error">
+        ⚠️ Warning: "${name}" is a special variable that changes system
+        behavior.
+        <a
+          href=${RESERVED_TREATMENT_VARIABLE_GITHUB_URL}
+          target="_blank"
+          rel="noopener noreferrer"
+          >See GitHub</a
+        >.
+      </div>
+    `;
+  }
 
   private renderVariableConfig(config: VariableConfig, index: number) {
     return html`
@@ -1069,6 +1095,7 @@ export class VariableEditor extends MobxLitElement {
           <option value="array">Array</option>
         </select>
       </div>
+      ${this.renderReservedKeyWarning(name)}
     `;
 
     if (!isComplex) {

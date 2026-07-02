@@ -8,6 +8,8 @@ import {ParticipantAnswerService} from '../../services/participant.answer';
 import {ParticipantService} from '../../services/participant.service';
 import {ExperimentService} from '../../services/experiment.service';
 
+import {StageKind} from '@deliberation-lab/utils';
+
 import {styles} from './chat_input.scss';
 
 /** Chat input component */
@@ -38,6 +40,7 @@ export class ChatInputComponent extends MobxLitElement {
   };
   @property() isDisabled = false;
   @property() isLoading = false;
+  @property() isTurnBased = false;
   @state() hasFocusedOnce = false;
 
   override render() {
@@ -80,11 +83,19 @@ export class ChatInputComponent extends MobxLitElement {
       return true;
     };
 
+    const stage = this.experimentService.getStage(this.stageId);
+    const isPrivateChat = stage?.kind === StageKind.PRIVATE_CHAT;
+    const isObserver =
+      !isPrivateChat && this.participantService.profile?.isObserver === true;
+    const placeholderText = isObserver
+      ? 'You are observing this discussion and cannot send messages.'
+      : 'Send message';
+
     return html`
       <div class="input ${this.isDisabled ? 'disabled' : ''}">
         <pr-textarea
           size="small"
-          placeholder="Send message"
+          placeholder=${placeholderText}
           .value=${this.getUserInput()}
           ?focused=${shouldFocus()}
           ?disabled=${this.isDisabled}
@@ -94,7 +105,7 @@ export class ChatInputComponent extends MobxLitElement {
         >
         </pr-textarea>
         <pr-tooltip
-          text="Send message"
+          text=${placeholderText}
           color="tertiary"
           variant="outlined"
           position="TOP_END"
