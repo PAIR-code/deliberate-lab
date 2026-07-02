@@ -68,6 +68,14 @@ export class ChatInterface extends MobxLitElement {
   // Tracks inner width of window
   @state() mobileView = false;
 
+  // "Setting up the group chat..." banner shown while agent participants /
+  // personas are still being generated (before the first turn or message),
+  // held for at least 1 second once it appears. While it shows it takes the
+  // place of the turn banner and suppresses the typing dots.
+  @state() private sawSetup = false;
+  @state() private minSetupTimePassed = false;
+  private setupTimer: number | undefined;
+
   private updateResponsiveState = () => {
     this.mobileView = window.innerWidth <= 1024;
   };
@@ -81,6 +89,58 @@ export class ChatInterface extends MobxLitElement {
   disconnectedCallback() {
     super.disconnectedCallback();
     window.removeEventListener('resize', this.updateResponsiveState);
+    if (this.setupTimer !== undefined) {
+      clearTimeout(this.setupTimer);
+      this.setupTimer = undefined;
+    }
+  }
+
+  override updated() {
+    // Once the chat data has loaded but the chat isn't ready yet (agents /
+    // personas still generating), start the minimum-display timer so the
+    // banner stays up for at least 1s even if setup finishes sooner.
+    if (
+      !this.sawSetup &&
+      this.isGroupChat &&
+      !this.cohortService.isChatLoading &&
+      !this.isChatReady
+    ) {
+      this.sawSetup = true;
+      this.setupTimer = window.setTimeout(() => {
+        this.minSetupTimePassed = true;
+      }, 1000);
+    }
+  }
+
+  private get isGroupChat(): boolean {
+    return this.stage?.kind === StageKind.CHAT;
+  }
+
+  /** Whether the group chat has started: a turn is assigned or a message
+   *  exists. Before this, agent participants/personas may still be generating. */
+  private get isChatReady(): boolean {
+    const stageId = this.stage?.id ?? '';
+    if (!stageId) return false;
+    const data = this.cohortService.stagePublicDataMap[stageId] as
+      | ChatStagePublicData
+      | undefined;
+    if (data?.currentTurnParticipantId) return true;
+    if ((this.cohortService.chatMap[stageId] ?? []).length > 0) return true;
+    const discussionMap = this.cohortService.chatDiscussionMap[stageId];
+    return Boolean(
+      discussionMap &&
+      Object.values(discussionMap).some((messages) => messages.length > 0),
+    );
+  }
+
+  /** Show the yellow setup banner while a group chat is being set up, holding
+   *  it for at least 1s once it appears. While shown it replaces the turn
+   *  banner and the typing dots are suppressed. */
+  private get showSetupBanner(): boolean {
+    if (!this.isGroupChat) return false;
+    if (this.cohortService.isChatLoading) return false;
+    if (!this.isChatReady) return true;
+    return this.sawSetup && !this.minSetupTimePassed;
   }
 
   private renderPanel() {
@@ -321,6 +381,9 @@ export class ChatInterface extends MobxLitElement {
   private renderTypingIndicator() {
     if (this.externalConversationOver || this.isConversationOver)
       return nothing;
+    // While the setup banner is showing, suppress the typing dots even if a
+    // turn has just been assigned.
+    if (this.showSetupBanner) return nothing;
     const turnState = this.turnIndicatorState;
     if (!turnState) return nothing;
 
@@ -414,6 +477,17 @@ export class ChatInterface extends MobxLitElement {
       }
       return nothing;
     }
+    // The setup banner occupies the same slot as the turn banner and takes
+    // precedence: while it shows, the "Waiting for ..." banner does not.
+    if (this.showSetupBanner) {
+      return html`
+        <div class="banner warning setup-banner">
+          <span class="setup-spinner" aria-hidden="true"></span>
+          <span>Setting up the group chat...</span>
+        </div>
+      `;
+    }
+
     const turnState = this.turnIndicatorState;
     if (!turnState) {
       // Keep an empty banner element in the DOM during transient turn-
