@@ -149,6 +149,7 @@ export const CreateParticipantData = Type.Object(
           modelName: Type.String(),
         }),
         personaSlotKey: Type.Optional(Type.String()),
+        personaHash: Type.Optional(Type.String()),
       }),
     ),
     prolificId: Type.Optional(Type.Union([Type.Null(), Type.String()])),

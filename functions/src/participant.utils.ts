@@ -67,6 +67,7 @@ import {
   treatmentSkipsPrivateChats,
 } from './treatment.utils';
 import {createMediatorProfileForPersona} from './mediator.utils';
+import {computeRoundVariableMap, personaMatchHash} from './persona_bank.utils';
 
 import {app} from './app';
 
@@ -1476,6 +1477,23 @@ export async function completeParticipantTransfer(
     );
   }
 
+  // Persona bank match key for this round, applied below to the spawned
+  // other-agents and inactive personas (not the representative, which
+  // draws on its principal's own persona content). Undefined when the transfer names
+  // no treatment index (those agents then fall back to standard generation).
+  let personaHash: string | undefined;
+  if (
+    currentStage?.kind === StageKind.TRANSFER &&
+    typeof (currentStage as TransferStageConfig).treatmentIndex === 'number' &&
+    participant.variableMap
+  ) {
+    const roundVariables = computeRoundVariableMap(
+      participant.variableMap,
+      (currentStage as TransferStageConfig).treatmentIndex as number,
+    );
+    personaHash = personaMatchHash(roundVariables);
+  }
+
   const otherAgentGeneration = participant.otherAgentGeneration;
   const numOtherAgents = otherAgentGeneration?.numOtherAgents ?? 0;
   const numInactivePersonas = otherAgentGeneration?.numInactivePersonas ?? 0;
@@ -1663,10 +1681,30 @@ export async function completeParticipantTransfer(
           // observer's representative above so every representative operates
           // from the same prompt input: the represented person's own
           // responses, not a persona to embody.
-          agentProfile.agentConfig.promptContext = `You are ${representedName}'s representative in this discussion. You are a separate agent, not ${representedName} yourself. Speak and advocate on ${representedName}'s behalf, representing their perspective from their persona description below, rather than expressing your own independent opinions or adopting their persona as your own identity. Ensure you properly separate every paragraph with one empty line.\n\n${representedName}'s persona:`;
+          agentProfile.agentConfig.promptContext = `You are ${representedName}'s representative in this discussion. You are a separate agent, not ${representedName} yourself. Speak and advocate on ${representedName}'s behalf, representing their perspective from their responses below, rather than expressing your own independent opinions or adopting their persona as your own identity. Ensure you properly separate every paragraph with one empty line.\n\n${representedName}'s responses:`;
+          // Representatives draw a persona from the bank (keyed by the
+          // round's variables), not a slot-based one.
+          delete agentProfile.agentConfig.personaSlotKey;
+          if (personaHash) {
+            agentProfile.agentConfig.personaHash = personaHash;
+          }
         }
       } else if (!agentProfile.name) {
         agentProfile.name = `Agent ${agentProfile.publicId.substring(0, 8)}`;
+      }
+
+      // Direct-participation (no-observer) agents draw a PLAIN persona (a
+      // character sketch) from the bank instead of generating one live at
+      // spawn, so group-chat setup is fast. Sketches are topic/treatment-
+      // agnostic, so any bank persona's sketch works ("personas are personas").
+      // The persona-generation trigger claims one keyed to the HUMAN, so a
+      // participant never gets the same persona twice across their rounds, and
+      // sets it as the agent's own persona. Falls
+      // back to live generation if the bank has no unused sketch.
+      if (!cohortHasObserver && agentProfile.agentConfig) {
+        agentProfile.agentConfig.personaSketchForHumanId =
+          participant.privateId;
+        delete agentProfile.agentConfig.personaSlotKey;
       }
 
       // Share the transferring participant's content variables (e.g. the
@@ -1719,6 +1757,11 @@ export async function completeParticipantTransfer(
 
       if (!agentProfile.name) {
         agentProfile.name = `Agent ${agentProfile.publicId.substring(0, 8)}`;
+      }
+
+      // Inactive personas draw a persona from the bank.
+      if (personaHash && agentProfile.agentConfig) {
+        agentProfile.agentConfig.personaHash = personaHash;
       }
 
       agentProfile.variableMap = inheritSpawnedAgentVariables(

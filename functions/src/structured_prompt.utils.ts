@@ -802,8 +802,7 @@ async function processPromptItems(
         if (groupText) items.push(groupText);
         break;
       case PromptItemType.OTHER_PROFILE_CONTEXTS: {
-        // Render each other agent participant's persona context, labeled with
-        // its display name.
+        // Render each other agent's persona under its display name.
         const others = promptData.participants.filter(
           (p) =>
             p.agentConfig?.promptContext && p.publicId !== userProfile.publicId,
