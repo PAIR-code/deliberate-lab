@@ -1,6 +1,6 @@
 import {MobxLitElement} from '@adobe/lit-mobx';
 
-import {CSSResultGroup, html} from 'lit';
+import {CSSResultGroup, html, PropertyValues} from 'lit';
 import {customElement, property, state} from 'lit/decorators.js';
 
 import {core} from '../../core/core';
@@ -42,6 +42,37 @@ export class ChatInputComponent extends MobxLitElement {
   @property() isLoading = false;
   @property() isTurnBased = false;
   @state() hasFocusedOnce = false;
+
+  // In turn-based chat the input is disabled between turns. When it becomes
+  // enabled again (this participant's turn), move the cursor into the box so
+  // they can type immediately. Skip touch devices, where focusing would force
+  // the on-screen keyboard up every turn, and use preventScroll so re-focusing
+  // does not jump the chat layout if the participant has scrolled up.
+  override updated(changedProperties: PropertyValues) {
+    if (
+      this.isTurnBased &&
+      changedProperties.has('isDisabled') &&
+      !this.isDisabled &&
+      navigator.maxTouchPoints === 0
+    ) {
+      const prTextarea = this.renderRoot.querySelector('pr-textarea') as
+        | (Element & {
+            renderRoot?: ParentNode;
+            updateComplete?: Promise<unknown>;
+          })
+        | null;
+      // The child pr-textarea re-renders asynchronously, so at this point its
+      // inner <textarea> still has the disabled attribute and focus() would be
+      // a no-op. Wait for the child's update to commit (disabled cleared)
+      // before focusing.
+      void prTextarea?.updateComplete?.then(() => {
+        const textarea = prTextarea?.renderRoot?.querySelector(
+          '#textarea',
+        ) as HTMLElement | null;
+        textarea?.focus({preventScroll: true});
+      });
+    }
+  }
 
   override render() {
     const sendInput = async () => {
