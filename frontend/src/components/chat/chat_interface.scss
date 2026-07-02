@@ -95,6 +95,31 @@ chat-input {
     background: transparent;
     color: transparent;
   }
+
+  // Setup banner: spinner + text on one centered row, so it's visually clear
+  // that work is in progress while the group chat is being set up.
+  &.setup-banner {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: common.$spacing-small;
+  }
+}
+
+.setup-spinner {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+  border: 2px solid rgba(125, 102, 8, 0.25); // faded warning text color
+  border-top-color: #7d6608; // matches the warning text color
+  border-radius: 50%;
+  animation: setupSpin 0.8s linear infinite;
+}
+
+@keyframes setupSpin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .typing-msg {
