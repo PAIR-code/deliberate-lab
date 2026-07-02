@@ -54,16 +54,18 @@ export class GroupChatStageHandler extends BaseStageHandler {
       }
       return '';
     };
-    // Get participant names (from all active participants)
-    const participantNames = stageContext.participants.map((participant) =>
-      getNameFromPublicId(
-        [participant],
-        participant.publicId,
-        getProfileSetId(),
-        true,
-        true,
-      ),
-    );
+    // Get participant names (exclude observers)
+    const participantNames = stageContext.participants
+      .filter((participant) => !participant.isObserver)
+      .map((participant) =>
+        getNameFromPublicId(
+          [participant],
+          participant.publicId,
+          getProfileSetId(),
+          true,
+          true,
+        ),
+      );
 
     const users = `Participants in chat: ${participantNames.join(', ')}`;
     const history = getChatPromptMessageHistory(messages, stage);

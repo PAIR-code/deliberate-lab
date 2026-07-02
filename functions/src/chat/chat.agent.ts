@@ -17,6 +17,7 @@ import {
   createChatMessage,
   createParticipantProfileBase,
   createSystemChatMessage,
+  getRepresentativeProfile,
   sanitizeRawResponseForLogging,
   shuffleWithSeed,
 } from '@deliberation-lab/utils';
@@ -36,6 +37,8 @@ import {
 import {updateParticipantReadyToEndChat} from '../chat/chat.utils';
 import {
   getExperimenterDataFromExperiment,
+  getFirestoreExperiment,
+  getFirestoreParticipant,
   getFirestorePublicStageChatMessages,
   getFirestorePrivateChatMessages,
   getFirestoreStage,
@@ -46,6 +49,10 @@ import {
   getPrivateChatTriggerLogRef,
   getFirestoreParticipantAnswerRef,
 } from '../utils/firestore';
+import {
+  getRoundTreatmentIndex,
+  treatmentAtIndexHasRepresentative,
+} from '../treatment.utils';
 import {app} from '../app';
 import {
   getChatMessageStoragePath,
@@ -59,6 +66,41 @@ import {updateModelLogFiles} from '../log.utils';
 
 // 300s cloud function timeout minus 10s buffer for skip handler.
 const TURN_BASED_AGENT_RETRY_TIMEOUT_MS = 290000;
+
+/**
+ * For a private chat in a `_hasRepresentative` round, the mediator is shown
+ * as the participant's representative. Returns that display profile, or null
+ * when it doesn't apply (not a private chat, not a mediator, or the round's
+ * treatment lacks `_hasRepresentative`). Read from the round's treatment
+ * because hoisting only happens later, at the transfer.
+ */
+async function getPrivateChatRepProfileOverride(
+  experimentId: string,
+  stage: StageConfig,
+  participantIds: string[],
+  user: ParticipantProfileExtended | MediatorProfileExtended,
+): Promise<{name: string; avatar: string} | null> {
+  if (stage.kind !== StageKind.PRIVATE_CHAT) return null;
+  if (user.type !== UserType.MEDIATOR) return null;
+  const humanId = participantIds[0];
+  if (!humanId) return null;
+  const human = await getFirestoreParticipant(experimentId, humanId);
+  if (!human?.variableMap) return null;
+  const experiment = await getFirestoreExperiment(experimentId);
+  const stageIds = experiment?.stageIds ?? [];
+  const stageIndex = stageIds.indexOf(stage.id);
+  if (stageIndex < 0) return null;
+  const roundIndex = await getRoundTreatmentIndex(
+    experimentId,
+    stageIds,
+    stageIndex,
+  );
+  if (roundIndex === null) return null;
+  if (!treatmentAtIndexHasRepresentative(human.variableMap, roundIndex)) {
+    return null;
+  }
+  return getRepresentativeProfile(String(human.name || human.publicId));
+}
 
 /** Use persona chat prompt to create and send agent chat message. */
 export async function createAgentChatMessageFromPrompt(
@@ -76,12 +118,31 @@ export async function createAgentChatMessageFromPrompt(
     return false;
   }
 
+  // Inactive personas supply persona context to other agents'
+  // prompts but never post chat messages themselves.
+  if (
+    user.type === UserType.PARTICIPANT &&
+    user.agentConfig.isInactivePersona
+  ) {
+    return false;
+  }
+
   // Stage (in order to determine stage kind)
   const stage = await getFirestoreStage(experimentId, stageId);
   if (!stage) {
     console.log(`[chat.agent] Stage ${stageId} not found`);
     return false;
   }
+
+  // Cosmetic: in `_hasRepresentative` conditions the private chat is
+  // presented as conducted by the participant's representative. Computed once;
+  // null unless this is a private-chat mediator message in such a condition.
+  const repProfileOverride = await getPrivateChatRepProfileOverride(
+    experimentId,
+    stage,
+    participantIds,
+    user,
+  );
 
   // Fetches stored (else default) prompt config for given stage
   const promptConfig = (await getStructuredPromptConfig(
@@ -247,6 +308,14 @@ export async function createAgentChatMessageFromPrompt(
       );
       return false;
     }
+    if (repProfileOverride && message) {
+      // Present the mediator as the participant's representative.
+      message.profile = {
+        ...message.profile,
+        name: repProfileOverride.name,
+        avatar: repProfileOverride.avatar,
+      };
+    }
     await sendAgentPrivateChatMessage(
       experimentId,
       privateChatParticipantId,
@@ -358,6 +427,7 @@ export async function getAgentChatMessage(
       cohortId,
       stageId,
       false, // checkIsAgent = false to get all mediators
+      stage,
     );
     mediatorCount = mediators.length;
   }
@@ -702,7 +772,13 @@ export async function skipTimedOutTurnBasedAgentTurn(
         ChatStagePublicData | undefined
       >,
       getFirestoreActiveParticipants(experimentId, cohortId, stage.id, false),
-      getFirestoreActiveMediators(experimentId, cohortId, stage.id, true),
+      getFirestoreActiveMediators(
+        experimentId,
+        cohortId,
+        stage.id,
+        true,
+        stage,
+      ),
       getFirestorePublicStageChatMessages(experimentId, cohortId, stage.id),
     ]);
 
@@ -1030,16 +1106,17 @@ async function sendInitialGroupChatMessages(
 
   const allParticipantIds = allParticipants.map((p) => p.privateId);
 
+  const stage = await getFirestoreStage(experimentId, stageId);
+  const chatStage = stage as ChatStageConfig;
+
   // Send initial messages from agent mediators
   const agentMediators = await getFirestoreActiveMediators(
     experimentId,
     cohortId,
     stageId,
     true, // checkIsAgent = true
+    stage ?? null,
   );
-
-  const stage = await getFirestoreStage(experimentId, stageId);
-  const chatStage = stage as ChatStageConfig;
 
   if (chatStage.isTurnBased) {
     const publicStageData = await getFirestoreStagePublicData(
@@ -1077,6 +1154,7 @@ async function sendInitialGroupChatMessages(
           .map((m) => m.publicId)
           .filter((id) => !existingIds.has(id));
         const newParticipantIds = allParticipants
+          .filter((p) => !p.isObserver && !p.agentConfig?.isInactivePersona)
           .map((p) => p.publicId)
           .filter((id) => !existingIds.has(id));
 
@@ -1110,7 +1188,9 @@ async function sendInitialGroupChatMessages(
 
     // If uninitialized
     if (!chatPublicData || !chatPublicData.currentTurnParticipantId) {
-      const allPublicParticipantIds = allParticipants.map((p) => p.publicId);
+      const allPublicParticipantIds = allParticipants
+        .filter((p) => !p.isObserver && !p.agentConfig?.isInactivePersona)
+        .map((p) => p.publicId);
       const allMediatorIds = agentMediators.map((m) => m.publicId);
 
       // Shuffle participants with seed
@@ -1221,7 +1301,9 @@ async function sendInitialGroupChatMessages(
   }
 
   // Send initial messages from agent participants
-  const agentParticipants = allParticipants.filter((p) => p.agentConfig);
+  const agentParticipants = allParticipants.filter(
+    (p) => p.agentConfig && !p.agentConfig.isInactivePersona,
+  );
 
   for (const participant of agentParticipants) {
     await createAgentChatMessageFromPrompt(
@@ -1251,7 +1333,10 @@ async function sendInitialPrivateChatMessages(
     cohortId,
     stageId,
     false, // checkIsAgent = false to get all participants
+    true, // includeObservers = true
   );
+
+  const stage = await getFirestoreStage(experimentId, stageId);
 
   // Get agent mediators
   const agentMediators = await getFirestoreActiveMediators(
@@ -1259,6 +1344,7 @@ async function sendInitialPrivateChatMessages(
     cohortId,
     stageId,
     true, // checkIsAgent = true
+    stage ?? null,
   );
 
   // For each participant (human or agent), send initial messages from agent mediators
@@ -1276,7 +1362,9 @@ async function sendInitialPrivateChatMessages(
   }
 
   // Also send initial messages from agent participants if they exist
-  const agentParticipants = allParticipants.filter((p) => p.agentConfig);
+  const agentParticipants = allParticipants.filter(
+    (p) => p.agentConfig && !p.agentConfig.isInactivePersona,
+  );
 
   for (const agentParticipant of agentParticipants) {
     await createAgentChatMessageFromPrompt(

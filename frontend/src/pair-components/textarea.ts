@@ -119,9 +119,10 @@ export class TextArea extends LitElement {
 
     return html`
       ${this.renderLabel()}
-      <div class="textarea-wrapper">
+      <div class="textarea-wrapper" part="wrapper">
         <textarea
           id="textarea"
+          part="textarea"
           ${ref(this.textareaRef)}
           class=${classes}
           ?disabled=${this.disabled}

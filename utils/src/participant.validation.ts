@@ -148,9 +148,19 @@ export const CreateParticipantData = Type.Object(
           apiType: Type.String(),
           modelName: Type.String(),
         }),
+        personaSlotKey: Type.Optional(Type.String()),
       }),
     ),
     prolificId: Type.Optional(Type.Union([Type.Null(), Type.String()])),
+    isObserver: Type.Optional(Type.Boolean()),
+    hasRepresentative: Type.Optional(Type.Boolean()),
+    otherAgentGeneration: Type.Optional(
+      Type.Object({
+        numOtherAgents: Type.Number(),
+        numInactivePersonas: Type.Optional(Type.Number()),
+      }),
+    ),
+    swapMediator: Type.Optional(Type.String()),
   },
   strict,
 );

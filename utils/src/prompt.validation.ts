@@ -32,6 +32,7 @@ export const PromptItemTypeData = Type.Union(
     Type.Literal('GROUP'),
     Type.Literal('CHAT_MEDIATOR_INSTRUCTIONS'),
     Type.Literal('CHAT_PARTICIPANT_INSTRUCTIONS'),
+    Type.Literal('OTHER_PROFILE_CONTEXTS'),
   ],
   {$id: 'PromptItemType'},
 );
@@ -106,6 +107,15 @@ export const ChatParticipantInstructionsPromptItemData = Type.Object(
   {$id: 'ChatParticipantInstructionsPromptItem', ...strict},
 );
 
+/** Other agents' persona contexts prompt item */
+export const OtherProfileContextsPromptItemData = Type.Object(
+  {
+    type: Type.Literal('OTHER_PROFILE_CONTEXTS'),
+    ...BasePromptItemFields,
+  },
+  {$id: 'OtherProfileContextsPromptItem', ...strict},
+);
+
 /** Prompt item group (recursive).
  * Uses Type.Recursive to properly handle nested groups in items array.
  */
@@ -123,6 +133,7 @@ export const PromptItemGroupData = Type.Recursive(
             StageContextPromptItemData,
             ChatMediatorInstructionsPromptItemData,
             ChatParticipantInstructionsPromptItemData,
+            OtherProfileContextsPromptItemData,
             This,
           ]),
         ),
@@ -142,6 +153,7 @@ export const PromptItemData = Type.Union([
   StageContextPromptItemData,
   ChatMediatorInstructionsPromptItemData,
   ChatParticipantInstructionsPromptItemData,
+  OtherProfileContextsPromptItemData,
   PromptItemGroupData,
 ]);
 

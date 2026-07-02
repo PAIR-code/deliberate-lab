@@ -138,6 +138,15 @@ chat-input {
   }
 }
 
+// Mediator typing indicator matches the mediator's blue bubble + dots.
+.typing-bubble.mediator {
+  background: var(--md-sys-color-mediator-container);
+}
+
+.typing-bubble.mediator .typing-dots span {
+  background-color: var(--md-sys-color-on-mediator-container);
+}
+
 @keyframes typingBlink {
   0% {
     opacity: 0.4;

@@ -277,6 +277,10 @@ export class GroupChatView extends MobxLitElement {
       <chat-interface
         .stage=${this.stage}
         .disableInput=${this.disableInput ||
+        // Observers are strictly read-only inside chat rooms (cannot type/send messages)
+        // but must retain interactive capabilities to complete surveys in other stages,
+        // so this gating is applied component-specifically rather than globally.
+        this.participantService.profile?.isObserver ||
         this.participantService.disableStage ||
         this.isConversationOver()}
         showPanel

@@ -22,6 +22,13 @@ export interface TransferStageConfig extends BaseStageConfig {
   enableTimeout: boolean;
   timeoutSeconds: number;
   autoTransferConfig: AutoTransferConfig | null; // if null, no auto-transfer
+  // Optional index into the participant's treatment variable (a multi-value
+  // RandomPermutation/BalancedAssignment). When set, the participant's treatment
+  // fields (isObserver, numOtherAgents, swapMediator, etc.) are re-hoisted from
+  // treatment[treatmentIndex] as this transfer completes, so a participant can
+  // rotate through multiple treatments across repeated deliberations. When
+  // unset, no re-hoisting occurs (existing behavior).
+  treatmentIndex?: number;
 }
 
 export type AutoTransferConfig =
@@ -125,6 +132,9 @@ export function createTransferStage(
     enableTimeout: config.enableTimeout ?? false,
     timeoutSeconds: config.timeoutSeconds ?? 600, // 10 minutes
     autoTransferConfig: config.autoTransferConfig ?? null,
+    ...(config.treatmentIndex !== undefined
+      ? {treatmentIndex: config.treatmentIndex}
+      : {}),
   };
 }
 
