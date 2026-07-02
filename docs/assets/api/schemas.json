@@ -738,6 +738,9 @@
         },
         "personaPositionPrompt": {
           "type": "string"
+        },
+        "additionalParticipantInstructions": {
+          "type": "string"
         }
       }
     },
