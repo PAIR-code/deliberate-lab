@@ -98,21 +98,23 @@ export class ChatInterface extends MobxLitElement {
     const data = this.stagePublicData;
     if (!data || !data.currentTurnParticipantId) return null;
 
-    const id = data.currentTurnParticipantId;
-
     // If the latest message is already from the current turn holder, the
-    // backend trigger hasn't advanced the turn yet — hide the indicator to
-    // avoid a stale "Waiting for X" flash immediately after X just spoke.
+    // backend has not advanced the turn yet. Hide the turn indicator so the
+    // holder's input stays disabled (the placeholder banner keeps the layout
+    // steady) until the turn switches to the next holder all at once.
     const messages = this.cohortService.chatMap[this.stage.id] ?? [];
     const latest = messages[messages.length - 1];
-    if (latest?.senderId === id) return null;
+    if (latest?.senderId === data.currentTurnParticipantId) return null;
 
+    return this.buildGroupChatTurnState(data.currentTurnParticipantId);
+  }
+
+  private buildGroupChatTurnState(id: string) {
     const isMyTurn =
       !this.participantService.profile?.agentConfig &&
       id === this.participantService.profile?.publicId;
 
-    const participantProfile =
-      this.cohortService.participantMap[data.currentTurnParticipantId];
+    const participantProfile = this.cohortService.participantMap[id];
     if (participantProfile && participantProfile.name) {
       return {
         name: participantProfile.name,
@@ -123,8 +125,7 @@ export class ChatInterface extends MobxLitElement {
       };
     }
 
-    const mediatorProfile =
-      this.cohortService.mediatorMap[data.currentTurnParticipantId];
+    const mediatorProfile = this.cohortService.mediatorMap[id];
     if (mediatorProfile && mediatorProfile.name) {
       return {
         name: mediatorProfile.name,
@@ -142,6 +143,15 @@ export class ChatInterface extends MobxLitElement {
       id,
       isMyTurn,
     };
+  }
+
+  /** Whether the current stage is configured for turn-based interaction. */
+  @computed get isTurnBasedMode() {
+    if (!this.stage) return false;
+    if (this.stage.kind === StageKind.CHAT) {
+      return (this.stage as ChatStageConfig).isTurnBased ?? false;
+    }
+    return false;
   }
 
   // True when the given turn-holder id is the viewing participant or their
@@ -231,7 +241,16 @@ export class ChatInterface extends MobxLitElement {
 
   private renderTurnBanner() {
     const turnState = this.turnIndicatorState;
-    if (!turnState) return nothing;
+    if (!turnState) {
+      // Keep an empty banner element in the DOM during transient turn-
+      // transitions (e.g., end-of-cycle wraps) so the chat content above
+      // does not shift up or down. The placeholder banner reserves the
+      // same vertical space as a real banner but renders no visible text.
+      if (this.isTurnBasedMode) {
+        return html`<div class="banner banner-placeholder">&nbsp;</div>`;
+      }
+      return nothing;
+    }
 
     if (turnState.isMyTurn) {
       return html` <div class="banner success">It's your turn to speak!</div> `;

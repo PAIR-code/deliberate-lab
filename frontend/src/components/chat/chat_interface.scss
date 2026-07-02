@@ -63,8 +63,16 @@ chat-input {
 
 .banner {
   @include typescale.label-large;
+  // All variants share a 1px border so the box's outer height is identical
+  // across success/warning/placeholder; only the border colour changes. This
+  // keeps the chat content above from shifting when the variant swaps (e.g.
+  // success → placeholder → warning during a turn transition).
+  border: 1px solid transparent;
   border-radius: 8px;
-  margin: common.$spacing-medium common.$spacing-xl;
+  // The banner always spans the full width of the text entry box: its
+  // horizontal insets match the chat input's padding ($main-content-padding) so
+  // the two align in any window size, rather than reading as a centered chip.
+  margin: common.$spacing-medium common.$main-content-padding;
   padding: common.$spacing-medium common.$spacing-large;
   text-align: center;
 
@@ -76,9 +84,16 @@ chat-input {
 
   &.warning {
     background: #fef9e7;
-    border: 1px solid #f7dc6f;
+    border-color: #f7dc6f;
     color: #7d6608; // High-contrast dark yellow readable on pale yellow
     font-weight: 500;
+  }
+
+  // Reserves the banner's vertical space during transient turn transitions
+  // so the chat content above does not shift up or down between turns.
+  &.banner-placeholder {
+    background: transparent;
+    color: transparent;
   }
 }
 
