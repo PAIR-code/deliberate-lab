@@ -27,6 +27,9 @@ export interface ChatStageConfig extends BaseStageConfig {
   timeLimitInMinutes: number | null; // Maximum duration in minutes (integer), or null if no limit.
   timeMinimumInMinutes: number | null; // Minimum time participants must stay in minutes (integer), or null if no minimum.
   isTurnBased?: boolean; // Whether the conversation is turn-based
+  // If true, agent participants cannot end the chat by setting readyToEndChat
+  // in their structured output. The backend ignores the field for agents.
+  preventAgentEnd?: boolean;
 }
 
 /** Chat discussion. */
@@ -120,6 +123,7 @@ export function createChatStage(
     timeLimitInMinutes: config.timeLimitInMinutes ?? null,
     timeMinimumInMinutes: config.timeMinimumInMinutes ?? null,
     isTurnBased: config.isTurnBased ?? false,
+    preventAgentEnd: config.preventAgentEnd ?? false,
   };
 }
 

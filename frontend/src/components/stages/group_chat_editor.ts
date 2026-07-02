@@ -31,6 +31,7 @@ export class ChatEditor extends MobxLitElement {
     return html`
       <div class="title">Conversation settings</div>
       ${this.renderTimeLimit()} ${this.renderTurnBasedSetting()}
+      ${this.renderPreventAgentEndSetting()}
       <div class="divider"></div>
       <div class="title">Agent mediators</div>
       <div class="description">
@@ -61,6 +62,29 @@ export class ChatEditor extends MobxLitElement {
             Turn-based conversation: Each participant speaks in a random order,
             beginning with the mediators if at least one is present.
           </div>
+        </div>
+      </div>
+    `;
+  }
+
+  private renderPreventAgentEndSetting() {
+    return html`
+      <div class="config-item">
+        <div class="checkbox-wrapper">
+          <md-checkbox
+            touch-target="wrapper"
+            ?checked=${this.stage?.preventAgentEnd ?? false}
+            ?disabled=${!this.experimentEditor.canEditStages}
+            @change=${(e: Event) => {
+              const checked = (e.target as HTMLInputElement).checked;
+              this.experimentEditor.updateStage({
+                ...this.stage!,
+                preventAgentEnd: checked,
+              });
+            }}
+          >
+          </md-checkbox>
+          <div>Prevent agents from ending chat</div>
         </div>
       </div>
     `;

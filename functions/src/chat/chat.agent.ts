@@ -4,6 +4,7 @@ import {
   ChatMessage,
   ChatPromptConfig,
   ChatStageConfig,
+  PrivateChatStageConfig,
   ChatStagePublicData,
   extractChatMediatorStructuredFields,
   getStructuredOutput,
@@ -393,21 +394,54 @@ export async function getAgentChatMessage(
   // field whose "stay silent" path would freeze the turn. The prompt text is
   // already filtered in structured_prompt.utils.ts; this keeps the two in sync.
   const effectiveStructuredOutputConfig = (() => {
-    const config = promptConfig.structuredOutputConfig as
+    let config = promptConfig.structuredOutputConfig as
       | ChatMediatorStructuredOutputConfig
       | undefined;
-    if (!isTurnBasedGroupChat || !config?.schema?.properties) return config;
-    const shouldRespondFieldName = config.shouldRespondField || 'shouldRespond';
-    return {
-      ...config,
-      schema: {
-        ...config.schema,
-        properties: config.schema.properties.filter(
-          (p) => p.name !== shouldRespondFieldName,
-        ),
-      },
-      shouldRespondField: '',
-    } as ChatMediatorStructuredOutputConfig;
+    if (isTurnBasedGroupChat && config?.schema?.properties) {
+      const shouldRespondFieldName =
+        config.shouldRespondField || 'shouldRespond';
+      config = {
+        ...config,
+        schema: {
+          ...config.schema,
+          properties: config.schema.properties.filter(
+            (p) => p.name !== shouldRespondFieldName,
+          ),
+        },
+        shouldRespondField: '',
+      } as ChatMediatorStructuredOutputConfig;
+    }
+    // When the stage prevents agents from ending the chat, drop the end-chat
+    // field for every agent; in turn-based private chats also drop the
+    // respond decision so the agent always replies.
+    const stagePreventsAgentEnd =
+      (stage.kind === StageKind.CHAT ||
+        stage.kind === StageKind.PRIVATE_CHAT) &&
+      (stage as ChatStageConfig | PrivateChatStageConfig).preventAgentEnd ===
+        true;
+    if (stagePreventsAgentEnd && config?.schema?.properties) {
+      const dropFields = [config.readyToEndField || 'readyToEndChat'];
+      let shouldRespondField = config.shouldRespondField;
+      if (
+        stage.kind === StageKind.PRIVATE_CHAT &&
+        (stage as PrivateChatStageConfig).isTurnBasedChatGroupStyle === true
+      ) {
+        dropFields.push(config.shouldRespondField || 'shouldRespond');
+        shouldRespondField = '';
+      }
+      config = {
+        ...config,
+        schema: {
+          ...config.schema,
+          properties: config.schema.properties.filter(
+            (p) => !dropFields.includes(p.name),
+          ),
+        },
+        shouldRespondField,
+        readyToEndField: '',
+      } as ChatMediatorStructuredOutputConfig;
+    }
+    return config;
   })();
 
   const {response, logId, retryTimedOut} = await processModelResponse(
@@ -486,8 +520,17 @@ export async function getAgentChatMessage(
     // Logic for not responding (handled below)
   }
 
-  // Only if agent participant is ready to end chat
-  if (readyToEndChat && user.type === UserType.PARTICIPANT) {
+  // Only if agent participant is ready to end chat. The experimenter can
+  // suppress this entirely via the preventAgentEnd setting.
+  const stageBlocksAgentEnd =
+    (stage.kind === StageKind.CHAT || stage.kind === StageKind.PRIVATE_CHAT) &&
+    (stage as ChatStageConfig | PrivateChatStageConfig).preventAgentEnd ===
+      true;
+  if (
+    readyToEndChat &&
+    user.type === UserType.PARTICIPANT &&
+    !stageBlocksAgentEnd
+  ) {
     // Ensure we don't end chat on the very first message
     if (chatMessages.length > 0) {
       // Call ready to end chat update to stage public data

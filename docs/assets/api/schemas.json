@@ -735,6 +735,9 @@
         },
         "isTurnBased": {
           "type": "boolean"
+        },
+        "preventAgentEnd": {
+          "type": "boolean"
         }
       }
     },
@@ -1370,6 +1373,9 @@
           "type": ["number", "null"]
         },
         "preventCancellation": {
+          "type": "boolean"
+        },
+        "preventAgentEnd": {
           "type": "boolean"
         }
       }

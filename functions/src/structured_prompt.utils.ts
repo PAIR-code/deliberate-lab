@@ -34,6 +34,7 @@ import {
   DEFAULT_MEDIATOR_GROUP_CHAT_PROMPT_INSTRUCTIONS,
   DEFAULT_MEDIATOR_GROUP_CHAT_TURN_TAKING_PROMPT_INSTRUCTIONS,
   ChatStageConfig,
+  PrivateChatStageConfig,
 } from '@deliberation-lab/utils';
 import {
   getAgentMediatorPrompt,
@@ -359,6 +360,34 @@ export async function getPromptFromConfig(
       schema: {
         ...structuredOutputConfig.schema,
         properties: sanitizedProperties,
+      },
+    };
+  }
+
+  // When the stage prevents agents from ending the chat, no agent is asked
+  // for the end-chat field at all. In turn-based private chats the agent is
+  // also not asked whether to respond: it always replies (declining would
+  // stall the turn; in free-form private chats it just means no reply).
+  const stagePreventsAgentEnd =
+    (stage?.kind === StageKind.CHAT ||
+      stage?.kind === StageKind.PRIVATE_CHAT) &&
+    (stage as ChatStageConfig | PrivateChatStageConfig).preventAgentEnd ===
+      true;
+  if (stagePreventsAgentEnd && structuredOutputConfig?.schema?.properties) {
+    const dropFields = [structuredOutputConfig.readyToEndField];
+    if (
+      stage?.kind === StageKind.PRIVATE_CHAT &&
+      (stage as PrivateChatStageConfig).isTurnBasedChatGroupStyle === true
+    ) {
+      dropFields.push(structuredOutputConfig.shouldRespondField);
+    }
+    structuredOutputConfig = {
+      ...structuredOutputConfig,
+      schema: {
+        ...structuredOutputConfig.schema,
+        properties: structuredOutputConfig.schema.properties.filter(
+          (prop) => !dropFields.includes(prop.name),
+        ),
       },
     };
   }
