@@ -14,6 +14,7 @@ import {
   StageConfig,
   StageKind,
   UserType,
+  getTimeElapsed,
 } from '@deliberation-lab/utils';
 import {core} from '../../core/core';
 import {AuthService} from '../../services/auth.service';
@@ -58,6 +59,11 @@ export class ChatInterface extends MobxLitElement {
     avatar: string;
     color: string;
   } | null = null;
+  // Set by a parent view (e.g. the private chat) that has its own notion of
+  // when the conversation is over, such as a response timeout the turn
+  // indicator here cannot see. When true, the turn banner and typing
+  // indicator hide so they do not contradict a conversation-ended message.
+  @property({type: Boolean}) externalConversationOver = false;
 
   // Tracks inner width of window
   @state() mobileView = false;
@@ -248,7 +254,73 @@ export class ChatInterface extends MobxLitElement {
     return id === myId || id === `${myId}-agent`;
   }
 
+  @computed get isConversationOver() {
+    if (!this.stage) return false;
+    if (this.stage.kind === StageKind.PRIVATE_CHAT) {
+      const chatMessages =
+        this.participantService.privateChatMap[this.stage.id] ?? [];
+      const publicId = this.participantService.profile?.publicId ?? '';
+      const participantMessageCount = chatMessages.filter(
+        (msg) => msg.senderId === publicId && !msg.isError,
+      ).length;
+
+      const maxTurns = (this.stage as PrivateChatStageConfig).maxNumberOfTurns;
+      const maxTurnsReached =
+        maxTurns !== null && participantMessageCount >= maxTurns;
+
+      const isWaitingForResponse =
+        chatMessages.length > 0 &&
+        chatMessages[chatMessages.length - 1].senderId === publicId;
+
+      const discussionStartTimestamp =
+        chatMessages.length > 0 ? chatMessages[0].timestamp : null;
+      const elapsedMinutes = discussionStartTimestamp
+        ? getTimeElapsed(discussionStartTimestamp, 'm')
+        : 0;
+      const maxTimeReached =
+        this.stage.timeLimitInMinutes !== null &&
+        this.stage.timeLimitInMinutes > 0 &&
+        elapsedMinutes >= this.stage.timeLimitInMinutes;
+
+      const minTurnsMet =
+        participantMessageCount >=
+        (this.stage as PrivateChatStageConfig).minNumberOfTurns;
+
+      return (
+        (maxTurnsReached && !isWaitingForResponse) ||
+        (maxTimeReached && minTurnsMet)
+      );
+    }
+
+    if (this.stage.kind === StageKind.CHAT) {
+      const stageData = this.cohortService.stagePublicDataMap[
+        this.stage.id
+      ] as ChatStagePublicData;
+      if (!stageData) return false;
+      if (stageData.discussionEndTimestamp) return true;
+      // Use the cap the backend actually enforces (a per-mediator override
+      // replaces the stage value), falling back to the stage value. Using the
+      // stage value directly would trip early when an override is higher,
+      // hiding the banner before the mediator's final message.
+      const max =
+        stageData.effectiveMaxNumberOfMessages ??
+        (this.stage as ChatStageConfig).maxNumberOfMessages;
+      if (max != null) {
+        const messages = this.cohortService.chatMap[this.stage.id] ?? [];
+        const count = messages.filter(
+          (m) => m.type !== UserType.SYSTEM && !m.isError,
+        ).length;
+        if (count >= max) return true;
+      }
+      return false;
+    }
+
+    return false;
+  }
+
   private renderTypingIndicator() {
+    if (this.externalConversationOver || this.isConversationOver)
+      return nothing;
     const turnState = this.turnIndicatorState;
     if (!turnState) return nothing;
 
@@ -328,6 +400,20 @@ export class ChatInterface extends MobxLitElement {
   }
 
   private renderTurnBanner() {
+    if (this.externalConversationOver || this.isConversationOver) {
+      // Every turn-based chat (group or private) shows the ended banner as its
+      // single end-of-discussion indicator; the duplicate in-chat system message
+      // is suppressed for turn-based chats (see group_chat_participant_view).
+      // Non-turn-based chats show no banner and keep the system message instead.
+      if (this.isTurnBasedMode) {
+        return html`
+          <div class="banner success">
+            The discussion has ended. Please proceed to the next stage.
+          </div>
+        `;
+      }
+      return nothing;
+    }
     const turnState = this.turnIndicatorState;
     if (!turnState) {
       // Keep an empty banner element in the DOM during transient turn-

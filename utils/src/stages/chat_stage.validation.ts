@@ -72,6 +72,10 @@ export const ChatStageConfigData = Type.Composite(
         isTurnBased: Type.Optional(Type.Boolean()),
         personaPositionPrompt: Type.Optional(Type.String()),
         additionalParticipantInstructions: Type.Optional(Type.String()),
+        minNumberOfMessages: Type.Optional(Type.Integer({minimum: 0})),
+        maxNumberOfMessages: Type.Optional(
+          Type.Union([Type.Integer({minimum: 1}), Type.Null()]),
+        ),
       },
       strict,
     ),

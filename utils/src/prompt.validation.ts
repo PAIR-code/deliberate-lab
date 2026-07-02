@@ -168,6 +168,12 @@ export const AgentChatSettingsData = Type.Object(
     minMessagesBeforeResponding: Type.Integer(),
     canSelfTriggerCalls: Type.Boolean(),
     maxResponses: Type.Optional(Type.Union([Type.Integer(), Type.Null()])),
+    maxNumberOfMessages: Type.Optional(
+      Type.Union([Type.Integer({minimum: 1}), Type.Null()]),
+    ),
+    minNumberOfMessages: Type.Optional(
+      Type.Union([Type.Integer({minimum: 0}), Type.Null()]),
+    ),
     initialMessage: Type.String(),
   },
   {$id: 'AgentChatSettings', ...strict},

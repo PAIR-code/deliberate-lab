@@ -87,11 +87,10 @@ export class PrivateChatView extends MobxLitElement {
       chatMessages[chatMessages.length - 1].senderId === publicId &&
       !this.responseTimeout.timedOut;
 
-    // Check if max number of turns reached (but only after response received)
+    // Check if max number of turns reached
     const maxTurnsReached =
       this.stage.maxNumberOfTurns !== null &&
-      participantMessageCount >= this.stage.maxNumberOfTurns &&
-      !isWaitingForResponse;
+      participantMessageCount >= this.stage.maxNumberOfTurns;
 
     const discussionStartTimestamp =
       chatMessages.length > 0 ? chatMessages[0].timestamp : null;
@@ -120,7 +119,8 @@ export class PrivateChatView extends MobxLitElement {
     // Min turns takes precedence: conversation stays open until min turns is met,
     // even if max time has elapsed.
     const isConversationOver =
-      maxTurnsReached || (maxTimeReached && minTurnsMet);
+      (maxTurnsReached && !isWaitingForResponse) ||
+      (maxTimeReached && minTurnsMet);
 
     // Disable input if turn-taking is set and latest message
     // is from participant OR if conversation is over
@@ -151,6 +151,7 @@ export class PrivateChatView extends MobxLitElement {
         .stage=${this.stage}
         .disableInput=${isDisabledInput()}
         .repPrivateChatProfile=${this.repPrivateChatProfile}
+        .externalConversationOver=${isConversationOver}
       >
         ${chatMessages.map((message) => this.renderChatMessage(message))}
         ${isWaitingForResponse &&

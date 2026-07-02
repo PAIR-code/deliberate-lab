@@ -756,6 +756,8 @@ class AgentChatSettings(BaseModel):
     minMessagesBeforeResponding: int
     canSelfTriggerCalls: bool
     maxResponses: int | None = None
+    maxNumberOfMessages: Annotated[int | None, Field(ge=1)] = None
+    minNumberOfMessages: Annotated[int | None, Field(ge=0)] = None
     initialMessage: str
 
 
@@ -982,6 +984,8 @@ class ChatStageConfig(BaseModel):
     isTurnBased: bool | None = None
     personaPositionPrompt: str | None = None
     additionalParticipantInstructions: str | None = None
+    minNumberOfMessages: Annotated[int | None, Field(ge=0)] = None
+    maxNumberOfMessages: Annotated[int | None, Field(ge=1)] = None
 
 
 class RankingStageConfig(

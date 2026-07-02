@@ -110,6 +110,14 @@ export interface AgentChatSettings {
   // Maximum total responses agent can make during the chat conversation
   // (or null if no max)
   maxResponses: number | null;
+  // Per-mediator max-messages override for group chats. Replaces the stage's
+  // maxNumberOfMessages while this mediator is active; the smallest override
+  // wins. Set to null to defer to the stage value.
+  maxNumberOfMessages: number | null;
+  // Per-mediator min-messages override for group chats. Replaces the stage's
+  // minNumberOfMessages while this mediator is active; the largest override
+  // wins. Set to null to defer to the stage value.
+  minNumberOfMessages: number | null;
   // Initial message to send when the conversation begins
   initialMessage: string;
 }
@@ -221,6 +229,8 @@ export function createAgentChatSettings(
     minMessagesBeforeResponding: config.minMessagesBeforeResponding ?? 0,
     canSelfTriggerCalls: config.canSelfTriggerCalls ?? false,
     maxResponses: config.maxResponses ?? 100,
+    maxNumberOfMessages: config.maxNumberOfMessages ?? null,
+    minNumberOfMessages: config.minNumberOfMessages ?? null,
     initialMessage: config.initialMessage ?? '',
   };
 }

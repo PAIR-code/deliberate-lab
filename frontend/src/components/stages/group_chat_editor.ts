@@ -32,11 +32,96 @@ export class ChatEditor extends MobxLitElement {
       <div class="title">Conversation settings</div>
       ${this.renderTimeLimit()} ${this.renderTurnBasedSetting()}
       <div class="divider"></div>
+      <div class="title">Message limits</div>
+      ${this.renderMinNumberOfMessages()} ${this.renderMaxNumberOfMessages()}
+      <div class="divider"></div>
       <div class="title">Agent mediators</div>
       <div class="description">
         Navigate to "Agent mediators" tab to add or edit mediators
       </div>
       ${this.renderMediators()}
+    `;
+  }
+
+  private renderMinNumberOfMessages() {
+    const minNumberOfMessages = this.stage?.minNumberOfMessages ?? 0;
+    const maxNumberOfMessages = this.stage?.maxNumberOfMessages ?? null;
+
+    const updateNum = (e: InputEvent) => {
+      if (!this.stage) return;
+      let value = Math.max(0, Number((e.target as HTMLInputElement).value));
+      if (maxNumberOfMessages !== null) {
+        value = Math.min(value, maxNumberOfMessages);
+      }
+      this.experimentEditor.updateStage({
+        ...this.stage,
+        minNumberOfMessages: value,
+      });
+    };
+
+    return html`
+      <div class="config-item">
+        <div class="number-input">
+          <label for="minTotalMessages">
+            Minimum total messages across all participants and mediators
+            combined (0 = no minimum). Takes precedence over maximum time limit.
+          </label>
+          <input
+            type="number"
+            id="minTotalMessages"
+            name="minTotalMessages"
+            min="0"
+            .max=${maxNumberOfMessages ?? ''}
+            .value=${minNumberOfMessages}
+            ?disabled=${!this.experimentEditor.canEditStages}
+            @input=${updateNum}
+          />
+        </div>
+      </div>
+    `;
+  }
+
+  private renderMaxNumberOfMessages() {
+    const maxNumberOfMessages = this.stage?.maxNumberOfMessages ?? null;
+    const minNumberOfMessages = this.stage?.minNumberOfMessages ?? 0;
+
+    const updateNum = (e: InputEvent) => {
+      if (!this.stage) return;
+      const value = (e.target as HTMLInputElement).value;
+      if (value === '') {
+        this.experimentEditor.updateStage({
+          ...this.stage,
+          maxNumberOfMessages: null,
+        });
+      } else {
+        const num = Math.max(minNumberOfMessages, Math.max(1, Number(value)));
+        this.experimentEditor.updateStage({
+          ...this.stage,
+          maxNumberOfMessages: num,
+        });
+      }
+    };
+
+    return html`
+      <div class="config-item">
+        <div class="number-input">
+          <label for="maxTotalMessages">
+            Maximum total messages across all participants and mediators
+            combined (empty = no limit). The discussion ends for the whole
+            cohort once this is reached.
+          </label>
+          <input
+            type="number"
+            id="maxTotalMessages"
+            name="maxTotalMessages"
+            min="1"
+            .value=${maxNumberOfMessages ?? ''}
+            placeholder="No limit"
+            ?disabled=${!this.experimentEditor.canEditStages}
+            @input=${updateNum}
+          />
+        </div>
+      </div>
     `;
   }
 
