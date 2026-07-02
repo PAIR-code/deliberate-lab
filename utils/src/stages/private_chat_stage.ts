@@ -32,6 +32,14 @@ export interface PrivateChatStageConfig extends BaseStageConfig {
   // If true, requires participant to go back and forth with mediator(s)
   // (rather than being able to send multiple messages at once)
   isTurnBasedChat: boolean;
+  // If true, displays the group-chat-style turn UI: an "It's your
+  // turn"/"Waiting for ..." banner, an inline typing indicator with the
+  // mediator's avatar, and mediator-goes-first ordering. Mutually exclusive
+  // with isTurnBasedChat (the private chat editor disables one when the
+  // other is checked). When neither is true, the legacy private-chat turn UX
+  // is used (input disabled while waiting, with a per-message spinner and
+  // cancel button).
+  isTurnBasedChatGroupStyle: boolean;
   // Minimum number of messages participant must send to move on
   minNumberOfTurns: number;
   // If turn based chat set to true, this specifies the max
@@ -61,6 +69,7 @@ export function createPrivateChatStage(
     timeLimitInMinutes: config.timeLimitInMinutes ?? null,
     timeMinimumInMinutes: config.timeMinimumInMinutes ?? null,
     isTurnBasedChat: config.isTurnBasedChat ?? true,
+    isTurnBasedChatGroupStyle: config.isTurnBasedChatGroupStyle ?? false,
     minNumberOfTurns: config.minNumberOfTurns ?? 0,
     maxNumberOfTurns: config.maxNumberOfTurns ?? null,
     preventCancellation: config.preventCancellation ?? false,

@@ -202,8 +202,24 @@ export class CohortService extends Service {
 
   // If stage is in a waiting phase
   isStageInWaitingPhase(stageId: string) {
-    // Return false if stage is unlocked for cohort, else true
-    return !this.cohortConfig?.stageUnlockMap[stageId];
+    // Group-style turn-based private chats are per-participant and
+    // mediator-goes-first: the mediator posts on stage entry without a
+    // cohort-wide unlock, which can never be satisfied in a within-subjects
+    // design where other participants occupy different stages. So they are
+    // never in a waiting phase. Otherwise the participant is stuck on the
+    // yellow "waiting for others" screen and the chat never initializes.
+    const stageConfig = this.sp.experimentService.getStage(stageId);
+    if (
+      stageConfig?.kind === StageKind.PRIVATE_CHAT &&
+      (stageConfig as {isTurnBasedChatGroupStyle?: boolean})
+        .isTurnBasedChatGroupStyle
+    ) {
+      return false;
+    }
+    // The unlock map only ever records unlocked stages (value true); a stage
+    // still gated by "waiting" is simply absent. Absent or falsy both mean the
+    // stage is still in its waiting phase.
+    return !this.cohortConfig?.stageUnlockMap?.[stageId];
   }
 
   // Get number of participants needed to pass waiting phase

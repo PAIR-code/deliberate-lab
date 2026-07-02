@@ -10,8 +10,10 @@ import {customElement, property, state} from 'lit/decorators.js';
 import {
   ChatStageConfig,
   ChatStagePublicData,
+  PrivateChatStageConfig,
   StageConfig,
   StageKind,
+  UserType,
 } from '@deliberation-lab/utils';
 import {core} from '../../core/core';
 import {AuthService} from '../../services/auth.service';
@@ -48,6 +50,14 @@ export class ChatInterface extends MobxLitElement {
   @property({type: Boolean}) showPanel = false;
   @property({type: Boolean}) showInput = true;
   @property({type: Boolean}) disableInput = false;
+  // For a representative-conducted private chat: the rep's display identity
+  // (name, avatar, the observer's color) so the representative shows
+  // consistently before/after its first message and matches the group chat.
+  @property({type: Object}) repPrivateChatProfile: {
+    name: string;
+    avatar: string;
+    color: string;
+  } | null = null;
 
   // Tracks inner width of window
   @state() mobileView = false;
@@ -83,7 +93,13 @@ export class ChatInterface extends MobxLitElement {
   }
 
   @computed get isMyTurn() {
-    if (!this.stage || this.stage.kind !== StageKind.CHAT) return true;
+    if (!this.stage) return true;
+    if (this.stage.kind === StageKind.PRIVATE_CHAT) {
+      const config = this.stage as PrivateChatStageConfig;
+      if (!config.isTurnBasedChatGroupStyle) return true;
+      return this.turnIndicatorState?.isMyTurn ?? false;
+    }
+    if (this.stage.kind !== StageKind.CHAT) return true;
     const config = this.stage as ChatStageConfig;
     if (!config.isTurnBased) return true;
 
@@ -91,7 +107,11 @@ export class ChatInterface extends MobxLitElement {
   }
 
   @computed get turnIndicatorState() {
-    if (!this.stage || this.stage.kind !== StageKind.CHAT) return null;
+    if (!this.stage) return null;
+    if (this.stage.kind === StageKind.PRIVATE_CHAT) {
+      return this.privateChatTurnIndicatorState;
+    }
+    if (this.stage.kind !== StageKind.CHAT) return null;
     const config = this.stage as ChatStageConfig;
     if (!config.isTurnBased) return null;
 
@@ -148,10 +168,75 @@ export class ChatInterface extends MobxLitElement {
   /** Whether the current stage is configured for turn-based interaction. */
   @computed get isTurnBasedMode() {
     if (!this.stage) return false;
+    if (this.stage.kind === StageKind.PRIVATE_CHAT) {
+      return (
+        (this.stage as PrivateChatStageConfig).isTurnBasedChatGroupStyle ??
+        false
+      );
+    }
     if (this.stage.kind === StageKind.CHAT) {
       return (this.stage as ChatStageConfig).isTurnBased ?? false;
     }
     return false;
+  }
+
+  @computed private get privateChatTurnIndicatorState() {
+    if (!this.stage || this.stage.kind !== StageKind.PRIVATE_CHAT) return null;
+    const config = this.stage as PrivateChatStageConfig;
+    if (!config.isTurnBasedChatGroupStyle) return null;
+
+    // Private chats have no public turn state, so the turn holder is
+    // inferred from the latest message: the mediator speaks first and turns
+    // alternate. An error message from the mediator counts as its turn so
+    // the participant can retry.
+    const messages =
+      this.participantService.privateChatMap[this.stage.id] ?? [];
+    const publicId = this.participantService.profile?.publicId ?? '';
+    const latest = messages[messages.length - 1];
+    // Match the group-chat path: agent participants never see "Your turn",
+    // since the agent doesn't drive the participant UI's chat input.
+    const isMyTurn =
+      !this.participantService.profile?.agentConfig &&
+      !!latest &&
+      latest.senderId !== publicId;
+
+    if (isMyTurn) {
+      const profile = this.participantService.profile;
+      return {
+        name: profile?.name ?? '',
+        avatar: profile?.avatar ?? '',
+        isMediator: false,
+        id: publicId,
+        isMyTurn: true,
+      };
+    }
+
+    const lastMediatorMsg = [...messages]
+      .reverse()
+      .find((m) => m.type === UserType.MEDIATOR);
+    const assignedMediator = this.cohortService.getMediatorsForStage(
+      this.stage.id,
+    )[0];
+
+    // In a representative-conducted private chat, show the represented
+    // participant's identity (and color) consistently, matching the group chat.
+    const rep = this.repPrivateChatProfile;
+    return {
+      name:
+        rep?.name ??
+        lastMediatorMsg?.profile?.name ??
+        assignedMediator?.name ??
+        'Mediator',
+      avatar:
+        rep?.avatar ??
+        lastMediatorMsg?.profile?.avatar ??
+        assignedMediator?.avatar ??
+        '🤖',
+      color: rep?.color,
+      isMediator: true,
+      id: lastMediatorMsg?.senderId ?? assignedMediator?.publicId ?? 'mediator',
+      isMyTurn: false,
+    };
   }
 
   // True when the given turn-holder id is the viewing participant or their
@@ -171,19 +256,22 @@ export class ChatInterface extends MobxLitElement {
     if (turnState.isMyTurn) return nothing;
 
     const reserve = this.reserveMediatorColor;
+    const repColor = (turnState as {color?: string}).color;
     // The mediator's typing indicator uses the same reserved blue as its
-    // avatar/bubble; other speakers keep their own color (with blue reserved
-    // away).
-    const useMediatorColor = reserve && turnState.isMediator;
-    const color = turnState.isMediator
-      ? useMediatorColor
-        ? MEDIATOR_OBSERVER_COLOR
-        : getHashBasedColor(turnState.id)
-      : getProfileBasedColor(
-          turnState.id,
-          turnState.avatar ?? '',
-          reserve ? [MEDIATOR_OBSERVER_COLOR] : [],
-        );
+    // avatar/bubble; a representative keeps its assigned color, and other
+    // speakers keep their own color (with blue reserved away).
+    const useMediatorColor = !repColor && reserve && turnState.isMediator;
+    const color =
+      repColor ??
+      (turnState.isMediator
+        ? useMediatorColor
+          ? MEDIATOR_OBSERVER_COLOR
+          : getHashBasedColor(turnState.id)
+        : getProfileBasedColor(
+            turnState.id,
+            turnState.avatar ?? '',
+            reserve ? [MEDIATOR_OBSERVER_COLOR] : [],
+          ));
 
     const ownSide = this.isOwnSideTurn(turnState.id);
 

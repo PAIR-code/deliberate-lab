@@ -104,9 +104,14 @@ export class PrivateChatView extends MobxLitElement {
       this.stage.timeLimitInMinutes > 0 &&
       elapsedMinutes >= this.stage.timeLimitInMinutes;
 
-    // Check if minimum number of turns met for progression
-    // For turn-based chats, only count completed turns (where agent has responded)
-    const minTurnsMet = this.stage.isTurnBasedChat
+    // Check if minimum number of turns met for progression.
+    // Both turn-based variants (text turn-taking and banner-style turn-taking)
+    // alternate participant and mediator, so the participant's last turn isn't
+    // complete until the mediator has responded. Otherwise the "Next stage"
+    // button can appear while the mediator is still composing its final message.
+    const isTurnBased =
+      this.stage.isTurnBasedChat || this.stage.isTurnBasedChatGroupStyle;
+    const minTurnsMet = isTurnBased
       ? participantMessageCount >= this.stage.minNumberOfTurns &&
         !isWaitingForResponse
       : participantMessageCount >= this.stage.minNumberOfTurns;
@@ -142,12 +147,20 @@ export class PrivateChatView extends MobxLitElement {
     const isNextDisabled = !minTurnsMet || !minTimeMet;
 
     return html`
-      <chat-interface .stage=${this.stage} .disableInput=${isDisabledInput()}>
+      <chat-interface
+        .stage=${this.stage}
+        .disableInput=${isDisabledInput()}
+        .repPrivateChatProfile=${this.repPrivateChatProfile}
+      >
         ${chatMessages.map((message) => this.renderChatMessage(message))}
-        ${isWaitingForResponse && !isConversationOver
+        ${isWaitingForResponse &&
+        !isConversationOver &&
+        !this.stage.isTurnBasedChatGroupStyle
           ? this.renderAgentIndicator(chatMessages)
           : nothing}
-        ${isConversationOver && minTimeMet
+        ${isConversationOver &&
+        minTimeMet &&
+        !this.stage.isTurnBasedChatGroupStyle
           ? this.renderConversationEndedMessage()
           : nothing}
         ${isConversationOver && !minTimeMet

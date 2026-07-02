@@ -357,6 +357,7 @@ class PrivateChatStageConfig(BaseModel):
     timeLimitInMinutes: Annotated[int | None, Field(ge=1)] = None
     timeMinimumInMinutes: Annotated[int | None, Field(ge=1)] = None
     isTurnBasedChat: bool | None = None
+    isTurnBasedChatGroupStyle: bool | None = None
     minNumberOfTurns: float | None = None
     maxNumberOfTurns: float | None = None
     preventCancellation: bool | None = None
