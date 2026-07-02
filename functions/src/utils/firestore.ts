@@ -20,6 +20,8 @@ import {
 } from '@deliberation-lab/utils';
 import {Timestamp} from 'firebase-admin/firestore';
 
+import {StoredPersona, selectPersonaToClaim} from '../persona_bank.utils';
+
 import {app} from '../app';
 
 /** Utils functions for handling Firestore docs. */
@@ -137,6 +139,74 @@ export async function saveStoredPersona(
 ): Promise<void> {
   const ref = getStoredPersonaRef(experimentId, slotKey);
   await ref.set({id: slotKey, text, createdAt: Timestamp.now()});
+}
+
+/**
+ * Claim a pre-generated persona from the bank for the given match hash. Returns
+ * the persona's content text, or null if the bank has no persona
+ * for the hash that this participant has not already used. Selection prefers the
+ * fewest-used persona and never returns one already used by this participant, so
+ * a participant sees a distinct persona per slot across their whole run and
+ * reuse is spread evenly across participants. The claim is transactional, so
+ * concurrent cohort spawns deterministically land on distinct personas.
+ */
+export async function claimStoredPersonaByHash(
+  experimentId: string,
+  hash: string,
+  participantPrivateId: string,
+): Promise<string | null> {
+  const personasRef = app
+    .firestore()
+    .collection('experiments')
+    .doc(experimentId)
+    .collection('personas');
+  const query = personasRef.where('hash', '==', hash);
+
+  return app.firestore().runTransaction(async (transaction) => {
+    const snapshot = await transaction.get(query);
+    const personas = snapshot.docs.map((doc) => doc.data() as StoredPersona);
+    const chosen = selectPersonaToClaim(personas, participantPrivateId);
+    if (!chosen) return null;
+
+    transaction.update(personasRef.doc(chosen.id), {
+      usageCount: (chosen.usageCount ?? 0) + 1,
+      usedBy: [...(chosen.usedBy ?? []), participantPrivateId],
+    });
+    return chosen.content ?? null;
+  });
+}
+
+/**
+ * Claim a plain persona SKETCH for an agent that participates directly.
+ * Sketches are topic and treatment agnostic, so any unused bank persona
+ * works: query the whole
+ * experiment bank (not a single hash bucket) and pick the fewest-used persona
+ * not already claimed by this participant. Keyed by the HUMAN's private ID so a
+ * participant never gets the same persona twice across rounds. Returns the
+ * sketch text, or null if no persona with an unclaimed sketch remains.
+ */
+export async function claimStoredPersonaSketch(
+  experimentId: string,
+  participantPrivateId: string,
+): Promise<string | null> {
+  const personasRef = app
+    .firestore()
+    .collection('experiments')
+    .doc(experimentId)
+    .collection('personas');
+  return app.firestore().runTransaction(async (transaction) => {
+    const snapshot = await transaction.get(personasRef);
+    const personas = snapshot.docs
+      .map((doc) => doc.data() as StoredPersona)
+      .filter((p) => p.sketch);
+    const chosen = selectPersonaToClaim(personas, participantPrivateId);
+    if (!chosen) return null;
+    transaction.update(personasRef.doc(chosen.id), {
+      usageCount: (chosen.usageCount ?? 0) + 1,
+      usedBy: [...(chosen.usedBy ?? []), participantPrivateId],
+    });
+    return chosen.sketch ?? null;
+  });
 }
 
 /** True for the turn-based chat variants (group chat with isTurnBased, or a

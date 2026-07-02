@@ -36,6 +36,17 @@ export interface ProfileAgentConfig {
   // takes a turn, and is not counted when deciding whether a cohort can unlock
   // or advance a stage.
   isInactivePersona?: boolean;
+  // Persona bank match key: SHA-256 of the round's canonical variable map. Set
+  // on representative and inactive personas so they retrieve a pre-generated
+  // persona from the bank instead of generating a fresh one. Unset for agents
+  // that use slot-based reuse or fresh generation.
+  personaHash?: string;
+  // Set on direct-participation agents: the private ID of the HUMAN this agent
+  // was spawned alongside. The persona-generation trigger claims a plain
+  // character sketch from the bank keyed to this human (so the human never gets
+  // the same persona twice across rounds) and uses it as the agent's own
+  // persona instead of generating one live.
+  personaSketchForHumanId?: string;
 }
 
 /** Reasoning level - mapped to provider-specific options by backend */

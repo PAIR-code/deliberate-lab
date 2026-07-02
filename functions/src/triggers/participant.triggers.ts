@@ -34,6 +34,8 @@ import {
   getExperimenterDataFromExperiment,
   getStoredPersona,
   saveStoredPersona,
+  claimStoredPersonaByHash,
+  claimStoredPersonaSketch,
 } from '../utils/firestore';
 import {
   canSendAgentChatMessage,
@@ -71,6 +73,10 @@ export const onParticipantCreation = onDocumentCreated(
         // it is reused across cohorts. Unset for representatives, which always
         // generate fresh.
         const slotKey = participant.agentConfig.personaSlotKey;
+        // Persona bank match key. Set on representatives and inactive
+        // personas so they retrieve a pre-generated persona (keyed by the
+        // round's variables) rather than generating one.
+        const personaHash = participant.agentConfig.personaHash;
 
         // Apply a persona (stored or freshly generated) to the participant:
         // append it to any context already set at spawn, mark the agent
@@ -129,6 +135,51 @@ export const onParticipantCreation = onDocumentCreated(
         const maxRetries = promptConfig?.numRetries ?? 0;
         const initialDelay = 1000;
         let success = false;
+
+        // Agents that participate directly claim a plain persona sketch from
+        // the bank. Sketches are topic-agnostic, so any bucket works; claims
+        // are keyed to the human so a participant never gets the same persona
+        // twice across rounds. Falls through to live generation if no unused
+        // sketch remains.
+        const sketchForHumanId =
+          participant.agentConfig.personaSketchForHumanId;
+        if (sketchForHumanId) {
+          const sketch = await claimStoredPersonaSketch(
+            experimentId,
+            sketchForHumanId,
+          );
+          if (sketch) {
+            console.log(
+              `Claimed bank persona SKETCH for participant ${participant.privateId} (human ${sketchForHumanId.slice(0, 8)}).`,
+            );
+            await applyPersona(sketch);
+            success = true;
+          }
+        }
+
+        // If this agent has a persona-bank match key, claim a pre-generated
+        // persona (distinct per participant, reuse spread evenly). Skips LLM
+        // generation; falls through to standard generation on no match.
+        if (!success && personaHash) {
+          const content = await claimStoredPersonaByHash(
+            experimentId,
+            personaHash,
+            participant.privateId,
+          );
+          if (content) {
+            // Content may reference the claiming agent's profile.
+            const resolved = content
+              .split('{{name}}')
+              .join(String(participant.name ?? participant.publicId))
+              .split('{{publicId}}')
+              .join(participant.publicId);
+            console.log(
+              `Claimed bank persona for participant ${participant.privateId} (hash ${personaHash.slice(0, 8)}).`,
+            );
+            await applyPersona(resolved);
+            success = true;
+          }
+        }
 
         // If this agent has a persona slot and one is already stored for the
         // experiment, reuse it (reproducible across cohorts) and skip the LLM
