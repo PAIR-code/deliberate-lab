@@ -705,6 +705,9 @@ async function processPromptItems(
             ? DEFAULT_AGENT_PARTICIPANT_CHAT_TURN_TAKING_PROMPT
             : DEFAULT_AGENT_PARTICIPANT_CHAT_PROMPT,
         );
+        const extraParticipantInstr = (stage as ChatStageConfig)
+          ?.additionalParticipantInstructions;
+        if (extraParticipantInstr) items.push(extraParticipantInstr);
         break;
       }
       case PromptItemType.PROFILE_CONTEXT: {

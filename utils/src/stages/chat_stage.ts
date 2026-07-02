@@ -31,6 +31,9 @@ export interface ChatStageConfig extends BaseStageConfig {
   // optional prompt elicits each persona's position (appended after the
   // persona text in a single generation). Empty/unset = persona only.
   personaPositionPrompt?: string;
+  // Extra instructions appended to spawned agent-participants' chat prompt for
+  // this stage (shapes how they engage, e.g. push for changes). Unset = none.
+  additionalParticipantInstructions?: string;
 }
 
 /** Chat discussion. */
@@ -125,6 +128,8 @@ export function createChatStage(
     timeMinimumInMinutes: config.timeMinimumInMinutes ?? null,
     isTurnBased: config.isTurnBased ?? false,
     personaPositionPrompt: config.personaPositionPrompt ?? '',
+    additionalParticipantInstructions:
+      config.additionalParticipantInstructions ?? '',
   };
 }
 

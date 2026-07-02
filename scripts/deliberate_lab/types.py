@@ -981,6 +981,7 @@ class ChatStageConfig(BaseModel):
     discussions: list[DefaultChatDiscussion | CompareChatDiscussion]
     isTurnBased: bool | None = None
     personaPositionPrompt: str | None = None
+    additionalParticipantInstructions: str | None = None
 
 
 class RankingStageConfig(
