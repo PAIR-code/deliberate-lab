@@ -440,6 +440,12 @@ export async function getAgentChatMessage(
     ) {
       return {message: null, success: true, retryTimedOut: false};
     }
+    // Quiz pause: if the chat is paused for a quiz, an agent that began its
+    // turn before the pause must not post. The turn resumes when the
+    // participant submits.
+    if (chatPublicData && (chatPublicData.quizPauseCheckpoint ?? 0) > 0) {
+      return {message: null, success: true, retryTimedOut: false};
+    }
   }
 
   // Confirm that agent can send chat messages based on prompt config

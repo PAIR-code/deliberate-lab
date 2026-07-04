@@ -21,6 +21,7 @@ import {ExperimentEditor} from '../../services/experiment.editor';
 
 import {
   type BalancedAssignmentVariableConfig,
+  type ChatStageConfig,
   type MultiValueVariableConfigType,
   type StaticVariableConfig,
   type VariableConfig,
@@ -28,6 +29,7 @@ import {
   BalanceStrategy,
   RESERVED_TREATMENT_VARIABLE_KEYS,
   RESERVED_TREATMENT_VARIABLE_GITHUB_URL,
+  StageKind,
   VariableConfigType,
   VariableScope,
   createBalancedAssignmentVariableConfig,
@@ -155,6 +157,14 @@ export class VariableEditor extends MobxLitElement {
   private renderReservedKeyWarning(name: string) {
     const reserved: readonly string[] = RESERVED_TREATMENT_VARIABLE_KEYS;
     if (!reserved.includes(name)) return nothing;
+    // _isQuizzed only takes effect in turn-based group chats.
+    const quizIgnored =
+      name === '_isQuizzed' &&
+      !this.experimentEditor.stages.some(
+        (stage) =>
+          stage.kind === StageKind.CHAT &&
+          (stage as ChatStageConfig).isTurnBased,
+      );
     return html`
       <div class="validation-error">
         ⚠️ Warning: "${name}" is a special variable that changes system
@@ -165,6 +175,12 @@ export class VariableEditor extends MobxLitElement {
           rel="noopener noreferrer"
           >See GitHub</a
         >.
+        ${quizIgnored
+          ? html`<div>
+              "_isQuizzed" is currently ignored because no group chat stage is
+              turn-based.
+            </div>`
+          : nothing}
       </div>
     `;
   }

@@ -8,6 +8,7 @@ import {
   UserType,
   createParticipantProfileBase,
   createSystemChatMessage,
+  getQuizPauseCheckpointForCount,
   shuffleWithSeed,
   ChatPromptConfig,
   ParticipantProfileExtended,
@@ -20,6 +21,7 @@ import {
   getFirestoreParticipant,
   getFirestoreStage,
   getFirestoreStagePublicData,
+  getFirestoreStagePublicDataRef,
   getFirestorePublicStageChatMessages,
 } from '../utils/firestore';
 import {
@@ -35,6 +37,44 @@ import {app} from '../app';
 // TRIGGER FUNCTIONS                                                         //
 // ************************************************************************* //
 
+/**
+ * Start the next agent's turn in a turn-based group chat. This is the single
+ * chokepoint that dispatches the next agent message after a turn advances.
+ * Exported so the quiz resume path (submitParticipantThought) can
+ * re-fire the stalled turn once the pause is cleared. No new chat message
+ * arrives to re-trigger onPublicChatMessageCreated, so the resume must be
+ * explicit.
+ */
+export async function triggerNextTurnHolder(
+  experimentId: string,
+  cohortId: string,
+  allParticipantIds: string[], // non-observer participant private IDs (mediator context)
+  stageId: string,
+  triggerChatId: string,
+  nextMediatorHolder: MediatorProfileExtended | null | undefined,
+  nextTurnHolder: ParticipantProfileExtended | null | undefined,
+) {
+  if (nextMediatorHolder) {
+    await createAgentChatMessageFromPrompt(
+      experimentId,
+      cohortId,
+      allParticipantIds,
+      stageId,
+      triggerChatId,
+      nextMediatorHolder,
+    );
+  } else if (nextTurnHolder?.agentConfig) {
+    await createAgentChatMessageFromPrompt(
+      experimentId,
+      cohortId,
+      [nextTurnHolder.privateId],
+      stageId,
+      triggerChatId,
+      nextTurnHolder,
+    );
+  }
+}
+
 /** When a chat message is created under publicStageData */
 export const onPublicChatMessageCreated = onDocumentCreated(
   {
@@ -44,6 +84,10 @@ export const onPublicChatMessageCreated = onDocumentCreated(
     timeoutSeconds: 300,
   },
   async (event) => {
+    if ((event.data?.data() as ChatMessage | undefined)?.isReasoningOnly) {
+      return;
+    }
+
     const stage = await getFirestoreStage(
       event.params.experimentId,
       event.params.stageId,
@@ -160,31 +204,91 @@ export const onPublicChatMessageCreated = onDocumentCreated(
               .doc(event.params.stageId)
               .set(effectiveUpdates, {merge: true});
           }
-          if (effectiveMax != null) {
-            const allChatMessages = await getFirestorePublicStageChatMessages(
+          const allChatMessages =
+            (await getFirestorePublicStageChatMessages(
+              event.params.experimentId,
+              event.params.cohortId,
+              event.params.stageId,
+            )) ?? [];
+          // `isReasoningOnly` is an optional field; when it is not set the
+          // access resolves to undefined (falsy), so a message is only
+          // excluded when the field is present and true. Keeps the backend
+          // cap aligned with the frontend, which excludes reasoning-only
+          // messages from chatMap entirely.
+          const cohortMessageCount = allChatMessages.filter(
+            (m) =>
+              m.type !== UserType.SYSTEM &&
+              !m.isError &&
+              !(m as {isReasoningOnly?: boolean}).isReasoningOnly,
+          ).length;
+          // Quiz-participant presence + quiz state. Computed before the cap check so
+          // the after-final-message quiz can pause the cap.
+          const cohortParticipants = await getFirestoreActiveParticipants(
+            event.params.experimentId,
+            event.params.cohortId,
+            stage.id,
+            false, // Get all participants
+            true, // Include observers
+          );
+          // Quiz applies per the participant's _isQuizzed variable, and only
+          // in turn-based chats (the pause gates the next agent turn);
+          // otherwise the variable is ignored.
+          const hasQuizParticipant =
+            (stage as ChatStageConfig).isTurnBased === true &&
+            cohortParticipants.some((p) => p.isQuizzed);
+          const answeredCheckpoint = existingPublic.quizAnsweredCheckpoint ?? 0;
+          const alreadyPaused = (existingPublic.quizPauseCheckpoint ?? 0) > 0;
+          // Checkpoints are thirds of the effective minimum message count
+          // (fewer than 3 quizzes when the minimum is under 3; none without a
+          // minimum).
+          const newCheckpoint = getQuizPauseCheckpointForCount(
+            cohortMessageCount,
+            effectiveMin,
+          );
+
+          if (effectiveMax != null && cohortMessageCount >= effectiveMax) {
+            // Final message sent -> end the discussion. If a participant
+            // still owes the after-final quiz (the last checkpoint quiz),
+            // also raise its pause so they answer before proceeding; the chat
+            // is ended either way, and submitting just clears the quiz (its
+            // turn-resume is then a no-op against the already-ended discussion).
+            if (
+              hasQuizParticipant &&
+              !alreadyPaused &&
+              newCheckpoint >= 1 &&
+              answeredCheckpoint < newCheckpoint
+            ) {
+              await getFirestoreStagePublicDataRef(
+                event.params.experimentId,
+                event.params.cohortId,
+                event.params.stageId,
+              ).update({quizPauseCheckpoint: newCheckpoint});
+            }
+            await handleMaxMessagesReached(
               event.params.experimentId,
               event.params.cohortId,
               event.params.stageId,
             );
-            // `isReasoningOnly` is an optional field; when it is not set the
-            // access resolves to undefined (falsy), so a message is only
-            // excluded when the field is present and true. Keeps the backend
-            // cap aligned with the frontend, which excludes reasoning-only
-            // messages from chatMap entirely.
-            const cohortMessageCount = allChatMessages.filter(
-              (m) =>
-                m.type !== UserType.SYSTEM &&
-                !m.isError &&
-                !(m as {isReasoningOnly?: boolean}).isReasoningOnly,
-            ).length;
-            if (cohortMessageCount >= effectiveMax) {
-              await handleMaxMessagesReached(
-                event.params.experimentId,
-                event.params.cohortId,
-                event.params.stageId,
-              );
-              return;
-            }
+            return;
+          }
+
+          // Intermediate quizzes (~1/3 and ~2/3 through): pause at a new
+          // checkpoint below the cap so the participant answers; cleared and the
+          // turn resumed on submit. Only the pause flag is set: the frontend
+          // renders the "paused" banner and suppresses the typing indicator.
+          // No system chat message is posted, since it read like a real
+          // message and left a stale typing indicator.
+          if (
+            hasQuizParticipant &&
+            !alreadyPaused &&
+            newCheckpoint > answeredCheckpoint &&
+            newCheckpoint >= 1
+          ) {
+            await getFirestoreStagePublicDataRef(
+              event.params.experimentId,
+              event.params.cohortId,
+              event.params.stageId,
+            ).update({quizPauseCheckpoint: newCheckpoint});
           }
         }
         break;
@@ -676,26 +780,24 @@ export const onPublicChatMessageCreated = onDocumentCreated(
       }
 
       if (shouldTriggerAgent && updatedTurnParticipantId) {
-        const finalTriggerChatId = wasTurnHolderDroppedOut ? '' : message.id;
-        if (nextMediatorHolder) {
-          await createAgentChatMessageFromPrompt(
-            event.params.experimentId,
-            event.params.cohortId,
-            allParticipantIds,
-            stage.id,
-            finalTriggerChatId,
-            nextMediatorHolder,
-          );
-        } else if (nextTurnHolder?.agentConfig) {
-          await createAgentChatMessageFromPrompt(
-            event.params.experimentId,
-            event.params.cohortId,
-            [nextTurnHolder.privateId],
-            stage.id,
-            finalTriggerChatId,
-            nextTurnHolder,
-          );
+        // Quiz pause: while the chat is paused for a quiz, do not start the
+        // next agent turn. turnOrder / currentTurnParticipantId / cycleIndex
+        // are already persisted, so the turn resumes cleanly when the
+        // participant submits (see submitParticipantThought ->
+        // triggerNextTurnHolder).
+        if ((updatedPublicStageData?.quizPauseCheckpoint ?? 0) > 0) {
+          return;
         }
+        const finalTriggerChatId = wasTurnHolderDroppedOut ? '' : message.id;
+        await triggerNextTurnHolder(
+          event.params.experimentId,
+          event.params.cohortId,
+          allParticipantIds,
+          stage.id,
+          finalTriggerChatId,
+          nextMediatorHolder,
+          nextTurnHolder,
+        );
       }
     } else {
       // Send agent mediator messages
@@ -766,7 +868,7 @@ export const onPrivateChatMessageCreated = onDocumentCreated(
         .doc(event.params.chatId)
         .get()
     ).data() as ChatMessage;
-    if (message.isError) {
+    if (message.isError || message.isReasoningOnly) {
       return;
     }
 

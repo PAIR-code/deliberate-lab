@@ -11,7 +11,7 @@ import {
 import {AlertMessage} from './alert';
 import {CohortConfig} from './cohort';
 import {Experiment} from './experiment';
-import {ParticipantProfileExtended} from './participant';
+import {ParticipantProfileExtended, ParticipantThought} from './participant';
 import {ChatMessage} from './chat_message';
 import {
   StageConfig,
@@ -54,6 +54,8 @@ export interface ParticipantDownload {
   profile: ParticipantProfileExtended;
   // Maps from stage ID to participant's stage answer
   answerMap: Record<string, StageParticipantAnswer>;
+  // Maps from stage ID to list of participant's thoughts in that stage
+  thoughtMap: Record<string, ParticipantThought[]>;
 }
 
 export interface CohortDownload {
@@ -86,6 +88,7 @@ export function createParticipantDownload(
   return {
     profile,
     answerMap: {},
+    thoughtMap: {},
   };
 }
 

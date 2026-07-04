@@ -89,6 +89,16 @@ chat-input {
     font-weight: 500;
   }
 
+  // Quiz pause: a hard stop, shown in a dark blue banner (a deeper shade of the
+  // mediator blue) so the participant notices the chat is held and answers the
+  // questions on the left.
+  &.paused {
+    background: var(--md-sys-color-on-mediator-container, #00174c);
+    border-color: var(--md-sys-color-on-mediator-container, #00174c);
+    color: #ffffff;
+    font-weight: 600;
+  }
+
   // Reserves the banner's vertical space during transient turn transitions
   // so the chat content above does not shift up or down between turns.
   &.banner-placeholder {

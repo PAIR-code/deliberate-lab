@@ -1206,6 +1206,8 @@ const TREATMENT_HOIST_FIELDS: Record<
     type: 'number',
   },
   _swapMediator: {field: 'swapMediator', type: 'string'},
+  // Whether this round's treatment includes the periodic group-chat quiz.
+  _isQuizzed: {field: 'isQuizzed', type: 'boolean'},
 };
 
 /**

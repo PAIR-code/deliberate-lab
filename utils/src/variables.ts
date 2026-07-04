@@ -47,6 +47,7 @@ export const RESERVED_TREATMENT_VARIABLE_KEYS = [
   '_numInactivePersonas',
   '_swapMediator',
   '_skipPrivateChats',
+  '_isQuizzed',
 ] as const;
 
 /**

@@ -60,6 +60,7 @@ export interface ParticipantProfile extends UserProfileBase {
   connected: boolean | null;
   isObserver?: boolean; // Read-only observer participant type
   hasRepresentative?: boolean; // Whether the observer has a representative agent spawned
+  isQuizzed?: boolean; // Whether this round's treatment includes the periodic group-chat quiz (hoisted from _isQuizzed at the transfer)
   otherAgentGeneration?: {
     numOtherAgents: number;
     // Number of inactive personas to spawn alongside numOtherAgents.
@@ -77,6 +78,13 @@ export interface AnonymousProfileMetadata {
   name: string;
   repeat: number; // e.g., if 1, then profile is Cat 2; if 2, then Cat 3
   avatar: string;
+}
+
+/** Participant observation thought structure. */
+export interface ParticipantThought {
+  id: string;
+  text: string;
+  timestamp: UnifiedTimestamp;
 }
 
 /** Participant profile available in private participants collection. */
@@ -210,6 +218,7 @@ export function createParticipantProfileExtended(
     agentConfig: config.agentConfig ?? null,
     isObserver: config.isObserver ?? false,
     hasRepresentative: config.hasRepresentative ?? false,
+    isQuizzed: config.isQuizzed ?? false,
     otherAgentGeneration: config.otherAgentGeneration ?? {
       numOtherAgents: 0,
     },

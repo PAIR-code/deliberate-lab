@@ -77,6 +77,31 @@ export class ChatEditor extends MobxLitElement {
             @input=${updateNum}
           />
         </div>
+        ${this.renderQuizCadenceNote()}
+      </div>
+    `;
+  }
+
+  private renderQuizCadenceNote() {
+    const hasQuizzedTreatment = (
+      this.experimentEditor.experiment.variableConfigs ?? []
+    ).some(
+      (config) =>
+        'values' in config &&
+        ((config as {values?: string[]}).values ?? []).some((value) => {
+          try {
+            return JSON.parse(value)?.['_isQuizzed'] === true;
+          } catch {
+            return false;
+          }
+        }),
+    );
+    if (!hasQuizzedTreatment) return nothing;
+    return html`
+      <div class="description">
+        ⚠️ A treatment sets <code>_isQuizzed</code>: the chat pauses for a quiz
+        at each third of the minimum message count (up to 3 quizzes; fewer if
+        the minimum is under 3).
       </div>
     `;
   }

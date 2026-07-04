@@ -143,6 +143,18 @@ export class ChatInterface extends MobxLitElement {
     return this.sawSetup && !this.minSetupTimePassed;
   }
 
+  /** Whether the group chat is paused for a quiz checkpoint. While paused, a
+   *  banner replaces the turn banner and the typing dots are suppressed, since
+   *  the turn is held and no agent is typing. */
+  private get isPausedForQuiz(): boolean {
+    const stageId = this.stage?.id ?? '';
+    if (!stageId) return false;
+    const data = this.cohortService.stagePublicDataMap[stageId] as
+      | ChatStagePublicData
+      | undefined;
+    return (data?.quizPauseCheckpoint ?? 0) > 0;
+  }
+
   private renderPanel() {
     if (!this.stage) return nothing;
     return html`
@@ -386,6 +398,9 @@ export class ChatInterface extends MobxLitElement {
     // While the setup banner is showing, suppress the typing dots even if a
     // turn has just been assigned.
     if (this.showSetupBanner) return nothing;
+    // While paused for a quiz, the turn is held by the backend
+    // and no agent is typing, so suppress the typing dots.
+    if (this.isPausedForQuiz) return nothing;
     const turnState = this.turnIndicatorState;
     if (!turnState) return nothing;
 
@@ -465,6 +480,23 @@ export class ChatInterface extends MobxLitElement {
   }
 
   private renderTurnBanner() {
+    // A quiz pause takes precedence over every other banner, including the
+    // conversation-over case below, so a final quiz still pending after the
+    // last message keeps showing its banner instead of the "ended" prompt.
+    // quizPauseCheckpoint is only ever set for a quiz, so non-quiz chats are
+    // unaffected. When the discussion has also ended, the banner says "ended"
+    // (not "paused"); both direct the participant to the questions on the left.
+    if (this.isPausedForQuiz) {
+      const ended = this.externalConversationOver || this.isConversationOver;
+      const where = this.mobileView ? 'above' : 'on the left';
+      return html`
+        <div class="banner paused">
+          ${ended
+            ? `The discussion has ended. Please answer the questions ${where}.`
+            : `The conversation is paused. Please answer the questions ${where}.`}
+        </div>
+      `;
+    }
     if (this.externalConversationOver || this.isConversationOver) {
       // Every turn-based chat (group or private) shows the ended banner as its
       // single end-of-discussion indicator; the duplicate in-chat system message

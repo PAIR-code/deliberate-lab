@@ -115,6 +115,16 @@ export interface ChatStagePublicData extends BaseStagePublicData {
   // this data is current only when this matches the newest participant or
   // mediator message.
   turnProcessedMessageId?: string;
+  // Quiz pause checkpoint. When > 0 the group chat is paused at an
+  // intermediate message-count checkpoint while the quizzed participant
+  // answers the quiz; the next agent turn is gated until they submit, which
+  // resets this to 0. 0 = not paused. See getQuizPauseCheckpointForCount.
+  quizPauseCheckpoint?: number;
+  // Highest quiz checkpoint the participant has already answered (monotonic).
+  // The backend pauses only when a newly crossed checkpoint exceeds this, so
+  // the chat is not re-paused for a checkpoint already answered after the
+  // pause clears.
+  quizAnsweredCheckpoint?: number;
   // Effective cohort-total minimum messages after applying any active
   // mediator's per-stage override (group chat only). Resolved by the backend;
   // the frontend advance-gate falls back to the stage value when null.
@@ -233,7 +243,31 @@ export function createChatStagePublicData(
     turnOrder: [],
     cycleIndex: 0,
     turnProcessedMessageId: '',
+    quizPauseCheckpoint: 0,
+    quizAnsweredCheckpoint: 0,
     effectiveMinNumberOfMessages: null,
     effectiveMaxNumberOfMessages: null,
   };
+}
+
+/**
+ * Quiz pause checkpoints: thirds of the effective minimum message count
+ * (ceil(min/3), ceil(2*min/3), and min, deduplicated and at least 1). Ceiling,
+ * so a quiz never fires before its third of the conversation has completed.
+ * Returns how many checkpoints the running non-system count has reached, so a
+ * minimum under 3 yields fewer than 3 quizzes and no minimum yields none.
+ */
+export function getQuizPauseCheckpointForCount(
+  nonSystemCount: number,
+  effectiveMin?: number | null,
+): number {
+  if (effectiveMin == null || effectiveMin <= 0) return 0;
+  const thresholds = [
+    ...new Set([
+      Math.ceil(effectiveMin / 3),
+      Math.ceil((2 * effectiveMin) / 3),
+      effectiveMin,
+    ]),
+  ].filter((t) => t >= 1);
+  return thresholds.filter((t) => nonSystemCount >= t).length;
 }

@@ -300,8 +300,13 @@ export class GroupChatView extends MobxLitElement {
       this.stage.id,
     );
 
-    // Determine if Next Stage button should be disabled
-    const disableNext = !this.isMinimumTimeMet || !this.isMinimumMessagesMet();
+    // Determine if Next Stage button should be disabled. Also block advance
+    // while a quiz is pending (incl. the final quiz after the last message) so
+    // the participant cannot skip past it.
+    const disableNext =
+      !this.isMinimumTimeMet ||
+      !this.isMinimumMessagesMet() ||
+      this.isQuizPending;
 
     const renderProgress = () => {
       if (!this.stage?.progress.showParticipantProgress) {
@@ -328,6 +333,10 @@ export class GroupChatView extends MobxLitElement {
         // so this gating is applied component-specifically rather than globally.
         this.participantService.profile?.isObserver ||
         this.participantService.disableStage ||
+        // Block the direct-participation human from typing while their quiz is
+        // pending (observers are already read-only) so they answer before the
+        // discussion resumes.
+        this.isQuizPending ||
         this.isConversationOver()}
         showPanel
       >
@@ -362,6 +371,20 @@ export class GroupChatView extends MobxLitElement {
       getTimeElapsed(publicStageData.discussionStartTimestamp, 'm') >=
       this.stage.timeMinimumInMinutes
     );
+  }
+
+  /** True while the participant has an unanswered quiz pending. The backend
+   *  keeps quizPauseCheckpoint > 0 until they submit (and zeroes it on
+   *  submit), so this single public-data flag is the authoritative "quiz
+   *  unanswered" signal, including the final quiz that follows the last
+   *  message. It is only ever set for a quiz, so ordinary chats are
+   *  unaffected. Used to block stage advance until the quiz is submitted. */
+  private get isQuizPending(): boolean {
+    if (!this.stage) return false;
+    const data = this.cohortService.stagePublicDataMap[this.stage.id] as
+      | ChatStagePublicData
+      | undefined;
+    return (data?.quizPauseCheckpoint ?? 0) > 0;
   }
 
   get minutesRemainingUntilMinimum(): number {
