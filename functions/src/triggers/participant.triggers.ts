@@ -173,7 +173,7 @@ async function advanceTurnBasedChatIfCurrentParticipantLeft(
               missingMediators.length > 1
                 ? shuffleWithSeed(
                     missingMediators,
-                    `${cohortId}-new-mediators-${cycleIndex}`,
+                    `${cohortId}-${stageId}-new-mediators-${cycleIndex}`,
                   )
                 : missingMediators;
             const nextMediators = [
@@ -186,7 +186,7 @@ async function advanceTurnBasedChatIfCurrentParticipantLeft(
             if (hadMediators) {
               const shuffledParticipants = shuffleWithSeed(
                 allPublicParticipantIds,
-                `${cohortId}-${cycleIndex}`,
+                `${cohortId}-${stageId}-${cycleIndex}`,
               );
               nextTurnOrderNew = [...nextMediators, ...shuffledParticipants];
             } else {

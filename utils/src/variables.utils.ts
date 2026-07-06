@@ -216,6 +216,7 @@ export function createBalancedAssignmentVariableConfig(
 function generateRandomPermutationValue(
   config: RandomPermutationVariableConfig,
   context: ScopeContext,
+  seedIndex: number | null,
 ): unknown {
   const {shuffle, seed: seedStrategy, customSeed} = config.shuffleConfig;
   const maxAvailable = config.values.length;
@@ -252,8 +253,13 @@ function generateRandomPermutationValue(
         break;
     }
 
-    // seed() is called inside choices() if a seed value is provided
-    selectedValues = choices(config.values, numToSelect, seedValue);
+    // The first shuffled variable keeps the bare seed, so existing
+    // deployments keep the sequences they already had. Later ones mix their
+    // position into the seed so distinct variables are randomized
+    // independently.
+    const effectiveSeed =
+      seedIndex === null ? seedValue : `${seedValue}::${seedIndex}`;
+    selectedValues = choices(config.values, numToSelect, effectiveSeed);
   } else {
     selectedValues = config.values.slice(0, numToSelect);
   }
@@ -303,8 +309,11 @@ export function generateStaticVariables(
 export function generateRandomPermutationVariables(
   config: RandomPermutationVariableConfig,
   context: ScopeContext,
+  // Position of the variable in its scope's config list; null keeps the bare
+  // seed.
+  seedIndex: number | null = null,
 ): Record<string, string> {
-  const value = generateRandomPermutationValue(config, context);
+  const value = generateRandomPermutationValue(config, context, seedIndex);
   const variables: Record<string, string> = {};
 
   // Check if we should flatten the array into indexed variables

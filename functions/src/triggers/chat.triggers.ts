@@ -238,7 +238,7 @@ export const onPublicChatMessageCreated = onDocumentCreated(
                 missingMediators.length > 1
                   ? shuffleWithSeed(
                       missingMediators,
-                      `${event.params.cohortId}-new-mediators-${cycleIndex}`,
+                      `${event.params.cohortId}-${event.params.stageId}-new-mediators-${cycleIndex}`,
                     )
                   : missingMediators;
               const nextMediators = [
@@ -250,7 +250,7 @@ export const onPublicChatMessageCreated = onDocumentCreated(
                 allMediatorIds.includes(id),
               );
               if (hadMediators) {
-                const seedString = `${event.params.cohortId}-${cycleIndex}`;
+                const seedString = `${event.params.cohortId}-${event.params.stageId}-${cycleIndex}`;
                 const shuffledParticipants = shuffleWithSeed(
                   allPublicParticipantIds,
                   seedString,
@@ -271,7 +271,7 @@ export const onPublicChatMessageCreated = onDocumentCreated(
         // 1. Initialize turn order if uninitialized or empty
         if (!currentTurnParticipantId || turnOrder.length === 0) {
           cycleIndex = 0;
-          const seedString = `${event.params.cohortId}-${cycleIndex}`;
+          const seedString = `${event.params.cohortId}-${event.params.stageId}-${cycleIndex}`;
           const shuffledParticipants = shuffleWithSeed(
             allPublicParticipantIds,
             seedString,
@@ -282,7 +282,7 @@ export const onPublicChatMessageCreated = onDocumentCreated(
             allMediatorIds.length > 1
               ? shuffleWithSeed(
                   allMediatorIds,
-                  `${event.params.cohortId}-mediators`,
+                  `${event.params.cohortId}-${event.params.stageId}-mediators`,
                 )
               : allMediatorIds;
 
@@ -371,7 +371,7 @@ export const onPublicChatMessageCreated = onDocumentCreated(
                   missingMediators.length > 1
                     ? shuffleWithSeed(
                         missingMediators,
-                        `${event.params.cohortId}-new-mediators-${cycleIndex}`,
+                        `${event.params.cohortId}-${event.params.stageId}-new-mediators-${cycleIndex}`,
                       )
                     : missingMediators;
                 const nextMediators = [
@@ -384,7 +384,7 @@ export const onPublicChatMessageCreated = onDocumentCreated(
                 );
 
                 if (hadMediators) {
-                  const seedString = `${event.params.cohortId}-${cycleIndex}`;
+                  const seedString = `${event.params.cohortId}-${event.params.stageId}-${cycleIndex}`;
                   const shuffledParticipants = shuffleWithSeed(
                     allPublicParticipantIds,
                     seedString,
