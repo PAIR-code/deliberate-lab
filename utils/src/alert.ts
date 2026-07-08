@@ -13,6 +13,7 @@ export interface AlertMessage {
   timestamp: UnifiedTimestamp; // time that message was sent
   responses: string[]; // responses from experimenter
   status: AlertStatus;
+  isExperimenterInitiated?: boolean;
 }
 
 export enum AlertStatus {
@@ -34,5 +35,6 @@ export function createAlertMessage(
     responses: config.responses ?? [],
     timestamp: config.timestamp ?? Timestamp.now(),
     status: config.status ?? AlertStatus.NEW,
+    isExperimenterInitiated: config.isExperimenterInitiated ?? false,
   };
 }
