@@ -150,6 +150,16 @@ export async function getFirestoreDataForStructuredPrompt(
       data,
     );
   }
+
+  // Fetch the current stage config when no prompt item has loaded it, so
+  // consumers can always read the stage's kind.
+  if (!data[currentStageId]) {
+    const stage = await getFirestoreStage(experimentId, currentStageId);
+    if (stage) {
+      data[currentStageId] = initializeStageContextData(stage);
+    }
+  }
+
   return {experiment, cohort, participants: answerParticipants, data};
 }
 
@@ -571,17 +581,40 @@ async function processPromptItems(
   // Determine which participant's variables to use for template resolution.
   // For agent participants, use their own variables.
   // For mediators in private chat, use that participant's variables.
-  let participantForVariables: ParticipantProfileExtended | undefined;
+  // For mediators in group chat, use every participant's variables.
+  let participantForVariables:
+    | ParticipantProfileExtended
+    | ParticipantProfileExtended[]
+    | undefined;
+  const stageConfigKind = promptData.data[stageId]?.stage?.kind;
+
   if (userProfile.type === UserType.PARTICIPANT) {
     participantForVariables = userProfile as ParticipantProfileExtended;
   } else if (
     userProfile.type === UserType.MEDIATOR &&
-    stageKind === StageKind.PRIVATE_CHAT
+    stageConfigKind === StageKind.PRIVATE_CHAT
   ) {
+    // The single participant in a private chat has their variables exposed
+    // directly, so they are just accessed by the assignment order within the
+    // participant, like {{<variable>.<position>}} or, for variables expanded
+    // to separate names, {{<variable>_1}}.
     participantForVariables =
       promptData.participants.length === 1
         ? promptData.participants[0]
         : undefined;
+  } else if (
+    userProfile.type === UserType.MEDIATOR &&
+    stageConfigKind === StageKind.CHAT
+  ) {
+    // In a group chat, expose every participant's variables to the mediator
+    // as arrays by position, so a prompt indexes a participant and then a
+    // position within that participant's variable:
+    // {{<variable>.<participant>.<position>}}. Participants are ordered
+    // humans first and otherwise keep the order they were fetched in.
+    participantForVariables = [
+      ...promptData.participants.filter((p) => !p.agentConfig),
+      ...promptData.participants.filter((p) => p.agentConfig),
+    ];
   }
 
   // Get variable context for resolving templates
