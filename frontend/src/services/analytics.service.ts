@@ -37,6 +37,7 @@ export enum ButtonClick {
   LOGIN = 'click_login',
   MANUAL_CHAT_SEND = 'click_manual_chat_send',
   PARTICIPANT_BOOT = 'click_participant_boot',
+  PARTICIPANT_MESSAGE = 'click_participant_message',
   PARTICIPANT_ADD = 'click_participant_add',
   PARTICIPANT_JOIN = 'click_participant_join',
   PERSONA_ENHANCE = 'click_persona_enhance',
