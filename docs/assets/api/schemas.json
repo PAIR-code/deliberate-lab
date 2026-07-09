@@ -1420,6 +1420,10 @@
               "type": "string"
             },
             {
+              "const": "ANONYMOUS_ANIMAL_NO_NUMBER",
+              "type": "string"
+            },
+            {
               "const": "ANONYMOUS_PARTICIPANT",
               "type": "string"
             }

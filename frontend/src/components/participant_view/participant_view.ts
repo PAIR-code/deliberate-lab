@@ -268,6 +268,7 @@ export class ParticipantView extends MobxLitElement {
       case StageKind.PROFILE:
         if (
           stage.profileType === ProfileType.ANONYMOUS_ANIMAL ||
+          stage.profileType === ProfileType.ANONYMOUS_ANIMAL_NO_NUMBER ||
           stage.profileType === ProfileType.ANONYMOUS_PARTICIPANT
         ) {
           return html`
