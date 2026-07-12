@@ -302,6 +302,7 @@ export const onPublicChatMessageCreated = onDocumentCreated(
             {
               currentTurnParticipantId: null,
               turnOrder: [],
+              turnProcessedMessageId: message.id,
             },
             {merge: true},
           );
@@ -458,6 +459,7 @@ export const onPublicChatMessageCreated = onDocumentCreated(
                 currentTurnParticipantId,
                 turnOrder,
                 cycleIndex,
+                turnProcessedMessageId: message.id,
               },
               {merge: true},
             );
@@ -468,6 +470,12 @@ export const onPublicChatMessageCreated = onDocumentCreated(
             );
             nextMediatorHolder = mediators.find(
               (m) => m.publicId === currentTurnParticipantId,
+            );
+          } else {
+            transaction.set(
+              publicStageDataRef,
+              {turnProcessedMessageId: message.id},
+              {merge: true},
             );
           }
           return;
@@ -588,6 +596,7 @@ export const onPublicChatMessageCreated = onDocumentCreated(
                 currentTurnParticipantId,
                 turnOrder,
                 cycleIndex,
+                turnProcessedMessageId: message.id,
               },
               {merge: true},
             );
@@ -598,6 +607,12 @@ export const onPublicChatMessageCreated = onDocumentCreated(
             );
             nextMediatorHolder = mediators.find(
               (m) => m.publicId === currentTurnParticipantId,
+            );
+          } else {
+            transaction.set(
+              publicStageDataRef,
+              {turnProcessedMessageId: message.id},
+              {merge: true},
             );
           }
         }

@@ -184,13 +184,15 @@ export class ChatInterface extends MobxLitElement {
     const data = this.stagePublicData;
     if (!data || !data.currentTurnParticipantId) return null;
 
-    // If the latest message is already from the current turn holder, the
-    // backend has not advanced the turn yet. Hide the turn indicator so the
-    // holder's input stays disabled (the placeholder banner keeps the layout
-    // steady) until the turn switches to the next holder all at once.
-    const messages = this.cohortService.chatMap[this.stage.id] ?? [];
+    // The backend stamps turnProcessedMessageId once its turn logic has
+    // handled a message. Until the newest participant or mediator message is
+    // stamped, the holder in the public data is stale, so hide the indicator
+    // and disable input.
+    const messages = (this.cohortService.chatMap[this.stage.id] ?? []).filter(
+      (m) => m.type !== UserType.SYSTEM && m.type !== UserType.EXPERIMENTER,
+    );
     const latest = messages[messages.length - 1];
-    if (latest?.senderId === data.currentTurnParticipantId) return null;
+    if (latest && latest.id !== data.turnProcessedMessageId) return null;
 
     return this.buildGroupChatTurnState(data.currentTurnParticipantId);
   }
