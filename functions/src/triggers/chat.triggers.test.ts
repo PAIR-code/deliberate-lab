@@ -366,6 +366,7 @@ describe('Chat Triggers - Turn Taking Mechanics', () => {
           currentTurnParticipantId: 'p2',
           turnOrder: ['m1', 'p1', 'p2', 'p3'],
           cycleIndex: 0,
+          turnProcessedMessageId: 'msg123',
         },
         {merge: true},
       );
@@ -423,6 +424,7 @@ describe('Chat Triggers - Turn Taking Mechanics', () => {
           currentTurnParticipantId: 'p3',
           turnOrder: ['m1', 'p1', 'p2', 'p3'],
           cycleIndex: 0,
+          turnProcessedMessageId: 'msg123',
         },
         {merge: true},
       );
@@ -474,8 +476,14 @@ describe('Chat Triggers - Turn Taking Mechanics', () => {
 
       await onPublicChatMessageCreated.run(event as any);
 
-      // Assert that Firestore setMock was NOT called to advance the turn
-      expect(__mocks__.setMock).not.toHaveBeenCalled();
+      // Assert the turn did not advance; only the processed message id is
+      // recorded
+      expect(__mocks__.setMock).toHaveBeenCalledTimes(1);
+      expect(__mocks__.setMock).toHaveBeenCalledWith(
+        'experiments/exp123/cohorts/cohort123/publicStageData/stage123',
+        {turnProcessedMessageId: 'msg123'},
+        {merge: true},
+      );
       // Assert no AI agent or mediator was triggered
       expect(mockInternalCreateAgentChatMessage).not.toHaveBeenCalled();
     });
@@ -511,8 +519,14 @@ describe('Chat Triggers - Turn Taking Mechanics', () => {
 
       await onPublicChatMessageCreated.run(event as any);
 
-      // Assert turn did not advance in database
-      expect(__mocks__.setMock).not.toHaveBeenCalled();
+      // Assert the turn did not advance; only the processed message id is
+      // recorded
+      expect(__mocks__.setMock).toHaveBeenCalledTimes(1);
+      expect(__mocks__.setMock).toHaveBeenCalledWith(
+        'experiments/exp123/cohorts/cohort123/publicStageData/stage123',
+        {turnProcessedMessageId: 'msg123'},
+        {merge: true},
+      );
 
       // Assert mediator is triggered to speak the initial message
       expect(mockInternalCreateAgentChatMessage).toHaveBeenCalledWith(
@@ -646,6 +660,7 @@ describe('Chat Triggers - Turn Taking Mechanics', () => {
           currentTurnParticipantId: 'm1', // mediator starts new cycle
           turnOrder: expectedTurnOrder,
           cycleIndex: 1,
+          turnProcessedMessageId: 'msg123',
         },
         {merge: true},
       );
@@ -710,6 +725,7 @@ describe('Chat Triggers - Turn Taking Mechanics', () => {
           currentTurnParticipantId: 'p3',
           turnOrder: ['m1', 'p1', 'p3'],
           cycleIndex: 0,
+          turnProcessedMessageId: 'msg123',
         },
         {merge: true},
       );
@@ -767,6 +783,7 @@ describe('Chat Triggers - Turn Taking Mechanics', () => {
           currentTurnParticipantId: 'm1',
           turnOrder: expectedTurnOrder,
           cycleIndex: 1,
+          turnProcessedMessageId: 'msg123',
         },
         {merge: true},
       );
@@ -837,6 +854,7 @@ describe('Chat Triggers - Turn Taking Mechanics', () => {
           currentTurnParticipantId: 'm1',
           turnOrder: ['m1'],
           cycleIndex: 1,
+          turnProcessedMessageId: 'msg123',
         },
         {merge: true},
       );

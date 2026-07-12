@@ -111,6 +111,10 @@ export interface ChatStagePublicData extends BaseStagePublicData {
   currentTurnParticipantId?: string | null; // ID of the participant whose turn it is
   turnOrder?: string[]; // Array of participant IDs defining the turn order
   cycleIndex?: number; // Counter to track turn cycles for seeded random
+  // Id of the last chat message the turn logic processed. The holder shown in
+  // this data is current only when this matches the newest participant or
+  // mediator message.
+  turnProcessedMessageId?: string;
   // Effective cohort-total minimum messages after applying any active
   // mediator's per-stage override (group chat only). Resolved by the backend;
   // the frontend advance-gate falls back to the stage value when null.
@@ -228,6 +232,7 @@ export function createChatStagePublicData(
     currentTurnParticipantId: null,
     turnOrder: [],
     cycleIndex: 0,
+    turnProcessedMessageId: '',
     effectiveMinNumberOfMessages: null,
     effectiveMaxNumberOfMessages: null,
   };
