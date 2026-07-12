@@ -20,7 +20,12 @@ import {
   UserType,
   getTimeElapsed,
 } from '@deliberation-lab/utils';
-import {getHashBasedColor, getProfileBasedColor} from '../../shared/utils';
+import {
+  getHashBasedColor,
+  getProfileBasedColor,
+  MEDIATOR_OBSERVER_COLOR,
+  variableAssignmentsIncludeObserver,
+} from '../../shared/utils';
 import {ResponseTimeoutTracker} from '../../shared/response_timeout';
 
 import {styles} from './group_chat_participant_view.scss';
@@ -220,7 +225,15 @@ export class PrivateChatView extends MobxLitElement {
       // Colour the representative from its own robot avatar, not the observer's
       // (possibly gendered) avatar, so it matches the group-chat representative
       // and is never given a mediator/gendered colour.
-      color: getProfileBasedColor(profile.publicId ?? '', '🤖'),
+      color: getProfileBasedColor(
+        profile.publicId ?? '',
+        '🤖',
+        variableAssignmentsIncludeObserver(
+          this.cohortService.activeParticipants,
+        )
+          ? [MEDIATOR_OBSERVER_COLOR]
+          : [],
+      ),
     };
   }
 
