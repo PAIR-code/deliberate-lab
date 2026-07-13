@@ -16,6 +16,8 @@ import {
   getTimeElapsed,
   ChatStagePublicData,
   ChatStageConfig,
+  MEDIATOR_OBSERVER_COLOR,
+  variableConfigsIncludeObserver,
 } from '@deliberation-lab/utils';
 import {
   getFirestoreCohort,
@@ -142,6 +144,14 @@ export const createParticipant = onCall(async (request) => {
         .get()
     ).data().count;
 
+    // When any treatment can assign observers, the mediator color is reserved
+    // and participant profiles must not be generated with it.
+    const reservedProfileColor = variableConfigsIncludeObserver(
+      experiment.variableConfigs ?? [],
+    )
+      ? MEDIATOR_OBSERVER_COLOR
+      : undefined;
+
     // Set participant profile fields
     if (data.isAnonymous) {
       // Find the profile stage to determine which anonymous profile type to use
@@ -158,9 +168,21 @@ export const createParticipant = onCall(async (request) => {
       const profileType =
         profileStage?.profileType || ProfileType.ANONYMOUS_ANIMAL;
 
-      setProfile(numParticipants, participantConfig, true, profileType);
+      setProfile(
+        numParticipants,
+        participantConfig,
+        true,
+        profileType,
+        reservedProfileColor,
+      );
     } else {
-      setProfile(numParticipants, participantConfig, false);
+      setProfile(
+        numParticipants,
+        participantConfig,
+        false,
+        undefined,
+        reservedProfileColor,
+      );
     }
 
     // Set current stage ID in participant config

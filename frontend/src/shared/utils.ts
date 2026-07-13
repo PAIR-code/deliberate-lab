@@ -135,7 +135,7 @@ export function getHashBasedColor(
 }
 
 /** The color reserved for mediators when an experiment uses observers. */
-export const MEDIATOR_OBSERVER_COLOR = 'blue';
+export {MEDIATOR_OBSERVER_COLOR} from '@deliberation-lab/utils';
 
 /**
  * Whether any of the given participants' variable assignments reference the
