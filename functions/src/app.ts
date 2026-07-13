@@ -6,7 +6,9 @@ import {setGlobalOptions} from 'firebase-functions/v2';
 // This MUST be in this file (not index.ts) because the bundler resolves
 // dependency modules before executing index.ts top-level code.
 // Since all endpoint files import app.ts, this runs before any onCall() calls.
-setGlobalOptions({memory: '512MiB'});
+// Turn-based agent calls retry inside request handlers for up to the stage's
+// response deadline, so the execution limit must exceed it.
+setGlobalOptions({memory: '512MiB', timeoutSeconds: 300});
 
 // Start writing functions
 // https://firebase.google.com/docs/functions/typescript

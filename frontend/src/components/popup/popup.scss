@@ -56,3 +56,14 @@
   font-style: italic;
   margin: 0;
 }
+
+.popup.constrained {
+  max-width: min(640px, 90vw);
+  width: auto;
+}
+
+.body {
+  @include typescale.body-medium;
+  max-height: 50vh;
+  overflow-y: auto;
+}

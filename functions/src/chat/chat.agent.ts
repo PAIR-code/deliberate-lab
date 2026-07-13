@@ -4,21 +4,26 @@ import {
   ChatMessage,
   ChatPromptConfig,
   ChatStageConfig,
+  DEFAULT_AGENT_TIMEOUT_SECONDS,
   ChatStagePublicData,
   extractChatMediatorStructuredFields,
   getStructuredOutput,
   MediatorProfileExtended,
   ModelResponseStatus,
   ParticipantProfileExtended,
+  ParticipantStatus,
   StageConfig,
   StageKind,
   UserType,
   awaitTypingDelay,
   createChatMessage,
+  NEUTRAL_TIMEOUT_RESPONSES,
+  TIMEOUT_ERROR_RESPONSE,
   createParticipantProfileBase,
   createSystemChatMessage,
   sanitizeRawResponseForLogging,
   shuffleWithSeed,
+  Experiment,
 } from '@deliberation-lab/utils';
 import {Timestamp} from 'firebase-admin/firestore';
 import {processModelResponse} from '../agent.utils';
@@ -36,12 +41,14 @@ import {
 import {updateParticipantReadyToEndChat} from '../chat/chat.utils';
 import {
   getExperimenterDataFromExperiment,
+  getFirestoreExperiment,
   getFirestorePublicStageChatMessages,
   getFirestorePrivateChatMessages,
   getFirestoreStage,
   getFirestoreStagePublicData,
   getFirestoreActiveMediators,
   getFirestoreActiveParticipants,
+  getFirestoreParticipantRef,
   getGroupChatTriggerLogRef,
   getPrivateChatTriggerLogRef,
   getFirestoreParticipantAnswerRef,
@@ -56,9 +63,6 @@ import {updateModelLogFiles} from '../log.utils';
 // ****************************************************************************
 // Functions for preparing, querying, and organizing agent chat responses.
 // ****************************************************************************
-
-// 300s cloud function timeout minus 10s buffer for skip handler.
-const TURN_BASED_AGENT_RETRY_TIMEOUT_MS = 290000;
 
 /** Use persona chat prompt to create and send agent chat message. */
 export async function createAgentChatMessageFromPrompt(
@@ -100,173 +104,341 @@ export async function createAgentChatMessageFromPrompt(
   const isPrivateChat = stage.kind === StageKind.PRIVATE_CHAT;
   const isTurnBasedGroupChat =
     stage.kind === StageKind.CHAT && (stage as ChatStageConfig).isTurnBased;
+  // Group-style turn-based private chats retry transient model errors until
+  // the deadline too: the participant is blocked waiting on the mediator, so
+  // we mirror the group-chat turn-based behavior rather than erroring out.
+  const isTurnBasedPrivateChat =
+    stage.kind === StageKind.PRIVATE_CHAT &&
+    (stage as {isTurnBasedChatGroupStyle?: boolean}).isTurnBasedChatGroupStyle;
+  const agentTimeoutMs =
+    ((stage as {agentTimeoutSeconds?: number}).agentTimeoutSeconds ??
+      DEFAULT_AGENT_TIMEOUT_SECONDS) * 1000;
   const retryDeadlineMs =
     turnBasedRetryDeadlineMs ??
-    (isTurnBasedGroupChat
-      ? Date.now() + TURN_BASED_AGENT_RETRY_TIMEOUT_MS
+    (isTurnBasedGroupChat || isTurnBasedPrivateChat
+      ? Date.now() + agentTimeoutMs
       : undefined);
 
-  // Check if this is an initial message request (empty triggerChatId)
-  if (triggerChatId === '') {
-    // Check if we've already sent an initial message for this user
-
-    // Build the appropriate trigger log reference based on chat type
-    const triggerLogId = `initial-${user.publicId}`;
-    const triggerLogRef = isPrivateChat
-      ? getPrivateChatTriggerLogRef(
-          experimentId,
-          participantIds[0], // Use the first participant ID as the storage location
-          stageId,
-          triggerLogId,
-        )
-      : getGroupChatTriggerLogRef(
-          experimentId,
-          cohortId,
-          stageId,
-          triggerLogId,
-        );
-
-    const shouldSendInitialMessage = await app
-      .firestore()
-      .runTransaction(async (transaction) => {
-        const triggerLog = await transaction.get(triggerLogRef);
-        if (triggerLog.exists) return false;
-
-        transaction.create(triggerLogRef, {timestamp: Timestamp.now()});
-        return true;
-      });
-
-    if (!shouldSendInitialMessage) {
-      return false; // Already sent initial message
-    }
-  }
-
-  // Get the chat message (either initial or response)
-  let message: ChatMessage | null = null;
-
-  // For initial messages, check if there's a configured initial message
-  if (triggerChatId === '') {
-    const initialMessage = promptConfig.chatSettings?.initialMessage;
-    if (initialMessage && initialMessage.trim() !== '') {
-      // Resolve template variables in the initial message.
-      // Only use participant variables for private chats.
-      const resolvedMessage = await resolveStringWithVariables(
-        initialMessage,
-        experimentId,
-        cohortId,
-        isPrivateChat ? participantIds[0] : undefined,
-      );
-
-      message = createChatMessage({
-        message: resolvedMessage,
-        senderId: user.publicId,
-        type: user.type,
-        profile: createParticipantProfileBase(user),
-        timestamp: Timestamp.now(),
-      });
-    }
-  }
-
-  // If no configured initial message or this is a regular response, query the API
-  if (!message) {
-    const response = await getAgentChatMessage(
-      experimentId,
-      cohortId,
-      participantIds,
-      stage,
-      user,
-      promptConfig,
-      retryDeadlineMs,
-    );
-    message = response.message;
-    if (!message) {
-      if (isTurnBasedGroupChat && response.retryTimedOut) {
-        // Clean up the initial trigger log lock if it timed out and we are skipping the agent
-        if (triggerChatId === '') {
-          const triggerLogId = `initial-${user.publicId}`;
-          const triggerLogRef = getGroupChatTriggerLogRef(
-            experimentId,
-            cohortId,
-            stageId,
-            triggerLogId,
-          );
-          await triggerLogRef.delete();
-        }
-
-        await skipTimedOutTurnBasedAgentTurn(
-          experimentId,
-          cohortId,
-          stage,
-          triggerChatId,
-          user,
-        );
-        return true;
+  // An unexpected error on the turn-based path would otherwise kill the
+  // trigger silently (nothing re-fires it). Retry the pipeline until the
+  // stage's response deadline, like model errors; only once the deadline has
+  // elapsed fall through to the fallback message/pop-up.
+  const throwRetryDelayMs = 5000;
+  for (;;) {
+    try {
+      return await runAgentChatMessagePipeline();
+    } catch (error) {
+      if (!isTurnBasedGroupChat && !isTurnBasedPrivateChat) {
+        throw error;
       }
-
+      console.error(
+        `[chat.agent] Turn-based message pipeline failed for ${user.publicId}:`,
+        error,
+      );
+      // Release the initial-message lock so a retry can re-enter.
       if (triggerChatId === '') {
         const triggerLogId = `initial-${user.publicId}`;
-        console.log(
-          `[chat.agent] getAgentChatMessage failed for initial message. Deleting trigger log: ${triggerLogId}`,
-        );
-        const isTurnBased =
-          stage?.kind === StageKind.CHAT &&
-          (stage as ChatStageConfig).isTurnBased;
+        const triggerLogRef = isPrivateChat
+          ? getPrivateChatTriggerLogRef(
+              experimentId,
+              participantIds[0],
+              stageId,
+              triggerLogId,
+            )
+          : getGroupChatTriggerLogRef(
+              experimentId,
+              cohortId,
+              stageId,
+              triggerLogId,
+            );
+        await triggerLogRef.delete().catch(() => {});
+      }
+      if (retryDeadlineMs !== undefined && Date.now() < retryDeadlineMs) {
+        await new Promise((resolve) => setTimeout(resolve, throwRetryDelayMs));
+        continue;
+      }
+    }
+    break;
+  }
+  {
+    const outcome = await handleTurnBasedDeadEnd(
+      experimentId,
+      cohortId,
+      stage,
+      participantIds,
+      user,
+      triggerChatId,
+    );
+    if (outcome === null) {
+      return true;
+    }
+    if (stage.kind === StageKind.PRIVATE_CHAT) {
+      const privateChatParticipantId = participantIds[0];
+      if (!privateChatParticipantId) {
+        return false;
+      }
+      await sendAgentPrivateChatMessage(
+        experimentId,
+        privateChatParticipantId,
+        stageId,
+        triggerChatId,
+        outcome,
+        promptConfig.chatSettings,
+      );
+    } else {
+      await sendAgentGroupChatMessage(
+        experimentId,
+        cohortId,
+        stageId,
+        triggerChatId,
+        outcome,
+        promptConfig.chatSettings,
+      );
+    }
+    return true;
+  }
 
-        let triggerLogRef;
-        if (isTurnBased) {
-          triggerLogRef = getGroupChatTriggerLogRef(
+  // Unreachable: every path above returns.
+
+  async function runAgentChatMessagePipeline(): Promise<boolean> {
+    // Check if this is an initial message request (empty triggerChatId)
+    if (triggerChatId === '') {
+      // Check if we've already sent an initial message for this user
+
+      // Build the appropriate trigger log reference based on chat type
+      const triggerLogId = `initial-${user.publicId}`;
+      const triggerLogRef = isPrivateChat
+        ? getPrivateChatTriggerLogRef(
+            experimentId,
+            participantIds[0], // Use the first participant ID as the storage location
+            stageId,
+            triggerLogId,
+          )
+        : getGroupChatTriggerLogRef(
             experimentId,
             cohortId,
             stageId,
             triggerLogId,
           );
-        } else {
-          triggerLogRef = app
-            .firestore()
-            .collection('experiments')
-            .doc(experimentId)
-            .collection('cohorts')
-            .doc(cohortId)
-            .collection('publicStageData')
-            .doc(stageId)
-            .collection('agentInitialTriggerLog')
-            .doc(triggerLogId);
-        }
-        await triggerLogRef.delete();
-      }
-      return response.success;
-    }
-  }
 
-  if (stage.kind === StageKind.PRIVATE_CHAT) {
-    // For private chat, use the first participant's ID for storage location
-    const privateChatParticipantId = participantIds[0];
-    if (!privateChatParticipantId) {
-      console.error(
-        'No participant ID provided for private chat message storage',
-      );
-      return false;
+      const shouldSendInitialMessage = await app
+        .firestore()
+        .runTransaction(async (transaction) => {
+          const triggerLog = await transaction.get(triggerLogRef);
+          if (triggerLog.exists) return false;
+
+          transaction.create(triggerLogRef, {timestamp: Timestamp.now()});
+          return true;
+        });
+
+      if (!shouldSendInitialMessage) {
+        return false; // Already sent initial message
+      }
     }
-    await sendAgentPrivateChatMessage(
-      experimentId,
-      privateChatParticipantId,
-      stageId,
-      triggerChatId,
-      message,
-      promptConfig.chatSettings,
-    );
-  } else {
-    await sendAgentGroupChatMessage(
+
+    // Get the chat message (either initial or response)
+    let message: ChatMessage | null = null;
+
+    // For initial messages, check if there's a configured initial message
+    if (triggerChatId === '') {
+      const initialMessage = promptConfig.chatSettings?.initialMessage;
+      if (initialMessage && initialMessage.trim() !== '') {
+        // Resolve template variables in the initial message.
+        // Only use participant variables for private chats.
+        const resolvedMessage = await resolveStringWithVariables(
+          initialMessage,
+          experimentId,
+          cohortId,
+          isPrivateChat ? participantIds[0] : undefined,
+        );
+
+        message = createChatMessage({
+          message: resolvedMessage,
+          senderId: user.publicId,
+          type: user.type,
+          profile: createParticipantProfileBase(user),
+          timestamp: Timestamp.now(),
+        });
+      }
+    }
+
+    // If no configured initial message or this is a regular response, query the API
+    if (!message) {
+      const response = await getAgentChatMessage(
+        experimentId,
+        cohortId,
+        participantIds,
+        stage,
+        user,
+        promptConfig,
+        retryDeadlineMs,
+      );
+      message = response.message;
+      if (!message) {
+        // `deadlineReached` is set only when the model call hit the stage's
+        // response deadline (see getAgentChatMessage / processModelResponse).
+        // It is not set for other "no message" outcomes (empty response,
+        // non-OK status, shouldRespond=false); those keep retrying as before.
+        const deadlineReached = response.deadlineReached;
+        // An empty/unusable response that exhausted its retry budget is, on the
+        // turn-based path, also a dead end that must surface the restart pop-up:
+        // otherwise the turn-holder stays set, no message re-fires the trigger,
+        // and the chat freezes silently with no pop-up. Treat it like the
+        // deadline here (the human can then restart).
+        const emptyResponse = response.emptyResponse;
+        // A permanent failure (no API key, no agent config) is the same dead
+        // end: raise the pop-up immediately (no fallback message would help).
+        const permanentFailure = response.permanentFailure;
+        if (
+          (isTurnBasedGroupChat || isTurnBasedPrivateChat) &&
+          (deadlineReached || emptyResponse || permanentFailure)
+        ) {
+          const outcome = await handleTurnBasedDeadEnd(
+            experimentId,
+            cohortId,
+            stage,
+            participantIds,
+            user,
+            triggerChatId,
+            permanentFailure === true,
+          );
+          if (outcome === null) {
+            return true;
+          }
+          message = outcome;
+        }
+
+        if (!message && triggerChatId === '') {
+          const triggerLogId = `initial-${user.publicId}`;
+          console.log(
+            `[chat.agent] getAgentChatMessage failed for initial message. Deleting trigger log: ${triggerLogId}`,
+          );
+          const isTurnBased =
+            stage?.kind === StageKind.CHAT &&
+            (stage as ChatStageConfig).isTurnBased;
+
+          let triggerLogRef;
+          if (isTurnBased) {
+            triggerLogRef = getGroupChatTriggerLogRef(
+              experimentId,
+              cohortId,
+              stageId,
+              triggerLogId,
+            );
+          } else {
+            triggerLogRef = app
+              .firestore()
+              .collection('experiments')
+              .doc(experimentId)
+              .collection('cohorts')
+              .doc(cohortId)
+              .collection('publicStageData')
+              .doc(stageId)
+              .collection('agentInitialTriggerLog')
+              .doc(triggerLogId);
+          }
+          await triggerLogRef.delete();
+        }
+        if (!message) {
+          return response.success;
+        }
+      }
+    }
+
+    if (stage.kind === StageKind.PRIVATE_CHAT) {
+      // For private chat, use the first participant's ID for storage location
+      const privateChatParticipantId = participantIds[0];
+      if (!privateChatParticipantId) {
+        console.error(
+          'No participant ID provided for private chat message storage',
+        );
+        return false;
+      }
+      await sendAgentPrivateChatMessage(
+        experimentId,
+        privateChatParticipantId,
+        stageId,
+        triggerChatId,
+        message,
+        promptConfig.chatSettings,
+      );
+    } else {
+      await sendAgentGroupChatMessage(
+        experimentId,
+        cohortId,
+        stageId,
+        triggerChatId,
+        message,
+        promptConfig.chatSettings,
+      );
+    }
+
+    return true;
+  }
+}
+
+/** On the turn-based path, a dead end (deadline, empty response, permanent
+ * failure, or unexpected error) must not leave the turn silently stuck.
+ * Claims a timeout response and returns it as the fallback chat message; when
+ * none remains, raises the blocking API-failure pop-up (cleaning up the
+ * initial trigger-log lock so a restart can retry) and returns null. */
+async function handleTurnBasedDeadEnd(
+  experimentId: string,
+  cohortId: string,
+  stage: StageConfig,
+  participantIds: string[],
+  user: ParticipantProfileExtended | MediatorProfileExtended,
+  triggerChatId: string,
+  // Permanent failures (bad key, invalid config) cannot improve on later
+  // turns, so no fallback message is posted: raise the pop-up right away.
+  permanent = false,
+): Promise<ChatMessage | null> {
+  const isTurnBasedGroupChat =
+    stage.kind === StageKind.CHAT && (stage as ChatStageConfig).isTurnBased;
+  const experiment = await getFirestoreExperiment(experimentId);
+  const timeoutResponse = permanent
+    ? null
+    : await claimTimeoutResponse(
+        experimentId,
+        cohortId,
+        stage,
+        participantIds,
+        experiment ?? undefined,
+      );
+  if (timeoutResponse === null) {
+    // Clean up the initial trigger log lock so the agent can be retried
+    // if the study is restarted (group chat owns this lock).
+    if (isTurnBasedGroupChat && triggerChatId === '') {
+      const triggerLogId = `initial-${user.publicId}`;
+      const triggerLogRef = getGroupChatTriggerLogRef(
+        experimentId,
+        cohortId,
+        stage.id,
+        triggerLogId,
+      );
+      await triggerLogRef.delete();
+    }
+
+    // Do not skip or advance the turn. Surface a blocking pop-up to the
+    // human participant(s) so they can restart the study.
+    await markTurnBasedApiFailure(
       experimentId,
       cohortId,
-      stageId,
-      triggerChatId,
-      message,
-      promptConfig.chatSettings,
+      stage,
+      participantIds,
     );
+    return null;
   }
 
-  return true;
+  // The agent sends the timeout message, so the turn completes and the
+  // conversation continues.
+  return createChatMessage({
+    message: timeoutResponse,
+    senderId: user.publicId,
+    type: user.type,
+    profile: createParticipantProfileBase(user),
+    timestamp: Timestamp.now(),
+  });
 }
 
 /** Query for and return chat message for given agent and chat prompt configs. */
@@ -283,6 +455,20 @@ export async function getAgentChatMessage(
   message: ChatMessage | null;
   success: boolean;
   retryTimedOut: boolean;
+  // True ONLY when the genuine 120s RetryTimeoutError deadline was reached
+  // (model never returned a usable response in time). Used to trigger the
+  // turn-based "restart the study" pop-up. Not set for other null-message
+  // outcomes (empty response, non-OK status, shouldRespond=false).
+  deadlineReached: boolean;
+  // True when the model returned an empty/unusable response after exhausting
+  // its retry budget. On the turn-based path the caller treats this like the
+  // deadline (surfaces the restart pop-up); other (non-turn-based) callers
+  // ignore it.
+  emptyResponse?: boolean;
+  // True when the call can never succeed (no API key configured, no agent
+  // config). On the turn-based path the caller treats this like the deadline,
+  // immediately: waiting out the timeout would add no information.
+  permanentFailure?: boolean;
 }> {
   const stageId = stage.id;
 
@@ -290,7 +476,13 @@ export async function getAgentChatMessage(
   const experimenterData =
     await getExperimenterDataFromExperiment(experimentId);
   if (!experimenterData) {
-    return {message: null, success: false, retryTimedOut: false};
+    return {
+      message: null,
+      success: false,
+      retryTimedOut: false,
+      deadlineReached: false,
+      permanentFailure: true,
+    };
   }
 
   // Get chat messages from private/public data based on stage kind
@@ -310,6 +502,9 @@ export async function getAgentChatMessage(
   // For turn-based conversation, ensure it is the agent's turn
   const isTurnBasedGroupChat =
     stage.kind === StageKind.CHAT && (stage as ChatStageConfig).isTurnBased;
+  const isTurnBasedPrivateChat =
+    stage.kind === StageKind.PRIVATE_CHAT &&
+    (stage as {isTurnBasedChatGroupStyle?: boolean}).isTurnBasedChatGroupStyle;
   if (isTurnBasedGroupChat) {
     const publicStageData = await getFirestoreStagePublicData(
       experimentId,
@@ -321,19 +516,35 @@ export async function getAgentChatMessage(
       chatPublicData &&
       chatPublicData.currentTurnParticipantId !== user.publicId
     ) {
-      return {message: null, success: true, retryTimedOut: false};
+      return {
+        message: null,
+        success: true,
+        retryTimedOut: false,
+        deadlineReached: false,
+      };
     }
   }
 
   // Confirm that agent can send chat messages based on prompt config
   const chatSettings = promptConfig.chatSettings;
   if (!canSendAgentChatMessage(user.publicId, chatSettings, chatMessages)) {
-    return {message: null, success: true, retryTimedOut: false};
+    return {
+      message: null,
+      success: true,
+      retryTimedOut: false,
+      deadlineReached: false,
+    };
   }
 
   // Ensure user has agent config
   if (!user.agentConfig) {
-    return {message: null, success: false, retryTimedOut: false};
+    return {
+      message: null,
+      success: false,
+      retryTimedOut: false,
+      deadlineReached: false,
+      permanentFailure: true,
+    };
   }
 
   // Use provided participant IDs for prompt context
@@ -384,7 +595,8 @@ export async function getAgentChatMessage(
   }
 
   const retryDurationMs =
-    isTurnBasedGroupChat && turnBasedRetryDeadlineMs !== undefined
+    (isTurnBasedGroupChat || isTurnBasedPrivateChat) &&
+    turnBasedRetryDeadlineMs !== undefined
       ? Math.max(0, turnBasedRetryDeadlineMs - Date.now())
       : null;
 
@@ -424,7 +636,9 @@ export async function getAgentChatMessage(
     user.agentConfig.modelSettings,
     promptConfig.generationConfig,
     effectiveStructuredOutputConfig,
-    isTurnBasedGroupChat ? null : (promptConfig.numRetries ?? 0),
+    isTurnBasedGroupChat || isTurnBasedPrivateChat
+      ? null
+      : (promptConfig.numRetries ?? 0),
     retryDurationMs,
   );
 
@@ -448,7 +662,19 @@ export async function getAgentChatMessage(
 
   // Process response
   if (response.status !== ModelResponseStatus.OK) {
-    return {message: null, success: false, retryTimedOut};
+    // A non-OK status after exhausting the retry budget. If the retry
+    // deadline was hit, flag it for the turn-based caller. Any other non-OK
+    // escape is a status the retry loop deliberately fails fast on (e.g. a
+    // bad API key or invalid config): deterministic, so nothing will improve
+    // without intervention. Flag it as permanent so the turn-based caller
+    // falls back immediately instead of leaving the turn silently stuck.
+    return {
+      message: null,
+      success: false,
+      retryTimedOut,
+      deadlineReached: retryTimedOut,
+      permanentFailure: !retryTimedOut,
+    };
   }
 
   const structured = effectiveStructuredOutputConfig as
@@ -477,9 +703,21 @@ export async function getAgentChatMessage(
     }
   }
 
-  // No text and no files = failure
+  // No text and no files = an empty/unusable response (status was OK) after
+  // the empty-retry budget was already exhausted. This is NOT the genuine
+  // 120s deadline, but on the turn-based path it is still a dead end: the
+  // trigger does not re-fire on its own, so returning here silently freezes
+  // the chat with no pop-up. Flag it so the turn-based caller surfaces the
+  // restart pop-up instead of stalling. Non-turn-based callers ignore
+  // emptyResponse.
   if (!response.text && (!response.files || response.files.length === 0)) {
-    return {message: null, success: false, retryTimedOut};
+    return {
+      message: null,
+      success: false,
+      retryTimedOut,
+      deadlineReached: false,
+      emptyResponse: true,
+    };
   }
 
   if (!shouldRespond) {
@@ -518,7 +756,12 @@ export async function getAgentChatMessage(
       );
       await participantAnswerDoc.set({readyToEndChat: true}, {merge: true});
     }
-    return {message: null, success: true, retryTimedOut};
+    return {
+      message: null,
+      success: true,
+      retryTimedOut,
+      deadlineReached: false,
+    };
   }
 
   // If stage includes discussions, figure out what discussion ID should be
@@ -569,7 +812,12 @@ export async function getAgentChatMessage(
     }
   }
 
-  return {message: chatMessage, success: true, retryTimedOut};
+  return {
+    message: chatMessage,
+    success: true,
+    retryTimedOut,
+    deadlineReached: false,
+  };
 }
 
 async function getNextTurnBasedSpeakerAfterSkippedAgent(
@@ -686,6 +934,179 @@ async function getNextTurnBasedSpeakerAfterSkippedAgent(
   }
 
   return null;
+}
+
+/**
+ * Surfaces the blocking "restart the study" pop-up to the relevant HUMAN
+ * (non-agent) participant(s) when a turn-based agent's model call reaches the
+ * genuine 120s retry deadline still failing.
+ *
+ * Sets ParticipantStatus.API_FAILURE on:
+ *   - group chat (StageKind.CHAT): all active non-agent participants in the cohort.
+ *   - group-chat-style private chat (StageKind.PRIVATE_CHAT): participantIds[0].
+ *
+ * Only transitions participants whose currentStatus is an active/in-progress
+ * state (IN_PROGRESS); never overwrites terminal/transfer states such as
+ * BOOTED_OUT, SUCCESS, DELETED, or TRANSFER_*.
+ */
+/**
+ * Reserve the next timeout message for the human participants in the failing
+ * chat. Returns the error message, or a neutral response drawn without
+ * replacement when the experiment opts into those. Once a participant has
+ * reached the experiment's timeout message limit, returns null so the caller
+ * ends the study instead. Unset limit means the chat continues indefinitely.
+ */
+async function claimTimeoutResponse(
+  experimentId: string,
+  cohortId: string,
+  stage: StageConfig,
+  participantIds: string[], // private participant IDs (private chat uses [0])
+  experiment?: Experiment,
+): Promise<string | null> {
+  const targetPrivateIds = await resolveTimeoutTargetPrivateIds(
+    experimentId,
+    cohortId,
+    stage,
+    participantIds,
+  );
+  if (targetPrivateIds.length === 0) {
+    console.error(
+      `[chat.agent] Timeout message: no human targets resolved in stage ${stage.id}; ending the study instead.`,
+    );
+    return null;
+  }
+  // Undefined defaults to 2; an explicit null means no limit.
+  const limit =
+    experiment?.timeoutMessageLimit === undefined
+      ? 2
+      : experiment.timeoutMessageLimit;
+  const useNeutral = experiment?.useNeutralTimeoutResponses === true;
+
+  const refs = targetPrivateIds.map((privateId) =>
+    getFirestoreParticipantRef(experimentId, privateId),
+  );
+  // Read, pick, and record atomically so concurrent claims for the same
+  // failure cannot double-spend or overwrite each other's records.
+  const pick = await app.firestore().runTransaction(async (transaction) => {
+    const snapshots = await transaction.getAll(...refs);
+    const participants = snapshots.map(
+      (snapshot) => snapshot.data() as ParticipantProfileExtended | undefined,
+    );
+    const count = Math.max(
+      0,
+      ...participants.map((p) => p?.timeoutMessageCount ?? 0),
+    );
+    if (limit !== null && count >= limit) return null;
+
+    let choice = TIMEOUT_ERROR_RESPONSE;
+    let usedNeutral: Set<string> | null = null;
+    if (useNeutral) {
+      usedNeutral = new Set<string>();
+      for (const participant of participants) {
+        for (const response of participant?.neutralTimeoutResponses ?? []) {
+          usedNeutral.add(response);
+        }
+      }
+      const remaining = NEUTRAL_TIMEOUT_RESPONSES.filter(
+        (r) => !usedNeutral!.has(r),
+      );
+      if (remaining.length > 0) {
+        choice = remaining[Math.floor(Math.random() * remaining.length)];
+        usedNeutral.add(choice);
+      }
+    }
+    for (const [i, ref] of refs.entries()) {
+      const update: Record<string, unknown> = {
+        timeoutMessageCount: (participants[i]?.timeoutMessageCount ?? 0) + 1,
+      };
+      if (usedNeutral && choice !== TIMEOUT_ERROR_RESPONSE) {
+        update.neutralTimeoutResponses = [...usedNeutral];
+      }
+      transaction.set(ref, update, {merge: true});
+    }
+    return choice;
+  });
+  console.log(
+    `[chat.agent] Timeout message in stage ${stage.id}: ` +
+      (pick === null ? 'limit reached, ending the study' : `posting "${pick}"`),
+  );
+  return pick;
+}
+
+/**
+ * Resolve the human participants a turn-based failure should address:
+ * the private chat participant, or every active human in the cohort for a
+ * group chat. Observers count; they experience the failure like any other
+ * human in the chat.
+ */
+async function resolveTimeoutTargetPrivateIds(
+  experimentId: string,
+  cohortId: string,
+  stage: StageConfig,
+  participantIds: string[],
+): Promise<string[]> {
+  if (stage.kind === StageKind.PRIVATE_CHAT) {
+    const privateId = participantIds[0];
+    return privateId ? [privateId] : [];
+  }
+  const activeParticipants = await getFirestoreActiveParticipants(
+    experimentId,
+    cohortId,
+    stage.id,
+    false,
+    true, // include observers
+  );
+  return activeParticipants
+    .filter((p) => !p.agentConfig)
+    .map((p) => p.privateId);
+}
+
+export async function markTurnBasedApiFailure(
+  experimentId: string,
+  cohortId: string,
+  stage: StageConfig,
+  participantIds: string[], // private participant IDs (private chat uses [0])
+) {
+  const targetPrivateIds = await resolveTimeoutTargetPrivateIds(
+    experimentId,
+    cohortId,
+    stage,
+    participantIds,
+  );
+
+  if (targetPrivateIds.length === 0) return;
+
+  await Promise.all(
+    targetPrivateIds.map(async (privateId) => {
+      const participantRef = getFirestoreParticipantRef(
+        experimentId,
+        privateId,
+      );
+      // Guard against overwriting terminal/transfer states inside a transaction.
+      await app.firestore().runTransaction(async (transaction) => {
+        const snapshot = await transaction.get(participantRef);
+        const participant = snapshot.data() as
+          | ParticipantProfileExtended
+          | undefined;
+        if (!participant) return;
+        // Only transition active/in-progress participants.
+        if (participant.currentStatus !== ParticipantStatus.IN_PROGRESS) {
+          return;
+        }
+        // Don't touch agent participants.
+        if (participant.agentConfig) return;
+        transaction.set(
+          participantRef,
+          {currentStatus: ParticipantStatus.API_FAILURE},
+          {merge: true},
+        );
+      });
+    }),
+  );
+
+  console.error(
+    `[chat.agent] Turn-based model call hit its response deadline in stage ${stage.id}; surfaced API_FAILURE restart pop-up to ${targetPrivateIds.length} participant(s).`,
+  );
 }
 
 export async function skipTimedOutTurnBasedAgentTurn(

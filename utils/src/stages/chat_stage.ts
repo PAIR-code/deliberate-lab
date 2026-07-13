@@ -27,7 +27,13 @@ export interface ChatStageConfig extends BaseStageConfig {
   timeLimitInMinutes: number | null; // Maximum duration in minutes (integer), or null if no limit.
   timeMinimumInMinutes: number | null; // Minimum time participants must stay in minutes (integer), or null if no minimum.
   isTurnBased?: boolean; // Whether the conversation is turn-based
+  // Seconds a turn-based agent response may take (including retries) before
+  // the participant is shown the error pop-up. Unset = default (120).
+  agentTimeoutSeconds?: number;
 }
+
+/** Default agent response timeout for turn-based chats, in seconds. */
+export const DEFAULT_AGENT_TIMEOUT_SECONDS = 120;
 
 /** Chat discussion. */
 export interface BaseChatDiscussion {

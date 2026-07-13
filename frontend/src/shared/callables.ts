@@ -278,13 +278,12 @@ export const updateParticipantToNextStageCallable = async (
   functions: Functions,
   config: BaseParticipantData,
 ) => {
+  // Entering a turn-based stage generates the opening agent messages before
+  // the call returns, so allow the backend's full response deadline.
   const {data} = await httpsCallable<
     BaseParticipantData,
     ParticipantNextStageResponse
-  >(
-    functions,
-    'updateParticipantToNextStage',
-  )(config);
+  >(functions, 'updateParticipantToNextStage', {timeout: 300_000})(config);
   return data;
 };
 
@@ -359,9 +358,11 @@ export const acceptParticipantExperimentStartCallable = async (
   functions: Functions,
   config: BaseParticipantData,
 ) => {
+  // The first stage can be turn-based, generating agent messages inline.
   const {data} = await httpsCallable<BaseParticipantData, SuccessResponse>(
     functions,
     'acceptParticipantExperimentStart',
+    {timeout: 300_000},
   )(config);
   return data;
 };

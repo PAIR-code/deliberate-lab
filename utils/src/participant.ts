@@ -58,6 +58,12 @@ export interface ParticipantProfile extends UserProfileBase {
   timestamps: ProgressTimestamps;
   anonymousProfiles: Record<string, AnonymousProfileMetadata>;
   connected: boolean | null;
+  // Neutral responses already used in this participant's chats after model
+  // timeouts, drawn without replacement. After three, a further timeout ends
+  // the study with the restart pop-up.
+  neutralTimeoutResponses?: string[];
+  // Number of timeout messages sent to this participant by turn-based agents.
+  timeoutMessageCount?: number;
   // Maps variable name to value assigned specifically for this participant
   // This overrides any variable values set at the cohort/experiment levels.
   variableMap?: Record<string, string>;
@@ -117,6 +123,9 @@ export enum ParticipantStatus {
   // Deleted (e.g., if cohort was deleted).
   // The participant will not be part of dashboard, data download, etc.
   DELETED = 'DELETED',
+  // Turn-based chat agent's model call failed to return within the stage's
+  // response deadline; a blocking pop-up debriefs the participant.
+  API_FAILURE = 'API_FAILURE',
 }
 
 // ************************************************************************* //
