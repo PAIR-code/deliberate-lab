@@ -7,6 +7,7 @@ import {
   type StageValidationResult,
 } from './stage.schemas';
 import {UserType} from '../participant';
+import {ChatMessageReaction, MAX_CHAT_QUOTE_LENGTH} from '../chat_message';
 import {ChatStageConfig} from './chat_stage';
 
 /** Shorthand for strict TypeBox object validation */
@@ -108,6 +109,23 @@ export const UserTypeData = Type.Union([
   Type.Literal(UserType.UNKNOWN),
 ]);
 
+/** ChatMessageReaction input validation. */
+export const ChatMessageReactionData = Type.Union([
+  Type.Literal(ChatMessageReaction.HEART),
+  Type.Literal(ChatMessageReaction.THUMBS_UP),
+]);
+
+/** ChatMessageReply input validation. */
+export const ChatMessageReplyData = Type.Object(
+  {
+    id: Type.String({minLength: 1}),
+    senderId: Type.String(),
+    name: Type.String(),
+    message: Type.String({maxLength: MAX_CHAT_QUOTE_LENGTH + 1}),
+  },
+  {$id: 'ChatMessageReply', ...strict},
+);
+
 /** ChatMessage input validation. */
 export const ChatMessageData = Type.Object(
   {
@@ -123,6 +141,7 @@ export const ChatMessageData = Type.Object(
       },
       {$id: 'ChatMessageProfile', ...strict},
     ),
+    replyTo: Type.Optional(Type.Union([Type.Null(), ChatMessageReplyData])),
     // timestamp
   },
   {$id: 'ChatMessage'},
@@ -142,6 +161,32 @@ export const CreateChatMessageData = Type.Object(
 );
 
 export type CreateChatMessageData = Static<typeof CreateChatMessageData>;
+
+// ************************************************************************* //
+// updateChatMessageReaction endpoint                                        //
+// ************************************************************************* //
+
+/** UpdateChatMessageReactionData. */
+export const UpdateChatMessageReactionData = Type.Object(
+  {
+    experimentId: Type.String({minLength: 1}),
+    cohortId: Type.String({minLength: 1}),
+    stageId: Type.String({minLength: 1}),
+    // private participant ID (used in private chat cases)
+    participantId: Type.String({minLength: 1}),
+    chatMessageId: Type.String({minLength: 1}),
+    // public ID of the participant applying/removing the reaction
+    senderId: Type.String({minLength: 1}),
+    reaction: ChatMessageReactionData,
+    // true to apply the reaction, false to remove it
+    add: Type.Boolean(),
+  },
+  strict,
+);
+
+export type UpdateChatMessageReactionData = Static<
+  typeof UpdateChatMessageReactionData
+>;
 
 // ************************************************************************* //
 // updateChatStageParticipantAnswer endpoint                                 //

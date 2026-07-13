@@ -1,6 +1,6 @@
 import {MobxLitElement} from '@adobe/lit-mobx';
 
-import {CSSResultGroup, html} from 'lit';
+import {CSSResultGroup, html, nothing} from 'lit';
 import {customElement, property, state} from 'lit/decorators.js';
 
 import {core} from '../../core/core';
@@ -26,8 +26,12 @@ export class ChatInputComponent extends MobxLitElement {
     input: string,
   ) => {
     if (!this.stageId || !input || input.trim() === '') return;
-    await this.participantService.createChatMessage({message: input.trim()});
+    await this.participantService.createChatMessage({
+      message: input.trim(),
+      replyTo: this.participantAnswerService.getChatReply(this.stageId),
+    });
     this.participantAnswerService.updateChatInput(this.stageId, '');
+    this.participantAnswerService.clearChatReply(this.stageId);
   };
   @property() storeUserInput: (input: string) => void = (input: string) => {
     if (!this.stageId) return;
@@ -81,30 +85,64 @@ export class ChatInputComponent extends MobxLitElement {
     };
 
     return html`
-      <div class="input ${this.isDisabled ? 'disabled' : ''}">
-        <pr-textarea
-          size="small"
-          placeholder="Send message"
-          .value=${this.getUserInput()}
-          ?focused=${shouldFocus()}
-          ?disabled=${this.isDisabled}
-          @keydown=${handleKeyDown}
-          @input=${handleInput}
-          @paste=${handlePaste}
-        >
-        </pr-textarea>
-        <pr-tooltip
-          text="Send message"
-          color="tertiary"
-          variant="outlined"
-          position="TOP_END"
-        >
-          <pr-icon-button
-            icon="send"
-            variant="tonal"
+      <div class="chat-input">
+        ${this.renderReplyBanner()}
+        <div class="input ${this.isDisabled ? 'disabled' : ''}">
+          <pr-textarea
+            size="small"
+            placeholder="Send message"
+            .value=${this.getUserInput()}
+            ?focused=${shouldFocus()}
             ?disabled=${this.isDisabled}
-            ?loading=${this.isLoading}
-            @click=${sendInput}
+            @keydown=${handleKeyDown}
+            @input=${handleInput}
+            @paste=${handlePaste}
+          >
+          </pr-textarea>
+          <pr-tooltip
+            text="Send message"
+            color="tertiary"
+            variant="outlined"
+            position="TOP_END"
+          >
+            <pr-icon-button
+              icon="send"
+              variant="tonal"
+              ?disabled=${this.isDisabled}
+              ?loading=${this.isLoading}
+              @click=${sendInput}
+            >
+            </pr-icon-button>
+          </pr-tooltip>
+        </div>
+      </div>
+    `;
+  }
+
+  /** Show the message being replied to, with the option to cancel the reply. */
+  private renderReplyBanner() {
+    if (!this.stageId) return nothing;
+
+    const reply = this.participantAnswerService.getChatReply(this.stageId);
+    if (!reply) return nothing;
+
+    return html`
+      <div class="reply-banner">
+        <div class="reply-preview">
+          <div class="reply-author">
+            Replying to ${reply.name.length > 0 ? reply.name : reply.senderId}
+          </div>
+          <div class="reply-text">
+            ${reply.message.length > 0 ? reply.message : 'Attachment'}
+          </div>
+        </div>
+        <pr-tooltip text="Cancel reply" position="TOP_END">
+          <pr-icon-button
+            icon="close"
+            color="neutral"
+            variant="default"
+            @click=${() =>
+              this.participantAnswerService.clearChatReply(this.stageId)}
           >
           </pr-icon-button>
         </pr-tooltip>
