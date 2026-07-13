@@ -131,6 +131,10 @@ export enum ParticipantStatus {
 // ************************************************************************* //
 // CONSTANTS                                                                 //
 // ************************************************************************* //
+// Reserved for mediators when an experiment assigns observers; participant
+// profiles must never be generated with it in those experiments.
+export const MEDIATOR_OBSERVER_COLOR = 'blue';
+
 export const COLORS: string[] = [
   'Red',
   'Orange',
@@ -220,7 +224,7 @@ export function setProfile(
   config: ParticipantProfileExtended,
   setAnonymousProfile = false,
   profileType: ProfileType = ProfileType.ANONYMOUS_ANIMAL,
-  excludeColor?: string,
+  excludeColor?: string | string[],
 ) {
   const generateProfileFromSet = (
     profileSet: {name: string; avatar: string}[],
@@ -275,10 +279,17 @@ export function setProfile(
 
   // Define public ID (using anonymous animal 1 set)
   const mainProfile = profileAnimal1;
-  const colorPool =
-    excludeColor && COLORS.length > 1
-      ? COLORS.filter((c) => c.toLowerCase() !== excludeColor.toLowerCase())
-      : COLORS;
+  const excludedColors = (
+    Array.isArray(excludeColor)
+      ? excludeColor
+      : excludeColor
+        ? [excludeColor]
+        : []
+  ).map((c) => c.toLowerCase());
+  const filteredPool = COLORS.filter(
+    (c) => !excludedColors.includes(c.toLowerCase()),
+  );
+  const colorPool = filteredPool.length > 0 ? filteredPool : COLORS;
   const color = colorPool[Math.floor(Math.random() * colorPool.length)];
 
   config.publicId =

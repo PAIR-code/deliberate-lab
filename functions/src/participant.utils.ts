@@ -48,6 +48,7 @@ import {
   MediatorProfileExtended,
   DEFAULT_AGENT_MODEL_SETTINGS,
   RESERVED_TREATMENT_VARIABLE_KEYS,
+  MEDIATOR_OBSERVER_COLOR,
 } from '@deliberation-lab/utils';
 import {completeStageAsAgentParticipant} from './agent_participant.utils';
 import {
@@ -1519,6 +1520,17 @@ export async function completeParticipantTransfer(
     ) as ProfileStageConfig | undefined;
     const profileType =
       profileStage?.profileType || ProfileType.ANONYMOUS_ANIMAL;
+    // Spawned agents avoid the human's color, and the reserved mediator color
+    // in observer-capable experiments (key presence mirrors the frontend check).
+    const spawnedProfileExcludeColors = [
+      (participant.publicId ?? '').split('-')[1] ?? '',
+      ...(Object.values(participant.variableMap ?? {}).some((value) =>
+        value.includes('_isObserver'),
+      )
+        ? [MEDIATOR_OBSERVER_COLOR]
+        : []),
+    ].filter((c) => c);
+
     const isAnonymousCohort = !!profileStage;
 
     const now = Timestamp.now();
@@ -1652,7 +1664,7 @@ export async function completeParticipantTransfer(
         agentProfile,
         isAnonymousCohort,
         profileType,
-        (participant.publicId ?? '').split('-')[1],
+        spawnedProfileExcludeColors,
       );
 
       // When an observer is present, suffix every AI participant with
@@ -1752,7 +1764,7 @@ export async function completeParticipantTransfer(
         agentProfile,
         isAnonymousCohort,
         profileType,
-        (participant.publicId ?? '').split('-')[1],
+        spawnedProfileExcludeColors,
       );
 
       if (!agentProfile.name) {

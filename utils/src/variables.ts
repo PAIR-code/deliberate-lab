@@ -49,6 +49,23 @@ export const RESERVED_TREATMENT_VARIABLE_KEYS = [
   '_skipPrivateChats',
 ] as const;
 
+/**
+ * Whether any variable config's values can assign observers. Presence of the
+ * reserved observer key in a value marks an observer-capable experiment,
+ * matching the frontend's per-participant check.
+ */
+export function variableConfigsIncludeObserver(
+  configs: VariableConfig[],
+): boolean {
+  return configs.some(
+    (config) =>
+      'values' in config &&
+      ((config as {values?: string[]}).values ?? []).some((value) =>
+        value.includes('_isObserver'),
+      ),
+  );
+}
+
 /** GitHub link surfaced alongside the reserved-key warning. */
 export const RESERVED_TREATMENT_VARIABLE_GITHUB_URL =
   'https://github.com/PAIR-code/deliberate-lab';
