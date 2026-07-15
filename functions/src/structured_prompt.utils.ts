@@ -590,6 +590,8 @@ async function processPromptItems(
   },
   userProfile: ParticipantProfileExtended | MediatorProfileExtended,
   includeScaffolding: boolean,
+  // Position prefix for nested groups, mixed into shuffle seeds.
+  seedNamespace = '',
 ): Promise<string> {
   const experiment = promptData.experiment;
   const items: string[] = [];
@@ -615,6 +617,13 @@ async function processPromptItems(
     experiment,
     promptData.cohort,
     participantForVariables,
+  );
+
+  // The first shuffled group keeps the bare seed (see the GROUP case).
+  const firstShuffledGroupIndex = promptItems.findIndex(
+    (it) =>
+      it.type === PromptItemType.GROUP &&
+      (it as PromptItemGroup).shuffleConfig?.shuffle,
   );
 
   // When referenced, inject the agent's past reasoning history
@@ -672,7 +681,7 @@ async function processPromptItems(
 
   valueMap['_reasoning'] = reasoningText;
 
-  for (const promptItem of promptItems) {
+  for (const [itemIndex, promptItem] of promptItems.entries()) {
     // Check condition if present (only for private chat contexts)
     if (
       !shouldIncludePromptItem(
@@ -802,7 +811,18 @@ async function processPromptItems(
               seedString = promptGroup.shuffleConfig.customSeed;
               break;
           }
-          groupItems = shuffleWithSeed(groupItems, seedString);
+          // The first shuffled group keeps the bare seed, so existing
+          // prompts are unchanged. Later groups mix the stage and their
+          // position into the seed so distinct groups shuffle independently,
+          // across stages too.
+          const isFirstShuffledGroup =
+            seedNamespace === '' && itemIndex === firstShuffledGroupIndex;
+          groupItems = shuffleWithSeed(
+            groupItems,
+            isFirstShuffledGroup
+              ? seedString
+              : `${seedString}::${stageId}::${seedNamespace}${itemIndex}`,
+          );
         }
 
         const groupText = await processPromptItems(
@@ -813,6 +833,7 @@ async function processPromptItems(
           promptData,
           userProfile,
           includeScaffolding,
+          `${seedNamespace}${itemIndex}.`,
         );
         if (groupText) items.push(groupText);
         break;

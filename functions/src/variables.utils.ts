@@ -143,7 +143,10 @@ export async function generateVariablesForScope(
     (c) => c.scope === context.scope,
   );
 
-  for (const config of scopedConfigs) {
+  // Seed handling is described in generateRandomPermutationValue.
+  let firstShuffled = true;
+
+  for (const [seedIndex, config] of scopedConfigs.entries()) {
     let generatedVariables: Record<string, string> = {};
 
     switch (config.type) {
@@ -155,7 +158,9 @@ export async function generateVariablesForScope(
         generatedVariables = generateRandomPermutationVariables(
           config,
           context,
+          firstShuffled ? null : seedIndex,
         );
+        if (config.shuffleConfig?.shuffle) firstShuffled = false;
         break;
 
       case VariableConfigType.BALANCED_ASSIGNMENT:
