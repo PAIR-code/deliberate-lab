@@ -326,9 +326,23 @@ export class PrivateChatView extends MobxLitElement {
     if (chatMessage.isError) {
       return html`<div class="description error">${chatMessage.message}</div>`;
     }
+    // In a representative-conducted chat, the observer sees their
+    // representative marked "(yours)"; the stored profile name carries no
+    // suffix.
+    const rep = this.repPrivateChatProfile;
+    const chat =
+      rep && chatMessage.type === UserType.MEDIATOR
+        ? {
+            ...chatMessage,
+            profile: {
+              ...chatMessage.profile,
+              name: `${chatMessage.profile.name} (yours)`,
+            },
+          }
+        : chatMessage;
     return html`<chat-message
-      .chat=${chatMessage}
-      .colorOverride=${this.repPrivateChatProfile?.color ?? ''}
+      .chat=${chat}
+      .colorOverride=${rep?.color ?? ''}
     ></chat-message>`;
   }
 

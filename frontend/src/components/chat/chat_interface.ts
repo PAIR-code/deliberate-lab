@@ -204,8 +204,14 @@ export class ChatInterface extends MobxLitElement {
 
     const participantProfile = this.cohortService.participantMap[id];
     if (participantProfile && participantProfile.name) {
+      // The viewer's own representative is marked "(yours)"; the stored
+      // profile name carries no suffix.
+      const ownRepSuffix =
+        id === `${this.participantService.profile?.publicId}-agent`
+          ? ' (yours)'
+          : '';
       return {
-        name: participantProfile.name,
+        name: participantProfile.name + ownRepSuffix,
         avatar: participantProfile.avatar,
         isMediator: false,
         id,

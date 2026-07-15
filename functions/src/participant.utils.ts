@@ -1545,8 +1545,9 @@ export async function completeParticipantTransfer(
     ).data().count;
 
     // When an observer is present in the target cohort, all AI participants
-    // get a "'s Agent" suffix (the observer's own representative uses
-    // "'s Agent (yours)" below). Count an observer being transferred in now,
+    // get a "'s Agent" suffix, like the observer's own representative below;
+    // the frontend marks that one "(yours)" for its observer only. Count an
+    // observer being transferred in now,
     // plus any non-agent observer already in the cohort.
     const cohortHasObserver =
       participant.isObserver ||
@@ -1668,8 +1669,8 @@ export async function completeParticipantTransfer(
       );
 
       // When an observer is present, suffix every AI participant with
-      // "'s Agent" so the observer can distinguish them from humans (the
-      // observer's own representative uses "'s Agent (yours)" above). Without
+      // "'s Agent" so the observer can distinguish them from humans (their
+      // own representative is marked "(yours)" at display time). Without
       // an observer, agents keep their drawn profile name.
       if (cohortHasObserver) {
         const drawnName = agentProfile.name;

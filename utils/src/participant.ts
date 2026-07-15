@@ -176,7 +176,8 @@ export function createParticipantProfileBase(
 
 /**
  * Display profile (name + avatar) for an observer's AI representative.
- * The avatar defaults to a robot.
+ * The avatar defaults to a robot. The "(yours)" marker is not part of the
+ * stored name; the frontend appends it only for the observer it represents.
  */
 export function getRepresentativeProfile(
   observerName: string,
@@ -185,7 +186,7 @@ export function getRepresentativeProfile(
   name: string;
   avatar: string;
 } {
-  return {name: `${observerName}'s Agent (yours)`, avatar};
+  return {name: `${observerName}'s Agent`, avatar};
 }
 
 /** Create private participant config. */

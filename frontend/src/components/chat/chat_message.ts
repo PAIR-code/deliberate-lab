@@ -116,6 +116,13 @@ export class ChatMessageComponent extends MobxLitElement {
     });
 
     const profile = chatMessage.profile;
+    // The viewer's own representative is marked "(yours)"; the stored
+    // profile name carries no suffix.
+    const ownRepSuffix =
+      chatMessage.senderId ===
+      `${this.participantService.profile?.publicId}-agent`
+        ? ' (yours)'
+        : '';
     // Use profile ID to determine color
     const color = () => {
       // If no name, use default background
@@ -136,7 +143,7 @@ export class ChatMessageComponent extends MobxLitElement {
         <avatar-icon .emoji=${profile.avatar} .color=${color()}> </avatar-icon>
         <div class="content">
           <div class="label">
-            ${profile.name ?? chatMessage.senderId}
+            ${(profile.name ?? chatMessage.senderId) + ownRepSuffix}
             ${profile.pronouns ? `(${profile.pronouns})` : ''}
 
             <span class="date"

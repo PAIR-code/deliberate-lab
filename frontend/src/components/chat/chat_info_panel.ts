@@ -195,6 +195,13 @@ export class ChatPanel extends MobxLitElement {
   private renderProfile(profile: ParticipantProfile, small = false) {
     const isCurrent =
       profile.publicId === this.participantService.profile?.publicId;
+    // The viewer's own representative is marked "(yours)"; the stored
+    // profile name carries no suffix.
+    if (
+      profile.publicId === `${this.participantService.profile?.publicId}-agent`
+    ) {
+      profile = {...profile, name: `${profile.name} (yours)`};
+    }
     const isCurrentTurn = this.currentTurnParticipantId === profile.publicId;
     return html`
       <div class="profile-row">
