@@ -268,11 +268,11 @@ Variables in agent prompts are resolved based on who is generating the prompt:
 |----------|---------------------|
 | **Participant agent** | Experiment + Cohort + Their own participant variables |
 | **Mediator in private chat** | Experiment + Cohort + Target participant's variables |
-| **Mediator in group chat** | Experiment + Cohort only |
+| **Mediator in group chat** | Experiment + Cohort + Every participant's variables as positional arrays |
 
 For **private chats**, when a mediator is talking to a single participant, the mediator's prompt will have access to that participant's variables. This allows prompts like "Help {{participant_topic}} discussion" to resolve correctly based on the participant being chatted with.
 
-For **group chats** with multiple participants, mediators only have access to experiment and cohort-scoped variables since different participants may have different values for participant-scoped variables.
+For **group chats** with multiple participants, each participant-scoped variable is exposed to the mediator as an array indexed by participant, so the prompt names a participant and then a field or position within that participant's value, e.g. `{{topic.0.topicName}}` for the first participant's topic. Participants are ordered humans first, then agents; a participant without the variable contributes `null` at their position.
 
 ## Roadmap / Future Work
 
@@ -282,4 +282,4 @@ The following areas are planned for future integration with Variables:
 - [x] **Flipcards:** Support variables in flipcard content (card title, front content, back content).
 - [x] **Surveys:** Support variables in survey question text and choices (question title, option text, scale labels).
 - [x] **Agent Mediators (Private Chat):** Mediators in private chats have access to the target participant's variables.
-- [ ] **Agent Mediators (Group Chat):** Determine approach for handling multiple participants with different variable values.
+- [x] **Agent Mediators (Group Chat):** Mediators in group chats have access to every participant's variables as positional arrays (humans first).
