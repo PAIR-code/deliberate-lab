@@ -114,6 +114,45 @@ describe('generateVariablesForScope', () => {
       expect(result['items_2']).toBe(JSON.stringify('B'));
       expect(result['items_3']).toBeUndefined();
     });
+
+    it('keeps the first shuffled variable stable and randomizes later ones by position', async () => {
+      const mk = (name: string) =>
+        createRandomPermutationVariableConfig({
+          scope: VariableScope.COHORT,
+          definition: {
+            name,
+            description: '',
+            schema: VariableType.array(VariableType.STRING),
+          },
+          values: ['a', 'b', 'c', 'd', 'e'].map((v) => JSON.stringify(v)),
+          numToSelect: 5,
+          expandListToSeparateVariables: false,
+          shuffleConfig: {
+            shuffle: true,
+            seed: SeedStrategy.COHORT,
+            customSeed: '',
+          },
+        });
+      const ctx = {
+        scope: VariableScope.COHORT,
+        experimentId: 'exp-1',
+        cohortId: 'cohort-1',
+      };
+      const alone = (await generateVariablesForScope([mk('colorVar')], ctx))[
+        'colorVar'
+      ];
+      const both = await generateVariablesForScope(
+        [mk('colorVar'), mk('animalVar')],
+        ctx,
+      );
+      expect(both['colorVar']).toBe(alone);
+      expect(both['animalVar']).not.toBe(both['colorVar']);
+      // Removing a variable re-randomizes the ones after it.
+      const animalAlone = (
+        await generateVariablesForScope([mk('animalVar')], ctx)
+      )['animalVar'];
+      expect(animalAlone).not.toBe(both['animalVar']);
+    });
   });
 
   describe('balanced assignment variables', () => {

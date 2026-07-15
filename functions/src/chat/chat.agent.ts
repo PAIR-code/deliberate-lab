@@ -614,7 +614,7 @@ async function getNextTurnBasedSpeakerAfterSkippedAgent(
           missingMediators.length > 1
             ? shuffleWithSeed(
                 missingMediators,
-                `${cohortId}-new-mediators-${cycleIndex}`,
+                `${cohortId}-${stage.id}-new-mediators-${cycleIndex}`,
               )
             : missingMediators;
         const nextMediators = [
@@ -626,7 +626,7 @@ async function getNextTurnBasedSpeakerAfterSkippedAgent(
         if (hadMediators) {
           const shuffledParticipants = shuffleWithSeed(
             participantIds,
-            `${cohortId}-${cycleIndex}`,
+            `${cohortId}-${stage.id}-${cycleIndex}`,
           );
           nextTurnOrder = [...nextMediators, ...shuffledParticipants];
         } else {
@@ -1114,7 +1114,7 @@ async function sendInitialGroupChatMessages(
       const allMediatorIds = agentMediators.map((m) => m.publicId);
 
       // Shuffle participants with seed
-      const seedString = `${cohortId}-0`;
+      const seedString = `${cohortId}-${stageId}-0`;
       const shuffledParticipants = shuffleWithSeed(
         allPublicParticipantIds,
         seedString,
@@ -1123,7 +1123,7 @@ async function sendInitialGroupChatMessages(
       // Shuffle mediator order when conversation begins (only if multiple)
       const shuffledMediators =
         allMediatorIds.length > 1
-          ? shuffleWithSeed(allMediatorIds, `${cohortId}-mediators`)
+          ? shuffleWithSeed(allMediatorIds, `${cohortId}-${stageId}-mediators`)
           : allMediatorIds;
 
       const turnOrder = [...shuffledMediators, ...shuffledParticipants];

@@ -1,18 +1,16 @@
 import {
   AlertMessage,
+  AlertStatus,
   AssetAllocation,
   ChatMessage,
   ChatStageParticipantAnswer,
   ChipOffer,
   CreateChatMessageData,
   FlipCardStageParticipantAnswer,
-  RankingItem,
   MultiAssetAllocationStageParticipantAnswer,
   ParticipantProfileBase,
   ParticipantProfileExtended,
   ParticipantStatus,
-  RoleStageConfig,
-  StageKind,
   StageParticipantAnswer,
   SurveyAnswer,
   SurveyPerParticipantStageParticipantAnswer,
@@ -34,8 +32,6 @@ import {
   onSnapshot,
   orderBy,
   query,
-  setDoc,
-  updateDoc,
 } from 'firebase/firestore';
 import {action, computed, makeObservable, observable, runInAction} from 'mobx';
 import {CohortService} from './cohort.service';
@@ -71,6 +67,7 @@ import {
   updateSurveyPerParticipantStageParticipantAnswerCallable,
   updateSurveyStageParticipantAnswerCallable,
   updateRankingStageParticipantAnswerCallable,
+  ackExperimenterAlertCallable,
 } from '../shared/callables';
 import {PROLIFIC_COMPLETION_URL_PREFIX} from '../shared/constants';
 import {
@@ -80,7 +77,6 @@ import {
   isPendingParticipant,
   isParticipantEndedExperiment,
 } from '../shared/participant.utils';
-import {ElectionStrategy} from '@deliberation-lab/utils';
 
 interface ServiceProvider {
   cohortService: CohortService;
@@ -217,7 +213,7 @@ export class ParticipantService extends Service {
   isReadyToEndChatDiscussion(stageId: string, discussionId: string) {
     // Use public stage data as source of truth
     // (since public stage data is used to determine current discussion ID)
-    const {completed, notCompleted} =
+    const {completed} =
       this.sp.cohortService.getParticipantsByChatDiscussionCompletion(
         stageId,
         discussionId,
@@ -388,9 +384,9 @@ export class ParticipantService extends Service {
     }
   }
 
-  /** Subscribe to participant's private alerts. */
   async loadAlertMessages() {
     if (!this.experimentId || !this.participantId) return;
+    let isInitial = true;
     this.unsubscribe.push(
       onSnapshot(
         query(
@@ -405,17 +401,24 @@ export class ParticipantService extends Service {
           orderBy('timestamp', 'asc'),
         ),
         (snapshot) => {
-          let changedDocs = snapshot.docChanges().map((change) => change.doc);
-          if (changedDocs.length === 0) {
-            changedDocs = snapshot.docs;
-          }
-
           runInAction(() => {
-            changedDocs.forEach((doc) => {
-              const alert = doc.data() as AlertMessage;
+            snapshot.docChanges().forEach((change) => {
+              const alert = change.doc.data() as AlertMessage;
+              const isNew = change.type === 'added' && !this.alertMap[alert.id];
               this.alertMap[alert.id] = alert;
+
+              // Auto-pop help panel on receiving a new experimenter alert
+              if (
+                !isInitial &&
+                isNew &&
+                alert.isExperimenterInitiated &&
+                alert.status === AlertStatus.NEW
+              ) {
+                this.showHelpPanel = true;
+              }
             });
           });
+          isInitial = false;
         },
       ),
     );
@@ -1089,5 +1092,20 @@ export class ParticipantService extends Service {
       );
     }
     return response;
+  }
+
+  async ackExperimenterAlert(alertId: string) {
+    let output = {};
+    if (this.experimentId && this.profile) {
+      output = await ackExperimenterAlertCallable(
+        this.sp.firebaseService.functions,
+        {
+          experimentId: this.experimentId,
+          participantId: this.profile.privateId,
+          alertId,
+        },
+      );
+    }
+    return output;
   }
 }
