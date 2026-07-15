@@ -304,7 +304,7 @@ describe('Chat Triggers - Turn Taking Mechanics', () => {
       // Assert cycleIndex is 0 and seed string matches 'cohortId-cycleIndex'
       expect(mockShuffleWithSeed).toHaveBeenCalledWith(
         ['p1', 'p2', 'p3'],
-        'cohort123-0',
+        'cohort123-stage123-0',
       );
 
       // Shuffled order from deterministic seed is ['p3', 'p1', 'p2']
@@ -644,10 +644,10 @@ describe('Chat Triggers - Turn Taking Mechanics', () => {
 
       await onPublicChatMessageCreated.run(event as any);
 
-      // Assert cycleIndex incremented to 1 and shuffleWithSeed called with seed string 'cohort123-1'
+      // Assert cycleIndex incremented to 1 and shuffleWithSeed called with seed string 'cohort123-stage123-1'
       expect(mockShuffleWithSeed).toHaveBeenCalledWith(
         ['p1', 'p2', 'p3'],
-        'cohort123-1',
+        'cohort123-stage123-1',
       );
 
       const expectedShuffled = mockShuffleWithSeed.mock.results[0].value;
@@ -771,7 +771,10 @@ describe('Chat Triggers - Turn Taking Mechanics', () => {
       await onPublicChatMessageCreated.run(event as any);
 
       // Shuffled active participants (only p1) for cycle 1
-      expect(mockShuffleWithSeed).toHaveBeenCalledWith(['p1'], 'cohort123-1');
+      expect(mockShuffleWithSeed).toHaveBeenCalledWith(
+        ['p1'],
+        'cohort123-stage123-1',
+      );
 
       const expectedShuffled = mockShuffleWithSeed.mock.results[0].value; // ['p1']
       const expectedTurnOrder = ['m1', ...expectedShuffled]; // ['m1', 'p1']

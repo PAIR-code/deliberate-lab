@@ -179,6 +179,55 @@ describe('generateRandomPermutationVariables', () => {
     expect(JSON.parse(result['item_2'])).toEqual({name: 'Item B', value: 200});
     expect(result['item']).toBeUndefined();
   });
+
+  const permConfig = (name: string, values: string[]) =>
+    createRandomPermutationVariableConfig({
+      id: name,
+      type: VariableConfigType.RANDOM_PERMUTATION,
+      scope: VariableScope.PARTICIPANT,
+      definition: {name, description: '', schema: Type.Array(Type.String())},
+      shuffleConfig: createShuffleConfig({
+        shuffle: true,
+        seed: SeedStrategy.PARTICIPANT,
+      }),
+      values,
+      numToSelect: values.length,
+      expandListToSeparateVariables: false,
+    });
+
+  it('randomizes each position independently', () => {
+    const pool = ['a', 'b', 'c', 'd', 'e'].map((v) => JSON.stringify(v));
+    const c = {
+      scope: VariableScope.PARTICIPANT as const,
+      experimentId: 'exp',
+      cohortId: 'cohort',
+      participantId: 'subject-1',
+    };
+    const perm = (name: string, seedIndex: number | null) =>
+      generateRandomPermutationVariables(permConfig(name, pool), c, seedIndex)[
+        name
+      ];
+    expect(perm('colorVar', null)).toBe(perm('animalVar', null));
+    expect(perm('colorVar', 1)).not.toBe(perm('colorVar', null));
+    expect(perm('colorVar', 1)).not.toBe(perm('colorVar', 2));
+  });
+
+  it('is deterministic for the same variable and seed', () => {
+    const colors = ['red', 'green', 'blue'].map((v) => JSON.stringify(v));
+    const c = {
+      scope: VariableScope.PARTICIPANT as const,
+      experimentId: 'exp',
+      cohortId: 'cohort',
+      participantId: 'subject-1',
+    };
+    const a = generateRandomPermutationVariables(permConfig('v', colors), c)[
+      'v'
+    ];
+    const b = generateRandomPermutationVariables(permConfig('v', colors), c)[
+      'v'
+    ];
+    expect(a).toBe(b);
+  });
 });
 
 describe('generateStaticVariables', () => {
