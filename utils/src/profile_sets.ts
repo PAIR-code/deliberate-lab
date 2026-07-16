@@ -15,6 +15,30 @@ export const PROFILE_AVATARS = [
 // anonymous profile set for display
 export const SECONDARY_PROFILE_SET_ID = 'secondary_profile';
 export const TERTIARY_PROFILE_SET_ID = 'tertiary_profile';
+export const NEGOTIATION_PROFILE_SET_ID = 'negotiation_profile';
+
+/**
+ * Returns which anonymous profile set ID should be used for display
+ * based on stage ID or stage name.
+ */
+export function getActiveProfileSetId(stageId = '', stageName = ''): string {
+  const combined = `${stageId} ${stageName}`.toLowerCase();
+  if (combined.includes(SECONDARY_PROFILE_SET_ID)) {
+    return PROFILE_SET_ANIMALS_2_ID;
+  } else if (combined.includes(TERTIARY_PROFILE_SET_ID)) {
+    return PROFILE_SET_NATURE_ID;
+  } else if (
+    combined.includes(NEGOTIATION_PROFILE_SET_ID) ||
+    combined.includes('negotiation') ||
+    combined.includes('coalition') ||
+    combined.includes('task 2:') ||
+    combined.includes('discussion-round-2') ||
+    combined.includes('final decision')
+  ) {
+    return NEGOTIATION_PROFILE_SET_ID;
+  }
+  return '';
+}
 
 // Set names for random hashes
 export const PROFILE_SET_RANDOM_1_ID = 'random-1';

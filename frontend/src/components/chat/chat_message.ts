@@ -12,10 +12,16 @@ import {unsafeHTML} from 'lit/directives/unsafe-html.js';
 
 import {core} from '../../core/core';
 import {AuthService} from '../../services/auth.service';
+import {CohortService} from '../../services/cohort.service';
 import {ExperimentService} from '../../services/experiment.service';
 import {ParticipantService} from '../../services/participant.service';
 
-import {ChatMessage, StoredFile, UserType} from '@deliberation-lab/utils';
+import {
+  ChatMessage,
+  StoredFile,
+  UserType,
+  getParticipantStageProfile,
+} from '@deliberation-lab/utils';
 import {
   convertMarkdownToHTML,
   convertUnifiedTimestampToDate,
@@ -31,6 +37,7 @@ export class ChatMessageComponent extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
 
   private readonly authService = core.getService(AuthService);
+  private readonly cohortService = core.getService(CohortService);
   private readonly experimentService = core.getService(ExperimentService);
   private readonly participantService = core.getService(ParticipantService);
 
@@ -89,7 +96,25 @@ export class ChatMessageComponent extends MobxLitElement {
         chatMessage.senderId === this.participantService.profile?.publicId,
     });
 
-    const profile = chatMessage.profile;
+    let profile = chatMessage.profile;
+    const currentStageId = this.participantService.currentStageViewId ?? '';
+    const currentStage = this.experimentService.getStage(currentStageId);
+    if (currentStageId && chatMessage.senderId) {
+      const senderParticipant = this.cohortService
+        .getAllParticipants()
+        .find((p) => p.publicId === chatMessage.senderId);
+      if (senderParticipant) {
+        const stageProfile = getParticipantStageProfile(
+          senderParticipant,
+          currentStageId,
+          currentStage?.name ?? '',
+        );
+        if (stageProfile && stageProfile.name) {
+          profile = stageProfile;
+        }
+      }
+    }
+
     // Use profile ID to determine color
     const color = () => {
       // If no name, use default background

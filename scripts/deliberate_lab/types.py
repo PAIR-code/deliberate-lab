@@ -482,6 +482,42 @@ class RoleStageConfig(BaseModel):
     roles: list[Role]
 
 
+class Item(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+        populate_by_name=True,
+    )
+    id: Annotated[str, Field(min_length=1)]
+    name: str
+    avatar: str
+    displayLines: list[str]
+
+
+class NegotiationProfileStageConfig(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+        populate_by_name=True,
+    )
+    id: Annotated[str, Field(min_length=1)]
+    kind: Literal["negotiationProfile"] = "negotiationProfile"
+    name: Annotated[str, Field(min_length=1)]
+    descriptions: StageTextConfig
+    progress: StageProgressConfig
+    items: list[Item]
+
+
+class NegotiationPayoutStageConfig(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+        populate_by_name=True,
+    )
+    id: Annotated[str, Field(min_length=1)]
+    kind: Literal["negotiationPayout"] = "negotiationPayout"
+    name: Annotated[str, Field(min_length=1)]
+    descriptions: StageTextConfig
+    progress: StageProgressConfig
+
+
 class SalespersonStageConfig(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
@@ -775,6 +811,8 @@ class StageKind(StrEnum):
     assetAllocation = "assetAllocation"
     multiAssetAllocation = "multiAssetAllocation"
     role = "role"
+    negotiationProfile = "negotiationProfile"
+    negotiationPayout = "negotiationPayout"
     survey = "survey"
     surveyPerParticipant = "surveyPerParticipant"
     transfer = "transfer"
@@ -1070,6 +1108,8 @@ class ExperimentTemplate(BaseModel):
         | ParticipantRankingStageConfig
         | RevealStageConfig
         | RoleStageConfig
+        | NegotiationProfileStageConfig
+        | NegotiationPayoutStageConfig
         | SalespersonStageConfig
         | StockInfoStageConfig
         | SurveyPerParticipantStageConfig

@@ -15,6 +15,7 @@ import {
   PROFILE_SET_RANDOM_1_ID,
   PROFILE_SET_RANDOM_2_ID,
   PROFILE_SET_RANDOM_3_ID,
+  getActiveProfileSetId,
 } from './profile_sets';
 
 /** Participant profile types and functions. */
@@ -340,4 +341,28 @@ export function getParticipantDisplayName(
     return `${avatar}${profileName}${pronouns}`;
   }
   return profile.publicId;
+}
+
+export function getParticipantStageProfile(
+  profile: ParticipantProfile,
+  stageId = '',
+  stageName = '',
+): {name: string; avatar: string; pronouns: string | null} {
+  if (!profile) {
+    return {name: '', avatar: '', pronouns: null};
+  }
+  const profileSetId = getActiveProfileSetId(stageId, stageName);
+  if (profileSetId && profile.anonymousProfiles?.[profileSetId]) {
+    const anon = profile.anonymousProfiles[profileSetId];
+    return {
+      name: anon.name ?? '',
+      avatar: anon.avatar ?? '',
+      pronouns: null,
+    };
+  }
+  return {
+    name: profile.name ?? profile.publicId,
+    avatar: profile.avatar ?? '',
+    pronouns: profile.pronouns ?? null,
+  };
 }

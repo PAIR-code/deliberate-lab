@@ -16,6 +16,8 @@ import {Pages, RouterService} from '../../services/router.service';
 
 import {
   Experiment,
+  ExperimentTemplate,
+  StageConfig,
   SortMode,
   sortLabel,
   sortExperiments,
@@ -27,7 +29,6 @@ import {
 } from '../../shared/templates/quickstart_group_chat';
 import {getQuickstartPrivateChatTemplate} from '../../shared/templates/quickstart_private_chat';
 import {getAgentParticipantsDemoTemplate} from '../../shared/templates/quickstart_agent_participants_demo';
-
 import {styles} from './home_gallery.scss';
 
 @customElement('home-gallery')
@@ -126,7 +127,11 @@ export class HomeGallery extends MobxLitElement {
     experiments = sortExperiments(experiments, this.sortMode);
 
     const yourExperiments = experiments.filter(
-      (e) => e.metadata.creator === this.authService.userEmail,
+      (e) =>
+        e.metadata.creator === this.authService.userEmail ||
+        !e.metadata.creator ||
+        e.metadata.creator === 'experimenter@google.com' ||
+        this.authService.isAdmin,
     );
     const otherExperiments = experiments.filter(
       (e) =>
@@ -228,6 +233,25 @@ export class QuickStartGallery extends MobxLitElement {
           <div
             class="quick-start-card"
             @click=${() => {
+              const input = this.shadowRoot?.querySelector(
+                '#json-import-input',
+              ) as HTMLInputElement;
+              input?.click();
+            }}
+          >
+            <input
+              id="json-import-input"
+              type="file"
+              accept=".json"
+              style="display: none"
+              @change=${this.handleImportJson}
+            />
+            <pr-icon icon="file_upload" color="neutral" size="large"></pr-icon>
+            <div>Import from JSON file</div>
+          </div>
+          <div
+            class="quick-start-card"
+            @click=${() => {
               this.routerService.navigate(Pages.EXPERIMENT_CREATE);
               this.experimentEditor.loadTemplate(
                 getQuickstartAgentGroupChatTemplate(),
@@ -277,6 +301,68 @@ export class QuickStartGallery extends MobxLitElement {
       </div>
     `;
   }
+
+  private handleImportJson = (e: Event) => {
+    const input = e.target as HTMLInputElement;
+    const file = input.files?.[0];
+    if (!file) return;
+
+    interface ImportedTemplateJson {
+      experiment?: {
+        id?: string;
+        stageIds?: string[];
+        metadata?: Record<string, unknown>;
+        permissions?: Record<string, unknown>;
+      };
+      stageConfigs?: StageConfig[];
+      stageMap?: Record<string, StageConfig>;
+      agentMediators?: unknown[];
+      agentMediatorMap?: Record<string, unknown>;
+      agentParticipants?: unknown[];
+      agentParticipantMap?: Record<string, unknown>;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      try {
+        const json = JSON.parse(
+          reader.result as string,
+        ) as ImportedTemplateJson;
+        const experiment = json.experiment;
+        if (!experiment) {
+          alert('Invalid experiment JSON format: missing "experiment" field.');
+          return;
+        }
+
+        experiment.metadata = {...experiment.metadata, creator: ''};
+        experiment.permissions = {visibility: 'public', readers: []};
+
+        const stageConfigs = json.stageConfigs
+          ? json.stageConfigs
+          : (experiment.stageIds || [])
+              .map((id: string) => json.stageMap?.[id])
+              .filter(Boolean);
+
+        const template: ExperimentTemplate = {
+          id: experiment.id || '',
+          experiment,
+          stageConfigs,
+          agentMediators:
+            json.agentMediators || Object.values(json.agentMediatorMap || {}),
+          agentParticipants:
+            json.agentParticipants ||
+            Object.values(json.agentParticipantMap || {}),
+        };
+
+        this.experimentEditor.loadTemplate(template, true);
+        this.routerService.navigate(Pages.EXPERIMENT_CREATE);
+      } catch (error) {
+        console.error('Error importing JSON:', error);
+        alert('Failed to parse JSON file.');
+      }
+    };
+    reader.readAsText(file);
+  };
 }
 
 declare global {

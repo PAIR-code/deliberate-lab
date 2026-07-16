@@ -22,6 +22,7 @@ import {
   createParticipantChatMessage,
   createSurveyPerParticipantStageParticipantAnswer,
   createSurveyStageParticipantAnswer,
+  getParticipantStageProfile,
 } from '@deliberation-lab/utils';
 import {
   Timestamp,
@@ -52,6 +53,7 @@ import {
   sendChipResponseCallable,
   setChipTurnCallable,
   setParticipantRolesCallable,
+  setParticipantNegotiationProfilesCallable,
   setSalespersonControllerCallable,
   setSalespersonMoveCallable,
   setSalespersonResponseCallable,
@@ -633,17 +635,22 @@ export class ParticipantService extends Service {
     let response = {};
     this.isSendingChat = true;
     if (this.experimentId && this.profile) {
+      const currentStage = this.sp.experimentService.getStage(
+        this.profile.currentStageId,
+      );
+      const stageProfile = getParticipantStageProfile(
+        this.profile,
+        this.profile.currentStageId,
+        currentStage?.name ?? '',
+      );
+
       const chatMessage = createParticipantChatMessage({
         ...config,
         discussionId: this.sp.cohortService.getChatDiscussionId(
           this.profile.currentStageId,
         ),
         senderId: this.profile.publicId,
-        profile: {
-          name: this.profile.name,
-          avatar: this.profile.avatar,
-          pronouns: this.profile.pronouns,
-        },
+        profile: stageProfile,
       });
 
       const createData: CreateChatMessageData = {
@@ -1066,6 +1073,21 @@ export class ParticipantService extends Service {
     let output = {success: false};
     if (this.experimentId && this.profile) {
       output = await setParticipantRolesCallable(
+        this.sp.firebaseService.functions,
+        {
+          experimentId: this.experimentId,
+          cohortId: this.profile.currentCohortId,
+          stageId,
+        },
+      );
+    }
+    return output;
+  }
+
+  async setParticipantNegotiationProfiles(stageId: string) {
+    let output = {success: false};
+    if (this.experimentId && this.profile) {
+      output = await setParticipantNegotiationProfilesCallable(
         this.sp.firebaseService.functions,
         {
           experimentId: this.experimentId,
