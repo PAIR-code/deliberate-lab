@@ -1,20 +1,25 @@
 // Auto-generated from Copy of Pilot study GUIDE (v2).json
 import {
+  Experiment,
+  createNegotiationProfileStage,
   createNegotiationPayoutStage,
+  createStageProgressConfig,
+  createStageTextConfig,
   ExperimentTemplate,
   StageConfig,
   AgentMediatorTemplate,
   AgentParticipantTemplate,
+  Visibility,
 } from '@deliberation-lab/utils';
 
 interface GuideDataTemplate {
-  experiment: Record<string, unknown>;
+  experiment: Experiment;
   stageMap: Record<string, StageConfig>;
   agentMediatorMap?: Record<string, AgentMediatorTemplate>;
   agentParticipantMap?: Record<string, AgentParticipantTemplate>;
 }
 
-const GUIDE_DATA: GuideDataTemplate = {
+const GUIDE_DATA = {
   experiment: {
     id: 'f11aab82-87cd-459b-a6bc-ad51e6a649e6',
     versionId: 19,
@@ -2731,12 +2736,13 @@ const GUIDE_DATA: GuideDataTemplate = {
 };
 
 export function getGuidePilotStudyTemplate(): ExperimentTemplate {
-  const exp = {...GUIDE_DATA.experiment};
+  const data = GUIDE_DATA as unknown as GuideDataTemplate;
+  const exp = {...data.experiment};
   exp.metadata = {...exp.metadata, creator: ''};
-  exp.permissions = {visibility: 'public', readers: []};
+  exp.permissions = {visibility: Visibility.PUBLIC, readers: []};
 
   const rawStages: StageConfig[] = (exp.stageIds || [])
-    .map((id: string) => GUIDE_DATA.stageMap[id])
+    .map((id: string) => data.stageMap[id])
     .filter(Boolean);
 
   const stageConfigs: StageConfig[] = [];
@@ -2793,10 +2799,10 @@ export function getGuidePilotStudyTemplate(): ExperimentTemplate {
   exp.stageIds = stageConfigs.map((s) => s.id);
 
   const agentMediators: AgentMediatorTemplate[] = Object.values(
-    GUIDE_DATA.agentMediatorMap || {},
+    data.agentMediatorMap || {},
   );
   const agentParticipants: AgentParticipantTemplate[] = Object.values(
-    GUIDE_DATA.agentParticipantMap || {},
+    data.agentParticipantMap || {},
   );
 
   return {

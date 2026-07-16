@@ -18,6 +18,9 @@ import {
   Experiment,
   ExperimentTemplate,
   StageConfig,
+  AgentMediatorTemplate,
+  AgentParticipantTemplate,
+  Visibility,
   SortMode,
   sortLabel,
   sortExperiments,
@@ -328,30 +331,33 @@ export class QuickStartGallery extends MobxLitElement {
         const json = JSON.parse(
           reader.result as string,
         ) as ImportedTemplateJson;
-        const experiment = json.experiment;
-        if (!experiment) {
+        const exp = json.experiment as unknown as Experiment;
+        if (!exp) {
           alert('Invalid experiment JSON format: missing "experiment" field.');
           return;
         }
 
-        experiment.metadata = {...experiment.metadata, creator: ''};
-        experiment.permissions = {visibility: 'public', readers: []};
+        exp.metadata = {...exp.metadata, creator: ''};
+        exp.permissions = {visibility: Visibility.PUBLIC, readers: []};
 
-        const stageConfigs = json.stageConfigs
+        const stageConfigs: StageConfig[] = json.stageConfigs
           ? json.stageConfigs
-          : (experiment.stageIds || [])
+          : (exp.stageIds || [])
               .map((id: string) => json.stageMap?.[id])
-              .filter(Boolean);
+              .filter((s): s is StageConfig => Boolean(s));
 
         const template: ExperimentTemplate = {
-          id: experiment.id || '',
-          experiment,
+          id: exp.id || '',
+          experiment: exp,
           stageConfigs,
-          agentMediators:
-            json.agentMediators || Object.values(json.agentMediatorMap || {}),
-          agentParticipants:
-            json.agentParticipants ||
-            Object.values(json.agentParticipantMap || {}),
+          agentMediators: (json.agentMediators ||
+            Object.values(
+              json.agentMediatorMap || {},
+            )) as AgentMediatorTemplate[],
+          agentParticipants: (json.agentParticipants ||
+            Object.values(
+              json.agentParticipantMap || {},
+            )) as AgentParticipantTemplate[],
         };
 
         this.experimentEditor.loadTemplate(template, true);
