@@ -642,6 +642,7 @@ export class ParticipantService extends Service {
         this.profile,
         this.profile.currentStageId,
         currentStage?.name ?? '',
+        currentStage?.anonymousProfileSetId,
       );
 
       const chatMessage = createParticipantChatMessage({

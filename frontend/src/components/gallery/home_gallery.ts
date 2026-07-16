@@ -16,11 +16,6 @@ import {Pages, RouterService} from '../../services/router.service';
 
 import {
   Experiment,
-  ExperimentTemplate,
-  StageConfig,
-  AgentMediatorTemplate,
-  AgentParticipantTemplate,
-  Visibility,
   SortMode,
   sortLabel,
   sortExperiments,
@@ -236,25 +231,6 @@ export class QuickStartGallery extends MobxLitElement {
           <div
             class="quick-start-card"
             @click=${() => {
-              const input = this.shadowRoot?.querySelector(
-                '#json-import-input',
-              ) as HTMLInputElement;
-              input?.click();
-            }}
-          >
-            <input
-              id="json-import-input"
-              type="file"
-              accept=".json"
-              style="display: none"
-              @change=${this.handleImportJson}
-            />
-            <pr-icon icon="file_upload" color="neutral" size="large"></pr-icon>
-            <div>Import from JSON file</div>
-          </div>
-          <div
-            class="quick-start-card"
-            @click=${() => {
               this.routerService.navigate(Pages.EXPERIMENT_CREATE);
               this.experimentEditor.loadTemplate(
                 getQuickstartAgentGroupChatTemplate(),
@@ -304,71 +280,6 @@ export class QuickStartGallery extends MobxLitElement {
       </div>
     `;
   }
-
-  private handleImportJson = (e: Event) => {
-    const input = e.target as HTMLInputElement;
-    const file = input.files?.[0];
-    if (!file) return;
-
-    interface ImportedTemplateJson {
-      experiment?: {
-        id?: string;
-        stageIds?: string[];
-        metadata?: Record<string, unknown>;
-        permissions?: Record<string, unknown>;
-      };
-      stageConfigs?: StageConfig[];
-      stageMap?: Record<string, StageConfig>;
-      agentMediators?: unknown[];
-      agentMediatorMap?: Record<string, unknown>;
-      agentParticipants?: unknown[];
-      agentParticipantMap?: Record<string, unknown>;
-    }
-
-    const reader = new FileReader();
-    reader.onload = () => {
-      try {
-        const json = JSON.parse(
-          reader.result as string,
-        ) as ImportedTemplateJson;
-        const exp = json.experiment as unknown as Experiment;
-        if (!exp) {
-          alert('Invalid experiment JSON format: missing "experiment" field.');
-          return;
-        }
-
-        exp.metadata = {...exp.metadata, creator: ''};
-        exp.permissions = {visibility: Visibility.PUBLIC, readers: []};
-
-        const stageConfigs: StageConfig[] = json.stageConfigs
-          ? json.stageConfigs
-          : (exp.stageIds || [])
-              .map((id: string) => json.stageMap?.[id])
-              .filter((s): s is StageConfig => Boolean(s));
-
-        const template: ExperimentTemplate = {
-          id: exp.id || '',
-          experiment: exp,
-          stageConfigs,
-          agentMediators: (json.agentMediators ||
-            Object.values(
-              json.agentMediatorMap || {},
-            )) as AgentMediatorTemplate[],
-          agentParticipants: (json.agentParticipants ||
-            Object.values(
-              json.agentParticipantMap || {},
-            )) as AgentParticipantTemplate[],
-        };
-
-        this.experimentEditor.loadTemplate(template, true);
-        this.routerService.navigate(Pages.EXPERIMENT_CREATE);
-      } catch (error) {
-        console.error('Error importing JSON:', error);
-        alert('Failed to parse JSON file.');
-      }
-    };
-    reader.readAsText(file);
-  };
 }
 
 declare global {

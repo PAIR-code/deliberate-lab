@@ -108,6 +108,7 @@ export class ChatMessageComponent extends MobxLitElement {
           senderParticipant,
           currentStageId,
           currentStage?.name ?? '',
+          currentStage?.anonymousProfileSetId,
         );
         if (stageProfile && stageProfile.name) {
           profile = stageProfile;

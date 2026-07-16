@@ -122,6 +122,13 @@ export interface BaseStageConfig {
   name: string;
   descriptions: StageTextConfig;
   progress: StageProgressConfig;
+  // If set, participants are shown under this anonymous profile set (see
+  // ParticipantProfile.anonymousProfiles) while this stage is displayed,
+  // instead of their base identity. Used by e.g. the negotiation game to
+  // display participants as their assigned party. Set explicitly by templates;
+  // when unset, display falls back to base identity (see
+  // getParticipantStageProfile / getActiveProfileSetId).
+  anonymousProfileSetId?: string;
 }
 
 export interface StageTextConfig {

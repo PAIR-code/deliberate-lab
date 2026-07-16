@@ -9,6 +9,12 @@ import {
 
 /** NegotiationProfile stage types and functions. */
 
+// Anonymous profile set under which participants are displayed as their
+// assigned negotiation party (see ParticipantProfile.anonymousProfiles).
+// Owned by the negotiation game; a stage opts in via
+// BaseStageConfig.anonymousProfileSetId.
+export const NEGOTIATION_PROFILE_SET_ID = 'negotiation_profile';
+
 // ************************************************************************* //
 // TYPES                                                                     //
 // ************************************************************************* //

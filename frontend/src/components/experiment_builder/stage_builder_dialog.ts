@@ -12,14 +12,10 @@ import {AuthService} from '../../services/auth.service';
 import {ExperimentEditor} from '../../services/experiment.editor';
 
 import {
-  Experiment,
   ExperimentTemplate,
   MetadataConfig,
   StageConfig,
   StageKind,
-  AgentMediatorTemplate,
-  AgentParticipantTemplate,
-  Visibility,
   createAssetAllocationStage,
   createChatStage,
   createRankingStage,
@@ -186,8 +182,7 @@ export class StageBuilderDialog extends MobxLitElement {
         configuration!
       </div>
       <div class="card-gallery-wrapper">
-        ${this.renderGuidePilotStudyCard()} ${this.renderImportJsonCard()}
-        ${this.renderFlipCardTemplateCard()}
+        ${this.renderGuidePilotStudyCard()} ${this.renderFlipCardTemplateCard()}
         ${this.renderFruitTestTemplateCard()}
         ${this.renderConditionalSurveyTemplateCard()}
         ${this.renderStockInfoGameCard()}
@@ -369,104 +364,12 @@ export class StageBuilderDialog extends MobxLitElement {
 
     return html`
       <div class="card">
-        <div class="title">📋 Copy of Pilot study GUIDE (v2)</div>
+        <div class="title">📋 GUIDE Pilot Study</div>
         <div>
           Full 36-stage pilot study template including negotiation, discussion,
           and surveys.
         </div>
         <pr-button @click=${loadTemplate}>Load Template</pr-button>
-      </div>
-    `;
-  }
-
-  private handleImportJson = (e: Event) => {
-    const input = e.target as HTMLInputElement;
-    const file = input.files?.[0];
-    if (!file) return;
-
-    interface ImportedTemplateJson {
-      experiment?: {
-        id?: string;
-        stageIds?: string[];
-        metadata?: Record<string, unknown>;
-        permissions?: Record<string, unknown>;
-      };
-      stageConfigs?: StageConfig[];
-      stageMap?: Record<string, StageConfig>;
-      agentMediators?: unknown[];
-      agentMediatorMap?: Record<string, unknown>;
-      agentParticipants?: unknown[];
-      agentParticipantMap?: Record<string, unknown>;
-    }
-
-    const reader = new FileReader();
-    reader.onload = () => {
-      try {
-        const json = JSON.parse(
-          reader.result as string,
-        ) as ImportedTemplateJson;
-        const exp = json.experiment as unknown as Experiment;
-        if (!exp) {
-          alert('Invalid experiment JSON format: missing "experiment" field.');
-          return;
-        }
-
-        exp.metadata = {...exp.metadata, creator: ''};
-        exp.permissions = {visibility: Visibility.PUBLIC, readers: []};
-
-        const stageConfigs: StageConfig[] = json.stageConfigs
-          ? json.stageConfigs
-          : (exp.stageIds || [])
-              .map((id: string) => json.stageMap?.[id])
-              .filter((s): s is StageConfig => Boolean(s));
-
-        const template: ExperimentTemplate = {
-          id: exp.id || '',
-          experiment: exp,
-          stageConfigs,
-          agentMediators: (json.agentMediators ||
-            Object.values(
-              json.agentMediatorMap || {},
-            )) as AgentMediatorTemplate[],
-          agentParticipants: (json.agentParticipants ||
-            Object.values(
-              json.agentParticipantMap || {},
-            )) as AgentParticipantTemplate[],
-        };
-
-        this.experimentEditor.loadTemplate(template, true);
-        this.experimentEditor.toggleStageBuilderDialog();
-      } catch (error) {
-        console.error('Error importing JSON:', error);
-        alert('Failed to parse JSON file.');
-      }
-    };
-    reader.readAsText(file);
-  };
-
-  private renderImportJsonCard() {
-    return html`
-      <div
-        class="card"
-        @click=${() => {
-          const input = this.shadowRoot?.querySelector(
-            '#dialog-json-import-input',
-          ) as HTMLInputElement;
-          input?.click();
-        }}
-      >
-        <input
-          id="dialog-json-import-input"
-          type="file"
-          accept=".json"
-          style="display: none"
-          @change=${this.handleImportJson}
-        />
-        <div class="title">📁 Import JSON file</div>
-        <div>
-          Load an experiment directly from a downloaded JSON file (e.g. Copy of
-          Pilot study GUIDE (v2).json).
-        </div>
       </div>
     `;
   }

@@ -1,11 +1,11 @@
 import {ParticipantProfileExtended} from '../participant';
 import {
+  NEGOTIATION_PROFILE_SET_ID,
   NegotiationProfileStageConfig,
   NegotiationProfileStagePublicData,
 } from './negotiation_profile_stage';
 import {StageConfig, StageContextData, StageKind} from './stage';
 import {AgentParticipantStageActions, BaseStageHandler} from './stage.handler';
-import {NEGOTIATION_PROFILE_SET_ID} from '../profile_sets';
 
 export class NegotiationProfileStageHandler extends BaseStageHandler {
   getAgentParticipantActionsForStage(

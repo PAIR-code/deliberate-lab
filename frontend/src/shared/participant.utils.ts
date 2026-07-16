@@ -1,9 +1,4 @@
 import {
-  SECONDARY_PROFILE_SET_ID,
-  TERTIARY_PROFILE_SET_ID,
-  NEGOTIATION_PROFILE_SET_ID,
-  PROFILE_SET_ANIMALS_2_ID,
-  PROFILE_SET_NATURE_ID,
   ParticipantProfile,
   ParticipantStatus,
   ProfileType,

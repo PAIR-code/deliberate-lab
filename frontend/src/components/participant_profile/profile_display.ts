@@ -7,11 +7,6 @@ import {customElement, property} from 'lit/decorators.js';
 import {classMap} from 'lit/directives/class-map.js';
 
 import {
-  SECONDARY_PROFILE_SET_ID,
-  NEGOTIATION_PROFILE_SET_ID,
-  PROFILE_SET_ANIMALS_2_ID,
-  PROFILE_SET_NATURE_ID,
-  TERTIARY_PROFILE_SET_ID,
   ParticipantProfile,
   ParticipantProfileBase,
   getParticipantStageProfile,
@@ -85,15 +80,15 @@ export class ParticipantProfileDisplay extends MobxLitElement {
       return getHashBasedColor(this.profile?.publicId);
     };
 
-    const resolvedStageName =
-      this.stageName ||
-      (this.stageId
-        ? (this.experimentService.getStage(this.stageId)?.name ?? '')
-        : '');
+    const resolvedStage = this.stageId
+      ? this.experimentService.getStage(this.stageId)
+      : undefined;
+    const resolvedStageName = this.stageName || (resolvedStage?.name ?? '');
     const baseProfile: ParticipantProfileBase = getParticipantStageProfile(
       this.profile,
       this.stageId,
       resolvedStageName,
+      resolvedStage?.anonymousProfileSetId,
     );
 
     return html`

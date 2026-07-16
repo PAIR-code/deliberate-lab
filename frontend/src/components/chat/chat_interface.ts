@@ -105,6 +105,7 @@ export class ChatInterface extends MobxLitElement {
         participantProfile,
         this.stage?.id ?? '',
         this.stage?.name ?? '',
+        this.stage?.anonymousProfileSetId,
       );
       return {
         name: stageProfile.name,

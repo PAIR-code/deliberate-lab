@@ -1,4 +1,7 @@
-// Auto-generated from Copy of Pilot study GUIDE (v2).json
+// Guide pilot study template: a three-task experiment (negotiation, open-ended
+// discussion, and consensus-building). The experiment definition is embedded as
+// GUIDE_DATA below and assembled into stage configs by
+// getGuidePilotStudyTemplate(), mirroring the other templates in this folder.
 import {
   Experiment,
   createNegotiationProfileStage,
@@ -6,11 +9,32 @@ import {
   createStageProgressConfig,
   createStageTextConfig,
   ExperimentTemplate,
+  NEGOTIATION_PROFILE_SET_ID,
   StageConfig,
   AgentMediatorTemplate,
   AgentParticipantTemplate,
   Visibility,
 } from '@deliberation-lab/utils';
+
+// The negotiation task (Task 2) displays participants under their assigned
+// party identity (Party A/B/C) rather than their base/animal profile. These
+// markers identify, by stage id or name, the Task 2 stages that should use the
+// negotiation profile set. This coupling is intentionally kept here in the
+// template — not in shared profile utilities — so it cannot affect other
+// experiments. Stages are tagged via their `anonymousProfileSetId` field.
+const NEGOTIATION_STAGE_MARKERS = [
+  'negotiation',
+  'coalition',
+  'task 2:',
+  'discussion-round-2',
+  'final decision',
+];
+
+/** Whether a stage should display participants under the negotiation profile. */
+function usesNegotiationProfile(stage: StageConfig): boolean {
+  const haystack = `${stage.id} ${stage.name}`.toLowerCase();
+  return NEGOTIATION_STAGE_MARKERS.some((marker) => haystack.includes(marker));
+}
 
 interface GuideDataTemplate {
   experiment: Experiment;
@@ -24,7 +48,7 @@ const GUIDE_DATA = {
     id: 'f11aab82-87cd-459b-a6bc-ad51e6a649e6',
     versionId: 19,
     metadata: {
-      name: 'Copy of Pilot study GUIDE (v2)',
+      name: 'GUIDE Pilot Study',
       publicName: 'General group conversation',
       description:
         'Three tasks including negotiation, open-ended discussion and consensus-building',
@@ -2794,6 +2818,13 @@ export function getGuidePilotStudyTemplate(): ExperimentTemplate {
       continue;
     }
     stageConfigs.push(stage);
+  }
+
+  // Tag the negotiation (Task 2) stages so participants display as their party.
+  for (const stage of stageConfigs) {
+    if (usesNegotiationProfile(stage)) {
+      stage.anonymousProfileSetId = NEGOTIATION_PROFILE_SET_ID;
+    }
   }
 
   exp.stageIds = stageConfigs.map((s) => s.id);
