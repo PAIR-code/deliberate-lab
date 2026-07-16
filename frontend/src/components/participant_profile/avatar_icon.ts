@@ -20,6 +20,7 @@ export class Avatar extends MobxLitElement {
   @property() color = '';
 
   override render() {
+    if (!this.emoji) return nothing;
     const classes = classMap({
       avatar: true,
       small: this.small,

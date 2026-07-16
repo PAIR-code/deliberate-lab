@@ -21,6 +21,7 @@ export * from './stages/flipcard.endpoints';
 
 export * from './stages/ranking.endpoints';
 export * from './stages/role.endpoints';
+export * from './stages/negotiation_profile.endpoints';
 export * from './stages/salesperson.endpoints';
 export * from './stages/survey.endpoints';
 

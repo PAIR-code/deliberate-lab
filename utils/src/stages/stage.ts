@@ -39,6 +39,16 @@ import {
   createRoleStagePublicData,
 } from './role_stage';
 import {
+  NegotiationProfileStageConfig,
+  NegotiationProfileStagePublicData,
+  createNegotiationProfileStagePublicData,
+} from './negotiation_profile_stage';
+import {
+  NegotiationPayoutStageConfig,
+  NegotiationPayoutStagePublicData,
+  createNegotiationPayoutStagePublicData,
+} from './negotiation_payout_stage';
+import {
   SalespersonStageConfig,
   SalespersonStagePublicData,
   createSalespersonStagePublicData,
@@ -93,6 +103,8 @@ export enum StageKind {
   ASSET_ALLOCATION = 'assetAllocation', // asset allocation between 2 stocks
   MULTI_ASSET_ALLOCATION = 'multiAssetAllocation', // allocation of 2+ stocks
   ROLE = 'role', // info stage that assigns different roles to participants
+  NEGOTIATION_PROFILE = 'negotiationProfile', // special stage assigning anonymous negotiation profiles (A/B/C)
+  NEGOTIATION_PAYOUT = 'negotiationPayout', // special stage showing negotiation payout summary
   SURVEY = 'survey',
   SURVEY_PER_PARTICIPANT = 'surveyPerParticipant',
   TRANSFER = 'transfer',
@@ -140,6 +152,8 @@ export type StageConfig =
   | AssetAllocationStageConfig
   | MultiAssetAllocationStageConfig
   | RoleStageConfig
+  | NegotiationProfileStageConfig
+  | NegotiationPayoutStageConfig
   | SurveyStageConfig
   | SurveyPerParticipantStageConfig
   | TOSStageConfig
@@ -189,6 +203,8 @@ export type StagePublicData =
   | FlipCardStagePublicData
   | RankingStagePublicData
   | RoleStagePublicData
+  | NegotiationProfileStagePublicData
+  | NegotiationPayoutStagePublicData
   | SalespersonStagePublicData
   | AssetAllocationStagePublicData
   | MultiAssetAllocationStagePublicData
@@ -217,6 +233,8 @@ export const STAGE_KIND_REQUIRES_TRANSFER_MIGRATION: Record<
   [StageKind.MULTI_ASSET_ALLOCATION]: true,
   [StageKind.FLIPCARD]: true,
   [StageKind.ROLE]: true,
+  [StageKind.NEGOTIATION_PROFILE]: true,
+  [StageKind.NEGOTIATION_PAYOUT]: false,
   // Has participant-keyed public data, but contextual to the cohort's
   // discussions — not portable across cohorts.
   [StageKind.CHAT]: false,
@@ -299,6 +317,12 @@ export function createPublicDataFromStageConfigs(stages: StageConfig[]) {
         break;
       case StageKind.ROLE:
         publicData.push(createRoleStagePublicData(stage));
+        break;
+      case StageKind.NEGOTIATION_PROFILE:
+        publicData.push(createNegotiationProfileStagePublicData(stage));
+        break;
+      case StageKind.NEGOTIATION_PAYOUT:
+        publicData.push(createNegotiationPayoutStagePublicData(stage));
         break;
       case StageKind.SALESPERSON:
         publicData.push(
