@@ -464,10 +464,10 @@ export class StageBuilderDialog extends MobxLitElement {
 
     return html`
       <div class="card" @click=${addStage}>
-        <div class="title">🤝 Negotiation profile</div>
+        <div class="title">🤝 Negotiation Party Assignment</div>
         <div>
-          Randomly assign anonymous profiles (e.g. Party A, Party B, Party C) to
-          participants and hide their avatar
+          Randomly assign negotiation parties (e.g. Party A, Party B, Party C)
+          to participants.
         </div>
       </div>
     `;
