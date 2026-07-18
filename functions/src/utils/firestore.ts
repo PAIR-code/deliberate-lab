@@ -152,15 +152,17 @@ export async function saveStoredPersona(
  */
 export async function claimStoredPersonaByHash(
   experimentId: string,
-  hash: string,
+  hash: string | null, // null: claim from the whole collection (flat pool)
   participantPrivateId: string,
+  collectionName = 'personas',
 ): Promise<string | null> {
   const personasRef = app
     .firestore()
     .collection('experiments')
     .doc(experimentId)
-    .collection('personas');
-  const query = personasRef.where('hash', '==', hash);
+    .collection(collectionName);
+  const query =
+    hash === null ? personasRef : personasRef.where('hash', '==', hash);
 
   return app.firestore().runTransaction(async (transaction) => {
     const snapshot = await transaction.get(query);

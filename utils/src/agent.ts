@@ -41,6 +41,10 @@ export interface ProfileAgentConfig {
   // persona from the bank instead of generating a fresh one. Unset for agents
   // that use slot-based reuse or fresh generation.
   personaHash?: string;
+  // Set on an observer's representative: claim a pre-generated persona from
+  // the experiment's representative bank (repPersonas) at creation. The bank
+  // is one flat pool; with no bank present nothing changes.
+  repPersonaBank?: boolean;
   // Set on direct-participation agents: the private ID of the HUMAN this agent
   // was spawned alongside. The persona-generation trigger claims a plain
   // character sketch from the bank keyed to this human (so the human never gets

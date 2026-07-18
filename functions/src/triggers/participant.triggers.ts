@@ -60,6 +60,46 @@ export const onParticipantCreation = onDocumentCreated(
 
     let activeParticipant = participant;
 
+    // An observer's representative claims a pre-generated persona from the
+    // representative bank (experiments/{id}/repPersonas) when the experiment
+    // provides one. The bank is one flat pool (no per-round keying). Without
+    // a bank this finds nothing and the representative behaves as before.
+    if (participant.agentConfig?.repPersonaBank) {
+      const content = await claimStoredPersonaByHash(
+        event.params.experimentId,
+        null,
+        participant.privateId,
+        'repPersonas',
+      );
+      if (content) {
+        const resolved = content
+          .split('{{name}}')
+          .join(String(participant.name ?? participant.publicId))
+          .split('{{publicId}}')
+          .join(participant.publicId);
+        await app.firestore().runTransaction(async (transaction) => {
+          const pRef = getFirestoreParticipantRef(
+            event.params.experimentId,
+            participant.privateId,
+          );
+          const pDoc = (
+            await transaction.get(pRef)
+          ).data() as ParticipantProfileExtended;
+          if (pDoc?.agentConfig) {
+            const base = pDoc.agentConfig.promptContext ?? '';
+            pDoc.agentConfig.promptContext = base
+              ? `${base}\n\n${resolved}`
+              : resolved;
+            transaction.set(pRef, pDoc);
+            activeParticipant = pDoc;
+          }
+        });
+        console.log(
+          `Claimed representative bank persona for ${participant.privateId}.`,
+        );
+      }
+    }
+
     // 1. Generate persona if flagged. This awaits the generation (and any
     // retries) before the participant is initialized below, so a flagged
     // participant stays uninitialized until its persona context is ready.

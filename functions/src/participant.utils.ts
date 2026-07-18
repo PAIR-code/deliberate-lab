@@ -1597,6 +1597,9 @@ export async function completeParticipantTransfer(
           // silently fails when the experimenter hasn't configured a Gemini
           // API key.
           modelSettings: DEFAULT_AGENT_MODEL_SETTINGS,
+          // Claim a persona from the representative bank at creation (the
+          // trigger is a no-op when the experiment stores no bank).
+          repPersonaBank: true,
         },
         timestamps: repAgentTimestamps,
         publicId: `${participant.publicId}-agent`,
