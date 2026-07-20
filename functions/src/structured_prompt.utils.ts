@@ -505,7 +505,7 @@ function buildStageAnswersForParticipant(
  * Returns true if the condition is met (or if there's no condition).
  * Only works for private chat contexts with a single participant.
  */
-function shouldIncludePromptItem(
+export function shouldIncludePromptItem(
   promptItem: PromptItem,
   stageKind: StageKind,
   participants: ParticipantProfileExtended[],
