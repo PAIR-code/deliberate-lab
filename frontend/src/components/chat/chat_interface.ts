@@ -185,14 +185,26 @@ export class ChatInterface extends MobxLitElement {
     if (!data || !data.currentTurnParticipantId) return null;
 
     // The backend stamps turnProcessedMessageId once its turn logic has
-    // handled a message. Until the newest participant or mediator message is
-    // stamped, the holder in the public data is stale, so hide the indicator
-    // and disable input.
+    // handled a message. Until the newest message is stamped,
+    // data.currentTurnParticipantId is still the speaker who just spoke.
+    // Rather than blank the indicator during that window (which collapses the
+    // typing dots and shifts the pinned message list, and hides the banner),
+    // optimistically show the NEXT speaker from the turn order, which is what
+    // the backend is about to stamp. This switches the banner and typing dots
+    // straight from one speaker to the next with no visible gap. If the next
+    // speaker cannot be determined (sender not in the order), fall back to
+    // hiding the indicator as before.
     const messages = (this.cohortService.chatMap[this.stage.id] ?? []).filter(
       (m) => m.type !== UserType.SYSTEM && m.type !== UserType.EXPERIMENTER,
     );
     const latest = messages[messages.length - 1];
-    if (latest && latest.id !== data.turnProcessedMessageId) return null;
+    if (latest && latest.id !== data.turnProcessedMessageId) {
+      const order = data.turnOrder ?? [];
+      const senderIndex = order.indexOf(latest.senderId);
+      if (senderIndex === -1 || order.length === 0) return null;
+      const nextId = order[(senderIndex + 1) % order.length];
+      return this.buildGroupChatTurnState(nextId);
+    }
 
     return this.buildGroupChatTurnState(data.currentTurnParticipantId);
   }
