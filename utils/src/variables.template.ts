@@ -12,10 +12,19 @@ import {
 // Disable HTML escaping (prevents quotes from being rendered as `&quot;`)
 Mustache.escape = (text: string) => text;
 
+/**
+ * System variables: `_`-prefixed template tokens the platform provides and the
+ * experimenter can reference but cannot define. The `_` prefix is reserved for
+ * these; this set is the registry the template logic consults.
+ */
+export const SYSTEM_VARIABLES: ReadonlySet<string> = new Set(['_scratchpad']);
+export type SystemVariableName = '_scratchpad';
+
 /** Reason why a variable reference is invalid */
 export type InvalidVariableReason =
   | 'undefined'
   | 'object_needs_property'
+  | 'system'
   | 'syntax';
 
 /** An invalid variable reference in a template */
@@ -31,6 +40,10 @@ export function formatInvalidVariable(invalid: InvalidVariable): string {
       return `'${invalid.path}' is not defined`;
     case 'object_needs_property':
       return `'${invalid.path}' is an object - access a property like '${invalid.path}.propertyName'`;
+    case 'system':
+      return `'${invalid.path}' is not a known system variable (valid: ${[
+        ...SYSTEM_VARIABLES,
+      ].join(', ')})`;
     case 'syntax':
       return invalid.path || 'Invalid template syntax';
   }
@@ -80,7 +93,7 @@ export function resolveTemplateVariables(
     const schemaType = variable?.schema?.type;
 
     if (!variable) {
-      if (variableName === '_scratchpad') {
+      if (SYSTEM_VARIABLES.has(variableName)) {
         typedValueMap[variableName] = valueMap[variableName] ?? '';
       }
       return;
@@ -210,7 +223,11 @@ function validateTokens(
     const schema = resolvePathInContextStack(value, contextStack);
 
     if (!schema) {
-      if (value === '_scratchpad') {
+      if (SYSTEM_VARIABLES.has(value)) {
+        continue;
+      }
+      if (value.startsWith('_')) {
+        invalidVariables.set(value, {path: value, reason: 'system'});
         continue;
       }
       invalidVariables.set(value, {path: value, reason: 'undefined'});

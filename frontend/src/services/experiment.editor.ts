@@ -200,10 +200,10 @@ export class ExperimentEditor extends Service {
     }
 
     for (const config of this.experiment.variableConfigs ?? []) {
-      // Block save and inform experimenter to avoid reasoning history name collision.
-      if (config.definition.name === '_scratchpad') {
+      // Names starting with "_" are reserved for system variables.
+      if (config.definition.name.startsWith('_')) {
         errors.push(
-          'The variable name "_scratchpad" is reserved for tracking the system\'s reasoning history. Please rename it.',
+          'Variables that begin with an underscore are not allowed unless they are established system variables.',
         );
       }
       if (requiresValues(config.type)) {
