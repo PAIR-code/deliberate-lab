@@ -472,6 +472,67 @@
         }
       }
     },
+    "AgentModelSettings": {
+      "title": "AgentModelSettings",
+      "additionalProperties": false,
+      "type": "object",
+      "required": ["apiType", "modelName"],
+      "properties": {
+        "apiType": {
+          "title": "ApiKeyType",
+          "anyOf": [
+            {
+              "const": "GEMINI",
+              "type": "string"
+            },
+            {
+              "const": "VERTEX_AI",
+              "type": "string"
+            },
+            {
+              "const": "OPENAI",
+              "type": "string"
+            },
+            {
+              "const": "CLAUDE",
+              "type": "string"
+            },
+            {
+              "const": "OLLAMA",
+              "type": "string"
+            }
+          ]
+        },
+        "modelName": {
+          "type": "string"
+        }
+      }
+    },
+    "ApiKeyType": {
+      "title": "ApiKeyType",
+      "anyOf": [
+        {
+          "const": "GEMINI",
+          "type": "string"
+        },
+        {
+          "const": "VERTEX_AI",
+          "type": "string"
+        },
+        {
+          "const": "OPENAI",
+          "type": "string"
+        },
+        {
+          "const": "CLAUDE",
+          "type": "string"
+        },
+        {
+          "const": "OLLAMA",
+          "type": "string"
+        }
+      ]
+    },
     "AssetAllocationStageConfig": {
       "title": "AssetAllocationStageConfig",
       "additionalProperties": false,
@@ -2736,67 +2797,6 @@
         }
       }
     },
-    "AgentModelSettings": {
-      "title": "AgentModelSettings",
-      "additionalProperties": false,
-      "type": "object",
-      "required": ["apiType", "modelName"],
-      "properties": {
-        "apiType": {
-          "title": "ApiKeyType",
-          "anyOf": [
-            {
-              "const": "GEMINI",
-              "type": "string"
-            },
-            {
-              "const": "VERTEX_AI",
-              "type": "string"
-            },
-            {
-              "const": "OPENAI",
-              "type": "string"
-            },
-            {
-              "const": "CLAUDE",
-              "type": "string"
-            },
-            {
-              "const": "OLLAMA",
-              "type": "string"
-            }
-          ]
-        },
-        "modelName": {
-          "type": "string"
-        }
-      }
-    },
-    "ApiKeyType": {
-      "title": "ApiKeyType",
-      "anyOf": [
-        {
-          "const": "GEMINI",
-          "type": "string"
-        },
-        {
-          "const": "VERTEX_AI",
-          "type": "string"
-        },
-        {
-          "const": "OPENAI",
-          "type": "string"
-        },
-        {
-          "const": "CLAUDE",
-          "type": "string"
-        },
-        {
-          "const": "OLLAMA",
-          "type": "string"
-        }
-      ]
-    },
     "ParticipantProfileBase": {
       "title": "ParticipantProfileBase",
       "additionalProperties": false,
@@ -4409,6 +4409,16 @@
                   "items": {
                     "$ref": "#/$defs/CohortDefinition"
                   }
+                },
+                "spawnedAgentModelSettings": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/$defs/AgentModelSettings"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
                 }
               },
               "title": "Experiment"

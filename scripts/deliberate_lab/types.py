@@ -146,6 +146,23 @@ class CohortDefinition(BaseModel):
     maxParticipantsPerCohort: Annotated[int | None, Field(ge=1)] = None
 
 
+class ApiKeyType(StrEnum):
+    GEMINI = "GEMINI"
+    VERTEX_AI = "VERTEX_AI"
+    OPENAI = "OPENAI"
+    CLAUDE = "CLAUDE"
+    OLLAMA = "OLLAMA"
+
+
+class AgentModelSettings(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+        populate_by_name=True,
+    )
+    apiType: Annotated[ApiKeyType, Field(title="ApiKeyType")]
+    modelName: str
+
+
 class StageTextConfig(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
@@ -582,23 +599,6 @@ class SurveyAutoTransferConfig(BaseModel):
     surveyStageId: Annotated[str, Field(min_length=1)]
     surveyQuestionId: Annotated[str, Field(min_length=1)]
     participantCounts: Annotated[dict[str, int], Field(title="ParticipantCounts")]
-
-
-class ApiKeyType(StrEnum):
-    GEMINI = "GEMINI"
-    VERTEX_AI = "VERTEX_AI"
-    OPENAI = "OPENAI"
-    CLAUDE = "CLAUDE"
-    OLLAMA = "OLLAMA"
-
-
-class AgentModelSettings(BaseModel):
-    model_config = ConfigDict(
-        extra="forbid",
-        populate_by_name=True,
-    )
-    apiType: Annotated[ApiKeyType, Field(title="ApiKeyType")]
-    modelName: str
 
 
 class ParticipantProfileBase(BaseModel):
@@ -1053,6 +1053,7 @@ class Experiment(BaseModel):
     ) = None
     variableMap: Annotated[dict[str, str] | None, Field(title="VariableMap")] = None
     cohortDefinitions: list[CohortDefinition] | None = None
+    spawnedAgentModelSettings: AgentModelSettings | None = None
 
 
 class ExperimentTemplate(BaseModel):

@@ -7,6 +7,7 @@ import {
 import {StageConfigData} from './stages/stage.validation';
 import {
   AgentMediatorTemplateData,
+  AgentModelSettingsData,
   AgentParticipantTemplateData,
 } from './agent.validation';
 import {VariableConfigData} from './variables.validation';
@@ -89,6 +90,9 @@ export const ExperimentTemplateSchema = Type.Object(
         variableConfigs: Type.Optional(Type.Array(VariableConfigData)),
         variableMap: Type.Optional(Type.Record(Type.String(), Type.String())),
         cohortDefinitions: Type.Optional(Type.Array(CohortDefinitionSchema)),
+        spawnedAgentModelSettings: Type.Optional(
+          Type.Union([AgentModelSettingsData, Type.Null()]),
+        ),
       },
       strict,
     ),

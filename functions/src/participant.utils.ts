@@ -1592,11 +1592,11 @@ export async function completeParticipantTransfer(
         agentConfig: {
           agentId: repAgentId,
           promptContext: `You are ${observerName}'s representative in this discussion. Speak and advocate on ${observerName}'s behalf, representing their perspective from their earlier responses rather than expressing your own independent opinions. Ensure you properly separate every paragraph with one empty line.`,
-          // Mirror the other spawn paths below and defer to the experiment's
-          // default model rather than hardcoding a specific Gemini build that
-          // silently fails when the experimenter hasn't configured a Gemini
-          // API key.
-          modelSettings: DEFAULT_AGENT_MODEL_SETTINGS,
+          // Use the experiment's configured spawned-agent model when set,
+          // else the built-in default. Avoids hardcoding a specific Gemini
+          // build that silently fails when no Gemini key is configured.
+          modelSettings:
+            experiment.spawnedAgentModelSettings ?? DEFAULT_AGENT_MODEL_SETTINGS,
           // Claim a persona from the representative bank at creation (the
           // trigger is a no-op when the experiment stores no bank).
           repPersonaBank: true,
@@ -1649,7 +1649,9 @@ export async function completeParticipantTransfer(
           // becomes the agent's persona.
           promptContext: '',
           modelSettings:
-            persona?.defaultModelSettings ?? DEFAULT_AGENT_MODEL_SETTINGS,
+            persona?.defaultModelSettings ??
+            experiment.spawnedAgentModelSettings ??
+            DEFAULT_AGENT_MODEL_SETTINGS,
           needsPersonaGeneration: true,
           personaSlotKey: `other-${i}`,
         },
@@ -1751,7 +1753,9 @@ export async function completeParticipantTransfer(
           agentId: persona?.id ?? '',
           promptContext: '',
           modelSettings:
-            persona?.defaultModelSettings ?? DEFAULT_AGENT_MODEL_SETTINGS,
+            persona?.defaultModelSettings ??
+            experiment.spawnedAgentModelSettings ??
+            DEFAULT_AGENT_MODEL_SETTINGS,
           needsPersonaGeneration: true,
           isInactivePersona: true,
         },
