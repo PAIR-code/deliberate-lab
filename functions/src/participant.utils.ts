@@ -1596,7 +1596,8 @@ export async function completeParticipantTransfer(
           // else the built-in default. Avoids hardcoding a specific Gemini
           // build that silently fails when no Gemini key is configured.
           modelSettings:
-            experiment.spawnedAgentModelSettings ?? DEFAULT_AGENT_MODEL_SETTINGS,
+            experiment.spawnedAgentModelSettings ??
+            DEFAULT_AGENT_MODEL_SETTINGS,
           // Claim a persona from the representative bank at creation (the
           // trigger is a no-op when the experiment stores no bank).
           repPersonaBank: true,
