@@ -64,6 +64,9 @@ export class ChatMessageComponent extends MobxLitElement {
   // Stage that this message belongs to. Replying and reacting are only offered
   // when a stage is given (e.g. not in experimenter previews).
   @property() stageId = '';
+  // Whether the stage opted into reactions and replies. When false, no
+  // react/reply affordances or reply quotes are shown.
+  @property() enableReactionsAndReplies = false;
   private fullscreenElement: HTMLElement | null = null;
 
   override disconnectedCallback() {
@@ -207,6 +210,7 @@ export class ChatMessageComponent extends MobxLitElement {
 
   /** Render the quoted message that this message is replying to. */
   private renderReplyQuote(chatMessage: ChatMessage) {
+    if (!this.enableReactionsAndReplies) return nothing;
     const replyTo = chatMessage.replyTo;
     if (!replyTo) return nothing;
 
@@ -224,6 +228,7 @@ export class ChatMessageComponent extends MobxLitElement {
 
   /** Render reaction counts, plus reply/react buttons for participants. */
   private renderMessageActions(chatMessage: ChatMessage) {
+    if (!this.enableReactionsAndReplies) return nothing;
     const publicId = this.participantService.profile?.publicId ?? '';
     // Only a participant viewing a real stage can react or reply. Everyone else
     // (e.g. an experimenter previewing the chat) still sees existing reactions.

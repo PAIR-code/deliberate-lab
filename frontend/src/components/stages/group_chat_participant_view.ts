@@ -50,7 +50,12 @@ export class GroupChatView extends MobxLitElement {
 
   private renderChatMessage(chatMessage: ChatMessage) {
     return html`
-      <chat-message .chat=${chatMessage} .stageId=${this.stage?.id ?? ''}>
+      <chat-message
+        .chat=${chatMessage}
+        .stageId=${this.stage?.id ?? ''}
+        .enableReactionsAndReplies=${this.stage?.enableReactionsAndReplies ??
+        false}
+      >
       </chat-message>
     `;
   }
