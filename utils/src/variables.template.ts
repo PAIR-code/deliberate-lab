@@ -80,7 +80,7 @@ export function resolveTemplateVariables(
     const schemaType = variable?.schema?.type;
 
     if (!variable) {
-      if (variableName === '_reasoning') {
+      if (variableName === '_scratchpad') {
         typedValueMap[variableName] = valueMap[variableName] ?? '';
       }
       return;
@@ -210,7 +210,7 @@ function validateTokens(
     const schema = resolvePathInContextStack(value, contextStack);
 
     if (!schema) {
-      if (value === '_reasoning') {
+      if (value === '_scratchpad') {
         continue;
       }
       invalidVariables.set(value, {path: value, reason: 'undefined'});

@@ -35,7 +35,7 @@ import {
   DEFAULT_MEDIATOR_GROUP_CHAT_PROMPT_INSTRUCTIONS,
   DEFAULT_MEDIATOR_GROUP_CHAT_TURN_TAKING_PROMPT_INSTRUCTIONS,
   ChatStageConfig,
-  injectReasoningField,
+  injectScratchpadField,
 } from '@deliberation-lab/utils';
 import {
   getAgentMediatorPrompt,
@@ -52,17 +52,19 @@ import {
 } from './utils/firestore';
 import {stageManager} from './app';
 
-// Recursively check whether `{{_reasoning}}` appears in prompt
-export function containsReasoningPlaceholder(items: PromptItem[]): boolean {
+// Recursively check whether `{{_scratchpad}}` appears in prompt
+export function containsScratchpadPlaceholder(items: PromptItem[]): boolean {
   return items.some((item) => {
     if (item.type === PromptItemType.TEXT) {
-      return (item as TextPromptItem).text?.includes('{{_reasoning}}') ?? false;
+      return (
+        (item as TextPromptItem).text?.includes('{{_scratchpad}}') ?? false
+      );
     }
     if (item.type === PromptItemType.GROUP) {
       const group = item as PromptItemGroup;
       return (
-        (group.title?.includes('{{_reasoning}}') ?? false) ||
-        containsReasoningPlaceholder(group.items ?? [])
+        (group.title?.includes('{{_scratchpad}}') ?? false) ||
+        containsScratchpadPlaceholder(group.items ?? [])
       );
     }
     return false;
@@ -382,13 +384,13 @@ export async function getPromptFromConfig(
     };
   }
 
-  // Auto-inject _reasoning at the start of the schema when {{_reasoning}} is present
+  // Auto-inject _scratchpad at the start of the schema when {{_scratchpad}} is present
   const usesReasoningPlaceholder =
-    (userProfile.agentConfig?.promptContext?.includes('{{_reasoning}}') ??
+    (userProfile.agentConfig?.promptContext?.includes('{{_scratchpad}}') ??
       false) ||
-    containsReasoningPlaceholder(promptConfig.prompt);
+    containsScratchpadPlaceholder(promptConfig.prompt);
   if (usesReasoningPlaceholder) {
-    structuredOutputConfig = injectReasoningField(structuredOutputConfig);
+    structuredOutputConfig = injectScratchpadField(structuredOutputConfig);
   }
 
   const structuredOutput = makeStructuredOutputPrompt(structuredOutputConfig);
@@ -629,9 +631,9 @@ async function processPromptItems(
   // When referenced, inject the agent's past reasoning history
   let reasoningText = '';
   const usesReasoning =
-    (userProfile.agentConfig?.promptContext?.includes('{{_reasoning}}') ??
+    (userProfile.agentConfig?.promptContext?.includes('{{_scratchpad}}') ??
       false) ||
-    containsReasoningPlaceholder(promptItems);
+    containsScratchpadPlaceholder(promptItems);
   const chatContext = usesReasoning ? promptData.data[stageId] : undefined;
   const messages = chatContext
     ? stageKind === StageKind.PRIVATE_CHAT
@@ -648,10 +650,10 @@ async function processPromptItems(
     messages.forEach((msg, idx) => {
       if (
         msg.senderId === userProfile.publicId &&
-        msg._reasoning &&
-        msg._reasoning.trim() !== ''
+        msg._scratchpad &&
+        msg._scratchpad.trim() !== ''
       ) {
-        agentReasonings.push({round: idx + 1, reasoning: msg._reasoning});
+        agentReasonings.push({round: idx + 1, reasoning: msg._scratchpad});
       }
     });
 
@@ -672,14 +674,14 @@ async function processPromptItems(
       }
       if (recentLines.length > 0) {
         reasoningText =
-          'Each line shows your reasoning for your messages sent in this conversation, in order:\n\n' +
+          'Each line shows your scratchpad for your messages sent in this conversation, in order:\n\n' +
           recentLines.join('');
         reasoningText = reasoningText.trim();
       }
     }
   }
 
-  valueMap['_reasoning'] = reasoningText;
+  valueMap['_scratchpad'] = reasoningText;
 
   for (const [itemIndex, promptItem] of promptItems.entries()) {
     // Check condition if present (only for private chat contexts)
@@ -736,8 +738,8 @@ async function processPromptItems(
         );
         if (profileContext) {
           const resolvedProfileContext = profileContext.replaceAll(
-            '{{_reasoning}}',
-            valueMap['_reasoning'] ?? '',
+            '{{_scratchpad}}',
+            valueMap['_scratchpad'] ?? '',
           );
           items.push(resolvedProfileContext);
         }

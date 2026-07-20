@@ -32,10 +32,10 @@ export interface ChatMessage {
   agentId: string; // agent persona used (or blank if none)
   explanation: string; // agent's explicit decision explanation from structured output
   reasoning?: string; // model's internal chain-of-thought (from thinking/reasoning features)
-  _reasoning?: string; // agent's structured-output reasoning field, auto-injected when {{_reasoning}} is in prompt
+  _scratchpad?: string; // agent's structured-output reasoning field, auto-injected when {{_scratchpad}} is in prompt
   isError: boolean; // is error message (used for private chats)
   files?: StoredFile[]; // uploaded files (images, documents, etc.)
-  isReasoningOnly?: boolean; // turn where the agent chose not to respond; retains reasoning history without showing in UI
+  isScratchpadOnly?: boolean; // turn where the agent chose not to respond; retains reasoning history without showing in UI
 }
 
 // ************************************************************************* //
@@ -65,10 +65,10 @@ export function createChatMessage(
     agentId: config.agentId ?? '',
     explanation: config.explanation ?? '',
     reasoning: config.reasoning ?? undefined,
-    _reasoning: config._reasoning ?? undefined,
+    _scratchpad: config._scratchpad ?? undefined,
     isError: config.isError ?? false,
     files: config.files ?? undefined,
-    isReasoningOnly: config.isReasoningOnly ?? undefined,
+    isScratchpadOnly: config.isScratchpadOnly ?? undefined,
   };
 }
 
@@ -87,10 +87,10 @@ export function createParticipantChatMessage(
     agentId: config.agentId ?? '',
     explanation: config.explanation ?? '',
     reasoning: config.reasoning ?? undefined,
-    _reasoning: config._reasoning ?? undefined,
+    _scratchpad: config._scratchpad ?? undefined,
     isError: config.isError ?? false,
     files: config.files ?? undefined,
-    isReasoningOnly: config.isReasoningOnly ?? undefined,
+    isScratchpadOnly: config.isScratchpadOnly ?? undefined,
   };
 }
 
@@ -109,10 +109,10 @@ export function createMediatorChatMessage(
     agentId: config.agentId ?? '',
     explanation: config.explanation ?? '',
     reasoning: config.reasoning ?? undefined,
-    _reasoning: config._reasoning ?? undefined,
+    _scratchpad: config._scratchpad ?? undefined,
     isError: config.isError ?? false,
     files: config.files ?? undefined,
-    isReasoningOnly: config.isReasoningOnly ?? undefined,
+    isScratchpadOnly: config.isScratchpadOnly ?? undefined,
   };
 }
 
@@ -131,7 +131,7 @@ export function createExperimenterChatMessage(
     agentId: config.agentId ?? '',
     explanation: config.explanation ?? '',
     reasoning: config.reasoning ?? undefined,
-    _reasoning: config._reasoning ?? undefined,
+    _scratchpad: config._scratchpad ?? undefined,
     isError: config.isError ?? false,
     files: config.files ?? undefined,
   };
@@ -152,7 +152,7 @@ export function createSystemChatMessage(
     agentId: config.agentId ?? '',
     explanation: config.explanation ?? '',
     reasoning: config.reasoning ?? undefined,
-    _reasoning: config._reasoning ?? undefined,
+    _scratchpad: config._scratchpad ?? undefined,
     isError: false,
     files: config.files ?? undefined,
   };

@@ -43,7 +43,7 @@ export const onPublicChatMessageCreated = onDocumentCreated(
     timeoutSeconds: 300,
   },
   async (event) => {
-    if ((event.data?.data() as ChatMessage | undefined)?.isReasoningOnly) {
+    if ((event.data?.data() as ChatMessage | undefined)?.isScratchpadOnly) {
       return;
     }
 
@@ -617,7 +617,7 @@ export const onPrivateChatMessageCreated = onDocumentCreated(
         .doc(event.params.chatId)
         .get()
     ).data() as ChatMessage;
-    if (message.isError || message.isReasoningOnly) {
+    if (message.isError || message.isScratchpadOnly) {
       return;
     }
 

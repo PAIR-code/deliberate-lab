@@ -201,9 +201,9 @@ export class ExperimentEditor extends Service {
 
     for (const config of this.experiment.variableConfigs ?? []) {
       // Block save and inform experimenter to avoid reasoning history name collision.
-      if (config.definition.name === '_reasoning') {
+      if (config.definition.name === '_scratchpad') {
         errors.push(
-          'The variable name "_reasoning" is reserved for tracking the system\'s reasoning history. Please rename it.',
+          'The variable name "_scratchpad" is reserved for tracking the system\'s reasoning history. Please rename it.',
         );
       }
       if (requiresValues(config.type)) {

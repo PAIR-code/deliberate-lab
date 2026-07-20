@@ -58,7 +58,7 @@ export interface ChatMediatorStructuredFields {
   message: string | null; // The message to send (null if not responding)
   explanation: string | null; // Why the mediator made this decision
   readyToEndChat: boolean; // Is the mediator ready to end the conversation?
-  _reasoning: string | null; // Auto-injected reasoning field when {{_reasoning}} is in prompt
+  _scratchpad: string | null; // Auto-injected reasoning field when {{_scratchpad}} is in prompt
 }
 
 /**
@@ -94,9 +94,9 @@ export function extractChatMediatorStructuredFields(
     ? Boolean(parsed[config.readyToEndField])
     : false;
 
-  const _reasoning =
-    typeof parsed['_reasoning'] === 'string'
-      ? (parsed['_reasoning'] as string)
+  const _scratchpad =
+    typeof parsed['_scratchpad'] === 'string'
+      ? (parsed['_scratchpad'] as string)
       : null;
 
   return {
@@ -104,35 +104,35 @@ export function extractChatMediatorStructuredFields(
     message,
     explanation,
     readyToEndChat,
-    _reasoning,
+    _scratchpad,
   };
 }
 
 /**
- * Prepend the `_reasoning` field to the structured output schema when:
+ * Prepend the `_scratchpad` field to the structured output schema when:
  * (a) the field is not already present, and
- * (b) reasoning placeholders are in use.
+ * (b) scratchpad placeholders are in use.
  */
-export function injectReasoningField<
+export function injectScratchpadField<
   T extends StructuredOutputConfig | undefined,
 >(config: T): T {
   if (!config?.schema?.properties) return config;
-  if (config.schema.properties.some((p) => p.name === '_reasoning')) {
+  if (config.schema.properties.some((p) => p.name === '_scratchpad')) {
     return config;
   }
-  const reasoningProperty = {
-    name: '_reasoning',
+  const scratchpadProperty = {
+    name: '_scratchpad',
     schema: {
       type: StructuredOutputDataType.STRING,
       description:
-        'Your private reasoning for this turn. This field is shown back to you in later turns, so you can, for example, make plans and test beliefs.',
+        'Your private scratchpad for this turn. This field is shown back to you in later turns, so you can, for example, make plans and test beliefs.',
     },
   };
   return {
     ...config,
     schema: {
       ...config.schema,
-      properties: [reasoningProperty, ...config.schema.properties],
+      properties: [scratchpadProperty, ...config.schema.properties],
     },
   };
 }

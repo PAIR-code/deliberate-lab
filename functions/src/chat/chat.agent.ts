@@ -7,7 +7,7 @@ import {
   ChatStagePublicData,
   extractChatMediatorStructuredFields,
   getStructuredOutput,
-  injectReasoningField,
+  injectScratchpadField,
   MediatorProfileExtended,
   ModelResponseStatus,
   ParticipantProfileExtended,
@@ -24,7 +24,7 @@ import {
 import {Timestamp} from 'firebase-admin/firestore';
 import {processModelResponse} from '../agent.utils';
 import {
-  containsReasoningPlaceholder,
+  containsScratchpadPlaceholder,
   getPromptFromConfig,
   getStructuredPromptConfig,
 } from '../structured_prompt.utils';
@@ -390,12 +390,12 @@ export async function getAgentChatMessage(
       ? Math.max(0, turnBasedRetryDeadlineMs - Date.now())
       : null;
 
-  // When the magic variable {{_reasoning}} is present in the prompt,
-  // we auto-inject a _reasoning field at the start of the structured output.
+  // When the magic variable {{_scratchpad}} is present in the prompt,
+  // we auto-inject a _scratchpad field at the start of the structured output.
   const isReasoningEnabled = Boolean(
     (user.agentConfig?.promptContext &&
-      user.agentConfig.promptContext.includes('{{_reasoning}}')) ||
-    containsReasoningPlaceholder(promptConfig.prompt),
+      user.agentConfig.promptContext.includes('{{_scratchpad}}')) ||
+    containsScratchpadPlaceholder(promptConfig.prompt),
   );
 
   const effectiveStructuredOutputConfig = (() => {
@@ -417,7 +417,7 @@ export async function getAgentChatMessage(
       } as ChatMediatorStructuredOutputConfig;
     }
     if (isReasoningEnabled) {
-      config = injectReasoningField(config);
+      config = injectScratchpadField(config);
     }
     return config;
   })();
@@ -470,7 +470,7 @@ export async function getAgentChatMessage(
   let message = response.text || ''; // Use response.text as the default message
   let explanation = ''; // From structured output schema field only
   const reasoning = response.reasoning || undefined; // From model's internal thinking
-  let agentReasoning: string | undefined = undefined; // From structured output _reasoning field
+  let agentReasoning: string | undefined = undefined; // From structured output _scratchpad field
   let shouldRespond = true;
   let readyToEndChat = false;
 
@@ -486,8 +486,8 @@ export async function getAgentChatMessage(
       if (fields.explanation !== null) {
         explanation = fields.explanation;
       }
-      if (fields._reasoning !== null) {
-        agentReasoning = fields._reasoning;
+      if (fields._scratchpad !== null) {
+        agentReasoning = fields._scratchpad;
       }
       readyToEndChat = fields.readyToEndChat;
     }
@@ -563,12 +563,12 @@ export async function getAgentChatMessage(
     message: shouldRespond ? message : '',
     explanation,
     reasoning,
-    _reasoning: agentReasoning,
+    _scratchpad: agentReasoning,
     profile: createParticipantProfileBase(user),
     senderId: user.publicId,
     agentId: user.agentConfig.agentId,
     timestamp: Timestamp.now(),
-    isReasoningOnly: !shouldRespond,
+    isScratchpadOnly: !shouldRespond,
   });
 
   // Upload files to GCS
@@ -823,7 +823,7 @@ export async function sendAgentGroupChatMessage(
 ) {
   // TODO: Decrease typing delay to account for LLM API call latencies?
   // TODO: Don't send message if conversation continues while agent is typing?
-  if (chatSettings.wordsPerMinute && !chatMessage.isReasoningOnly) {
+  if (chatSettings.wordsPerMinute && !chatMessage.isScratchpadOnly) {
     await awaitTypingDelay(chatMessage.message, chatSettings.wordsPerMinute);
   }
 
@@ -898,7 +898,7 @@ export async function sendAgentPrivateChatMessage(
 ) {
   // TODO: Decrease typing delay to account for LLM API call latencies?
   // TODO: Don't send message if conversation continues while agent is typing?
-  if (chatSettings.wordsPerMinute && !chatMessage.isReasoningOnly) {
+  if (chatSettings.wordsPerMinute && !chatMessage.isScratchpadOnly) {
     await awaitTypingDelay(chatMessage.message, chatSettings.wordsPerMinute);
   }
 

@@ -375,7 +375,7 @@ export class ParticipantService extends Service {
             runInAction(() => {
               this.privateChatMap[stageId] = snapshot.docs
                 .map((doc) => doc.data() as ChatMessage)
-                .filter((message) => !message.isReasoningOnly);
+                .filter((message) => !message.isScratchpadOnly);
               this.isPrivateChatLoading = false;
             });
           },
