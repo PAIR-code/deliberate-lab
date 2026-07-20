@@ -14,6 +14,7 @@ import {
 import {
   AssetAllocation,
   AssetAllocationStageParticipantAnswer,
+  ChatMessageReply,
   ParticipantProfileBase,
   RankingStageParticipantAnswer,
   StageKind,
@@ -51,6 +52,8 @@ export class ParticipantAnswerService extends Service {
   @observable answerMap: Record<string, StageParticipantAnswer> = {};
   // Map of stage ID to current chat input
   @observable chatInputMap: Record<string, string> = {};
+  // Map of stage ID to the message the participant is currently replying to
+  @observable chatReplyMap: Record<string, ChatMessageReply | null> = {};
   // Profile
   @observable profile: ParticipantProfileBase | null = null;
 
@@ -220,6 +223,18 @@ export class ParticipantAnswerService extends Service {
 
   getChatInput(stageId: string) {
     return this.chatInputMap[stageId] ?? '';
+  }
+
+  setChatReply(stageId: string, reply: ChatMessageReply) {
+    this.chatReplyMap[stageId] = reply;
+  }
+
+  getChatReply(stageId: string): ChatMessageReply | null {
+    return this.chatReplyMap[stageId] ?? null;
+  }
+
+  clearChatReply(stageId: string) {
+    this.chatReplyMap[stageId] = null;
   }
 
   updateProfile(config: Partial<ParticipantProfileBase>) {
