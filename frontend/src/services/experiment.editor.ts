@@ -200,10 +200,10 @@ export class ExperimentEditor extends Service {
     }
 
     for (const config of this.experiment.variableConfigs ?? []) {
-      // Names starting with "_" are reserved for system variables.
+      // Names starting with "_" are reserved for internal variables.
       if (config.definition.name.startsWith('_')) {
         errors.push(
-          'Variables that begin with an underscore are not allowed unless they are established system variables.',
+          'Variables that begin with an underscore are not allowed unless they are established internal variables.',
         );
       }
       if (requiresValues(config.type)) {
