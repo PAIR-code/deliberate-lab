@@ -26,8 +26,6 @@ import {
   UserType,
   getParticipantStageProfile,
   ChatMessageReaction,
-  StoredFile,
-  UserType,
   createChatMessageReply,
   getChatMessageReactors,
 } from '@deliberation-lab/utils';
