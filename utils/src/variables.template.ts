@@ -41,9 +41,9 @@ export function formatInvalidVariable(invalid: InvalidVariable): string {
     case 'object_needs_property':
       return `'${invalid.path}' is an object - access a property like '${invalid.path}.propertyName'`;
     case 'internal':
-      return `'${invalid.path}' is not a known internal variable (valid: ${[
+      return `'${invalid.path}' is not a known internal variable. Names that begin with '_' are reserved for internal variables (valid: ${[
         ...INTERNAL_VARIABLES,
-      ].join(', ')})`;
+      ].join(', ')}).`;
     case 'syntax':
       return invalid.path || 'Invalid template syntax';
   }
