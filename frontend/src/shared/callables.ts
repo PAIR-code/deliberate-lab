@@ -29,6 +29,7 @@ import {
   SendParticipantCheckData,
   SetChipTurnData,
   SetParticipantRolesData,
+  SetParticipantNegotiationProfilesData,
   SetSalespersonControllerData,
   SetSalespersonMoveData,
   SetSalespersonResponseData,
@@ -507,6 +508,21 @@ export const setParticipantRolesCallable = async (
   const {data} = await httpsCallable<SetParticipantRolesData, SuccessResponse>(
     functions,
     'setParticipantRoles',
+  )(config);
+  return data;
+};
+
+/** Generic endpoint for assigning participants to profiles for negotiation profile stage. */
+export const setParticipantNegotiationProfilesCallable = async (
+  functions: Functions,
+  config: SetParticipantNegotiationProfilesData,
+) => {
+  const {data} = await httpsCallable<
+    SetParticipantNegotiationProfilesData,
+    SuccessResponse
+  >(
+    functions,
+    'setParticipantNegotiationProfiles',
   )(config);
   return data;
 };

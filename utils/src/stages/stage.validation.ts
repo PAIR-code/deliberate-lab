@@ -22,6 +22,8 @@ import {
 import {ProfileStageConfigData} from './profile_stage.validation';
 import {RevealStageConfigData} from './reveal_stage.validation';
 import {RoleStageConfigData} from './role_stage.validation';
+import {NegotiationProfileStageConfigData} from './negotiation_profile_stage.validation';
+import {NegotiationPayoutStageConfigData} from './negotiation_payout_stage.validation';
 import {SalespersonStageConfigData} from './salesperson_stage.validation';
 import {StockInfoStageConfigData} from './stockinfo_stage.validation';
 import {
@@ -68,6 +70,8 @@ export const CONFIG_DATA: Record<string, StageConfigEntry> = {
   ranking: {schema: RankingStageConfigData},
   reveal: {schema: RevealStageConfigData},
   role: {schema: RoleStageConfigData},
+  negotiationProfile: {schema: NegotiationProfileStageConfigData},
+  negotiationPayout: {schema: NegotiationPayoutStageConfigData},
   salesperson: {schema: SalespersonStageConfigData},
   stockinfo: {schema: StockInfoStageConfigData},
   surveyPerParticipant: {
