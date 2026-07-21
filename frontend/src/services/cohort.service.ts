@@ -1,4 +1,4 @@
-import {computed, makeObservable, observable} from 'mobx';
+import {computed, makeObservable, observable, runInAction} from 'mobx';
 import {
   collection,
   doc,
@@ -369,18 +369,13 @@ export class CohortService extends Service {
             orderBy('timestamp', 'asc'),
           ),
           (snapshot) => {
-            let changedDocs = snapshot.docChanges().map((change) => change.doc);
-            if (changedDocs.length === 0) {
-              changedDocs = snapshot.docs;
-            }
+            // Rebuild from the full snapshot rather than appending the changed
+            // docs: a chat message doc is updated in place when someone reacts
+            // to it, and appending would render that message twice.
+            const messages: ChatMessage[] = [];
+            const discussionMap: Record<string, ChatMessage[]> = {};
 
-            changedDocs.forEach((doc) => {
-              if (!this.chatMap[stageId]) {
-                this.chatMap[stageId] = [];
-              }
-              if (!this.chatDiscussionMap[stageId]) {
-                this.chatDiscussionMap[stageId] = {};
-              }
+            snapshot.docs.forEach((doc) => {
               const message = {
                 senderId: doc.data().participantPublicId ?? '', // backwards compatibility pre version 16
                 agentId: '', // backwards compatibility pre version 16
@@ -388,17 +383,20 @@ export class CohortService extends Service {
                 ...doc.data(),
               } as ChatMessage;
               if (!message.discussionId) {
-                this.chatMap[stageId].push(message);
+                messages.push(message);
               } else {
-                if (!this.chatDiscussionMap[stageId][message.discussionId]) {
-                  this.chatDiscussionMap[stageId][message.discussionId] = [];
+                if (!discussionMap[message.discussionId]) {
+                  discussionMap[message.discussionId] = [];
                 }
-                this.chatDiscussionMap[stageId][message.discussionId].push(
-                  message,
-                );
+                discussionMap[message.discussionId].push(message);
               }
             });
-            this.isChatLoading = false;
+
+            runInAction(() => {
+              this.chatMap[stageId] = messages;
+              this.chatDiscussionMap[stageId] = discussionMap;
+              this.isChatLoading = false;
+            });
           },
         ),
       );

@@ -986,6 +986,7 @@ class ChatStageConfig(BaseModel):
     additionalParticipantInstructions: str | None = None
     minNumberOfMessages: Annotated[int | None, Field(ge=0)] = None
     maxNumberOfMessages: Annotated[int | None, Field(ge=1)] = None
+    enableReactionsAndReplies: bool | None = None
 
 
 class RankingStageConfig(

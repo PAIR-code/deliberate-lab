@@ -6,6 +6,7 @@ import {stringify as csvStringify} from 'csv-stringify/sync';
 import {
   AlertMessage,
   ChatMessage,
+  ChatMessageReaction,
   ChipItem,
   ChipStageConfig,
   ChipStagePublicData,
@@ -26,12 +27,19 @@ import {
   UnifiedTimestamp,
   calculatePayoutResult,
   calculatePayoutTotal,
+  getChatMessageReactors,
 } from '@deliberation-lab/utils';
 import {convertUnifiedTimestampToISO} from './utils';
 
 // ****************************************************************************
 // FILE DOWNLOAD FUNCTIONS
 // ****************************************************************************
+
+/** Column labels for each chat message reaction. */
+const CHAT_REACTION_CSV_LABELS: Record<ChatMessageReaction, string> = {
+  [ChatMessageReaction.HEART]: 'Heart',
+  [ChatMessageReaction.THUMBS_UP]: 'Thumbs up',
+};
 
 const CSV_STRINGIFY_OPTIONS = {
   header: true,
@@ -1312,6 +1320,25 @@ export function getChatMessageCSVColumns(
 
   // Message content
   columns.push(!message ? 'Message content' : toCSV(message.message));
+
+  // Message that this message replies to (blank if not a reply)
+  columns.push(!message ? 'Reply to message ID' : (message.replyTo?.id ?? ''));
+  columns.push(
+    !message ? 'Reply to sender ID' : toCSV(message.replyTo?.senderId ?? ''),
+  );
+  columns.push(
+    !message ? 'Reply to content' : toCSV(message.replyTo?.message ?? ''),
+  );
+
+  // Reactions: a count, plus the IDs of everyone who reacted, per reaction
+  for (const reaction of Object.values(ChatMessageReaction)) {
+    const label = CHAT_REACTION_CSV_LABELS[reaction];
+    const reactors = message ? getChatMessageReactors(message, reaction) : [];
+
+    columns.push(!message ? `${label} count` : String(reactors.length));
+    // Semicolon-separated: toCSV strips commas out of cell values
+    columns.push(!message ? `${label} by` : toCSV(reactors.join('; ')));
+  }
 
   return columns;
 }

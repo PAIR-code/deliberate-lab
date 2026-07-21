@@ -810,6 +810,9 @@
         "maxNumberOfMessages": {
           "minimum": 1,
           "type": ["integer", "null"]
+        },
+        "enableReactionsAndReplies": {
+          "type": "boolean"
         }
       }
     },
