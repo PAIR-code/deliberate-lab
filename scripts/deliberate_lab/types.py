@@ -979,6 +979,7 @@ class ChatStageConfig(BaseModel):
     timeMinimumInMinutes: Annotated[int | None, Field(ge=1)] = None
     discussions: list[DefaultChatDiscussion | CompareChatDiscussion]
     isTurnBased: bool | None = None
+    enableReactionsAndReplies: bool | None = None
 
 
 class RankingStageConfig(

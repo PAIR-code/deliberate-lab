@@ -3,6 +3,7 @@ import {
   AlertStatus,
   AssetAllocation,
   ChatMessage,
+  ChatMessageReaction,
   ChatStageParticipantAnswer,
   ChipOffer,
   CreateChatMessageData,
@@ -16,6 +17,7 @@ import {
   SurveyPerParticipantStageParticipantAnswer,
   SurveyStageParticipantAnswer,
   UnifiedTimestamp,
+  UpdateChatMessageReactionData,
   UpdateChatStageParticipantAnswerData,
   createChatMessage,
   createChatStageParticipantAnswer,
@@ -62,6 +64,7 @@ import {
   updateParticipantProfileCallable,
   updateParticipantToNextStageCallable,
   updateParticipantWaitingCallable,
+  updateChatMessageReactionCallable,
   updateChatStageParticipantAnswerCallable,
   updateFlipCardStageParticipantAnswerCallable,
   updateSurveyPerParticipantStageParticipantAnswerCallable,
@@ -661,6 +664,32 @@ export class ParticipantService extends Service {
     }
     this.isSendingChat = false;
     return response;
+  }
+
+  /** Apply or remove a reaction on a chat message. */
+  async updateChatMessageReaction(
+    stageId: string,
+    chatMessageId: string,
+    reaction: ChatMessageReaction,
+    add: boolean,
+  ) {
+    if (!this.experimentId || !this.profile) return;
+
+    const reactionData: UpdateChatMessageReactionData = {
+      experimentId: this.experimentId,
+      cohortId: this.profile.currentCohortId,
+      stageId,
+      participantId: this.profile.privateId,
+      chatMessageId,
+      senderId: this.profile.publicId,
+      reaction,
+      add,
+    };
+
+    return await updateChatMessageReactionCallable(
+      this.sp.firebaseService.functions,
+      reactionData,
+    );
   }
 
   /** Send error chat message. */

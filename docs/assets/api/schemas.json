@@ -735,6 +735,9 @@
         },
         "isTurnBased": {
           "type": "boolean"
+        },
+        "enableReactionsAndReplies": {
+          "type": "boolean"
         }
       }
     },
