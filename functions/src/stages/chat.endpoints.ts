@@ -3,6 +3,7 @@ import {
   ChatStageConfig,
   ChatStagePublicData,
   StageKind,
+  UpdateChatMessageReactionData,
   UpdateChatStageParticipantAnswerData,
   getTimeElapsed,
 } from '@deliberation-lab/utils';
@@ -10,6 +11,10 @@ import {Timestamp} from 'firebase-admin/firestore';
 import {onCall, HttpsError} from 'firebase-functions/v2/https';
 
 import {app} from '../app';
+import {
+  ChatMessageNotFoundError,
+  updateChatMessageReaction as updateChatMessageReactionInternal,
+} from '../chat/chat.utils';
 import {
   getFirestoreStage,
   getFirestoreStagePublicData,
@@ -101,6 +106,49 @@ export const createChatMessage = onCall(async (request) => {
   });
 
   return {id: ''};
+});
+
+// ************************************************************************* //
+// updateChatMessageReaction endpoint                                        //
+//                                                                           //
+// Input structure: {                                                        //
+//   experimentId, cohortId, stageId, participantId (private), chatMessageId,//
+//   senderId (public), reaction, add                                        //
+// }                                                                         //
+// Validation: utils/src/stages/chat_stage.validation.ts                     //
+// ************************************************************************* //
+
+export const updateChatMessageReaction = onCall(async (request) => {
+  const {data} = request;
+
+  // Validate input
+  const validInput = Value.Check(UpdateChatMessageReactionData, data);
+  if (!validInput) {
+    for (const error of Value.Errors(UpdateChatMessageReactionData, data)) {
+      prettyPrintError(error);
+    }
+    throw new HttpsError('invalid-argument', 'Invalid data');
+  }
+
+  const stage = await getFirestoreStage(data.experimentId, data.stageId);
+
+  if (!stage) {
+    throw new HttpsError(
+      'not-found',
+      `Stage ${data.stageId} not found in experiment ${data.experimentId}`,
+    );
+  }
+
+  try {
+    await updateChatMessageReactionInternal(stage.kind, data);
+  } catch (error) {
+    if (error instanceof ChatMessageNotFoundError) {
+      throw new HttpsError('not-found', error.message);
+    }
+    throw error;
+  }
+
+  return {id: data.chatMessageId};
 });
 
 // ************************************************************************* //

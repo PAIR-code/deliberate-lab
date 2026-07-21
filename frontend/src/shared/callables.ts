@@ -37,6 +37,7 @@ import {
   SuccessResponse,
   UpdateAssetAllocationStageParticipantAnswerData,
   UpdateMultiAssetAllocationStageParticipantAnswerData,
+  UpdateChatMessageReactionData,
   UpdateChatStageParticipantAnswerData,
   UpdateCohortMetadataData,
   UpdateFlipCardStageParticipantAnswerData,
@@ -480,6 +481,21 @@ export const createChatMessageCallable = async (
   const {data} = await httpsCallable<CreateChatMessageData, CreationResponse>(
     functions,
     'createChatMessage',
+  )(config);
+  return data;
+};
+
+/** Endpoint to apply or remove a reaction on a chat message. */
+export const updateChatMessageReactionCallable = async (
+  functions: Functions,
+  config: UpdateChatMessageReactionData,
+) => {
+  const {data} = await httpsCallable<
+    UpdateChatMessageReactionData,
+    CreationResponse
+  >(
+    functions,
+    'updateChatMessageReaction',
   )(config);
   return data;
 };
