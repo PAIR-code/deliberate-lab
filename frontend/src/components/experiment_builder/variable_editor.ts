@@ -157,7 +157,7 @@ export class VariableEditor extends MobxLitElement {
     if (!reserved.includes(name)) return nothing;
     return html`
       <div class="validation-error">
-        ⚠️ Warning: "${name}" is a special variable that changes system
+        ⚠️ Warning: "${name}" is an internal variable that changes system
         behavior.
         <a
           href=${RESERVED_TREATMENT_VARIABLE_GITHUB_URL}

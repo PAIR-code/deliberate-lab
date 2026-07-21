@@ -37,8 +37,8 @@ export type ScopeContext =
     };
 
 /**
- * Reserved variable names with special behavior. The variable editor warns
- * when an experimenter uses one of these names.
+ * Reserved internal variable names with special behavior. The variable editor
+ * warns when an experimenter uses one of these names.
  */
 export const RESERVED_TREATMENT_VARIABLE_KEYS = [
   '_isObserver',
