@@ -26,7 +26,9 @@ import {
   RankingStageConfig,
   RankingStageParticipantAnswer,
   RankingStagePublicData,
+  LRRankingStagePublicData,
   createRankingStagePublicData,
+  createLRRankingStagePublicData,
 } from './ranking_stage';
 import {InfoStageConfig} from './info_stage';
 import {PayoutStageConfig, PayoutStageParticipantAnswer} from './payout_stage';
@@ -188,6 +190,7 @@ export type StagePublicData =
   | ChipStagePublicData
   | FlipCardStagePublicData
   | RankingStagePublicData
+  | LRRankingStagePublicData
   | RoleStagePublicData
   | SalespersonStagePublicData
   | AssetAllocationStagePublicData
@@ -295,7 +298,12 @@ export function createPublicDataFromStageConfigs(stages: StageConfig[]) {
         publicData.push(createFlipCardStagePublicData(stage.id));
         break;
       case StageKind.RANKING:
-        publicData.push(createRankingStagePublicData(stage.id));
+        if (stage.id.startsWith('r1_') || stage.id.startsWith('r2_')) {
+          // 👇 These are your Leadership Rejection ranking stages
+          publicData.push(createLRRankingStagePublicData(stage.id));
+        } else {
+          publicData.push(createRankingStagePublicData(stage.id));
+        }
         break;
       case StageKind.ROLE:
         publicData.push(createRoleStagePublicData(stage));

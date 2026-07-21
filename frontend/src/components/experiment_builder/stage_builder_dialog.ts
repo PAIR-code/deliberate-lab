@@ -20,6 +20,7 @@ import {
   createAssetAllocationStage,
   createChatStage,
   createRankingStage,
+  createLRRankingStage,
   createInfoStage,
   createFlipCardStage,
   createMultiAssetAllocationStage,
@@ -41,6 +42,10 @@ import {
   getLASStageConfigs,
   getAnonLASStageConfigs,
 } from '../../shared/templates/lost_at_sea';
+import {
+  LR_METADATA,
+  getLeadershipRejectionStageConfigs,
+} from '../../shared/templates/leader_rejection_template';
 import {
   getChipMetadata,
   getChipNegotiationStageConfigs,
@@ -181,7 +186,7 @@ export class StageBuilderDialog extends MobxLitElement {
         configuration!
       </div>
       <div class="card-gallery-wrapper">
-        ${this.renderFlipCardTemplateCard()}
+        ${this.renderLRCard()} ${this.renderFlipCardTemplateCard()}
         ${this.renderFruitTestTemplateCard()}
         ${this.renderConditionalSurveyTemplateCard()}
         ${this.renderStockInfoGameCard()}
@@ -251,8 +256,8 @@ export class StageBuilderDialog extends MobxLitElement {
           ${this.renderTransferCard()} ${this.renderSurveyCard()}
           ${this.renderSurveyPerParticipantCard()}
           ${this.renderComprehensionCard()} ${this.renderRankingCard()}
-          ${this.renderRevealCard()} ${this.renderPayoutCard()}
-          ${this.renderRoleCard()}
+          ${this.renderLRRankingCard()} ${this.renderRevealCard()}
+          ${this.renderPayoutCard()} ${this.renderRoleCard()}
         </div>
       </div>
 
@@ -294,6 +299,25 @@ export class StageBuilderDialog extends MobxLitElement {
   private renderLASCard(isAnon: boolean = false) {
     const metadata = isAnon ? ANON_LAS_METADATA : LAS_METADATA;
     const configs = isAnon ? getAnonLASStageConfigs() : getLASStageConfigs();
+
+    const addGame = () => {
+      this.addGame(metadata, configs);
+    };
+
+    return html`
+      <div class="card" @click=${addGame}>
+        <div class="title">${metadata.name}</div>
+        <div>
+          ${metadata.description}
+          <div></div>
+        </div>
+      </div>
+    `;
+  }
+
+  private renderLRCard() {
+    const metadata = LR_METADATA;
+    const configs = getLeadershipRejectionStageConfigs();
 
     const addGame = () => {
       this.addGame(metadata, configs);
@@ -546,6 +570,22 @@ export class StageBuilderDialog extends MobxLitElement {
         <div>
           Have participants rank each other or items, and optionally hold an
           election.
+        </div>
+      </div>
+    `;
+  }
+
+  private renderLRRankingCard() {
+    const addStage = () => {
+      this.addStage(createLRRankingStage());
+    };
+
+    return html`
+      <div class="card" @click=${addStage}>
+        <div class="title">🗳️ LR Triggering Selection Logic</div>
+        <div>
+          TODO: Stage that triggers the selection of a leader based on candidacy
+          and performance in two initial tasks
         </div>
       </div>
     `;

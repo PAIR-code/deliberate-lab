@@ -1,6 +1,7 @@
 import './ranking_reveal_view';
 import './survey_reveal_view';
 import './allocation_reveal_view';
+import './leader_status_reveal_view';
 
 import {MobxLitElement} from '@adobe/lit-mobx';
 import {CSSResultGroup, html, nothing} from 'lit';
@@ -83,6 +84,12 @@ export class RevealView extends MobxLitElement {
           </chip-reveal-view>
         `;
       case StageKind.RANKING:
+        // If it's a leadership version (has leaderStatusMap), use your new view
+        if ('leaderStatusMap' in publicData && publicData?.leaderStatusMap) {
+          return html`
+            <leader-reveal-view .publicData=${publicData}></leader-reveal-view>
+          `;
+        }
         return html`
           <ranking-reveal-view .item=${item} .publicData=${publicData}>
           </ranking-reveal-view>
