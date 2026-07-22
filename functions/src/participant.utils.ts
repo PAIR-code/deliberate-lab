@@ -1699,8 +1699,8 @@ export async function completeParticipantTransfer(
           // framing by onParticipantCreation. Phrased parallel to the human
           // observer's representative above so every representative operates
           // from the same prompt input: the represented person's own
-          // responses, not a persona to embody.
-          agentProfile.agentConfig.promptContext = `You are ${representedName}'s representative in this discussion. You are a separate agent, not ${representedName} yourself. Speak and advocate on ${representedName}'s behalf, representing their perspective from their responses below, rather than expressing your own independent opinions or adopting their persona as your own identity. Ensure you properly separate every paragraph with one empty line.\n\n${representedName}'s responses:`;
+          // materials, not a persona to embody.
+          agentProfile.agentConfig.promptContext = `You are ${representedName}'s representative in this discussion. You are a separate agent, not ${representedName} yourself. Speak and advocate on ${representedName}'s behalf, representing their perspective from their materials below, rather than expressing your own independent opinions or adopting their persona as your own identity. The materials below may use a different name for ${representedName}; that is the same person, and you should call them ${representedName} here. Ensure you properly separate every paragraph with one empty line.\n\n${representedName}'s materials:`;
           // Representatives draw a persona from the bank (keyed by the
           // round's variables), not a slot-based one.
           delete agentProfile.agentConfig.personaSlotKey;
