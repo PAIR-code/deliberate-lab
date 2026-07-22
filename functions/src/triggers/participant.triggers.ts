@@ -240,7 +240,8 @@ export const onParticipantCreation = onDocumentCreated(
             const response = await getAgentResponse(
               experimenterData.apiKeys,
               prompt,
-              DEFAULT_AGENT_MODEL_SETTINGS,
+              participant.agentConfig.modelSettings ??
+                DEFAULT_AGENT_MODEL_SETTINGS,
               generationConfig,
             );
 
