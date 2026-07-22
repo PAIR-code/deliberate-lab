@@ -96,8 +96,11 @@ async function handleTimeElapsed(
     stageId,
     'The timer for this stage has ended; you can no longer respond.',
   );
+  // An ended discussion is nobody's turn: clear the turn holder so nothing
+  // (e.g. the quiz turn resume) re-dispatches an agent afterwards.
   await getFirestoreStagePublicDataRef(experimentId, cohortId, stageId).update({
     discussionEndTimestamp: Timestamp.now(),
+    currentTurnParticipantId: null,
   });
 }
 
@@ -114,8 +117,11 @@ export async function handleMaxMessagesReached(
   cohortId: string,
   stageId: string,
 ) {
+  // An ended discussion is nobody's turn: clear the turn holder so nothing
+  // (e.g. the quiz turn resume) re-dispatches an agent afterwards.
   await getFirestoreStagePublicDataRef(experimentId, cohortId, stageId).update({
     discussionEndTimestamp: Timestamp.now(),
+    currentTurnParticipantId: null,
   });
   await sendSystemChatMessage(
     experimentId,
