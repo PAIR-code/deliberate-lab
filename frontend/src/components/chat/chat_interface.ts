@@ -125,6 +125,18 @@ export class ChatInterface extends MobxLitElement {
       | ChatStagePublicData
       | undefined;
     if (data?.currentTurnParticipantId) return true;
+    // In a turn-based chat the turn banner cannot render until a turn is
+    // assigned, so a message alone does not count as ready. This keeps the
+    // setup banner up through the gap between the first message and the first
+    // turn assignment instead of showing no banner and shifting the layout.
+    // An ended discussion is ready, since the turn holder is cleared at the
+    // end.
+    if (
+      this.stage?.kind === StageKind.CHAT &&
+      (this.stage as ChatStageConfig).isTurnBased
+    ) {
+      return Boolean(data?.discussionEndTimestamp);
+    }
     if ((this.cohortService.chatMap[stageId] ?? []).length > 0) return true;
     const discussionMap = this.cohortService.chatDiscussionMap[stageId];
     return Boolean(
