@@ -176,31 +176,11 @@ export const onParticipantCreation = onDocumentCreated(
         const initialDelay = 1000;
         let success = false;
 
-        // Agents that participate directly claim a plain persona sketch from
-        // the bank. Sketches are topic-agnostic, so any bucket works; claims
-        // are keyed to the human so a participant never gets the same persona
-        // twice across rounds. Falls through to live generation if no unused
-        // sketch remains.
-        const sketchForHumanId =
-          participant.agentConfig.personaSketchForHumanId;
-        if (sketchForHumanId) {
-          const sketch = await claimStoredPersonaSketch(
-            experimentId,
-            sketchForHumanId,
-          );
-          if (sketch) {
-            console.log(
-              `Claimed bank persona SKETCH for participant ${participant.privateId} (human ${sketchForHumanId.slice(0, 8)}).`,
-            );
-            await applyPersona(sketch);
-            success = true;
-          }
-        }
-
         // If this agent has a persona-bank match key, claim a pre-generated
-        // persona (distinct per participant, reuse spread evenly). Skips LLM
-        // generation; falls through to standard generation on no match.
-        if (!success && personaHash) {
+        // persona for the round's variables (distinct per participant, reuse
+        // spread evenly). Tried first so agents that also carry the sketch
+        // key get the round-specific persona when the bank has one.
+        if (personaHash) {
           const content = await claimStoredPersonaByHash(
             experimentId,
             personaHash,
@@ -217,6 +197,27 @@ export const onParticipantCreation = onDocumentCreated(
               `Claimed bank persona for participant ${participant.privateId} (hash ${personaHash.slice(0, 8)}).`,
             );
             await applyPersona(resolved);
+            success = true;
+          }
+        }
+
+        // Agents that participate directly claim a plain persona sketch from
+        // the bank when no round-keyed persona was found. Sketches are
+        // topic-agnostic, so any bucket works; claims are keyed to the human
+        // so a participant never gets the same persona twice across rounds.
+        // Falls through to live generation if no unused sketch remains.
+        const sketchForHumanId =
+          participant.agentConfig.personaSketchForHumanId;
+        if (!success && sketchForHumanId) {
+          const sketch = await claimStoredPersonaSketch(
+            experimentId,
+            sketchForHumanId,
+          );
+          if (sketch) {
+            console.log(
+              `Claimed bank persona SKETCH for participant ${participant.privateId} (human ${sketchForHumanId.slice(0, 8)}).`,
+            );
+            await applyPersona(sketch);
             success = true;
           }
         }

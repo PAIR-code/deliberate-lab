@@ -1714,13 +1714,16 @@ export async function completeParticipantTransfer(
 
       // Direct-participation (no-observer) agents draw a PLAIN persona (a
       // character sketch) from the bank instead of generating one live at
-      // spawn, so group-chat setup is fast. Sketches are topic/treatment-
-      // agnostic, so any bank persona's sketch works ("personas are personas").
-      // The persona-generation trigger claims one keyed to the HUMAN, so a
-      // participant never gets the same persona twice across their rounds, and
-      // sets it as the agent's own persona. Falls
-      // back to live generation if the bank has no unused sketch.
+      // spawn, so group-chat setup is fast. The round's persona-bank match key
+      // is set too, so when the bank has personas for this round's variables
+      // (persona plus a position on the round's topic), those are claimed
+      // first; the plain sketch keyed to the HUMAN (so a participant never
+      // gets the same persona twice across their rounds) is the fallback, and
+      // live generation the last resort.
       if (!cohortHasObserver && agentProfile.agentConfig) {
+        if (personaHash) {
+          agentProfile.agentConfig.personaHash = personaHash;
+        }
         agentProfile.agentConfig.personaSketchForHumanId =
           participant.privateId;
         delete agentProfile.agentConfig.personaSlotKey;
