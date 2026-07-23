@@ -49,10 +49,13 @@ describe('getTurnCycleInfo', () => {
     ).toBe(2);
   });
 
-  it('returns null when not turn-based, uncapped, or turn order is empty', () => {
+  it('returns null when not turn-based, uncapped, or under two speakers', () => {
     expect(getTurnCycleInfo(publicData(), stage(9, false))).toBeNull();
     expect(getTurnCycleInfo(publicData(), stage(null))).toBeNull();
     expect(getTurnCycleInfo(publicData({turnOrder: []}), stage(9))).toBeNull();
+    expect(
+      getTurnCycleInfo(publicData({turnOrder: ['a']}), stage(9)),
+    ).toBeNull();
     expect(getTurnCycleInfo(undefined, stage(9))).toBeNull();
   });
 });

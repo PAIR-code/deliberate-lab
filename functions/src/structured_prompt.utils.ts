@@ -34,6 +34,7 @@ import {
   DEFAULT_MEDIATOR_GROUP_CHAT_PROMPT_INSTRUCTIONS,
   DEFAULT_MEDIATOR_GROUP_CHAT_TURN_TAKING_PROMPT_INSTRUCTIONS,
   ChatStageConfig,
+  rewriteDescriptionsForRequiredResponse,
 } from '@deliberation-lab/utils';
 import {
   getAgentMediatorPrompt,
@@ -421,8 +422,11 @@ export async function getPromptFromConfig(
   let structuredOutputConfig = promptConfig.structuredOutputConfig;
 
   if (isTurnBased && structuredOutputConfig?.schema?.properties) {
-    const sanitizedProperties = structuredOutputConfig.schema.properties.filter(
-      (prop) => prop.name !== 'shouldRespond',
+    const sanitizedProperties = rewriteDescriptionsForRequiredResponse(
+      structuredOutputConfig.schema.properties.filter(
+        (prop) => prop.name !== 'shouldRespond',
+      ),
+      userProfile.type === UserType.MEDIATOR,
     );
     structuredOutputConfig = {
       ...structuredOutputConfig,

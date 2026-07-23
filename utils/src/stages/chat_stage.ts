@@ -153,7 +153,7 @@ export function getTurnCycleInfo(
     publicData?.effectiveMaxNumberOfMessages ?? stage.maxNumberOfMessages;
   if (max === null || max === undefined || max <= 0) return null;
   const speakersPerCycle = (publicData?.turnOrder ?? []).length;
-  if (speakersPerCycle <= 0) return null;
+  if (speakersPerCycle <= 1) return null;
   const totalCycles = Math.ceil(max / speakersPerCycle);
   const currentCycle = Math.min((publicData?.cycleIndex ?? 0) + 1, totalCycles);
   return {currentCycle, totalCycles};

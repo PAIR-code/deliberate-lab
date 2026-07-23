@@ -24,6 +24,7 @@ import {
   getRepresentativeProfile,
   sanitizeRawResponseForLogging,
   shuffleWithSeed,
+  rewriteDescriptionsForRequiredResponse,
 } from '@deliberation-lab/utils';
 import {Timestamp} from 'firebase-admin/firestore';
 import {processModelResponse} from '../agent.utils';
@@ -537,8 +538,11 @@ export async function getAgentChatMessage(
       ...config,
       schema: {
         ...config.schema,
-        properties: config.schema.properties.filter(
-          (p) => p.name !== shouldRespondFieldName,
+        properties: rewriteDescriptionsForRequiredResponse(
+          config.schema.properties.filter(
+            (p) => p.name !== shouldRespondFieldName,
+          ),
+          user.type === UserType.MEDIATOR,
         ),
       },
       shouldRespondField: '',
