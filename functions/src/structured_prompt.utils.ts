@@ -867,15 +867,15 @@ function getStageContextForPrompt(
   const stage = stageContext.stage;
   const textItems: string[] = [];
 
-  // Include name of stage if scaffolding
-  if (includeScaffolding) {
+  // Include name of stage if scaffolding (items can opt out per stage)
+  if (includeScaffolding && item.includeStageDisplay !== false) {
     textItems.push(`[Stage: ${stage.name ?? stage.id}]`);
   }
 
   if (item.includePrimaryText && stage.descriptions.primaryText.trim() !== '') {
     textItems.push(`* Stage description: ${stage.descriptions.primaryText}`);
   }
-  if (item.includeInfoText) {
+  if (item.includeInfoText && stage.descriptions.infoText.trim() !== '') {
     textItems.push(`* Additional info: ${stage.descriptions.infoText}`);
   }
   // Note: Help text not included since the field has been deprecated

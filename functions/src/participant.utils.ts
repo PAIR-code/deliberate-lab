@@ -1377,12 +1377,29 @@ function valueContainsReservedTreatmentKey(value: unknown): boolean {
   return false;
 }
 
+/** Remove reserved treatment keys from a parsed variable value, recursively. */
+function stripReservedTreatmentKeys(value: unknown): unknown {
+  const reserved: readonly string[] = RESERVED_TREATMENT_VARIABLE_KEYS;
+  if (Array.isArray(value)) {
+    return value.map(stripReservedTreatmentKeys);
+  }
+  if (value && typeof value === 'object') {
+    const result: Record<string, unknown> = {};
+    for (const [key, nested] of Object.entries(
+      value as Record<string, unknown>,
+    )) {
+      if (reserved.includes(key)) continue;
+      result[key] = stripReservedTreatmentKeys(nested);
+    }
+    return result;
+  }
+  return value;
+}
+
 /**
- * Variables a spawned agent should inherit from the participant it is spawned
- * alongside: copy the participant's content variables (e.g. the deliberation
- * topic) so the round is coherent, but drop any treatment variable. A spawned
- * agent must not carry the treatment, since it could later be hoisted into
- * an observer, gain a representative, swap the mediator, or spawn more agents.
+ * Variables a spawned agent inherits from the participant it is spawned
+ * alongside. Reserved treatment keys are removed from the copied values so
+ * none of their effects apply to the agent; display names still resolve.
  */
 function inheritSpawnedAgentVariables(
   variableMap: Record<string, string> | undefined,
@@ -1396,9 +1413,9 @@ function inheritSpawnedAgentVariables(
       result[name] = value; // non-JSON can't hold reserved keys; keep as-is
       continue;
     }
-    if (!valueContainsReservedTreatmentKey(parsed)) {
-      result[name] = value;
-    }
+    result[name] = valueContainsReservedTreatmentKey(parsed)
+      ? JSON.stringify(stripReservedTreatmentKeys(parsed))
+      : value;
   }
   return result;
 }
