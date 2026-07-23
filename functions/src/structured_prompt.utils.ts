@@ -746,8 +746,23 @@ async function processPromptItems(
             `\n--- Previously completed stages chronologically (read only) ---`,
           );
         }
+        const stageBlocks: string[] = [];
+        const flushStageBlocks = () => {
+          if (stageBlocks.length > 0) {
+            // only the last block keeps its trailing newline
+            items.push(
+              stageBlocks
+                .map((b, i) =>
+                  i < stageBlocks.length - 1 ? b.replace(/\n+$/, '') : b,
+                )
+                .join('\n\n'),
+            );
+            stageBlocks.length = 0;
+          }
+        };
         for (const id of stageContextIds) {
           if (id === stageId && labelStages) {
+            flushStageBlocks();
             items.push(`\n--- Current stage ---`);
           }
           // Resolve template variables in stage config before formatting
@@ -762,16 +777,18 @@ async function processPromptItems(
             stage: resolvedStage,
           };
 
-          items.push(
-            getStageContextForPrompt(
-              promptData.participants,
-              resolvedStageContext,
-              promptItem,
-              includeScaffolding,
-              cohortId,
-            ),
+          const stageBlock = getStageContextForPrompt(
+            promptData.participants,
+            resolvedStageContext,
+            promptItem,
+            includeScaffolding,
+            cohortId,
           );
+          if (stageBlock) {
+            stageBlocks.push(stageBlock);
+          }
         }
+        flushStageBlocks();
         break;
       case PromptItemType.GROUP:
         const promptGroup = promptItem as PromptItemGroup;
@@ -924,7 +941,12 @@ function getStageContextForPrompt(
       '\n\n',
     );
   }
-  textItems.push(stageDisplay);
+  if (stageDisplay) {
+    if (textItems.length > 0) {
+      textItems.push(''); // blank line before the stage content
+    }
+    textItems.push(stageDisplay);
+  }
 
   return textItems.join('\n');
 }

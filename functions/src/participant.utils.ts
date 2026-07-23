@@ -1608,10 +1608,7 @@ export async function completeParticipantTransfer(
         avatar: repProfile.avatar,
         agentConfig: {
           agentId: repAgentId,
-          promptContext: `You are ${observerName}'s representative in this discussion. Speak and advocate on ${observerName}'s behalf, representing their perspective from their earlier responses rather than expressing your own independent opinions. Ensure you properly separate every paragraph with one empty line.`,
-          // Use the experiment's configured spawned-agent model when set,
-          // else the built-in default. Avoids hardcoding a specific Gemini
-          // build that silently fails when no Gemini key is configured.
+          promptContext: `You are ${observerName}'s representative in this discussion. Speak and advocate on ${observerName}'s behalf, representing their perspective from their earlier responses rather than expressing your own independent opinions. Ensure you properly separate every paragraph with one empty line in between.`,
           modelSettings:
             experiment.spawnedAgentModelSettings ??
             DEFAULT_AGENT_MODEL_SETTINGS,
@@ -1712,14 +1709,10 @@ export async function completeParticipantTransfer(
         // opinions, like the observer's representative.
         if (agentProfile.agentConfig) {
           const representedName = drawnName || agentProfile.name;
-          // The stored persona (from the persona bank) is appended to this
-          // framing by onParticipantCreation. Phrased parallel to the human
-          // observer's representative above so every representative operates
-          // from the same prompt input: the represented person's own
-          // materials, not a persona to embody.
-          agentProfile.agentConfig.promptContext = `You are ${representedName}'s representative in this discussion. You are a separate agent, not ${representedName} yourself. Speak and advocate on ${representedName}'s behalf, representing their perspective from their materials below, rather than expressing your own independent opinions or adopting their persona as your own identity. The materials below may use a different name for ${representedName}; that is the same person, and you should call them ${representedName} here. Ensure you properly separate every paragraph with one empty line.\n\n${representedName}'s materials:`;
-          // Representatives draw a persona from the bank (keyed by the
-          // round's variables), not a slot-based one.
+          // onParticipantCreation appends the stored bank persona to this
+          // framing.
+          agentProfile.agentConfig.promptContext = `You are ${representedName}'s representative in this discussion. You are a separate agent, not ${representedName} yourself. Speak and advocate on ${representedName}'s behalf, representing their perspective from their materials below, rather than expressing your own independent opinions or adopting their persona as your own identity. The materials below may use a different name for ${representedName}; that is the same person, and you should call them ${representedName} here. Ensure you properly separate every paragraph with one empty line in between.\n\n${representedName}'s materials:`;
+          // Bank persona, not a slot-based one.
           delete agentProfile.agentConfig.personaSlotKey;
           if (personaHash) {
             agentProfile.agentConfig.personaHash = personaHash;
