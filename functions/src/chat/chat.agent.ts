@@ -20,6 +20,7 @@ import {
   createSystemChatMessage,
   sanitizeRawResponseForLogging,
   shuffleWithSeed,
+  rewriteDescriptionsForRequiredResponse,
 } from '@deliberation-lab/utils';
 import {Timestamp} from 'firebase-admin/firestore';
 import {processModelResponse} from '../agent.utils';
@@ -422,20 +423,28 @@ export async function getAgentChatMessage(
     if (stagePreventsAgentEnd && config?.schema?.properties) {
       const dropFields = [config.readyToEndField || 'readyToEndChat'];
       let shouldRespondField = config.shouldRespondField;
+      let respondRequired = false;
       if (
         stage.kind === StageKind.PRIVATE_CHAT &&
         (stage as PrivateChatStageConfig).isTurnBasedChatGroupStyle === true
       ) {
         dropFields.push(config.shouldRespondField || 'shouldRespond');
         shouldRespondField = '';
+        respondRequired = true;
       }
+      const properties = config.schema.properties.filter(
+        (p) => !dropFields.includes(p.name),
+      );
       config = {
         ...config,
         schema: {
           ...config.schema,
-          properties: config.schema.properties.filter(
-            (p) => !dropFields.includes(p.name),
-          ),
+          properties: respondRequired
+            ? rewriteDescriptionsForRequiredResponse(
+                properties,
+                user.type === UserType.MEDIATOR,
+              )
+            : properties,
         },
         shouldRespondField,
         readyToEndField: '',

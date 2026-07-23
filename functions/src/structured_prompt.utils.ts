@@ -35,6 +35,7 @@ import {
   DEFAULT_MEDIATOR_GROUP_CHAT_TURN_TAKING_PROMPT_INSTRUCTIONS,
   ChatStageConfig,
   PrivateChatStageConfig,
+  rewriteDescriptionsForRequiredResponse,
 } from '@deliberation-lab/utils';
 import {
   getAgentMediatorPrompt,
@@ -375,19 +376,27 @@ export async function getPromptFromConfig(
       true;
   if (stagePreventsAgentEnd && structuredOutputConfig?.schema?.properties) {
     const dropFields = [structuredOutputConfig.readyToEndField];
+    let respondRequired = false;
     if (
       stage?.kind === StageKind.PRIVATE_CHAT &&
       (stage as PrivateChatStageConfig).isTurnBasedChatGroupStyle === true
     ) {
       dropFields.push(structuredOutputConfig.shouldRespondField);
+      respondRequired = true;
     }
+    const remainingProperties = structuredOutputConfig.schema.properties.filter(
+      (prop) => !dropFields.includes(prop.name),
+    );
     structuredOutputConfig = {
       ...structuredOutputConfig,
       schema: {
         ...structuredOutputConfig.schema,
-        properties: structuredOutputConfig.schema.properties.filter(
-          (prop) => !dropFields.includes(prop.name),
-        ),
+        properties: respondRequired
+          ? rewriteDescriptionsForRequiredResponse(
+              remainingProperties,
+              userProfile.type === UserType.MEDIATOR,
+            )
+          : remainingProperties,
       },
     };
   }
