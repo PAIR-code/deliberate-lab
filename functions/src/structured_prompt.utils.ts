@@ -71,6 +71,21 @@ export function containsScratchpadPlaceholder(items: PromptItem[]): boolean {
   });
 }
 
+/** With no history, the placeholder and one adjacent blank line collapse. */
+function substituteScratchpad(text: string, block: string): string {
+  if (!block) {
+    return text
+      .replaceAll('{{_scratchpad}}\n\n', '')
+      .replaceAll('\n\n{{_scratchpad}}', '\n')
+      .replaceAll('{{_scratchpad}}', '');
+  }
+  const b = block.trim();
+  return text
+    .replaceAll('{{_scratchpad}}\n\n', `${b}\n\n`)
+    .replaceAll('\n\n{{_scratchpad}}', `\n\n${b}\n`)
+    .replaceAll('{{_scratchpad}}', b);
+}
+
 /** Attempts to fetch corresponding prompt config from storage,
  * else returns the stage's default config.
  */
@@ -681,7 +696,8 @@ async function processPromptItems(
     }
   }
 
-  valueMap['_scratchpad'] = reasoningText;
+  const scratchpadBlock = reasoningText;
+  valueMap['_scratchpad'] = '';
 
   for (const [itemIndex, promptItem] of promptItems.entries()) {
     // Check condition if present (only for private chat contexts)
@@ -700,7 +716,7 @@ async function processPromptItems(
       case PromptItemType.TEXT: {
         // Resolve template variables in text prompt items
         const resolvedText = resolveTemplateVariables(
-          promptItem.text,
+          substituteScratchpad(promptItem.text, scratchpadBlock),
           variableDefinitions,
           valueMap,
         );
@@ -737,11 +753,7 @@ async function processPromptItems(
           includeScaffolding,
         );
         if (profileContext) {
-          const resolvedProfileContext = profileContext.replaceAll(
-            '{{_scratchpad}}',
-            valueMap['_scratchpad'] ?? '',
-          );
-          items.push(resolvedProfileContext);
+          items.push(substituteScratchpad(profileContext, scratchpadBlock));
         }
         break;
       case PromptItemType.PROFILE_INFO:
