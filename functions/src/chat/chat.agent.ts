@@ -454,35 +454,8 @@ export async function getAgentChatMessage(
     return {message: null, success: false, retryTimedOut: false};
   }
 
-  // Use provided participant IDs for prompt context
-  // Get structured prompt
-  let structuredPrompt = await getPromptFromConfig(
-    experimentId,
-    cohortId,
-    stageId,
-    user,
-    promptConfig,
-    participantIds, // Pass participant IDs to limit context scope (e.g., for private chats)
-  );
-
-  // For a turn-based group chat with a fixed message cap, tell the agent
-  // (participant or mediator) which cycle it is in and how many remain, so it
-  // can pace its contribution. No-op when not turn-based or there is no cap.
-  if (isTurnBasedGroupChat) {
-    const cycleInfo = getTurnCycleInfo(
-      chatPublicData,
-      stage as ChatStageConfig,
-    );
-    if (cycleInfo) {
-      structuredPrompt += `\n\n${getTurnCycleStatusForPrompt(
-        cycleInfo.currentCycle,
-        cycleInfo.totalCycles,
-      )}`;
-    }
-  }
-
-  // Check if we should use message-based format
-  // Only for private chat with exactly one participant AND one mediator
+  // Send the conversation as role-tagged messages only for a private chat
+  // with exactly one participant and one mediator.
   const isPrivateChat = stage.kind === StageKind.PRIVATE_CHAT;
   // Count active mediators for this stage
   let mediatorCount = 0;
@@ -503,6 +476,34 @@ export async function getAgentChatMessage(
     participantIds.length,
     mediatorCount,
   );
+
+  // Use provided participant IDs for prompt context
+  // Get structured prompt
+  let structuredPrompt = await getPromptFromConfig(
+    experimentId,
+    cohortId,
+    stageId,
+    user,
+    promptConfig,
+    participantIds, // Pass participant IDs to limit context scope (e.g., for private chats)
+    useMessageFormat,
+  );
+
+  // For a turn-based group chat with a fixed message cap, tell the agent
+  // (participant or mediator) which cycle it is in and how many remain, so it
+  // can pace its contribution. No-op when not turn-based or there is no cap.
+  if (isTurnBasedGroupChat) {
+    const cycleInfo = getTurnCycleInfo(
+      chatPublicData,
+      stage as ChatStageConfig,
+    );
+    if (cycleInfo) {
+      structuredPrompt += `\n\n${getTurnCycleStatusForPrompt(
+        cycleInfo.currentCycle,
+        cycleInfo.totalCycles,
+      )}`;
+    }
+  }
 
   // Prepare prompt - either message-based or traditional string
   let prompt: string | ModelMessage[];
