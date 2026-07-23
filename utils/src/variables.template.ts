@@ -63,6 +63,34 @@ export function findUnusedVariables(
 }
 
 /**
+ * Participant-major arrays ([participant][round]) also carry the first
+ * participant's fields per round index, so references with a single index
+ * resolve alongside participant-plus-round references.
+ */
+function withFirstParticipantFallback(
+  value: object | unknown[],
+): object | unknown[] {
+  if (
+    !Array.isArray(value) ||
+    value.length === 0 ||
+    !value.every((v) => Array.isArray(v))
+  ) {
+    return value;
+  }
+  const first = value[0] as unknown[];
+  return value.map((participantRounds, i) => {
+    const rounds = [...(participantRounds as unknown[])];
+    const graft = first[i];
+    if (graft && typeof graft === 'object' && !Array.isArray(graft)) {
+      for (const [key, val] of Object.entries(graft)) {
+        (rounds as unknown as Record<string, unknown>)[key] = val;
+      }
+    }
+    return rounds;
+  });
+}
+
+/**
  * Resolve Mustache template variables in a given string.
  * https://mustache.github.io/mustache.5.html
  */
@@ -93,7 +121,9 @@ export function resolveTemplateVariables(
       case 'object':
       case 'array':
         // Parse JSON for complex types
-        typedValueMap[variableName] = JSON.parse(valueMap[variableName]);
+        typedValueMap[variableName] = withFirstParticipantFallback(
+          JSON.parse(valueMap[variableName]),
+        );
         break;
       default:
         break;
