@@ -498,7 +498,7 @@ export async function getAgentChatMessage(
       stage as ChatStageConfig,
     );
     if (cycleInfo) {
-      structuredPrompt += `\n\n${getTurnCycleStatusForPrompt(
+      structuredPrompt = `${structuredPrompt.replace(/\n+$/, '')}\n\n${getTurnCycleStatusForPrompt(
         cycleInfo.currentCycle,
         cycleInfo.totalCycles,
       )}`;

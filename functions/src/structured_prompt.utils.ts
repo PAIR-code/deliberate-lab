@@ -759,7 +759,7 @@ async function processPromptItems(
         const stageBlocks: string[] = [];
         const flushStageBlocks = () => {
           if (stageBlocks.length > 0) {
-            // only the last block keeps its trailing newline
+            // Only the last block keeps its trailing newline.
             items.push(
               stageBlocks
                 .map((b, i) =>
