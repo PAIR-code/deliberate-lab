@@ -12,7 +12,6 @@ import {AuthService} from '../../services/auth.service';
 import {ExperimentEditor} from '../../services/experiment.editor';
 
 import {
-  AgentPersonaType,
   ExperimentTemplate,
   MetadataConfig,
   StageConfig,
@@ -28,6 +27,7 @@ import {
   createProfileStage,
   createRevealStage,
   createRoleStage,
+  createNegotiationProfileStage,
   createStockInfoStage,
   createSurveyPerParticipantStage,
   createSurveyStage,
@@ -71,6 +71,7 @@ import {
   FLIPCARD_TEMPLATE_METADATA,
   getFlipCardExperimentTemplate,
 } from '../../shared/templates/flipcard';
+import {getGuidePilotStudyTemplate} from '../../shared/templates/guide_pilot_study';
 import {
   ASSET_ALLOCATION_TEMPLATE_METADATA,
   getAssetAllocationTemplate,
@@ -181,7 +182,7 @@ export class StageBuilderDialog extends MobxLitElement {
         configuration!
       </div>
       <div class="card-gallery-wrapper">
-        ${this.renderFlipCardTemplateCard()}
+        ${this.renderGuidePilotStudyCard()} ${this.renderFlipCardTemplateCard()}
         ${this.renderFruitTestTemplateCard()}
         ${this.renderConditionalSurveyTemplateCard()}
         ${this.renderStockInfoGameCard()}
@@ -252,7 +253,7 @@ export class StageBuilderDialog extends MobxLitElement {
           ${this.renderSurveyPerParticipantCard()}
           ${this.renderComprehensionCard()} ${this.renderRankingCard()}
           ${this.renderRevealCard()} ${this.renderPayoutCard()}
-          ${this.renderRoleCard()}
+          ${this.renderRoleCard()} ${this.renderNegotiationProfileCard()}
         </div>
       </div>
 
@@ -356,6 +357,23 @@ export class StageBuilderDialog extends MobxLitElement {
     `;
   }
 
+  private renderGuidePilotStudyCard() {
+    const loadTemplate = () => {
+      this.addTemplate(getGuidePilotStudyTemplate());
+    };
+
+    return html`
+      <div class="card">
+        <div class="title">📋 GUIDE Pilot Study</div>
+        <div>
+          Full 36-stage pilot study template including negotiation, discussion,
+          and surveys.
+        </div>
+        <pr-button @click=${loadTemplate}>Load Template</pr-button>
+      </div>
+    `;
+  }
+
   private renderChipNegotiationCard() {
     const addGame = (numChips: number) => {
       this.addGame(
@@ -434,6 +452,22 @@ export class StageBuilderDialog extends MobxLitElement {
         <div>
           Randomly assign roles to participants and show different
           Markdown-rendered info for each role
+        </div>
+      </div>
+    `;
+  }
+
+  private renderNegotiationProfileCard() {
+    const addStage = () => {
+      this.addStage(createNegotiationProfileStage());
+    };
+
+    return html`
+      <div class="card" @click=${addStage}>
+        <div class="title">🤝 Negotiation Party Assignment</div>
+        <div>
+          Randomly assign negotiation parties (e.g. Party A, Party B, Party C)
+          to participants.
         </div>
       </div>
     `;

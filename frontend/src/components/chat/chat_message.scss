@@ -101,6 +101,90 @@ $bubble-width: 400px;
     border-radius: $bubble-radius $bubble-radius $bubble-radius-small
       $bubble-radius;
   }
+
+  .reply-quote {
+    align-self: end;
+  }
+
+  .actions {
+    justify-content: flex-end;
+  }
+}
+
+.reply-quote {
+  @include common.flex-column;
+  border-left: 3px solid var(--md-sys-color-outline-variant);
+  color: var(--md-sys-color-on-surface-variant);
+  gap: 2px;
+  max-width: $bubble-width;
+  padding: common.$spacing-xs 0 common.$spacing-xs common.$spacing-medium;
+}
+
+.reply-author {
+  @include typescale.label-small;
+  font-weight: 500;
+}
+
+.reply-text {
+  @include typescale.label-small;
+  // Keep the quote to a couple of lines so it cannot dwarf the reply itself
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  display: -webkit-box;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+}
+
+.actions {
+  @include common.flex-row;
+  align-items: center;
+  gap: common.$spacing-xs;
+  min-height: 24px;
+}
+
+.action-chip {
+  @include typescale.label-small;
+  align-items: center;
+  background: var(--md-sys-color-surface);
+  border: 1px solid var(--md-sys-color-outline-variant);
+  border-radius: 20px;
+  color: var(--md-sys-color-on-surface-variant);
+  cursor: pointer;
+  display: flex;
+  gap: common.$spacing-xs;
+  line-height: 1;
+  padding: common.$spacing-xs common.$spacing-small;
+
+  &:hover:not(:disabled) {
+    background: var(--md-sys-color-surface-variant);
+  }
+
+  &:disabled {
+    cursor: default;
+    opacity: 0.5;
+  }
+
+  &.active {
+    background: var(--md-sys-color-secondary-container);
+    border-color: var(--md-sys-color-secondary);
+    color: var(--md-sys-color-on-secondary-container);
+  }
+
+  // Chips with no reactions yet stay hidden until the message is hovered,
+  // so an untouched conversation is not cluttered with empty buttons
+  &.empty {
+    opacity: 0;
+    transition: opacity 0.1s ease-in-out;
+  }
+}
+
+.chat-message:hover .action-chip.empty,
+.action-chip.empty:focus-visible {
+  opacity: 1;
+}
+
+.count {
+  font-variant-numeric: tabular-nums;
 }
 
 .discuss-message {
