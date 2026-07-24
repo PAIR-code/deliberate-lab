@@ -27,6 +27,9 @@ export interface ChatStageConfig extends BaseStageConfig {
   timeLimitInMinutes: number | null; // Maximum duration in minutes (integer), or null if no limit.
   timeMinimumInMinutes: number | null; // Minimum time participants must stay in minutes (integer), or null if no minimum.
   isTurnBased?: boolean; // Whether the conversation is turn-based
+  // If true, agent participants cannot end the chat by setting readyToEndChat
+  // in their structured output. The backend ignores the field for agents.
+  preventAgentEnd?: boolean;
   // Whether participants may react to and reply to each other's messages.
   // Opt-in: when false or unset, no react/reply affordances are shown.
   enableReactionsAndReplies?: boolean;
@@ -123,6 +126,7 @@ export function createChatStage(
     timeLimitInMinutes: config.timeLimitInMinutes ?? null,
     timeMinimumInMinutes: config.timeMinimumInMinutes ?? null,
     isTurnBased: config.isTurnBased ?? false,
+    preventAgentEnd: config.preventAgentEnd ?? false,
     enableReactionsAndReplies: config.enableReactionsAndReplies ?? false,
   };
 }

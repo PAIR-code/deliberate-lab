@@ -745,6 +745,9 @@
         "isTurnBased": {
           "type": "boolean"
         },
+        "preventAgentEnd": {
+          "type": "boolean"
+        },
         "enableReactionsAndReplies": {
           "type": "boolean"
         }
@@ -1400,6 +1403,9 @@
           "type": ["number", "null"]
         },
         "preventCancellation": {
+          "type": "boolean"
+        },
+        "preventAgentEnd": {
           "type": "boolean"
         }
       }

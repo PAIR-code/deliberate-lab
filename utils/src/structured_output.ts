@@ -19,6 +19,46 @@ export enum StructuredOutputDataType {
   ENUM = 'ENUM',
 }
 
+const OPTIONAL_RESPONSE_DESCRIPTION =
+  'Your chat message (empty if you prefer to stay silent).';
+const REQUIRED_RESPONSE_DESCRIPTION = 'Your chat message.';
+const OPTIONAL_EXPLANATION_DESCRIPTION =
+  '1-2 sentences explaining why you are sending this message, or why you are staying silent, based on your persona and the chat context.';
+const REQUIRED_EXPLANATION_DESCRIPTION =
+  '1-2 sentences explaining why you are sending this message, based on your persona and the chat context.';
+const REQUIRED_EXPLANATION_MEDIATOR_DESCRIPTION =
+  '1-2 sentences explaining why you are sending this message, based on the chat context.';
+
+/**
+ * Rewords the default explanation and response descriptions once the respond
+ * decision is stripped and a response is required; custom text is unchanged.
+ */
+export function rewriteDescriptionsForRequiredResponse(
+  properties: {name: string; schema: StructuredOutputSchema}[],
+  isMediator: boolean,
+): {name: string; schema: StructuredOutputSchema}[] {
+  return properties.map((prop) => {
+    if (prop.schema.description === OPTIONAL_RESPONSE_DESCRIPTION) {
+      return {
+        ...prop,
+        schema: {...prop.schema, description: REQUIRED_RESPONSE_DESCRIPTION},
+      };
+    }
+    if (prop.schema.description === OPTIONAL_EXPLANATION_DESCRIPTION) {
+      return {
+        ...prop,
+        schema: {
+          ...prop.schema,
+          description: isMediator
+            ? REQUIRED_EXPLANATION_MEDIATOR_DESCRIPTION
+            : REQUIRED_EXPLANATION_DESCRIPTION,
+        },
+      };
+    }
+    return prop;
+  });
+}
+
 export interface StructuredOutputSchema {
   type: StructuredOutputDataType;
   description?: string;
@@ -127,8 +167,7 @@ export function createStructuredOutputConfig(
         name: DEFAULT_EXPLANATION_FIELD,
         schema: {
           type: StructuredOutputDataType.STRING,
-          description:
-            '1-2 sentences explaining why you are sending this message, or why you are staying silent, based on your persona and the chat context.',
+          description: OPTIONAL_EXPLANATION_DESCRIPTION,
         },
       },
       {
@@ -143,8 +182,7 @@ export function createStructuredOutputConfig(
         name: DEFAULT_RESPONSE_FIELD,
         schema: {
           type: StructuredOutputDataType.STRING,
-          description:
-            'Your chat message (empty if you prefer to stay silent).',
+          description: OPTIONAL_RESPONSE_DESCRIPTION,
         },
       },
       {

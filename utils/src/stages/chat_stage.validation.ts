@@ -71,6 +71,7 @@ export const ChatStageConfigData = Type.Composite(
         ),
         discussions: Type.Array(ChatDiscussionData),
         isTurnBased: Type.Optional(Type.Boolean()),
+        preventAgentEnd: Type.Optional(Type.Boolean()),
         enableReactionsAndReplies: Type.Optional(Type.Boolean()),
       },
       strict,
