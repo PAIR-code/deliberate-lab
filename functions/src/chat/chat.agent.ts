@@ -7,6 +7,7 @@ import {
   ChatStagePublicData,
   extractChatMediatorStructuredFields,
   getStructuredOutput,
+  injectScratchpadField,
   MediatorProfileExtended,
   ModelResponseStatus,
   ParticipantProfileExtended,
@@ -23,6 +24,7 @@ import {
 import {Timestamp} from 'firebase-admin/firestore';
 import {processModelResponse} from '../agent.utils';
 import {
+  containsScratchpadPlaceholder,
   getPromptFromConfig,
   getStructuredPromptConfig,
 } from '../structured_prompt.utils';
@@ -388,26 +390,36 @@ export async function getAgentChatMessage(
       ? Math.max(0, turnBasedRetryDeadlineMs - Date.now())
       : null;
 
-  // In turn-based mode the agent always responds when called — strip shouldRespond
-  // from the API-level schema constraint so the model isn't forced to output a
-  // field whose "stay silent" path would freeze the turn. The prompt text is
-  // already filtered in structured_prompt.utils.ts; this keeps the two in sync.
+  // When the magic variable {{_scratchpad}} is present in the prompt,
+  // we auto-inject a _scratchpad field at the start of the structured output.
+  const isReasoningEnabled = Boolean(
+    (user.agentConfig?.promptContext &&
+      user.agentConfig.promptContext.includes('{{_scratchpad}}')) ||
+    containsScratchpadPlaceholder(promptConfig.prompt),
+  );
+
   const effectiveStructuredOutputConfig = (() => {
-    const config = promptConfig.structuredOutputConfig as
+    let config = promptConfig.structuredOutputConfig as
       | ChatMediatorStructuredOutputConfig
       | undefined;
-    if (!isTurnBasedGroupChat || !config?.schema?.properties) return config;
-    const shouldRespondFieldName = config.shouldRespondField || 'shouldRespond';
-    return {
-      ...config,
-      schema: {
-        ...config.schema,
-        properties: config.schema.properties.filter(
-          (p) => p.name !== shouldRespondFieldName,
-        ),
-      },
-      shouldRespondField: '',
-    } as ChatMediatorStructuredOutputConfig;
+    if (isTurnBasedGroupChat && config?.schema?.properties) {
+      const shouldRespondFieldName =
+        config.shouldRespondField || 'shouldRespond';
+      config = {
+        ...config,
+        schema: {
+          ...config.schema,
+          properties: config.schema.properties.filter(
+            (p) => p.name !== shouldRespondFieldName,
+          ),
+        },
+        shouldRespondField: '',
+      } as ChatMediatorStructuredOutputConfig;
+    }
+    if (isReasoningEnabled) {
+      config = injectScratchpadField(config);
+    }
+    return config;
   })();
 
   const {response, logId, retryTimedOut} = await processModelResponse(
@@ -458,6 +470,7 @@ export async function getAgentChatMessage(
   let message = response.text || ''; // Use response.text as the default message
   let explanation = ''; // From structured output schema field only
   const reasoning = response.reasoning || undefined; // From model's internal thinking
+  let agentReasoning: string | undefined = undefined; // From structured output _scratchpad field
   let shouldRespond = true;
   let readyToEndChat = false;
 
@@ -473,17 +486,20 @@ export async function getAgentChatMessage(
       if (fields.explanation !== null) {
         explanation = fields.explanation;
       }
+      if (fields._scratchpad !== null) {
+        agentReasoning = fields._scratchpad;
+      }
       readyToEndChat = fields.readyToEndChat;
     }
   }
 
-  // No text and no files = failure
-  if (!response.text && (!response.files || response.files.length === 0)) {
+  if (!shouldRespond && isReasoningEnabled) {
+    // Silent turns are allowed to have empty text
+  } else if (
+    !response.text &&
+    (!response.files || response.files.length === 0)
+  ) {
     return {message: null, success: false, retryTimedOut};
-  }
-
-  if (!shouldRespond) {
-    // Logic for not responding (handled below)
   }
 
   // Only if agent participant is ready to end chat
@@ -518,7 +534,10 @@ export async function getAgentChatMessage(
       );
       await participantAnswerDoc.set({readyToEndChat: true}, {merge: true});
     }
-    return {message: null, success: true, retryTimedOut};
+    // If reasoning is not being tracked, bypass saving silent message
+    if (!isReasoningEnabled) {
+      return {message: null, success: true, retryTimedOut};
+    }
   }
 
   // If stage includes discussions, figure out what discussion ID should be
@@ -541,13 +560,15 @@ export async function getAgentChatMessage(
   const chatMessage = createChatMessage({
     type: user.type,
     discussionId,
-    message,
+    message: shouldRespond ? message : '',
     explanation,
     reasoning,
+    _scratchpad: agentReasoning,
     profile: createParticipantProfileBase(user),
     senderId: user.publicId,
     agentId: user.agentConfig.agentId,
     timestamp: Timestamp.now(),
+    isScratchpadOnly: !shouldRespond,
   });
 
   // Upload files to GCS
@@ -802,7 +823,7 @@ export async function sendAgentGroupChatMessage(
 ) {
   // TODO: Decrease typing delay to account for LLM API call latencies?
   // TODO: Don't send message if conversation continues while agent is typing?
-  if (chatSettings.wordsPerMinute) {
+  if (chatSettings.wordsPerMinute && !chatMessage.isScratchpadOnly) {
     await awaitTypingDelay(chatMessage.message, chatSettings.wordsPerMinute);
   }
 
@@ -877,7 +898,7 @@ export async function sendAgentPrivateChatMessage(
 ) {
   // TODO: Decrease typing delay to account for LLM API call latencies?
   // TODO: Don't send message if conversation continues while agent is typing?
-  if (chatSettings.wordsPerMinute) {
+  if (chatSettings.wordsPerMinute && !chatMessage.isScratchpadOnly) {
     await awaitTypingDelay(chatMessage.message, chatSettings.wordsPerMinute);
   }
 

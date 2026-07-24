@@ -12,10 +12,19 @@ import {
 // Disable HTML escaping (prevents quotes from being rendered as `&quot;`)
 Mustache.escape = (text: string) => text;
 
+/**
+ * Internal variables: `_`-prefixed template tokens the platform provides and the
+ * experimenter can reference but cannot define. The `_` prefix is reserved for
+ * these; this set is the registry the template logic consults.
+ */
+export const INTERNAL_VARIABLES: ReadonlySet<string> = new Set(['_scratchpad']);
+export type InternalVariableName = '_scratchpad';
+
 /** Reason why a variable reference is invalid */
 export type InvalidVariableReason =
   | 'undefined'
   | 'object_needs_property'
+  | 'internal'
   | 'syntax';
 
 /** An invalid variable reference in a template */
@@ -31,6 +40,10 @@ export function formatInvalidVariable(invalid: InvalidVariable): string {
       return `'${invalid.path}' is not defined`;
     case 'object_needs_property':
       return `'${invalid.path}' is an object - access a property like '${invalid.path}.propertyName'`;
+    case 'internal':
+      return `'${invalid.path}' is not a known internal variable. Names that begin with '_' are reserved for internal variables (valid: ${[
+        ...INTERNAL_VARIABLES,
+      ].join(', ')}).`;
     case 'syntax':
       return invalid.path || 'Invalid template syntax';
   }
@@ -78,6 +91,13 @@ export function resolveTemplateVariables(
   Object.keys(valueMap).forEach((variableName) => {
     const variable = variableDefinitions[variableName];
     const schemaType = variable?.schema?.type;
+
+    if (!variable) {
+      if (INTERNAL_VARIABLES.has(variableName)) {
+        typedValueMap[variableName] = valueMap[variableName] ?? '';
+      }
+      return;
+    }
 
     switch (schemaType) {
       case 'string':
@@ -203,6 +223,13 @@ function validateTokens(
     const schema = resolvePathInContextStack(value, contextStack);
 
     if (!schema) {
+      if (INTERNAL_VARIABLES.has(value)) {
+        continue;
+      }
+      if (value.startsWith('_')) {
+        invalidVariables.set(value, {path: value, reason: 'internal'});
+        continue;
+      }
       invalidVariables.set(value, {path: value, reason: 'undefined'});
     } else if (isDirectOutput && schema.type === 'object') {
       // Using {{object}} directly will render as "[object Object]"

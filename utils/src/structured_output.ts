@@ -58,6 +58,7 @@ export interface ChatMediatorStructuredFields {
   message: string | null; // The message to send (null if not responding)
   explanation: string | null; // Why the mediator made this decision
   readyToEndChat: boolean; // Is the mediator ready to end the conversation?
+  _scratchpad: string | null; // Auto-injected reasoning field when {{_scratchpad}} is in prompt
 }
 
 /**
@@ -93,11 +94,46 @@ export function extractChatMediatorStructuredFields(
     ? Boolean(parsed[config.readyToEndField])
     : false;
 
+  const _scratchpad =
+    typeof parsed['_scratchpad'] === 'string'
+      ? (parsed['_scratchpad'] as string)
+      : null;
+
   return {
     shouldRespond,
     message,
     explanation,
     readyToEndChat,
+    _scratchpad,
+  };
+}
+
+/**
+ * Prepend the `_scratchpad` field to the structured output schema when:
+ * (a) the field is not already present, and
+ * (b) scratchpad placeholders are in use.
+ */
+export function injectScratchpadField<
+  T extends StructuredOutputConfig | undefined,
+>(config: T): T {
+  if (!config?.schema?.properties) return config;
+  if (config.schema.properties.some((p) => p.name === '_scratchpad')) {
+    return config;
+  }
+  const scratchpadProperty = {
+    name: '_scratchpad',
+    schema: {
+      type: StructuredOutputDataType.STRING,
+      description:
+        'Your private scratchpad for this turn. This field is shown back to you in later turns, so you can, for example, make plans and test beliefs.',
+    },
+  };
+  return {
+    ...config,
+    schema: {
+      ...config.schema,
+      properties: [scratchpadProperty, ...config.schema.properties],
+    },
   };
 }
 

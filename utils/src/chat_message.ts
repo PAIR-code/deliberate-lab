@@ -60,8 +60,10 @@ export interface ChatMessage {
   agentId: string; // agent persona used (or blank if none)
   explanation: string; // agent's explicit decision explanation from structured output
   reasoning?: string; // model's internal chain-of-thought (from thinking/reasoning features)
+  _scratchpad?: string; // agent's structured-output reasoning field, auto-injected when {{_scratchpad}} is in prompt
   isError: boolean; // is error message (used for private chats)
   files?: StoredFile[]; // uploaded files (images, documents, etc.)
+  isScratchpadOnly?: boolean; // turn where the agent chose not to respond; retains reasoning history without showing in UI
   // Message that this message replies to (with quoted text), if any.
   // Optional because messages written before replies existed do not have it.
   replyTo?: ChatMessageReply | null;
@@ -101,8 +103,10 @@ export function createChatMessage(
     agentId: config.agentId ?? '',
     explanation: config.explanation ?? '',
     reasoning: config.reasoning ?? undefined,
+    _scratchpad: config._scratchpad ?? undefined,
     isError: config.isError ?? false,
     files: config.files ?? undefined,
+    isScratchpadOnly: config.isScratchpadOnly ?? undefined,
     replyTo: config.replyTo ?? null,
     reactionMap: config.reactionMap ?? {},
   };
@@ -123,8 +127,10 @@ export function createParticipantChatMessage(
     agentId: config.agentId ?? '',
     explanation: config.explanation ?? '',
     reasoning: config.reasoning ?? undefined,
+    _scratchpad: config._scratchpad ?? undefined,
     isError: config.isError ?? false,
     files: config.files ?? undefined,
+    isScratchpadOnly: config.isScratchpadOnly ?? undefined,
     replyTo: config.replyTo ?? null,
     reactionMap: config.reactionMap ?? {},
   };
@@ -145,8 +151,10 @@ export function createMediatorChatMessage(
     agentId: config.agentId ?? '',
     explanation: config.explanation ?? '',
     reasoning: config.reasoning ?? undefined,
+    _scratchpad: config._scratchpad ?? undefined,
     isError: config.isError ?? false,
     files: config.files ?? undefined,
+    isScratchpadOnly: config.isScratchpadOnly ?? undefined,
     replyTo: config.replyTo ?? null,
     reactionMap: config.reactionMap ?? {},
   };
@@ -167,6 +175,7 @@ export function createExperimenterChatMessage(
     agentId: config.agentId ?? '',
     explanation: config.explanation ?? '',
     reasoning: config.reasoning ?? undefined,
+    _scratchpad: config._scratchpad ?? undefined,
     isError: config.isError ?? false,
     files: config.files ?? undefined,
     replyTo: config.replyTo ?? null,
@@ -230,6 +239,7 @@ export function createSystemChatMessage(
     agentId: config.agentId ?? '',
     explanation: config.explanation ?? '',
     reasoning: config.reasoning ?? undefined,
+    _scratchpad: config._scratchpad ?? undefined,
     isError: false,
     files: config.files ?? undefined,
     replyTo: config.replyTo ?? null,

@@ -3,6 +3,8 @@ import {
   findUnusedVariables,
   resolveTemplateVariables,
   validateTemplateVariables,
+  formatInvalidVariable,
+  INTERNAL_VARIABLES,
 } from './variables.template';
 
 describe('Mustache Template Resolution', () => {
@@ -422,5 +424,43 @@ describe('Mustache Template Resolution', () => {
       const result = findUnusedVariables(stages, variableDefinitions);
       expect(result).toEqual(['city']);
     });
+  });
+});
+
+describe('internal variables (reserved _ prefix)', () => {
+  it('treats a known internal variable as valid', () => {
+    const result = validateTemplateVariables('Notes: {{_scratchpad}}', {});
+    expect(result.valid).toBe(true);
+    expect(result.invalidVariables).toEqual([]);
+  });
+
+  it('flags an unknown _-prefixed variable as internal, not undefined', () => {
+    const result = validateTemplateVariables('Oops {{_scratchpat}}', {});
+    expect(result.valid).toBe(false);
+    expect(result.invalidVariables).toEqual([
+      {path: '_scratchpat', reason: 'internal'},
+    ]);
+  });
+
+  it('lists the valid internal variables in the error message', () => {
+    const msg = formatInvalidVariable({
+      path: '_scratchpat',
+      reason: 'internal',
+    });
+    expect(msg).toContain('not a known internal variable');
+    for (const name of INTERNAL_VARIABLES) {
+      expect(msg).toContain(name);
+    }
+  });
+
+  it('resolves a known internal variable from the value map', () => {
+    const out = resolveTemplateVariables(
+      'Notes: {{_scratchpad}}',
+      {},
+      {
+        _scratchpad: 'my note',
+      },
+    );
+    expect(out).toBe('Notes: my note');
   });
 });
