@@ -5,6 +5,7 @@
  * for JSON Schema export and Python type generation.
  */
 import {Type, type Static} from '@sinclair/typebox';
+import {AgentPersonaType} from './agent';
 import {PromptConfigData} from './prompt.validation';
 import {ApiKeyTypeData} from './providers.validation';
 import {ParticipantProfileBaseData} from './participant.validation';
@@ -34,6 +35,9 @@ export const AgentConfigData = Type.Object(
   {
     id: Type.String({minLength: 1}),
     name: Type.String(),
+    description: Type.Optional(Type.String()),
+    type: Type.Optional(Type.Enum(AgentPersonaType)),
+    isDefaultAddToCohort: Type.Optional(Type.Boolean()),
     defaultModelSettings: Type.Optional(AgentModelSettingsData),
     defaultProfile: Type.Optional(ParticipantProfileBaseData),
   },

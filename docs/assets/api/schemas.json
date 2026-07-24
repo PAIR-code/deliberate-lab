@@ -2855,6 +2855,24 @@
         "name": {
           "type": "string"
         },
+        "description": {
+          "type": "string"
+        },
+        "type": {
+          "anyOf": [
+            {
+              "const": "participant",
+              "type": "string"
+            },
+            {
+              "const": "mediator",
+              "type": "string"
+            }
+          ]
+        },
+        "isDefaultAddToCohort": {
+          "type": "boolean"
+        },
         "defaultModelSettings": {
           "$ref": "#/$defs/AgentModelSettings"
         },
