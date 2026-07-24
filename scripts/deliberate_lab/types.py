@@ -208,6 +208,7 @@ class MultiAssetAllocationStageConfig(BaseModel):
     name: Annotated[str, Field(min_length=1)]
     descriptions: StageTextConfig
     progress: StageProgressConfig
+    anonymousProfileSetId: str | None = None
     stockOptions: list[Stock]
     stockInfoStageId: str
 
@@ -289,6 +290,7 @@ class InfoStageConfig(BaseModel):
     name: Annotated[str, Field(min_length=1)]
     descriptions: StageTextConfig
     progress: StageProgressConfig
+    anonymousProfileSetId: str | None = None
     infoLines: list[str]
     youtubeVideoId: str | None = None
 
@@ -354,6 +356,7 @@ class PrivateChatStageConfig(BaseModel):
     name: Annotated[str, Field(min_length=1)]
     descriptions: StageTextConfig
     progress: StageProgressConfig
+    anonymousProfileSetId: str | None = None
     timeLimitInMinutes: Annotated[int | None, Field(ge=1)] = None
     timeMinimumInMinutes: Annotated[int | None, Field(ge=1)] = None
     isTurnBasedChat: bool | None = None
@@ -380,6 +383,7 @@ class ProfileStageConfig(BaseModel):
     name: Annotated[str, Field(min_length=1)]
     descriptions: StageTextConfig
     progress: StageProgressConfig
+    anonymousProfileSetId: str | None = None
     profileType: ProfileType
 
 
@@ -401,6 +405,7 @@ class ParticipantRankingStageConfig(BaseModel):
     name: Annotated[str, Field(min_length=1)]
     descriptions: StageTextConfig
     progress: StageProgressConfig
+    anonymousProfileSetId: str | None = None
     rankingType: Literal["participants"] = "participants"
     strategy: Strategy
     enableSelfVoting: bool
@@ -480,7 +485,46 @@ class RoleStageConfig(BaseModel):
     name: Annotated[str, Field(min_length=1)]
     descriptions: StageTextConfig
     progress: StageProgressConfig
+    anonymousProfileSetId: str | None = None
     roles: list[Role]
+
+
+class Item(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+        populate_by_name=True,
+    )
+    id: Annotated[str, Field(min_length=1)]
+    name: str
+    avatar: str
+    displayLines: list[str]
+
+
+class NegotiationProfileStageConfig(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+        populate_by_name=True,
+    )
+    id: Annotated[str, Field(min_length=1)]
+    kind: Literal["negotiationProfile"] = "negotiationProfile"
+    name: Annotated[str, Field(min_length=1)]
+    descriptions: StageTextConfig
+    progress: StageProgressConfig
+    anonymousProfileSetId: str | None = None
+    items: list[Item]
+
+
+class NegotiationPayoutStageConfig(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+        populate_by_name=True,
+    )
+    id: Annotated[str, Field(min_length=1)]
+    kind: Literal["negotiationPayout"] = "negotiationPayout"
+    name: Annotated[str, Field(min_length=1)]
+    descriptions: StageTextConfig
+    progress: StageProgressConfig
+    anonymousProfileSetId: str | None = None
 
 
 class SalespersonStageConfig(BaseModel):
@@ -493,6 +537,7 @@ class SalespersonStageConfig(BaseModel):
     name: Annotated[str, Field(min_length=1)]
     descriptions: StageTextConfig
     progress: StageProgressConfig
+    anonymousProfileSetId: str | None = None
 
 
 class StockInfoStageConfig(BaseModel):
@@ -505,6 +550,7 @@ class StockInfoStageConfig(BaseModel):
     name: Annotated[str, Field(min_length=1)]
     descriptions: StageTextConfig
     progress: StageProgressConfig
+    anonymousProfileSetId: str | None = None
     stocks: list[Stock]
     visibleStockIds: list[str] | None = None
     showBestYearCard: bool
@@ -558,6 +604,7 @@ class TOSStageConfig(BaseModel):
     name: Annotated[str, Field(min_length=1)]
     descriptions: StageTextConfig
     progress: StageProgressConfig
+    anonymousProfileSetId: str | None = None
     tosLines: list[str]
 
 
@@ -776,6 +823,8 @@ class StageKind(StrEnum):
     assetAllocation = "assetAllocation"
     multiAssetAllocation = "multiAssetAllocation"
     role = "role"
+    negotiationProfile = "negotiationProfile"
+    negotiationPayout = "negotiationPayout"
     survey = "survey"
     surveyPerParticipant = "surveyPerParticipant"
     transfer = "transfer"
@@ -803,6 +852,7 @@ class AssetAllocationStageConfig(BaseModel):
     name: Annotated[str, Field(min_length=1)]
     descriptions: StageTextConfig
     progress: StageProgressConfig
+    anonymousProfileSetId: str | None = None
     stockConfig: Annotated[StockConfig, Field(title="StockConfig")]
 
 
@@ -827,6 +877,7 @@ class ChipStageConfig(BaseModel):
     name: Annotated[str, Field(min_length=1)]
     descriptions: StageTextConfig
     progress: StageProgressConfig
+    anonymousProfileSetId: str | None = None
     enableChat: bool
     numRounds: float
     chips: list[ChipItem]
@@ -854,6 +905,7 @@ class ComprehensionStageConfig(BaseModel):
     name: Annotated[str, Field(min_length=1)]
     descriptions: StageTextConfig
     progress: StageProgressConfig
+    anonymousProfileSetId: str | None = None
     questions: list[TextQuestion | McQuestion]
 
 
@@ -867,6 +919,7 @@ class FlipCardStageConfig(BaseModel):
     name: Annotated[str, Field(min_length=1)]
     descriptions: StageTextConfig
     progress: StageProgressConfig
+    anonymousProfileSetId: str | None = None
     cards: list[FlipCard]
     enableSelection: bool
     allowMultipleSelections: bool
@@ -885,6 +938,7 @@ class PayoutStageConfig(BaseModel):
     name: Annotated[str, Field(min_length=1)]
     descriptions: StageTextConfig
     progress: StageProgressConfig
+    anonymousProfileSetId: str | None = None
     currency: Currency
     payoutItems: list[DefaultPayoutItem | ChipPayoutItem | SurveyPayoutItem]
     averageAllPayoutItems: bool
@@ -900,6 +954,7 @@ class ItemRankingStageConfig(BaseModel):
     name: Annotated[str, Field(min_length=1)]
     descriptions: StageTextConfig
     progress: StageProgressConfig
+    anonymousProfileSetId: str | None = None
     rankingType: Literal["items"] = "items"
     strategy: Strategy
     rankingItems: list[RankingItem]
@@ -915,6 +970,7 @@ class RevealStageConfig(BaseModel):
     name: Annotated[str, Field(min_length=1)]
     descriptions: StageTextConfig
     progress: StageProgressConfig
+    anonymousProfileSetId: str | None = None
     items: list[
         ChipRevealItem
         | RankingRevealItem
@@ -976,11 +1032,13 @@ class ChatStageConfig(BaseModel):
     name: Annotated[str, Field(min_length=1)]
     descriptions: StageTextConfig
     progress: StageProgressConfig
+    anonymousProfileSetId: str | None = None
     timeLimitInMinutes: Annotated[int | None, Field(ge=1)] = None
     timeMinimumInMinutes: Annotated[int | None, Field(ge=1)] = None
     discussions: list[DefaultChatDiscussion | CompareChatDiscussion]
     isTurnBased: bool | None = None
     agentTimeoutSeconds: Annotated[int | None, Field(ge=1)] = None
+    enableReactionsAndReplies: bool | None = None
 
 
 class RankingStageConfig(
@@ -1074,6 +1132,8 @@ class ExperimentTemplate(BaseModel):
         | ParticipantRankingStageConfig
         | RevealStageConfig
         | RoleStageConfig
+        | NegotiationProfileStageConfig
+        | NegotiationPayoutStageConfig
         | SalespersonStageConfig
         | StockInfoStageConfig
         | SurveyPerParticipantStageConfig
@@ -1188,6 +1248,7 @@ class SurveyPerParticipantStageConfig(BaseModel):
     name: Annotated[str, Field(min_length=1)]
     descriptions: StageTextConfig
     progress: StageProgressConfig
+    anonymousProfileSetId: str | None = None
     questions: list[
         TextSurveyQuestion
         | CheckSurveyQuestion
@@ -1275,6 +1336,7 @@ class SurveyStageConfig(BaseModel):
     name: Annotated[str, Field(min_length=1)]
     descriptions: StageTextConfig
     progress: StageProgressConfig
+    anonymousProfileSetId: str | None = None
     questions: list[
         TextSurveyQuestion
         | CheckSurveyQuestion
@@ -1293,6 +1355,7 @@ class TransferStageConfig(BaseModel):
     name: Annotated[str, Field(min_length=1)]
     descriptions: StageTextConfig
     progress: StageProgressConfig
+    anonymousProfileSetId: str | None = None
     enableTimeout: bool
     timeoutSeconds: float
     autoTransferConfig: (

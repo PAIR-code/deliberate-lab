@@ -34,6 +34,7 @@ export class ChatEditor extends MobxLitElement {
     return html`
       <div class="title">Conversation settings</div>
       ${this.renderTimeLimit()} ${this.renderTurnBasedSetting()}
+      ${this.renderReactionsSetting()}
       <div class="divider"></div>
       <div class="title">Agent mediators</div>
       <div class="description">
@@ -99,6 +100,32 @@ export class ChatEditor extends MobxLitElement {
           ?disabled=${!this.experimentEditor.canEditStages}
           @input=${updateTimeout}
         />
+      </div>
+    `;
+  }
+
+  private renderReactionsSetting() {
+    return html`
+      <div class="config-item">
+        <div class="checkbox-wrapper">
+          <md-checkbox
+            touch-target="wrapper"
+            ?checked=${this.stage?.enableReactionsAndReplies ?? false}
+            ?disabled=${!this.experimentEditor.canEditStages}
+            @change=${(e: Event) => {
+              const checked = (e.target as HTMLInputElement).checked;
+              this.experimentEditor.updateStage({
+                ...this.stage!,
+                enableReactionsAndReplies: checked,
+              });
+            }}
+          >
+          </md-checkbox>
+          <div>
+            Reactions and replies: Allow participants to react to and reply to
+            each other's messages.
+          </div>
+        </div>
       </div>
     `;
   }

@@ -30,6 +30,9 @@ export interface ChatStageConfig extends BaseStageConfig {
   // Seconds a turn-based agent response may take (including retries) before
   // the participant is shown the error pop-up. Unset = default (120).
   agentTimeoutSeconds?: number;
+  // Whether participants may react to and reply to each other's messages.
+  // Opt-in: when false or unset, no react/reply affordances are shown.
+  enableReactionsAndReplies?: boolean;
 }
 
 /** Default agent response timeout for turn-based chats, in seconds. */
@@ -126,6 +129,7 @@ export function createChatStage(
     timeLimitInMinutes: config.timeLimitInMinutes ?? null,
     timeMinimumInMinutes: config.timeMinimumInMinutes ?? null,
     isTurnBased: config.isTurnBased ?? false,
+    enableReactionsAndReplies: config.enableReactionsAndReplies ?? false,
   };
 }
 

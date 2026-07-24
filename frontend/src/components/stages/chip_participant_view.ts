@@ -441,7 +441,12 @@ export class ChipView extends MobxLitElement {
       .getAllParticipants()
       .find((p) => p.publicId === offer.senderId);
     if (!senderParticipant) return nothing;
-    const senderName = `${getParticipantInlineDisplay(senderParticipant, false, this.stage?.id ?? '')}`;
+    const senderName = `${getParticipantInlineDisplay(
+      senderParticipant,
+      false,
+      this.stage?.id ?? '',
+      this.stage?.name ?? '',
+    )}`;
 
     const assistanceConfig = this.stage?.assistanceConfig;
     return html`
