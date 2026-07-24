@@ -15,6 +15,7 @@ import {
   StageKind,
   UserType,
   getTimeElapsed,
+  getParticipantStageProfile,
 } from '@deliberation-lab/utils';
 import {core} from '../../core/core';
 import {AuthService} from '../../services/auth.service';
@@ -228,6 +229,12 @@ export class ChatInterface extends MobxLitElement {
 
     const participantProfile = this.cohortService.participantMap[id];
     if (participantProfile && participantProfile.name) {
+      const stageProfile = getParticipantStageProfile(
+        participantProfile,
+        this.stage?.id ?? '',
+        this.stage?.name ?? '',
+        this.stage?.anonymousProfileSetId,
+      );
       // The viewer's own representative is marked "(yours)"; the stored
       // profile name carries no suffix.
       const ownRepSuffix =
@@ -235,8 +242,8 @@ export class ChatInterface extends MobxLitElement {
           ? ' (yours)'
           : '';
       return {
-        name: participantProfile.name + ownRepSuffix,
-        avatar: participantProfile.avatar,
+        name: stageProfile.name + ownRepSuffix,
+        avatar: stageProfile.avatar,
         isMediator: false,
         id,
         isMyTurn,

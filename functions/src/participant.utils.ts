@@ -27,6 +27,7 @@ import {
   RankingStageParticipantAnswer,
   RankingStagePublicData,
   RoleStagePublicData,
+  NegotiationProfileStagePublicData,
   StageConfig,
   SYSTEM_VARIABLE_NAMESPACE,
   STAGE_KIND_REQUIRES_TRANSFER_MIGRATION,
@@ -138,6 +139,11 @@ export const TRANSFER_MIGRATION_HANDLERS = {
   },
   [StageKind.ROLE]: (_publicData: RoleStagePublicData) => {
     // TODO: Assign new role to participant (or move role over)
+  },
+  [StageKind.NEGOTIATION_PROFILE]: (
+    _publicData: NegotiationProfileStagePublicData,
+  ) => {
+    // TODO: Assign new negotiation profile to participant if transferring
   },
 } as Partial<
   Record<

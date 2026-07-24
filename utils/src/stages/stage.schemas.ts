@@ -38,4 +38,5 @@ export const BaseStageConfigSchema = Type.Object({
   name: Type.String({minLength: 1}),
   descriptions: StageTextConfigSchema,
   progress: StageProgressConfigSchema,
+  anonymousProfileSetId: Type.Optional(Type.String()),
 });
