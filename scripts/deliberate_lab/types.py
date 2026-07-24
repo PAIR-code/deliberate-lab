@@ -982,6 +982,7 @@ class ChatStageConfig(BaseModel):
     timeMinimumInMinutes: Annotated[int | None, Field(ge=1)] = None
     discussions: list[DefaultChatDiscussion | CompareChatDiscussion]
     isTurnBased: bool | None = None
+    randomizeTurnOrderEachCycle: bool | None = None
     personaPositionPrompt: str | None = None
     additionalParticipantInstructions: str | None = None
     minNumberOfMessages: Annotated[int | None, Field(ge=0)] = None

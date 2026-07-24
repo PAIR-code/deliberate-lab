@@ -797,6 +797,9 @@
         "isTurnBased": {
           "type": "boolean"
         },
+        "randomizeTurnOrderEachCycle": {
+          "type": "boolean"
+        },
         "personaPositionPrompt": {
           "type": "string"
         },

@@ -765,7 +765,7 @@ async function getNextTurnBasedSpeakerAfterSkippedAgent(
         ];
 
         const hadMediators = turnOrder.some((id) => mediatorIds.includes(id));
-        if (hadMediators) {
+        if (hadMediators && stage.randomizeTurnOrderEachCycle) {
           const shuffledParticipants = shuffleWithSeed(
             participantIds,
             `${cohortId}-${stage.id}-${cycleIndex}`,

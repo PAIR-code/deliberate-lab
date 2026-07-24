@@ -613,6 +613,13 @@ describe('Chat Triggers - Turn Taking Mechanics', () => {
   // ---------------------------------------------------------------------------
   describe('5. Cycle Shuffles on End-of-Cycle', () => {
     it('increments cycleIndex, shuffles with seed based on new cycleIndex, and restarts turn order', async () => {
+      mockGetFirestoreStage.mockResolvedValue({
+        id: 'stage123',
+        kind: StageKind.CHAT,
+        isTurnBased: true,
+        randomizeTurnOrderEachCycle: true,
+        discussions: [],
+      });
       // Let's set p3 as the current turn holder, which is the last person in turnOrder
       mockGetFirestoreStagePublicData.mockResolvedValue({
         id: 'stage123',
@@ -680,6 +687,54 @@ describe('Chat Triggers - Turn Taking Mechanics', () => {
   // ---------------------------------------------------------------------------
   // 6. PARTICIPANT DROPOUT robustness
   // ---------------------------------------------------------------------------
+  describe('5b. Cycle Keeps Order by Default', () => {
+    it('keeps the starting participant order on cycle wrap when randomizeTurnOrderEachCycle is off', async () => {
+      mockGetFirestoreStagePublicData.mockResolvedValue({
+        id: 'stage123',
+        currentTurnParticipantId: 'p3',
+        turnOrder: ['m1', 'p1', 'p2', 'p3'],
+        cycleIndex: 0,
+      });
+
+      const chatMessage = {
+        id: 'msg123',
+        senderId: 'p3',
+        message: 'Wrapping up cycle 0!',
+        type: UserType.PARTICIPANT,
+        timestamp: {} as any,
+      } as ChatMessage;
+
+      const event = {
+        data: {
+          data: () => chatMessage,
+          exists: true,
+        },
+        params: {
+          experimentId: 'exp123',
+          cohortId: 'cohort123',
+          stageId: 'stage123',
+          chatId: 'msg123',
+        },
+      };
+
+      await onPublicChatMessageCreated.run(event as any);
+
+      expect(mockShuffleWithSeed).not.toHaveBeenCalledWith(
+        ['p1', 'p2', 'p3'],
+        'cohort123-stage123-1',
+      );
+      expect(__mocks__.setMock).toHaveBeenCalledWith(
+        'experiments/exp123/cohorts/cohort123/publicStageData/stage123',
+        expect.objectContaining({
+          currentTurnParticipantId: 'm1',
+          turnOrder: ['m1', 'p1', 'p2', 'p3'],
+          cycleIndex: 1,
+        }),
+        {merge: true},
+      );
+    });
+  });
+
   describe('6. Participant Dropout Robustness', () => {
     it('Scenario 1: Auto-advance on active speaker dropout', async () => {
       // p2 drops out (so they are NOT returned by getFirestoreActiveParticipants)
@@ -735,6 +790,13 @@ describe('Chat Triggers - Turn Taking Mechanics', () => {
     });
 
     it('Scenario 2: Recycle on all remaining speakers dropout', async () => {
+      mockGetFirestoreStage.mockResolvedValue({
+        id: 'stage123',
+        kind: StageKind.CHAT,
+        isTurnBased: true,
+        randomizeTurnOrderEachCycle: true,
+        discussions: [],
+      });
       // All remaining speakers (p2 and p3) drop out, leaving only p1
       mockGetFirestoreActiveParticipants.mockResolvedValue([
         {publicId: 'p1', privateId: 'priv1'},

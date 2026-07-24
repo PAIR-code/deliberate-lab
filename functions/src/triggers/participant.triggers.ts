@@ -455,7 +455,10 @@ async function advanceTurnBasedChatIfCurrentParticipantLeft(
             const hadMediators = filteredTurnOrder.some((id) =>
               allMediatorIds.includes(id),
             );
-            if (hadMediators) {
+            if (
+              hadMediators &&
+              (stage as ChatStageConfig).randomizeTurnOrderEachCycle
+            ) {
               const shuffledParticipants = shuffleWithSeed(
                 allPublicParticipantIds,
                 `${cohortId}-${stageId}-${cycleIndex}`,

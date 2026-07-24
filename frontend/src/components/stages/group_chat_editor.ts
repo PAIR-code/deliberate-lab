@@ -148,6 +148,26 @@ export class ChatEditor extends MobxLitElement {
             beginning with the mediators if at least one is present.
           </div>
         </div>
+        <div class="checkbox-wrapper">
+          <md-checkbox
+            touch-target="wrapper"
+            ?checked=${this.stage?.randomizeTurnOrderEachCycle ?? false}
+            ?disabled=${!this.experimentEditor.canEditStages ||
+            !(this.stage?.isTurnBased ?? false)}
+            @change=${(e: Event) => {
+              const checked = (e.target as HTMLInputElement).checked;
+              this.experimentEditor.updateStage({
+                ...this.stage!,
+                randomizeTurnOrderEachCycle: checked,
+              });
+            }}
+          >
+          </md-checkbox>
+          <div>
+            Randomize turn order every cycle: Participants speak in a new random
+            order each cycle instead of keeping the starting order.
+          </div>
+        </div>
       </div>
     `;
   }
