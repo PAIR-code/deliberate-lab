@@ -14,6 +14,8 @@ tags:
     description: Experiment management operations
   - name: cohorts
     description: Cohort management operations
+  - name: personas
+    description: Persona bank operations
   - name: health
     description: API health check
 
@@ -694,6 +696,116 @@ paths:
         '429':
           $ref: '#/components/responses/RateLimitError'
 
+  /experiments/{experimentId}/personas:
+    get:
+      tags:
+        - personas
+      summary: List a persona bank
+      description: |
+        Retrieve all documents in one of the experiment's persona banks:
+        `personas` (agent persona bank) or `repPersonas` (representative
+        persona bank).
+      operationId: listPersonas
+      parameters:
+        - $ref: '#/components/parameters/ExperimentIdPath'
+        - $ref: '#/components/parameters/PersonaCollection'
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  collection:
+                    type: string
+                    enum: [personas, repPersonas]
+                  personas:
+                    type: array
+                    description: Array of persona bank documents
+                    items:
+                      $ref: '#/components/schemas/StoredPersona'
+                  total:
+                    type: integer
+                    description: Total number of personas
+                    example: 360
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '429':
+          $ref: '#/components/responses/RateLimitError'
+
+    post:
+      tags:
+        - personas
+      summary: Upload persona bank documents
+      description: |
+        Write documents to one of the experiment's persona banks. Agents claim
+        personas from these banks at spawn time; without a bank, agents fall
+        back to standard generation.
+
+        At most 2000 personas per request; upload larger banks in several
+        requests. Set `replace` to delete the existing bank first.
+        Only the experiment creator can upload.
+      operationId: uploadPersonas
+      parameters:
+        - $ref: '#/components/parameters/ExperimentIdPath'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - personas
+              properties:
+                collection:
+                  type: string
+                  enum: [personas, repPersonas]
+                  default: personas
+                  description: Which persona bank to write
+                replace:
+                  type: boolean
+                  default: false
+                  description: Delete the existing bank documents before writing
+                personas:
+                  type: array
+                  description: Persona bank documents to write
+                  items:
+                    $ref: '#/components/schemas/StoredPersona'
+      responses:
+        '201':
+          description: Personas written
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  collection:
+                    type: string
+                    enum: [personas, repPersonas]
+                  written:
+                    type: integer
+                    description: Number of persona documents written
+                    example: 360
+                  removed:
+                    type: integer
+                    description: Number of existing documents deleted (when replace is set)
+                    example: 0
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '429':
+          $ref: '#/components/responses/RateLimitError'
+
 components:
   securitySchemes:
     BearerAuth:
@@ -733,6 +845,16 @@ components:
       schema:
         type: string
       example: cohort123
+
+    PersonaCollection:
+      name: collection
+      in: query
+      required: false
+      description: Which persona bank to read (defaults to personas)
+      schema:
+        type: string
+        enum: [personas, repPersonas]
+        default: personas
 
   schemas:
     Metadata:
@@ -827,6 +949,43 @@ components:
       description: |
         Stage configuration. This is a discriminated union - the `kind` field determines the stage type and its required fields.
       $ref: 'schemas.json#/properties/stage'
+
+    StoredPersona:
+      type: object
+      description: |
+        One persona bank document. Fields beyond the bookkeeping ones are
+        stored as-is; the runtime reads the optional text fields `content`
+        (appended to the claiming agent's prompt) and `sketch` (a plain
+        persona for agents that need one of their own).
+      properties:
+        id:
+          type: string
+          description: Unique persona identifier (generated when omitted)
+        hash:
+          type: string
+          description: Match key for hash-keyed banks; empty for flat pools
+        variables:
+          type: object
+          description: Variables the persona was generated for (inspection only)
+        content:
+          type: string
+          description: Text appended to the claiming agent's prompt
+        sketch:
+          type: string
+          description: Plain persona text for agents that need one of their own
+        usageCount:
+          type: integer
+          description: Claim bookkeeping; defaults to 0
+        usedBy:
+          type: array
+          items:
+            type: string
+          description: Private IDs of participants who used this persona; defaults to empty
+        createdAt:
+          type: object
+          readOnly: true
+          description: Server timestamp set at upload when omitted
+      additionalProperties: true
 
     Cohort:
       type: object

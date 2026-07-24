@@ -14,6 +14,7 @@ import {
   MediatorProfileExtended,
 } from '@deliberation-lab/utils';
 import {
+  getAgentMediatorPrompt,
   getFirestoreActiveMediators,
   getFirestoreActiveParticipants,
   getFirestoreParticipant,
@@ -26,7 +27,7 @@ import {
   canSendAgentChatMessage,
 } from '../chat/chat.agent';
 import {sendErrorPrivateChatMessage} from '../chat/chat.utils';
-import {startTimeElapsed} from '../stages/chat.time';
+import {handleMaxMessagesReached, startTimeElapsed} from '../stages/chat.time';
 import {getStructuredPromptConfig} from '../structured_prompt.utils';
 import {app} from '../app';
 
@@ -58,14 +59,136 @@ export const onPublicChatMessageCreated = onDocumentCreated(
 
     // Take action for specific stages
     switch (stage.kind) {
-      case StageKind.CHAT:
+      case StageKind.CHAT: {
         // Start tracking elapsed time
         startTimeElapsed(
           event.params.experimentId,
           event.params.cohortId,
           publicStageData as ChatStagePublicData,
         );
+        // End the discussion globally when the group chat's message cap is
+        // reached. A per-mediator override (set on an active mediator's chat
+        // settings for this stage) replaces the stage-level maxNumberOfMessages;
+        // otherwise the stage value applies. Lets experimenters set a different
+        // cap for group chats running certain mediator personas.
+        const alreadyEnded = (publicStageData as ChatStagePublicData)
+          .discussionEndTimestamp;
+        if (!alreadyEnded) {
+          const stageMax = (stage as ChatStageConfig).maxNumberOfMessages;
+          const activeMediators = await getFirestoreActiveMediators(
+            event.params.experimentId,
+            event.params.cohortId,
+            stage.id,
+            true, // checkIsAgent
+          );
+          const mediatorOverrides: number[] = [];
+          const mediatorMinOverrides: number[] = [];
+          for (const mediator of activeMediators) {
+            const personaId = mediator.agentConfig?.agentId;
+            if (!personaId) continue;
+            const mediatorPrompt = await getAgentMediatorPrompt(
+              event.params.experimentId,
+              stage.id,
+              personaId,
+            );
+            const override = mediatorPrompt?.chatSettings?.maxNumberOfMessages;
+            if (override != null) mediatorOverrides.push(override);
+            const minOverride =
+              mediatorPrompt?.chatSettings?.minNumberOfMessages;
+            if (minOverride != null) mediatorMinOverrides.push(minOverride);
+          }
+          // A per-mediator override replaces the stage-level cap for this group
+          // chat. If multiple active mediators set one, the most restrictive
+          // (smallest) among them applies.
+          const effectiveMax =
+            mediatorOverrides.length > 0
+              ? Math.min(...mediatorOverrides)
+              : stageMax;
+
+          // A per-mediator override likewise replaces the stage-level
+          // minimum; the largest override wins. Published to publicStageData
+          // so the participant view's advance gate honors it, since the
+          // frontend cannot read mediator chat settings. Write only when it
+          // changes.
+          const stageMin = (stage as ChatStageConfig).minNumberOfMessages ?? 0;
+          let effectiveMin =
+            mediatorMinOverrides.length > 0
+              ? Math.max(...mediatorMinOverrides)
+              : stageMin;
+          // The max cap also caps the advancement requirement: participants can
+          // never be required to send more messages than the discussion
+          // allows, so the minimum is clamped down to the effective maximum.
+          if (effectiveMax != null && effectiveMin > effectiveMax) {
+            effectiveMin = effectiveMax;
+          }
+          // Only publish when an override moves a bound off the stage default.
+          // With no override the participant view already falls back to the
+          // stage value, so writing nothing leaves the effective bound equal to
+          // the stage bound.
+          const existingPublic = publicStageData as ChatStagePublicData;
+          const effectiveUpdates: {
+            effectiveMinNumberOfMessages?: number;
+            effectiveMaxNumberOfMessages?: number;
+          } = {};
+          if (
+            effectiveMin !== stageMin &&
+            existingPublic.effectiveMinNumberOfMessages !== effectiveMin
+          ) {
+            effectiveUpdates.effectiveMinNumberOfMessages = effectiveMin;
+          }
+          // Publish the effective max the same way, so the frontend's
+          // conversation-over / banner logic and the send-time cap guard use
+          // the cap the backend actually enforces (a per-mediator override
+          // replaces the stage value). The frontend otherwise compares against
+          // the stage value, hiding the banner before the final message and
+          // making the chat look like it ran past the limit.
+          if (
+            effectiveMax != null &&
+            effectiveMax !== stageMax &&
+            existingPublic.effectiveMaxNumberOfMessages !== effectiveMax
+          ) {
+            effectiveUpdates.effectiveMaxNumberOfMessages = effectiveMax;
+          }
+          if (Object.keys(effectiveUpdates).length > 0) {
+            await app
+              .firestore()
+              .collection('experiments')
+              .doc(event.params.experimentId)
+              .collection('cohorts')
+              .doc(event.params.cohortId)
+              .collection('publicStageData')
+              .doc(event.params.stageId)
+              .set(effectiveUpdates, {merge: true});
+          }
+          if (effectiveMax != null) {
+            const allChatMessages = await getFirestorePublicStageChatMessages(
+              event.params.experimentId,
+              event.params.cohortId,
+              event.params.stageId,
+            );
+            // `isReasoningOnly` is an optional field; when it is not set the
+            // access resolves to undefined (falsy), so a message is only
+            // excluded when the field is present and true. Keeps the backend
+            // cap aligned with the frontend, which excludes reasoning-only
+            // messages from chatMap entirely.
+            const cohortMessageCount = allChatMessages.filter(
+              (m) =>
+                m.type !== UserType.SYSTEM &&
+                !m.isError &&
+                !(m as {isReasoningOnly?: boolean}).isReasoningOnly,
+            ).length;
+            if (cohortMessageCount >= effectiveMax) {
+              await handleMaxMessagesReached(
+                event.params.experimentId,
+                event.params.cohortId,
+                event.params.stageId,
+              );
+              return;
+            }
+          }
+        }
         break;
+      }
       case StageKind.SALESPERSON:
         // TODO: Add API calls for salesperson back in
         return; // Don't call any of the usual chat functions
@@ -79,9 +202,12 @@ export const onPublicChatMessageCreated = onDocumentCreated(
       event.params.cohortId,
       stage.id,
       false, // Get all participants, not just agents
+      true, // Include observers
     );
 
-    const allParticipantIds = allParticipants.map((p) => p.privateId);
+    const allParticipantIds = allParticipants
+      .filter((p) => !p.isObserver)
+      .map((p) => p.privateId);
 
     const chatStage = stage as ChatStageConfig;
     const chatPublicData = publicStageData as ChatStagePublicData;
@@ -103,6 +229,7 @@ export const onPublicChatMessageCreated = onDocumentCreated(
         event.params.cohortId,
         stage.id,
         true, // get AI mediators
+        stage,
       );
       const allMediatorIds = mediators.map((m) => m.publicId);
 
@@ -138,8 +265,10 @@ export const onPublicChatMessageCreated = onDocumentCreated(
         let currentTurnParticipantId = chatPublicData.currentTurnParticipantId;
         let cycleIndex = chatPublicData.cycleIndex ?? 0;
 
-        // Get active IDs for validation and filtering. Filter out completed/booted/timed-out participants.
+        // Get active IDs for validation and filtering. Filter out completed/booted/timed-out participants and observers.
         const activeParticipants = allParticipants.filter((p) => {
+          if (p.isObserver) return false;
+          if (p.agentConfig?.isInactivePersona) return false;
           if (
             p.currentCohortId !== undefined &&
             p.currentCohortId !== event.params.cohortId
@@ -159,12 +288,21 @@ export const onPublicChatMessageCreated = onDocumentCreated(
           return !isExplicitlyInactive && !isExplicitlyCompleted;
         });
 
-        if (activeParticipants.length === 0) {
+        // Pause turn-taking once there are no active (non-observer)
+        // participants left, unless an observer is present to watch the
+        // agents. Without an observer, the chat pauses as before so the
+        // mediator does not monologue after every participant has left.
+        const hasObserver = allParticipants.some((p) => p.isObserver);
+        if (
+          activeParticipants.length === 0 &&
+          (allMediatorIds.length === 0 || !hasObserver)
+        ) {
           transaction.set(
             publicStageDataRef,
             {
               currentTurnParticipantId: null,
               turnOrder: [],
+              turnProcessedMessageId: message.id,
             },
             {merge: true},
           );
@@ -249,7 +387,7 @@ export const onPublicChatMessageCreated = onDocumentCreated(
               const hadMediators = turnOrder.some((id) =>
                 allMediatorIds.includes(id),
               );
-              if (hadMediators) {
+              if (hadMediators && chatStage.randomizeTurnOrderEachCycle) {
                 const seedString = `${event.params.cohortId}-${event.params.stageId}-${cycleIndex}`;
                 const shuffledParticipants = shuffleWithSeed(
                   allPublicParticipantIds,
@@ -321,6 +459,7 @@ export const onPublicChatMessageCreated = onDocumentCreated(
                 currentTurnParticipantId,
                 turnOrder,
                 cycleIndex,
+                turnProcessedMessageId: message.id,
               },
               {merge: true},
             );
@@ -331,6 +470,12 @@ export const onPublicChatMessageCreated = onDocumentCreated(
             );
             nextMediatorHolder = mediators.find(
               (m) => m.publicId === currentTurnParticipantId,
+            );
+          } else {
+            transaction.set(
+              publicStageDataRef,
+              {turnProcessedMessageId: message.id},
+              {merge: true},
             );
           }
           return;
@@ -383,7 +528,7 @@ export const onPublicChatMessageCreated = onDocumentCreated(
                   allMediatorIds.includes(id),
                 );
 
-                if (hadMediators) {
+                if (hadMediators && chatStage.randomizeTurnOrderEachCycle) {
                   const seedString = `${event.params.cohortId}-${event.params.stageId}-${cycleIndex}`;
                   const shuffledParticipants = shuffleWithSeed(
                     allPublicParticipantIds,
@@ -451,6 +596,7 @@ export const onPublicChatMessageCreated = onDocumentCreated(
                 currentTurnParticipantId,
                 turnOrder,
                 cycleIndex,
+                turnProcessedMessageId: message.id,
               },
               {merge: true},
             );
@@ -461,6 +607,12 @@ export const onPublicChatMessageCreated = onDocumentCreated(
             );
             nextMediatorHolder = mediators.find(
               (m) => m.publicId === currentTurnParticipantId,
+            );
+          } else {
+            transaction.set(
+              publicStageDataRef,
+              {turnProcessedMessageId: message.id},
+              {merge: true},
             );
           }
         }
@@ -514,9 +666,7 @@ export const onPublicChatMessageCreated = onDocumentCreated(
             await createAgentChatMessageFromPrompt(
               event.params.experimentId,
               event.params.cohortId,
-              mediator
-                ? allParticipants.map((p) => p.privateId)
-                : [agent.privateId],
+              mediator ? allParticipantIds : [agent.privateId],
               stage.id,
               '', // empty triggerChatId indicates initial message
               agent,
@@ -531,7 +681,7 @@ export const onPublicChatMessageCreated = onDocumentCreated(
           await createAgentChatMessageFromPrompt(
             event.params.experimentId,
             event.params.cohortId,
-            allParticipants.map((p) => p.privateId),
+            allParticipantIds,
             stage.id,
             finalTriggerChatId,
             nextMediatorHolder,
@@ -554,6 +704,7 @@ export const onPublicChatMessageCreated = onDocumentCreated(
         event.params.cohortId,
         stage.id,
         true,
+        stage,
       );
       await Promise.all(
         mediators.map((mediator) =>
@@ -572,7 +723,9 @@ export const onPublicChatMessageCreated = onDocumentCreated(
       // the experiment
       const agentParticipants = allParticipants.filter(
         (p) =>
-          p.agentConfig && p.currentStatus === ParticipantStatus.IN_PROGRESS,
+          p.agentConfig &&
+          !p.agentConfig.isInactivePersona &&
+          p.currentStatus === ParticipantStatus.IN_PROGRESS,
       );
       await Promise.all(
         agentParticipants.map((participant) =>
@@ -635,6 +788,7 @@ export const onPrivateChatMessageCreated = onDocumentCreated(
       participant.currentCohortId,
       stage.id,
       true,
+      stage,
     );
 
     await Promise.all(

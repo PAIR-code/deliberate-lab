@@ -1,4 +1,8 @@
-import {AgentMediatorTemplate, AgentParticipantTemplate} from './agent';
+import {
+  AgentMediatorTemplate,
+  AgentModelSettings,
+  AgentParticipantTemplate,
+} from './agent';
 import {
   MetadataConfig,
   PermissionsConfig,
@@ -80,6 +84,10 @@ export interface Experiment {
   variableConfigs?: VariableConfig[]; // list of variable configs used in experiment
   variableMap?: Record<string, string>; // variable to assigned value
   cohortDefinitions?: CohortDefinition[]; // pre-defined cohorts for individual routing
+  // Model settings applied to agents spawned at runtime (an observer's
+  // representative and the other spawned agents), when the experiment does not
+  // otherwise configure a model for them. Unset keeps the built-in default.
+  spawnedAgentModelSettings?: AgentModelSettings | null;
 }
 
 /** Experiment template (used to load experiments). */
@@ -137,6 +145,7 @@ export function createExperimentConfig(
     variableConfigs: config.variableConfigs ?? [],
     variableMap: config.variableMap ?? {},
     cohortDefinitions: config.cohortDefinitions,
+    spawnedAgentModelSettings: config.spawnedAgentModelSettings ?? null,
   };
 }
 

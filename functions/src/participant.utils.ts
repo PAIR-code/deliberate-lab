@@ -39,6 +39,17 @@ import {
   SurveyStagePublicData,
   TransferGroup,
   TransferStageConfig,
+  createParticipantProfileExtended,
+  getRepresentativeProfile,
+  createProgressTimestamps,
+  setProfile,
+  ProfileType,
+  ProfileStageConfig,
+  AgentPersonaConfig,
+  MediatorProfileExtended,
+  DEFAULT_AGENT_MODEL_SETTINGS,
+  RESERVED_TREATMENT_VARIABLE_KEYS,
+  MEDIATOR_OBSERVER_COLOR,
 } from '@deliberation-lab/utils';
 import {completeStageAsAgentParticipant} from './agent_participant.utils';
 import {
@@ -52,6 +63,13 @@ import {
 import {generateId, UnifiedTimestamp} from '@deliberation-lab/utils';
 import {createCohortInternal} from './cohort.utils';
 import {sendSystemChatMessage} from './chat/chat.utils';
+import {
+  getRoundTreatmentIndex,
+  treatmentAtIndexSkipsPrivateChats,
+  treatmentSkipsPrivateChats,
+} from './treatment.utils';
+import {createMediatorProfileForPersona} from './mediator.utils';
+import {computeRoundVariableMap, personaMatchHash} from './persona_bank.utils';
 
 import {app} from './app';
 
@@ -216,22 +234,62 @@ export async function updateParticipantNextStage(
     participant.currentStatus = ParticipantStatus.SUCCESS;
     response.endExperiment = true;
   } else {
-    // Else, progress to next stage
-    const nextStageId = stageIds[currentStageIndex + 1];
-    participant.currentStageId = nextStageId;
-    response.currentStageId = nextStageId;
+    // Else, progress to the next stage, skipping a private chat only when the
+    // treatment for that round sets `_skipPrivateChats`. In a within-subjects
+    // design, a round that skips its own private chat must not also skip
+    // another round's. The round is attributed via the following
+    // transfer's treatmentIndex; if a private chat can't be attributed to a
+    // round, fall back to the round-independent flag. Read directly from the
+    // treatment (not a hoisted field) because a private chat can precede the
+    // transfer stage where treatment is hoisted.
+    let nextStageIndex = currentStageIndex + 1;
+    while (nextStageIndex < stageIds.length) {
+      const candidateId = stageIds[nextStageIndex];
+      const candidate = await getFirestoreStage(experimentId, candidateId);
+      if (candidate?.kind === StageKind.PRIVATE_CHAT) {
+        const roundIndex = await getRoundTreatmentIndex(
+          experimentId,
+          stageIds,
+          nextStageIndex,
+        );
+        const skip =
+          roundIndex !== null
+            ? treatmentAtIndexSkipsPrivateChats(
+                participant.variableMap,
+                roundIndex,
+              )
+            : treatmentSkipsPrivateChats(participant.variableMap);
+        if (skip) {
+          // Bypass this private chat entirely: never mark it reached/current.
+          nextStageIndex++;
+          continue;
+        }
+      }
+      break;
+    }
 
-    // Mark next stage as reached
-    participant.timestamps.readyStages[nextStageId] = timestamp;
+    if (nextStageIndex >= stageIds.length) {
+      // Skipping ran past the last stage, so end the experiment.
+      participant.timestamps.endExperiment = timestamp;
+      participant.currentStatus = ParticipantStatus.SUCCESS;
+      response.endExperiment = true;
+    } else {
+      const nextStageId = stageIds[nextStageIndex];
+      participant.currentStageId = nextStageId;
+      response.currentStageId = nextStageId;
 
-    // If all active participants have reached the next stage,
-    // unlock that stage in CohortConfig
-    await updateCohortStageUnlocked(
-      experimentId,
-      participant.currentCohortId,
-      participant.currentStageId,
-      participant.privateId,
-    );
+      // Mark next stage as reached
+      participant.timestamps.readyStages[nextStageId] = timestamp;
+
+      // If all active participants have reached the next stage,
+      // unlock that stage in CohortConfig
+      await updateCohortStageUnlocked(
+        experimentId,
+        participant.currentCohortId,
+        participant.currentStageId,
+        participant.privateId,
+      );
+    }
   }
 
   return response;
@@ -246,8 +304,9 @@ export async function updateCohortStageUnlocked(
   cohortId: string,
   stageId: string,
   currentParticipantId: string,
+  existingTransaction?: FirebaseFirestore.Transaction,
 ) {
-  await app.firestore().runTransaction(async (transaction) => {
+  const runLogic = async (transaction: FirebaseFirestore.Transaction) => {
     // Get active participants for given cohort
     const activeParticipants = await getFirestoreActiveParticipants(
       experimentId,
@@ -266,8 +325,13 @@ export async function updateCohortStageUnlocked(
         .get()
     ).docs.map((doc) => doc.data() as ParticipantProfileExtended);
 
-    // Consider both participants actively in cohort and pending transfer
-    const participants = [...activeParticipants, ...transferParticipants];
+    // Consider both participants actively in cohort and pending transfer.
+    // Inactive personas are excluded: they never chat or take a turn,
+    // so they must not count toward (or block) the stage unlock gate.
+    const participants = [
+      ...activeParticipants,
+      ...transferParticipants,
+    ].filter((p) => !p.agentConfig?.isInactivePersona);
 
     // Get current stage config
     const stage = (
@@ -347,7 +411,13 @@ export async function updateCohortStageUnlocked(
         completeStageAsAgentParticipant(experiment, participant);
       } // end agent participant if
     } // end participant loop
-  });
+  };
+
+  if (existingTransaction) {
+    await runLogic(existingTransaction);
+  } else {
+    await app.firestore().runTransaction(runLogic);
+  }
 }
 
 /** Automatically transfer participants based on config type. */
@@ -966,28 +1036,27 @@ async function handleConditionAutoTransfer(
         ? definition.maxParticipantsPerCohort
         : experiment.defaultCohortConfig.maxParticipantsPerCohort;
 
-    if (maxParticipants !== null) {
-      const participants = await getFirestoreCohortParticipants(
-        experimentId,
-        targetCohortId,
+    const participants = await getFirestoreCohortParticipants(
+      experimentId,
+      targetCohortId,
+    );
+    if (
+      (maxParticipants !== null &&
+        participants.length + cohortParticipants.length > maxParticipants) ||
+      (participants.some((p) => !p.agentConfig && p.isObserver) &&
+        cohortParticipants.some((p) => !p.agentConfig && !p.isObserver))
+    ) {
+      console.log(
+        `[CONDITION] Cohort ${targetCohortId} full/observer conflict, finding overflow`,
       );
-      const currentCount = participants.length;
-
-      if (currentCount + cohortParticipants.length > maxParticipants) {
-        console.log(
-          `[CONDITION] Cohort ${targetCohortId} at capacity (${currentCount}/${maxParticipants}), finding overflow`,
-        );
-
-        // Find or create overflow cohort with same alias
-        targetCohortId = await findOrCreateOverflowCohort(
-          transaction,
-          experimentId,
-          readyGroup.targetCohortAlias,
-          maxParticipants,
-          cohortParticipants.length,
-          autoTransferConfig.autoCohortParticipantConfig,
-        );
-      }
+      targetCohortId = await findOrCreateOverflowCohort(
+        transaction,
+        experimentId,
+        readyGroup.targetCohortAlias,
+        maxParticipants || 1,
+        cohortParticipants.length,
+        autoTransferConfig.autoCohortParticipantConfig,
+      );
     }
 
     console.log(
@@ -1125,6 +1194,239 @@ export async function executeDirectTransfers(
 }
 
 /**
+ * Reserved (underscore-prefixed) treatment keys mapped to the participant field
+ * each is hoisted onto and the type its raw value is coerced to. These are a
+ * subset of RESERVED_TREATMENT_VARIABLE_KEYS in @deliberation-lab/utils (the
+ * variable editor warns on that full set); keys read directly rather than
+ * hoisted, e.g. _skipPrivateChats, intentionally do not appear here.
+ */
+const TREATMENT_HOIST_FIELDS: Record<
+  string,
+  {field: string; type: 'boolean' | 'number' | 'string'}
+> = {
+  _isObserver: {field: 'isObserver', type: 'boolean'},
+  _hasRepresentative: {field: 'hasRepresentative', type: 'boolean'},
+  _numOtherAgents: {field: 'numOtherAgents', type: 'number'},
+  _numInactivePersonas: {
+    field: 'numInactivePersonas',
+    type: 'number',
+  },
+  _swapMediator: {field: 'swapMediator', type: 'string'},
+};
+
+/**
+ * Coerce a raw treatment value to its declared type. The type is driven by the
+ * key's entry in TREATMENT_HOIST_FIELDS rather than by whatever value is already
+ * on the target, so a missing field on the target can't silently turn a boolean
+ * into a (truthy) string.
+ */
+function coerceTreatmentValue(
+  value: unknown,
+  type: 'boolean' | 'number' | 'string',
+): boolean | number | string {
+  switch (type) {
+    case 'boolean':
+      return String(value) === 'true' || value === true;
+    case 'number':
+      return Number(value);
+    default:
+      return String(value);
+  }
+}
+
+/** Apply one coerced reserved-key value onto the participant target. */
+function applyTreatmentField(
+  target: Record<string, unknown>,
+  field: string,
+  type: 'boolean' | 'number' | 'string',
+  raw: unknown,
+): void {
+  const value = coerceTreatmentValue(raw, type);
+  if (field === 'numOtherAgents' || field === 'numInactivePersonas') {
+    if (!target['otherAgentGeneration']) {
+      target['otherAgentGeneration'] = {numOtherAgents: 0};
+    }
+    const gen = target['otherAgentGeneration'] as {
+      numOtherAgents: number;
+      numInactivePersonas?: number;
+    };
+    (gen as Record<string, number>)[field] = value as number;
+  } else {
+    target[field] = value;
+  }
+}
+
+/**
+ * Collect every hoist-managed reserved key that appears anywhere in a value
+ * (across all rounds of a treatment variable). Used to decide which target
+ * fields to reset before re-hoisting.
+ */
+function collectHoistFieldKeys(value: unknown, into: Set<string>): void {
+  if (Array.isArray(value)) {
+    for (const item of value) collectHoistFieldKeys(item, into);
+    return;
+  }
+  if (!value || typeof value !== 'object') return;
+  for (const [key, nested] of Object.entries(
+    value as Record<string, unknown>,
+  )) {
+    if (key in TREATMENT_HOIST_FIELDS) into.add(key);
+    collectHoistFieldKeys(nested, into);
+  }
+}
+
+/**
+ * Recursively hoist reserved treatment keys found anywhere in a treatment value
+ * (top level or any level of nesting) onto the participant target.
+ */
+function hoistTreatmentObject(
+  target: Record<string, unknown>,
+  value: unknown,
+): void {
+  if (Array.isArray(value)) {
+    for (const item of value) hoistTreatmentObject(target, item);
+    return;
+  }
+  if (!value || typeof value !== 'object') return;
+  for (const [key, raw] of Object.entries(value as Record<string, unknown>)) {
+    const spec = TREATMENT_HOIST_FIELDS[key];
+    if (spec) {
+      applyTreatmentField(target, spec.field, spec.type, raw);
+    } else if (raw && typeof raw === 'object') {
+      hoistTreatmentObject(target, raw);
+    }
+  }
+}
+
+/**
+ * Apply (hoist) a treatment bundle's fields onto a participant-like target,
+ * selecting the treatment for round `index` (0-based). Supports both multi-value
+ * variable formats produced by RandomPermutation/BalancedAssignment:
+ *
+ *  - Array form (expandListToSeparateVariables = false): a single variable holds
+ *    an array [t0, t1, ...]; element [index] is selected.
+ *  - Expanded form (expandListToSeparateVariables = true): separate variables
+ *    name_1, name_2, ...; the one whose 1-based suffix equals index + 1 is
+ *    selected (others skipped).
+ *  - A plain (non-indexed) object value is always applied.
+ *
+ * At creation the experiment hoists round 0; re-running with a different index
+ * at a transfer stage lets a participant rotate through multiple treatments
+ * across repeated deliberations. An out-of-range index is a safe no-op.
+ */
+export function applyHoistedTreatment(
+  target: Record<string, unknown>,
+  variableMap: Record<string, string>,
+  index: number,
+): void {
+  // Reset every hoist field the treatment scheme uses to its "off" default
+  // before applying the selected round. Otherwise, when a participant is
+  // re-hoisted at a transfer (within-subjects rotation), a round whose
+  // treatment omits a key would silently inherit the previous round's value
+  // (e.g. stay an observer / keep swapping the mediator). Only keys the scheme
+  // actually defines are reset, so experiments that set these fields outside
+  // of treatment hoisting are left untouched.
+  const managedKeys = new Set<string>();
+  for (const value of Object.values(variableMap)) {
+    try {
+      collectHoistFieldKeys(JSON.parse(value), managedKeys);
+    } catch {
+      continue; // Not JSON, skip
+    }
+  }
+  for (const key of managedKeys) {
+    const spec = TREATMENT_HOIST_FIELDS[key];
+    const def =
+      spec.type === 'boolean' ? false : spec.type === 'number' ? 0 : '';
+    applyTreatmentField(target, spec.field, spec.type, def);
+  }
+
+  for (const [name, value] of Object.entries(variableMap)) {
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(value);
+    } catch {
+      continue; // Not JSON, skip
+    }
+
+    let treatment: unknown;
+    if (Array.isArray(parsed)) {
+      treatment = parsed[index]; // array form
+    } else if (parsed && typeof parsed === 'object') {
+      const suffix = name.match(/_(\d+)$/); // expanded form: name_1, name_2, ...
+      if (suffix && Number(suffix[1]) !== index + 1) continue;
+      treatment = parsed;
+    } else {
+      continue;
+    }
+
+    if (treatment && typeof treatment === 'object') {
+      hoistTreatmentObject(target, treatment as Record<string, unknown>);
+    }
+  }
+}
+
+/** True if a parsed variable value contains a reserved treatment key anywhere. */
+function valueContainsReservedTreatmentKey(value: unknown): boolean {
+  const reserved: readonly string[] = RESERVED_TREATMENT_VARIABLE_KEYS;
+  if (Array.isArray(value)) {
+    return value.some(valueContainsReservedTreatmentKey);
+  }
+  if (value && typeof value === 'object') {
+    for (const [key, nested] of Object.entries(
+      value as Record<string, unknown>,
+    )) {
+      if (reserved.includes(key)) return true;
+      if (valueContainsReservedTreatmentKey(nested)) return true;
+    }
+  }
+  return false;
+}
+
+/** Remove reserved treatment keys from a parsed variable value, recursively. */
+function stripReservedTreatmentKeys(value: unknown): unknown {
+  const reserved: readonly string[] = RESERVED_TREATMENT_VARIABLE_KEYS;
+  if (Array.isArray(value)) {
+    return value.map(stripReservedTreatmentKeys);
+  }
+  if (value && typeof value === 'object') {
+    const result: Record<string, unknown> = {};
+    for (const [key, nested] of Object.entries(
+      value as Record<string, unknown>,
+    )) {
+      if (reserved.includes(key)) continue;
+      result[key] = stripReservedTreatmentKeys(nested);
+    }
+    return result;
+  }
+  return value;
+}
+
+/**
+ * Variables a spawned agent inherits from the participant it is spawned
+ * alongside. Reserved treatment keys are removed from the copied values so
+ * none of their effects apply to the agent; display names still resolve.
+ */
+function inheritSpawnedAgentVariables(
+  variableMap: Record<string, string> | undefined,
+): Record<string, string> {
+  const result: Record<string, string> = {};
+  for (const [name, value] of Object.entries(variableMap ?? {})) {
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(value);
+    } catch {
+      result[name] = value; // non-JSON can't hold reserved keys; keep as-is
+      continue;
+    }
+    result[name] = valueContainsReservedTreatmentKey(parsed)
+      ? JSON.stringify(stripReservedTreatmentKeys(parsed))
+      : value;
+  }
+  return result;
+}
+
+/**
  * Complete a participant's transfer to a new cohort.
  * This is the shared logic used by both:
  * - acceptParticipantTransfer endpoint (user-initiated via popup)
@@ -1181,6 +1483,414 @@ export async function completeParticipantTransfer(
     participant,
     targetCohortId,
   );
+
+  // Re-apply this round's treatment bundle (observer role, spawned-agent count,
+  // mediator name, etc.) when the transfer stage names a treatment index. This
+  // lets a participant rotate through multiple treatments across repeated
+  // deliberations; the spawn + mediator-swap logic below then operates on the
+  // round's values. No-op (existing behavior) when treatmentIndex is unset.
+  if (
+    currentStage?.kind === StageKind.TRANSFER &&
+    typeof (currentStage as TransferStageConfig).treatmentIndex === 'number' &&
+    participant.variableMap
+  ) {
+    applyHoistedTreatment(
+      participant as unknown as Record<string, unknown>,
+      participant.variableMap,
+      (currentStage as TransferStageConfig).treatmentIndex as number,
+    );
+  }
+
+  // Persona bank match key for this round, applied below to the spawned
+  // other-agents and inactive personas (not the representative, which
+  // draws on its principal's own persona content). Undefined when the transfer names
+  // no treatment index (those agents then fall back to standard generation).
+  let personaHash: string | undefined;
+  if (
+    currentStage?.kind === StageKind.TRANSFER &&
+    typeof (currentStage as TransferStageConfig).treatmentIndex === 'number' &&
+    participant.variableMap
+  ) {
+    const roundVariables = computeRoundVariableMap(
+      participant.variableMap,
+      (currentStage as TransferStageConfig).treatmentIndex as number,
+    );
+    personaHash = personaMatchHash(roundVariables);
+  }
+
+  const otherAgentGeneration = participant.otherAgentGeneration;
+  const numOtherAgents = otherAgentGeneration?.numOtherAgents ?? 0;
+  const numInactivePersonas = otherAgentGeneration?.numInactivePersonas ?? 0;
+
+  const hasSpawningRequirement =
+    (participant.isObserver && participant.hasRepresentative) ||
+    numOtherAgents > 0 ||
+    numInactivePersonas > 0;
+
+  if (hasSpawningRequirement) {
+    const experiment = await getFirestoreExperiment(experimentId);
+    if (!experiment) return response;
+
+    const stages = (
+      await app
+        .firestore()
+        .collection(`experiments/${experimentId}/stages`)
+        .get()
+    ).docs.map((doc) => doc.data());
+
+    const profileStage = stages.find(
+      (stage) => (stage as StageConfig).kind === StageKind.PROFILE,
+    ) as ProfileStageConfig | undefined;
+    const profileType =
+      profileStage?.profileType || ProfileType.ANONYMOUS_ANIMAL;
+    // Spawned agents avoid the human's color, and the reserved mediator color
+    // in observer-capable experiments (key presence mirrors the frontend check).
+    const spawnedProfileExcludeColors = [
+      (participant.publicId ?? '').split('-')[1] ?? '',
+      ...(Object.values(participant.variableMap ?? {}).some((value) =>
+        value.includes('_isObserver'),
+      )
+        ? [MEDIATOR_OBSERVER_COLOR]
+        : []),
+    ].filter((c) => c);
+
+    const isAnonymousCohort = !!profileStage;
+
+    const now = Timestamp.now();
+
+    // Fetch total experiment-wide participants count for setProfile indexing
+    const numParticipants = (
+      await app
+        .firestore()
+        .collection(`experiments/${experimentId}/participants`)
+        .count()
+        .get()
+    ).data().count;
+
+    // When an observer is present in the target cohort, all AI participants
+    // get a "'s Agent" suffix, like the observer's own representative below;
+    // the frontend marks that one "(yours)" for its observer only. Count an
+    // observer being transferred in now,
+    // plus any non-agent observer already in the cohort.
+    const cohortHasObserver =
+      participant.isObserver ||
+      (
+        await app
+          .firestore()
+          .collection(`experiments/${experimentId}/participants`)
+          .where('currentCohortId', '==', targetCohortId)
+          .get()
+      ).docs.some((doc) => {
+        const p = doc.data() as ParticipantProfileExtended;
+        return (
+          !p.agentConfig &&
+          p.isObserver &&
+          p.currentStatus !== ParticipantStatus.DELETED
+        );
+      });
+
+    const nextStageId = response.currentStageId || participant.currentStageId;
+
+    const getParticipantRef = (id: string) =>
+      app.firestore().doc(`experiments/${experimentId}/participants/${id}`);
+
+    // Spawn the observer's representative agent (strictly for observer cohorts)
+    if (participant.isObserver && participant.hasRepresentative) {
+      const repAgentId = generateId();
+      const repAgentTimestamps = createProgressTimestamps();
+      repAgentTimestamps.startExperiment = now;
+      repAgentTimestamps.acceptedTOS = now;
+      repAgentTimestamps.readyStages[stageIds[0]] = now;
+      repAgentTimestamps.readyStages[nextStageId] = now; // Mark nextStageId as ready so it doesn't block the stage unlock
+
+      const observerName = String(participant.name || participant.publicId);
+      const repProfile = getRepresentativeProfile(
+        observerName,
+        participant.avatar ?? '🤖',
+      );
+      const repAgentProfile = createParticipantProfileExtended({
+        currentCohortId: targetCohortId,
+        name: repProfile.name,
+        avatar: repProfile.avatar,
+        agentConfig: {
+          agentId: repAgentId,
+          promptContext: `You are ${observerName}'s representative in this discussion. Speak and advocate on ${observerName}'s behalf, representing their perspective from their earlier responses rather than expressing your own independent opinions. Ensure you properly separate every paragraph with one empty line in between.`,
+          modelSettings:
+            experiment.spawnedAgentModelSettings ??
+            DEFAULT_AGENT_MODEL_SETTINGS,
+          // Claim a persona from the representative bank at creation (the
+          // trigger is a no-op when the experiment stores no bank).
+          repPersonaBank: true,
+        },
+        timestamps: repAgentTimestamps,
+        publicId: `${participant.publicId}-agent`,
+        privateId: repAgentId,
+        currentStageId: nextStageId,
+        connected: true,
+        currentStatus: ParticipantStatus.IN_PROGRESS,
+        isObserver: false,
+      });
+
+      // The representative deliberates on the observer's behalf, so it shares
+      // the observer's content variables (e.g. topic) but not the treatment.
+      repAgentProfile.variableMap = inheritSpawnedAgentVariables(
+        participant.variableMap,
+      );
+      transaction.set(getParticipantRef(repAgentId), repAgentProfile);
+    }
+
+    // Spawn the other virtual AI agents directly inside targetCohortId
+    const agentParticipantsQuery = await app
+      .firestore()
+      .collection('experiments')
+      .doc(experimentId)
+      .collection('agentParticipants')
+      .get();
+
+    const personas = agentParticipantsQuery.docs.map(
+      (doc) => doc.data() as AgentPersonaConfig,
+    );
+
+    for (let i = 0; i < numOtherAgents; i++) {
+      const agentId = generateId();
+      const agentTimestamps = createProgressTimestamps();
+      agentTimestamps.startExperiment = now;
+      agentTimestamps.acceptedTOS = now;
+      agentTimestamps.readyStages[stageIds[0]] = now;
+      agentTimestamps.readyStages[nextStageId] = now;
+
+      const persona = personas[i % personas.length];
+
+      const agentProfile = createParticipantProfileExtended({
+        currentCohortId: targetCohortId,
+        agentConfig: {
+          agentId: persona?.id ?? '',
+          // Spawned agents always get a generated persona; start from an empty
+          // context so the generated text (appended by onParticipantCreation)
+          // becomes the agent's persona.
+          promptContext: '',
+          modelSettings:
+            persona?.defaultModelSettings ??
+            experiment.spawnedAgentModelSettings ??
+            DEFAULT_AGENT_MODEL_SETTINGS,
+          needsPersonaGeneration: true,
+          personaSlotKey: `other-${i}`,
+        },
+        timestamps: agentTimestamps,
+        privateId: agentId,
+        currentStageId: nextStageId,
+        connected: false,
+        currentStatus: ParticipantStatus.IN_PROGRESS,
+        isObserver: false,
+      });
+
+      // Draw standard anonymous profile using a unique index offset and the
+      // cohort anonymity setting.
+      setProfile(
+        numParticipants + i + 10,
+        agentProfile,
+        isAnonymousCohort,
+        profileType,
+        spawnedProfileExcludeColors,
+      );
+
+      // When an observer is present, suffix every AI participant with
+      // "'s Agent" so the observer can distinguish them from humans (their
+      // own representative is marked "(yours)" at display time). Without
+      // an observer, agents keep their drawn profile name.
+      if (cohortHasObserver) {
+        const drawnName = agentProfile.name;
+        agentProfile.name = drawnName
+          ? `${drawnName}'s Agent`
+          : `Agent ${agentProfile.publicId.substring(0, 8)}`;
+        for (const profileSetId of Object.keys(
+          agentProfile.anonymousProfiles,
+        )) {
+          if (agentProfile.anonymousProfiles[profileSetId].name) {
+            agentProfile.anonymousProfiles[profileSetId].name += "'s Agent";
+          }
+        }
+        // A "'s Agent" participant is a representative: it advocates for the
+        // person it stands in for rather than voicing its own independent
+        // opinions, like the observer's representative.
+        if (agentProfile.agentConfig) {
+          const representedName = drawnName || agentProfile.name;
+          // onParticipantCreation appends the stored bank persona to this
+          // framing.
+          agentProfile.agentConfig.promptContext = `You are ${representedName}'s representative in this discussion. You are a separate agent, not ${representedName} yourself. Speak and advocate on ${representedName}'s behalf, representing their perspective from their materials below, rather than expressing your own independent opinions or adopting their persona as your own identity. The materials below may use a different name for ${representedName}; that is the same person, and you should call them ${representedName} here. Ensure you properly separate every paragraph with one empty line in between.\n\n${representedName}'s materials:`;
+          // Bank persona, not a slot-based one.
+          delete agentProfile.agentConfig.personaSlotKey;
+          if (personaHash) {
+            agentProfile.agentConfig.personaHash = personaHash;
+          }
+        }
+      } else if (!agentProfile.name) {
+        agentProfile.name = `Agent ${agentProfile.publicId.substring(0, 8)}`;
+      }
+
+      // Direct-participation (no-observer) agents draw a PLAIN persona (a
+      // character sketch) from the bank instead of generating one live at
+      // spawn, so group-chat setup is fast. The round's persona-bank match key
+      // is set too, so when the bank has personas for this round's variables
+      // (persona plus a position on the round's topic), those are claimed
+      // first; the plain sketch keyed to the HUMAN (so a participant never
+      // gets the same persona twice across their rounds) is the fallback, and
+      // live generation the last resort.
+      if (!cohortHasObserver && agentProfile.agentConfig) {
+        if (personaHash) {
+          agentProfile.agentConfig.personaHash = personaHash;
+        }
+        agentProfile.agentConfig.personaSketchForHumanId =
+          participant.privateId;
+        delete agentProfile.agentConfig.personaSlotKey;
+      }
+
+      // Share the transferring participant's content variables (e.g. the
+      // deliberation topic) so the round is coherent, minus the treatment.
+      agentProfile.variableMap = inheritSpawnedAgentVariables(
+        participant.variableMap,
+      );
+      transaction.set(getParticipantRef(agentId), agentProfile);
+    }
+
+    // Spawn inactive personas. These generate a persona just like
+    // the agents above, but are flagged so they never chat, never take a turn,
+    // and are not counted for stage unlock. They exist solely so a mediator can
+    // reason over real generated personas via OTHER_PROFILE_CONTEXTS.
+    for (let i = 0; i < numInactivePersonas; i++) {
+      const agentId = generateId();
+      const agentTimestamps = createProgressTimestamps();
+      agentTimestamps.startExperiment = now;
+      agentTimestamps.acceptedTOS = now;
+      agentTimestamps.readyStages[stageIds[0]] = now;
+      agentTimestamps.readyStages[nextStageId] = now;
+
+      const persona = personas[i % personas.length];
+
+      const agentProfile = createParticipantProfileExtended({
+        currentCohortId: targetCohortId,
+        agentConfig: {
+          agentId: persona?.id ?? '',
+          promptContext: '',
+          modelSettings:
+            persona?.defaultModelSettings ??
+            experiment.spawnedAgentModelSettings ??
+            DEFAULT_AGENT_MODEL_SETTINGS,
+          needsPersonaGeneration: true,
+          isInactivePersona: true,
+        },
+        timestamps: agentTimestamps,
+        privateId: agentId,
+        currentStageId: nextStageId,
+        connected: false,
+        currentStatus: ParticipantStatus.IN_PROGRESS,
+        isObserver: false,
+      });
+
+      setProfile(
+        numParticipants + numOtherAgents + i + 10,
+        agentProfile,
+        isAnonymousCohort,
+        profileType,
+        spawnedProfileExcludeColors,
+      );
+
+      if (!agentProfile.name) {
+        agentProfile.name = `Agent ${agentProfile.publicId.substring(0, 8)}`;
+      }
+
+      // Inactive personas draw a persona from the bank.
+      if (personaHash && agentProfile.agentConfig) {
+        agentProfile.agentConfig.personaHash = personaHash;
+      }
+
+      agentProfile.variableMap = inheritSpawnedAgentVariables(
+        participant.variableMap,
+      );
+      transaction.set(getParticipantRef(agentId), agentProfile);
+    }
+  }
+
+  // Dynamically swap the mediator in the cohort if specified
+  if (participant.swapMediator && participant.swapMediator.trim() !== '') {
+    const targetMediatorIdentifier = participant.swapMediator;
+
+    const agentMediators = await app
+      .firestore()
+      .collection('experiments')
+      .doc(experimentId)
+      .collection('agentMediators')
+      .get();
+
+    const matchingDoc = agentMediators.docs.find((doc) => {
+      const persona = doc.data() as AgentPersonaConfig;
+      return (
+        persona.id === targetMediatorIdentifier ||
+        persona.name === targetMediatorIdentifier ||
+        persona.defaultProfile?.name === targetMediatorIdentifier
+      );
+    });
+
+    if (matchingDoc) {
+      const matchingPersona = matchingDoc.data() as AgentPersonaConfig;
+      const existingMediatorsQuery = await app
+        .firestore()
+        .collection('experiments')
+        .doc(experimentId)
+        .collection('mediators')
+        .where('currentCohortId', '==', targetCohortId)
+        .get();
+
+      // Build the swapped mediator so we know which stages it covers (its
+      // configured prompt stages).
+      const newMediator = await createMediatorProfileForPersona(
+        experimentId,
+        targetCohortId,
+        matchingPersona,
+      );
+      newMediator.privateId = `mediator-${targetCohortId}-${matchingPersona.id}`;
+      newMediator.publicId = matchingPersona.id.substring(0, 8);
+      const swappedStageIds = Object.entries(newMediator.activeStageMap ?? {})
+        .filter(([, active]) => active)
+        .map(([stageId]) => stageId);
+
+      // The swap should only take over the group chat(s) the swapped persona
+      // covers; private-chat stages must keep using the default
+      // mediator. So rather than deleting the cohort's existing mediators,
+      // deactivate them only for the stages the swapped mediator covers and
+      // leave them active elsewhere (e.g. private chats).
+      let swappedAlreadyPresent = false;
+      for (const doc of existingMediatorsQuery.docs) {
+        const existing = doc.data() as MediatorProfileExtended;
+        if (existing.agentConfig?.agentId === matchingPersona.id) {
+          swappedAlreadyPresent = true;
+          continue; // already installed; leave it as-is
+        }
+        const activeStageMap = {...(existing.activeStageMap ?? {})};
+        let changed = false;
+        for (const stageId of swappedStageIds) {
+          if (activeStageMap[stageId]) {
+            activeStageMap[stageId] = false;
+            changed = true;
+          }
+        }
+        if (changed) {
+          transaction.set(doc.ref, {...existing, activeStageMap});
+        }
+      }
+
+      if (!swappedAlreadyPresent) {
+        const newMediatorDoc = app
+          .firestore()
+          .collection('experiments')
+          .doc(experimentId)
+          .collection('mediators')
+          .doc(newMediator.privateId);
+
+        transaction.set(newMediatorDoc, newMediator);
+      }
+    }
+  }
 
   // 7. Save participant
   transaction.set(participantDoc, participant);

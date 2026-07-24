@@ -1,6 +1,7 @@
 import {
   AgentPersonaConfig,
   ChatMessage,
+  ChatStageConfig,
   CohortConfig,
   Experiment,
   ExperimenterData,
@@ -10,11 +11,16 @@ import {
   ParticipantPromptConfig,
   ParticipantProfileExtended,
   ParticipantStatus,
+  PrivateChatStageConfig,
   StageConfig,
+  StageKind,
   StageParticipantAnswer,
   StagePublicData,
   getParticipantDisplayName,
 } from '@deliberation-lab/utils';
+import {Timestamp} from 'firebase-admin/firestore';
+
+import {StoredPersona, selectPersonaToClaim} from '../persona_bank.utils';
 
 import {app} from '../app';
 
@@ -103,13 +109,137 @@ export async function getFirestoreCohortParticipants(
   ).docs.map((doc) => doc.data() as ParticipantProfileExtended);
 }
 
+/** Return ref for a stored persona doc. */
+export function getStoredPersonaRef(experimentId: string, slotKey: string) {
+  return app
+    .firestore()
+    .collection('experiments')
+    .doc(experimentId)
+    .collection('personas')
+    .doc(slotKey);
+}
+
+/** Fetch a stored persona's text from Firestore, or null if it does not exist. */
+export async function getStoredPersona(
+  experimentId: string,
+  slotKey: string,
+): Promise<string | null> {
+  const ref = getStoredPersonaRef(experimentId, slotKey);
+  const doc = await ref.get();
+  if (!doc.exists) return null;
+
+  return (doc.data()?.text as string) ?? null;
+}
+
+/** Save a generated persona's text to Firestore for reuse across cohorts. */
+export async function saveStoredPersona(
+  experimentId: string,
+  slotKey: string,
+  text: string,
+): Promise<void> {
+  const ref = getStoredPersonaRef(experimentId, slotKey);
+  await ref.set({id: slotKey, text, createdAt: Timestamp.now()});
+}
+
+/**
+ * Claim a pre-generated persona from the bank for the given match hash. Returns
+ * the persona's content text, or null if the bank has no persona
+ * for the hash that this participant has not already used. Selection prefers the
+ * fewest-used persona and never returns one already used by this participant, so
+ * a participant sees a distinct persona per slot across their whole run and
+ * reuse is spread evenly across participants. The claim is transactional, so
+ * concurrent cohort spawns deterministically land on distinct personas.
+ */
+export async function claimStoredPersonaByHash(
+  experimentId: string,
+  hash: string | null, // null: claim from the whole collection (flat pool)
+  participantPrivateId: string,
+  collectionName = 'personas',
+): Promise<string | null> {
+  const personasRef = app
+    .firestore()
+    .collection('experiments')
+    .doc(experimentId)
+    .collection(collectionName);
+  const query =
+    hash === null ? personasRef : personasRef.where('hash', '==', hash);
+
+  return app.firestore().runTransaction(async (transaction) => {
+    const snapshot = await transaction.get(query);
+    const personas = snapshot.docs.map((doc) => doc.data() as StoredPersona);
+    const chosen = selectPersonaToClaim(personas, participantPrivateId);
+    if (!chosen) return null;
+
+    transaction.update(personasRef.doc(chosen.id), {
+      usageCount: (chosen.usageCount ?? 0) + 1,
+      usedBy: [...(chosen.usedBy ?? []), participantPrivateId],
+    });
+    return chosen.content ?? null;
+  });
+}
+
+/**
+ * Claim a plain persona SKETCH for an agent that participates directly.
+ * Sketches are topic and treatment agnostic, so any unused bank persona
+ * works: query the whole
+ * experiment bank (not a single hash bucket) and pick the fewest-used persona
+ * not already claimed by this participant. Keyed by the HUMAN's private ID so a
+ * participant never gets the same persona twice across rounds. Returns the
+ * sketch text, or null if no persona with an unclaimed sketch remains.
+ */
+export async function claimStoredPersonaSketch(
+  experimentId: string,
+  participantPrivateId: string,
+): Promise<string | null> {
+  const personasRef = app
+    .firestore()
+    .collection('experiments')
+    .doc(experimentId)
+    .collection('personas');
+  return app.firestore().runTransaction(async (transaction) => {
+    const snapshot = await transaction.get(personasRef);
+    const personas = snapshot.docs
+      .map((doc) => doc.data() as StoredPersona)
+      .filter((p) => p.sketch);
+    const chosen = selectPersonaToClaim(personas, participantPrivateId);
+    if (!chosen) return null;
+    transaction.update(personasRef.doc(chosen.id), {
+      usageCount: (chosen.usageCount ?? 0) + 1,
+      usedBy: [...(chosen.usedBy ?? []), participantPrivateId],
+    });
+    return chosen.sketch ?? null;
+  });
+}
+
+/** True for the turn-based chat variants (group chat with isTurnBased, or a
+ * group-style turn-based private chat). */
+function isTurnBasedStage(stage: StageConfig | null | undefined): boolean {
+  if (!stage) return false;
+  if (stage.kind === StageKind.CHAT) {
+    return (stage as ChatStageConfig).isTurnBased === true;
+  }
+  if (stage.kind === StageKind.PRIVATE_CHAT) {
+    return (stage as PrivateChatStageConfig).isTurnBasedChatGroupStyle === true;
+  }
+  return false;
+}
+
 /** Fetch active mediators for current cohort/stage. */
 export async function getFirestoreActiveMediators(
   experimentId: string,
   cohortId: string,
   stageId: string | null = null, // if null, can be in any stage
   checkIsAgent = false, // whether to check if participant is agent
+  stage: StageConfig | null = null, // stage config, for turn-based filtering
 ) {
+  // In turn-based stages, only mediators active for the stage respond. A
+  // cohort may hold several mediators (e.g. a swapped group-chat mediator
+  // alongside the default that runs the private chats); querying one with no
+  // prompt for the current stage would otherwise put a spurious "Error
+  // fetching response" in the chat and stall the turn cycle. Non-turn-based
+  // stages keep the existing behavior (no activeStageMap filtering), since a
+  // failed mediator response there does not block anyone.
+  const filterByActiveStage = stageId !== null && isTurnBasedStage(stage);
   const activeMediators = (
     await app
       .firestore()
@@ -123,7 +253,9 @@ export async function getFirestoreActiveMediators(
     .filter(
       (participant) =>
         participant.currentStatus === MediatorStatus.ACTIVE &&
-        (checkIsAgent ? participant.agentConfig : true),
+        (checkIsAgent ? participant.agentConfig : true) &&
+        (!filterByActiveStage ||
+          (participant.activeStageMap ?? {})[stageId as string]),
     );
   return activeMediators;
 }
@@ -134,6 +266,7 @@ export async function getFirestoreActiveParticipants(
   cohortId: string,
   stageId: string | null = null, // if null, can be in any stage
   checkIsAgent = false, // whether to check if participant is agent
+  includeObservers = false,
 ) {
   // TODO: Use isActiveParticipant utils function?
   const activeStatuses = [
@@ -157,7 +290,10 @@ export async function getFirestoreActiveParticipants(
 
   const activeParticipants = (await query.get()).docs
     .map((doc) => doc.data() as ParticipantProfileExtended)
-    .filter((participant) => (checkIsAgent ? participant.agentConfig : true));
+    .filter((participant) => {
+      if (participant.isObserver && !includeObservers) return false;
+      return checkIsAgent ? participant.agentConfig : true;
+    });
 
   return activeParticipants;
 }

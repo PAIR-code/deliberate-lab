@@ -16,6 +16,8 @@ import {
   getTimeElapsed,
   ChatStagePublicData,
   ChatStageConfig,
+  MEDIATOR_OBSERVER_COLOR,
+  variableConfigsIncludeObserver,
 } from '@deliberation-lab/utils';
 import {
   getFirestoreCohort,
@@ -31,7 +33,9 @@ import {
   completeParticipantTransfer,
   executeDirectTransfers,
   DirectTransferInstructions,
+  applyHoistedTreatment,
 } from './participant.utils';
+
 import {generateVariablesForScope} from './variables.utils';
 
 import {onCall, HttpsError} from 'firebase-functions/v2/https';
@@ -45,7 +49,9 @@ import {
   prettyPrintErrors,
 } from './utils/validation';
 
-/** Create, update, and delete participants. */
+const formatAgentName = (nameOrPublicId: string) => {
+  return String(nameOrPublicId || 'Agent') + "'s Agent";
+};
 
 // ************************************************************************* //
 // createParticipant endpoint                                                //
@@ -83,6 +89,9 @@ export const createParticipant = onCall(async (request) => {
   const participantConfig = createParticipantProfileExtended({
     currentCohortId: data.cohortId,
     prolificId: data.prolificId,
+    isObserver: data.isObserver ?? false,
+    hasRepresentative: data.hasRepresentative ?? false,
+    otherAgentGeneration: data.otherAgentGeneration,
   });
 
   // Temporarily always mark participants as connected (PR #537)
@@ -135,6 +144,14 @@ export const createParticipant = onCall(async (request) => {
         .get()
     ).data().count;
 
+    // When any treatment can assign observers, the mediator color is reserved
+    // and participant profiles must not be generated with it.
+    const reservedProfileColor = variableConfigsIncludeObserver(
+      experiment.variableConfigs ?? [],
+    )
+      ? MEDIATOR_OBSERVER_COLOR
+      : undefined;
+
     // Set participant profile fields
     if (data.isAnonymous) {
       // Find the profile stage to determine which anonymous profile type to use
@@ -151,9 +168,21 @@ export const createParticipant = onCall(async (request) => {
       const profileType =
         profileStage?.profileType || ProfileType.ANONYMOUS_ANIMAL;
 
-      setProfile(numParticipants, participantConfig, true, profileType);
+      setProfile(
+        numParticipants,
+        participantConfig,
+        true,
+        profileType,
+        reservedProfileColor,
+      );
     } else {
-      setProfile(numParticipants, participantConfig, false);
+      setProfile(
+        numParticipants,
+        participantConfig,
+        false,
+        undefined,
+        reservedProfileColor,
+      );
     }
 
     // Set current stage ID in participant config
@@ -170,7 +199,52 @@ export const createParticipant = onCall(async (request) => {
       },
     );
 
-    // Write new participant document
+    // Hoist treatment fields from the participant's assigned variables onto the
+    // participant (round 0). Shared with the per-transfer re-hoist so both the
+    // array and expanded (_1/_2/...) multi-value formats behave identically.
+    if (!participantConfig.agentConfig && participantConfig.variableMap) {
+      applyHoistedTreatment(
+        participantConfig as unknown as Record<string, unknown>,
+        participantConfig.variableMap,
+        0,
+      );
+    }
+
+    // Fetch existing cohort participants for checking observer status and renaming (Reads first!)
+    const cohortParticipants = (
+      await app
+        .firestore()
+        .collection(`experiments/${data.experimentId}/participants`)
+        .where('currentCohortId', '==', data.cohortId)
+        .get()
+    ).docs.map((doc) => doc.data() as ParticipantProfileExtended);
+
+    const hasObserver = cohortParticipants.some(
+      (p) =>
+        !p.agentConfig &&
+        p.isObserver &&
+        p.currentStatus !== ParticipantStatus.DELETED,
+    );
+
+    // If the new participant is an agent and there's an observer in the cohort, rename them
+    if (participantConfig.agentConfig && hasObserver) {
+      participantConfig.name = formatAgentName(
+        participantConfig.name || participantConfig.publicId,
+      );
+      // Also update anonymous profiles
+      for (const profileSetId of Object.keys(
+        participantConfig.anonymousProfiles,
+      )) {
+        if (participantConfig.anonymousProfiles[profileSetId].name) {
+          participantConfig.anonymousProfiles[profileSetId].name =
+            formatAgentName(
+              participantConfig.anonymousProfiles[profileSetId].name,
+            );
+        }
+      }
+    }
+
+    // Write new participant document (All writes happen at the end!)
     transaction.set(document, participantConfig);
   });
 
@@ -258,6 +332,7 @@ export const updateParticipantWaiting = onCall(async (request) => {
       participant.currentCohortId,
       participant.currentStageId,
       participant.privateId,
+      transaction,
     );
 
     transaction.set(document, participant);
@@ -514,6 +589,7 @@ export const acceptParticipantExperimentStart = onCall(
         participant.currentCohortId,
         participant.currentStageId,
         participant.privateId,
+        transaction,
       );
 
       transaction.set(document, participant);

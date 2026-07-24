@@ -26,6 +26,31 @@ export interface ProfileAgentConfig {
   agentId: string; // ID of agent persona used
   promptContext: string; // Additional text to concatenate to agent prompts
   modelSettings: AgentModelSettings;
+  needsPersonaGeneration?: boolean;
+  // Stable key used to store/retrieve this agent's generated persona so it is
+  // reused across cohorts. Unset for agents that should not reuse a stored
+  // persona (e.g. representatives).
+  personaSlotKey?: string;
+  // If true, this agent exists only to supply persona context to other agents'
+  // prompts (via OTHER_PROFILE_CONTEXTS). It never posts chat messages, never
+  // takes a turn, and is not counted when deciding whether a cohort can unlock
+  // or advance a stage.
+  isInactivePersona?: boolean;
+  // Persona bank match key: SHA-256 of the round's canonical variable map. Set
+  // on representative and inactive personas so they retrieve a pre-generated
+  // persona from the bank instead of generating a fresh one. Unset for agents
+  // that use slot-based reuse or fresh generation.
+  personaHash?: string;
+  // Set on an observer's representative: claim a pre-generated persona from
+  // the experiment's representative bank (repPersonas) at creation. The bank
+  // is one flat pool; with no bank present nothing changes.
+  repPersonaBank?: boolean;
+  // Set on direct-participation agents: the private ID of the HUMAN this agent
+  // was spawned alongside. The persona-generation trigger claims a plain
+  // character sketch from the bank keyed to this human (so the human never gets
+  // the same persona twice across rounds) and uses it as the agent's own
+  // persona instead of generating one live.
+  personaSketchForHumanId?: string;
 }
 
 /** Reasoning level - mapped to provider-specific options by backend */
@@ -89,6 +114,14 @@ export interface AgentChatSettings {
   // Maximum total responses agent can make during the chat conversation
   // (or null if no max)
   maxResponses: number | null;
+  // Per-mediator max-messages override for group chats. Replaces the stage's
+  // maxNumberOfMessages while this mediator is active; the smallest override
+  // wins. Set to null to defer to the stage value.
+  maxNumberOfMessages: number | null;
+  // Per-mediator min-messages override for group chats. Replaces the stage's
+  // minNumberOfMessages while this mediator is active; the largest override
+  // wins. Set to null to defer to the stage value.
+  minNumberOfMessages: number | null;
   // Initial message to send when the conversation begins
   initialMessage: string;
 }
@@ -200,6 +233,8 @@ export function createAgentChatSettings(
     minMessagesBeforeResponding: config.minMessagesBeforeResponding ?? 0,
     canSelfTriggerCalls: config.canSelfTriggerCalls ?? false,
     maxResponses: config.maxResponses ?? 100,
+    maxNumberOfMessages: config.maxNumberOfMessages ?? null,
+    minNumberOfMessages: config.minNumberOfMessages ?? null,
     initialMessage: config.initialMessage ?? '',
   };
 }

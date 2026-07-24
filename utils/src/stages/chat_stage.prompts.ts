@@ -50,7 +50,6 @@ export const DEFAULT_AGENT_PRIVATE_MEDIATOR_CHAT_PROMPT = `You are an agent who 
 /** Participant prompt text for group chat. */
 export const DEFAULT_AGENT_PARTICIPANT_CHAT_STYLE_INSTRUCTIONS = `Rules for how to write your message:
 - Let your persona determine how you open. Some people jump straight to their opinion; others react to what was just said first ("yeah but—", "wait, really?", "I mean, kind of"). Don't default to a thesis-statement opener just because it's the easiest thing to write — ask what *this person* would actually do.
-- Keep it short: 1-3 sentences as a default. Never write a paragraph. Real people in group chats don't write essays.
 - Verbosity is a tendency, not a rule. A terse persona is usually brief — but if something genuinely provokes them, they say more. A verbose persona usually elaborates — but sometimes a short reaction is all they have. Let the moment determine it.
 - Express your personality through word choice and content, not through formal sentence structure. Even a highly educated or pedantic persona types in chat voice, not essay voice. A pedant in a group chat writes "honestly not that hard to keep your inbox organized" — not "it is a profound failure of personal discipline."
 - Sound like your persona, not like an AI assistant. Use your persona's speech patterns, vocabulary level, and tone. Fragments and low-substance replies are valid when they fit the persona.
@@ -70,6 +69,19 @@ export const DEFAULT_AGENT_PARTICIPANT_CHAT_TURN_TAKING_PROMPT = `You are partic
 First, react: read the last 1-2 messages and ask yourself how this specific person would feel in this moment. Are they amused? Annoyed? Curious? Uncertain? Let that reaction drive your response. Write a message.
 
 ${DEFAULT_AGENT_PARTICIPANT_CHAT_STYLE_INSTRUCTIONS}`;
+
+/**
+ * One-line round/cycle status appended to a turn-based agent's chat prompt (for
+ * both participants and mediators) so they know which cycle they are in and how
+ * many remain before the discussion ends. See `getTurnCycleInfo` for how the
+ * numbers are derived.
+ */
+export function getTurnCycleStatusForPrompt(
+  currentCycle: number,
+  totalCycles: number,
+): string {
+  return `This is cycle ${currentCycle} of ${totalCycles} cycles, where each participant speaks once per cycle. The discussion ends after cycle ${totalCycles}, so pace your contribution accordingly.`;
+}
 
 /** Hardcoded text used in stage display of chat transcript. */
 export const CHAT_PROMPT_TRANSCRIPT_EXPLANATION = `Below is the transcript of your discussion. Messages are shown in chronological order; new messages appear at the bottom. Each message / turn follows the format: (HH:MM) Name: message.`;

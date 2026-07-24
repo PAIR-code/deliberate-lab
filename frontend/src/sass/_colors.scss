@@ -231,6 +231,12 @@
   --md-sys-color-outline-variant-high: var(--md-ref-palette-neutral-variant90);
   --md-sys-color-box-shadow-3:
     0px 1px 3px 0px rgba(0, 0, 0, 0.3), 0px 4px 8px 3px rgba(0, 0, 0, 0.15);
+
+  // Mediator chat bubble/typing indicator: blue, matching the mediator's blue
+  // avatar, so it stands out from the grey (secondary-container) bubbles other
+  // participants use.
+  --md-sys-color-mediator-container: var(--md-sys-color-avatar-blue);
+  --md-sys-color-on-mediator-container: #00174c;
 }
 
 /* Dark theme. */
@@ -277,6 +283,12 @@
   --md-sys-color-outline-variant-high: var(--md-ref-palette-neutral-variant25);
   --md-sys-color-box-shadow-3:
     0px 1px 3px 0px rgba(0, 0, 0, 0.3), 0px 4px 8px 3px rgba(0, 0, 0, 0.15);
+
+  // Mediator chat bubble/typing indicator: blue, matching the mediator's blue
+  // avatar, so it stands out from the grey (secondary-container) bubbles other
+  // participants use.
+  --md-sys-color-mediator-container: var(--md-sys-color-avatar-blue);
+  --md-sys-color-on-mediator-container: #00174c;
 
   // scrollbar
   scrollbar-color: #777 #333;

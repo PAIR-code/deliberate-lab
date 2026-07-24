@@ -98,7 +98,8 @@ export type PromptItem =
   | StageContextPromptItem
   | PromptItemGroup
   | ChatMediatorInstructionsPromptItem
-  | ChatParticipantInstructionsPromptItem;
+  | ChatParticipantInstructionsPromptItem
+  | OtherProfileContextsPromptItem;
 
 export interface BasePromptItem {
   type: PromptItemType;
@@ -123,6 +124,9 @@ export enum PromptItemType {
   // to the turn-based or free-form variant based on stage config.
   CHAT_MEDIATOR_INSTRUCTIONS = 'CHAT_MEDIATOR_INSTRUCTIONS',
   CHAT_PARTICIPANT_INSTRUCTIONS = 'CHAT_PARTICIPANT_INSTRUCTIONS',
+  // Persona contexts (PROFILE_CONTEXT) of the other agent participants in the
+  // cohort, so an agent can aggregate the generated or retrieved personas.
+  OTHER_PROFILE_CONTEXTS = 'OTHER_PROFILE_CONTEXTS',
 }
 
 export interface TextPromptItem extends BasePromptItem {
@@ -180,6 +184,14 @@ export interface ChatMediatorInstructionsPromptItem extends BasePromptItem {
 /** Group chat participant behavior instructions, resolved at build time. */
 export interface ChatParticipantInstructionsPromptItem extends BasePromptItem {
   type: PromptItemType.CHAT_PARTICIPANT_INSTRUCTIONS;
+}
+
+/**
+ * The persona contexts of the other agent participants in the cohort,
+ * concatenated. Resolved at build time from each other agent's promptContext.
+ */
+export interface OtherProfileContextsPromptItem extends BasePromptItem {
+  type: PromptItemType.OTHER_PROFILE_CONTEXTS;
 }
 
 // ****************************************************************************
