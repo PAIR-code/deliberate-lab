@@ -7,13 +7,13 @@ import {customElement, property} from 'lit/decorators.js';
 import {classMap} from 'lit/directives/class-map.js';
 
 import {
-  SECONDARY_PROFILE_SET_ID,
-  PROFILE_SET_ANIMALS_2_ID,
-  PROFILE_SET_NATURE_ID,
-  TERTIARY_PROFILE_SET_ID,
   ParticipantProfile,
   ParticipantProfileBase,
+  getParticipantStageProfile,
 } from '@deliberation-lab/utils';
+
+import {core} from '../../core/core';
+import {ExperimentService} from '../../services/experiment.service';
 
 import {styles} from './profile_display.scss';
 import {getHashBasedColor} from '../../shared/utils';
@@ -47,7 +47,10 @@ enum ProfileDisplayType {
 export class ParticipantProfileDisplay extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
 
+  private readonly experimentService = core.getService(ExperimentService);
+
   @property() stageId = '';
+  @property() stageName = '';
   @property() profile: ParticipantProfile | undefined = undefined;
   @property() displayType: ProfileDisplayType = ProfileDisplayType.DEFAULT;
 
@@ -77,27 +80,16 @@ export class ParticipantProfileDisplay extends MobxLitElement {
       return getHashBasedColor(this.profile?.publicId);
     };
 
-    // If alternate profile ID in stage ID, use anonymous profile
-    let baseProfile: ParticipantProfileBase = this.profile;
-    if (this.stageId?.includes(SECONDARY_PROFILE_SET_ID)) {
-      const anon = this.profile.anonymousProfiles[PROFILE_SET_ANIMALS_2_ID];
-      if (anon) {
-        baseProfile = {
-          name: `${anon.name}`,
-          avatar: `${anon.avatar}`,
-          pronouns: null,
-        };
-      }
-    } else if (this.stageId?.includes(TERTIARY_PROFILE_SET_ID)) {
-      const anon = this.profile.anonymousProfiles[PROFILE_SET_NATURE_ID];
-      if (anon) {
-        baseProfile = {
-          name: `${anon.name}`,
-          avatar: `${anon.avatar}`,
-          pronouns: null,
-        };
-      }
-    }
+    const resolvedStage = this.stageId
+      ? this.experimentService.getStage(this.stageId)
+      : undefined;
+    const resolvedStageName = this.stageName || (resolvedStage?.name ?? '');
+    const baseProfile: ParticipantProfileBase = getParticipantStageProfile(
+      this.profile,
+      this.stageId,
+      resolvedStageName,
+      resolvedStage?.anonymousProfileSetId,
+    );
 
     return html`
       <profile-display

@@ -14,6 +14,8 @@ import '../stages/profile_participant_editor';
 import '../stages/profile_participant_view';
 import '../stages/reveal_participant_view';
 import '../stages/role_participant_view';
+import '../stages/negotiation_profile_participant_view';
+import '../stages/negotiation_payout_participant_view';
 import '../stages/salesperson_participant_view';
 import '../stages/asset_allocation_participant_view';
 import '../stages/stockinfo_participant_view';
@@ -265,6 +267,10 @@ export class ParticipantView extends MobxLitElement {
         return html`<tos-view .stage=${stage}></tos-view>`;
       case StageKind.INFO:
         return html`<info-view .stage=${stage}></info-view>`;
+      case StageKind.NEGOTIATION_PAYOUT:
+        return html`<negotiation-payout-participant-view
+          .stage=${stage}
+        ></negotiation-payout-participant-view>`;
       case StageKind.PROFILE:
         if (
           stage.profileType === ProfileType.ANONYMOUS_ANIMAL ||
@@ -321,6 +327,12 @@ export class ParticipantView extends MobxLitElement {
       case StageKind.ROLE:
         return html`
           <role-participant-view .stage=${stage}></role-participant-view>
+        `;
+      case StageKind.NEGOTIATION_PROFILE:
+        return html`
+          <negotiation-profile-participant-view
+            .stage=${stage}
+          ></negotiation-profile-participant-view>
         `;
       case StageKind.SALESPERSON:
         return html`

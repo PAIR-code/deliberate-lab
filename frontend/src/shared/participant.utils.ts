@@ -1,14 +1,11 @@
 import {
-  SECONDARY_PROFILE_SET_ID,
-  TERTIARY_PROFILE_SET_ID,
-  PROFILE_SET_ANIMALS_2_ID,
-  PROFILE_SET_NATURE_ID,
   ParticipantProfile,
   ParticipantStatus,
   ProfileType,
   StageConfig,
   StageKind,
   compareTimestamps,
+  getParticipantStageProfile,
 } from '@deliberation-lab/utils';
 
 /**
@@ -21,26 +18,13 @@ export function getParticipantInlineDisplay(
   participant: ParticipantProfile,
   showIsSelf = false, // add (you) to the end
   stageId = '',
+  stageName = '',
 ) {
-  if (
-    stageId.includes(SECONDARY_PROFILE_SET_ID) &&
-    participant.anonymousProfiles[PROFILE_SET_ANIMALS_2_ID]
-  ) {
-    const anon = participant.anonymousProfiles[PROFILE_SET_ANIMALS_2_ID];
-    return `${anon.avatar} ${anon.name}${showIsSelf ? ' (you)' : ''}`;
-  } else if (
-    stageId.includes(TERTIARY_PROFILE_SET_ID) &&
-    participant.anonymousProfiles[PROFILE_SET_NATURE_ID]
-  ) {
-    const anon = participant.anonymousProfiles[PROFILE_SET_NATURE_ID];
-    return `${anon.avatar} ${anon.name}${showIsSelf ? ' (you)' : ''}`;
-  }
-
-  return `
-    ${participant.avatar ?? ''} ${participant.name ?? participant.publicId}${
-      showIsSelf ? ' (you)' : ''
-    }
-  `;
+  if (!participant) return '';
+  const profile = getParticipantStageProfile(participant, stageId, stageName);
+  const avatarPrefix = profile.avatar ? `${profile.avatar} ` : '';
+  const selfSuffix = showIsSelf ? ' (you)' : '';
+  return `${avatarPrefix}${profile.name}${selfSuffix}`.trim();
 }
 
 /** Returns the start timestamp of the current stage. */

@@ -15,6 +15,30 @@ export const PROFILE_AVATARS = [
 // anonymous profile set for display
 export const SECONDARY_PROFILE_SET_ID = 'secondary_profile';
 export const TERTIARY_PROFILE_SET_ID = 'tertiary_profile';
+// NEGOTIATION_PROFILE_SET_ID lives with the negotiation stage
+// (see stages/negotiation_profile_stage.ts), which owns that profile set.
+
+/**
+ * Legacy detection of which anonymous profile set a stage should display,
+ * inferred from the stage id/name containing a known profile-set id.
+ *
+ * This only recognises the built-in secondary/tertiary anonymous sets, for
+ * experiments that encode the set in the stage id (its long-standing behavior).
+ * It deliberately does NOT match on generic words (e.g. "negotiation") so that
+ * it cannot change the display of unrelated experiments. To opt a stage into a
+ * specific set (e.g. the negotiation game's party identities), set
+ * `anonymousProfileSetId` on the stage config instead — see
+ * getParticipantStageProfile.
+ */
+export function getActiveProfileSetId(stageId = '', stageName = ''): string {
+  const combined = `${stageId} ${stageName}`.toLowerCase();
+  if (combined.includes(SECONDARY_PROFILE_SET_ID)) {
+    return PROFILE_SET_ANIMALS_2_ID;
+  } else if (combined.includes(TERTIARY_PROFILE_SET_ID)) {
+    return PROFILE_SET_NATURE_ID;
+  }
+  return '';
+}
 
 // Set names for random hashes
 export const PROFILE_SET_RANDOM_1_ID = 'random-1';

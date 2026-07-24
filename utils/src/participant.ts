@@ -15,6 +15,7 @@ import {
   PROFILE_SET_RANDOM_1_ID,
   PROFILE_SET_RANDOM_2_ID,
   PROFILE_SET_RANDOM_3_ID,
+  getActiveProfileSetId,
 } from './profile_sets';
 
 /** Participant profile types and functions. */
@@ -346,4 +347,41 @@ export function getParticipantDisplayName(
     return `${avatar}${profileName}${pronouns}`;
   }
   return profile.publicId;
+}
+
+/**
+ * Returns the identity (name/avatar/pronouns) to display for a participant in
+ * a given stage.
+ *
+ * If the stage opts into an anonymous profile set — either explicitly via
+ * `explicitProfileSetId` (from the stage config's `anonymousProfileSetId`) or,
+ * for legacy experiments, inferred from the stage id via getActiveProfileSetId
+ * — and the participant has that anonymous profile, it is returned. Otherwise
+ * the participant's base identity is used. Callers that have the stage config
+ * should pass `stage.anonymousProfileSetId` as `explicitProfileSetId`.
+ */
+export function getParticipantStageProfile(
+  profile: ParticipantProfile,
+  stageId = '',
+  stageName = '',
+  explicitProfileSetId?: string,
+): {name: string; avatar: string; pronouns: string | null} {
+  if (!profile) {
+    return {name: '', avatar: '', pronouns: null};
+  }
+  const profileSetId =
+    explicitProfileSetId || getActiveProfileSetId(stageId, stageName);
+  if (profileSetId && profile.anonymousProfiles?.[profileSetId]) {
+    const anon = profile.anonymousProfiles[profileSetId];
+    return {
+      name: anon.name ?? '',
+      avatar: anon.avatar ?? '',
+      pronouns: null,
+    };
+  }
+  return {
+    name: profile.name ?? profile.publicId,
+    avatar: profile.avatar ?? '',
+    pronouns: profile.pronouns ?? null,
+  };
 }
