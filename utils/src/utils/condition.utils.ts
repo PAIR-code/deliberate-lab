@@ -13,8 +13,12 @@ import {
   extractConditionDependencies,
   evaluateCondition,
   Condition,
+  SYSTEM_VARIABLE_NAMESPACE,
 } from './condition';
+import type {TSchema} from '@sinclair/typebox';
 import {StageKind, StageConfig, StageParticipantAnswer} from '../stages/stage';
+import {VariableConfig, VariableConfigType} from '../variables';
+import {getItemSchemaIfArray} from '../variables.utils';
 import {
   SurveyStageConfig,
   SurveyPerParticipantStageConfig,
@@ -26,6 +30,37 @@ import {
   MultipleChoiceSurveyQuestion,
   extractAnswerValue,
 } from '../stages/survey_stage';
+
+/** Resolve a participant-variable target with one-level JSON-object flatten, matching upstream's buildTargetValuesForParticipant. */
+function resolveSystemVariableValue(
+  variableMap: Record<string, string> | undefined,
+  questionId: string,
+): unknown {
+  if (!variableMap) return undefined;
+  if (questionId in variableMap) {
+    return variableMap[questionId];
+  }
+
+  const parts = questionId.split('.');
+  const varName = parts[0];
+  const raw = variableMap[varName];
+  if (raw === undefined) return undefined;
+
+  try {
+    let parsed = JSON.parse(raw);
+    for (let i = 1; i < parts.length; i++) {
+      if (parsed && typeof parsed === 'object') {
+        parsed = (parsed as Record<string, unknown>)[parts[i]];
+      } else {
+        return undefined;
+      }
+    }
+    return parsed;
+  } catch {
+    // Not JSON-parseable, so fall through.
+  }
+  return undefined;
+}
 
 /**
  * Get condition dependency values from a map of stage answers.
@@ -42,11 +77,21 @@ export function getConditionDependencyValues(
   dependencies: ConditionTargetReference[],
   stageAnswers: Record<string, StageParticipantAnswer>,
   targetParticipantId?: string,
+  variableMap?: Record<string, string>,
 ): Record<string, unknown> {
   const values: Record<string, unknown> = {};
 
   for (const targetRef of dependencies) {
     const dataKey = getConditionTargetKey(targetRef);
+
+    if (targetRef.stageId === SYSTEM_VARIABLE_NAMESPACE) {
+      const val = resolveSystemVariableValue(variableMap, targetRef.questionId);
+      if (val !== undefined) {
+        values[dataKey] = val;
+      }
+      continue;
+    }
+
     const stageAnswer = stageAnswers[targetRef.stageId];
 
     if (!stageAnswer || !('answerMap' in stageAnswer)) {
@@ -95,11 +140,20 @@ export function getConditionDependencyValuesWithCurrentStage(
   currentStageAnswers: Record<string, SurveyAnswer>,
   allStageAnswers?: Record<string, StageParticipantAnswer>,
   targetParticipantId?: string,
+  variableMap?: Record<string, string>,
 ): Record<string, unknown> {
   const values: Record<string, unknown> = {};
 
   for (const targetRef of dependencies) {
     const dataKey = getConditionTargetKey(targetRef);
+
+    if (targetRef.stageId === SYSTEM_VARIABLE_NAMESPACE) {
+      const val = resolveSystemVariableValue(variableMap, targetRef.questionId);
+      if (val !== undefined) {
+        values[dataKey] = val;
+      }
+      continue;
+    }
 
     if (targetRef.stageId === currentStageId) {
       // Reference to current stage - use local answers
@@ -113,6 +167,7 @@ export function getConditionDependencyValuesWithCurrentStage(
         [targetRef],
         allStageAnswers,
         targetParticipantId,
+        variableMap,
       );
       Object.assign(values, stageValues);
     }
@@ -136,6 +191,7 @@ export function evaluateConditionWithStageAnswers(
   condition: Condition | undefined,
   stageAnswers: Record<string, StageParticipantAnswer>,
   targetParticipantId?: string,
+  variableMap?: Record<string, string>,
 ): boolean {
   if (!condition) return true;
 
@@ -144,6 +200,7 @@ export function evaluateConditionWithStageAnswers(
     dependencies,
     stageAnswers,
     targetParticipantId,
+    variableMap,
   );
 
   return evaluateCondition(condition, targetValues);
@@ -163,6 +220,7 @@ export function filterByCondition<T extends {condition?: Condition}>(
   items: T[],
   stageAnswers: Record<string, StageParticipantAnswer>,
   targetParticipantId?: string,
+  variableMap?: Record<string, string>,
 ): T[] {
   // Extract all dependencies upfront for efficiency
   const allConditions = items
@@ -178,6 +236,7 @@ export function filterByCondition<T extends {condition?: Condition}>(
     allDependencies,
     stageAnswers,
     targetParticipantId,
+    variableMap,
   );
 
   return items.filter((item) => {
@@ -265,9 +324,14 @@ export function getConditionTargetsFromStages(
   options: {
     includeCurrentStage?: boolean;
     currentStageQuestionIndex?: number;
+    variableConfigs?: VariableConfig[];
   } = {},
 ): ConditionTarget[] {
-  const {includeCurrentStage = true, currentStageQuestionIndex} = options;
+  const {
+    includeCurrentStage = true,
+    currentStageQuestionIndex,
+    variableConfigs = [],
+  } = options;
 
   const currentStageIndex = stages.findIndex(
     (stage) => stage.id === currentStageId,
@@ -307,6 +371,86 @@ export function getConditionTargetsFromStages(
         stage.name,
       );
       targets.push(...stageTargets);
+    }
+  }
+
+  // Helper to extract nested paths from TypeBox schema
+  const extractVariableTargets = (
+    schema: TSchema,
+    variableName: string,
+    prefix: string = variableName,
+  ): ConditionTarget[] => {
+    const extracted: ConditionTarget[] = [];
+    if (!schema) return extracted;
+
+    if (schema.type === 'object' && schema.properties) {
+      for (const [key, propSchema] of Object.entries(schema.properties)) {
+        extracted.push(
+          ...extractVariableTargets(
+            propSchema as TSchema,
+            variableName,
+            `${prefix}.${key}`,
+          ),
+        );
+      }
+    } else {
+      let type: ConditionTarget['type'] = 'text';
+      if (schema.type === 'boolean') type = 'boolean';
+      else if (schema.type === 'number' || schema.type === 'integer')
+        type = 'number';
+
+      extracted.push({
+        ref: {
+          stageId: SYSTEM_VARIABLE_NAMESPACE,
+          questionId: prefix,
+        },
+        label: `Variable: ${prefix}`,
+        type,
+      });
+    }
+    return extracted;
+  };
+
+  for (const config of variableConfigs) {
+    switch (config.type) {
+      case VariableConfigType.STATIC:
+        targets.push(
+          ...extractVariableTargets(
+            config.definition.schema,
+            config.definition.name,
+          ),
+        );
+        break;
+      case VariableConfigType.RANDOM_PERMUTATION: {
+        const numToSelect = config.numToSelect ?? config.values.length;
+        const itemSchema = getItemSchemaIfArray(config.definition.schema);
+        if (config.expandListToSeparateVariables) {
+          for (let i = 1; i <= numToSelect; i++) {
+            const indexedName = `${config.definition.name}_${i}`;
+            targets.push(
+              ...extractVariableTargets(itemSchema, indexedName, indexedName),
+            );
+          }
+        } else {
+          for (let i = 0; i < numToSelect; i++) {
+            targets.push(
+              ...extractVariableTargets(
+                itemSchema,
+                config.definition.name,
+                `${config.definition.name}.${i}`,
+              ),
+            );
+          }
+        }
+        break;
+      }
+      case VariableConfigType.BALANCED_ASSIGNMENT: {
+        const itemSchema = getItemSchemaIfArray(config.definition.schema);
+        targets.push(
+          ...extractVariableTargets(itemSchema, config.definition.name),
+        );
+        break;
+      }
     }
   }
 

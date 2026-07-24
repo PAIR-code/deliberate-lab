@@ -9,10 +9,12 @@ import {classMap} from 'lit/directives/class-map.js';
 
 import {core} from '../../core/core';
 import {AuthService} from '../../services/auth.service';
+import {CohortService} from '../../services/cohort.service';
 import {ExperimentService} from '../../services/experiment.service';
 import {HomeService} from '../../services/home.service';
 import {ParticipantService} from '../../services/participant.service';
 import {StageConfig} from '@deliberation-lab/utils';
+import {resolveStageName} from '../../shared/stage.utils';
 
 import {styles} from './participant_nav.scss';
 
@@ -22,6 +24,7 @@ export class ParticipantNav extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
 
   private readonly authService = core.getService(AuthService);
+  private readonly cohortService = core.getService(CohortService);
   private readonly experimentService = core.getService(ExperimentService);
   private readonly participantService = core.getService(ParticipantService);
 
@@ -67,7 +70,16 @@ export class ParticipantNav extends MobxLitElement {
     return html`
       <div class="nav-item-wrapper">
         <div class=${navItemClasses} role="button" @click=${navigate}>
-          <div>${index + 1}. ${stage.name}</div>
+          <div>
+            ${index + 1}.
+            ${resolveStageName(
+              stage.name,
+              this.experimentService.experiment?.variableConfigs ?? [],
+              this.experimentService.experiment?.variableMap ?? {},
+              this.cohortService.cohortConfig?.variableMap ?? {},
+              this.participantService.profile?.variableMap ?? {},
+            )}
+          </div>
           ${this.participantService.isCurrentStage(stage.id)
             ? html`<div class="chip tertiary">current</div>`
             : nothing}
