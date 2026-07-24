@@ -7,6 +7,7 @@ import {customElement, property} from 'lit/decorators.js';
 
 import {core} from '../../core/core';
 import {CohortService} from '../../services/cohort.service';
+import {ExperimentService} from '../../services/experiment.service';
 import {ParticipantService} from '../../services/participant.service';
 
 import {ParticipantProfile} from '@deliberation-lab/utils';
@@ -21,6 +22,7 @@ export class Progress extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
 
   private readonly cohortService = core.getService(CohortService);
+  private readonly experimentService = core.getService(ExperimentService);
   private readonly participantService = core.getService(ParticipantService);
 
   @property() discussionId: string | null = null;
@@ -45,10 +47,14 @@ export class Progress extends MobxLitElement {
   }
 
   private renderParticipant(participant: ParticipantProfile) {
+    const stageId = this.participantService.currentStageViewId ?? '';
+    const stageName = this.experimentService.getStage(stageId)?.name ?? '';
     return html`
       <participant-profile-display
         class="participant"
         .profile=${participant}
+        .stageId=${stageId}
+        .stageName=${stageName}
         displayType="progress"
       >
       </participant-profile-display>

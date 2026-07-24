@@ -27,7 +27,6 @@ import {
 } from '../../shared/templates/quickstart_group_chat';
 import {getQuickstartPrivateChatTemplate} from '../../shared/templates/quickstart_private_chat';
 import {getAgentParticipantsDemoTemplate} from '../../shared/templates/quickstart_agent_participants_demo';
-
 import {styles} from './home_gallery.scss';
 
 @customElement('home-gallery')
@@ -126,7 +125,11 @@ export class HomeGallery extends MobxLitElement {
     experiments = sortExperiments(experiments, this.sortMode);
 
     const yourExperiments = experiments.filter(
-      (e) => e.metadata.creator === this.authService.userEmail,
+      (e) =>
+        e.metadata.creator === this.authService.userEmail ||
+        !e.metadata.creator ||
+        e.metadata.creator === 'experimenter@google.com' ||
+        this.authService.isAdmin,
     );
     const otherExperiments = experiments.filter(
       (e) =>

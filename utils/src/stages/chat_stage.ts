@@ -30,6 +30,9 @@ export interface ChatStageConfig extends BaseStageConfig {
   // If true, agent participants cannot end the chat by setting readyToEndChat
   // in their structured output. The backend ignores the field for agents.
   preventAgentEnd?: boolean;
+  // Whether participants may react to and reply to each other's messages.
+  // Opt-in: when false or unset, no react/reply affordances are shown.
+  enableReactionsAndReplies?: boolean;
 }
 
 /** Chat discussion. */
@@ -124,6 +127,7 @@ export function createChatStage(
     timeMinimumInMinutes: config.timeMinimumInMinutes ?? null,
     isTurnBased: config.isTurnBased ?? false,
     preventAgentEnd: config.preventAgentEnd ?? false,
+    enableReactionsAndReplies: config.enableReactionsAndReplies ?? false,
   };
 }
 

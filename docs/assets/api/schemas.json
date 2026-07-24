@@ -503,6 +503,9 @@
         "progress": {
           "$ref": "#/$defs/StageProgressConfig"
         },
+        "anonymousProfileSetId": {
+          "type": "string"
+        },
         "stockConfig": {
           "additionalProperties": false,
           "type": "object",
@@ -670,6 +673,9 @@
         "progress": {
           "$ref": "#/$defs/StageProgressConfig"
         },
+        "anonymousProfileSetId": {
+          "type": "string"
+        },
         "stockOptions": {
           "type": "array",
           "items": {
@@ -712,6 +718,9 @@
         "progress": {
           "$ref": "#/$defs/StageProgressConfig"
         },
+        "anonymousProfileSetId": {
+          "type": "string"
+        },
         "timeLimitInMinutes": {
           "minimum": 1,
           "type": ["integer", "null"]
@@ -737,6 +746,9 @@
           "type": "boolean"
         },
         "preventAgentEnd": {
+          "type": "boolean"
+        },
+        "enableReactionsAndReplies": {
           "type": "boolean"
         }
       }
@@ -833,6 +845,9 @@
         "progress": {
           "$ref": "#/$defs/StageProgressConfig"
         },
+        "anonymousProfileSetId": {
+          "type": "string"
+        },
         "enableChat": {
           "type": "boolean"
         },
@@ -918,6 +933,9 @@
         },
         "progress": {
           "$ref": "#/$defs/StageProgressConfig"
+        },
+        "anonymousProfileSetId": {
+          "type": "string"
         },
         "questions": {
           "type": "array",
@@ -1038,6 +1056,9 @@
         "progress": {
           "$ref": "#/$defs/StageProgressConfig"
         },
+        "anonymousProfileSetId": {
+          "type": "string"
+        },
         "cards": {
           "type": "array",
           "items": {
@@ -1115,6 +1136,9 @@
         "progress": {
           "$ref": "#/$defs/StageProgressConfig"
         },
+        "anonymousProfileSetId": {
+          "type": "string"
+        },
         "infoLines": {
           "type": "array",
           "items": {
@@ -1158,6 +1182,9 @@
         },
         "progress": {
           "$ref": "#/$defs/StageProgressConfig"
+        },
+        "anonymousProfileSetId": {
+          "type": "string"
         },
         "currency": {
           "anyOf": [
@@ -1355,6 +1382,9 @@
         "progress": {
           "$ref": "#/$defs/StageProgressConfig"
         },
+        "anonymousProfileSetId": {
+          "type": "string"
+        },
         "timeLimitInMinutes": {
           "minimum": 1,
           "type": ["integer", "null"]
@@ -1410,6 +1440,9 @@
         },
         "progress": {
           "$ref": "#/$defs/StageProgressConfig"
+        },
+        "anonymousProfileSetId": {
+          "type": "string"
         },
         "profileType": {
           "anyOf": [
@@ -1476,6 +1509,9 @@
         },
         "progress": {
           "$ref": "#/$defs/StageProgressConfig"
+        },
+        "anonymousProfileSetId": {
+          "type": "string"
         },
         "rankingType": {
           "const": "items",
@@ -1552,6 +1588,9 @@
         "progress": {
           "$ref": "#/$defs/StageProgressConfig"
         },
+        "anonymousProfileSetId": {
+          "type": "string"
+        },
         "rankingType": {
           "const": "participants",
           "type": "string"
@@ -1596,6 +1635,9 @@
         },
         "progress": {
           "$ref": "#/$defs/StageProgressConfig"
+        },
+        "anonymousProfileSetId": {
+          "type": "string"
         },
         "items": {
           "type": "array",
@@ -1769,6 +1811,9 @@
         "progress": {
           "$ref": "#/$defs/StageProgressConfig"
         },
+        "anonymousProfileSetId": {
+          "type": "string"
+        },
         "roles": {
           "type": "array",
           "items": {
@@ -1807,6 +1852,91 @@
         }
       }
     },
+    "NegotiationProfileStageConfig": {
+      "title": "NegotiationProfileStageConfig",
+      "additionalProperties": false,
+      "type": "object",
+      "required": ["id", "kind", "name", "descriptions", "progress", "items"],
+      "properties": {
+        "id": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "kind": {
+          "const": "negotiationProfile",
+          "type": "string"
+        },
+        "name": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "descriptions": {
+          "$ref": "#/$defs/StageTextConfig"
+        },
+        "progress": {
+          "$ref": "#/$defs/StageProgressConfig"
+        },
+        "anonymousProfileSetId": {
+          "type": "string"
+        },
+        "items": {
+          "type": "array",
+          "items": {
+            "additionalProperties": false,
+            "type": "object",
+            "required": ["id", "name", "avatar", "displayLines"],
+            "properties": {
+              "id": {
+                "minLength": 1,
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "avatar": {
+                "type": "string"
+              },
+              "displayLines": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            },
+            "title": "Item"
+          }
+        }
+      }
+    },
+    "NegotiationPayoutStageConfig": {
+      "title": "NegotiationPayoutStageConfig",
+      "additionalProperties": false,
+      "type": "object",
+      "required": ["id", "kind", "name", "descriptions", "progress"],
+      "properties": {
+        "id": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "kind": {
+          "const": "negotiationPayout",
+          "type": "string"
+        },
+        "name": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "descriptions": {
+          "$ref": "#/$defs/StageTextConfig"
+        },
+        "progress": {
+          "$ref": "#/$defs/StageProgressConfig"
+        },
+        "anonymousProfileSetId": {
+          "type": "string"
+        }
+      }
+    },
     "SalespersonStageConfig": {
       "title": "SalespersonStageConfig",
       "additionalProperties": false,
@@ -1830,6 +1960,9 @@
         },
         "progress": {
           "$ref": "#/$defs/StageProgressConfig"
+        },
+        "anonymousProfileSetId": {
+          "type": "string"
         }
       }
     },
@@ -1871,6 +2004,9 @@
         },
         "progress": {
           "$ref": "#/$defs/StageProgressConfig"
+        },
+        "anonymousProfileSetId": {
+          "type": "string"
         },
         "stocks": {
           "type": "array",
@@ -1947,6 +2083,9 @@
         },
         "progress": {
           "$ref": "#/$defs/StageProgressConfig"
+        },
+        "anonymousProfileSetId": {
+          "type": "string"
         },
         "questions": {
           "type": "array",
@@ -2403,6 +2542,9 @@
         "progress": {
           "$ref": "#/$defs/StageProgressConfig"
         },
+        "anonymousProfileSetId": {
+          "type": "string"
+        },
         "questions": {
           "type": "array",
           "items": {
@@ -2455,6 +2597,9 @@
         "progress": {
           "$ref": "#/$defs/StageProgressConfig"
         },
+        "anonymousProfileSetId": {
+          "type": "string"
+        },
         "tosLines": {
           "type": "array",
           "items": {
@@ -2495,6 +2640,9 @@
         },
         "progress": {
           "$ref": "#/$defs/StageProgressConfig"
+        },
+        "anonymousProfileSetId": {
+          "type": "string"
         },
         "enableTimeout": {
           "type": "boolean"
@@ -4011,6 +4159,14 @@
               "type": "string"
             },
             {
+              "const": "negotiationProfile",
+              "type": "string"
+            },
+            {
+              "const": "negotiationPayout",
+              "type": "string"
+            },
+            {
               "const": "survey",
               "type": "string"
             },
@@ -4131,6 +4287,14 @@
         },
         {
           "const": "role",
+          "type": "string"
+        },
+        {
+          "const": "negotiationProfile",
+          "type": "string"
+        },
+        {
+          "const": "negotiationPayout",
           "type": "string"
         },
         {
@@ -4401,6 +4565,12 @@
                   },
                   {
                     "$ref": "#/$defs/RoleStageConfig"
+                  },
+                  {
+                    "$ref": "#/$defs/NegotiationProfileStageConfig"
+                  },
+                  {
+                    "$ref": "#/$defs/NegotiationPayoutStageConfig"
                   },
                   {
                     "$ref": "#/$defs/SalespersonStageConfig"

@@ -29,6 +29,7 @@ import {
   SendParticipantCheckData,
   SetChipTurnData,
   SetParticipantRolesData,
+  SetParticipantNegotiationProfilesData,
   SetSalespersonControllerData,
   SetSalespersonMoveData,
   SetSalespersonResponseData,
@@ -36,6 +37,7 @@ import {
   SuccessResponse,
   UpdateAssetAllocationStageParticipantAnswerData,
   UpdateMultiAssetAllocationStageParticipantAnswerData,
+  UpdateChatMessageReactionData,
   UpdateChatStageParticipantAnswerData,
   UpdateCohortMetadataData,
   UpdateFlipCardStageParticipantAnswerData,
@@ -483,6 +485,21 @@ export const createChatMessageCallable = async (
   return data;
 };
 
+/** Endpoint to apply or remove a reaction on a chat message. */
+export const updateChatMessageReactionCallable = async (
+  functions: Functions,
+  config: UpdateChatMessageReactionData,
+) => {
+  const {data} = await httpsCallable<
+    UpdateChatMessageReactionData,
+    CreationResponse
+  >(
+    functions,
+    'updateChatMessageReaction',
+  )(config);
+  return data;
+};
+
 /** Generic endpoint for assigning participants to roles for role stage. */
 export const setParticipantRolesCallable = async (
   functions: Functions,
@@ -491,6 +508,21 @@ export const setParticipantRolesCallable = async (
   const {data} = await httpsCallable<SetParticipantRolesData, SuccessResponse>(
     functions,
     'setParticipantRoles',
+  )(config);
+  return data;
+};
+
+/** Generic endpoint for assigning participants to profiles for negotiation profile stage. */
+export const setParticipantNegotiationProfilesCallable = async (
+  functions: Functions,
+  config: SetParticipantNegotiationProfilesData,
+) => {
+  const {data} = await httpsCallable<
+    SetParticipantNegotiationProfilesData,
+    SuccessResponse
+  >(
+    functions,
+    'setParticipantNegotiationProfiles',
   )(config);
   return data;
 };
