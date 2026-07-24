@@ -40,6 +40,9 @@ export interface ChatStageConfig extends BaseStageConfig {
   // Maximum total messages from all participants/mediators combined; the
   // discussion ends globally for the whole cohort once reached. null = no cap.
   maxNumberOfMessages?: number | null;
+  // Whether participants may react to and reply to each other's messages.
+  // Opt-in: when false or unset, no react/reply affordances are shown.
+  enableReactionsAndReplies?: boolean;
 }
 
 /** Chat discussion. */
@@ -187,6 +190,7 @@ export function createChatStage(
       config.additionalParticipantInstructions ?? '',
     minNumberOfMessages: config.minNumberOfMessages ?? 0,
     maxNumberOfMessages: config.maxNumberOfMessages ?? null,
+    enableReactionsAndReplies: config.enableReactionsAndReplies ?? false,
   };
 }
 

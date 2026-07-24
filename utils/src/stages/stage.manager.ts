@@ -8,6 +8,8 @@ import {InfoStageHandler} from './info_stage.manager';
 import {PrivateChatStageHandler} from './private_chat_stage.manager';
 import {RankingStageHandler} from './ranking_stage.manager';
 import {RoleStageHandler} from './role_stage.manager';
+import {NegotiationProfileStageHandler} from './negotiation_profile_stage.manager';
+import {NegotiationPayoutStageHandler} from './negotiation_payout_stage.manager';
 import {SurveyStageHandler} from './survey_stage.manager';
 import {SurveyPerParticipantStageHandler} from './survey_per_participant_stage.manager';
 import {TransferStageHandler} from './transfer_stage.manager';
@@ -35,6 +37,14 @@ export class StageManager {
     this.handlerMap.set(StageKind.PRIVATE_CHAT, new PrivateChatStageHandler());
     this.handlerMap.set(StageKind.RANKING, new RankingStageHandler());
     this.handlerMap.set(StageKind.ROLE, new RoleStageHandler());
+    this.handlerMap.set(
+      StageKind.NEGOTIATION_PROFILE,
+      new NegotiationProfileStageHandler(),
+    );
+    this.handlerMap.set(
+      StageKind.NEGOTIATION_PAYOUT,
+      new NegotiationPayoutStageHandler(),
+    );
     this.handlerMap.set(StageKind.STOCKINFO, new StockInfoStageHandler());
     this.handlerMap.set(StageKind.SURVEY, new SurveyStageHandler());
     this.handlerMap.set(StageKind.TRANSFER, new TransferStageHandler());

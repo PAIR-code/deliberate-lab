@@ -15,6 +15,7 @@ import {
   StageKind,
   UserType,
   getTimeElapsed,
+  getParticipantStageProfile,
 } from '@deliberation-lab/utils';
 import {core} from '../../core/core';
 import {AuthService} from '../../services/auth.service';
@@ -216,9 +217,15 @@ export class ChatInterface extends MobxLitElement {
 
     const participantProfile = this.cohortService.participantMap[id];
     if (participantProfile && participantProfile.name) {
+      const stageProfile = getParticipantStageProfile(
+        participantProfile,
+        this.stage?.id ?? '',
+        this.stage?.name ?? '',
+        this.stage?.anonymousProfileSetId,
+      );
       return {
-        name: participantProfile.name,
-        avatar: participantProfile.avatar,
+        name: stageProfile.name,
+        avatar: stageProfile.avatar,
         isMediator: false,
         id,
         isMyTurn,

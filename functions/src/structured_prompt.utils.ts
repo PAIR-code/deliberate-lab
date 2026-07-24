@@ -1,8 +1,5 @@
 import {
-  SECONDARY_PROFILE_SET_ID,
-  TERTIARY_PROFILE_SET_ID,
-  PROFILE_SET_ANIMALS_2_ID,
-  PROFILE_SET_NATURE_ID,
+  getActiveProfileSetId,
   PROMPT_ITEM_PROFILE_CONTEXT_PARTICIPANT_SCAFFOLDING,
   PROMPT_ITEM_PROFILE_INFO_PARTICIPANT_SCAFFOLDING,
   BasePromptConfig,
@@ -261,12 +258,7 @@ export async function addFirestoreDataForPromptItem(
   // Get profile set ID based on stage ID
   // (Temporary workaround before profile sets are refactored)
   const getProfileSetId = (stageId: string) => {
-    if (stageId.includes(SECONDARY_PROFILE_SET_ID)) {
-      return PROFILE_SET_ANIMALS_2_ID;
-    } else if (stageId.includes(TERTIARY_PROFILE_SET_ID)) {
-      return PROFILE_SET_NATURE_ID;
-    }
-    return '';
+    return getActiveProfileSetId(stageId);
   };
 
   switch (promptItem.type) {
@@ -479,12 +471,7 @@ function getProfileInfoForPrompt(
   // as prior stages' context will not make sense if it references "Animals 1"
   // profile and the current stage uses "Animals 2".
   const getProfileSetId = () => {
-    if (stageId.includes(SECONDARY_PROFILE_SET_ID)) {
-      return PROFILE_SET_ANIMALS_2_ID;
-    } else if (stageId.includes(TERTIARY_PROFILE_SET_ID)) {
-      return PROFILE_SET_NATURE_ID;
-    }
-    return '';
+    return getActiveProfileSetId(stageId);
   };
 
   const scaffoldingPrefix = includeScaffolding ? `Alias: ` : '';

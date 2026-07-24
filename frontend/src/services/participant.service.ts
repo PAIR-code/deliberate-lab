@@ -3,6 +3,7 @@ import {
   AlertStatus,
   AssetAllocation,
   ChatMessage,
+  ChatMessageReaction,
   ChatStageParticipantAnswer,
   ChipOffer,
   CreateChatMessageData,
@@ -16,12 +17,14 @@ import {
   SurveyPerParticipantStageParticipantAnswer,
   SurveyStageParticipantAnswer,
   UnifiedTimestamp,
+  UpdateChatMessageReactionData,
   UpdateChatStageParticipantAnswerData,
   createChatMessage,
   createChatStageParticipantAnswer,
   createParticipantChatMessage,
   createSurveyPerParticipantStageParticipantAnswer,
   createSurveyStageParticipantAnswer,
+  getParticipantStageProfile,
 } from '@deliberation-lab/utils';
 import {
   Timestamp,
@@ -52,6 +55,7 @@ import {
   sendChipResponseCallable,
   setChipTurnCallable,
   setParticipantRolesCallable,
+  setParticipantNegotiationProfilesCallable,
   setSalespersonControllerCallable,
   setSalespersonMoveCallable,
   setSalespersonResponseCallable,
@@ -62,6 +66,7 @@ import {
   updateParticipantProfileCallable,
   updateParticipantToNextStageCallable,
   updateParticipantWaitingCallable,
+  updateChatMessageReactionCallable,
   updateChatStageParticipantAnswerCallable,
   updateFlipCardStageParticipantAnswerCallable,
   updateSurveyPerParticipantStageParticipantAnswerCallable,
@@ -641,17 +646,23 @@ export class ParticipantService extends Service {
     let response = {};
     this.isSendingChat = true;
     if (this.experimentId && this.profile) {
+      const currentStage = this.sp.experimentService.getStage(
+        this.profile.currentStageId,
+      );
+      const stageProfile = getParticipantStageProfile(
+        this.profile,
+        this.profile.currentStageId,
+        currentStage?.name ?? '',
+        currentStage?.anonymousProfileSetId,
+      );
+
       const chatMessage = createParticipantChatMessage({
         ...config,
         discussionId: this.sp.cohortService.getChatDiscussionId(
           this.profile.currentStageId,
         ),
         senderId: this.profile.publicId,
-        profile: {
-          name: this.profile.name,
-          avatar: this.profile.avatar,
-          pronouns: this.profile.pronouns,
-        },
+        profile: stageProfile,
       });
 
       const createData: CreateChatMessageData = {
@@ -669,6 +680,32 @@ export class ParticipantService extends Service {
     }
     this.isSendingChat = false;
     return response;
+  }
+
+  /** Apply or remove a reaction on a chat message. */
+  async updateChatMessageReaction(
+    stageId: string,
+    chatMessageId: string,
+    reaction: ChatMessageReaction,
+    add: boolean,
+  ) {
+    if (!this.experimentId || !this.profile) return;
+
+    const reactionData: UpdateChatMessageReactionData = {
+      experimentId: this.experimentId,
+      cohortId: this.profile.currentCohortId,
+      stageId,
+      participantId: this.profile.privateId,
+      chatMessageId,
+      senderId: this.profile.publicId,
+      reaction,
+      add,
+    };
+
+    return await updateChatMessageReactionCallable(
+      this.sp.firebaseService.functions,
+      reactionData,
+    );
   }
 
   /** Send error chat message. */
@@ -1120,6 +1157,21 @@ export class ParticipantService extends Service {
     let output = {success: false};
     if (this.experimentId && this.profile) {
       output = await setParticipantRolesCallable(
+        this.sp.firebaseService.functions,
+        {
+          experimentId: this.experimentId,
+          cohortId: this.profile.currentCohortId,
+          stageId,
+        },
+      );
+    }
+    return output;
+  }
+
+  async setParticipantNegotiationProfiles(stageId: string) {
+    let output = {success: false};
+    if (this.experimentId && this.profile) {
+      output = await setParticipantNegotiationProfilesCallable(
         this.sp.firebaseService.functions,
         {
           experimentId: this.experimentId,

@@ -3,12 +3,19 @@ import {
   ChatStageConfig,
   ChatStagePublicData,
   ChatStageParticipantAnswer,
+  StageKind,
+  UpdateChatMessageReactionData,
   createChatMessage,
   createChatStageParticipantAnswer,
   createSystemChatMessage,
   getTimeElapsed,
 } from '@deliberation-lab/utils';
-import {Timestamp} from 'firebase-admin/firestore';
+import {
+  DocumentReference,
+  FieldPath,
+  FieldValue,
+  Timestamp,
+} from 'firebase-admin/firestore';
 import {app} from '../app';
 import {
   getFirestoreParticipant,
@@ -20,6 +27,89 @@ import {
   getFirestoreParticipantRef,
 } from '../utils/firestore';
 import {updateParticipantNextStage} from '../participant.utils';
+
+/** Thrown when a reaction targets a chat message that does not exist. */
+export class ChatMessageNotFoundError extends Error {}
+
+/**
+ * Resolve the doc that a chat message is stored under.
+ *
+ * Private chat messages live under the participant, group chat messages under
+ * the cohort's public stage data.
+ */
+export function getChatMessageRef(
+  stageKind: StageKind,
+  experimentId: string,
+  cohortId: string,
+  participantId: string, // private ID, used for private chats
+  stageId: string,
+  chatMessageId: string,
+): DocumentReference {
+  if (stageKind === StageKind.PRIVATE_CHAT) {
+    return app
+      .firestore()
+      .collection('experiments')
+      .doc(experimentId)
+      .collection('participants')
+      .doc(participantId)
+      .collection('stageData')
+      .doc(stageId)
+      .collection('privateChats')
+      .doc(chatMessageId);
+  }
+
+  return app
+    .firestore()
+    .collection('experiments')
+    .doc(experimentId)
+    .collection('cohorts')
+    .doc(cohortId)
+    .collection('publicStageData')
+    .doc(stageId)
+    .collection('chats')
+    .doc(chatMessageId);
+}
+
+/**
+ * Apply or remove a participant's reaction on a chat message.
+ *
+ * The reaction is stored as the list of participants who applied it (rather
+ * than as a counter), so that a count can never disagree with who reacted.
+ * arrayUnion/arrayRemove are applied atomically by Firestore, so simultaneous
+ * reactions from different participants cannot overwrite each other, and
+ * reacting twice cannot double-count.
+ */
+export async function updateChatMessageReaction(
+  stageKind: StageKind,
+  data: UpdateChatMessageReactionData,
+) {
+  const document = getChatMessageRef(
+    stageKind,
+    data.experimentId,
+    data.cohortId,
+    data.participantId,
+    data.stageId,
+    data.chatMessageId,
+  );
+
+  const reactors = data.add
+    ? FieldValue.arrayUnion(data.senderId)
+    : FieldValue.arrayRemove(data.senderId);
+
+  await app.firestore().runTransaction(async (transaction) => {
+    const snapshot = await transaction.get(document);
+    if (!snapshot.exists) {
+      throw new ChatMessageNotFoundError(
+        `Chat message ${data.chatMessageId} not found`,
+      );
+    }
+    transaction.update(
+      document,
+      new FieldPath('reactionMap', data.reaction),
+      reactors,
+    );
+  });
+}
 
 /** Used for private chats if model response fails. */
 export async function sendErrorPrivateChatMessage(

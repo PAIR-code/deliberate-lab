@@ -257,6 +257,8 @@ export class ChatPanel extends MobxLitElement {
       <div class="profile-row">
         <span class="turn-indicator ${isCurrentTurn ? 'visible' : ''}">👉</span>
         <participant-profile-display
+          .stageId=${this.stage?.id ?? ''}
+          .stageName=${this.stage?.name ?? ''}
           .profile=${profile}
           .showIsSelf=${isCurrent}
           .excludeColors=${this.reserveMediatorColor

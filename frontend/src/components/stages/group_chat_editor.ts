@@ -31,6 +31,7 @@ export class ChatEditor extends MobxLitElement {
     return html`
       <div class="title">Conversation settings</div>
       ${this.renderTimeLimit()} ${this.renderTurnBasedSetting()}
+      ${this.renderReactionsSetting()}
       <div class="divider"></div>
       <div class="title">Message limits</div>
       ${this.renderMinNumberOfMessages()} ${this.renderMaxNumberOfMessages()}
@@ -170,6 +171,32 @@ export class ChatEditor extends MobxLitElement {
           <div>
             Turn-based conversation: Each participant speaks in a random order,
             beginning with the mediators if at least one is present.
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  private renderReactionsSetting() {
+    return html`
+      <div class="config-item">
+        <div class="checkbox-wrapper">
+          <md-checkbox
+            touch-target="wrapper"
+            ?checked=${this.stage?.enableReactionsAndReplies ?? false}
+            ?disabled=${!this.experimentEditor.canEditStages}
+            @change=${(e: Event) => {
+              const checked = (e.target as HTMLInputElement).checked;
+              this.experimentEditor.updateStage({
+                ...this.stage!,
+                enableReactionsAndReplies: checked,
+              });
+            }}
+          >
+          </md-checkbox>
+          <div>
+            Reactions and replies: Allow participants to react to and reply to
+            each other's messages.
           </div>
         </div>
       </div>
