@@ -75,8 +75,46 @@ export class TransferEditorComponent extends MobxLitElement {
     return html`
       ${this.renderTimeout()}
       ${this.authService.showAlphaFeatures
-        ? this.renderAutoTransfer()
+        ? html`${this.renderTreatmentIndex()}${this.renderAutoTransfer()}`
         : nothing}
+    `;
+  }
+
+  private renderTreatmentIndex() {
+    if (!this.stage) return nothing;
+
+    const current = this.stage.treatmentIndex;
+
+    const updateTreatmentIndex = (e: InputEvent) => {
+      if (!this.stage) return;
+      const raw = (e.target as HTMLInputElement).value.trim();
+      const treatmentIndex = raw === '' ? undefined : Number(raw);
+      this.experimentEditor.updateStage({...this.stage, treatmentIndex});
+    };
+
+    return html`
+      <div class="section">
+        <div class="title">
+          Treatment index
+          <span class="alpha">alpha</span>
+        </div>
+        <div class="description">
+          For within-subjects experiments: transfers based on the Nth item from
+          a multi-item <code>treatment</code> array. Leave blank to disable.
+        </div>
+        <div class="number-input">
+          <input
+            type="number"
+            id="treatmentIndex"
+            min="0"
+            placeholder="(none)"
+            name="treatmentIndex"
+            .value=${current === undefined ? '' : String(current)}
+            ?disabled=${!this.experimentEditor.canEditStages}
+            @input=${updateTreatmentIndex}
+          />
+        </div>
+      </div>
     `;
   }
 

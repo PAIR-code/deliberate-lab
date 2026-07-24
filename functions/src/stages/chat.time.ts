@@ -96,7 +96,37 @@ async function handleTimeElapsed(
     stageId,
     'The timer for this stage has ended; you can no longer respond.',
   );
+  // An ended discussion is nobody's turn: clear the turn holder so nothing
+  // (e.g. the quiz turn resume) re-dispatches an agent afterwards.
   await getFirestoreStagePublicDataRef(experimentId, cohortId, stageId).update({
     discussionEndTimestamp: Timestamp.now(),
+    currentTurnParticipantId: null,
   });
+}
+
+/**
+ * End the discussion globally because the cohort hit the maximum total
+ * message count for the stage. Writes discussionEndTimestamp before sending
+ * the system notice: the system message re-fires onPublicChatMessageCreated,
+ * and that re-fire must read a stage that is already marked ended so it bails
+ * before recounting. Reversing this order produced two cap-reached system
+ * messages.
+ */
+export async function handleMaxMessagesReached(
+  experimentId: string,
+  cohortId: string,
+  stageId: string,
+) {
+  // An ended discussion is nobody's turn: clear the turn holder so nothing
+  // (e.g. the quiz turn resume) re-dispatches an agent afterwards.
+  await getFirestoreStagePublicDataRef(experimentId, cohortId, stageId).update({
+    discussionEndTimestamp: Timestamp.now(),
+    currentTurnParticipantId: null,
+  });
+  await sendSystemChatMessage(
+    experimentId,
+    cohortId,
+    stageId,
+    'The discussion has ended. Please proceed to the next stage.',
+  );
 }

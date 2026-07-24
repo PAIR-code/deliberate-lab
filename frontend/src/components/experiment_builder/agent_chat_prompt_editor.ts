@@ -307,6 +307,9 @@ export class EditorComponent extends MobxLitElement {
     agentPromptConfig: ChatPromptConfig,
   ) {
     const chatSettings = agentPromptConfig.chatSettings;
+    // Per-mediator message-count overrides govern group chats only.
+    const isGroupChat =
+      this.experimentEditor.getStage(this.stageId)?.kind === StageKind.CHAT;
 
     const updateInitialMessage = (e: InputEvent) => {
       const initialMessage = (e.target as HTMLTextAreaElement).value;
@@ -360,6 +363,28 @@ export class EditorComponent extends MobxLitElement {
         chatSettings: {
           ...agentPromptConfig.chatSettings,
           maxResponses,
+        },
+      });
+    };
+
+    const updateMaxNumberOfMessages = (e: InputEvent) => {
+      const value = (e.target as HTMLInputElement).value;
+      const maxNumberOfMessages = value === '' ? null : Number(value);
+      this.updatePrompt({
+        chatSettings: {
+          ...agentPromptConfig.chatSettings,
+          maxNumberOfMessages,
+        },
+      });
+    };
+
+    const updateMinNumberOfMessages = (e: InputEvent) => {
+      const value = (e.target as HTMLInputElement).value;
+      const minNumberOfMessages = value === '' ? null : Number(value);
+      this.updatePrompt({
+        chatSettings: {
+          ...agentPromptConfig.chatSettings,
+          minNumberOfMessages,
         },
       });
     };
@@ -460,6 +485,50 @@ export class EditorComponent extends MobxLitElement {
             />
           </div>
         </div>
+        ${isGroupChat
+          ? html`
+              <div class="field">
+                <label for="maxNumberOfMessages"
+                  >Per-mediator message cap</label
+                >
+                <div class="description">
+                  Overrides the stage-level "Max total messages" cap for group
+                  chats where this mediator is active. Leave empty to defer to
+                  the stage-level cap.
+                </div>
+                <div class="number-input">
+                  <input
+                    .disabled=${!this.experimentEditor.isCreator}
+                    type="number"
+                    min="1"
+                    .value=${chatSettings.maxNumberOfMessages ?? ''}
+                    placeholder="Defer to stage cap"
+                    @input=${updateMaxNumberOfMessages}
+                  />
+                </div>
+              </div>
+              <div class="field">
+                <label for="minNumberOfMessages"
+                  >Per-mediator message minimum</label
+                >
+                <div class="description">
+                  Overrides the stage-level "Min total messages" gate for group
+                  chats where this mediator is active. Leave empty to defer to
+                  the stage-level minimum.
+                </div>
+                <div class="number-input">
+                  <input
+                    .disabled=${!this.experimentEditor.isCreator}
+                    type="number"
+                    min="0"
+                    .value=${chatSettings.minNumberOfMessages ?? ''}
+                    placeholder="Defer to stage minimum"
+                    @input=${updateMinNumberOfMessages}
+                  />
+                </div>
+              </div>
+            `
+          : nothing}
         <div class="field">
           <label for="numRetries">API retry attempts</label>
           <div class="description">

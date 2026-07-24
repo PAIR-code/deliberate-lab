@@ -63,8 +63,16 @@ chat-input {
 
 .banner {
   @include typescale.label-large;
+  // All variants share a 1px border so the box's outer height is identical
+  // across success/warning/placeholder; only the border colour changes. This
+  // keeps the chat content above from shifting when the variant swaps (e.g.
+  // success → placeholder → warning during a turn transition).
+  border: 1px solid transparent;
   border-radius: 8px;
-  margin: common.$spacing-medium common.$spacing-xl;
+  // The banner always spans the full width of the text entry box: its
+  // horizontal insets match the chat input's padding ($main-content-padding) so
+  // the two align in any window size, rather than reading as a centered chip.
+  margin: common.$spacing-medium common.$main-content-padding;
   padding: common.$spacing-medium common.$spacing-large;
   text-align: center;
 
@@ -76,9 +84,51 @@ chat-input {
 
   &.warning {
     background: #fef9e7;
-    border: 1px solid #f7dc6f;
+    border-color: #f7dc6f;
     color: #7d6608; // High-contrast dark yellow readable on pale yellow
     font-weight: 500;
+  }
+
+  // Quiz pause: a hard stop, shown in a dark blue banner (a deeper shade of the
+  // mediator blue) so the participant notices the chat is held and answers the
+  // questions on the left.
+  &.paused {
+    background: var(--md-sys-color-on-mediator-container, #00174c);
+    border-color: var(--md-sys-color-on-mediator-container, #00174c);
+    color: #ffffff;
+    font-weight: 600;
+  }
+
+  // Reserves the banner's vertical space during transient turn transitions
+  // so the chat content above does not shift up or down between turns.
+  &.banner-placeholder {
+    background: transparent;
+    color: transparent;
+  }
+
+  // Setup banner: spinner + text on one centered row, so it's visually clear
+  // that work is in progress while the group chat is being set up.
+  &.setup-banner {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: common.$spacing-small;
+  }
+}
+
+.setup-spinner {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+  border: 2px solid rgba(125, 102, 8, 0.25); // faded warning text color
+  border-top-color: #7d6608; // matches the warning text color
+  border-radius: 50%;
+  animation: setupSpin 0.8s linear infinite;
+}
+
+@keyframes setupSpin {
+  to {
+    transform: rotate(360deg);
   }
 }
 
@@ -136,6 +186,15 @@ chat-input {
       animation-delay: 0.4s;
     }
   }
+}
+
+// Mediator typing indicator matches the mediator's blue bubble + dots.
+.typing-bubble.mediator {
+  background: var(--md-sys-color-mediator-container);
+}
+
+.typing-bubble.mediator .typing-dots span {
+  background-color: var(--md-sys-color-on-mediator-container);
 }
 
 @keyframes typingBlink {

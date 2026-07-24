@@ -34,6 +34,8 @@ import {
   convertUnifiedTimestampToDate,
   getHashBasedColor,
   getProfileBasedColor,
+  variableAssignmentsIncludeObserver,
+  MEDIATOR_OBSERVER_COLOR,
 } from '../../shared/utils';
 
 import {styles} from './chat_message.scss';
@@ -62,6 +64,10 @@ export class ChatMessageComponent extends MobxLitElement {
   private readonly participantService = core.getService(ParticipantService);
 
   @property() chat: ChatMessage | undefined = undefined;
+  // Optional explicit avatar color. Used e.g. for the private chat
+  // representative, whose color must match the observer (and the group-chat
+  // representative) rather than being derived from the mediator's name/id.
+  @property() colorOverride = '';
   // Stage that this message belongs to. Replying and reacting are only offered
   // when a stage is given (e.g. not in experimenter previews).
   @property() stageId = '';
@@ -69,6 +75,15 @@ export class ChatMessageComponent extends MobxLitElement {
   // react/reply affordances or reply quotes are shown.
   @property() enableReactionsAndReplies = false;
   private fullscreenElement: HTMLElement | null = null;
+
+  // Observer-specific chat coloring (mediators shown blue; that blue reserved
+  // away from other speakers) only applies when the experiment assigns the
+  // `_isObserver` treatment variable.
+  private get reserveMediatorColor(): boolean {
+    return variableAssignmentsIncludeObserver(
+      this.cohortService.activeParticipants,
+    );
+  }
 
   override disconnectedCallback() {
     super.disconnectedCallback();
@@ -115,11 +130,20 @@ export class ChatMessageComponent extends MobxLitElement {
     }
   }
 
+  // A message belongs on the viewing participant's own side of the chat if
+  // they sent it directly or their representative (publicId
+  // `${publicId}-agent`) sent it, so the participant's own voice stays on
+  // one side of the chat.
+  private isOwnSideMessage(senderId: string | undefined): boolean {
+    const myId = this.participantService.profile?.publicId;
+    if (!myId || !senderId) return false;
+    return senderId === myId || senderId === `${myId}-agent`;
+  }
+
   renderParticipantMessage(chatMessage: ChatMessage) {
     const classes = classMap({
       'chat-message': true,
-      'current-user':
-        chatMessage.senderId === this.participantService.profile?.publicId,
+      'current-user': this.isOwnSideMessage(chatMessage.senderId),
     });
 
     let profile = chatMessage.profile;
@@ -148,10 +172,12 @@ export class ChatMessageComponent extends MobxLitElement {
       if (!chatMessage.profile?.name) {
         return '';
       }
-      // Otherwise, use profile ID/avatar to determine color
+      // Otherwise, use profile ID/avatar to determine color, reserving the
+      // mediator color (blue) away from participants when applicable.
       return getProfileBasedColor(
         chatMessage.senderId ?? '',
         profile.avatar ?? '',
+        this.reserveMediatorColor ? [MEDIATOR_OBSERVER_COLOR] : [],
       );
     };
 
@@ -186,13 +212,19 @@ export class ChatMessageComponent extends MobxLitElement {
 
   renderMediatorMessage(chatMessage: ChatMessage) {
     const profile = chatMessage.profile;
+    const reserveColor = this.reserveMediatorColor;
+    // An explicit override (e.g. a representative whose color must match its
+    // participant) wins; otherwise mediators are blue in observer experiments,
+    // falling back to an id hash color.
+    const avatarColor =
+      this.colorOverride ||
+      (reserveColor
+        ? MEDIATOR_OBSERVER_COLOR
+        : getHashBasedColor(chatMessage.senderId ?? ''));
 
     return html`
       <div class="chat-message">
-        <avatar-icon
-          .emoji=${profile.avatar}
-          .color=${getHashBasedColor(chatMessage.senderId ?? '')}
-        >
+        <avatar-icon .emoji=${profile.avatar} .color=${avatarColor}>
         </avatar-icon>
         <div class="content">
           <div class="label">
@@ -206,7 +238,11 @@ export class ChatMessageComponent extends MobxLitElement {
           </div>
           ${this.renderReplyQuote(chatMessage)}
           ${chatMessage.message
-            ? html`<div class="chat-bubble">
+            ? html`<div
+                class="chat-bubble ${reserveColor && !this.colorOverride
+                  ? 'mediator-bubble'
+                  : ''}"
+              >
                 ${unsafeHTML(convertMarkdownToHTML(chatMessage.message))}
               </div>`
             : nothing}

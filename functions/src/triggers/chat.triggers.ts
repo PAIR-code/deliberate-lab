@@ -8,17 +8,20 @@ import {
   UserType,
   createParticipantProfileBase,
   createSystemChatMessage,
+  getQuizPauseCheckpointForCount,
   shuffleWithSeed,
   ChatPromptConfig,
   ParticipantProfileExtended,
   MediatorProfileExtended,
 } from '@deliberation-lab/utils';
 import {
+  getAgentMediatorPrompt,
   getFirestoreActiveMediators,
   getFirestoreActiveParticipants,
   getFirestoreParticipant,
   getFirestoreStage,
   getFirestoreStagePublicData,
+  getFirestoreStagePublicDataRef,
   getFirestorePublicStageChatMessages,
 } from '../utils/firestore';
 import {
@@ -26,13 +29,51 @@ import {
   canSendAgentChatMessage,
 } from '../chat/chat.agent';
 import {sendErrorPrivateChatMessage} from '../chat/chat.utils';
-import {startTimeElapsed} from '../stages/chat.time';
+import {handleMaxMessagesReached, startTimeElapsed} from '../stages/chat.time';
 import {getStructuredPromptConfig} from '../structured_prompt.utils';
 import {app} from '../app';
 
 // ************************************************************************* //
 // TRIGGER FUNCTIONS                                                         //
 // ************************************************************************* //
+
+/**
+ * Start the next agent's turn in a turn-based group chat. This is the single
+ * chokepoint that dispatches the next agent message after a turn advances.
+ * Exported so the quiz resume path (submitParticipantThought) can
+ * re-fire the stalled turn once the pause is cleared. No new chat message
+ * arrives to re-trigger onPublicChatMessageCreated, so the resume must be
+ * explicit.
+ */
+export async function triggerNextTurnHolder(
+  experimentId: string,
+  cohortId: string,
+  allParticipantIds: string[], // non-observer participant private IDs (mediator context)
+  stageId: string,
+  triggerChatId: string,
+  nextMediatorHolder: MediatorProfileExtended | null | undefined,
+  nextTurnHolder: ParticipantProfileExtended | null | undefined,
+) {
+  if (nextMediatorHolder) {
+    await createAgentChatMessageFromPrompt(
+      experimentId,
+      cohortId,
+      allParticipantIds,
+      stageId,
+      triggerChatId,
+      nextMediatorHolder,
+    );
+  } else if (nextTurnHolder?.agentConfig) {
+    await createAgentChatMessageFromPrompt(
+      experimentId,
+      cohortId,
+      [nextTurnHolder.privateId],
+      stageId,
+      triggerChatId,
+      nextTurnHolder,
+    );
+  }
+}
 
 /** When a chat message is created under publicStageData */
 export const onPublicChatMessageCreated = onDocumentCreated(
@@ -43,6 +84,10 @@ export const onPublicChatMessageCreated = onDocumentCreated(
     timeoutSeconds: 300,
   },
   async (event) => {
+    if ((event.data?.data() as ChatMessage | undefined)?.isReasoningOnly) {
+      return;
+    }
+
     const stage = await getFirestoreStage(
       event.params.experimentId,
       event.params.stageId,
@@ -58,14 +103,196 @@ export const onPublicChatMessageCreated = onDocumentCreated(
 
     // Take action for specific stages
     switch (stage.kind) {
-      case StageKind.CHAT:
+      case StageKind.CHAT: {
         // Start tracking elapsed time
         startTimeElapsed(
           event.params.experimentId,
           event.params.cohortId,
           publicStageData as ChatStagePublicData,
         );
+        // End the discussion globally when the group chat's message cap is
+        // reached. A per-mediator override (set on an active mediator's chat
+        // settings for this stage) replaces the stage-level maxNumberOfMessages;
+        // otherwise the stage value applies. Lets experimenters set a different
+        // cap for group chats running certain mediator personas.
+        const alreadyEnded = (publicStageData as ChatStagePublicData)
+          .discussionEndTimestamp;
+        if (!alreadyEnded) {
+          const stageMax = (stage as ChatStageConfig).maxNumberOfMessages;
+          const activeMediators = await getFirestoreActiveMediators(
+            event.params.experimentId,
+            event.params.cohortId,
+            stage.id,
+            true, // checkIsAgent
+          );
+          const mediatorOverrides: number[] = [];
+          const mediatorMinOverrides: number[] = [];
+          for (const mediator of activeMediators) {
+            const personaId = mediator.agentConfig?.agentId;
+            if (!personaId) continue;
+            const mediatorPrompt = await getAgentMediatorPrompt(
+              event.params.experimentId,
+              stage.id,
+              personaId,
+            );
+            const override = mediatorPrompt?.chatSettings?.maxNumberOfMessages;
+            if (override != null) mediatorOverrides.push(override);
+            const minOverride =
+              mediatorPrompt?.chatSettings?.minNumberOfMessages;
+            if (minOverride != null) mediatorMinOverrides.push(minOverride);
+          }
+          // A per-mediator override replaces the stage-level cap for this group
+          // chat. If multiple active mediators set one, the most restrictive
+          // (smallest) among them applies.
+          const effectiveMax =
+            mediatorOverrides.length > 0
+              ? Math.min(...mediatorOverrides)
+              : stageMax;
+
+          // A per-mediator override likewise replaces the stage-level
+          // minimum; the largest override wins. Published to publicStageData
+          // so the participant view's advance gate honors it, since the
+          // frontend cannot read mediator chat settings. Write only when it
+          // changes.
+          const stageMin = (stage as ChatStageConfig).minNumberOfMessages ?? 0;
+          let effectiveMin =
+            mediatorMinOverrides.length > 0
+              ? Math.max(...mediatorMinOverrides)
+              : stageMin;
+          // The max cap also caps the advancement requirement: participants can
+          // never be required to send more messages than the discussion
+          // allows, so the minimum is clamped down to the effective maximum.
+          if (effectiveMax != null && effectiveMin > effectiveMax) {
+            effectiveMin = effectiveMax;
+          }
+          // Only publish when an override moves a bound off the stage default.
+          // With no override the participant view already falls back to the
+          // stage value, so writing nothing leaves the effective bound equal to
+          // the stage bound.
+          const existingPublic = publicStageData as ChatStagePublicData;
+          const effectiveUpdates: {
+            effectiveMinNumberOfMessages?: number;
+            effectiveMaxNumberOfMessages?: number;
+          } = {};
+          if (
+            effectiveMin !== stageMin &&
+            existingPublic.effectiveMinNumberOfMessages !== effectiveMin
+          ) {
+            effectiveUpdates.effectiveMinNumberOfMessages = effectiveMin;
+          }
+          // Publish the effective max the same way, so the frontend's
+          // conversation-over / banner logic and the send-time cap guard use
+          // the cap the backend actually enforces (a per-mediator override
+          // replaces the stage value). The frontend otherwise compares against
+          // the stage value, hiding the banner before the final message and
+          // making the chat look like it ran past the limit.
+          if (
+            effectiveMax != null &&
+            effectiveMax !== stageMax &&
+            existingPublic.effectiveMaxNumberOfMessages !== effectiveMax
+          ) {
+            effectiveUpdates.effectiveMaxNumberOfMessages = effectiveMax;
+          }
+          if (Object.keys(effectiveUpdates).length > 0) {
+            await app
+              .firestore()
+              .collection('experiments')
+              .doc(event.params.experimentId)
+              .collection('cohorts')
+              .doc(event.params.cohortId)
+              .collection('publicStageData')
+              .doc(event.params.stageId)
+              .set(effectiveUpdates, {merge: true});
+          }
+          const allChatMessages =
+            (await getFirestorePublicStageChatMessages(
+              event.params.experimentId,
+              event.params.cohortId,
+              event.params.stageId,
+            )) ?? [];
+          // `isReasoningOnly` is an optional field; when it is not set the
+          // access resolves to undefined (falsy), so a message is only
+          // excluded when the field is present and true. Keeps the backend
+          // cap aligned with the frontend, which excludes reasoning-only
+          // messages from chatMap entirely.
+          const cohortMessageCount = allChatMessages.filter(
+            (m) =>
+              m.type !== UserType.SYSTEM &&
+              !m.isError &&
+              !(m as {isReasoningOnly?: boolean}).isReasoningOnly,
+          ).length;
+          // Quiz-participant presence + quiz state. Computed before the cap check so
+          // the after-final-message quiz can pause the cap.
+          const cohortParticipants = await getFirestoreActiveParticipants(
+            event.params.experimentId,
+            event.params.cohortId,
+            stage.id,
+            false, // Get all participants
+            true, // Include observers
+          );
+          // Quiz applies per the participant's _isQuizzed variable, and only
+          // in turn-based chats (the pause gates the next agent turn);
+          // otherwise the variable is ignored.
+          const hasQuizParticipant =
+            (stage as ChatStageConfig).isTurnBased === true &&
+            cohortParticipants.some((p) => p.isQuizzed);
+          const answeredCheckpoint = existingPublic.quizAnsweredCheckpoint ?? 0;
+          const alreadyPaused = (existingPublic.quizPauseCheckpoint ?? 0) > 0;
+          // Checkpoints are thirds of the effective minimum message count
+          // (fewer than 3 quizzes when the minimum is under 3; none without a
+          // minimum).
+          const newCheckpoint = getQuizPauseCheckpointForCount(
+            cohortMessageCount,
+            effectiveMin,
+          );
+
+          if (effectiveMax != null && cohortMessageCount >= effectiveMax) {
+            // Final message sent -> end the discussion. If a participant
+            // still owes the after-final quiz (the last checkpoint quiz),
+            // also raise its pause so they answer before proceeding; the chat
+            // is ended either way, and submitting just clears the quiz (its
+            // turn-resume is then a no-op against the already-ended discussion).
+            if (
+              hasQuizParticipant &&
+              !alreadyPaused &&
+              newCheckpoint >= 1 &&
+              answeredCheckpoint < newCheckpoint
+            ) {
+              await getFirestoreStagePublicDataRef(
+                event.params.experimentId,
+                event.params.cohortId,
+                event.params.stageId,
+              ).update({quizPauseCheckpoint: newCheckpoint});
+            }
+            await handleMaxMessagesReached(
+              event.params.experimentId,
+              event.params.cohortId,
+              event.params.stageId,
+            );
+            return;
+          }
+
+          // Intermediate quizzes (~1/3 and ~2/3 through): pause at a new
+          // checkpoint below the cap so the participant answers; cleared and the
+          // turn resumed on submit. Only the pause flag is set: the frontend
+          // renders the "paused" banner and suppresses the typing indicator.
+          // No system chat message is posted, since it read like a real
+          // message and left a stale typing indicator.
+          if (
+            hasQuizParticipant &&
+            !alreadyPaused &&
+            newCheckpoint > answeredCheckpoint &&
+            newCheckpoint >= 1
+          ) {
+            await getFirestoreStagePublicDataRef(
+              event.params.experimentId,
+              event.params.cohortId,
+              event.params.stageId,
+            ).update({quizPauseCheckpoint: newCheckpoint});
+          }
+        }
         break;
+      }
       case StageKind.SALESPERSON:
         // TODO: Add API calls for salesperson back in
         return; // Don't call any of the usual chat functions
@@ -79,9 +306,12 @@ export const onPublicChatMessageCreated = onDocumentCreated(
       event.params.cohortId,
       stage.id,
       false, // Get all participants, not just agents
+      true, // Include observers
     );
 
-    const allParticipantIds = allParticipants.map((p) => p.privateId);
+    const allParticipantIds = allParticipants
+      .filter((p) => !p.isObserver)
+      .map((p) => p.privateId);
 
     const chatStage = stage as ChatStageConfig;
     const chatPublicData = publicStageData as ChatStagePublicData;
@@ -103,6 +333,7 @@ export const onPublicChatMessageCreated = onDocumentCreated(
         event.params.cohortId,
         stage.id,
         true, // get AI mediators
+        stage,
       );
       const allMediatorIds = mediators.map((m) => m.publicId);
 
@@ -138,8 +369,10 @@ export const onPublicChatMessageCreated = onDocumentCreated(
         let currentTurnParticipantId = chatPublicData.currentTurnParticipantId;
         let cycleIndex = chatPublicData.cycleIndex ?? 0;
 
-        // Get active IDs for validation and filtering. Filter out completed/booted/timed-out participants.
+        // Get active IDs for validation and filtering. Filter out completed/booted/timed-out participants and observers.
         const activeParticipants = allParticipants.filter((p) => {
+          if (p.isObserver) return false;
+          if (p.agentConfig?.isInactivePersona) return false;
           if (
             p.currentCohortId !== undefined &&
             p.currentCohortId !== event.params.cohortId
@@ -159,12 +392,21 @@ export const onPublicChatMessageCreated = onDocumentCreated(
           return !isExplicitlyInactive && !isExplicitlyCompleted;
         });
 
-        if (activeParticipants.length === 0) {
+        // Pause turn-taking once there are no active (non-observer)
+        // participants left, unless an observer is present to watch the
+        // agents. Without an observer, the chat pauses as before so the
+        // mediator does not monologue after every participant has left.
+        const hasObserver = allParticipants.some((p) => p.isObserver);
+        if (
+          activeParticipants.length === 0 &&
+          (allMediatorIds.length === 0 || !hasObserver)
+        ) {
           transaction.set(
             publicStageDataRef,
             {
               currentTurnParticipantId: null,
               turnOrder: [],
+              turnProcessedMessageId: message.id,
             },
             {merge: true},
           );
@@ -321,6 +563,7 @@ export const onPublicChatMessageCreated = onDocumentCreated(
                 currentTurnParticipantId,
                 turnOrder,
                 cycleIndex,
+                turnProcessedMessageId: message.id,
               },
               {merge: true},
             );
@@ -331,6 +574,12 @@ export const onPublicChatMessageCreated = onDocumentCreated(
             );
             nextMediatorHolder = mediators.find(
               (m) => m.publicId === currentTurnParticipantId,
+            );
+          } else {
+            transaction.set(
+              publicStageDataRef,
+              {turnProcessedMessageId: message.id},
+              {merge: true},
             );
           }
           return;
@@ -451,6 +700,7 @@ export const onPublicChatMessageCreated = onDocumentCreated(
                 currentTurnParticipantId,
                 turnOrder,
                 cycleIndex,
+                turnProcessedMessageId: message.id,
               },
               {merge: true},
             );
@@ -461,6 +711,12 @@ export const onPublicChatMessageCreated = onDocumentCreated(
             );
             nextMediatorHolder = mediators.find(
               (m) => m.publicId === currentTurnParticipantId,
+            );
+          } else {
+            transaction.set(
+              publicStageDataRef,
+              {turnProcessedMessageId: message.id},
+              {merge: true},
             );
           }
         }
@@ -514,9 +770,7 @@ export const onPublicChatMessageCreated = onDocumentCreated(
             await createAgentChatMessageFromPrompt(
               event.params.experimentId,
               event.params.cohortId,
-              mediator
-                ? allParticipants.map((p) => p.privateId)
-                : [agent.privateId],
+              mediator ? allParticipantIds : [agent.privateId],
               stage.id,
               '', // empty triggerChatId indicates initial message
               agent,
@@ -526,26 +780,24 @@ export const onPublicChatMessageCreated = onDocumentCreated(
       }
 
       if (shouldTriggerAgent && updatedTurnParticipantId) {
-        const finalTriggerChatId = wasTurnHolderDroppedOut ? '' : message.id;
-        if (nextMediatorHolder) {
-          await createAgentChatMessageFromPrompt(
-            event.params.experimentId,
-            event.params.cohortId,
-            allParticipants.map((p) => p.privateId),
-            stage.id,
-            finalTriggerChatId,
-            nextMediatorHolder,
-          );
-        } else if (nextTurnHolder?.agentConfig) {
-          await createAgentChatMessageFromPrompt(
-            event.params.experimentId,
-            event.params.cohortId,
-            [nextTurnHolder.privateId],
-            stage.id,
-            finalTriggerChatId,
-            nextTurnHolder,
-          );
+        // Quiz pause: while the chat is paused for a quiz, do not start the
+        // next agent turn. turnOrder / currentTurnParticipantId / cycleIndex
+        // are already persisted, so the turn resumes cleanly when the
+        // participant submits (see submitParticipantThought ->
+        // triggerNextTurnHolder).
+        if ((updatedPublicStageData?.quizPauseCheckpoint ?? 0) > 0) {
+          return;
         }
+        const finalTriggerChatId = wasTurnHolderDroppedOut ? '' : message.id;
+        await triggerNextTurnHolder(
+          event.params.experimentId,
+          event.params.cohortId,
+          allParticipantIds,
+          stage.id,
+          finalTriggerChatId,
+          nextMediatorHolder,
+          nextTurnHolder,
+        );
       }
     } else {
       // Send agent mediator messages
@@ -554,6 +806,7 @@ export const onPublicChatMessageCreated = onDocumentCreated(
         event.params.cohortId,
         stage.id,
         true,
+        stage,
       );
       await Promise.all(
         mediators.map((mediator) =>
@@ -572,7 +825,9 @@ export const onPublicChatMessageCreated = onDocumentCreated(
       // the experiment
       const agentParticipants = allParticipants.filter(
         (p) =>
-          p.agentConfig && p.currentStatus === ParticipantStatus.IN_PROGRESS,
+          p.agentConfig &&
+          !p.agentConfig.isInactivePersona &&
+          p.currentStatus === ParticipantStatus.IN_PROGRESS,
       );
       await Promise.all(
         agentParticipants.map((participant) =>
@@ -613,7 +868,7 @@ export const onPrivateChatMessageCreated = onDocumentCreated(
         .doc(event.params.chatId)
         .get()
     ).data() as ChatMessage;
-    if (message.isError) {
+    if (message.isError || message.isReasoningOnly) {
       return;
     }
 
@@ -635,6 +890,7 @@ export const onPrivateChatMessageCreated = onDocumentCreated(
       participant.currentCohortId,
       stage.id,
       true,
+      stage,
     );
 
     await Promise.all(
