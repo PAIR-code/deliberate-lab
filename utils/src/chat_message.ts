@@ -236,3 +236,25 @@ export function createSystemChatMessage(
     reactionMap: config.reactionMap ?? {},
   };
 }
+
+/**
+ * Neutral chat responses an agent sends when its model call fails past the
+ * retry deadline and the experiment keeps the conversation going instead of
+ * ending the study.
+ */
+/**
+ * Message a turn-based agent sends when its model call fails past the retry
+ * deadline, unless the experiment opts into neutral responses.
+ */
+export const TIMEOUT_ERROR_RESPONSE =
+  '*Error: Could not generate a message at this time. Please try again.*';
+
+export const NEUTRAL_TIMEOUT_RESPONSES = [
+  'Not sure.',
+  'Not sure yet.',
+  "I'm not sure about that.",
+  "I'm thinking.",
+  "I'm just thinking.",
+  "I'm thinking about it.",
+  "Let's consider that.",
+];

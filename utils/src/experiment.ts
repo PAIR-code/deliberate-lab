@@ -80,6 +80,16 @@ export interface Experiment {
   variableConfigs?: VariableConfig[]; // list of variable configs used in experiment
   variableMap?: Record<string, string>; // variable to assigned value
   cohortDefinitions?: CohortDefinition[]; // pre-defined cohorts for individual routing
+  // Maximum number of timeout messages a participant may receive from
+  // turn-based agents before a further timeout ends the study with the
+  // restart pop-up. Defaults to 2 when unset; null means no limit. Set on
+  // the experiment document directly; not shown in the editor.
+  timeoutMessageLimit?: number | null;
+  // When true, timeout messages are drawn without replacement from the
+  // neutral responses instead of the error message; once all have been
+  // used, the error message is sent. Set on the experiment document
+  // directly; not shown in the editor.
+  useNeutralTimeoutResponses?: boolean;
 }
 
 /** Experiment template (used to load experiments). */

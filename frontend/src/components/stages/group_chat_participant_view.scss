@@ -3,6 +3,41 @@
 
 :host {
   @include common.flex-column;
+  // Containing block for the absolutely positioned overlay below.
+  position: relative;
+}
+
+.response-timeout-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: common.$spacing-xl;
+  background: rgba(0, 0, 0, 0.55);
+}
+
+.response-timeout-dialog {
+  @include common.flex-column;
+  gap: common.$spacing-medium;
+  max-width: 420px;
+  padding: common.$spacing-xl;
+  border-radius: common.$spacing-medium;
+  background: var(--md-sys-color-surface);
+  color: var(--md-sys-color-on-surface);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
+  text-align: center;
+}
+
+.response-timeout-title {
+  @include typescale.title-medium;
+  color: var(--md-sys-color-error);
+  font-weight: 600;
+}
+
+.response-timeout-body {
+  @include typescale.body-medium;
 }
 
 chat-interface {

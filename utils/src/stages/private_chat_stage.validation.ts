@@ -38,6 +38,7 @@ export const PrivateChatStageConfigData = Type.Composite(
         // If true, prevents participants from cancelling pending requests
         // while waiting for a response (to prevent gaming minimum message counts)
         preventCancellation: Type.Optional(Type.Boolean()),
+        agentTimeoutSeconds: Type.Optional(Type.Integer({minimum: 1})),
       },
       strict,
     ),
