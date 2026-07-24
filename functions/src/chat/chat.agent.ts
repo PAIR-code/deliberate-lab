@@ -454,8 +454,8 @@ export async function getAgentChatMessage(
     return {message: null, success: false, retryTimedOut: false};
   }
 
-  // Send the conversation as role-tagged messages only for a private chat
-  // with exactly one participant and one mediator.
+  // Check if we should use message-based format
+  // Only for private chat with exactly one participant AND one mediator
   const isPrivateChat = stage.kind === StageKind.PRIVATE_CHAT;
   // Count active mediators for this stage
   let mediatorCount = 0;
@@ -486,7 +486,6 @@ export async function getAgentChatMessage(
     user,
     promptConfig,
     participantIds, // Pass participant IDs to limit context scope (e.g., for private chats)
-    useMessageFormat,
   );
 
   // For a turn-based group chat with a fixed message cap, tell the agent
