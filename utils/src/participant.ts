@@ -262,6 +262,12 @@ export function setProfile(
       // Use animal profile (default)
       config.name = `${mainProfile.name}${mainProfile.repeat === 0 ? '' : ` ${mainProfile.repeat + 1}`}`;
       config.avatar = mainProfile.avatar;
+    } else if (profileType === ProfileType.ANONYMOUS_ANIMAL_NO_NUMBER) {
+      // Same in-order, looping animal assignment as ANONYMOUS_ANIMAL, but never
+      // append a repeat number. Repeats are allowed (e.g. the 41st participant
+      // is "Bear" again, not "Bear 2").
+      config.name = mainProfile.name;
+      config.avatar = mainProfile.avatar;
     }
     // Note: ProfileType.DEFAULT should not reach here as setAnonymousProfile would be false
     config.pronouns = '';

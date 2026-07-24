@@ -318,6 +318,7 @@ export function requiresAnonymousProfiles(stages: StageConfig[]): boolean {
   if (!profileStage || profileStage.kind !== StageKind.PROFILE) return false;
   return (
     profileStage.profileType === ProfileType.ANONYMOUS_ANIMAL ||
+    profileStage.profileType === ProfileType.ANONYMOUS_ANIMAL_NO_NUMBER ||
     profileStage.profileType === ProfileType.ANONYMOUS_PARTICIPANT
   );
 }

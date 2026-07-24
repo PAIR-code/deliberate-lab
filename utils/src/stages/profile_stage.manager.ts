@@ -24,6 +24,7 @@ export class ProfileStageHandler extends BaseStageHandler {
     if (
       !agentConfig ||
       stageProfileType === ProfileType.ANONYMOUS_ANIMAL ||
+      stageProfileType === ProfileType.ANONYMOUS_ANIMAL_NO_NUMBER ||
       stageProfileType === ProfileType.ANONYMOUS_PARTICIPANT
     ) {
       return {callApi: false, moveToNextStage: true};
