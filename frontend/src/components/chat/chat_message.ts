@@ -22,9 +22,10 @@ import {ParticipantService} from '../../services/participant.service';
 
 import {
   ChatMessage,
-  ChatMessageReaction,
   StoredFile,
   UserType,
+  getParticipantStageProfile,
+  ChatMessageReaction,
   createChatMessageReply,
   getChatMessageReactors,
 } from '@deliberation-lab/utils';
@@ -121,7 +122,26 @@ export class ChatMessageComponent extends MobxLitElement {
         chatMessage.senderId === this.participantService.profile?.publicId,
     });
 
-    const profile = chatMessage.profile;
+    let profile = chatMessage.profile;
+    const currentStageId = this.participantService.currentStageViewId ?? '';
+    const currentStage = this.experimentService.getStage(currentStageId);
+    if (currentStageId && chatMessage.senderId) {
+      const senderParticipant = this.cohortService
+        .getAllParticipants()
+        .find((p) => p.publicId === chatMessage.senderId);
+      if (senderParticipant) {
+        const stageProfile = getParticipantStageProfile(
+          senderParticipant,
+          currentStageId,
+          currentStage?.name ?? '',
+          currentStage?.anonymousProfileSetId,
+        );
+        if (stageProfile && stageProfile.name) {
+          profile = stageProfile;
+        }
+      }
+    }
+
     // Use profile ID to determine color
     const color = () => {
       // If no name, use default background

@@ -101,6 +101,14 @@ export * from './stages/role_stage';
 export * from './stages/role_stage.manager';
 export * from './stages/role_stage.validation';
 
+export * from './stages/negotiation_profile_stage';
+export * from './stages/negotiation_profile_stage.manager';
+export * from './stages/negotiation_profile_stage.validation';
+
+export * from './stages/negotiation_payout_stage';
+export * from './stages/negotiation_payout_stage.manager';
+export * from './stages/negotiation_payout_stage.validation';
+
 export * from './stages/info_stage';
 export * from './stages/info_stage.manager';
 export * from './stages/info_stage.prompts';
