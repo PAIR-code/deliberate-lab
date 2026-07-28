@@ -153,6 +153,21 @@ chat-input {
   }
 }
 
+// The viewing participant's own representative sits on their side of the chat
+// (its messages get `current-user`), so its typing indicator mirrors to the
+// right too, matching chat_message.scss's `.current-user`.
+.typing-msg.current-user {
+  flex-direction: row-reverse;
+
+  .content {
+    align-items: flex-end;
+  }
+
+  .typing-bubble {
+    border-radius: 20px 20px 8px 20px;
+  }
+}
+
 .typing-dots {
   display: flex;
   align-items: center;
