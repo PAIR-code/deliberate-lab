@@ -16,6 +16,7 @@ import {
   createModelGenerationConfig,
   ModelResponseStatus,
   DEFAULT_AGENT_MODEL_SETTINGS,
+  getRepresentedName,
 } from '@deliberation-lab/utils';
 import {startAgentParticipant} from '../agent_participant.utils';
 import {
@@ -74,7 +75,11 @@ export const onParticipantCreation = onDocumentCreated(
       if (content) {
         const resolved = content
           .split('{{name}}')
-          .join(String(participant.name ?? participant.publicId))
+          .join(
+            getRepresentedName(
+              String(participant.name ?? participant.publicId),
+            ),
+          )
           .split('{{publicId}}')
           .join(participant.publicId);
         await app.firestore().runTransaction(async (transaction) => {
@@ -190,7 +195,11 @@ export const onParticipantCreation = onDocumentCreated(
             // Content may reference the claiming agent's profile.
             const resolved = content
               .split('{{name}}')
-              .join(String(participant.name ?? participant.publicId))
+              .join(
+                getRepresentedName(
+                  String(participant.name ?? participant.publicId),
+                ),
+              )
               .split('{{publicId}}')
               .join(participant.publicId);
             console.log(

@@ -175,6 +175,11 @@ export function createParticipantProfileBase(
   };
 }
 
+// Suffix that labels a person's AI representative (for example "Bear" becomes
+// "Bear's Agent"). One constant so the represented person's name can be
+// recovered from a representative's name.
+export const REPRESENTATIVE_NAME_SUFFIX = "'s Agent";
+
 /**
  * Display profile (name + avatar) for an observer's AI representative.
  * The avatar defaults to a robot. The "(yours)" marker is not part of the
@@ -187,7 +192,19 @@ export function getRepresentativeProfile(
   name: string;
   avatar: string;
 } {
-  return {name: `${observerName}'s Agent`, avatar};
+  return {name: `${observerName}${REPRESENTATIVE_NAME_SUFFIX}`, avatar};
+}
+
+/**
+ * Recover the represented person's name from a representative's display name,
+ * so their materials read under the same name a human interview uses (for
+ * example "Bear's Agent" becomes "Bear"). A name that is not a
+ * representative's is returned unchanged.
+ */
+export function getRepresentedName(representativeName: string): string {
+  return representativeName.endsWith(REPRESENTATIVE_NAME_SUFFIX)
+    ? representativeName.slice(0, -REPRESENTATIVE_NAME_SUFFIX.length)
+    : representativeName;
 }
 
 /** Create private participant config. */

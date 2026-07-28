@@ -1614,7 +1614,7 @@ export async function completeParticipantTransfer(
         avatar: repProfile.avatar,
         agentConfig: {
           agentId: repAgentId,
-          promptContext: `You are ${observerName}'s representative in this discussion. Speak and advocate on ${observerName}'s behalf, representing their perspective from their earlier responses rather than expressing your own independent opinions. Ensure you properly separate every paragraph with one empty line in between.`,
+          promptContext: `You are ${observerName}'s representative in this discussion. Represent ${observerName}'s perspective from their earlier responses rather than expressing your own independent opinions. Ensure you properly separate every paragraph with one empty line in between.`,
           modelSettings:
             experiment.spawnedAgentModelSettings ??
             DEFAULT_AGENT_MODEL_SETTINGS,
@@ -1717,7 +1717,7 @@ export async function completeParticipantTransfer(
           const representedName = drawnName || agentProfile.name;
           // onParticipantCreation appends the stored bank persona to this
           // framing.
-          agentProfile.agentConfig.promptContext = `You are ${representedName}'s representative in this discussion. You are a separate agent, not ${representedName} yourself. Speak and advocate on ${representedName}'s behalf, representing their perspective from their materials below, rather than expressing your own independent opinions or adopting their persona as your own identity. The materials below may use a different name for ${representedName}; that is the same person, and you should call them ${representedName} here. Ensure you properly separate every paragraph with one empty line in between.\n\n${representedName}'s materials:`;
+          agentProfile.agentConfig.promptContext = `You are ${representedName}'s representative in this discussion. Represent ${representedName}'s perspective from the materials below rather than expressing your own independent opinions. Ensure you properly separate every paragraph with one empty line in between.\n\n${representedName}'s materials:`;
           // Bank persona, not a slot-based one.
           delete agentProfile.agentConfig.personaSlotKey;
           if (personaHash) {
