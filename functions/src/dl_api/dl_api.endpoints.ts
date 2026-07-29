@@ -30,7 +30,6 @@ import {
   getCohort,
   updateCohort,
   deleteCohort,
-  resetCohort,
 } from './cohorts.dl_api';
 import {listPersonas, uploadPersonas} from './personas.dl_api';
 
@@ -84,7 +83,6 @@ app.post('/v1/experiments/:experimentId/cohorts', createCohort);
 app.get('/v1/experiments/:experimentId/cohorts/:cohortId', getCohort);
 app.put('/v1/experiments/:experimentId/cohorts/:cohortId', updateCohort);
 app.delete('/v1/experiments/:experimentId/cohorts/:cohortId', deleteCohort);
-app.post('/v1/experiments/:experimentId/cohorts/:cohortId/reset', resetCohort);
 
 // API Routes - Persona banks
 app.get('/v1/experiments/:experimentId/personas', listPersonas);
