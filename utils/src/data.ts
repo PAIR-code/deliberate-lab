@@ -56,6 +56,10 @@ export interface ParticipantDownload {
   answerMap: Record<string, StageParticipantAnswer>;
   // Maps from stage ID to list of participant's thoughts in that stage
   thoughtMap: Record<string, ParticipantThought[]>;
+  // Maps from stage ID to the participant's private-chat (e.g. interview)
+  // messages in that stage, ordered chronologically. Private chats live in a
+  // per-participant subcollection and were previously absent from the download.
+  privateChatMap: Record<string, ChatMessage[]>;
 }
 
 export interface CohortDownload {
@@ -89,6 +93,7 @@ export function createParticipantDownload(
     profile,
     answerMap: {},
     thoughtMap: {},
+    privateChatMap: {},
   };
 }
 
