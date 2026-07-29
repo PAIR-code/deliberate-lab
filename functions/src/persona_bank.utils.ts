@@ -1,5 +1,5 @@
 import {createHash} from 'crypto';
-import {UnifiedTimestamp} from '@deliberation-lab/utils';
+import {shuffleWithSeed, UnifiedTimestamp} from '@deliberation-lab/utils';
 
 /**
  * Persona bank: pre-generated personas stored per experiment, keyed by a
@@ -15,11 +15,14 @@ export interface StoredPersona {
   // The round variables this persona was generated for (inspection only).
   variables: Record<string, unknown>;
   // Persona content is experiment-defined; fields beyond the bookkeeping ones
-  // are stored as-is. The runtime reads two optional text fields: `content`
-  // (appended to the claiming agent's prompt) and `sketch` (a plain persona
-  // for agents that need one of their own).
+  // are stored as-is. The runtime reads three optional fields: `content`
+  // (appended to the claiming agent's prompt), `sketch` (a plain persona
+  // for agents that need one of their own), and `stageAnswers` (stage answers
+  // to materialize as the claiming inactive persona's real answer docs, keyed
+  // by stage ID, so prompts and exports present it like a live participant).
   content?: string;
   sketch?: string;
+  stageAnswers?: Record<string, unknown>;
   // Reuse bookkeeping: fewest-used personas are claimed first; a persona is
   // never claimed twice by the same participant.
   usageCount: number;
@@ -52,11 +55,7 @@ export function selectPersonaToClaim(
   const leastUsed = candidates
     .filter((p) => (p.usageCount ?? 0) === minUsage)
     .sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
-  const seed = createHash('sha256')
-    .update(participantPrivateId)
-    .digest()
-    .readUInt32BE(0);
-  return leastUsed[seed % leastUsed.length];
+  return shuffleWithSeed(leastUsed, participantPrivateId)[0];
 }
 
 /**

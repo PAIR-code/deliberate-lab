@@ -155,7 +155,7 @@ export async function claimStoredPersonaByHash(
   hash: string | null, // null: claim from the whole collection (flat pool)
   participantPrivateId: string,
   collectionName = 'personas',
-): Promise<string | null> {
+): Promise<StoredPersona | null> {
   const personasRef = app
     .firestore()
     .collection('experiments')
@@ -174,7 +174,7 @@ export async function claimStoredPersonaByHash(
       usageCount: (chosen.usageCount ?? 0) + 1,
       usedBy: [...(chosen.usedBy ?? []), participantPrivateId],
     });
-    return chosen.content ?? null;
+    return chosen;
   });
 }
 

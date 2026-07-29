@@ -895,8 +895,19 @@ function getStageContextForPrompt(
   // alongside the human, in a per-cohort shuffled order, so a mediator sees
   // every participant's block in one uniform list. With no persona agents
   // this is byte-identical to the prior output.
+  //
+  // A persona with an actual recorded answer for this stage (materialized at
+  // claim time from the bank) renders natively like any participant, so its
+  // data and a live participant's are presented identically; its stored
+  // content stands in only for stages where it has no real answer.
+  const hasRealAnswer = (p: ParticipantProfileExtended) =>
+    stageContext.privateAnswers.some(
+      (a) => a.participantPublicId === p.publicId,
+    );
   const realParticipants = item.includeParticipantAnswers
-    ? participants.filter((p) => !p.agentConfig?.isInactivePersona)
+    ? participants.filter(
+        (p) => !p.agentConfig?.isInactivePersona || hasRealAnswer(p),
+      )
     : [];
   // Inactive personas' content must be included whenever participant answers
   // are (mirroring realParticipants above), not just when the rendered stage
@@ -904,12 +915,18 @@ function getStageContextForPrompt(
   // them.
   const personaAgents = item.includeParticipantAnswers
     ? participants.filter(
-        (p) => p.agentConfig?.isInactivePersona && p.agentConfig?.promptContext,
+        (p) =>
+          p.agentConfig?.isInactivePersona &&
+          p.agentConfig?.promptContext &&
+          !hasRealAnswer(p),
       )
     : [];
+  const hasInactivePersonas =
+    item.includeParticipantAnswers &&
+    participants.some((p) => p.agentConfig?.isInactivePersona);
 
   let stageDisplay: string;
-  if (personaAgents.length === 0) {
+  if (!hasInactivePersonas) {
     stageDisplay = stageManager.getStageDisplayForPrompt(
       stage,
       realParticipants,

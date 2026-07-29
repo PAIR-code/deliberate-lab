@@ -11,6 +11,7 @@ import {
   ParticipantStatus,
   StageConfig,
   StageKind,
+  StageParticipantAnswer,
   shuffleWithSeed,
   buildGeneratePersonaPrompt,
   createModelGenerationConfig,
@@ -66,12 +67,13 @@ export const onParticipantCreation = onDocumentCreated(
     // provides one. The bank is one flat pool (no per-round keying). Without
     // a bank this finds nothing and the representative behaves as before.
     if (participant.agentConfig?.repPersonaBank) {
-      const content = await claimStoredPersonaByHash(
+      const claimed = await claimStoredPersonaByHash(
         event.params.experimentId,
         null,
         participant.privateId,
         'repPersonas',
       );
+      const content = claimed?.content;
       if (content) {
         const resolved = content
           .split('{{name}}')
@@ -186,14 +188,14 @@ export const onParticipantCreation = onDocumentCreated(
         // spread evenly). Tried first so agents that also carry the sketch
         // key get the round-specific persona when the bank has one.
         if (personaHash) {
-          const content = await claimStoredPersonaByHash(
+          const claimed = await claimStoredPersonaByHash(
             experimentId,
             personaHash,
             participant.privateId,
           );
-          if (content) {
+          if (claimed?.content) {
             // Content may reference the claiming agent's profile.
-            const resolved = content
+            const resolved = claimed.content
               .split('{{name}}')
               .join(
                 getRepresentedName(
@@ -206,6 +208,27 @@ export const onParticipantCreation = onDocumentCreated(
               `Claimed bank persona for participant ${participant.privateId} (hash ${personaHash.slice(0, 8)}).`,
             );
             await applyPersona(resolved);
+            // Materialize any stage answers the bank stored for this persona
+            // (e.g. its survey responses) as real answer docs, so prompts and
+            // exports present the persona's data exactly like a live
+            // participant's. Scoped to inactive personas, whose only role is
+            // to stand in for participants in prompts.
+            const stageAnswers = claimed.stageAnswers as
+              | Record<string, StageParticipantAnswer>
+              | undefined;
+            if (participant.agentConfig?.isInactivePersona && stageAnswers) {
+              for (const [answerStageId, answer] of Object.entries(
+                stageAnswers,
+              )) {
+                await getFirestoreParticipantRef(
+                  experimentId,
+                  participant.privateId,
+                )
+                  .collection('stageData')
+                  .doc(answerStageId)
+                  .set(answer);
+              }
+            }
             success = true;
           }
         }

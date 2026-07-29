@@ -15,16 +15,21 @@ import * as firestoreUtils from './utils/firestore';
 // Mock firestore utilities
 jest.mock('./utils/firestore');
 jest.mock('./app', () => {
-  // Delegate getStageDisplayForPrompt to the real private-chat handler so the
-  // merge test exercises the genuine "Private chat with NAME (id)" formatting.
+  // Delegate getStageDisplayForPrompt to the real stage handlers so the merge
+  // tests exercise the genuine "Private chat with NAME (id)" and survey-answer
+  // formatting.
   const utils = jest.requireActual('@deliberation-lab/utils');
-  const handler = new utils.PrivateChatStageHandler();
+  const privateChatHandler = new utils.PrivateChatStageHandler();
+  const surveyHandler = new utils.SurveyStageHandler();
   return {
     stageManager: {
       resolveTemplateVariablesInStage: jest.fn((stage) => stage),
       getStageDisplayForPrompt: jest.fn(
         (stage, participants, stageContext, includeScaffolding) =>
-          handler.getStageDisplayForPrompt(
+          (stage.kind === 'survey'
+            ? surveyHandler
+            : privateChatHandler
+          ).getStageDisplayForPrompt(
             participants,
             stageContext,
             includeScaffolding,
@@ -481,6 +486,67 @@ describe('structured_prompt.utils', () => {
       expect(prompt).toContain('BLAIR_CONTENT');
       // Each persona's content appears exactly once (not duplicated).
       expect(prompt.split('AVERY_CONTENT')).toHaveLength(2);
+    });
+
+    it('renders a persona natively for stages where it has a real answer', async () => {
+      setupMocks([human, persona1, persona2]);
+      const surveyStage = {
+        id: chatStageId,
+        kind: StageKind.SURVEY,
+        name: 'Initial survey',
+        descriptions: {primaryText: '', infoText: '', helpText: ''},
+        questions: [
+          {
+            id: 'q1',
+            kind: 'scale',
+            questionTitle: 'Importance',
+            upperValue: 7,
+            upperText: 'High',
+            lowerValue: 1,
+            lowerText: 'Low',
+            middleText: '',
+            useSlider: false,
+            stepSize: 1,
+          },
+        ],
+      };
+      (firestoreUtils.getFirestoreStage as jest.Mock).mockResolvedValue(
+        surveyStage,
+      );
+      const answerFor = (p: ParticipantProfileExtended, value: number) => ({
+        participantPublicId: p.publicId,
+        participantDisplayName: p.name,
+        answer: {
+          id: chatStageId,
+          kind: StageKind.SURVEY,
+          answerMap: {q1: {id: 'q1', kind: 'scale', value}},
+        },
+      });
+      // The human and persona1 have real survey answers (persona1's
+      // materialized from the bank at claim time); persona2 has none.
+      (
+        firestoreUtils.getFirestoreAnswersForStage as jest.Mock
+      ).mockResolvedValue([answerFor(human, 6), answerFor(persona1, 3)]);
+      const prompt = await getPromptFromConfig(
+        experimentId,
+        cohortId,
+        chatStageId,
+        mediator,
+        {
+          ...promptConfig,
+          type: StageKind.SURVEY,
+          includeScaffoldingInPrompt: true,
+        } as unknown as BasePromptConfig,
+      );
+      // persona1 renders natively via its real answer, not its stored content.
+      expect(prompt).toContain("Avery's answers");
+      expect(prompt).toContain('Importance: 3');
+      expect(prompt).not.toContain('AVERY_CONTENT');
+      // persona2 still stands in via its stored content.
+      expect(prompt).toContain('BLAIR_CONTENT');
+      // The human's answer renders as usual.
+      expect(prompt).toContain("Human's answers");
+      expect(prompt).toContain('Importance: 6');
     });
 
     it('is unchanged (real participants only) when no persona agents are present', async () => {
