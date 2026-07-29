@@ -236,6 +236,38 @@ export async function createAgentChatMessageFromPrompt(
       }
     }
 
+    // Turn-based private chats: guard against a re-delivered creation event
+    // producing a duplicate reply. Event delivery is at-least-once, so the
+    // private-chat message trigger can fire more than once for the same
+    // participant message; each firing would otherwise generate its own
+    // independent reply. This covers the private turn-based path only, so a
+    // given responder answers a given trigger message at most once there. The
+    // public turn-based path has a claim of its own further down this file,
+    // keyed on the trigger message and the sender's type, which stops a second
+    // reply being posted, though only after the model call has been paid for.
+    // Non-turn-based chats keep their existing behavior.
+    if (triggerChatId !== '' && isTurnBasedPrivateChat) {
+      const replyLogRef = getPrivateChatTriggerLogRef(
+        experimentId,
+        participantIds[0],
+        stageId,
+        `reply-${user.publicId}-${triggerChatId}`,
+      );
+      const shouldReply = await app
+        .firestore()
+        .runTransaction(async (transaction) => {
+          const replyLog = await transaction.get(replyLogRef);
+          if (replyLog.exists) return false;
+
+          transaction.create(replyLogRef, {timestamp: Timestamp.now()});
+          return true;
+        });
+
+      if (!shouldReply) {
+        return false; // Duplicate delivery: already replied to this trigger
+      }
+    }
+
     // Get the chat message (either initial or response)
     let message: ChatMessage | null = null;
 
