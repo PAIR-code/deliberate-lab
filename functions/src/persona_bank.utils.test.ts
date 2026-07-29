@@ -151,10 +151,32 @@ describe('selectPersonaToClaim', () => {
     expect(selectPersonaToClaim([], 'pid')).toBeNull();
   });
 
-  it('prefers the fewest-used persona, tie-broken deterministically by id', () => {
+  it('prefers a fewest-used persona', () => {
     const bank = [persona('c', 2), persona('a', 0), persona('b', 0)];
-    // a and b are both least-used (0); id tie-break picks 'a'.
-    expect(selectPersonaToClaim(bank, 'pid')?.id).toBe('a');
+    // a and b are both least-used (0); one of them is chosen, never c.
+    expect(['a', 'b']).toContain(selectPersonaToClaim(bank, 'pid')?.id);
+  });
+
+  it('breaks usage ties by participant, deterministically per participant', () => {
+    const bank = () => [
+      persona('p0', 0),
+      persona('p1', 0),
+      persona('p2', 0),
+      persona('p3', 0),
+      persona('p4', 0),
+    ];
+    // Same participant always draws the same persona from the same bank.
+    const first = selectPersonaToClaim(bank(), 'participant-1')?.id;
+    expect(selectPersonaToClaim(bank(), 'participant-1')?.id).toBe(first);
+    // Across many participants the draws vary rather than all landing on the
+    // lowest id.
+    const picks = new Set(
+      Array.from(
+        {length: 20},
+        (_, i) => selectPersonaToClaim(bank(), `participant-${i}`)?.id,
+      ),
+    );
+    expect(picks.size).toBeGreaterThan(1);
   });
 
   it('never returns a persona this participant has already used', () => {
@@ -167,7 +189,7 @@ describe('selectPersonaToClaim', () => {
     const bank = [persona('a', 0, ['pid']), persona('b', 0, ['pid'])];
     expect(selectPersonaToClaim(bank, 'pid')).toBeNull();
     // ...but a different participant can still claim them.
-    expect(selectPersonaToClaim(bank, 'other')?.id).toBe('a');
+    expect(['a', 'b']).toContain(selectPersonaToClaim(bank, 'other')?.id);
   });
 
   it('gives a participant distinct personas across successive claims', () => {
