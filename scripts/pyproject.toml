@@ -11,7 +11,7 @@ dependencies = [
 
 [dependency-groups]
 dev = [
-    "datamodel-code-generator>=0.42.2",
+    "datamodel-code-generator>=0.64.0",
     "pyright>=1.1.391",
 ]
 
