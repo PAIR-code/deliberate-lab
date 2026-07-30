@@ -156,6 +156,66 @@ describe('Cohort API Integration Tests', () => {
       expect(cohort!.metadata.name).toBe('Test Cohort');
     });
 
+    it('should create a cohort with a chosen id, so a join link can be reused', async () => {
+      const experimentId = await createTestExperiment('Chosen Cohort Id Test');
+
+      const response = await apiRequest(
+        'POST',
+        `/v1/experiments/${experimentId}/cohorts`,
+        {
+          name: 'Chosen Id Cohort',
+          id: 'my-stable-cohort',
+        },
+      );
+      expect(response.status).toBe(201);
+
+      const data = await response.json();
+      expect(data.cohort.id).toBe('my-stable-cohort');
+
+      const cohort = await getCohortFromFirestore(
+        experimentId,
+        'my-stable-cohort',
+      );
+      expect(cohort).not.toBeNull();
+      expect(cohort!.id).toBe('my-stable-cohort');
+      expect(cohort!.metadata.name).toBe('Chosen Id Cohort');
+      // Initialized like any other cohort, rather than a bare document
+      expect(cohort!.stageUnlockMap).toBeDefined();
+      expect(cohort!.participantConfig).toBeDefined();
+    });
+
+    it('should reject a chosen id that is already taken', async () => {
+      const experimentId = await createTestExperiment(
+        'Duplicate Cohort Id Test',
+      );
+      const body = {name: 'First', id: 'taken-id'};
+
+      const first = await apiRequest(
+        'POST',
+        `/v1/experiments/${experimentId}/cohorts`,
+        body,
+      );
+      expect(first.status).toBe(201);
+
+      const second = await apiRequest(
+        'POST',
+        `/v1/experiments/${experimentId}/cohorts`,
+        {name: 'Second', id: 'taken-id'},
+      );
+      expect(second.status).toBe(409);
+    });
+
+    it('should reject an empty cohort id', async () => {
+      const experimentId = await createTestExperiment('Empty Cohort Id Test');
+
+      const response = await apiRequest(
+        'POST',
+        `/v1/experiments/${experimentId}/cohorts`,
+        {name: 'No Id', id: ''},
+      );
+      expect(response.status).toBe(400);
+    });
+
     it('should create a cohort with description', async () => {
       const experimentId = await createTestExperiment(
         'Cohort Description Test',
