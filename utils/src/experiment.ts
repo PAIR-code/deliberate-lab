@@ -147,6 +147,8 @@ export function createExperimentConfig(
     variableConfigs: config.variableConfigs ?? [],
     variableMap: config.variableMap ?? {},
     cohortDefinitions: config.cohortDefinitions,
+    timeoutMessageLimit: config.timeoutMessageLimit,
+    useNeutralTimeoutResponses: config.useNeutralTimeoutResponses,
   };
 }
 
