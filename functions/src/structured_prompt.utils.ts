@@ -797,23 +797,10 @@ async function processPromptItems(
             stage: resolvedStage,
           };
 
-          // A representative (an agent standing in for a person, marked by
-          // its repPersonaBank flag) speaks from the person's own materials:
-          // their interview, which reaches it through this same stage
-          // context. What the study withholds is the survey answers, so drop
-          // those for this stage kind alone. A single prompt item can cover
-          // every stage at once, which is why the choice is made per stage
-          // here rather than on the item. Other agents keep the default.
-          const withholdSurveyAnswers =
-            (userProfile as ParticipantProfileExtended).agentConfig
-              ?.repPersonaBank === true &&
-            resolvedStage.kind === StageKind.SURVEY;
           const stageBlock = getStageContextForPrompt(
             promptData.participants,
             resolvedStageContext,
-            withholdSurveyAnswers
-              ? {...promptItem, includeParticipantAnswers: false}
-              : promptItem,
+            promptItem,
             includeScaffolding,
             cohortId,
           );
