@@ -1,4 +1,5 @@
 import {
+  ChatPromptConfig,
   getActiveProfileSetId,
   PROMPT_ITEM_PROFILE_CONTEXT_PARTICIPANT_SCAFFOLDING,
   PROMPT_ITEM_PROFILE_INFO_PARTICIPANT_SCAFFOLDING,
@@ -78,18 +79,27 @@ export async function getStructuredPromptConfig(
       if (!fallbackPrompt) {
         return fallbackPrompt;
       }
-      const experiment = await getFirestoreExperiment(experimentId);
-      const spawnedChatSettings = experiment?.spawnedAgentChatSettings;
-      if (!spawnedChatSettings) {
-        return fallbackPrompt;
+      // Chat settings only exist on chat-stage prompts, so the merge is
+      // limited to those; other stage kinds return the fallback as is.
+      if (
+        stage.kind === StageKind.CHAT ||
+        stage.kind === StageKind.PRIVATE_CHAT
+      ) {
+        const experiment = await getFirestoreExperiment(experimentId);
+        const spawnedChatSettings = experiment?.spawnedAgentChatSettings;
+        if (spawnedChatSettings) {
+          const chatFallback = fallbackPrompt as ChatPromptConfig;
+          const merged: ChatPromptConfig = {
+            ...chatFallback,
+            chatSettings: {
+              ...chatFallback.chatSettings,
+              ...spawnedChatSettings,
+            },
+          };
+          return merged;
+        }
       }
-      return {
-        ...fallbackPrompt,
-        chatSettings: {
-          ...fallbackPrompt.chatSettings,
-          ...spawnedChatSettings,
-        },
-      };
+      return fallbackPrompt;
     case UserType.MEDIATOR:
       const mediatorPrompt = await getAgentMediatorPrompt(
         experimentId,
@@ -787,10 +797,23 @@ async function processPromptItems(
             stage: resolvedStage,
           };
 
+          // A representative (an agent standing in for a person, marked by
+          // its repPersonaBank flag) speaks from the person's own materials:
+          // their interview, which reaches it through this same stage
+          // context. What the study withholds is the survey answers, so drop
+          // those for this stage kind alone. A single prompt item can cover
+          // every stage at once, which is why the choice is made per stage
+          // here rather than on the item. Other agents keep the default.
+          const withholdSurveyAnswers =
+            (userProfile as ParticipantProfileExtended).agentConfig
+              ?.repPersonaBank === true &&
+            resolvedStage.kind === StageKind.SURVEY;
           const stageBlock = getStageContextForPrompt(
             promptData.participants,
             resolvedStageContext,
-            promptItem,
+            withholdSurveyAnswers
+              ? {...promptItem, includeParticipantAnswers: false}
+              : promptItem,
             includeScaffolding,
             cohortId,
           );

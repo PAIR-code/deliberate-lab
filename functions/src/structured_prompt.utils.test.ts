@@ -5,6 +5,7 @@ import {
   BasePromptConfig,
   PromptItemType,
   StageKind,
+  SurveyQuestionKind,
 } from '@deliberation-lab/utils';
 import {
   getFirestoreDataForStructuredPrompt,
@@ -568,6 +569,141 @@ describe('structured_prompt.utils', () => {
       expect(prompt).toContain('Private chat with Human (human-1)');
       expect(prompt).toContain('Private chat with Human2 (human-2)');
       expect(prompt).not.toContain('isInactivePersona');
+    });
+
+    // A representative stands in for a person and must speak from that
+    // person's interview, while the study keeps survey answers away from it.
+    // Both arrive through the same stage-context channel, so withholding has
+    // to distinguish the two rather than dropping participant answers wholesale.
+    describe('representative stage context', () => {
+      // The person a representative stands in for is an observer; the
+      // representative is spawned as `${observer.publicId}-agent`, which is
+      // how their answers reach it.
+      const observer = {
+        ...human,
+        isObserver: true,
+      } as unknown as ParticipantProfileExtended;
+
+      const representative = {
+        ...human,
+        id: 'rep',
+        privateId: 'rep-priv',
+        publicId: 'human-1-agent',
+        name: "Human's Agent",
+        isObserver: false,
+        agentConfig: {
+          agentId: 'rep',
+          promptContext: 'REP_FRAMING',
+          repPersonaBank: true,
+        },
+      } as unknown as ParticipantProfileExtended;
+
+      const setupRepMocks = (
+        participants: ParticipantProfileExtended[],
+        caller: ParticipantProfileExtended,
+      ) => {
+        setupMocks(participants);
+        (
+          firestoreUtils.getFirestoreActiveParticipants as jest.Mock
+        ).mockResolvedValue(participants);
+        (
+          firestoreUtils.getFirestoreParticipant as jest.Mock
+        ).mockImplementation(
+          async (_exp, privateId) =>
+            participants.find((p) => p.privateId === privateId) ?? caller,
+        );
+      };
+
+      const surveyAnswers = [
+        {
+          participantPublicId: 'human-1',
+          answer: {
+            id: chatStageId,
+            kind: StageKind.SURVEY,
+            answerMap: {
+              q1: {id: 'q1', kind: SurveyQuestionKind.SCALE, value: 7},
+            },
+          },
+        },
+      ];
+
+      const surveyStage = {
+        id: chatStageId,
+        kind: StageKind.SURVEY,
+        name: 'Initial survey',
+        descriptions: {primaryText: '', infoText: '', helpText: ''},
+        questions: [
+          {
+            id: 'q1',
+            kind: SurveyQuestionKind.SCALE,
+            questionTitle: 'How important is the topic?',
+            lowerValue: 1,
+            upperValue: 7,
+            lowerText: 'Low',
+            upperText: 'High',
+          },
+        ],
+      };
+
+      it('keeps the interview a representative speaks from', async () => {
+        setupRepMocks([observer, representative], representative);
+        const prompt = await getPromptFromConfig(
+          experimentId,
+          cohortId,
+          chatStageId,
+          representative,
+          promptConfig,
+        );
+        expect(prompt).toContain('Private chat with Human (human-1)');
+        expect(prompt).toContain('HUMAN_ANSWER_TEXT');
+      });
+
+      it('withholds survey answers from a representative', async () => {
+        setupRepMocks([observer, representative], representative);
+        (firestoreUtils.getFirestoreStage as jest.Mock).mockResolvedValue(
+          surveyStage,
+        );
+        (
+          firestoreUtils.getFirestoreAnswersForStage as jest.Mock
+        ).mockResolvedValue(surveyAnswers);
+        const prompt = await getPromptFromConfig(
+          experimentId,
+          cohortId,
+          chatStageId,
+          representative,
+          promptConfig,
+        );
+        // The question still renders; the person's answer to it does not.
+        expect(prompt).toContain('How important is the topic?');
+        expect(prompt).not.toContain('How important is the topic?: 7');
+      });
+
+      it('still gives other agents the survey answers', async () => {
+        // Same position as the representative (it stands in for the same
+        // observer), differing only in the flag, so the flag is what the
+        // assertion isolates.
+        const plainAgent = {
+          ...representative,
+          id: 'plain',
+          privateId: 'plain-priv',
+          agentConfig: {agentId: 'plain', promptContext: ''},
+        } as unknown as ParticipantProfileExtended;
+        setupRepMocks([observer, plainAgent], plainAgent);
+        (firestoreUtils.getFirestoreStage as jest.Mock).mockResolvedValue(
+          surveyStage,
+        );
+        (
+          firestoreUtils.getFirestoreAnswersForStage as jest.Mock
+        ).mockResolvedValue(surveyAnswers);
+        const prompt = await getPromptFromConfig(
+          experimentId,
+          cohortId,
+          chatStageId,
+          plainAgent,
+          promptConfig,
+        );
+        expect(prompt).toContain('How important is the topic?: 7');
+      });
     });
   });
 });
