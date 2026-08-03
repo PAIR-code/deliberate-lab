@@ -346,6 +346,34 @@ export const onParticipantCreation = onDocumentCreated(
       }
     }
 
+    // The persona step above clears the flag on every path it can reach, but
+    // it does nothing at all when the experiment has no experimenter data (no
+    // API key configured), and a thrown error would skip it too. A group chat
+    // waits for every agent to be ready, so a flag left set holds the chat on
+    // the setup banner indefinitely. Clear it here as well: the agent then
+    // takes part with whatever context it has and any real problem surfaces
+    // through the normal model-error path instead of a silent stall.
+    if (activeParticipant.agentConfig?.needsPersonaGeneration) {
+      console.error(
+        `[participant.triggers] No persona was attached to agent ${participant.privateId}; letting it proceed rather than holding the chat.`,
+      );
+      await app.firestore().runTransaction(async (transaction) => {
+        const pRef = getFirestoreParticipantRef(
+          event.params.experimentId,
+          participant.privateId,
+        );
+        const pDoc = (
+          await transaction.get(pRef)
+        ).data() as ParticipantProfileExtended;
+        if (pDoc?.agentConfig?.needsPersonaGeneration) {
+          pDoc.connected = true;
+          pDoc.agentConfig.needsPersonaGeneration = false;
+          transaction.set(pRef, pDoc);
+          activeParticipant = pDoc;
+        }
+      });
+    }
+
     // Set up participant stage answers
     initializeParticipantStageAnswers(
       event.params.experimentId,
