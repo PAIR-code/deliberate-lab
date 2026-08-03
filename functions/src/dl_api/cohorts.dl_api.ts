@@ -18,6 +18,7 @@ import {
 import {
   CohortConfig,
   CohortParticipantConfig,
+  MediatorStatus,
   MetadataConfig,
   MetadataConfigSchema,
   ParticipantStatus,
@@ -374,6 +375,26 @@ export async function deleteCohort(
       transferCohortId: null,
     });
   }
+
+  // Mediators live beside the cohort rather than under it, keyed by
+  // currentCohortId, so recursiveDelete below does not reach them. Left behind
+  // they stay ACTIVE, and recreating the cohort under the same id (which this
+  // API supports, to keep join links stable) then adds a second mediator for
+  // every default persona. Two mediators in one chat answer the same turn and
+  // re-trigger each other.
+  const mediatorsSnapshot = await app
+    .firestore()
+    .collection('experiments')
+    .doc(experimentId)
+    .collection('mediators')
+    .where('currentCohortId', '==', cohortId)
+    .get();
+
+  const mediatorBatch = app.firestore().batch();
+  for (const doc of mediatorsSnapshot.docs) {
+    mediatorBatch.update(doc.ref, {currentStatus: MediatorStatus.DELETED});
+  }
+  await mediatorBatch.commit();
 
   await batch.commit();
 
