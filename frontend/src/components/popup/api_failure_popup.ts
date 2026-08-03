@@ -8,7 +8,7 @@ import {styles} from './popup.scss';
 /**
  * Blocking pop-up shown when a turn-based chat agent's model call fails to
  * return within the stage's response deadline. Tells the participant the
- * error was recorded and compensation is unaffected, and shows the study's
+ * error was recorded and they will be compensated, and shows the study's
  * debrief when the experiment's last stage is named "Debrief".
  */
 @customElement('api-failure-popup')
@@ -24,9 +24,8 @@ class ApiFailurePopup extends MobxLitElement {
         <div class="popup constrained">
           <div class="title">
             The chatbot is not currently working due to technical issues. The
-            error has been recorded, and you will receive full compensation for
-            the study. You can exit the study and return to the platform (e.g.,
-            Prolific).
+            error has been recorded, and you will be compensated for your time.
+            You can exit the study and return to the platform (e.g., Prolific).
           </div>
           ${this.debriefText
             ? html`<div class="body">
