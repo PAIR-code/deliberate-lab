@@ -544,6 +544,81 @@ describe('Chat Triggers - Turn Taking Mechanics', () => {
   // 4. MEDIATOR AUTO-TRIGGERING
   // ---------------------------------------------------------------------------
   describe('4. Mediator Auto-Triggering', () => {
+    it('waits for every spawned agent to have a persona before starting', async () => {
+      mockGetFirestoreStagePublicData.mockResolvedValue(null);
+      // One agent is still being prepared, so the chat is not ready to start.
+      mockGetFirestoreActiveParticipants.mockImplementation(
+        async (
+          _experimentId: string,
+          _cohortId: string,
+          _stageId: string | null,
+          checkIsAgent?: boolean,
+        ) =>
+          checkIsAgent
+            ? [
+                {
+                  publicId: 'a1',
+                  privateId: 'priv-a1',
+                  agentConfig: {needsPersonaGeneration: false},
+                },
+                {
+                  publicId: 'a2',
+                  privateId: 'priv-a2',
+                  agentConfig: {needsPersonaGeneration: true},
+                },
+              ]
+            : [
+                {publicId: 'p1', privateId: 'priv1'},
+                {publicId: 'a1', privateId: 'priv-a1'},
+                {publicId: 'a2', privateId: 'priv-a2'},
+              ],
+      );
+
+      await sendInitialChatMessages('exp123', 'cohort123', 'stage123', 'priv1');
+
+      // No turn assigned: the participant keeps seeing the setup banner
+      // instead of a message written about agents that are not there yet.
+      expect(__mocks__.setMock).not.toHaveBeenCalled();
+    });
+
+    it('starts once the last spawned agent has its persona', async () => {
+      mockGetFirestoreStagePublicData.mockResolvedValue(null);
+      mockGetFirestoreActiveParticipants.mockImplementation(
+        async (
+          _experimentId: string,
+          _cohortId: string,
+          _stageId: string | null,
+          checkIsAgent?: boolean,
+        ) =>
+          checkIsAgent
+            ? [
+                {
+                  publicId: 'a1',
+                  privateId: 'priv-a1',
+                  agentConfig: {needsPersonaGeneration: false},
+                },
+                {
+                  publicId: 'a2',
+                  privateId: 'priv-a2',
+                  agentConfig: {needsPersonaGeneration: false},
+                },
+              ]
+            : [
+                {publicId: 'p1', privateId: 'priv1'},
+                {publicId: 'a1', privateId: 'priv-a1'},
+                {publicId: 'a2', privateId: 'priv-a2'},
+              ],
+      );
+
+      await sendInitialChatMessages('exp123', 'cohort123', 'stage123', 'priv1');
+
+      expect(__mocks__.setMock).toHaveBeenCalledWith(
+        'experiments/exp123/cohorts/cohort123/publicStageData/stage123',
+        expect.objectContaining({currentTurnParticipantId: 'm1'}),
+        {merge: true},
+      );
+    });
+
     it('initializes turn-based chat and triggers mediator', async () => {
       // Mock getFirestoreStagePublicData returning null (meaning uninitialized)
       mockGetFirestoreStagePublicData.mockResolvedValue(null);

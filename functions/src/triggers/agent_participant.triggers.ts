@@ -69,6 +69,28 @@ export const updateAgentParticipant = onDocumentUpdated(
       }
     }
 
+    // A spawned agent has just received its persona. A group chat holds off
+    // while any agent is still without one, so try to start it again now.
+    // Every agent runs this as it becomes ready and only the last one gets
+    // past that check, so the chat starts once, with all of them prepared.
+    if (
+      before.agentConfig?.needsPersonaGeneration &&
+      !after.agentConfig?.needsPersonaGeneration
+    ) {
+      const cohort = await getFirestoreCohort(
+        experimentId,
+        after.currentCohortId,
+      );
+      if (cohort?.stageUnlockMap[after.currentStageId]) {
+        await sendInitialChatMessages(
+          experimentId,
+          after.currentCohortId,
+          after.currentStageId,
+          after.privateId,
+        );
+      }
+    }
+
     const experimentDoc = app
       .firestore()
       .collection('experiments')
