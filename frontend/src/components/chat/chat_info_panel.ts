@@ -65,8 +65,15 @@ export class ChatPanel extends MobxLitElement {
       `;
     }
 
+    // When an observer is present in the cohort, participant labels gain a
+    // "(yours)" suffix and representative agent names get long, so widen the
+    // panel to accommodate them.
+    const observerPresent = this.cohortService.activeParticipants.some(
+      (p) => p.isObserver,
+    );
+
     return html`
-      <div class="side-layout">
+      <div class="side-layout ${observerPresent ? 'wide' : ''}">
         <stage-description .stage=${this.stage} noPadding> </stage-description>
         ${this.renderTimer()} ${this.renderParticipantList()}
       </div>
