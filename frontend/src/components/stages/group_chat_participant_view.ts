@@ -25,6 +25,7 @@ import {
   ChatStagePublicData,
   ChatMessage,
   ChatStageConfig,
+  getQuizPauseCheckpointForCount,
   DiscussionItem,
   StageKind,
   UserType,
@@ -314,6 +315,7 @@ export class GroupChatView extends MobxLitElement {
     const disableNext =
       !this.isMinimumTimeMet ||
       !this.isMinimumMessagesMet() ||
+      this.isQuizOwed ||
       this.isQuizPending;
 
     const renderProgress = () => {
@@ -393,6 +395,30 @@ export class GroupChatView extends MobxLitElement {
       | ChatStagePublicData
       | undefined;
     return (data?.quizPauseCheckpoint ?? 0) > 0;
+  }
+
+  /** True while this participant still owes a quiz for the current message
+   *  count. The backend raises quizPauseCheckpoint a beat after a message
+   *  lands, so at the moment the minimum-messages condition flips true the
+   *  pause flag has not arrived yet, briefly enabling "Next stage" in the gap
+   *  before the quiz appears. This derives the same answer the pause is about
+   *  to encode, from the message count and the answered checkpoint the client
+   *  already holds, so there is no gap. Scoped to quiz participants in
+   *  turn-based chats, so other chats are unaffected. */
+  private get isQuizOwed(): boolean {
+    if (!this.stage) return false;
+    if ((this.stage as ChatStageConfig).isTurnBased !== true) return false;
+    if (!this.participantService.profile?.isQuizzed) return false;
+    const data = this.cohortService.stagePublicDataMap[this.stage.id] as
+      | ChatStagePublicData
+      | undefined;
+    const min =
+      data?.effectiveMinNumberOfMessages ?? this.stage.minNumberOfMessages ?? 0;
+    const expected = getQuizPauseCheckpointForCount(
+      this.cohortMessageCount(),
+      min,
+    );
+    return expected > (data?.quizAnsweredCheckpoint ?? 0);
   }
 
   get minutesRemainingUntilMinimum(): number {
