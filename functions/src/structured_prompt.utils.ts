@@ -66,11 +66,30 @@ export async function getStructuredPromptConfig(
         stage.id,
         user.agentConfig?.agentId,
       );
-      // Return stored prompt or fallback default prompt
-      return (
-        participantPrompt ??
-        stageManager.getDefaultParticipantStructuredPrompt(stage)
-      );
+      if (participantPrompt) {
+        return participantPrompt;
+      }
+      // No stored prompt, so fall back to the stage default. That default
+      // leaves wordsPerMinute unset, which means a spawned agent answers with
+      // no typing delay at all, so let the experiment supply chat settings for
+      // agents it spawns rather than configures.
+      const fallbackPrompt =
+        stageManager.getDefaultParticipantStructuredPrompt(stage);
+      if (!fallbackPrompt) {
+        return fallbackPrompt;
+      }
+      const experiment = await getFirestoreExperiment(experimentId);
+      const spawnedChatSettings = experiment?.spawnedAgentChatSettings;
+      if (!spawnedChatSettings) {
+        return fallbackPrompt;
+      }
+      return {
+        ...fallbackPrompt,
+        chatSettings: {
+          ...fallbackPrompt.chatSettings,
+          ...spawnedChatSettings,
+        },
+      };
     case UserType.MEDIATOR:
       const mediatorPrompt = await getAgentMediatorPrompt(
         experimentId,

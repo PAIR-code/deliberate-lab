@@ -1,5 +1,6 @@
 import {
   AgentMediatorTemplate,
+  AgentChatSettings,
   AgentModelSettings,
   AgentParticipantTemplate,
 } from './agent';
@@ -88,6 +89,11 @@ export interface Experiment {
   // representative and the other spawned agents), when the experiment does not
   // otherwise configure a model for them. Unset keeps the built-in default.
   spawnedAgentModelSettings?: AgentModelSettings | null;
+  // Chat settings applied to agents spawned at runtime, when the experiment
+  // does not otherwise configure a prompt for them. Spawned agents fall back
+  // to the built-in prompt default, whose wordsPerMinute is unset, so without
+  // this they answer with no typing delay at all. Unset keeps that behavior.
+  spawnedAgentChatSettings?: AgentChatSettings | null;
 }
 
 /** Experiment template (used to load experiments). */
@@ -146,6 +152,7 @@ export function createExperimentConfig(
     variableMap: config.variableMap ?? {},
     cohortDefinitions: config.cohortDefinitions,
     spawnedAgentModelSettings: config.spawnedAgentModelSettings ?? null,
+    spawnedAgentChatSettings: config.spawnedAgentChatSettings ?? null,
   };
 }
 

@@ -10,6 +10,7 @@ import {
   AgentModelSettingsData,
   AgentParticipantTemplateData,
 } from './agent.validation';
+import {AgentChatSettingsData} from './prompt.validation';
 import {VariableConfigData} from './variables.validation';
 
 /** Shorthand for strict TypeBox object validation */
@@ -92,6 +93,9 @@ export const ExperimentTemplateSchema = Type.Object(
         cohortDefinitions: Type.Optional(Type.Array(CohortDefinitionSchema)),
         spawnedAgentModelSettings: Type.Optional(
           Type.Union([AgentModelSettingsData, Type.Null()]),
+        ),
+        spawnedAgentChatSettings: Type.Optional(
+          Type.Union([AgentChatSettingsData, Type.Null()]),
         ),
       },
       strict,
