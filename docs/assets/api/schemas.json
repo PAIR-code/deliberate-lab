@@ -533,6 +533,41 @@
         }
       ]
     },
+    "AgentChatSettings": {
+      "title": "AgentChatSettings",
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "minMessagesBeforeResponding",
+        "canSelfTriggerCalls",
+        "initialMessage"
+      ],
+      "properties": {
+        "wordsPerMinute": {
+          "type": ["number", "null"]
+        },
+        "minMessagesBeforeResponding": {
+          "type": "integer"
+        },
+        "canSelfTriggerCalls": {
+          "type": "boolean"
+        },
+        "maxResponses": {
+          "type": ["integer", "null"]
+        },
+        "maxNumberOfMessages": {
+          "minimum": 1,
+          "type": ["integer", "null"]
+        },
+        "minNumberOfMessages": {
+          "minimum": 0,
+          "type": ["integer", "null"]
+        },
+        "initialMessage": {
+          "type": "string"
+        }
+      }
+    },
     "AssetAllocationStageConfig": {
       "title": "AssetAllocationStageConfig",
       "additionalProperties": false,
@@ -4108,41 +4143,6 @@
         }
       }
     },
-    "AgentChatSettings": {
-      "title": "AgentChatSettings",
-      "additionalProperties": false,
-      "type": "object",
-      "required": [
-        "minMessagesBeforeResponding",
-        "canSelfTriggerCalls",
-        "initialMessage"
-      ],
-      "properties": {
-        "wordsPerMinute": {
-          "type": ["number", "null"]
-        },
-        "minMessagesBeforeResponding": {
-          "type": "integer"
-        },
-        "canSelfTriggerCalls": {
-          "type": "boolean"
-        },
-        "maxResponses": {
-          "type": ["integer", "null"]
-        },
-        "maxNumberOfMessages": {
-          "minimum": 1,
-          "type": ["integer", "null"]
-        },
-        "minNumberOfMessages": {
-          "minimum": 0,
-          "type": ["integer", "null"]
-        },
-        "initialMessage": {
-          "type": "string"
-        }
-      }
-    },
     "GenericPromptConfig": {
       "title": "GenericPromptConfig",
       "additionalProperties": false,
@@ -4581,6 +4581,16 @@
                   "anyOf": [
                     {
                       "$ref": "#/$defs/AgentModelSettings"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "spawnedAgentChatSettings": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/$defs/AgentChatSettings"
                     },
                     {
                       "type": "null"
