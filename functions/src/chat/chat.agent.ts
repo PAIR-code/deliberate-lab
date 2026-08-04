@@ -8,8 +8,6 @@ import {
   PrivateChatStageConfig,
   extractChatMediatorStructuredFields,
   getStructuredOutput,
-  getTurnCycleInfo,
-  getTurnCycleStatusForPrompt,
   MediatorProfileExtended,
   ModelResponse,
   ModelResponseStatus,
@@ -469,22 +467,6 @@ export async function getAgentChatMessage(
     promptConfig,
     participantIds, // Pass participant IDs to limit context scope (e.g., for private chats)
   );
-
-  // For a turn-based group chat with a fixed message cap, tell the agent
-  // (participant or mediator) which cycle it is in and how many remain, so it
-  // can pace its contribution. No-op when not turn-based or there is no cap.
-  if (isTurnBasedGroupChat) {
-    const cycleInfo = getTurnCycleInfo(
-      chatPublicData,
-      stage as ChatStageConfig,
-    );
-    if (cycleInfo) {
-      structuredPrompt += `\n\n${getTurnCycleStatusForPrompt(
-        cycleInfo.currentCycle,
-        cycleInfo.totalCycles,
-      )}`;
-    }
-  }
 
   // Check if we should use message-based format
   // Only for private chat with exactly one participant AND one mediator
