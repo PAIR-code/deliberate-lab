@@ -217,10 +217,25 @@ export class SurveyView extends MobxLitElement {
 
     const isTooShort = minCount !== null && textAnswer.length < minCount;
 
-    // Build error text (only needed for minimum since maxlength prevents exceeding max)
-    const errorText = isTooShort
-      ? `Minimum ${minCount} characters required`
-      : '';
+    const titleLower = question.questionTitle.toLowerCase();
+    const isNumberRequired =
+      titleLower.includes('type a number') ||
+      titleLower.includes('enter numbers only') ||
+      titleLower.includes('number only') ||
+      titleLower.includes('numbers only');
+    const isInvalidNumber =
+      isNumberRequired &&
+      textAnswer.trim() !== '' &&
+      isNaN(Number(textAnswer.trim()));
+
+    const isError = isTooShort || isInvalidNumber;
+
+    // Build error text
+    const errorText = isInvalidNumber
+      ? 'Should be a number only'
+      : isTooShort
+        ? `Minimum ${minCount} characters required`
+        : '';
 
     return html`
       <div class="question">
@@ -235,7 +250,7 @@ export class SurveyView extends MobxLitElement {
           @input=${handleTextChange}
           .minLength=${minCount ?? nothing}
           .maxLength=${maxCount ?? nothing}
-          .error=${isTooShort}
+          .error=${isError}
           .errorText=${errorText}
           .counter=${maxCount !== null}
         >

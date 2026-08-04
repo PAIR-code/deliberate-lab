@@ -15,6 +15,7 @@ import {
   updateParticipantNextStage,
 } from './participant.utils';
 import {getPromptFromConfig} from './structured_prompt.utils';
+import {assignNegotiationProfilesToParticipants} from './stages/negotiation_profile.utils';
 import {
   getExperimenterData,
   getFirestoreParticipantRef,
@@ -98,6 +99,14 @@ export async function completeStageAsAgentParticipant(
     participant,
     stage,
   );
+
+  if (stage.kind === StageKind.NEGOTIATION_PROFILE) {
+    await assignNegotiationProfilesToParticipants(
+      experiment.id,
+      participant.currentCohortId,
+      stage.id,
+    );
+  }
 
   if (stageActions.callApi) {
     const response = await getParsedAgentParticipantPromptResponse(

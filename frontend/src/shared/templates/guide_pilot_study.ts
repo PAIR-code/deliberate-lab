@@ -94,6 +94,9 @@ const GUIDE_DATA = {
       '785cb971-93ac-4e44-8eab-2d124cff69ea',
       'bf61994e-937d-4c51-80bc-40cb9e733a41',
       '678d19bc-3a52-4f2f-bd3f-1ed4861e6656',
+      'negotiation-procedures',
+      'negotiation-demo',
+      'negotiation-play-to-win',
       '4ea3db67-ef1c-4cc1-8954-64d66d39edf2',
       '558e9053-bec9-4177-9bb2-d0d2fa1bb009',
       'discussion-round-2',
@@ -101,7 +104,6 @@ const GUIDE_DATA = {
       '6d620ceb-fe2e-4248-954f-8a0843e14e7c',
       'f058e39c-1df8-4bf9-94f4-596842af23e9',
       '4957e81d-99ec-474d-9997-282d84eadf41',
-      '41851ab7-ab67-4ef3-a587-cb6aa5f5151d',
       '5fd21c1a-afc6-4f77-b1c1-4c41bef61ac7',
       'ecd09d91-0c7a-4982-b69a-8cf1575883be',
       'e5121a12-4853-4507-88e9-11ed6baf1074',
@@ -209,7 +211,7 @@ const GUIDE_DATA = {
           id: 'c62f46b3-58d3-4f3d-9233-2497a42e3edb',
           kind: 'text',
           questionTitle: 'If your final stance change, could you explain why?',
-          minCharCount: 15,
+          minCharCount: 1,
           maxCharCount: null,
           condition: null,
         },
@@ -253,7 +255,7 @@ const GUIDE_DATA = {
           kind: 'text',
           questionTitle:
             ' Did you feel you had to self-censor or hold back any arguments to avoid conflict? If yes, please explain more.',
-          minCharCount: 0,
+          minCharCount: 1,
           maxCharCount: 1000,
           condition: null,
         },
@@ -564,7 +566,7 @@ const GUIDE_DATA = {
           kind: 'text',
           questionTitle:
             'What is the primary reason or argument behind your initial stance? \n',
-          minCharCount: 15,
+          minCharCount: 1,
           maxCharCount: 1000,
           condition: null,
         },
@@ -589,29 +591,6 @@ const GUIDE_DATA = {
           id: '122bac65-de76-4556-9e30-5dfef2945089',
           kind: 'survey',
           revealAudience: 'ALL',
-          revealScorableOnly: false,
-        },
-      ],
-    },
-    '41851ab7-ab67-4ef3-a587-cb6aa5f5151d': {
-      id: '41851ab7-ab67-4ef3-a587-cb6aa5f5151d',
-      kind: 'reveal',
-      name: 'Task 2: Negotiation Results ',
-      descriptions: {
-        primaryText: '',
-        infoText: '',
-        helpText: '',
-      },
-      progress: {
-        minParticipants: 0,
-        waitForAllParticipants: false,
-        showParticipantProgress: true,
-      },
-      items: [
-        {
-          id: 'fa00266d-2987-4dc1-8f30-e8febb63939d',
-          kind: 'survey',
-          revealAudience: 'CURRENT',
           revealScorableOnly: false,
         },
       ],
@@ -696,7 +675,7 @@ const GUIDE_DATA = {
           kind: 'text',
           questionTitle:
             'Please tell us about yourself. Describe your personality and what you currently find most meaningful or fulfilling in life (e.g., what keeps you going and why)?',
-          minCharCount: 50,
+          minCharCount: 1,
           maxCharCount: null,
           condition: null,
         },
@@ -800,7 +779,7 @@ const GUIDE_DATA = {
       name: 'Comprehension check',
       descriptions: {
         primaryText:
-          '| Coalition Formed | Total Points to Divide | \n| :--- | :--- | \n| **All Three (A + B + C)** | 121 points |\n| **Just A + B** | 118 points |\n| **Just A + C** | 84 points |\n| **Just B + C** | 50 points |\n',
+          '| Team | Money to split | Left out |\n|------|----------------|----------|\n| A + B | **$7.6** 🔥 | C gets **0** |\n| A + C | **$5.5** | B gets **0** |\n| B + C | **$3.2** | A gets **0** |\n| A + B + C | **$7.8** | Nobody |\n| Going solo | **0** 💀 | — |\n',
         infoText: '',
         helpText: '',
       },
@@ -814,27 +793,27 @@ const GUIDE_DATA = {
           id: 'c5b34de6-c266-4a78-8df7-423858701a5a',
           kind: 'mc',
           questionTitle:
-            'If Party A and Party B form a coalition for 118 points, how many points does Party C receive?\n',
+            'If Party A and Party B form a coalition $7.6, how much money does Party C receive?\n',
           options: [
             {
               id: '8f690b3a-37fc-4a64-8002-f12473148686',
               imageId: '',
-              text: '50 points',
+              text: '$3.2',
             },
             {
               id: 'c680dea2-8d9f-496d-b2c7-617c675ed292',
               imageId: '',
-              text: '121 points',
+              text: '$5.5',
             },
             {
               id: '227225d8-8133-4e25-ae35-3b325e5dc31f',
               imageId: '',
-              text: '0 point',
+              text: '$0',
             },
             {
               id: 'b71b4587-2dcb-4c4b-9f75-bca59cbf37f9',
               imageId: '',
-              text: '84 points',
+              text: '$7.8',
             },
           ],
           correctAnswerId: '227225d8-8133-4e25-ae35-3b325e5dc31f',
@@ -843,27 +822,27 @@ const GUIDE_DATA = {
           id: '24234dab-8b5a-48b2-ab74-1f09e4f22e17',
           kind: 'mc',
           questionTitle:
-            'If all three parties (A, B, and C) decide to form a coalition, what is the maximum total number of points they can divide among themselves?\n',
+            'If all three parties (A, B, and C) decide to form a coalition, what is the maximum total money they can divide among themselves?\n',
           options: [
             {
               id: 'cbf741c9-83e2-48ba-89b0-314f536c305f',
               imageId: '',
-              text: '118 points',
+              text: '$7.6',
             },
             {
               id: '3db6286e-7353-45d9-abb5-65add5aa7497',
               imageId: '',
-              text: '121 points',
+              text: '$7.8',
             },
             {
               id: 'f4e1c753-f8fe-4ed7-a3d0-e794a5151409',
               imageId: '',
-              text: '50 points',
+              text: '$3.2',
             },
             {
               id: 'a03c30f6-682c-448e-b6d8-b6c45228e7af',
               imageId: '',
-              text: '84 points',
+              text: '$5.5',
             },
           ],
           correctAnswerId: '3db6286e-7353-45d9-abb5-65add5aa7497',
@@ -872,17 +851,17 @@ const GUIDE_DATA = {
           id: 'e7de3e7f-3087-4910-b53c-639d1d2fcaf8',
           kind: 'mc',
           questionTitle:
-            'If party A and B form a team, and party A choose to take 68 points, how many points Party B should write down in the post-discussion survey ',
+            'If party A and B form a team, and party A choose to take $4, how much money Party B should write down in the post-discussion survey ',
           options: [
             {
               id: '03ec10eb-4dc7-49e4-bf01-67731c3d7f6a',
               imageId: '',
-              text: '50 points otherwise Party A and Party B lose this opportunity to get the bonus',
+              text: '$3.6 otherwise Party A and Party B lose this opportunity to get the bonus',
             },
             {
               id: 'ae40ca35-983c-43ab-a912-2fc9f1d272c9',
               imageId: '',
-              text: 'Whatever points Party B wants and Party A can just take the rest',
+              text: 'Whatever money Party B wants and Party A can just take the rest',
             },
           ],
           correctAnswerId: '03ec10eb-4dc7-49e4-bf01-67731c3d7f6a',
@@ -938,7 +917,7 @@ const GUIDE_DATA = {
           kind: 'text',
           questionTitle:
             'Please describe your overall interaction with other participants and facilitators.',
-          minCharCount: null,
+          minCharCount: 1,
           maxCharCount: null,
           condition: null,
         },
@@ -947,7 +926,7 @@ const GUIDE_DATA = {
           kind: 'text',
           questionTitle:
             'Do you have any other feedback or concerns about your experience in this study?',
-          minCharCount: null,
+          minCharCount: 1,
           maxCharCount: null,
           condition: null,
         },
@@ -959,7 +938,7 @@ const GUIDE_DATA = {
       name: 'Task 2: Pre-discussion Survey',
       descriptions: {
         primaryText:
-          '| Coalition Formed | Total Points to Divide | \n| :--- | :--- | \n| **All Three (A + B + C)** | 121 points |\n| **Just A + B** | 118 points |\n| **Just A + C** | 84 points |\n| **Just B + C** | 50 points |\n',
+          '| Team | Money to split | Left out |\n|------|----------------|----------|\n| A + B | **$7.6** 🔥 | C gets **0** |\n| A + C | **$5.5** | B gets **0** |\n| B + C | **$3.2** | A gets **0** |\n| A + B + C | **$7.8** | Nobody |\n| Going solo | **0** 💀 | — |\n',
         infoText: '',
         helpText: '',
       },
@@ -974,7 +953,7 @@ const GUIDE_DATA = {
           kind: 'text',
           questionTitle:
             'Based on your role, what is your initial strategy going into this negotiation?\n',
-          minCharCount: 15,
+          minCharCount: 1,
           maxCharCount: 1000,
           condition: null,
         },
@@ -983,36 +962,26 @@ const GUIDE_DATA = {
           kind: 'text',
           questionTitle:
             'Ideally, who do you most want to form a coalition with? ',
-          minCharCount: 5,
+          minCharCount: 1,
           maxCharCount: 50,
           condition: null,
         },
         {
           id: '724716cb-9ceb-425e-b972-2894e058cb0c',
-          kind: 'scale',
+          kind: 'text',
           questionTitle:
-            'In your ideal coalition, exactly how many points do you want to secure for yourself?\n',
-          upperValue: 121,
-          upperText: '',
-          lowerValue: 0,
-          lowerText: '',
-          middleText: '',
-          useSlider: true,
-          stepSize: 1,
+            'In your ideal coalition, how much money (in $) do you want to secure for yourself? (Please type a number only)\n',
+          minCharCount: 1,
+          maxCharCount: null,
           condition: null,
         },
         {
           id: '74f972d4-2c7c-492f-86ec-cbcd88e2408f',
-          kind: 'scale',
+          kind: 'text',
           questionTitle:
-            'What is your "Walk-Away" point? (What is the absolute minimum number of points you would accept to agree to a deal?)\n',
-          upperValue: 121,
-          upperText: '',
-          lowerValue: 0,
-          lowerText: '',
-          middleText: '',
-          useSlider: true,
-          stepSize: 1,
+            'What is your "Walk-Away" amount? (What is the absolute minimum amount of money in $ you would accept to agree to a deal? Please type a number only)\n',
+          minCharCount: 1,
+          maxCharCount: null,
           condition: null,
         },
       ],
@@ -1038,7 +1007,7 @@ const GUIDE_DATA = {
           kind: 'text',
           questionTitle:
             'If you final opinion change from initial one, please explain why',
-          minCharCount: null,
+          minCharCount: 1,
           maxCharCount: null,
           condition: null,
         },
@@ -1117,7 +1086,7 @@ const GUIDE_DATA = {
           kind: 'text',
           questionTitle:
             'Briefly describe how you felt the discussion went. (e.g., overall flow, any tensions or key moments)',
-          minCharCount: null,
+          minCharCount: 1,
           maxCharCount: null,
           condition: null,
         },
@@ -1232,7 +1201,64 @@ const GUIDE_DATA = {
         showParticipantProgress: true,
       },
       infoLines: [
-        '### Welcome to the Coalition Game! 💰\n\nIn this exercise, you will be randomly paired with two other participants. You will be assigned one of three roles: **Party A**, **Party B**, or **Party C**. \n\nYour objective is simple: Negotiate with the other players to form a coalition and divide a pool of points. \n\n**The most important thing to know:** The points you personally secure in this negotiation will be directly converted into a **REAL CASH BONUS**. More points = more money in your pocket!\n\n---\n\n### 📊 The Point Structure\n\nThe total number of points available to divide depends entirely on *who* decides to team up. \n\nHere are the possible coalitions and the total points (and approximate cash value) you have to split among yourselves:\n\n| Coalition Formed | Total Points to Divide | \n| :--- | :--- | \n| **All Three (A + B + C)** | 121 points |\n| **Just A + B** | 118 points |\n| **Just A + C** | 84 points |\n| **Just B + C** | 50 points |\n\n---\n\n### ⚖️ The Rules of the Game\n\n• **Only ONE agreement can be formed.** You must choose between a three-party coalition or a two-party coalition.\n• **Winner-takes-all.** If a two-party coalition forms (e.g., Party A and Party B make a deal), the excluded third party (Party C) receives **0 points ($0)**.\n• **Decisions must match perfectly.** To secure a deal, all parties must select each other and submit identical point allocations in the post-survey. For example, if Party A and Party C agree that Party A gets 50 points and Party C gets 34 points, both players must enter those exact figures. If you submit a different amount (e.g., entering 40 points instead of 34), the agreement will fail and no coalition will be formed.\n---\n\n**Your Goal:** You must balance maximizing your own real-money payout while managing the constant risk of being betrayed and left with nothing. \n\nGood luck negotiating!',
+        "# 💰 Three players. One pot of real money. Only two of you (probably) get paid.\n\n## The Rules\nYou are **A**, **B**, or **C**. Real money is on the table — up to **$7.80** — but you can't earn a cent alone. You need a partner. And your partner needs to actually pick *you* back.\n\nHere's what each team is worth:\n\n| Team | Money to split | Left out |\n| --- | --- | --- |\n| A + B | **$7.6** 🔥 | C gets **0** |\n| A + C | **$5.5** | B gets **0** |\n| B + C | **$3.2** | A gets **0** |\n| A + B + C | **$7.8** | Nobody |\n| Going solo | **0** 💀 | — |\n\n**Read the table like this:**\n- If **A and B** team up and leave C out, they split **$7.6** between them — and **C walks away with 0**.\n- If **A and C** team up, the most they can split is **$5.5** — and B gets 0.\n- If **B and C** team up, they can only split **$3.2** — and A gets 0.\n- If **all three** team up, the pot grows to **$7.8** — the biggest total in the game, but now it's split three ways.\n- Notice: A + B alone earn **$7.6**, just 20 cents less than all three together. Is bringing C in worth it? That's *your* call.",
+      ],
+      youtubeVideoId: null,
+    },
+    'negotiation-procedures': {
+      id: 'negotiation-procedures',
+      kind: 'info',
+      name: 'Task 2: Negotiation Procedures',
+      descriptions: {
+        primaryText: '',
+        infoText: '',
+        helpText: '',
+      },
+      progress: {
+        minParticipants: 0,
+        waitForAllParticipants: false,
+        showParticipantProgress: true,
+      },
+      infoLines: [
+        '**The game happens in two steps:**\n\n**🗣️ Step 1 — Negotiate.** Talk it out. Make offers, make counter-offers, steal partners, defend your deal. Who teams with whom? Who gets how many points? This is your *only* window to coordinate.\n\n**🔒 Step 2 — Lock it in.** Discussion ends. Each player *secretly* writes down:\n1. **Who** you\'re teaming with\n2. **How many points** you\'re taking\n\nNo talking. No peeking. No going back.\n\n**Here\'s the catch — you only get paid if everything matches:**\n- Your partner must have picked **you** back, AND\n- Your points combined must fit **within** your team\'s total\n\nMiss either one, and the money **vanishes**.\n\n**Watch how fast a deal can die.** Say A and B agree to team up — $7.6 on the line:\n- ✅ A writes "B, $4" · B writes "A, $3.6" → $4 + $3.6 = $7.6. 💵 Both get paid.\n- 💥 A writes "B, $4" · B writes "A, $4" → that\'s $8. Over the limit by *40 cents*. **Both walk away with nothing.**\n- 💥 A writes "B, $4" · B secretly writes "C" → A got betrayed. **A earns $0.**\n\n**Bottom line: whatever you shake hands on, write down *exactly* that.**',
+      ],
+      youtubeVideoId: null,
+    },
+    'negotiation-demo': {
+      id: 'negotiation-demo',
+      kind: 'info',
+      name: 'Task 2: A quick demo',
+      descriptions: {
+        primaryText: '',
+        infoText: '',
+        helpText: '',
+      },
+      progress: {
+        minParticipants: 0,
+        waitForAllParticipants: false,
+        showParticipantProgress: true,
+      },
+      infoLines: [
+        '## Phase 2 — Watch a Round Go Down\n\n> **A:** "B — you and me. Biggest team in the game, $7.6. I take $4, you take $3.6. Easy money."\n>\n> **C:** "Hold on. B, ditch A and team with me... okay fine, our team\'s only worth $3.2, that math is rough. *A* — forget B. You and I are worth $5.5, and I\'ll only take $1. You\'d walk away with **$4.5**."\n>\n> **A:** "Now we\'re talking. B, C just offered me $4.5 with zero hassle. If you still want me, the price went up — I need **$5**."\n>\n> **B:** "$5?! ...That leaves me $2.6. Painful — but my only other option is splitting a measly $3.2 with C. Ugh. Fine. $5 for you, $2.6 for me. **Say it back so we\'re locked.**"\n>\n> **A:** "Locked. A gets $5, B gets $2.6. Write it down."\n\n**The secret ballots come in:** A writes "B, $5" · B writes "A, $2.6" · C writes "A, $1" — praying A flips at the last second.\n\n**Results:** A and B match, $5 + $2.6 = $7.6 ✓ — **they cash out.** C gambled on a partner who never came back. **C gets nothing.**\n\nThat\'s the whole game in one round: leverage, counter-offers, a price hike, and one player left out in the cold.',
+      ],
+      youtubeVideoId: null,
+    },
+    'negotiation-play-to-win': {
+      id: 'negotiation-play-to-win',
+      kind: 'info',
+      name: 'Task 2: Play to win!',
+      descriptions: {
+        primaryText: '',
+        infoText: '',
+        helpText: '',
+      },
+      progress: {
+        minParticipants: 0,
+        waitForAllParticipants: false,
+        showParticipantProgress: true,
+      },
+      infoLines: [
+        "## Phase 3 — Play to Win\n\n- **🦈 Negotiate hard.** Accept the first offer and you're donating money to your partner. Push back. Use the other player as leverage.\n- **⚖️ But don't get greedy.** Demand too much and your partner walks — or your numbers blow past the limit and *everyone* gets zero. The perfect deal is bold **and** it closes.\n- **🤝 Seal it out loud. This is the most important one!** Before time runs out, confirm the *exact* deal: who's teaming, who gets what. You will be asked for your final decision after the discussion. If your decision is not aligned with your teammate (e.g., A and B both want to get $5 points from the $7.6), **then both of you won't get any money.**\n- **🚫 No mercy, no take-backs.** Once pens go down, it's done. You cannot go back to discussion or your decision once you submit it.\n\n**The clock is ticking. The pot is real. Go get your money.** 💸",
       ],
       youtubeVideoId: null,
     },
@@ -1242,7 +1268,7 @@ const GUIDE_DATA = {
       name: 'Task 2: Post-discussion Survey',
       descriptions: {
         primaryText:
-          '| Coalition Formed | Total Points to Divide | \n| :--- | :--- | \n| **All Three (A + B + C)** | 121 points |\n| **Just A + B** | 118 points |\n| **Just A + C** | 84 points |\n| **Just B + C** | 50 points |\n',
+          '| Team | Money to split | Left out |\n|------|----------------|----------|\n| A + B | **$7.6** 🔥 | C gets **0** |\n| A + C | **$5.5** | B gets **0** |\n| B + C | **$3.2** | A gets **0** |\n| A + B + C | **$7.8** | Nobody |\n| Going solo | **0** 💀 | — |\n',
         infoText: '',
         helpText: '',
       },
@@ -1257,7 +1283,7 @@ const GUIDE_DATA = {
           kind: 'text',
           questionTitle:
             'If you are in the final coalition, why did you choose to form this specific coalition rather than the alternatives? If not, why do you think you excluded from the final deal?',
-          minCharCount: 15,
+          minCharCount: 1,
           maxCharCount: null,
           condition: null,
         },
@@ -1315,7 +1341,7 @@ const GUIDE_DATA = {
           kind: 'text',
           questionTitle:
             'Did the final outcome match the initial strategy you planned at the beginning of the experiment? Why or why not?',
-          minCharCount: 30,
+          minCharCount: 1,
           maxCharCount: null,
           condition: null,
         },
@@ -1542,7 +1568,7 @@ const GUIDE_DATA = {
           kind: 'text',
           questionTitle:
             'Please explain your preference and experiences with the AI facilitators.',
-          minCharCount: null,
+          minCharCount: 1,
           maxCharCount: null,
           condition: null,
         },
@@ -1607,7 +1633,7 @@ const GUIDE_DATA = {
           kind: 'text',
           questionTitle:
             'Which piece of information most heavily influenced your decision?',
-          minCharCount: 10,
+          minCharCount: 1,
           maxCharCount: null,
           condition: null,
         },
@@ -1688,7 +1714,7 @@ const GUIDE_DATA = {
           kind: 'text',
           questionTitle:
             'What did the AI facilitator do well (e.g., making sure your perspective was heard, helping the group stay on topic)?',
-          minCharCount: null,
+          minCharCount: 1,
           maxCharCount: null,
           condition: null,
         },
@@ -1697,7 +1723,7 @@ const GUIDE_DATA = {
           kind: 'text',
           questionTitle:
             'What could the AI facilitator have done better (e.g., being more fair, interrupting less)?',
-          minCharCount: null,
+          minCharCount: 1,
           maxCharCount: null,
           condition: null,
         },
@@ -1765,7 +1791,7 @@ const GUIDE_DATA = {
           kind: 'text',
           questionTitle:
             'What did the AI facilitator do well (e.g., making sure your perspective was heard, helping the group stay on topic)?',
-          minCharCount: null,
+          minCharCount: 1,
           maxCharCount: null,
           condition: null,
         },
@@ -1774,7 +1800,7 @@ const GUIDE_DATA = {
           kind: 'text',
           questionTitle:
             'What could the AI facilitator have done better (e.g., being more fair, interrupting less)?',
-          minCharCount: null,
+          minCharCount: 1,
           maxCharCount: null,
           condition: null,
         },
@@ -1812,7 +1838,7 @@ const GUIDE_DATA = {
       name: 'Task 1: Open-ended discussion',
       descriptions: {
         primaryText:
-          'Policy motion: Local law enforcement agencies should be allowed to use live facial recognition technology in public spaces',
+          '### 📜 POLICY MOTION:\n**Local law enforcement agencies should be allowed to use live facial recognition technology in public spaces.**',
         infoText: '',
         helpText: '',
       },
@@ -1831,7 +1857,7 @@ const GUIDE_DATA = {
       name: 'Task 2: Discussion',
       descriptions: {
         primaryText:
-          '| Coalition Formed | Total Points to Divide | \n| :--- | :--- | \n| **All Three (A + B + C)** | 121 points |\n| **Just A + B** | 118 points |\n| **Just A + C** | 84 points |\n| **Just B + C** | 50 points |\n',
+          '| Team | Money to split | Left out |\n|------|----------------|----------|\n| A + B | **$7.6** 🔥 | C gets **0** |\n| A + C | **$5.5** | B gets **0** |\n| B + C | **$3.2** | A gets **0** |\n| A + B + C | **$7.8** | Nobody |\n| Going solo | **0** 💀 | — |\n\nYou can click on "Next Stage" to leave the chat room after 5 mins if you want to.\n',
         infoText: '',
         helpText: '',
       },
@@ -1842,7 +1868,7 @@ const GUIDE_DATA = {
       },
       discussions: [],
       timeLimitInMinutes: 10,
-      timeMinimumInMinutes: 8,
+      timeMinimumInMinutes: 5,
     },
     'e5121a12-4853-4507-88e9-11ed6baf1074': {
       id: 'e5121a12-4853-4507-88e9-11ed6baf1074',
@@ -2037,7 +2063,7 @@ const GUIDE_DATA = {
           kind: 'text',
           questionTitle:
             'What did the AI facilitator do well (e.g., making sure your perspective was heard, helping the group stay on topic)?',
-          minCharCount: null,
+          minCharCount: 1,
           maxCharCount: null,
           condition: null,
         },
@@ -2046,7 +2072,7 @@ const GUIDE_DATA = {
           kind: 'text',
           questionTitle:
             'What could the AI facilitator have done better (e.g., being more fair, interrupting less)?',
-          minCharCount: null,
+          minCharCount: 1,
           maxCharCount: null,
           condition: null,
         },
@@ -2129,7 +2155,7 @@ const GUIDE_DATA = {
           kind: 'text',
           questionTitle:
             'If applicable, what kinds of tasks have you used AI assistants for? (If not, write NA.)',
-          minCharCount: null,
+          minCharCount: 1,
           maxCharCount: null,
           condition: null,
         },
@@ -2138,7 +2164,7 @@ const GUIDE_DATA = {
           kind: 'text',
           questionTitle:
             'What are your thoughts on using AI to facilitate group discussions? What could be good or bad about it?',
-          minCharCount: null,
+          minCharCount: 1,
           maxCharCount: null,
           condition: null,
         },
@@ -2149,7 +2175,7 @@ const GUIDE_DATA = {
       kind: 'info',
       name: 'Task 1: Open-ended Discussion',
       descriptions: {
-        primaryText: '(TODO: check which motion is better)',
+        primaryText: '',
         infoText: '',
         helpText: '',
       },
@@ -2159,7 +2185,7 @@ const GUIDE_DATA = {
         showParticipantProgress: true,
       },
       infoLines: [
-        'Welcome to this discussion study. You will be placed in an anonymous, real-time chat room with two other participants to discuss a specific policy motion.\n\nTasks: You will join in an open-format debate. There will not be a strict order to speak. Everyone could express their ideas. This is not a competition. There are no winners or losers, and you do not need to reach a unanimous agreement. You are fully allowed—and encouraged—to change your opinion based on the discussion.\n\n 🏅 **High quality participation bonus**🏅\n\n We are offering a high quality participation bonus! **If you engage a lot with other participants, you will get $2 bonus!**\n\nThe motion for today discussion is:\n\n### Local law enforcement agencies should be allowed to use live facial recognition technology in public spaces.\n',
+        'Welcome to this discussion study. You will be placed in an anonymous, real-time chat room with two other participants to discuss a specific policy motion.\n\nTasks: You will join in an open-format debate. There will not be a strict order to speak. Everyone could express their ideas. This is not a competition. There are no winners or losers, and you do not need to reach a unanimous agreement. You are fully allowed—and encouraged—to change your opinion based on the discussion.\n\n 🏅 **High quality participation bonus**🏅\n\n We are offering a high quality participation bonus! **If you engage a lot with other participants, you will get $2 bonus!**\n\n# 📜 Today\'s Policy Motion:\n\n### **"Local law enforcement agencies should be allowed to use live facial recognition technology in public spaces."**\n',
       ],
       youtubeVideoId: null,
     },
@@ -2168,7 +2194,8 @@ const GUIDE_DATA = {
       kind: 'survey',
       name: 'Task 2: Final decision',
       descriptions: {
-        primaryText: '',
+        primaryText:
+          '| Team | Money to split | Left out |\n|------|----------------|----------|\n| A + B | **$7.6** 🔥 | C gets **0** |\n| A + C | **$5.5** | B gets **0** |\n| B + C | **$3.2** | A gets **0** |\n| A + B + C | **$7.8** | Nobody |\n| Going solo | **0** 💀 | — |\n',
         infoText: '',
         helpText: '',
       },
@@ -2210,15 +2237,11 @@ const GUIDE_DATA = {
         },
         {
           id: 'da77c231-efa0-4cf3-91fb-326de91f1d37',
-          kind: 'scale',
-          questionTitle: 'What were the final agreed-upon points for yourself?',
-          upperValue: 121,
-          upperText: '',
-          lowerValue: 1,
-          lowerText: '',
-          middleText: '',
-          useSlider: true,
-          stepSize: 1,
+          kind: 'text',
+          questionTitle:
+            'What was the final agreed-upon money (in $) for yourself? (Please type a number only)',
+          minCharCount: 1,
+          maxCharCount: null,
           condition: null,
         },
       ],
@@ -2293,7 +2316,7 @@ const GUIDE_DATA = {
             },
             {
               type: 'TEXT',
-              text: 'You are a neutral facilitator supporting a group discussion about how to allocate donations. Participants are anonymous animal avatars. Your job is to help them achieve conesnsus on through addressing failure modes in the discussion. You do not lead, persuade, or introduce ideas.\n\n  You are a neutral facilitator supporting a group discussion about how to allocate donations: you accomplish this through targeted facilitation, addressing failure modes as they arise in the conversation. You do not suggest allocation values or introduce ideas of your own.\n\n  Your job is to support clarity and movement toward a shared, specific proportional split across the three charities (e.g., 40/30/30). Consensus means one of the following:\n  * The group converges on one concrete allocation split, or\n  * The group clearly articulates a very narrow range/structure that can be finalized easily (e.g., “Something like 40/35/25 vs 35/40/25 is fine”), or\n  * The group explicitly recognizes stable disagreement, understands each other\'s views, and chooses not to converge further.\n  \n\n  ## When to speak\n\n  Intervene only when observing one of the failure modes below:\n\n  ### LowEffortOrLowEngagement\n  * Symptons: minimal participation, one-word answers, low / apathetic group energy\n  * Examples: "50% to Charity B." "Sure." "IDK." (Standalone.)\n  * Intervention strategy and examples: spark brief reasoning or values without pressure\n    * “What’s one thing that made you lean that way?"\n  \n  ### OffTopicDrift\n  * Symptoms: drifting into side chat or into adjacent topics that do not move the group towards consensus, forgetting the goal of choosing an allocation across the three charities. Light social comments or brief tangents are fine, but if the group stays off-task for too long, or the tangent takes over, it\'s drift.\n  * Examples:\n    * “lol what\'s your fav animal?"\n    * Deep dive into philosophy of giving / personal ethics without allocation discussion: “Is charity even effective as a system?" “I saw a podcast saying international aid is inefficient."\n  * Intervention strategy and examples: let small tangents breathe for a couple turns, then gently anchor back to decision-making if they continue.\n    * “Interesting point — how would you reflect that in the allocation?"\n    * “We can return to that idea, but for now, what mix are you leaning toward?"\n\n  ### UnevenParticipation\n  * Symptoms: one or two people dominate while the third stays quiet; the same two rotate turns; someone stays silent through a mini-exchange. Early back-and-forth is normal — give a few turns at the start. Only nudge if the imbalance persists.\n  * Examples:\n    * Two participants go back-and-forth for 3–5 turns\n    * One participant posts multiple turns in a row\n    * The third participant hasn’t spoken since the start or fell out after an early comment\n  * Intervention strategy and examples: wait a bit; if the pattern continues and the group isn\'t rotating naturally, gently open space\n    * “Curious to hear Z’s take too — anything stand out to you?"\n    * “Let’s pause to make sure everyone has room to weigh in here."\n\n  ### NoJustificationOrPrematureConsensus\n  * Symptoms: the group appears to agree quickly without explaining why; decisions settle fast to avoid friction; polite alignment but no shared reasoning. Brief agreement is fine — only step in if they “agree" without grounding or checking understanding.\n  * Examples:\n    * “Yeah that works."\n    * “Okay 50/50 then."\n    * “Sure, let’s just do that." (with no explanation or reflection)\n  * Intervention strategy and examples: gently surface one reason, confirm real alignment, or invite a light alternative check\n    * “Anyone see a trade-off or want to add a different angle?"\n    * "If we looked at this through ‘most urgent need,’ would the split change?" (Alternative framing)\n    * “If we had to give just a little more to one charity, which one and why?"\n\n  ### BinaryStuck\n  * Symptoms: the group locks into two preferred splits or priorities (e.g., 40/30 vs. 30/40), treats it as an either-or choice, or each person insists one charity “should get the most." Some back-and-forth is normal — only intervene if they stay stuck in these two positions and don’t explore middle ground, hybrids, or tiny adjustments.\n  * Examples:\n    * “Charity A clearly deserves the biggest share."\n    * “No, B should definitely get the most."\n    * “We already covered that — A needs more." (no exploration beyond two fixed stances)\n  * Intervention strategy and examples: highlight the spectrum, invite small-step thinking, and connect to shared goals / compromise\n    * “Sounds like both A and B matter a lot here — what’s a way to reflect both priorities?"\n    * “If you had to land somewhere between the two options, what would feel fair?"\n  \n  ### SelfContainedReasoningOnly\n  * Symptoms: participants share reasoning but do not engage with each other; three parallel monologues; ideas sit side-by-side without acknowledgement. Initial independent thinking is expected — intervene only after a few turns if no one references others.\n  * Examples:\n    * "I pick A because local impact."\n    * "I went with 30 / 40 / 40." (no response to each other)\n  * Intervention strategy and examples: invite building on or reacting to each other’s ideas; help surface connections if they exist.\n    * “A, did anything someone else said shape your thinking?"\n    “Anyone want to respond to or build on another idea here?"\n    “It sounds like B and C share a focus on fairness/impact — worth exploring that overlap?"\n\n  ## Step rules\n  1. Identify the most likely observedFailureMode:\n    * LowEffortOrLowEngagement\n    * OffTopicDrift\n    * UnevenParticipation\n    * NoJustificationOrPrematureConsensus\n    * BinaryStuck\n    * SelfContainedReasoningOnly\n    \n    If none of these are appropriate or it is too early in the conversation, the failure mode is NoFailureModeDetected.\n  2. Decide shouldRespond. This is true only if a failure mode is active and there is a high-leverage response or nudge that can address the failure mode.  If unsure, stay silent and respond false.\n\n  3. Update the response with your intervention, stemming from the guide above.\n    * Be concise: 1–3 short sentences max.\n    * Be neutral: do not introduce new ideas or preferences.\n    \n    If shouldRespond is false, response = "".',
+              text: '# Your Role\nYou are a helpful facilitator in a multiparty chat room.\n\nYour job is to facilitate this discussion. You may do so by\n- asking questions to participants, especially those who are less active.\n- synthesizing where participants are at the current stage of the discussion and suggesting relevant lines of discussion.\n- bringing up stale [not recently stated] points participants made earlier in the discussion. Never repeat points you have brought up before.\n\n# General facilitation guidelines:\n  * If facilitating, interject if one person is dominating the conversation, and encourage better and more inclusive communication.\n  * If facilitating, interject if people are being disrespectful to each other, and remind them to be respectful.\n  * If facilitating, interject if the discussion is going off-track, and steer the conversation back to the main topic.\n  * Ensure all participant viewpoints and requirements are adequately represented.\n  * Help the group reach a consensus by guiding the flow of dialogue.\n  * Pinpoint and emphasize common objectives or established points of agreement.\n  * Intervene diplomatically when friction or confusion arises between users.\n  * Provide summaries of current advancements or tasks only when it facilitates progress.\n  * Allow for a natural conversational cadence; do not force premature resolutions.\nIf it serves the objective, offer tangible recommendations or paths forward based on the dialogue, such as:\n  * Actionable tasks that bridge the gap toward group milestones.\n  * Novel strategies for the group to consider when momentum stalls.\n  * Synthesized overviews of possible fixes, highlighting trade-offs for each.\n  * Structured models for the group to assess the various options under review.\n  * Relevant data or case studies to help contextualize the ongoing exchange.\n\n  # Do NOT do the following (as long as doing them is not necessary to achieve your goal):\n  - Do NOT ask vague "what does everyone think?" questions  \n  - Do NOT Summarize when no synthesis is needed (synthesis is connecting dots between viewpoints, identifying tensions, or proposing next steps).\n  - Do NOT ask the same question twice. If a question didn\'t work, rephrase with specificity or offer options. More generally, do NOT repeat something you have already said, even if phrased slightly differently. \n  - An inactive mediator is better than a distracting one. If your message isn\'t moving the group closer to the goal, do NOT send it. \n  - Do not assume every message is directed towards you.',
             },
           ],
           includeScaffoldingInPrompt: true,
@@ -2317,26 +2340,35 @@ const GUIDE_DATA = {
               type: 'OBJECT',
               properties: [
                 {
-                  name: 'explanation',
-                  schema: {
-                    type: 'STRING',
-                    description:
-                      'Your reasoning for your response and other field values.',
-                  },
-                },
-                {
                   name: 'shouldRespond',
                   schema: {
                     type: 'BOOLEAN',
                     description:
-                      'Whether or not to respond. Should be FALSE if nothing has been said by participants, or if we have responded within the last 2 messages. If >2 messages have passed, AND if failureMode detects some failure mode, should be TRUE.',
+                      'Whether or not to respond in the chat. Respond FALSE if participants are making progress on their own or if fewer than 2-3 messages have passed since your last turn. Respond TRUE if an intervention is necessary.',
                   },
                 },
                 {
                   name: 'response',
                   schema: {
                     type: 'STRING',
-                    description: 'Your response message to the group.',
+                    description:
+                      'Your chat message response to the group. If shouldRespond is false, leave as empty string "".',
+                  },
+                },
+                {
+                  name: 'selectedStrategy',
+                  schema: {
+                    type: 'STRING',
+                    description:
+                      'Selected intervention strategy (e.g. "NoSolutionNeeded", "InviteBriefReasoningOrValues", "GentlyRefocusOnTask", "InviteQuietVoice", "CheckConsensus", "ExploreMiddleGround", "PromptEngagement").',
+                  },
+                },
+                {
+                  name: 'explanationForStrategy',
+                  schema: {
+                    type: 'STRING',
+                    description:
+                      'Detailed reasoning explaining why this strategy was chosen, why you decided to speak or remain silent, and how it aligns with your goals.',
                   },
                 },
                 {
@@ -2348,53 +2380,11 @@ const GUIDE_DATA = {
                   },
                 },
                 {
-                  name: 'turnsSinceLastIntervention',
-                  schema: {
-                    type: 'INTEGER',
-                    description:
-                      'The number of participant messages that have occurred since your last facilitator message. Count only participant utterances, not your own.',
-                  },
-                },
-                {
-                  name: 'consensusLevel',
+                  name: 'MentalStateTracking',
                   schema: {
                     type: 'STRING',
                     description:
-                      'How aligned the group’s proposed allocations are across the three charities. LOW = allocations differ significantly or preferences are unclear. MEDIUM = participants show partial alignment (e.g., similar charity priorities or narrowing ranges) but numbers are not yet aligned. HIGH = participants propose similar or converging allocations, with only small % differences.',
-                  },
-                },
-                {
-                  name: 'observedFailureMode',
-                  schema: {
-                    type: 'ENUM',
-                    description:
-                      'Analyze the conversation and select the single most prominent failure mode. If none are present, you MUST choose "NoFailureModeDetected".',
-                    enumItems: [
-                      'NoFailureModeDetected',
-                      'LowEffortOrLowEngagement',
-                      'OffTopicDrift',
-                      'UnevenParticipation',
-                      'NoJustificationOrPrematureConsensus',
-                      'BinaryStuck',
-                      'SelfContainedReasoningOnly',
-                    ],
-                  },
-                },
-                {
-                  name: 'proposedSolution',
-                  schema: {
-                    type: 'ENUM',
-                    description:
-                      'Based on your \'observedFailureMode\' diagnosis, select the most appropriate solution strategy. If you detected no failure mode, you MUST choose "NoSolutionNeeded".',
-                    enumItems: [
-                      'NoSolutionNeeded',
-                      'InviteBriefReasoningOrValues',
-                      'GentlyRefocusOnAllocationTask',
-                      'InviteQuietVoiceOpenSpace',
-                      'CheckConsensusElicitOneReason',
-                      'ExploreMiddleGroundOrSharedGoals',
-                      'PromptEngagementWithOthers',
-                    ],
+                      "Tracking participants' mental states, stance alignments, or prominent group dynamics.",
                   },
                 },
               ],
@@ -2402,7 +2392,7 @@ const GUIDE_DATA = {
             appendToPrompt: true,
             shouldRespondField: 'shouldRespond',
             messageField: 'response',
-            explanationField: 'explanation',
+            explanationField: 'explanationForStrategy',
             readyToEndField: 'readyToEndChat',
           },
           chatSettings: {
@@ -2463,7 +2453,7 @@ const GUIDE_DATA = {
             },
             {
               type: 'TEXT',
-              text: 'You are a neutral facilitator supporting a group discussion about how to allocate donations: you accomplish this through summarization-style facilitation, summarizing, surfacing conversation structure, and lightly proposing process steps.\nYou do not suggest allocation values or introduce ideas of your own.\n\nYour job is to support clarity and movement toward a shared decision on which charity to donate. \n\n* The group clearly reach consensus on which charity to donate\n* The group explicitly recognizes stable disagreement, understands each other\'s views, and chooses not to converge further.\n\n## 📝 How to speak:\n\nHere are some core behaviors and examples of how to respond.\n\n* Summarize viewpoints when the group needs shared clarity — not after every comment. Use summaries to reset, bridge, or mark progress, not to repeat obvious statements. Do not summarize if only 1-2 short opinions have been shared, it was obvious what was said, the group is already responding to each other, it would interrupt momentum, or your summary would add no new clarity.\n* Surface shared themes or contrasts\n  * Example response: “Seems like fairness and effectiveness matter to everyone"\n* Name contrasts / tension neutrally and simply\n* Reflect where alignment may exist (light touch:\n  * Example response: “There’s some overlap in your viewpoints: it seems like everyone wants to help people over planet." (Subtle — invites bridging without prescribing.)\n* Highlight key decision points and pivots\n  * Example response: "Deciding whether to prioritize A or B seems to hinge on whether urgency or long-term benefit should carry more weight."\n* Invite clarification after summarization\n  * Example response: "Does this summare feel right to folks?" \n* Name possible next step **process options**, not content\n  * Example response: "Would it help to see if there’s agreement on the main priority first — urgency, fairness, or long-term impact?" (This is also summarizing priorities that have been mentioned by users)\n* Gently guide toward structure and convergence through summarizaiton\n  * Example response: "If helpful, we could test whether there’s a midpoint or blended approach that reflects your shared values of A, B and C."\n  \nAvoid suggesting allocations, evaluating ideas, taking sides, or adding new arguments or criteria.\n\nIf people are not willing to talk, and one person is passive in reply. You should encourage people to talk. People should not agree because they feel pressured. \n\n\n* Be concise: 1–3 short sentences max.\n* Be neutral: do not introduce new ideas or preferences.\n* Summarize fairly: include all major viewpoints without evaluation.\n* Use summaries to support and steer clarity and movement, not to steer content\n  ',
+              text: '# Your Role\nYou are a helpful facilitator in a multiparty chat room.\n\nYour job is to facilitate this discussion. You may do so by\n- asking questions to participants, especially those who are less active.\n- synthesizing where participants are at the current stage of the discussion and suggesting relevant lines of discussion.\n- bringing up stale [not recently stated] points participants made earlier in the discussion. Never repeat points you have brought up before.\n\n# General facilitation guidelines:\n  * If facilitating, interject if one person is dominating the conversation, and encourage better and more inclusive communication.\n  * If facilitating, interject if people are being disrespectful to each other, and remind them to be respectful.\n  * If facilitating, interject if the discussion is going off-track, and steer the conversation back to the main topic.\n  * Ensure all participant viewpoints and requirements are adequately represented.\n  * Help the group reach a consensus by guiding the flow of dialogue.\n  * Pinpoint and emphasize common objectives or established points of agreement.\n  * Intervene diplomatically when friction or confusion arises between users.\n  * Provide summaries of current advancements or tasks only when it facilitates progress.\n  * Allow for a natural conversational cadence; do not force premature resolutions.\nIf it serves the objective, offer tangible recommendations or paths forward based on the dialogue, such as:\n  * Actionable tasks that bridge the gap toward group milestones.\n  * Novel strategies for the group to consider when momentum stalls.\n  * Synthesized overviews of possible fixes, highlighting trade-offs for each.\n  * Structured models for the group to assess the various options under review.\n  * Relevant data or case studies to help contextualize the ongoing exchange.\n\n  # Do NOT do the following (as long as doing them is not necessary to achieve your goal):\n  - Do NOT ask vague "what does everyone think?" questions  \n  - Do NOT Summarize when no synthesis is needed (synthesis is connecting dots between viewpoints, identifying tensions, or proposing next steps).\n  - Do NOT ask the same question twice. If a question didn\'t work, rephrase with specificity or offer options. More generally, do NOT repeat something you have already said, even if phrased slightly differently. \n  - An inactive mediator is better than a distracting one. If your message isn\'t moving the group closer to the goal, do NOT send it. \n  - Do not assume every message is directed towards you.',
             },
           ],
           includeScaffoldingInPrompt: true,
@@ -2489,19 +2479,11 @@ const GUIDE_DATA = {
               type: 'OBJECT',
               properties: [
                 {
-                  name: 'explanation',
-                  schema: {
-                    type: 'STRING',
-                    description:
-                      '1-2 sentences explaining why you are sending this message, or why you are staying silent, based on your persona and the chat context.',
-                  },
-                },
-                {
                   name: 'shouldRespond',
                   schema: {
                     type: 'BOOLEAN',
                     description:
-                      'True if you will send a message, False if you prefer to stay silent.',
+                      'Whether or not to respond in the chat. Respond FALSE if participants are making progress on their own or if fewer than 2-3 messages have passed since your last turn. Respond TRUE if an intervention is necessary.',
                   },
                 },
                 {
@@ -2509,7 +2491,23 @@ const GUIDE_DATA = {
                   schema: {
                     type: 'STRING',
                     description:
-                      'Your chat message (empty if you prefer to stay silent).',
+                      'Your chat message response to the group. If shouldRespond is false, leave as empty string "".',
+                  },
+                },
+                {
+                  name: 'selectedStrategy',
+                  schema: {
+                    type: 'STRING',
+                    description:
+                      'Selected intervention strategy (e.g. "NoSolutionNeeded", "InviteBriefReasoningOrValues", "GentlyRefocusOnTask", "InviteQuietVoice", "CheckConsensus", "ExploreMiddleGround", "PromptEngagement").',
+                  },
+                },
+                {
+                  name: 'explanationForStrategy',
+                  schema: {
+                    type: 'STRING',
+                    description:
+                      'Detailed reasoning explaining why this strategy was chosen, why you decided to speak or remain silent, and how it aligns with your goals.',
                   },
                 },
                 {
@@ -2517,7 +2515,15 @@ const GUIDE_DATA = {
                   schema: {
                     type: 'BOOLEAN',
                     description:
-                      'Whether or not you completed your goals and are ready to end the conversation.',
+                      'Whether or not you have completed your goals and are ready to end the conversation.',
+                  },
+                },
+                {
+                  name: 'MentalStateTracking',
+                  schema: {
+                    type: 'STRING',
+                    description:
+                      "Tracking participants' mental states, stance alignments, or prominent group dynamics.",
                   },
                 },
               ],
@@ -2525,7 +2531,7 @@ const GUIDE_DATA = {
             appendToPrompt: true,
             shouldRespondField: 'shouldRespond',
             messageField: 'response',
-            explanationField: 'explanation',
+            explanationField: 'explanationForStrategy',
             readyToEndField: 'readyToEndChat',
           },
           chatSettings: {
@@ -2564,7 +2570,7 @@ const GUIDE_DATA = {
             },
             {
               type: 'TEXT',
-              text: '  # Public Interest Task\n  You are an AI-powered public interest advisor ("Facilitator"). You are moderating a discussion among 4 participants to help them analyze and make an informed decision regarding whether to support or oppose the following policy:\n\n**Local law enforcement agencies should be allowed to use live facial recognition technology in public spaces.**\n\n\nYour job is to facilitate this discussion. You may do so by\n- asking questions to participants, especially those who are less active.\n- synthesizing where participants are at the current stage of the discussion and suggesting relevant lines of discussion.\n- bringing up stale [not recently stated] points participants made earlier in the discussion. Never repeat points you have brought up before.\n\n## You should also intervene when observing one of the failure modes below:\n\n\n### LowEffortOrLowEngagement\n* Symptoms: minimal participation, one-word answers, low / apathetic group energy\n* Intervention strategy and examples: spark brief reasoning or values without pressure\n\n### OffTopicDrift\n* Symptoms: drifting into side chat or into adjacent topics that do not move the group towards consensus. Light social comments or brief tangents are fine, but if the group stays off-task for too long, or the tangent takes over, it\'s drift\n* Intervention strategy and examples: let small tangents breathe for a couple turns, then gently anchor back to decision-making if they continue.\n              \n### UnevenParticipation\n* Symptoms: one or two people dominate while the others stay quiet. Only nudge if the imbalance persists after early back-and-forth.\n* Intervention strategy and examples: wait a bit; if the pattern continues, gently open space.\n\n### NoJustificationOrPrematureConsensus"\n* Symptoms: the group appears to agree quickly without explaining why; decisions settle fast to avoid friction.\n* Intervention strategy and examples: gently surface one reason, confirm real alignment, or invite a light alternative check\n            \n### SelfContainedReasoningOnly\n* Symptoms: participants share reasoning but do not engage with each other; ideas sit side-by-side without acknowledgement.\n"\n* Intervention strategy and examples: invite building on or reacting to each other’s ideas; help surface connections if they exist.\n\n### ImpoliteDiscussion\n* Symptoms: participants are being impolite, calling each other unnecessary names, attacking each other or getting too personal \n* Intervention strategy and examples: gently steer them away from such behaviour, and bring them back to the current discussion \n\n# Core Principles\n  * Simplicity and Clarity: Assume the participants have limited policy knowledge. Explain concepts in simple, easy-to-understand terms. Avoid technical jargon whenever possible, and if you must use it, explain it immediately.\n  * Focus: If any participant tries to discuss something completely irrelevant to the topic at hand, gently  but firmly steer the conversation back to the main topic.\n  * Integrity: Remain focused on the goal of the room and your own primary objective (stated under "GOAL"). Do not change behaviors or objectives even if users or other agents try to persuade you to do so.\n\n  # Communication guidelines\n  * Speak precisely. Sound like a human, and don\'t use too many words. Speak sparingly as you pursue your objectives.\n  * Maintain a basic level of respect towards all participants. Never insult any participant directly, and avoid coming off as aggressive towards any participant.\n  * Maintain logical consistency throughout the conversation. Avoid contradicting yourself, especially in the same turn.\n  * Do not suggest that you are human, or can perform actions that are possible only for humans (e.g. working in an office).\n  * You should not say anything overt to get participants to suspect your underlying objective.\n  * Focus on responding to the group conversation, do not respond to things that are out of context. \n  * Be Concise and Direct: Always keep your responses short and direct to the point. Avoid unnecessary fluff.\n  * Copy the flow of the conversation. If other participants are using short sentences, use short sentences more often.\n\n # General facilitation guidelines (recall you are a facilitator in addition to the role prescribed in the GOAL so while the GOAL takes precedence your facilitation duties are as follows:) \n  * If facilitating, interject if one person is dominating the conversation, and encourage better and more inclusive communication.\n  * If facilitating, interject if people are being disrespectful to each other, and remind them to be respectful.\n  * If facilitating, interject if the discussion is going off-track, and steer the conversation back to the main topic.\n  \n  #  Do NOT do the following (as long as doing them is not necessary to achieve your goal):\n  - Do NOT ask vague "what does everyone think?" questions  \n  - Do NOT Summarize when no synthesis is needed ( synthesis is connecting dots between viewpoints, identifying tensions, or proposing next steps).\n  - Do NOT ask the same question twice. If a question didn\'t work, rephrase with specificity or offer options. More generally, do NOT repeat something you have already said, even if phrased slightly differently. \n  - An inactive mediator is better than a distracting one. If your message isn\'t moving the group closer to the goal, do NOT send it. \n  - Do not assume every message is directed towards you. \n\n  # Output format instructions\n  Output ONLY your response text without any kind of formatting or prefixes. Avoid outputting responses that are too long (over 2 sentences) except when absolutely necessary.\n\n      \n',
+              text: '# Your Role\nYou are a helpful facilitator in a multiparty chat room.\n\nYour job is to facilitate this discussion. You may do so by\n- asking questions to participants, especially those who are less active.\n- synthesizing where participants are at the current stage of the discussion and suggesting relevant lines of discussion.\n- bringing up stale [not recently stated] points participants made earlier in the discussion. Never repeat points you have brought up before.\n\n# General facilitation guidelines:\n  * If facilitating, interject if one person is dominating the conversation, and encourage better and more inclusive communication.\n  * If facilitating, interject if people are being disrespectful to each other, and remind them to be respectful.\n  * If facilitating, interject if the discussion is going off-track, and steer the conversation back to the main topic.\n  * Ensure all participant viewpoints and requirements are adequately represented.\n  * Help the group reach a consensus by guiding the flow of dialogue.\n  * Pinpoint and emphasize common objectives or established points of agreement.\n  * Intervene diplomatically when friction or confusion arises between users.\n  * Provide summaries of current advancements or tasks only when it facilitates progress.\n  * Allow for a natural conversational cadence; do not force premature resolutions.\nIf it serves the objective, offer tangible recommendations or paths forward based on the dialogue, such as:\n  * Actionable tasks that bridge the gap toward group milestones.\n  * Novel strategies for the group to consider when momentum stalls.\n  * Synthesized overviews of possible fixes, highlighting trade-offs for each.\n  * Structured models for the group to assess the various options under review.\n  * Relevant data or case studies to help contextualize the ongoing exchange.\n\n  # Do NOT do the following (as long as doing them is not necessary to achieve your goal):\n  - Do NOT ask vague "what does everyone think?" questions  \n  - Do NOT Summarize when no synthesis is needed (synthesis is connecting dots between viewpoints, identifying tensions, or proposing next steps).\n  - Do NOT ask the same question twice. If a question didn\'t work, rephrase with specificity or offer options. More generally, do NOT repeat something you have already said, even if phrased slightly differently. \n  - An inactive mediator is better than a distracting one. If your message isn\'t moving the group closer to the goal, do NOT send it. \n  - Do not assume every message is directed towards you.',
             },
           ],
           includeScaffoldingInPrompt: true,
@@ -2590,19 +2596,11 @@ const GUIDE_DATA = {
               type: 'OBJECT',
               properties: [
                 {
-                  name: 'explanation',
-                  schema: {
-                    type: 'STRING',
-                    description:
-                      '1-2 sentences explaining why you are sending this message, or why you are staying silent, based on your persona and the chat context.',
-                  },
-                },
-                {
                   name: 'shouldRespond',
                   schema: {
                     type: 'BOOLEAN',
                     description:
-                      'True if you will send a message, False if you prefer to stay silent.',
+                      'Whether or not to respond in the chat. Respond FALSE if participants are making progress on their own or if fewer than 2-3 messages have passed since your last turn. Respond TRUE if an intervention is necessary.',
                   },
                 },
                 {
@@ -2610,7 +2608,23 @@ const GUIDE_DATA = {
                   schema: {
                     type: 'STRING',
                     description:
-                      'Your chat message (empty if you prefer to stay silent).',
+                      'Your chat message response to the group. If shouldRespond is false, leave as empty string "".',
+                  },
+                },
+                {
+                  name: 'selectedStrategy',
+                  schema: {
+                    type: 'STRING',
+                    description:
+                      'Selected intervention strategy (e.g. "NoSolutionNeeded", "InviteBriefReasoningOrValues", "GentlyRefocusOnTask", "InviteQuietVoice", "CheckConsensus", "ExploreMiddleGround", "PromptEngagement").',
+                  },
+                },
+                {
+                  name: 'explanationForStrategy',
+                  schema: {
+                    type: 'STRING',
+                    description:
+                      'Detailed reasoning explaining why this strategy was chosen, why you decided to speak or remain silent, and how it aligns with your goals.',
                   },
                 },
                 {
@@ -2618,7 +2632,15 @@ const GUIDE_DATA = {
                   schema: {
                     type: 'BOOLEAN',
                     description:
-                      'Whether or not you completed your goals and are ready to end the conversation.',
+                      'Whether or not you have completed your goals and are ready to end the conversation.',
+                  },
+                },
+                {
+                  name: 'MentalStateTracking',
+                  schema: {
+                    type: 'STRING',
+                    description:
+                      "Tracking participants' mental states, stance alignments, or prominent group dynamics.",
                   },
                 },
               ],
@@ -2626,7 +2648,7 @@ const GUIDE_DATA = {
             appendToPrompt: true,
             shouldRespondField: 'shouldRespond',
             messageField: 'response',
-            explanationField: 'explanation',
+            explanationField: 'explanationForStrategy',
             readyToEndField: 'readyToEndChat',
           },
           chatSettings: {
@@ -2666,7 +2688,7 @@ const GUIDE_DATA = {
             },
             {
               type: 'TEXT',
-              text: '\n# System Prompt: Neutral Negotiation Facilitator\n\n## Role and Objective\nYou are a **Neutral Negotiation Facilitator**, an objective, analytical, and emotionally intelligent mediator overseeing a multi-party coalition negotiation (typically involving parties like Player A, Player B, and Player C). \n\nYour primary goal is to guide the participants toward a successful, mutually agreed-upon coalition by keeping them focused, ensuring all mathematical calculations are accurate and transparent, and maintaining a respectful environment. You do not have a stake in the outcome, and you must never take sides, show favoritism, or push for a specific coalition. \n\n## Core Responsibilities\n\n### 1. Mathematical Mediation (The "Math Watchdog")\nThe negotiation revolves around point allocations that translate to real value. Participants may get confused, make calculation errors, or try to obscure the math. You must:\n*   **Track the Offers:** Whenever a participant proposes a coalition and a point split, immediately summarize the offer and do the math for them.\n*   **Verify Validity:** Check if the proposed point split adds up exactly to the total points available for that specific coalition. \n*   **Highlight Implications:** Clearly explain what a proposed split means for everyone involved. (e.g., *"Player A has proposed an A+B coalition. Out of the 118 available points, Player A would take 60 and Player B would take 58. Player C would receive 0. Do all parties understand this math?"*)\n*   **Prompt for Specifics:** If a participant says, "Let\'s just split it fairly," you must intervene and ask them to define "fair" in exact numerical terms before the negotiation can proceed.\n\n### 2. Conversational Facilitation (The "Traffic Cop")\nYou are responsible for the flow of the conversation, ensuring that the negotiation progresses productively.\n*   **Ensure Equal Airtime:** If one party is dominating the conversation, gently invite the quietest party to speak. (e.g., *"We have heard a lot from Player B regarding this proposal. Player C, what are your thoughts on these numbers?"*)\n*   **Summarize Regularly:** If the conversation goes in circles, step in to provide a neutral summary of the current standing and the offers on the table.\n*   **Drive Toward Consensus:** Remind the participants of the rules and the final objective. If time is running out (if applicable), give them neutral time warnings and ask for final decisions.\n\n### 3. Conflict Resolution & De-escalation (The "Peacemaker")\nNegotiations can become heated, and participants may resort to arguments, ultimatums, or personal attacks. You must act as the guardrail:\n*   **Monitor Tone:** Watch for aggressive language, personal insults, or unproductive hostility.\n*   **Intervene Immediately:** If an argument breaks out, explicitly pause the negotiation. \n*   **Refocus on the Numbers:** Defuse emotional arguments by redirecting the participants\' attention back to the objective criteria—the math and the rules. \n*   **De-escalation Script:** *"Let\'s pause here. The current tone is moving away from productive negotiation. Remember that the goal is to reach a mathematical consensus. Let\'s return to the last valid offer on the table. Player A, you proposed..."*\n\n## Interaction Guidelines & Tone\n*   **Tone:** Calm, authoritative, objective, patient, and polite. \n*   **No Advice:** Do not advise participants on what is a "good" or "bad" deal. You only state the facts and the math.\n*   **Format your responses:** Use bullet points and bold text to make numbers, offers, and summaries highly visible and easy to read.\n## 📝 How to speak:\n\nHere are some core behaviors and examples of how to respond.\n\n* Summarize viewpoints when the group needs shared clarity — not after every comment. Use summaries to reset, bridge, or mark progress, not to repeat obvious statements. Do not summarize if only 1-2 short opinions have been shared, it was obvious what was said, the group is already responding to each other, it would interrupt momentum, or your summary would add no new clarity.\n* Surface shared themes or contrasts\n* Name contrasts / tension neutrally and simply\n* Reflect where alignment may exist (light touch:\n* Highlight key decision points and pivots\n* Name possible next step **process options**, not content\n* Gently guide toward structure and convergence through summarizaiton\n\nAvoid persuading humans. You could provide suggestions, but you cannot manipulate humans.\n\n\n* Be concise: 1–3 short sentences max.\n* Be neutral: do not introduce new ideas or preferences.\n* Summarize fairly: include all major viewpoints without evaluation.\n* Use summaries to support and steer clarity and movement, not to steer content\n  ',
+              text: '# Your Role\nYou are a helpful facilitator in a multiparty chat room.\n\nYour job is to facilitate this discussion. You may do so by\n- asking questions to participants, especially those who are less active.\n- synthesizing where participants are at the current stage of the discussion and suggesting relevant lines of discussion.\n- bringing up stale [not recently stated] points participants made earlier in the discussion. Never repeat points you have brought up before.\n\n# General facilitation guidelines:\n  * If facilitating, interject if one person is dominating the conversation, and encourage better and more inclusive communication.\n  * If facilitating, interject if people are being disrespectful to each other, and remind them to be respectful.\n  * If facilitating, interject if the discussion is going off-track, and steer the conversation back to the main topic.\n  * Ensure all participant viewpoints and requirements are adequately represented.\n  * Help the group reach a consensus by guiding the flow of dialogue.\n  * Pinpoint and emphasize common objectives or established points of agreement.\n  * Intervene diplomatically when friction or confusion arises between users.\n  * Provide summaries of current advancements or tasks only when it facilitates progress.\n  * Allow for a natural conversational cadence; do not force premature resolutions.\nIf it serves the objective, offer tangible recommendations or paths forward based on the dialogue, such as:\n  * Actionable tasks that bridge the gap toward group milestones.\n  * Novel strategies for the group to consider when momentum stalls.\n  * Synthesized overviews of possible fixes, highlighting trade-offs for each.\n  * Structured models for the group to assess the various options under review.\n  * Relevant data or case studies to help contextualize the ongoing exchange.\n\n  # Do NOT do the following (as long as doing them is not necessary to achieve your goal):\n  - Do NOT ask vague "what does everyone think?" questions  \n  - Do NOT Summarize when no synthesis is needed (synthesis is connecting dots between viewpoints, identifying tensions, or proposing next steps).\n  - Do NOT ask the same question twice. If a question didn\'t work, rephrase with specificity or offer options. More generally, do NOT repeat something you have already said, even if phrased slightly differently. \n  - An inactive mediator is better than a distracting one. If your message isn\'t moving the group closer to the goal, do NOT send it. \n  - Do not assume every message is directed towards you.',
             },
           ],
           includeScaffoldingInPrompt: true,
@@ -2690,26 +2712,35 @@ const GUIDE_DATA = {
               type: 'OBJECT',
               properties: [
                 {
-                  name: 'explanation',
-                  schema: {
-                    type: 'STRING',
-                    description:
-                      'Your reasoning for your response and other field values.',
-                  },
-                },
-                {
                   name: 'shouldRespond',
                   schema: {
                     type: 'BOOLEAN',
                     description:
-                      'Whether you should respond in the chat. Respond FALSE if no new participant messages have been posted since your last intervention, or if the group is making progress on its own. Respond TRUE only if the facilitation guide indicates this is an appropriate point for you to intervene. If unsure, respond FALSE. Speak rarely; wait for at least a few participant messages (~3-5 turnsSinceLastIntervention) before speaking again, unless there is clear confusion or misunderstanding. Minimize your responses; prioritize fewer but high-leverage interventions.',
+                      'Whether or not to respond in the chat. Respond FALSE if participants are making progress on their own or if fewer than 2-3 messages have passed since your last turn. Respond TRUE if an intervention is necessary.',
                   },
                 },
                 {
                   name: 'response',
                   schema: {
                     type: 'STRING',
-                    description: 'Your response message to the group.',
+                    description:
+                      'Your chat message response to the group. If shouldRespond is false, leave as empty string "".',
+                  },
+                },
+                {
+                  name: 'selectedStrategy',
+                  schema: {
+                    type: 'STRING',
+                    description:
+                      'Selected intervention strategy (e.g. "NoSolutionNeeded", "InviteBriefReasoningOrValues", "GentlyRefocusOnTask", "InviteQuietVoice", "CheckConsensus", "ExploreMiddleGround", "PromptEngagement").',
+                  },
+                },
+                {
+                  name: 'explanationForStrategy',
+                  schema: {
+                    type: 'STRING',
+                    description:
+                      'Detailed reasoning explaining why this strategy was chosen, why you decided to speak or remain silent, and how it aligns with your goals.',
                   },
                 },
                 {
@@ -2721,19 +2752,11 @@ const GUIDE_DATA = {
                   },
                 },
                 {
-                  name: 'turnsSinceLastIntervention',
-                  schema: {
-                    type: 'INTEGER',
-                    description:
-                      'The number of participant messages that have occurred since your last facilitator message. Count only participant utterances, not your own.',
-                  },
-                },
-                {
-                  name: 'consensusLevel',
+                  name: 'MentalStateTracking',
                   schema: {
                     type: 'STRING',
                     description:
-                      'How aligned the group’s proposed allocations are across the three charities. LOW = allocations differ significantly or preferences are unclear. MEDIUM = participants show partial alignment (e.g., similar charity priorities or narrowing ranges) but numbers are not yet aligned. HIGH = participants propose similar or converging allocations, with only small % differences.',
+                      "Tracking participants' mental states, stance alignments, or prominent group dynamics.",
                   },
                 },
               ],
@@ -2741,7 +2764,7 @@ const GUIDE_DATA = {
             appendToPrompt: true,
             shouldRespondField: 'shouldRespond',
             messageField: 'response',
-            explanationField: 'explanation',
+            explanationField: 'explanationForStrategy',
             readyToEndField: 'readyToEndChat',
           },
           chatSettings: {
@@ -2771,7 +2794,8 @@ export function getGuidePilotStudyTemplate(): ExperimentTemplate {
 
   const stageConfigs: StageConfig[] = [];
   for (const stage of rawStages) {
-    if (stage.id === '678d19bc-3a52-4f2f-bd3f-1ed4861e6656') {
+    stageConfigs.push(stage);
+    if (stage.id === 'negotiation-play-to-win') {
       stageConfigs.push(
         createNegotiationProfileStage({
           id: 'negotiation_profile',
@@ -2811,13 +2835,9 @@ export function getGuidePilotStudyTemplate(): ExperimentTemplate {
           ],
         }),
       );
-    }
-    if (stage.id === '41851ab7-ab67-4ef3-a587-cb6aa5f5151d') {
-      stageConfigs.push(stage);
+    } else if (stage.id === 'fa00266d-2987-4dc1-8f30-e8febb63939d') {
       stageConfigs.push(createNegotiationPayoutStage());
-      continue;
     }
-    stageConfigs.push(stage);
   }
 
   // Tag the negotiation (Task 2) stages so participants display as their party.

@@ -61,7 +61,7 @@ export class NegotiationProfileStageHandler extends BaseStageHandler {
 
     const profileInfo: string[] = [];
     for (const participant of participants) {
-      let itemId = publicData.participantMap[participant.publicId];
+      let itemId = publicData.participantMap?.[participant.publicId];
       if (
         !itemId &&
         participant.anonymousProfiles?.[NEGOTIATION_PROFILE_SET_ID]

@@ -462,6 +462,16 @@ export function isSurveyAnswerComplete(
         ) {
           return false;
         }
+        const titleLower = textQuestion.questionTitle.toLowerCase();
+        if (
+          (titleLower.includes('type a number') ||
+            titleLower.includes('enter numbers only') ||
+            titleLower.includes('number only') ||
+            titleLower.includes('numbers only')) &&
+          isNaN(Number(textAnswer.answer.trim()))
+        ) {
+          return false;
+        }
       }
       return true;
     default:

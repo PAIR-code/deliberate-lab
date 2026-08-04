@@ -30,15 +30,43 @@ export async function assignNegotiationProfilesToParticipants(
     stageId,
   );
 
+  // Fetch all active participants in the cohort (without stageId filter) so
+  // profiles are assigned in balanced order across cohort members even if
+  // participants reach this stage at slightly different times or concurrently.
+  const participants = await getFirestoreActiveParticipants(
+    experimentId,
+    cohortId,
+  );
+
   await app.firestore().runTransaction(async (transaction) => {
     const publicStageDataSnapshot = await transaction.get(publicDoc);
+    if (!publicStageDataSnapshot.exists) {
+      return;
+    }
+
     const publicStageData =
       publicStageDataSnapshot.data() as NegotiationProfileStagePublicData;
 
-    const participants = await getFirestoreActiveParticipants(
-      experimentId,
-      cohortId,
-      stageId,
+    if (!publicStageData.participantMap) {
+      publicStageData.participantMap = {};
+    }
+
+    // Filter participants that need assignment
+    const unassignedParticipants = participants.filter(
+      (p) => !publicStageData.participantMap[p.publicId],
+    );
+
+    // Perform ALL reads before any writes (required by Firestore transactions)
+    const participantSnapshots = await Promise.all(
+      unassignedParticipants.map((p) => {
+        const ref = app
+          .firestore()
+          .collection('experiments')
+          .doc(experimentId)
+          .collection('participants')
+          .doc(p.privateId);
+        return transaction.get(ref);
+      }),
     );
 
     const getItemCounts = () => {
@@ -62,37 +90,36 @@ export async function assignNegotiationProfilesToParticipants(
         (item) => (itemToFrequencyMap[item.id] ?? 0) === minFreq,
       );
       if (availableItems.length === 0) {
-        return stage.items[Math.floor(Math.random() * stage.items.length)];
+        return stage.items[0];
       }
-      return availableItems[Math.floor(Math.random() * availableItems.length)];
+      return availableItems[0];
     };
 
-    for (const participant of participants) {
-      if (!publicStageData.participantMap[participant.publicId]) {
-        const nextItem = getNextItem();
-        if (nextItem) {
-          publicStageData.participantMap[participant.publicId] = nextItem.id;
+    // Perform WRITES
+    for (let i = 0; i < unassignedParticipants.length; i++) {
+      const participant = unassignedParticipants[i];
+      const participantDoc = participantSnapshots[i];
+      const nextItem = getNextItem();
+      if (nextItem) {
+        publicStageData.participantMap[participant.publicId] = nextItem.id;
 
+        if (participantDoc.exists) {
+          const pData = participantDoc.data() as ParticipantProfileExtended;
+          if (!pData.anonymousProfiles) {
+            pData.anonymousProfiles = {};
+          }
+          pData.anonymousProfiles[NEGOTIATION_PROFILE_SET_ID] = {
+            name: nextItem.name,
+            avatar: pData.avatar || nextItem.avatar || '',
+            repeat: 0,
+          };
           const participantRef = app
             .firestore()
             .collection('experiments')
             .doc(experimentId)
             .collection('participants')
             .doc(participant.privateId);
-
-          const participantDoc = await transaction.get(participantRef);
-          if (participantDoc.exists) {
-            const pData = participantDoc.data() as ParticipantProfileExtended;
-            if (!pData.anonymousProfiles) {
-              pData.anonymousProfiles = {};
-            }
-            pData.anonymousProfiles[NEGOTIATION_PROFILE_SET_ID] = {
-              name: nextItem.name,
-              avatar: pData.avatar || nextItem.avatar || '',
-              repeat: 0,
-            };
-            transaction.set(participantRef, pData);
-          }
+          transaction.set(participantRef, pData);
         }
       }
     }

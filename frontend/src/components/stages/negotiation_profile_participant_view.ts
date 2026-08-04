@@ -36,12 +36,16 @@ export class NegotiationProfileView extends MobxLitElement {
     const publicData = this.cohortService.stagePublicDataMap[this.stage.id];
     if (publicData?.kind !== StageKind.NEGOTIATION_PROFILE) return;
     const itemId =
-      publicData.participantMap[
+      publicData.participantMap?.[
         this.participantService.profile?.publicId ?? ''
       ];
     if (!itemId && !this.isAssigning) {
       this.isAssigning = true;
-      this.participantService.setParticipantNegotiationProfiles(this.stage.id);
+      this.participantService
+        .setParticipantNegotiationProfiles(this.stage.id)
+        .finally(() => {
+          this.isAssigning = false;
+        });
     }
   }
 
@@ -56,15 +60,19 @@ export class NegotiationProfileView extends MobxLitElement {
     }
 
     const itemId =
-      publicData.participantMap[
+      publicData.participantMap?.[
         this.participantService.profile?.publicId ?? ''
       ];
     const item = this.stage.items.find((item) => item.id === itemId);
 
     const getProfile = () => {
-      this.participantService.setParticipantNegotiationProfiles(
-        this.stage?.id ?? '',
-      );
+      if (this.isAssigning) return;
+      this.isAssigning = true;
+      this.participantService
+        .setParticipantNegotiationProfiles(this.stage?.id ?? '')
+        .finally(() => {
+          this.isAssigning = false;
+        });
     };
 
     const renderDisplay = () => {
