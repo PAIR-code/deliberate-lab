@@ -3,6 +3,11 @@ import {
   ChatStagePublicData,
   getTurnCycleInfo,
 } from './chat_stage';
+import {
+  TURN_CYCLE_STATUS_PLACEHOLDER,
+  getTurnCycleStatusForPrompt,
+  substituteTurnCycleStatus,
+} from './chat_stage.prompts';
 
 describe('getTurnCycleInfo', () => {
   const stage = (
@@ -54,5 +59,39 @@ describe('getTurnCycleInfo', () => {
     expect(getTurnCycleInfo(publicData(), stage(null))).toBeNull();
     expect(getTurnCycleInfo(publicData({turnOrder: []}), stage(9))).toBeNull();
     expect(getTurnCycleInfo(undefined, stage(9))).toBeNull();
+  });
+});
+
+describe('substituteTurnCycleStatus', () => {
+  const info = {currentCycle: 2, totalCycles: 4};
+
+  it('replaces the placeholder with the cycle status line', () => {
+    expect(
+      substituteTurnCycleStatus(
+        `Before.\n\n${TURN_CYCLE_STATUS_PLACEHOLDER}\n\nAfter.`,
+        info,
+      ),
+    ).toBe(`Before.\n\n${getTurnCycleStatusForPrompt(2, 4)}\n\nAfter.`);
+  });
+
+  it('collapses the placeholder and one adjacent blank line without info', () => {
+    expect(
+      substituteTurnCycleStatus(
+        `Before.\n\n${TURN_CYCLE_STATUS_PLACEHOLDER}\n\nAfter.`,
+        null,
+      ),
+    ).toBe('Before.\n\nAfter.');
+    expect(
+      substituteTurnCycleStatus(
+        `Line.\n\n${TURN_CYCLE_STATUS_PLACEHOLDER}`,
+        null,
+      ),
+    ).toBe('Line.\n');
+  });
+
+  it('leaves text without the placeholder untouched', () => {
+    expect(substituteTurnCycleStatus('No placeholder here.', info)).toBe(
+      'No placeholder here.',
+    );
   });
 });

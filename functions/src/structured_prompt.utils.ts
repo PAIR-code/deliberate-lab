@@ -31,6 +31,11 @@ import {
   DEFAULT_MEDIATOR_GROUP_CHAT_PROMPT_INSTRUCTIONS,
   DEFAULT_MEDIATOR_GROUP_CHAT_TURN_TAKING_PROMPT_INSTRUCTIONS,
   ChatStageConfig,
+  ChatStagePublicData,
+  TURN_CYCLE_STATUS_PLACEHOLDER,
+  TextPromptItem,
+  getTurnCycleInfo,
+  substituteTurnCycleStatus,
 } from '@deliberation-lab/utils';
 import {
   getAgentMediatorPrompt,
@@ -46,6 +51,25 @@ import {
   getFirestorePrivateChatMessages,
 } from './utils/firestore';
 import {stageManager} from './app';
+
+// Recursively check whether `{{_turnCycleStatus}}` appears in prompt items.
+function containsTurnCyclePlaceholder(items: PromptItem[]): boolean {
+  return items.some((item) => {
+    if (item.type === PromptItemType.TEXT) {
+      return (
+        (item as TextPromptItem).text?.includes(
+          TURN_CYCLE_STATUS_PLACEHOLDER,
+        ) ?? false
+      );
+    }
+    if (item.type === PromptItemType.GROUP) {
+      return containsTurnCyclePlaceholder(
+        (item as PromptItemGroup).items ?? [],
+      );
+    }
+    return false;
+  });
+}
 
 /** Attempts to fetch corresponding prompt config from storage,
  * else returns the stage's default config.
@@ -654,6 +678,34 @@ async function processPromptItems(
       it.type === PromptItemType.GROUP &&
       (it as PromptItemGroup).shuffleConfig?.shuffle,
   );
+
+  // Resolve {{_turnCycleStatus}} where the experimenter placed it: the cycle
+  // line for a turn-based group chat with a message cap, empty text otherwise.
+  let turnCycleInfo: {currentCycle: number; totalCycles: number} | null = null;
+  if (stageKind === StageKind.CHAT) {
+    const stage = (promptData.data[stageId]?.stage ??
+      (await getFirestoreStage(experiment.id, stageId))) as
+      | ChatStageConfig
+      | undefined;
+    const usesTurnCycle =
+      containsTurnCyclePlaceholder(promptItems) ||
+      (stage?.additionalParticipantInstructions?.includes(
+        TURN_CYCLE_STATUS_PLACEHOLDER,
+      ) ??
+        false);
+    if (usesTurnCycle && stage?.isTurnBased) {
+      const publicData = ((promptData.data[stageId]?.publicData as
+        | ChatStagePublicData
+        | undefined) ??
+        (await getFirestoreStagePublicData(
+          experiment.id,
+          cohortId,
+          stageId,
+        ))) as ChatStagePublicData | undefined;
+      turnCycleInfo = getTurnCycleInfo(publicData, stage);
+    }
+  }
+
   for (const [itemIndex, promptItem] of promptItems.entries()) {
     // Check condition if present (only for private chat contexts)
     if (
@@ -671,7 +723,7 @@ async function processPromptItems(
       case PromptItemType.TEXT: {
         // Resolve template variables in text prompt items
         const resolvedText = resolveTemplateVariables(
-          promptItem.text,
+          substituteTurnCycleStatus(promptItem.text, turnCycleInfo),
           variableDefinitions,
           valueMap,
         );
@@ -702,7 +754,11 @@ async function processPromptItems(
         );
         const extraParticipantInstr = (stage as ChatStageConfig)
           ?.additionalParticipantInstructions;
-        if (extraParticipantInstr) items.push(extraParticipantInstr);
+        if (extraParticipantInstr) {
+          items.push(
+            substituteTurnCycleStatus(extraParticipantInstr, turnCycleInfo),
+          );
+        }
         break;
       }
       case PromptItemType.PROFILE_CONTEXT: {

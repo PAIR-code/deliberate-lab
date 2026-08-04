@@ -459,7 +459,7 @@ export async function getAgentChatMessage(
 
   // Use provided participant IDs for prompt context
   // Get structured prompt
-  let structuredPrompt = await getPromptFromConfig(
+  const structuredPrompt = await getPromptFromConfig(
     experimentId,
     cohortId,
     stageId,
