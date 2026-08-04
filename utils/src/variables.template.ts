@@ -19,9 +19,19 @@ Mustache.escape = (text: string) => text;
  */
 export const INTERNAL_VARIABLES: ReadonlySet<string> = new Set([
   '_scratchpad',
+  '_profileName',
+  '_profileAvatar',
+  '_profilePronouns',
+  '_profileId',
   '_turnCycleStatus',
 ]);
-export type InternalVariableName = '_scratchpad' | '_turnCycleStatus';
+export type InternalVariableName =
+  | '_scratchpad'
+  | '_profileName'
+  | '_profileAvatar'
+  | '_profilePronouns'
+  | '_profileId'
+  | '_turnCycleStatus';
 
 /** Reason why a variable reference is invalid */
 export type InvalidVariableReason =
