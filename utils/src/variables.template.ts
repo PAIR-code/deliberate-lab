@@ -17,8 +17,11 @@ Mustache.escape = (text: string) => text;
  * experimenter can reference but cannot define. The `_` prefix is reserved for
  * these; this set is the registry the template logic consults.
  */
-export const INTERNAL_VARIABLES: ReadonlySet<string> = new Set(['_scratchpad']);
-export type InternalVariableName = '_scratchpad';
+export const INTERNAL_VARIABLES: ReadonlySet<string> = new Set([
+  '_scratchpad',
+  '_turnCycleStatus',
+]);
+export type InternalVariableName = '_scratchpad' | '_turnCycleStatus';
 
 /** Reason why a variable reference is invalid */
 export type InvalidVariableReason =
