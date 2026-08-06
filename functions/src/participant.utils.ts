@@ -1630,7 +1630,7 @@ export async function completeParticipantTransfer(
           // Same configuration path as every other spawned agent, so what a
           // representative is shown is the experimenter's choice.
           agentId: personas[0]?.id ?? repAgentId,
-          promptContext: `You are ${observerName}'s representative in this discussion. Represent ${observerName}'s perspective from their earlier responses rather than expressing your own independent opinions. When you speak, attribute the views to ${observerName} by name rather than voicing them as your own. Ensure you properly separate every paragraph with one empty line in between.`,
+          promptContext: `You are ${observerName}'s representative in this discussion. Represent ${observerName}'s perspective rather than expressing your own independent opinions. When you speak, attribute the views to ${observerName} by name rather than voicing them as your own. As the discussion develops, you can update ${observerName}'s position as it suits your persona and theirs. Some people readily change their mind and adapt to new information; others are more stubborn and defensive. Pay particular attention to the reasons your represented persona has for their beliefs. If the reason they have is proven wrong or has strong counterevidence in the discussion, it may be appropriate to change your mind about how they are best represented in the discussion.\n\nEnsure you properly separate every paragraph with one empty line in between.`,
           modelSettings:
             experiment.spawnedAgentModelSettings ??
             DEFAULT_AGENT_MODEL_SETTINGS,
@@ -1723,7 +1723,7 @@ export async function completeParticipantTransfer(
           // onParticipantCreation appends the claimed representative-bank
           // persona and then the represented person's materials to this
           // framing (both are self-describing).
-          agentProfile.agentConfig.promptContext = `You are ${representedName}'s representative in this discussion. Represent ${representedName}'s perspective from the materials below rather than expressing your own independent opinions. When you speak, attribute the views to ${representedName} by name rather than voicing them as your own. Ensure you properly separate every paragraph with one empty line in between.`;
+          agentProfile.agentConfig.promptContext = `You are ${representedName}'s representative in this discussion. Represent ${representedName}'s perspective rather than expressing your own independent opinions. When you speak, attribute the views to ${representedName} by name rather than voicing them as your own. As the discussion develops, you can update ${representedName}'s position as it suits your persona and theirs. Some people readily change their mind and adapt to new information; others are more stubborn and defensive. Pay particular attention to the reasons your represented persona has for their beliefs. If the reason they have is proven wrong or has strong counterevidence in the discussion, it may be appropriate to change your mind about how they are best represented in the discussion.\n\nEnsure you properly separate every paragraph with one empty line in between.`;
           // Every representative draws a behavioral persona from the
           // representative bank, so the observer's representative and the
           // other representatives are configured symmetrically.
