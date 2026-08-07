@@ -4596,6 +4596,9 @@
                       "type": "null"
                     }
                   ]
+                },
+                "representativePromptContext": {
+                  "type": ["string", "null"]
                 }
               },
               "title": "Experiment"

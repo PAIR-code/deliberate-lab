@@ -1114,6 +1114,7 @@ class Experiment(BaseModel):
     cohortDefinitions: list[CohortDefinition] | None = None
     spawnedAgentModelSettings: AgentModelSettings | None = None
     spawnedAgentChatSettings: AgentChatSettings | None = None
+    representativePromptContext: str | None = None
 
 
 class ExperimentTemplate(BaseModel):

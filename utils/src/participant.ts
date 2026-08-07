@@ -196,6 +196,30 @@ export function getRepresentativeProfile(
 }
 
 /**
+ * Framing every representative agent is spawned with, telling it whose views
+ * it speaks for. An experiment can replace it wholesale through
+ * `representativePromptContext`, so this wording is a default rather than
+ * something only a code change can alter.
+ */
+export const REPRESENTATIVE_PROMPT_CONTEXT = `You are {{name}}'s representative in this discussion. Represent {{name}}'s perspective rather than expressing your own independent opinions. When you speak, attribute the views to {{name}} by name rather than voicing them as your own. As the discussion develops, you can update {{name}}'s position as it suits your persona and theirs. Some people readily change their mind and adapt to new information; others are more stubborn and defensive. Pay particular attention to the reasons your represented persona has for their beliefs. If the reason they have is proven wrong or has strong counterevidence in the discussion, it may be appropriate to change your mind about how they are best represented in the discussion.
+
+Ensure you properly separate every paragraph with one empty line in between.`;
+
+/**
+ * Resolve the representative framing for one represented person: the
+ * experiment's own wording when it sets any, else the default above.
+ */
+export function getRepresentativePromptContext(
+  representedName: string,
+  template?: string | null,
+): string {
+  return (template || REPRESENTATIVE_PROMPT_CONTEXT).replaceAll(
+    '{{name}}',
+    representedName,
+  );
+}
+
+/**
  * Recover the represented person's name from a representative's display name,
  * so their materials read under the same name a human interview uses (for
  * example "Bear's Agent" becomes "Bear"). A name that is not a
