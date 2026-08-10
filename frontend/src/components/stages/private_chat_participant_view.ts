@@ -30,11 +30,12 @@ import {
 import {ResponseTimeoutTracker} from '../../shared/response_timeout';
 
 import {styles} from './group_chat_participant_view.scss';
+import {styles as privateChatStyles} from './private_chat_participant_view.scss';
 
 /** Private chat interface for participants */
 @customElement('private-chat-participant-view')
 export class PrivateChatView extends MobxLitElement {
-  static override styles: CSSResultGroup = [styles];
+  static override styles: CSSResultGroup = [styles, privateChatStyles];
 
   private readonly participantService = core.getService(ParticipantService);
   private readonly cohortService = core.getService(CohortService);
@@ -153,28 +154,30 @@ export class PrivateChatView extends MobxLitElement {
     const isNextDisabled = !minTurnsMet || !minTimeMet;
 
     return html`
-      <chat-interface
-        .stage=${this.stage}
-        .disableInput=${isDisabledInput()}
-        .repPrivateChatProfile=${this.repPrivateChatProfile}
-        .externalConversationOver=${isConversationOver}
-      >
-        <stage-description .stage=${this.stage} noPadding></stage-description>
-        ${chatMessages.map((message) => this.renderChatMessage(message))}
-        ${isWaitingForResponse &&
-        !isConversationOver &&
-        !this.stage.isTurnBasedChatGroupStyle
-          ? this.renderAgentIndicator(chatMessages)
-          : nothing}
-        ${isConversationOver &&
-        minTimeMet &&
-        !this.stage.isTurnBasedChatGroupStyle
-          ? this.renderConversationEndedMessage()
-          : nothing}
-        ${isConversationOver && !minTimeMet
-          ? this.renderWaitingForMinTimeMessage(elapsedMinutes)
-          : nothing}
-      </chat-interface>
+      <div class="chat-area">
+        <stage-description .stage=${this.stage}></stage-description>
+        <chat-interface
+          .stage=${this.stage}
+          .disableInput=${isDisabledInput()}
+          .repPrivateChatProfile=${this.repPrivateChatProfile}
+          .externalConversationOver=${isConversationOver}
+        >
+          ${chatMessages.map((message) => this.renderChatMessage(message))}
+          ${isWaitingForResponse &&
+          !isConversationOver &&
+          !this.stage.isTurnBasedChatGroupStyle
+            ? this.renderAgentIndicator(chatMessages)
+            : nothing}
+          ${isConversationOver &&
+          minTimeMet &&
+          !this.stage.isTurnBasedChatGroupStyle
+            ? this.renderConversationEndedMessage()
+            : nothing}
+          ${isConversationOver && !minTimeMet
+            ? this.renderWaitingForMinTimeMessage(elapsedMinutes)
+            : nothing}
+        </chat-interface>
+      </div>
       <stage-footer .disabled=${isNextDisabled}>
         ${this.stage.progress.showParticipantProgress
           ? html`<progress-stage-completed></progress-stage-completed>`

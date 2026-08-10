@@ -1,0 +1,17 @@
+@use '../../sass/common';
+
+// The stage description sits at the top of the page, the way it does on a
+// survey page, and the conversation fills what is left. The block keeps the
+// height the chat interface claims for itself elsewhere, so the page is the
+// same overall size as before and only the space inside it is divided.
+.chat-area {
+  @include common.flex-column;
+  height: calc(100vh - common.$header-height * 3);
+  min-height: 0;
+
+  chat-interface {
+    flex: 1;
+    height: auto;
+    min-height: 0;
+  }
+}
