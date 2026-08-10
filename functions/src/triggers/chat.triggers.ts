@@ -6,7 +6,6 @@ import {
   ParticipantStatus,
   StageKind,
   UserType,
-  createParticipantProfileBase,
   createSystemChatMessage,
   shuffleWithSeed,
   ChatPromptConfig,
@@ -25,6 +24,7 @@ import {
 import {
   createAgentChatMessageFromPrompt,
   canSendAgentChatMessage,
+  getPrivateChatSenderProfile,
 } from '../chat/chat.agent';
 import {sendErrorPrivateChatMessage} from '../chat/chat.utils';
 import {handleMaxMessagesReached, startTimeElapsed} from '../stages/chat.time';
@@ -811,7 +811,15 @@ export const onPrivateChatMessageCreated = onDocumentCreated(
               discussionId: message.discussionId,
               message: 'Error fetching response',
               type: mediator.type,
-              profile: createParticipantProfileBase(mediator),
+              // Under the name the participant sees for this speaker: a
+              // mediator interviewing someone who has a representative writes
+              // as that representative, error messages included.
+              profile: await getPrivateChatSenderProfile(
+                event.params.experimentId,
+                stage,
+                [participant.privateId],
+                mediator,
+              ),
               senderId: mediator.publicId,
               agentId: mediator.agentConfig?.agentId ?? '',
             },
