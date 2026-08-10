@@ -282,11 +282,15 @@ export class ChatPanel extends MobxLitElement {
     const text = this.participantService.quizText.trim();
     // Pass the backend's current pause checkpoint so the endpoint clears it and
     // resumes the stalled turn; the Likert value is saved as a structured field.
-    await this.participantService.submitParticipantThought(
+    const response = await this.participantService.submitParticipantThought(
       text,
       checkpoint,
       rating,
     );
+    // A submission that did not reach the backend leaves the chat paused, so
+    // the quiz has to stay on screen: counting it as answered would hide the
+    // form with nothing to resume the discussion.
+    if (!response?.success) return;
     // Advance exactly one checkpoint so no quiz is ever skipped; the form resets
     // (submitParticipantThought clears quizText).
     this.quizAnsweredCheckpoint = this.quizAnsweredCheckpoint + 1;
