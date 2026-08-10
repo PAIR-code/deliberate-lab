@@ -128,7 +128,7 @@ export async function assignNegotiationProfilesToParticipants(
       }
       pData.anonymousProfiles[NEGOTIATION_PROFILE_SET_ID] = {
         name: assignedItem.name,
-        avatar: pData.avatar || assignedItem.avatar || '',
+        avatar: pData.avatar || '',
         repeat: 0,
       };
       const participantRef = app

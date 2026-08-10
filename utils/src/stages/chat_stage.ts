@@ -129,6 +129,7 @@ export function createChatStage(
       : {}),
   };
 }
+//TODO: Need to make sure the negotiation logic does not hurt the original chat stage logic. Re-evaluate the robustness later. (https://github.com/PAIR-code/deliberate-lab/issues/1212)
 
 /** Create chat default discussion. */
 export function createDefaultChatDiscussion(
