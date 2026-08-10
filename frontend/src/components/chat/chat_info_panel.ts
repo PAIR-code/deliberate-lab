@@ -332,10 +332,14 @@ export class ChatPanel extends MobxLitElement {
     const isSubmitting = this.participantService.isSubmittingThought;
     const canSubmit =
       this.quizRating !== null && text.trim() !== '' && !isSubmitting;
-    const quizQuestion = 'Do you like the process so far?';
     return html`
       <div class="quiz-section">
-        <div class="quiz-question">${quizQuestion}</div>
+        <div class="quiz-question">
+          Do you like the process so far?
+          <span class="quiz-note"
+            >Your responses will not be a part of this discussion.</span
+          >
+        </div>
         <div class="quiz-likert">
           ${QUIZ_LIKERT_OPTIONS.map(
             (option) => html`

@@ -48,6 +48,12 @@
   color: var(--md-sys-color-on-surface);
 }
 
+// The note after the question is part of the same line, in normal weight so
+// the question itself still reads as the bold part.
+.quiz-note {
+  font-weight: 400;
+}
+
 // 7-point Likert laid out top-to-bottom.
 .quiz-likert {
   @include common.flex-column;
