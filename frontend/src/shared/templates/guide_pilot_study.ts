@@ -1462,7 +1462,8 @@ const GUIDE_DATA = {
         {
           id: '9c1a35a1-23f0-4954-a9ed-1683c0ad8365',
           kind: 'scale',
-          questionTitle: 'I was satisfied with the performance of the AI facilitator. ',
+          questionTitle:
+            'I was satisfied with the performance of the AI facilitator. ',
           upperValue: 5,
           upperText: 'Strongly Satisfied',
           lowerValue: 1,
@@ -1738,7 +1739,8 @@ const GUIDE_DATA = {
         {
           id: '9c1a35a1-23f0-4954-a9ed-1683c0ad8365',
           kind: 'scale',
-          questionTitle: 'I was satisfied with the performance of the AI facilitator. ',
+          questionTitle:
+            'I was satisfied with the performance of the AI facilitator. ',
           upperValue: 5,
           upperText: 'Strongly Satisfied',
           lowerValue: 1,
