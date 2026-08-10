@@ -1,4 +1,5 @@
 import '../progress/progress_stage_completed';
+import './stage_description';
 import '../chat/chat_interface';
 import '../chat/chat_message';
 import '../participant_profile/avatar_icon';
@@ -158,6 +159,7 @@ export class PrivateChatView extends MobxLitElement {
         .repPrivateChatProfile=${this.repPrivateChatProfile}
         .externalConversationOver=${isConversationOver}
       >
+        <stage-description .stage=${this.stage} noPadding></stage-description>
         ${chatMessages.map((message) => this.renderChatMessage(message))}
         ${isWaitingForResponse &&
         !isConversationOver &&
