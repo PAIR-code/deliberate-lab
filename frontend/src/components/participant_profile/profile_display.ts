@@ -14,9 +14,14 @@ import {
 
 import {core} from '../../core/core';
 import {ExperimentService} from '../../services/experiment.service';
+import {CohortService} from '../../services/cohort.service';
 
 import {styles} from './profile_display.scss';
-import {getHashBasedColor} from '../../shared/utils';
+import {
+  getHashBasedColor,
+  MEDIATOR_OBSERVER_COLOR,
+  variableAssignmentsIncludeObserver,
+} from '../../shared/utils';
 import {MAN_EMOJIS, WOMAN_EMOJIS, PERSON_EMOJIS} from '../../shared/constants';
 
 enum ProfileDisplayType {
@@ -60,6 +65,23 @@ export class ParticipantProfileDisplay extends MobxLitElement {
   // Display (you) indicator that the profile is the current user
   @property() showIsSelf = false;
 
+  // Avatar colors to exclude from id/hash-based selection (e.g. blue when it
+  // is reserved for mediators).
+  @property({type: Array}) excludeColors: string[] = [];
+
+  private readonly cohortService = core.getService(CohortService);
+
+  // In an observer study the mediator color is reserved, so participants must
+  // not derive it. Callers can still pass their own exclusions.
+  private get effectiveExcludeColors(): string[] {
+    if (this.excludeColors.length > 0) return this.excludeColors;
+    return variableAssignmentsIncludeObserver(
+      this.cohortService.activeParticipants,
+    )
+      ? [MEDIATOR_OBSERVER_COLOR]
+      : [];
+  }
+
   override render() {
     if (!this.profile) return nothing;
 
@@ -71,13 +93,15 @@ export class ParticipantProfileDisplay extends MobxLitElement {
 
     // Use profile ID to determine color
     const color = () => {
-      // If publicId is in format animal-color-number, extract color
+      // If publicId is in format animal-color-number, extract color (unless it
+      // is excluded, e.g. blue reserved for mediators)
+      const excludeColors = this.effectiveExcludeColors;
       const splitId = (this.profile?.publicId ?? '').split('-');
-      if (splitId.length >= 3) {
+      if (splitId.length >= 3 && !excludeColors.includes(splitId[1])) {
         return splitId[1];
       }
       // Otherwise, use publicId as hash
-      return getHashBasedColor(this.profile?.publicId);
+      return getHashBasedColor(this.profile?.publicId, excludeColors);
     };
 
     const resolvedStage = this.stageId

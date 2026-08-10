@@ -25,8 +25,10 @@ import {
   ChatStagePublicData,
   ChatMessage,
   ChatStageConfig,
+  getQuizPauseCheckpointForCount,
   DiscussionItem,
   StageKind,
+  UserType,
   getTimeElapsed,
 } from '@deliberation-lab/utils';
 
@@ -49,6 +51,19 @@ export class GroupChatView extends MobxLitElement {
   @state() readyToEndDiscussionLoading = false;
 
   private renderChatMessage(chatMessage: ChatMessage) {
+    // Turn-based chats show a "discussion has ended" banner (rendered by
+    // chat-interface), so suppress the duplicate system message carrying that
+    // exact text. Non-turn-based chats get no banner and keep the system
+    // message as their end-of-discussion cue.
+    if (
+      chatMessage.type === UserType.SYSTEM &&
+      chatMessage.message ===
+        'The discussion has ended. Please proceed to the next stage.' &&
+      this.stage?.isTurnBased &&
+      this.isConversationOver()
+    ) {
+      return nothing;
+    }
     return html`
       <chat-message
         .chat=${chatMessage}
@@ -69,7 +84,39 @@ export class GroupChatView extends MobxLitElement {
       stage.id
     ] as ChatStagePublicData;
     if (!stageData) return;
-    return Boolean(stageData.discussionEndTimestamp);
+    if (stageData.discussionEndTimestamp) return true;
+    // Honor the backend's effective cap (a per-mediator override replaces the
+    // stage value), falling back to the stage value when none is published.
+    const max =
+      stageData.effectiveMaxNumberOfMessages ??
+      (stage as ChatStageConfig).maxNumberOfMessages;
+    if (max != null && this.cohortMessageCount() >= max) return true;
+    return false;
+  }
+
+  /**
+   * Total non-system, non-error messages sent in the cohort's public chat.
+   * Used to enforce cohort-wide min/max message limits.
+   */
+  private cohortMessageCount(): number {
+    const stageId = this.participantService.currentStageViewId ?? '';
+    const messages = this.cohortService.chatMap[stageId] ?? [];
+    return messages.filter((m) => m.type !== UserType.SYSTEM && !m.isError)
+      .length;
+  }
+
+  private isMinimumMessagesMet() {
+    if (!this.stage) return true;
+    // Honor a per-mediator min override published by the backend, falling back
+    // to the stage-level minimum when none is set.
+    const stageData = this.cohortService.stagePublicDataMap[this.stage.id] as
+      | ChatStagePublicData
+      | undefined;
+    const min =
+      stageData?.effectiveMinNumberOfMessages ??
+      this.stage.minNumberOfMessages ??
+      0;
+    return this.cohortMessageCount() >= min;
   }
 
   private renderChatHistory(currentDiscussionId: string | null) {
@@ -262,8 +309,14 @@ export class GroupChatView extends MobxLitElement {
       this.stage.id,
     );
 
-    // Determine if Next Stage button should be disabled
-    const disableNext = !this.isMinimumTimeMet;
+    // Determine if Next Stage button should be disabled. Also block advance
+    // while a quiz is pending (incl. the final quiz after the last message) so
+    // the participant cannot skip past it.
+    const disableNext =
+      !this.isMinimumTimeMet ||
+      !this.isMinimumMessagesMet() ||
+      this.isQuizOwed ||
+      this.isQuizPending;
 
     const renderProgress = () => {
       if (!this.stage?.progress.showParticipantProgress) {
@@ -285,7 +338,15 @@ export class GroupChatView extends MobxLitElement {
       <chat-interface
         .stage=${this.stage}
         .disableInput=${this.disableInput ||
+        // Observers are strictly read-only inside chat rooms (cannot type/send messages)
+        // but must retain interactive capabilities to complete surveys in other stages,
+        // so this gating is applied component-specifically rather than globally.
+        this.participantService.profile?.isObserver ||
         this.participantService.disableStage ||
+        // Block the direct-participation human from typing while their quiz is
+        // pending (observers are already read-only) so they answer before the
+        // discussion resumes.
+        this.isQuizPending ||
         this.isConversationOver()}
         showPanel
       >
@@ -320,6 +381,44 @@ export class GroupChatView extends MobxLitElement {
       getTimeElapsed(publicStageData.discussionStartTimestamp, 'm') >=
       this.stage.timeMinimumInMinutes
     );
+  }
+
+  /** True while the participant has an unanswered quiz pending. The backend
+   *  keeps quizPauseCheckpoint > 0 until they submit (and zeroes it on
+   *  submit), so this single public-data flag is the authoritative "quiz
+   *  unanswered" signal, including the final quiz that follows the last
+   *  message. It is only ever set for a quiz, so ordinary chats are
+   *  unaffected. Used to block stage advance until the quiz is submitted. */
+  private get isQuizPending(): boolean {
+    if (!this.stage) return false;
+    const data = this.cohortService.stagePublicDataMap[this.stage.id] as
+      | ChatStagePublicData
+      | undefined;
+    return (data?.quizPauseCheckpoint ?? 0) > 0;
+  }
+
+  /** True while this participant still owes a quiz for the current message
+   *  count. The backend raises quizPauseCheckpoint a beat after a message
+   *  lands, so at the moment the minimum-messages condition flips true the
+   *  pause flag has not arrived yet, briefly enabling "Next stage" in the gap
+   *  before the quiz appears. This derives the same answer the pause is about
+   *  to encode, from the message count and the answered checkpoint the client
+   *  already holds, so there is no gap. Scoped to quiz participants in
+   *  turn-based chats, so other chats are unaffected. */
+  private get isQuizOwed(): boolean {
+    if (!this.stage) return false;
+    if ((this.stage as ChatStageConfig).isTurnBased !== true) return false;
+    if (!this.participantService.profile?.isQuizzed) return false;
+    const data = this.cohortService.stagePublicDataMap[this.stage.id] as
+      | ChatStagePublicData
+      | undefined;
+    const min =
+      data?.effectiveMinNumberOfMessages ?? this.stage.minNumberOfMessages ?? 0;
+    const expected = getQuizPauseCheckpointForCount(
+      this.cohortMessageCount(),
+      min,
+    );
+    return expected > (data?.quizAnsweredCheckpoint ?? 0);
   }
 
   get minutesRemainingUntilMinimum(): number {

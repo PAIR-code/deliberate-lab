@@ -3,6 +3,8 @@ import {
   Experiment,
   ParticipantProfileExtended,
   ParticipantStatus,
+  PrivateChatStageConfig,
+  StageKind,
 } from '@deliberation-lab/utils';
 import {completeStageAsAgentParticipant} from '../agent_participant.utils';
 import {sendInitialChatMessages} from '../chat/chat.agent';
@@ -10,6 +12,7 @@ import {
   getFirestoreCohort,
   getFirestoreParticipant,
   getFirestoreParticipantRef,
+  getFirestoreStage,
 } from '../utils/firestore';
 import {app} from '../app';
 
@@ -37,11 +40,26 @@ export const updateAgentParticipant = onDocumentUpdated(
         experimentId,
         after.currentCohortId,
       );
-
-      // Check if the stage is unlocked before sending initial messages
+      // Check if the stage is unlocked before sending initial messages.
       // This prevents sending messages for stages that are gated by "waiting"
-      // where all participants must be on the current stage first
-      if (cohort?.stageUnlockMap[after.currentStageId]) {
+      // where all participants must be on the current stage first. Observers
+      // testing the experiment bypass the waiting phase.
+      const isStageUnlocked = cohort?.stageUnlockMap[after.currentStageId];
+
+      // Group-style turn-based private chats are mediator-goes-first and their
+      // data is scoped to the individual participant, so the opening message
+      // must be sent on stage entry without waiting for the whole cohort to
+      // unlock. In a within-subjects design the other participants advance
+      // through phases on their own cadence and never co-occupy this
+      // per-participant chat, so a cohort-wide unlock (waitForAllParticipants)
+      // can never be satisfied and the mediator would otherwise never speak.
+      // Ordinary (non-group-style) private chats still respect the unlock gate.
+      const stage = await getFirestoreStage(experimentId, after.currentStageId);
+      const isGroupStylePrivateChat =
+        stage?.kind === StageKind.PRIVATE_CHAT &&
+        (stage as PrivateChatStageConfig).isTurnBasedChatGroupStyle === true;
+
+      if (isStageUnlocked || isGroupStylePrivateChat || after.isObserver) {
         await sendInitialChatMessages(
           experimentId,
           after.currentCohortId,

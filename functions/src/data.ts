@@ -21,6 +21,7 @@ import {
   MediatorPromptConfig,
   ParticipantProfileExtended,
   ParticipantPromptConfig,
+  ParticipantThought,
   StageConfig,
   StageKind,
   StageParticipantAnswer,
@@ -160,6 +161,59 @@ export async function getExperimentDownload(
       for (const stage of stageAnswers) {
         participantDownload.answerMap[stage.id] = stage;
       }
+
+      // Fetch thoughts for all stages of this participant in parallel
+      const stageIdsWithThoughts = experimentConfig.stageIds || [];
+      const thoughtsQueries = stageIdsWithThoughts.map(async (stageId) => {
+        const thoughtsList = (
+          await firestore
+            .collection('experiments')
+            .doc(experimentId)
+            .collection('participants')
+            .doc(profile.privateId)
+            .collection('stageData')
+            .doc(stageId)
+            .collection('thoughts')
+            .orderBy('timestamp', 'asc')
+            .get()
+        ).docs.map((thoughtDoc) => thoughtDoc.data() as ParticipantThought);
+
+        return {stageId, thoughtsList};
+      });
+
+      const thoughtsResults = await Promise.all(thoughtsQueries);
+      for (const {stageId, thoughtsList} of thoughtsResults) {
+        if (thoughtsList.length > 0) {
+          participantDownload.thoughtMap[stageId] = thoughtsList;
+        }
+      }
+
+      // Fetch private-chat (e.g. interview) messages for all stages in
+      // parallel. Private chats live in a per-participant subcollection and
+      // were previously excluded from the download, so interviews could not be
+      // recovered from the export.
+      const privateChatQueries = stageIdsWithThoughts.map(async (stageId) => {
+        const messages = (
+          await firestore
+            .collection('experiments')
+            .doc(experimentId)
+            .collection('participants')
+            .doc(profile.privateId)
+            .collection('stageData')
+            .doc(stageId)
+            .collection('privateChats')
+            .orderBy('timestamp', 'asc')
+            .get()
+        ).docs.map((chatDoc) => chatDoc.data() as ChatMessage);
+        return {stageId, messages};
+      });
+      const privateChatResults = await Promise.all(privateChatQueries);
+      for (const {stageId, messages} of privateChatResults) {
+        if (messages.length > 0) {
+          participantDownload.privateChatMap[stageId] = messages;
+        }
+      }
+
       // Add ParticipantDownload to ExperimentDownload
       experimentDownload.participantMap[profile.publicId] = participantDownload;
     }

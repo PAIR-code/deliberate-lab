@@ -11,7 +11,7 @@ import {
 import {AlertMessage} from './alert';
 import {CohortConfig} from './cohort';
 import {Experiment} from './experiment';
-import {ParticipantProfileExtended} from './participant';
+import {ParticipantProfileExtended, ParticipantThought} from './participant';
 import {ChatMessage} from './chat_message';
 import {
   StageConfig,
@@ -54,6 +54,12 @@ export interface ParticipantDownload {
   profile: ParticipantProfileExtended;
   // Maps from stage ID to participant's stage answer
   answerMap: Record<string, StageParticipantAnswer>;
+  // Maps from stage ID to list of participant's thoughts in that stage
+  thoughtMap: Record<string, ParticipantThought[]>;
+  // Maps from stage ID to the participant's private-chat (e.g. interview)
+  // messages in that stage, ordered chronologically. Private chats live in a
+  // per-participant subcollection and were previously absent from the download.
+  privateChatMap: Record<string, ChatMessage[]>;
 }
 
 export interface CohortDownload {
@@ -86,6 +92,8 @@ export function createParticipantDownload(
   return {
     profile,
     answerMap: {},
+    thoughtMap: {},
+    privateChatMap: {},
   };
 }
 

@@ -59,6 +59,16 @@ export interface ParticipantProfile extends UserProfileBase {
   timestamps: ProgressTimestamps;
   anonymousProfiles: Record<string, AnonymousProfileMetadata>;
   connected: boolean | null;
+  isObserver?: boolean; // Read-only observer participant type
+  hasRepresentative?: boolean; // Whether the observer has a representative agent spawned
+  isQuizzed?: boolean; // Whether this round's treatment includes the periodic group-chat quiz (hoisted from _isQuizzed at the transfer)
+  otherAgentGeneration?: {
+    numOtherAgents: number;
+    // Number of inactive personas to spawn alongside numOtherAgents.
+    // These generate a persona for prompt context but do not chat or take turns.
+    numInactivePersonas?: number;
+  };
+  swapMediator?: string; // Name or ID of mediator to swap to when entering a group chat
   // Maps variable name to value assigned specifically for this participant
   // This overrides any variable values set at the cohort/experiment levels.
   variableMap?: Record<string, string>;
@@ -69,6 +79,13 @@ export interface AnonymousProfileMetadata {
   name: string;
   repeat: number; // e.g., if 1, then profile is Cat 2; if 2, then Cat 3
   avatar: string;
+}
+
+/** Participant observation thought structure. */
+export interface ParticipantThought {
+  id: string;
+  text: string;
+  timestamp: UnifiedTimestamp;
 }
 
 /** Participant profile available in private participants collection. */
@@ -123,6 +140,10 @@ export enum ParticipantStatus {
 // ************************************************************************* //
 // CONSTANTS                                                                 //
 // ************************************************************************* //
+// Reserved for mediators when an experiment assigns observers; participant
+// profiles must never be generated with it in those experiments.
+export const MEDIATOR_OBSERVER_COLOR = 'blue';
+
 export const COLORS: string[] = [
   'Red',
   'Orange',
@@ -162,6 +183,20 @@ export function createParticipantProfileBase(
   };
 }
 
+/**
+ * Display profile (name + avatar) for an observer's AI representative.
+ * The avatar defaults to a robot.
+ */
+export function getRepresentativeProfile(
+  observerName: string,
+  avatar = '🤖',
+): {
+  name: string;
+  avatar: string;
+} {
+  return {name: `${observerName}'s Agent (yours)`, avatar};
+}
+
 /** Create private participant config. */
 export function createParticipantProfileExtended(
   config: Partial<ParticipantProfileExtended> = {},
@@ -182,6 +217,13 @@ export function createParticipantProfileExtended(
     anonymousProfiles: {},
     connected: config.agentConfig ? true : false,
     agentConfig: config.agentConfig ?? null,
+    isObserver: config.isObserver ?? false,
+    hasRepresentative: config.hasRepresentative ?? false,
+    isQuizzed: config.isQuizzed ?? false,
+    otherAgentGeneration: config.otherAgentGeneration ?? {
+      numOtherAgents: 0,
+    },
+    swapMediator: config.swapMediator ?? '',
     variableMap: config.variableMap ?? {},
   };
 }
@@ -192,6 +234,7 @@ export function setProfile(
   config: ParticipantProfileExtended,
   setAnonymousProfile = false,
   profileType: ProfileType = ProfileType.ANONYMOUS_ANIMAL,
+  excludeColor?: string | string[],
 ) {
   const generateProfileFromSet = (
     profileSet: {name: string; avatar: string}[],
@@ -246,7 +289,18 @@ export function setProfile(
 
   // Define public ID (using anonymous animal 1 set)
   const mainProfile = profileAnimal1;
-  const color = COLORS[Math.floor(Math.random() * COLORS.length)];
+  const excludedColors = (
+    Array.isArray(excludeColor)
+      ? excludeColor
+      : excludeColor
+        ? [excludeColor]
+        : []
+  ).map((c) => c.toLowerCase());
+  const filteredPool = COLORS.filter(
+    (c) => !excludedColors.includes(c.toLowerCase()),
+  );
+  const colorPool = filteredPool.length > 0 ? filteredPool : COLORS;
+  const color = colorPool[Math.floor(Math.random() * colorPool.length)];
 
   config.publicId =
     `${mainProfile.name}-${color}-${randomNumber}`.toLowerCase();

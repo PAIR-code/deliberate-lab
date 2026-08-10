@@ -16,14 +16,23 @@ import {
   getTimeElapsed,
   ChatStagePublicData,
   ChatStageConfig,
+  MEDIATOR_OBSERVER_COLOR,
+  variableConfigsIncludeObserver,
+  generateId,
+  SubmitParticipantThoughtData,
 } from '@deliberation-lab/utils';
 import {
+  getFirestoreActiveMediators,
+  getFirestoreActiveParticipants,
   getFirestoreCohort,
   getFirestoreStage,
   getFirestoreStagePublicData,
+  getFirestoreStagePublicDataRef,
   getFirestorePrivateChatMessages,
+  getFirestorePublicStageChatMessages,
 } from './utils/firestore';
 import {sendInitialChatMessages} from './chat/chat.agent';
+import {triggerNextTurnHolder} from './triggers/chat.triggers';
 import {
   updateCohortStageUnlocked,
   updateParticipantNextStage,
@@ -31,7 +40,9 @@ import {
   completeParticipantTransfer,
   executeDirectTransfers,
   DirectTransferInstructions,
+  applyHoistedTreatment,
 } from './participant.utils';
+
 import {generateVariablesForScope} from './variables.utils';
 
 import {onCall, HttpsError} from 'firebase-functions/v2/https';
@@ -45,7 +56,9 @@ import {
   prettyPrintErrors,
 } from './utils/validation';
 
-/** Create, update, and delete participants. */
+const formatAgentName = (nameOrPublicId: string) => {
+  return String(nameOrPublicId || 'Agent') + "'s Agent";
+};
 
 // ************************************************************************* //
 // createParticipant endpoint                                                //
@@ -83,6 +96,9 @@ export const createParticipant = onCall(async (request) => {
   const participantConfig = createParticipantProfileExtended({
     currentCohortId: data.cohortId,
     prolificId: data.prolificId,
+    isObserver: data.isObserver ?? false,
+    hasRepresentative: data.hasRepresentative ?? false,
+    otherAgentGeneration: data.otherAgentGeneration,
   });
 
   // Temporarily always mark participants as connected (PR #537)
@@ -135,6 +151,14 @@ export const createParticipant = onCall(async (request) => {
         .get()
     ).data().count;
 
+    // When any treatment can assign observers, the mediator color is reserved
+    // and participant profiles must not be generated with it.
+    const reservedProfileColor = variableConfigsIncludeObserver(
+      experiment.variableConfigs ?? [],
+    )
+      ? MEDIATOR_OBSERVER_COLOR
+      : undefined;
+
     // Set participant profile fields
     if (data.isAnonymous) {
       // Find the profile stage to determine which anonymous profile type to use
@@ -151,9 +175,21 @@ export const createParticipant = onCall(async (request) => {
       const profileType =
         profileStage?.profileType || ProfileType.ANONYMOUS_ANIMAL;
 
-      setProfile(numParticipants, participantConfig, true, profileType);
+      setProfile(
+        numParticipants,
+        participantConfig,
+        true,
+        profileType,
+        reservedProfileColor,
+      );
     } else {
-      setProfile(numParticipants, participantConfig, false);
+      setProfile(
+        numParticipants,
+        participantConfig,
+        false,
+        undefined,
+        reservedProfileColor,
+      );
     }
 
     // Set current stage ID in participant config
@@ -170,7 +206,52 @@ export const createParticipant = onCall(async (request) => {
       },
     );
 
-    // Write new participant document
+    // Hoist treatment fields from the participant's assigned variables onto the
+    // participant (round 0). Shared with the per-transfer re-hoist so both the
+    // array and expanded (_1/_2/...) multi-value formats behave identically.
+    if (!participantConfig.agentConfig && participantConfig.variableMap) {
+      applyHoistedTreatment(
+        participantConfig as unknown as Record<string, unknown>,
+        participantConfig.variableMap,
+        0,
+      );
+    }
+
+    // Fetch existing cohort participants for checking observer status and renaming (Reads first!)
+    const cohortParticipants = (
+      await app
+        .firestore()
+        .collection(`experiments/${data.experimentId}/participants`)
+        .where('currentCohortId', '==', data.cohortId)
+        .get()
+    ).docs.map((doc) => doc.data() as ParticipantProfileExtended);
+
+    const hasObserver = cohortParticipants.some(
+      (p) =>
+        !p.agentConfig &&
+        p.isObserver &&
+        p.currentStatus !== ParticipantStatus.DELETED,
+    );
+
+    // If the new participant is an agent and there's an observer in the cohort, rename them
+    if (participantConfig.agentConfig && hasObserver) {
+      participantConfig.name = formatAgentName(
+        participantConfig.name || participantConfig.publicId,
+      );
+      // Also update anonymous profiles
+      for (const profileSetId of Object.keys(
+        participantConfig.anonymousProfiles,
+      )) {
+        if (participantConfig.anonymousProfiles[profileSetId].name) {
+          participantConfig.anonymousProfiles[profileSetId].name =
+            formatAgentName(
+              participantConfig.anonymousProfiles[profileSetId].name,
+            );
+        }
+      }
+    }
+
+    // Write new participant document (All writes happen at the end!)
     transaction.set(document, participantConfig);
   });
 
@@ -258,6 +339,7 @@ export const updateParticipantWaiting = onCall(async (request) => {
       participant.currentCohortId,
       participant.currentStageId,
       participant.privateId,
+      transaction,
     );
 
     transaction.set(document, participant);
@@ -514,6 +596,7 @@ export const acceptParticipantExperimentStart = onCall(
         participant.currentCohortId,
         participant.currentStageId,
         participant.privateId,
+        transaction,
       );
 
       transaction.set(document, participant);
@@ -776,6 +859,150 @@ export const updateParticipantStatus = onCall(async (request) => {
     participant.currentStatus = data.status;
     transaction.set(document, participant);
   });
+
+  return {success: true};
+});
+
+// ************************************************************************* //
+// submitParticipantThought endpoint                                         //
+//                                                                           //
+// Input structure: { experimentId, participantId, stageId, text,            //
+//   checkpoint, rating }                                                    //
+// Validation: utils/src/participant.validation.ts                           //
+// ************************************************************************* //
+export const submitParticipantThought = onCall(async (request) => {
+  const {data} = request;
+
+  const validInput = Value.Check(SubmitParticipantThoughtData, data);
+  if (!validInput) {
+    throw new HttpsError('invalid-argument', 'Invalid data');
+  }
+
+  const {experimentId, participantId, stageId, text, checkpoint, rating} = data;
+
+  const trimmedText = text.trim();
+  if (trimmedText.length === 0) {
+    throw new HttpsError('invalid-argument', 'Text cannot be empty');
+  }
+
+  // Fetch parent entities in parallel to ensure their existence and check access permissions
+  const [experimentDoc, participantDoc, stageDoc] = await Promise.all([
+    app.firestore().collection('experiments').doc(experimentId).get(),
+    app
+      .firestore()
+      .collection('experiments')
+      .doc(experimentId)
+      .collection('participants')
+      .doc(participantId)
+      .get(),
+    app
+      .firestore()
+      .collection('experiments')
+      .doc(experimentId)
+      .collection('stages')
+      .doc(stageId)
+      .get(),
+  ]);
+
+  if (!experimentDoc.exists) {
+    throw new HttpsError('not-found', 'Experiment not found');
+  }
+
+  if (!participantDoc.exists) {
+    throw new HttpsError('not-found', 'Participant not found');
+  }
+
+  const participant = participantDoc.data() as ParticipantProfileExtended;
+  if (!participant.isQuizzed) {
+    throw new HttpsError(
+      'permission-denied',
+      "Participant's treatment does not include the quiz",
+    );
+  }
+
+  if (!stageDoc.exists) {
+    throw new HttpsError('not-found', 'Stage not found');
+  }
+
+  const thoughtId = generateId();
+  const timestamp = Timestamp.now();
+
+  const thoughtRef = app
+    .firestore()
+    .collection('experiments')
+    .doc(experimentId)
+    .collection('participants')
+    .doc(participantId)
+    .collection('stageData')
+    .doc(stageId)
+    .collection('thoughts')
+    .doc(thoughtId);
+
+  await thoughtRef.set({
+    id: thoughtId,
+    text: trimmedText,
+    ...(rating != null ? {rating} : {}),
+    timestamp,
+  });
+
+  // Quiz pause: submitting the quiz records the
+  // answered checkpoint, clears the chat's pause, and resumes the stalled turn.
+  // No new chat message arrives to re-fire onPublicChatMessageCreated, so the
+  // resume must be explicit here. quizAnsweredCheckpoint is recorded so the
+  // trigger does not immediately re-pause for the checkpoint just answered.
+  if (checkpoint != null && participant.isQuizzed) {
+    const cohortId = participant.currentCohortId;
+    await getFirestoreStagePublicDataRef(
+      experimentId,
+      cohortId,
+      stageId,
+    ).update({quizPauseCheckpoint: 0, quizAnsweredCheckpoint: checkpoint});
+
+    // Resume the turn that was paused: re-dispatch the current turn holder.
+    const publicStageData = (await getFirestoreStagePublicData(
+      experimentId,
+      cohortId,
+      stageId,
+    )) as ChatStagePublicData | undefined;
+    const currentTurnId = publicStageData?.currentTurnParticipantId;
+    if (currentTurnId) {
+      const [mediators, participants, chatMessages] = await Promise.all([
+        getFirestoreActiveMediators(experimentId, cohortId, stageId, true),
+        getFirestoreActiveParticipants(
+          experimentId,
+          cohortId,
+          stageId,
+          false,
+          true, // include observers (for non-observer participant ID context)
+        ),
+        getFirestorePublicStageChatMessages(experimentId, cohortId, stageId),
+      ]);
+      const nextMediatorHolder = mediators.find(
+        (m) => m.publicId === currentTurnId,
+      );
+      const nextTurnHolder = participants.find(
+        (p) => p.publicId === currentTurnId,
+      );
+      const allParticipantIds = participants
+        .filter((p) => !p.isObserver)
+        .map((p) => p.privateId);
+      // Use the latest message ID as the trigger so the resumed agent responds
+      // to the conversation as it stands, and so the empty-triggerChatId
+      // "initial message" lock (already taken when the chat began) does not
+      // silently swallow the resume.
+      const latestMessageId =
+        chatMessages.length > 0 ? chatMessages[chatMessages.length - 1].id : '';
+      await triggerNextTurnHolder(
+        experimentId,
+        cohortId,
+        allParticipantIds,
+        stageId,
+        latestMessageId,
+        nextMediatorHolder,
+        nextTurnHolder,
+      );
+    }
+  }
 
   return {success: true};
 });

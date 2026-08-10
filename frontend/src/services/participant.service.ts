@@ -73,6 +73,7 @@ import {
   updateSurveyStageParticipantAnswerCallable,
   updateRankingStageParticipantAnswerCallable,
   ackExperimenterAlertCallable,
+  submitParticipantThoughtCallable,
 } from '../shared/callables';
 import {PROLIFIC_COMPLETION_URL_PREFIX} from '../shared/constants';
 import {
@@ -107,6 +108,7 @@ export class ParticipantService extends Service {
     {};
   @observable privateChatMap: Record<string, ChatMessage[]> = {};
   @observable alertMap: Record<string, AlertMessage> = {};
+  @observable quizText = '';
 
   // Loading
   @observable unsubscribe: Unsubscribe[] = [];
@@ -120,6 +122,7 @@ export class ParticipantService extends Service {
 
   // Chat creation loading
   @observable isSendingChat = false;
+  @observable isSubmittingThought = false;
 
   @computed get isLoading() {
     return this.isProfileLoading || this.areAnswersLoading;
@@ -230,6 +233,10 @@ export class ParticipantService extends Service {
 
   @action setCurrentStageView(stageId: string | undefined) {
     this.currentStageViewId = stageId;
+  }
+
+  @action setQuizText(text: string) {
+    this.quizText = text;
   }
 
   updateForRoute(
@@ -437,6 +444,7 @@ export class ParticipantService extends Service {
     this.answerMap = {};
     this.privateChatMap = {};
     this.alertMap = {};
+    this.quizText = '';
     this.sp.participantAnswerService.reset();
   }
 
@@ -785,6 +793,52 @@ export class ParticipantService extends Service {
         },
       );
     }
+    return response;
+  }
+
+  /** Submit the participant's private thoughts on the discussion. */
+  async submitParticipantThought(
+    text: string,
+    checkpoint?: number,
+    rating?: number,
+  ) {
+    if (!this.experimentId || !this.profile || !text || text.trim() === '') {
+      return {success: false};
+    }
+
+    if (this.isSubmittingThought) {
+      return {success: false};
+    }
+
+    this.isSubmittingThought = true;
+    let response = {success: false};
+
+    try {
+      response = await submitParticipantThoughtCallable(
+        this.sp.firebaseService.functions,
+        {
+          experimentId: this.experimentId,
+          participantId: this.profile.privateId,
+          stageId: this.profile.currentStageId,
+          text: text.trim(),
+          ...(checkpoint != null ? {checkpoint} : {}),
+          ...(rating != null ? {rating} : {}),
+        },
+      );
+
+      if (response.success) {
+        runInAction(() => {
+          this.quizText = '';
+        });
+      }
+    } catch (error) {
+      console.error('Error submitting thought:', error);
+    } finally {
+      runInAction(() => {
+        this.isSubmittingThought = false;
+      });
+    }
+
     return response;
   }
 

@@ -12,6 +12,10 @@ import {
   StageConfig,
   StageKind,
   shuffleWithSeed,
+  buildGeneratePersonaPrompt,
+  createModelGenerationConfig,
+  ModelResponseStatus,
+  DEFAULT_AGENT_MODEL_SETTINGS,
 } from '@deliberation-lab/utils';
 import {startAgentParticipant} from '../agent_participant.utils';
 import {
@@ -23,15 +27,23 @@ import {
   getFirestoreActiveMediators,
   getFirestoreActiveParticipants,
   getFirestoreParticipant,
+  getFirestoreParticipantRef,
   getFirestorePublicStageChatMessages,
   getFirestoreStage,
   getFirestoreStagePublicDataRef,
+  getExperimenterDataFromExperiment,
+  getStoredPersona,
+  saveStoredPersona,
+  claimStoredPersonaByHash,
+  claimStoredPersonaSketch,
 } from '../utils/firestore';
 import {
   canSendAgentChatMessage,
   createAgentChatMessageFromPrompt,
   skipTimedOutTurnBasedAgentTurn,
 } from '../chat/chat.agent';
+import {getAgentResponse} from '../agent.utils';
+import {samplePersonaParams} from '../agent_persona_sampling';
 import {getStructuredPromptConfig} from '../structured_prompt.utils';
 
 import {app} from '../app';
@@ -46,11 +58,228 @@ export const onParticipantCreation = onDocumentCreated(
     );
     if (!participant) return;
 
+    let activeParticipant = participant;
+
+    // 1. Generate persona if flagged. This awaits the generation (and any
+    // retries) before the participant is initialized below, so a flagged
+    // participant stays uninitialized until its persona context is ready.
+    if (participant.agentConfig?.needsPersonaGeneration) {
+      const experimentId = event.params.experimentId;
+      const experimenterData =
+        await getExperimenterDataFromExperiment(experimentId);
+
+      if (experimenterData) {
+        // Stable key for storing/retrieving this agent's generated persona so
+        // it is reused across cohorts. Unset for representatives, which always
+        // generate fresh.
+        const slotKey = participant.agentConfig.personaSlotKey;
+        // Persona bank match key. Set on representatives and inactive
+        // personas so they retrieve a pre-generated persona (keyed by the
+        // round's variables) rather than generating one.
+        const personaHash = participant.agentConfig.personaHash;
+
+        // Apply a persona (stored or freshly generated) to the participant:
+        // append it to any context already set at spawn, mark the agent
+        // connected, and clear the generation flag.
+        const applyPersona = async (generated: string) => {
+          await app.firestore().runTransaction(async (transaction) => {
+            const pRef = getFirestoreParticipantRef(
+              experimentId,
+              participant.privateId,
+            );
+            const pDoc = (
+              await transaction.get(pRef)
+            ).data() as ParticipantProfileExtended;
+            if (pDoc?.agentConfig) {
+              // Append the persona to any context already set at spawn (e.g. a
+              // representative's framing) rather than overwriting it.
+              const base = pDoc.agentConfig.promptContext ?? '';
+              pDoc.agentConfig.promptContext = base
+                ? `${base}\n\n${generated}`
+                : generated;
+              pDoc.connected = true;
+              pDoc.agentConfig.needsPersonaGeneration = false;
+              transaction.set(pRef, pDoc);
+              activeParticipant = pDoc;
+            }
+          });
+        };
+
+        const params = samplePersonaParams();
+        const generationConfig = createModelGenerationConfig({
+          includeReasoning: false,
+          providerOptions: {
+            google: {thinkingConfig: {thinkingBudget: 0}},
+            anthropic: {thinking: {type: 'disabled'}},
+          },
+        });
+
+        // Fetch stage prompt config to dynamically retrieve configured numRetries
+        const stage = await getFirestoreStage(
+          experimentId,
+          participant.currentStageId,
+        );
+        const promptConfig = stage
+          ? await getStructuredPromptConfig(experimentId, stage, participant)
+          : undefined;
+
+        // When the agent is spawned into a chat stage that configures a
+        // position prompt, elicit the position alongside the persona in a
+        // single call (persona first, then position).
+        const positionPrompt =
+          stage?.kind === StageKind.CHAT
+            ? (stage as ChatStageConfig).personaPositionPrompt
+            : undefined;
+        const prompt = buildGeneratePersonaPrompt(params, positionPrompt);
+
+        const maxRetries = promptConfig?.numRetries ?? 0;
+        const initialDelay = 1000;
+        let success = false;
+
+        // Agents that participate directly claim a plain persona sketch from
+        // the bank. Sketches are topic-agnostic, so any bucket works; claims
+        // are keyed to the human so a participant never gets the same persona
+        // twice across rounds. Falls through to live generation if no unused
+        // sketch remains.
+        const sketchForHumanId =
+          participant.agentConfig.personaSketchForHumanId;
+        if (sketchForHumanId) {
+          const sketch = await claimStoredPersonaSketch(
+            experimentId,
+            sketchForHumanId,
+          );
+          if (sketch) {
+            console.log(
+              `Claimed bank persona SKETCH for participant ${participant.privateId} (human ${sketchForHumanId.slice(0, 8)}).`,
+            );
+            await applyPersona(sketch);
+            success = true;
+          }
+        }
+
+        // If this agent has a persona-bank match key, claim a pre-generated
+        // persona (distinct per participant, reuse spread evenly). Skips LLM
+        // generation; falls through to standard generation on no match.
+        if (!success && personaHash) {
+          const content = await claimStoredPersonaByHash(
+            experimentId,
+            personaHash,
+            participant.privateId,
+          );
+          if (content) {
+            // Content may reference the claiming agent's profile.
+            const resolved = content
+              .split('{{name}}')
+              .join(String(participant.name ?? participant.publicId))
+              .split('{{publicId}}')
+              .join(participant.publicId);
+            console.log(
+              `Claimed bank persona for participant ${participant.privateId} (hash ${personaHash.slice(0, 8)}).`,
+            );
+            await applyPersona(resolved);
+            success = true;
+          }
+        }
+
+        // If this agent has a persona slot and one is already stored for the
+        // experiment, reuse it (reproducible across cohorts) and skip the LLM
+        // generation entirely.
+        if (!success && slotKey) {
+          const storedPersona = await getStoredPersona(experimentId, slotKey);
+          if (storedPersona) {
+            console.log(
+              `Reusing stored persona for participant ${participant.privateId} (slot ${slotKey}).`,
+            );
+            await applyPersona(storedPersona);
+            success = true;
+          }
+        }
+
+        for (let attempt = 0; !success && attempt <= maxRetries; attempt++) {
+          try {
+            const response = await getAgentResponse(
+              experimenterData.apiKeys,
+              prompt,
+              DEFAULT_AGENT_MODEL_SETTINGS,
+              generationConfig,
+            );
+
+            if (response.status === ModelResponseStatus.OK && response.text) {
+              const generated = response.text;
+              // Store the raw generated persona (before the base-append) so it
+              // is reused by later cohorts sharing this slot.
+              if (slotKey) {
+                await saveStoredPersona(experimentId, slotKey, generated);
+              }
+              await applyPersona(generated);
+              success = true;
+              break;
+            }
+
+            // Check if we should retry
+            const shouldRetry =
+              attempt < maxRetries &&
+              (response.status ===
+                ModelResponseStatus.PROVIDER_UNAVAILABLE_ERROR ||
+                response.status === ModelResponseStatus.INTERNAL_ERROR ||
+                response.status === ModelResponseStatus.UNKNOWN_ERROR);
+
+            if (!shouldRetry) {
+              if (attempt === maxRetries) {
+                console.error(
+                  `Failed to generate persona context: Non-retryable response status: ${response.status}`,
+                );
+              }
+              break;
+            }
+
+            const delay = initialDelay * Math.pow(2, attempt);
+            console.log(
+              `Persona generation API error (${response.status}), retrying after ${delay}ms (attempt ${attempt + 1}/${maxRetries})`,
+            );
+            await new Promise((resolve) => setTimeout(resolve, delay));
+          } catch (error) {
+            console.error(`Attempt ${attempt} threw error:`, error);
+            if (attempt < maxRetries) {
+              const delay = initialDelay * Math.pow(2, attempt);
+              await new Promise((resolve) => setTimeout(resolve, delay));
+            } else {
+              break;
+            }
+          }
+        }
+
+        if (!success) {
+          console.error(
+            `Failed to generate persona context for participant ${participant.privateId} after ${maxRetries} retries. Reverting to base promptContext.`,
+          );
+          await app.firestore().runTransaction(async (transaction) => {
+            const pRef = getFirestoreParticipantRef(
+              experimentId,
+              participant.privateId,
+            );
+            const pDoc = (
+              await transaction.get(pRef)
+            ).data() as ParticipantProfileExtended;
+            if (pDoc?.agentConfig) {
+              pDoc.connected = true;
+              pDoc.agentConfig.needsPersonaGeneration = false;
+              transaction.set(pRef, pDoc);
+              activeParticipant = pDoc;
+            }
+          });
+        }
+      }
+    }
+
     // Set up participant stage answers
-    initializeParticipantStageAnswers(event.params.experimentId, participant);
+    initializeParticipantStageAnswers(
+      event.params.experimentId,
+      activeParticipant,
+    );
 
     // Start making agent calls for participants with agent configs
-    startAgentParticipant(event.params.experimentId, participant);
+    startAgentParticipant(event.params.experimentId, activeParticipant);
   },
 );
 
@@ -88,10 +317,11 @@ async function advanceTurnBasedChatIfCurrentParticipantLeft(
 
   const [allActiveParticipants, activeMediators] = await Promise.all([
     getFirestoreActiveParticipants(experimentId, cohortId, stageId, false),
-    getFirestoreActiveMediators(experimentId, cohortId, stageId, true),
+    getFirestoreActiveMediators(experimentId, cohortId, stageId, true, stage),
   ]);
   const activeParticipants = allActiveParticipants.filter(
-    (p) => p.timestamps?.completedStages?.[stageId] === undefined,
+    (p) =>
+      p.timestamps?.completedStages?.[stageId] === undefined && !p.isObserver,
   );
   const activeIds = new Set([
     ...activeMediators.map((mediator) => mediator.publicId),

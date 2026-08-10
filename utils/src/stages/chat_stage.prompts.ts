@@ -71,6 +71,45 @@ First, react: read the last 1-2 messages and ask yourself how this specific pers
 
 ${DEFAULT_AGENT_PARTICIPANT_CHAT_STYLE_INSTRUCTIONS}`;
 
+/**
+ * Placeholder an experimenter can put anywhere in prompt text (text items or
+ * additionalParticipantInstructions) to show a turn-based agent the cycle
+ * status. Substituted when the prompt is assembled; outside a turn-based
+ * group chat with a message cap it renders as empty text.
+ */
+export const TURN_CYCLE_STATUS_PLACEHOLDER = '{{_turnCycleStatus}}';
+
+/**
+ * One-line round/cycle status for a turn-based agent's chat prompt (for both
+ * participants and mediators) so they know which cycle they are in and how
+ * many remain before the discussion ends. See `getTurnCycleInfo` for how the
+ * numbers are derived.
+ */
+export function getTurnCycleStatusForPrompt(
+  currentCycle: number,
+  totalCycles: number,
+): string {
+  return `This is cycle ${currentCycle} of ${totalCycles} cycles, where each participant speaks once per cycle. The discussion ends after cycle ${totalCycles}, so pace your contribution accordingly.`;
+}
+
+/** With no cycle info, the placeholder and one adjacent blank line collapse. */
+export function substituteTurnCycleStatus(
+  text: string,
+  cycleInfo: {currentCycle: number; totalCycles: number} | null,
+): string {
+  if (!text.includes(TURN_CYCLE_STATUS_PLACEHOLDER)) return text;
+  if (!cycleInfo) {
+    return text
+      .replaceAll(`${TURN_CYCLE_STATUS_PLACEHOLDER}\n\n`, '')
+      .replaceAll(`\n\n${TURN_CYCLE_STATUS_PLACEHOLDER}`, '\n')
+      .replaceAll(TURN_CYCLE_STATUS_PLACEHOLDER, '');
+  }
+  return text.replaceAll(
+    TURN_CYCLE_STATUS_PLACEHOLDER,
+    getTurnCycleStatusForPrompt(cycleInfo.currentCycle, cycleInfo.totalCycles),
+  );
+}
+
 /** Hardcoded text used in stage display of chat transcript. */
 export const CHAT_PROMPT_TRANSCRIPT_EXPLANATION = `Below is the transcript of your discussion. Messages are shown in chronological order; new messages appear at the bottom. Each message / turn follows the format: (HH:MM) Name: message.`;
 

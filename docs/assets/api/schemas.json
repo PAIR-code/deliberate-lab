@@ -745,6 +745,20 @@
         "isTurnBased": {
           "type": "boolean"
         },
+        "personaPositionPrompt": {
+          "type": "string"
+        },
+        "additionalParticipantInstructions": {
+          "type": "string"
+        },
+        "minNumberOfMessages": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "maxNumberOfMessages": {
+          "minimum": 1,
+          "type": ["integer", "null"]
+        },
         "enableReactionsAndReplies": {
           "type": "boolean"
         }
@@ -1391,6 +1405,9 @@
           "type": ["integer", "null"]
         },
         "isTurnBasedChat": {
+          "type": "boolean"
+        },
+        "isTurnBasedChatGroupStyle": {
           "type": "boolean"
         },
         "minNumberOfTurns": {
@@ -2663,6 +2680,10 @@
               "type": "null"
             }
           ]
+        },
+        "treatmentIndex": {
+          "minimum": 0,
+          "type": "integer"
         }
       }
     },
@@ -2986,6 +3007,9 @@
                 "$ref": "#/$defs/ChatParticipantInstructionsPromptItem"
               },
               {
+                "$ref": "#/$defs/OtherProfileContextsPromptItem"
+              },
+              {
                 "$ref": "#/$defs/PromptItemGroup"
               }
             ]
@@ -3237,6 +3261,36 @@
         }
       }
     },
+    "OtherProfileContextsPromptItem": {
+      "title": "OtherProfileContextsPromptItem",
+      "additionalProperties": false,
+      "type": "object",
+      "required": ["type"],
+      "properties": {
+        "type": {
+          "const": "OTHER_PROFILE_CONTEXTS",
+          "type": "string"
+        },
+        "condition": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "title": "Condition",
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/ComparisonCondition"
+                },
+                {
+                  "$ref": "#/$defs/ConditionGroup"
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
     "PromptItemGroup": {
       "title": "PromptItemGroup",
       "additionalProperties": false,
@@ -3271,6 +3325,9 @@
               },
               {
                 "$ref": "#/$defs/ChatParticipantInstructionsPromptItem"
+              },
+              {
+                "$ref": "#/$defs/OtherProfileContextsPromptItem"
               },
               {
                 "$ref": "#/$defs/PromptItemGroup"
@@ -4070,6 +4127,14 @@
         "maxResponses": {
           "type": ["integer", "null"]
         },
+        "maxNumberOfMessages": {
+          "minimum": 1,
+          "type": ["integer", "null"]
+        },
+        "minNumberOfMessages": {
+          "minimum": 0,
+          "type": ["integer", "null"]
+        },
         "initialMessage": {
           "type": "string"
         }
@@ -4195,6 +4260,9 @@
               },
               {
                 "$ref": "#/$defs/ChatParticipantInstructionsPromptItem"
+              },
+              {
+                "$ref": "#/$defs/OtherProfileContextsPromptItem"
               },
               {
                 "$ref": "#/$defs/PromptItemGroup"
