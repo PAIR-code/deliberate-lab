@@ -45,8 +45,11 @@ export class GroupChatStageHandler extends BaseStageHandler {
     const stage = stageContext.stage as ChatStageConfig;
     const messages = stageContext.publicChatMessages;
 
-    // Handle profile set ID workaround
+    // Handle profile set ID
     const getProfileSetId = () => {
+      if (stage.anonymousProfileSetId) {
+        return stage.anonymousProfileSetId;
+      }
       if (stage.id.includes(SECONDARY_PROFILE_SET_ID)) {
         return PROFILE_SET_ANIMALS_2_ID;
       } else if (stage.id.includes(TERTIARY_PROFILE_SET_ID)) {

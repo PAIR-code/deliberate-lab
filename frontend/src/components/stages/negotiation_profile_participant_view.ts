@@ -12,6 +12,7 @@ import {CohortService} from '../../services/cohort.service';
 import {ParticipantService} from '../../services/participant.service';
 
 import {
+  NEGOTIATION_PROFILE_SET_ID,
   NegotiationProfileStageConfig,
   StageKind,
 } from '@deliberation-lab/utils';
@@ -30,18 +31,43 @@ export class NegotiationProfileView extends MobxLitElement {
 
   @property() stage: NegotiationProfileStageConfig | null = null;
   @state() private isAssigning = false;
+  // Tracks the stage we've already requested an assignment for. This persists
+  // across renders (unlike `isAssigning`, which is reset when the cloud call
+  // resolves) so the auto-trigger fires exactly once per stage. Without it,
+  // the callable resolves before the Firestore snapshot listener refreshes
+  // `stagePublicDataMap`, so `itemId` is still empty when `updated()` re-runs
+  // and the assignment would re-fire in an infinite loop, freezing the page.
+  private requestedStageId: string | null = null;
 
   override updated() {
     if (!this.stage) return;
     const publicData = this.cohortService.stagePublicDataMap[this.stage.id];
     if (publicData?.kind !== StageKind.NEGOTIATION_PROFILE) return;
-    const itemId =
-      publicData.participantMap[
-        this.participantService.profile?.publicId ?? ''
-      ];
-    if (!itemId && !this.isAssigning) {
+    const publicId = this.participantService.profile?.publicId ?? '';
+    const itemId = publicData.participantMap?.[publicId];
+    const assignedItem = this.stage.items.find((item) => item.id === itemId);
+    const selfProfileName =
+      this.participantService.profile?.anonymousProfiles?.[
+        NEGOTIATION_PROFILE_SET_ID
+      ]?.name;
+    // Request assignment when we have no profile yet, or when our displayed
+    // identity (anonymousProfiles, used by the chat + profile chip) has drifted
+    // out of sync with the authoritative participantMap. The backend call is
+    // idempotent and repairs the mismatch.
+    const needsAssignment = !itemId;
+    const needsReconcile =
+      !!assignedItem && selfProfileName !== assignedItem.name;
+    if (
+      (needsAssignment || needsReconcile) &&
+      this.requestedStageId !== this.stage.id
+    ) {
+      this.requestedStageId = this.stage.id;
       this.isAssigning = true;
-      this.participantService.setParticipantNegotiationProfiles(this.stage.id);
+      this.participantService
+        .setParticipantNegotiationProfiles(this.stage.id)
+        .finally(() => {
+          this.isAssigning = false;
+        });
     }
   }
 
@@ -56,15 +82,19 @@ export class NegotiationProfileView extends MobxLitElement {
     }
 
     const itemId =
-      publicData.participantMap[
+      publicData.participantMap?.[
         this.participantService.profile?.publicId ?? ''
       ];
     const item = this.stage.items.find((item) => item.id === itemId);
 
     const getProfile = () => {
-      this.participantService.setParticipantNegotiationProfiles(
-        this.stage?.id ?? '',
-      );
+      if (this.isAssigning) return;
+      this.isAssigning = true;
+      this.participantService
+        .setParticipantNegotiationProfiles(this.stage?.id ?? '')
+        .finally(() => {
+          this.isAssigning = false;
+        });
     };
 
     const renderDisplay = () => {

@@ -462,6 +462,17 @@ export function isSurveyAnswerComplete(
         ) {
           return false;
         }
+        //TODO: make the "numerical only" a feature in the free-form QA. (https://github.com/PAIR-code/deliberate-lab/issues/1210)
+        const titleLower = textQuestion.questionTitle.toLowerCase();
+        if (
+          (titleLower.includes('type a number') ||
+            titleLower.includes('enter numbers only') ||
+            titleLower.includes('number only') ||
+            titleLower.includes('numbers only')) &&
+          isNaN(Number(textAnswer.answer.trim()))
+        ) {
+          return false;
+        }
       }
       return true;
     default:

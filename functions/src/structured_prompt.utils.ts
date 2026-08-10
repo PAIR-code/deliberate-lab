@@ -188,7 +188,8 @@ export async function addFirestoreDataForPromptItem(
   // Get profile set ID based on stage ID
   // (Temporary workaround before profile sets are refactored)
   const getProfileSetId = (stageId: string) => {
-    return getActiveProfileSetId(stageId);
+    const stage = data[stageId]?.stage;
+    return stage?.anonymousProfileSetId || getActiveProfileSetId(stageId);
   };
 
   switch (promptItem.type) {
@@ -393,6 +394,7 @@ function getProfileInfoForPrompt(
   userProfile: ParticipantProfileExtended | MediatorProfileExtended,
   includeScaffolding: boolean,
   stageId: string, // Used for temporary stage ID hack that sets profiles
+  stage?: StageConfig,
 ): string {
   // This is a temporary check to see if the profile names should be
   // overrided for this stage only, e.g., if the profile is typically
@@ -401,7 +403,7 @@ function getProfileInfoForPrompt(
   // as prior stages' context will not make sense if it references "Animals 1"
   // profile and the current stage uses "Animals 2".
   const getProfileSetId = () => {
-    return getActiveProfileSetId(stageId);
+    return stage?.anonymousProfileSetId || getActiveProfileSetId(stageId);
   };
 
   const scaffoldingPrefix = includeScaffolding ? `Alias: ` : '';
@@ -643,7 +645,12 @@ async function processPromptItems(
         break;
       case PromptItemType.PROFILE_INFO:
         items.push(
-          getProfileInfoForPrompt(userProfile, includeScaffolding, stageId),
+          getProfileInfoForPrompt(
+            userProfile,
+            includeScaffolding,
+            stageId,
+            promptData.data[stageId]?.stage,
+          ),
         );
         break;
       case PromptItemType.STAGE_CONTEXT:

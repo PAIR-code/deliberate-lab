@@ -7,9 +7,20 @@ import {CSSResultGroup, html, nothing} from 'lit';
 import {customElement, property} from 'lit/decorators.js';
 import {css} from 'lit';
 
-import {NegotiationPayoutStageConfig} from '@deliberation-lab/utils';
+import {
+  NEGOTIATION_PROFILE_SET_ID,
+  NegotiationPayoutStageConfig,
+  NegotiationProfileStageConfig,
+  StageKind,
+  SurveyStageConfig,
+} from '@deliberation-lab/utils';
+import {
+  calculateNegotiationPayout,
+  extractPartySubmission,
+} from '../../shared/negotiation_payout.utils';
 import {core} from '../../core/core';
 import {CohortService} from '../../services/cohort.service';
+import {ExperimentService} from '../../services/experiment.service';
 import {ParticipantService} from '../../services/participant.service';
 
 /** Negotiation payout summary stage view for participants. */
@@ -92,6 +103,7 @@ export class NegotiationPayoutParticipantView extends MobxLitElement {
   @property() stage: NegotiationPayoutStageConfig | null = null;
   private cohortService = core.getService(CohortService);
   private participantService = core.getService(ParticipantService);
+  private experimentService = core.getService(ExperimentService);
 
   override render() {
     if (!this.stage) {
@@ -101,9 +113,36 @@ export class NegotiationPayoutParticipantView extends MobxLitElement {
     interface NegotiationProfilePublicData {
       participantMap?: Record<string, string>;
     }
-    const negProfileData = this.cohortService.stagePublicDataMap[
-      'negotiation_profile'
-    ] as NegotiationProfilePublicData | undefined;
+
+    // 1. Locate Negotiation Profile public data dynamically
+    const findNegProfilePublicData = ():
+      | NegotiationProfilePublicData
+      | undefined => {
+      const negStage = this.experimentService.stages.find(
+        (s) => s.kind === StageKind.NEGOTIATION_PROFILE,
+      );
+      if (negStage && this.cohortService.stagePublicDataMap[negStage.id]) {
+        return this.cohortService.stagePublicDataMap[
+          negStage.id
+        ] as NegotiationProfilePublicData;
+      }
+      if (this.cohortService.stagePublicDataMap['negotiation_profile']) {
+        return this.cohortService.stagePublicDataMap[
+          'negotiation_profile'
+        ] as NegotiationProfilePublicData;
+      }
+      for (const pd of Object.values(this.cohortService.stagePublicDataMap)) {
+        if (
+          (pd as {kind?: string}).kind === StageKind.NEGOTIATION_PROFILE &&
+          (pd as NegotiationProfilePublicData).participantMap
+        ) {
+          return pd as NegotiationProfilePublicData;
+        }
+      }
+      return undefined;
+    };
+
+    const negProfileData = findNegProfilePublicData();
     if (!negProfileData?.participantMap) {
       return html`
         <stage-description .stage=${this.stage}></stage-description>
@@ -116,134 +155,215 @@ export class NegotiationPayoutParticipantView extends MobxLitElement {
       `;
     }
 
+    const negStage = this.experimentService.stages.find(
+      (s) => s.kind === StageKind.NEGOTIATION_PROFILE,
+    ) as NegotiationProfileStageConfig | undefined;
+
     const partyMap: Record<
       string,
       {publicId: string; name: string; avatar: string}
     > = {};
+
+    const registerPartyKey = (
+      key: string,
+      pInfo: {publicId: string; name: string; avatar: string},
+    ) => {
+      partyMap[key] = pInfo;
+      partyMap[key.toLowerCase()] = pInfo;
+      const lower = key.toLowerCase();
+      if (
+        lower.includes('party-a') ||
+        lower.includes('party a') ||
+        lower === 'a'
+      ) {
+        partyMap['party-a'] = pInfo;
+        partyMap['Party A'] = pInfo;
+      } else if (
+        lower.includes('party-b') ||
+        lower.includes('party b') ||
+        lower === 'b'
+      ) {
+        partyMap['party-b'] = pInfo;
+        partyMap['Party B'] = pInfo;
+      } else if (
+        lower.includes('party-c') ||
+        lower.includes('party c') ||
+        lower === 'c'
+      ) {
+        partyMap['party-c'] = pInfo;
+        partyMap['Party C'] = pInfo;
+      }
+    };
+
     for (const [pubId, itemId] of Object.entries(
       negProfileData.participantMap,
     )) {
+      if (typeof itemId !== 'string') continue;
       const p = this.cohortService.participantMap[pubId];
-      if (typeof itemId === 'string' && p) {
-        partyMap[itemId] = {
+      const pInfo = {
+        publicId: pubId,
+        name: p?.name ?? pubId,
+        avatar: p?.avatar ?? '👤',
+      };
+
+      registerPartyKey(itemId, pInfo);
+
+      if (negStage?.items) {
+        const item = negStage.items.find(
+          (it) =>
+            it.id === itemId ||
+            it.name === itemId ||
+            it.id.toLowerCase() === itemId.toLowerCase() ||
+            it.name.toLowerCase() === itemId.toLowerCase(),
+        );
+        if (item) {
+          registerPartyKey(item.id, pInfo);
+          registerPartyKey(item.name, pInfo);
+        }
+      }
+    }
+
+    // Also check anonymousProfiles on cached participant profiles as fallback
+    for (const [pubId, p] of Object.entries(
+      this.cohortService.participantMap,
+    )) {
+      const anonName = p.anonymousProfiles?.[NEGOTIATION_PROFILE_SET_ID]?.name;
+      if (anonName) {
+        const pInfo = {
           publicId: pubId,
           name: p.name ?? pubId,
           avatar: p.avatar ?? '👤',
         };
+        registerPartyKey(anonName, pInfo);
       }
     }
 
     interface SurveyPublicData {
       participantAnswerMap?: Record<
         string,
-        Record<string, {choiceId?: string; value?: string | number}>
+        Record<
+          string,
+          {choiceId?: string; value?: string | number; answer?: string}
+        >
       >;
     }
-    const surveyData = this.cohortService.stagePublicDataMap[
-      'fa00266d-2987-4dc1-8f30-e8febb63939d'
-    ] as SurveyPublicData | undefined;
-    const answerMap = surveyData?.participantAnswerMap ?? {};
 
-    const getPartySubmission = (itemId: string) => {
-      const pubId = partyMap[itemId]?.publicId;
-      if (!pubId || !answerMap[pubId])
-        return {coalition: 'Not submitted', points: 0};
-      const userAnswers = answerMap[pubId];
-      const coalAns =
-        userAnswers['5c95a991-483a-418f-90e3-d3a53e2aa06f']?.choiceId;
-      let coalition = 'Not selected';
-      if (coalAns === 'ea5fff0d-7a01-4b81-a383-b7e8dd3f5072')
-        coalition = 'A+B+C';
-      else if (coalAns === 'b0cab089-b7b7-4827-a9a4-ebc1dfcc7571')
-        coalition = 'A+B';
-      else if (coalAns === '602e3349-4626-4255-ac3a-abebb5f99307')
-        coalition = 'A+C';
-      else if (coalAns === '22cd5855-3a02-4b38-89ad-80a97a4f7d53')
-        coalition = 'B+C';
+    // 2. Locate Final Decision Survey stage and public data dynamically
+    const findSurveyStageAndPublicData = () => {
+      const surveyStages = this.experimentService.stages.filter(
+        (s) => s.kind === StageKind.SURVEY,
+      ) as SurveyStageConfig[];
 
-      const ptsAns = Number(
-        userAnswers['da77c231-efa0-4cf3-91fb-326de91f1d37']?.value ?? 0,
+      let targetStage = surveyStages.find(
+        (s) =>
+          s.id === 'fa00266d-2987-4dc1-8f30-e8febb63939d' ||
+          s.name?.toLowerCase().includes('final decision'),
       );
-      return {coalition, points: ptsAns};
+      if (!targetStage) {
+        targetStage = surveyStages.find((s) =>
+          s.questions?.some(
+            (q) =>
+              'options' in q &&
+              Array.isArray((q as {options?: unknown[]}).options) &&
+              (q as {options: Array<{text?: string}>}).options.some((o) =>
+                ['A+B', 'A+C', 'B+C', 'A+B+C'].includes(
+                  o.text?.trim().toUpperCase() ?? '',
+                ),
+              ),
+          ),
+        );
+      }
+      if (!targetStage) {
+        targetStage = surveyStages.find(
+          (s) =>
+            s.name?.toLowerCase().includes('task 2') &&
+            !s.name?.toLowerCase().includes('pre-negotiation'),
+        );
+      }
+      if (!targetStage && surveyStages.length > 0) {
+        targetStage = surveyStages[surveyStages.length - 1];
+      }
+
+      if (
+        targetStage &&
+        this.cohortService.stagePublicDataMap[targetStage.id]
+      ) {
+        return {
+          stage: targetStage,
+          publicData: this.cohortService.stagePublicDataMap[
+            targetStage.id
+          ] as SurveyPublicData,
+        };
+      }
+
+      const fallbackPublicData = this.cohortService.stagePublicDataMap[
+        'fa00266d-2987-4dc1-8f30-e8febb63939d'
+      ] as SurveyPublicData | undefined;
+
+      if (fallbackPublicData) {
+        return {stage: targetStage, publicData: fallbackPublicData};
+      }
+
+      for (const [sId, pd] of Object.entries(
+        this.cohortService.stagePublicDataMap,
+      )) {
+        const pData = pd as SurveyPublicData;
+        if (
+          pData?.participantAnswerMap &&
+          Object.keys(pData.participantAnswerMap).length > 0
+        ) {
+          const s = this.experimentService.stages.find(
+            (st) => st.id === sId,
+          ) as SurveyStageConfig | undefined;
+          return {stage: s ?? targetStage, publicData: pData};
+        }
+      }
+
+      return {stage: targetStage, publicData: undefined};
     };
 
-    const subA = getPartySubmission('party-a');
-    const subB = getPartySubmission('party-b');
-    const subC = getPartySubmission('party-c');
+    const {stage: surveyStage, publicData: surveyData} =
+      findSurveyStageAndPublicData();
+    const answerMap = surveyData?.participantAnswerMap ?? {};
 
-    let formedCoalition = 'None';
-    let isSuccess = false;
-    let explanation =
-      'No valid coalition agreement was reached or point demands did not sum exactly to the coalition target total.';
+    const pubIdA = partyMap['party-a']?.publicId;
+    const pubIdB = partyMap['party-b']?.publicId;
+    const pubIdC = partyMap['party-c']?.publicId;
 
-    if (
-      subA.coalition === 'A+B' &&
-      subB.coalition === 'A+B' &&
-      subA.points + subB.points === 118
-    ) {
-      formedCoalition = 'A+B (118 points total)';
-      isSuccess = true;
-      explanation = `Party A and Party B successfully formed Coalition A+B. Their agreed points (${subA.points} + ${subB.points}) sum exactly to the 118 point target. Party C is excluded and receives 0 points.`;
-    } else if (
-      subA.coalition === 'A+C' &&
-      subC.coalition === 'A+C' &&
-      subA.points + subC.points === 84
-    ) {
-      formedCoalition = 'A+C (84 points total)';
-      isSuccess = true;
-      explanation = `Party A and Party C successfully formed Coalition A+C. Their agreed points (${subA.points} + ${subC.points}) sum exactly to the 84 point target. Party B is excluded and receives 0 points.`;
-    } else if (
-      subB.coalition === 'B+C' &&
-      subC.coalition === 'B+C' &&
-      subB.points + subC.points === 50
-    ) {
-      formedCoalition = 'B+C (50 points total)';
-      isSuccess = true;
-      explanation = `Party B and Party C successfully formed Coalition B+C. Their agreed points (${subB.points} + ${subC.points}) sum exactly to the 50 point target. Party A is excluded and receives 0 points.`;
-    } else if (
-      subA.coalition === 'A+B+C' &&
-      subB.coalition === 'A+B+C' &&
-      subC.coalition === 'A+B+C' &&
-      subA.points + subB.points + subC.points === 121
-    ) {
-      formedCoalition = 'A+B+C (121 points total)';
-      isSuccess = true;
-      explanation = `All three parties successfully formed the Grand Coalition A+B+C. Their agreed points (${subA.points} + ${subB.points} + ${subC.points}) sum exactly to the 121 point target.`;
-    }
+    const subA = extractPartySubmission(
+      pubIdA ? answerMap[pubIdA] : undefined,
+      surveyStage,
+    );
+    const subB = extractPartySubmission(
+      pubIdB ? answerMap[pubIdB] : undefined,
+      surveyStage,
+    );
+    const subC = extractPartySubmission(
+      pubIdC ? answerMap[pubIdC] : undefined,
+      surveyStage,
+    );
 
-    let payoutA = 0;
-    let payoutB = 0;
-    let payoutC = 0;
-    if (isSuccess) {
-      if (formedCoalition.startsWith('A+B+C')) {
-        payoutA = subA.points;
-        payoutB = subB.points;
-        payoutC = subC.points;
-      } else if (formedCoalition.startsWith('A+B')) {
-        payoutA = subA.points;
-        payoutB = subB.points;
-      } else if (formedCoalition.startsWith('A+C')) {
-        payoutA = subA.points;
-        payoutC = subC.points;
-      } else if (formedCoalition.startsWith('B+C')) {
-        payoutB = subB.points;
-        payoutC = subC.points;
-      }
-    }
+    const {isSuccess, explanation, payouts} = calculateNegotiationPayout(
+      subA,
+      subB,
+      subC,
+    );
+
+    const payoutA = payouts['party-a'];
+    const payoutB = payouts['party-b'];
+    const payoutC = payouts['party-c'];
 
     const currentPubId = this.participantService.profile?.publicId;
-    const rate = 7.8 / 118; // $7.80 total for the 118 point target
 
     const renderRow = (
       itemId: string,
       defaultName: string,
-      defaultAvatar: string,
-      sub: {coalition: string; points: number},
+      sub: {coalition: string; money: number},
       payout: number,
     ) => {
       const party = partyMap[itemId];
       const name = party ? party.name : defaultName;
-      const avatar = party ? party.avatar : defaultAvatar;
+      const avatar = party?.avatar || '👤';
       const isCurrent = party && party.publicId === currentPubId;
 
       return html`
@@ -255,9 +375,9 @@ export class NegotiationPayoutParticipantView extends MobxLitElement {
             >
           </td>
           <td>${sub.coalition}</td>
-          <td>${sub.points} pts</td>
+          <td>$${sub.money.toFixed(2)}</td>
           <td>
-            <strong>${payout} pts ($${(payout * rate).toFixed(2)})</strong>
+            <strong>$${payout.toFixed(2)}</strong>
           </td>
         </tr>
       `;
@@ -273,7 +393,7 @@ export class NegotiationPayoutParticipantView extends MobxLitElement {
         <div class="status-badge ${isSuccess ? 'success' : 'failure'}">
           ${isSuccess
             ? '✅ Coalition Validated'
-            : '❌ Deal Failed / Points Mismatch'}
+            : '❌ Deal Failed / Amount Mismatch'}
         </div>
 
         <div class="explanation"><strong>Result:</strong> ${explanation}</div>
@@ -283,14 +403,14 @@ export class NegotiationPayoutParticipantView extends MobxLitElement {
             <tr>
               <th>Party Role</th>
               <th>Reported Coalition</th>
-              <th>Submitted Points</th>
-              <th>Final Payout (Based on $7.80 pool)</th>
+              <th>Submitted Amount</th>
+              <th>Final Payout</th>
             </tr>
           </thead>
           <tbody>
-            ${renderRow('party-a', 'Party A', '🔴', subA, payoutA)}
-            ${renderRow('party-b', 'Party B', '🔵', subB, payoutB)}
-            ${renderRow('party-c', 'Party C', '🟢', subC, payoutC)}
+            ${renderRow('party-a', 'Party A', subA, payoutA)}
+            ${renderRow('party-b', 'Party B', subB, payoutB)}
+            ${renderRow('party-c', 'Party C', subC, payoutC)}
           </tbody>
         </table>
       </div>
