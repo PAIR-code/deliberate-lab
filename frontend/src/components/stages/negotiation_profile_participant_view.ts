@@ -30,6 +30,13 @@ export class NegotiationProfileView extends MobxLitElement {
 
   @property() stage: NegotiationProfileStageConfig | null = null;
   @state() private isAssigning = false;
+  // Tracks the stage we've already requested an assignment for. This persists
+  // across renders (unlike `isAssigning`, which is reset when the cloud call
+  // resolves) so the auto-trigger fires exactly once per stage. Without it,
+  // the callable resolves before the Firestore snapshot listener refreshes
+  // `stagePublicDataMap`, so `itemId` is still empty when `updated()` re-runs
+  // and the assignment would re-fire in an infinite loop, freezing the page.
+  private requestedStageId: string | null = null;
 
   override updated() {
     if (!this.stage) return;
@@ -39,7 +46,8 @@ export class NegotiationProfileView extends MobxLitElement {
       publicData.participantMap?.[
         this.participantService.profile?.publicId ?? ''
       ];
-    if (!itemId && !this.isAssigning) {
+    if (!itemId && this.requestedStageId !== this.stage.id) {
+      this.requestedStageId = this.stage.id;
       this.isAssigning = true;
       this.participantService
         .setParticipantNegotiationProfiles(this.stage.id)
