@@ -28,6 +28,9 @@ export const PrivateChatStageConfigData = Type.Composite(
         // If true, requires participant to go back and forth with mediator(s)
         // (rather than being able to send multiple messages at once)
         isTurnBasedChat: Type.Optional(Type.Boolean()),
+        // If true, uses the group-chat turn UI (banner + typing indicator +
+        // mediator-goes-first). Mutually exclusive with isTurnBasedChat.
+        isTurnBasedChatGroupStyle: Type.Optional(Type.Boolean()),
         // Minimum number of messages participant must send to move on
         minNumberOfTurns: Type.Optional(Type.Number()),
         // If turn based chat set to true, this specifies the max

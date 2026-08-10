@@ -134,6 +134,36 @@ export async function getExperimentDownload(
     experimentDownload.agentParticipantMap[persona.id] = participantTemplate;
   }
 
+  // Persona banks, when present. Included so the per-participant persona
+  // assignment (recorded on each doc's usedBy) is recoverable from the
+  // download; skipped entirely for experiments with no bank.
+  const personaBankDocs = (
+    await firestore
+      .collection('experiments')
+      .doc(experimentId)
+      .collection('personas')
+      .get()
+  ).docs;
+  if (personaBankDocs.length > 0) {
+    experimentDownload.personaBankMap = {};
+    for (const doc of personaBankDocs) {
+      experimentDownload.personaBankMap[doc.id] = doc.data();
+    }
+  }
+  const repPersonaBankDocs = (
+    await firestore
+      .collection('experiments')
+      .doc(experimentId)
+      .collection('repPersonas')
+      .get()
+  ).docs;
+  if (repPersonaBankDocs.length > 0) {
+    experimentDownload.repPersonaBankMap = {};
+    for (const doc of repPersonaBankDocs) {
+      experimentDownload.repPersonaBankMap[doc.id] = doc.data();
+    }
+  }
+
   if (includeParticipantData) {
     // For each participant, add ParticipantDownload
     const profiles = (

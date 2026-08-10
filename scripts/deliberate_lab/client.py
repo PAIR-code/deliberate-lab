@@ -540,6 +540,61 @@ class Client:
         )
         return self._handle_response(response)
 
+    # ------------------------------------------------------------------
+    # Persona banks
+    # ------------------------------------------------------------------
+
+    def list_personas(self, experiment_id: str, collection: str = "personas") -> dict:
+        """
+        List a persona bank.
+
+        Args:
+            experiment_id: The experiment ID
+            collection: Which bank to read ("personas" or "repPersonas")
+
+        Returns:
+            dict with 'collection', 'personas' list, and 'total'
+        """
+        response = self._session.get(
+            f"{self.base_url}/experiments/{experiment_id}/personas",
+            params={"collection": collection},
+            timeout=self.timeout,
+        )
+        return self._handle_response(response)
+
+    def upload_personas(
+        self,
+        experiment_id: str,
+        personas: list[dict],
+        collection: str = "personas",
+        replace: bool = False,
+    ) -> dict:
+        """
+        Upload persona bank documents.
+
+        At most 2000 personas per request; upload larger banks in several
+        requests. Only the experiment creator can upload.
+
+        Args:
+            experiment_id: The experiment ID
+            personas: Persona documents to write
+            collection: Which bank to write ("personas" or "repPersonas")
+            replace: Delete the existing bank documents before writing
+
+        Returns:
+            dict with 'collection', 'written', and 'removed'
+        """
+        response = self._session.post(
+            f"{self.base_url}/experiments/{experiment_id}/personas",
+            json={
+                "collection": collection,
+                "replace": replace,
+                "personas": personas,
+            },
+            timeout=self.timeout,
+        )
+        return self._handle_response(response)
+
 
 if __name__ == "__main__":
     # Quick test - requires DL_API_KEY to be set

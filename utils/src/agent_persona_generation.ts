@@ -99,9 +99,17 @@ function buildDimensionsList(verbosity: number): string {
  */
 export function buildGeneratePersonaPrompt(
   params: PersonaGenerationParams,
+  // Optional question to elicit the persona's position, appended after the
+  // sketch in the same generation (persona first, then position).
+  positionPrompt?: string,
 ): string {
   const birthDecade =
     Math.floor((new Date().getFullYear() - params.age) / 10) * 10 + 's';
+
+  const closingInstruction =
+    positionPrompt && positionPrompt.trim()
+      ? `First write the character sketch, starting directly with "You are" (250-300 words). Then add a blank line and, speaking in this person's own voice and consistent with the persona above, state their position on the following in 1-2 paragraphs:\n\n${positionPrompt}\n\nOutput only the character sketch followed by their position, with no preamble, labels, or meta-commentary.`
+      : `Write ONLY the character sketch text, starting directly with "You are". No preamble, no labels, no meta-commentary.`;
 
   return `You are helping configure an AI research agent that will simulate a real human participant in an online study.
 
@@ -140,7 +148,7 @@ Aim for 250–300 words. ${ACT_INSTRUCTION}
 
 CRITICAL: Your character must strictly adhere to the parameters above. Make the blind spots and internal contradiction feel genuinely specific to this person — not generic. Each sketch you write should feel completely unlike the last.
 
-Write ONLY the character sketch text, starting directly with "You are". No preamble, no labels, no meta-commentary.`;
+${closingInstruction}`;
 }
 
 /**

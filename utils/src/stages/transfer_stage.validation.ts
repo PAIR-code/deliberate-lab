@@ -89,6 +89,7 @@ export const TransferStageConfigData = Type.Composite(
         enableTimeout: Type.Boolean(),
         timeoutSeconds: Type.Number(),
         autoTransferConfig: Type.Union([AutoTransferConfigSchema, Type.Null()]),
+        treatmentIndex: Type.Optional(Type.Integer({minimum: 0})),
       },
       strict,
     ),

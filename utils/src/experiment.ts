@@ -1,4 +1,9 @@
-import {AgentMediatorTemplate, AgentParticipantTemplate} from './agent';
+import {
+  AgentMediatorTemplate,
+  AgentChatSettings,
+  AgentModelSettings,
+  AgentParticipantTemplate,
+} from './agent';
 import {
   MetadataConfig,
   PermissionsConfig,
@@ -80,6 +85,19 @@ export interface Experiment {
   variableConfigs?: VariableConfig[]; // list of variable configs used in experiment
   variableMap?: Record<string, string>; // variable to assigned value
   cohortDefinitions?: CohortDefinition[]; // pre-defined cohorts for individual routing
+  // Model settings applied to agents spawned at runtime (an observer's
+  // representative and the other spawned agents), when the experiment does not
+  // otherwise configure a model for them. Unset keeps the built-in default.
+  spawnedAgentModelSettings?: AgentModelSettings | null;
+  // Chat settings applied to agents spawned at runtime, when the experiment
+  // does not otherwise configure a prompt for them. Spawned agents fall back
+  // to the built-in prompt default, whose wordsPerMinute is unset, so without
+  // this they answer with no typing delay at all. Unset keeps that behavior.
+  spawnedAgentChatSettings?: AgentChatSettings | null;
+  // Framing given to every representative agent at spawn, telling it whose
+  // views it speaks for. {{name}} resolves to the represented person's display
+  // name. Unset uses REPRESENTATIVE_PROMPT_CONTEXT.
+  representativePromptContext?: string | null;
 }
 
 /** Experiment template (used to load experiments). */
@@ -137,6 +155,9 @@ export function createExperimentConfig(
     variableConfigs: config.variableConfigs ?? [],
     variableMap: config.variableMap ?? {},
     cohortDefinitions: config.cohortDefinitions,
+    spawnedAgentModelSettings: config.spawnedAgentModelSettings ?? null,
+    spawnedAgentChatSettings: config.spawnedAgentChatSettings ?? null,
+    representativePromptContext: config.representativePromptContext ?? null,
   };
 }
 

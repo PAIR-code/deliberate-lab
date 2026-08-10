@@ -73,6 +73,7 @@ export class BaseStageHandler {
     participants: ParticipantProfileExtended[],
     stageContext: StageContextData,
     includeScaffolding: boolean,
+    omitChatHistory = false,
   ) {
     return '';
   }

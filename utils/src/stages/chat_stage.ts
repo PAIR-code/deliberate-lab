@@ -27,6 +27,22 @@ export interface ChatStageConfig extends BaseStageConfig {
   timeLimitInMinutes: number | null; // Maximum duration in minutes (integer), or null if no limit.
   timeMinimumInMinutes: number | null; // Minimum time participants must stay in minutes (integer), or null if no minimum.
   isTurnBased?: boolean; // Whether the conversation is turn-based
+  // Reshuffle the participant turn order at the start of each cycle. When
+  // off, the order drawn at the start of the conversation is kept.
+  randomizeTurnOrderEachCycle?: boolean;
+  // When agents are spawned into this stage with generated personas, this
+  // optional prompt elicits each persona's position (appended after the
+  // persona text in a single generation). Empty/unset = persona only.
+  personaPositionPrompt?: string;
+  // Extra instructions appended to spawned agent-participants' chat prompt for
+  // this stage (shapes how they engage, e.g. push for changes). Unset = none.
+  additionalParticipantInstructions?: string;
+  // Minimum total messages from all participants/mediators combined before
+  // a participant is eligible to advance. 0 = no minimum.
+  minNumberOfMessages?: number;
+  // Maximum total messages from all participants/mediators combined; the
+  // discussion ends globally for the whole cohort once reached. null = no cap.
+  maxNumberOfMessages?: number | null;
   // Whether participants may react to and reply to each other's messages.
   // Opt-in: when false or unset, no react/reply affordances are shown.
   enableReactionsAndReplies?: boolean;
@@ -101,11 +117,50 @@ export interface ChatStagePublicData extends BaseStagePublicData {
   currentTurnParticipantId?: string | null; // ID of the participant whose turn it is
   turnOrder?: string[]; // Array of participant IDs defining the turn order
   cycleIndex?: number; // Counter to track turn cycles for seeded random
+  // Id of the last chat message the turn logic processed. The holder shown in
+  // this data is current only when this matches the newest participant or
+  // mediator message.
+  turnProcessedMessageId?: string;
+  // Effective cohort-total minimum messages after applying any active
+  // mediator's per-stage override (group chat only). Resolved by the backend;
+  // the frontend advance-gate falls back to the stage value when null.
+  effectiveMinNumberOfMessages?: number | null;
+  // Effective cohort-total maximum messages after applying any active
+  // mediator's per-stage override (group chat only). Resolved by the backend;
+  // the frontend's conversation-over / banner logic falls back to the stage
+  // value when null. Published so the frontend uses the cap the backend
+  // actually enforces (an override replaces the stage value), rather than
+  // tripping early at the stage value and hiding the banner / appearing to
+  // run past the limit.
+  effectiveMaxNumberOfMessages?: number | null;
 }
 
 // ************************************************************************* //
 // FUNCTIONS                                                                 //
 // ************************************************************************* //
+
+/**
+ * For a turn-based group chat with a message cap, compute the current cycle and
+ * the total number of cycles. A "cycle" is one full pass through the turn order
+ * (every participant and any mediator in the rotation takes one turn), as
+ * tracked by `cycleIndex`. Returns null when the stage isn't turn-based, has no
+ * message cap, or the turn order hasn't been established yet, so callers can
+ * choose not to show a cycle indicator.
+ */
+export function getTurnCycleInfo(
+  publicData: ChatStagePublicData | undefined | null,
+  stage: ChatStageConfig,
+): {currentCycle: number; totalCycles: number} | null {
+  if (!stage.isTurnBased) return null;
+  const max =
+    publicData?.effectiveMaxNumberOfMessages ?? stage.maxNumberOfMessages;
+  if (max === null || max === undefined || max <= 0) return null;
+  const speakersPerCycle = (publicData?.turnOrder ?? []).length;
+  if (speakersPerCycle <= 1) return null;
+  const totalCycles = Math.ceil(max / speakersPerCycle);
+  const currentCycle = Math.min((publicData?.cycleIndex ?? 0) + 1, totalCycles);
+  return {currentCycle, totalCycles};
+}
 
 /** Create chat stage. */
 export function createChatStage(
@@ -123,6 +178,12 @@ export function createChatStage(
     timeLimitInMinutes: config.timeLimitInMinutes ?? null,
     timeMinimumInMinutes: config.timeMinimumInMinutes ?? null,
     isTurnBased: config.isTurnBased ?? false,
+    randomizeTurnOrderEachCycle: config.randomizeTurnOrderEachCycle ?? false,
+    personaPositionPrompt: config.personaPositionPrompt ?? '',
+    additionalParticipantInstructions:
+      config.additionalParticipantInstructions ?? '',
+    minNumberOfMessages: config.minNumberOfMessages ?? 0,
+    maxNumberOfMessages: config.maxNumberOfMessages ?? null,
     enableReactionsAndReplies: config.enableReactionsAndReplies ?? false,
   };
 }
@@ -179,5 +240,8 @@ export function createChatStagePublicData(
     currentTurnParticipantId: null,
     turnOrder: [],
     cycleIndex: 0,
+    turnProcessedMessageId: '',
+    effectiveMinNumberOfMessages: null,
+    effectiveMaxNumberOfMessages: null,
   };
 }

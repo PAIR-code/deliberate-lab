@@ -46,6 +46,12 @@ export interface ExperimentDownload {
   agentMediatorMap: Record<string, AgentMediatorTemplate>;
   // Maps from agent participant ID to agent template
   agentParticipantMap: Record<string, AgentParticipantTemplate>;
+  // Persona banks (personas / repPersonas), included when the experiment
+  // stores them. Each entry's usedBy records which participants claimed it,
+  // so the per-participant persona assignment is recoverable by joining on
+  // usedBy; omitted entirely when no bank is present.
+  personaBankMap?: Record<string, object>;
+  repPersonaBankMap?: Record<string, object>;
   // Map from participant private ID to alerts.
   alerts: Record<string, AlertMessage[]>;
 }

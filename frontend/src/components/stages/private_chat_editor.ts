@@ -160,6 +160,8 @@ export class ChatEditor extends MobxLitElement {
 
   private renderTurnBasedChat() {
     const isTurnBasedChat = this.stage?.isTurnBasedChat ?? true;
+    const isTurnBasedChatGroupStyle =
+      this.stage?.isTurnBasedChatGroupStyle ?? false;
 
     const updateCheck = () => {
       if (!this.stage) return;
@@ -169,18 +171,39 @@ export class ChatEditor extends MobxLitElement {
       });
     };
 
+    const updateGroupStyleCheck = () => {
+      if (!this.stage) return;
+      this.experimentEditor.updateStage({
+        ...this.stage,
+        isTurnBasedChatGroupStyle: !isTurnBasedChatGroupStyle,
+      });
+    };
+
     return html`
       <div class="config-item">
         <div class="checkbox-wrapper">
           <md-checkbox
             touch-target="wrapper"
             ?checked=${isTurnBasedChat}
-            ?disabled=${!this.experimentEditor.canEditStages}
+            ?disabled=${!this.experimentEditor.canEditStages ||
+            isTurnBasedChatGroupStyle}
             @click=${updateCheck}
           >
           </md-checkbox>
           <div>
             Turn-based chat (participant and mediator alternate messages)
+          </div>
+        </div>
+        <div class="checkbox-wrapper">
+          <md-checkbox
+            touch-target="wrapper"
+            ?checked=${isTurnBasedChatGroupStyle}
+            ?disabled=${!this.experimentEditor.canEditStages || isTurnBasedChat}
+            @click=${updateGroupStyleCheck}
+          >
+          </md-checkbox>
+          <div>
+            Turn-based chat (group-chat style, e.g., banner while waiting)
           </div>
         </div>
       </div>

@@ -77,32 +77,78 @@ export function convertUnifiedTimestampToISO(timestamp: UnifiedTimestamp) {
 /** Get color based on profile ID and avatar
  *  (e.g., use pronoun colors if avatar matches
  */
-export function getProfileBasedColor(publicId: string, avatar: string) {
-  if (MAN_EMOJIS.indexOf(avatar) > -1) {
+export function getProfileBasedColor(
+  publicId: string,
+  avatar: string,
+  exclude: string[] = [],
+) {
+  // Pronoun-based colors, unless that color is excluded (e.g. blue reserved
+  // for mediators), in which case fall through to an id/hash color.
+  if (MAN_EMOJIS.indexOf(avatar) > -1 && !exclude.includes('blue')) {
     return 'blue';
-  } else if (WOMAN_EMOJIS.indexOf(avatar) > -1) {
+  } else if (WOMAN_EMOJIS.indexOf(avatar) > -1 && !exclude.includes('pink')) {
     return 'pink';
-  } else if (PERSON_EMOJIS.indexOf(avatar) > -1) {
+  } else if (
+    PERSON_EMOJIS.indexOf(avatar) > -1 &&
+    !exclude.includes('purple')
+  ) {
     return 'purple';
   }
 
-  // If publicId is in format animal-color-number, extract color
+  // If publicId is in format animal-color-number, extract color (unless that
+  // color is excluded, e.g. blue reserved for mediators).
   const splitId = (publicId ?? '').split('-');
-  if (splitId.length >= 3) {
+  if (splitId.length >= 3 && !exclude.includes(splitId[1])) {
     return splitId[1];
   }
 
   // Else, return hash-based color
-  return getHashBasedColor(publicId);
+  return getHashBasedColor(publicId, exclude);
 }
 
-/** Get random or hash-based color (e.g., for avatar backgroud). */
-export function getHashBasedColor(hashString = ''): string {
-  const COLORS = ['red', 'orange', 'yellow', 'green', 'blue', 'purple', 'pink'];
+/** Get random or hash-based color (e.g., for avatar backgroud).
+ *  Colors in `exclude` are removed from the pool (e.g. to reserve blue for
+ *  mediators).
+ */
+export function getHashBasedColor(
+  hashString = '',
+  exclude: string[] = [],
+): string {
+  const allColors = [
+    'red',
+    'orange',
+    'yellow',
+    'green',
+    'blue',
+    'purple',
+    'pink',
+  ];
+  const COLORS = exclude.length
+    ? allColors.filter((color) => !exclude.includes(color))
+    : allColors;
   const index =
     hashString.length > 0
       ? getHashIntegerFromString(hashString) % COLORS.length
       : Math.floor(Math.random() * COLORS.length);
 
   return COLORS[index];
+}
+
+/** The color reserved for mediators when an experiment uses observers. */
+export {MEDIATOR_OBSERVER_COLOR} from '@deliberation-lab/utils';
+
+/**
+ * Whether any of the given participants' variable assignments reference the
+ * `_isObserver` treatment variable. Used to gate the observer-specific chat
+ * colors (mediators shown in blue, that blue reserved away from other
+ * speakers) to experiments that actually assign observers.
+ */
+export function variableAssignmentsIncludeObserver(
+  participants: {variableMap?: Record<string, string>}[],
+): boolean {
+  return participants.some((participant) =>
+    Object.values(participant.variableMap ?? {}).some((value) =>
+      value.includes('_isObserver'),
+    ),
+  );
 }

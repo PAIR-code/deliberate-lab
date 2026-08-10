@@ -31,6 +31,7 @@ import {
   updateCohort,
   deleteCohort,
 } from './cohorts.dl_api';
+import {listPersonas, uploadPersonas} from './personas.dl_api';
 
 // Create Express app
 const app = express();
@@ -82,6 +83,10 @@ app.post('/v1/experiments/:experimentId/cohorts', createCohort);
 app.get('/v1/experiments/:experimentId/cohorts/:cohortId', getCohort);
 app.put('/v1/experiments/:experimentId/cohorts/:cohortId', updateCohort);
 app.delete('/v1/experiments/:experimentId/cohorts/:cohortId', deleteCohort);
+
+// API Routes - Persona banks
+app.get('/v1/experiments/:experimentId/personas', listPersonas);
+app.post('/v1/experiments/:experimentId/personas', uploadPersonas);
 
 // Health check endpoint (also requires authentication)
 app.get('/v1/health', (_req, res) => {

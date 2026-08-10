@@ -59,6 +59,15 @@ export interface ParticipantProfile extends UserProfileBase {
   timestamps: ProgressTimestamps;
   anonymousProfiles: Record<string, AnonymousProfileMetadata>;
   connected: boolean | null;
+  isObserver?: boolean; // Read-only observer participant type
+  hasRepresentative?: boolean; // Whether the observer has a representative agent spawned
+  otherAgentGeneration?: {
+    numOtherAgents: number;
+    // Number of inactive personas to spawn alongside numOtherAgents.
+    // These generate a persona for prompt context but do not chat or take turns.
+    numInactivePersonas?: number;
+  };
+  swapMediator?: string; // Name or ID of mediator to swap to when entering a group chat
   // Maps variable name to value assigned specifically for this participant
   // This overrides any variable values set at the cohort/experiment levels.
   variableMap?: Record<string, string>;
@@ -123,6 +132,10 @@ export enum ParticipantStatus {
 // ************************************************************************* //
 // CONSTANTS                                                                 //
 // ************************************************************************* //
+// Reserved for mediators when an experiment assigns observers; participant
+// profiles must never be generated with it in those experiments.
+export const MEDIATOR_OBSERVER_COLOR = 'blue';
+
 export const COLORS: string[] = [
   'Red',
   'Orange',
@@ -162,6 +175,62 @@ export function createParticipantProfileBase(
   };
 }
 
+// Suffix that labels a person's AI representative (for example "Bear" becomes
+// "Bear's Agent"). One constant so the represented person's name can be
+// recovered from a representative's name.
+export const REPRESENTATIVE_NAME_SUFFIX = "'s Agent";
+
+/**
+ * Display profile (name + avatar) for an observer's AI representative.
+ * The avatar defaults to a robot. The "(yours)" marker is not part of the
+ * stored name; the frontend appends it only for the observer it represents.
+ */
+export function getRepresentativeProfile(
+  observerName: string,
+  avatar = '🤖',
+): {
+  name: string;
+  avatar: string;
+} {
+  return {name: `${observerName}${REPRESENTATIVE_NAME_SUFFIX}`, avatar};
+}
+
+/**
+ * Framing every representative agent is spawned with, telling it whose views
+ * it speaks for. An experiment can replace it wholesale through
+ * `representativePromptContext`, so this wording is a default rather than
+ * something only a code change can alter.
+ */
+export const REPRESENTATIVE_PROMPT_CONTEXT = `You are {{name}}'s representative in this discussion. Represent {{name}}'s perspective rather than expressing your own independent opinions. When you speak, attribute the views to {{name}} by name rather than voicing them as your own. Avoid phrasing your attribution in the same way as every other representative is doing; consider different wording. As the discussion develops, you can update {{name}}'s position as it suits your persona and theirs. Some people readily change their mind and adapt to new information; others are more stubborn and defensive. Pay particular attention to the reasons your represented persona has for their beliefs. If the reason they have is proven wrong or has strong counterevidence in the discussion, it may be appropriate to change your mind about how they are best represented in the discussion.
+
+Ensure you properly separate every paragraph with one empty line in between.`;
+
+/**
+ * Resolve the representative framing for one represented person: the
+ * experiment's own wording when it sets any, else the default above.
+ */
+export function getRepresentativePromptContext(
+  representedName: string,
+  template?: string | null,
+): string {
+  return (template || REPRESENTATIVE_PROMPT_CONTEXT).replaceAll(
+    '{{name}}',
+    representedName,
+  );
+}
+
+/**
+ * Recover the represented person's name from a representative's display name,
+ * so their materials read under the same name a human interview uses (for
+ * example "Bear's Agent" becomes "Bear"). A name that is not a
+ * representative's is returned unchanged.
+ */
+export function getRepresentedName(representativeName: string): string {
+  return representativeName.endsWith(REPRESENTATIVE_NAME_SUFFIX)
+    ? representativeName.slice(0, -REPRESENTATIVE_NAME_SUFFIX.length)
+    : representativeName;
+}
+
 /** Create private participant config. */
 export function createParticipantProfileExtended(
   config: Partial<ParticipantProfileExtended> = {},
@@ -182,6 +251,12 @@ export function createParticipantProfileExtended(
     anonymousProfiles: {},
     connected: config.agentConfig ? true : false,
     agentConfig: config.agentConfig ?? null,
+    isObserver: config.isObserver ?? false,
+    hasRepresentative: config.hasRepresentative ?? false,
+    otherAgentGeneration: config.otherAgentGeneration ?? {
+      numOtherAgents: 0,
+    },
+    swapMediator: config.swapMediator ?? '',
     variableMap: config.variableMap ?? {},
   };
 }
@@ -192,16 +267,40 @@ export function setProfile(
   config: ParticipantProfileExtended,
   setAnonymousProfile = false,
   profileType: ProfileType = ProfileType.ANONYMOUS_ANIMAL,
+  excludeColor?: string | string[],
+  excludeName?: string | string[],
 ) {
+  // Names already taken by someone the participant will see alongside this
+  // profile, in the same spirit as excludeColor. The in-order assignment can
+  // otherwise hand a spawned agent the name its own human already has, and a
+  // profile type that appends no repeat number leaves the two indistinguishable.
+  const excludedNames = (
+    Array.isArray(excludeName) ? excludeName : excludeName ? [excludeName] : []
+  ).map((n) => n.toLowerCase());
+
   const generateProfileFromSet = (
     profileSet: {name: string; avatar: string}[],
   ): AnonymousProfileMetadata => {
     // TODO: Randomly select from set
-    const {name, avatar} = profileSet[participantNumber % profileSet.length];
+    // Step past any excluded name, keeping the in-order assignment otherwise.
+    // With every name excluded, the first candidate is used.
+    let offset = 0;
+    while (
+      offset < profileSet.length &&
+      excludedNames.includes(
+        profileSet[
+          (participantNumber + offset) % profileSet.length
+        ].name.toLowerCase(),
+      )
+    ) {
+      offset += 1;
+    }
+    const position = participantNumber + (offset % profileSet.length);
+    const {name, avatar} = profileSet[position % profileSet.length];
     return {
       name,
       avatar,
-      repeat: Math.floor(participantNumber / profileSet.length),
+      repeat: Math.floor(position / profileSet.length),
     };
   };
 
@@ -246,7 +345,18 @@ export function setProfile(
 
   // Define public ID (using anonymous animal 1 set)
   const mainProfile = profileAnimal1;
-  const color = COLORS[Math.floor(Math.random() * COLORS.length)];
+  const excludedColors = (
+    Array.isArray(excludeColor)
+      ? excludeColor
+      : excludeColor
+        ? [excludeColor]
+        : []
+  ).map((c) => c.toLowerCase());
+  const filteredPool = COLORS.filter(
+    (c) => !excludedColors.includes(c.toLowerCase()),
+  );
+  const colorPool = filteredPool.length > 0 ? filteredPool : COLORS;
+  const color = colorPool[Math.floor(Math.random() * colorPool.length)];
 
   config.publicId =
     `${mainProfile.name}-${color}-${randomNumber}`.toLowerCase();

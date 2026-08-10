@@ -1,12 +1,14 @@
 import {MobxLitElement} from '@adobe/lit-mobx';
 
-import {CSSResultGroup, html, nothing} from 'lit';
+import {CSSResultGroup, html, nothing, PropertyValues} from 'lit';
 import {customElement, property, state} from 'lit/decorators.js';
 
 import {core} from '../../core/core';
 import {ParticipantAnswerService} from '../../services/participant.answer';
 import {ParticipantService} from '../../services/participant.service';
 import {ExperimentService} from '../../services/experiment.service';
+
+import {StageKind} from '@deliberation-lab/utils';
 
 import {styles} from './chat_input.scss';
 
@@ -42,7 +44,39 @@ export class ChatInputComponent extends MobxLitElement {
   };
   @property() isDisabled = false;
   @property() isLoading = false;
+  @property() isTurnBased = false;
   @state() hasFocusedOnce = false;
+
+  // In turn-based chat the input is disabled between turns. When it becomes
+  // enabled again (this participant's turn), move the cursor into the box so
+  // they can type immediately. Skip touch devices, where focusing would force
+  // the on-screen keyboard up every turn, and use preventScroll so re-focusing
+  // does not jump the chat layout if the participant has scrolled up.
+  override updated(changedProperties: PropertyValues) {
+    if (
+      this.isTurnBased &&
+      changedProperties.has('isDisabled') &&
+      !this.isDisabled &&
+      navigator.maxTouchPoints === 0
+    ) {
+      const prTextarea = this.renderRoot.querySelector('pr-textarea') as
+        | (Element & {
+            renderRoot?: ParentNode;
+            updateComplete?: Promise<unknown>;
+          })
+        | null;
+      // The child pr-textarea re-renders asynchronously, so at this point its
+      // inner <textarea> still has the disabled attribute and focus() would be
+      // a no-op. Wait for the child's update to commit (disabled cleared)
+      // before focusing.
+      void prTextarea?.updateComplete?.then(() => {
+        const textarea = prTextarea?.renderRoot?.querySelector(
+          '#textarea',
+        ) as HTMLElement | null;
+        textarea?.focus({preventScroll: true});
+      });
+    }
+  }
 
   override render() {
     const sendInput = async () => {
@@ -84,13 +118,21 @@ export class ChatInputComponent extends MobxLitElement {
       return true;
     };
 
+    const stage = this.experimentService.getStage(this.stageId);
+    const isPrivateChat = stage?.kind === StageKind.PRIVATE_CHAT;
+    const isObserver =
+      !isPrivateChat && this.participantService.profile?.isObserver === true;
+    const placeholderText = isObserver
+      ? 'You are observing this discussion and cannot send messages.'
+      : 'Send message';
+
     return html`
       <div class="chat-input">
         ${this.renderReplyBanner()}
         <div class="input ${this.isDisabled ? 'disabled' : ''}">
           <pr-textarea
             size="small"
-            placeholder="Send message"
+            placeholder=${placeholderText}
             .value=${this.getUserInput()}
             ?focused=${shouldFocus()}
             ?disabled=${this.isDisabled}
@@ -100,7 +142,7 @@ export class ChatInputComponent extends MobxLitElement {
           >
           </pr-textarea>
           <pr-tooltip
-            text="Send message"
+            text=${placeholderText}
             color="tertiary"
             variant="outlined"
             position="TOP_END"

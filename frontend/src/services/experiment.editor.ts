@@ -4,6 +4,7 @@ import {
   AgentParticipantPersonaConfig,
   AgentParticipantTemplate,
   ApiKeyType,
+  ChatStageConfig,
   CohortParticipantConfig,
   Experiment,
   ExperimentTemplate,
@@ -186,6 +187,20 @@ export class ExperimentEditor extends Service {
     renderApiErrorMessage(ApiKeyType.OLLAMA_CUSTOM_URL);
 
     for (const stage of this.stages) {
+      // Group chat: validate only that the stage's own message-count bounds are
+      // self-consistent. Per-mediator overrides replace these at runtime, and
+      // the effective minimum is clamped to the effective maximum, so a
+      // mediator cap below the stage minimum cannot lock progression.
+      if (stage.kind === StageKind.CHAT) {
+        const chatStage = stage as ChatStageConfig;
+        const stageMin = chatStage.minNumberOfMessages ?? 0;
+        const stageMax = chatStage.maxNumberOfMessages;
+        if (stageMax != null && stageMin > stageMax) {
+          errors.push(
+            `${stage.name}: minimum total messages (${stageMin}) exceeds the stage's maximum (${stageMax})`,
+          );
+        }
+      }
       if (
         stage.kind === StageKind.SURVEY ||
         stage.kind === StageKind.SURVEY_PER_PARTICIPANT

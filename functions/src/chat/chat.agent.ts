@@ -5,9 +5,13 @@ import {
   ChatPromptConfig,
   ChatStageConfig,
   ChatStagePublicData,
+  PrivateChatStageConfig,
   extractChatMediatorStructuredFields,
   getStructuredOutput,
+  getTurnCycleInfo,
+  getTurnCycleStatusForPrompt,
   MediatorProfileExtended,
+  ModelResponse,
   ModelResponseStatus,
   ParticipantProfileExtended,
   StageConfig,
@@ -17,8 +21,11 @@ import {
   createChatMessage,
   createParticipantProfileBase,
   createSystemChatMessage,
+  getRepresentativeProfile,
   sanitizeRawResponseForLogging,
   shuffleWithSeed,
+  ParticipantProfileBase,
+  rewriteDescriptionsForRequiredResponse,
 } from '@deliberation-lab/utils';
 import {Timestamp} from 'firebase-admin/firestore';
 import {processModelResponse} from '../agent.utils';
@@ -36,6 +43,8 @@ import {
 import {updateParticipantReadyToEndChat} from '../chat/chat.utils';
 import {
   getExperimenterDataFromExperiment,
+  getFirestoreExperiment,
+  getFirestoreParticipant,
   getFirestorePublicStageChatMessages,
   getFirestorePrivateChatMessages,
   getFirestoreStage,
@@ -46,6 +55,10 @@ import {
   getPrivateChatTriggerLogRef,
   getFirestoreParticipantAnswerRef,
 } from '../utils/firestore';
+import {
+  getRoundTreatmentIndex,
+  treatmentAtIndexHasRepresentative,
+} from '../treatment.utils';
 import {app} from '../app';
 import {
   getChatMessageStoragePath,
@@ -59,6 +72,108 @@ import {updateModelLogFiles} from '../log.utils';
 
 // 300s cloud function timeout minus 10s buffer for skip handler.
 const TURN_BASED_AGENT_RETRY_TIMEOUT_MS = 290000;
+
+/**
+ * For a private chat in a `_hasRepresentative` round, the mediator is shown
+ * as the participant's representative. Returns that display profile, or null
+ * when it doesn't apply (not a private chat, not a mediator, or the round's
+ * treatment lacks `_hasRepresentative`). Read from the round's treatment
+ * because hoisting only happens later, at the transfer.
+ */
+async function getPrivateChatRepProfileOverride(
+  experimentId: string,
+  stage: StageConfig,
+  participantIds: string[],
+  user: ParticipantProfileExtended | MediatorProfileExtended,
+): Promise<{name: string; avatar: string} | null> {
+  if (stage.kind !== StageKind.PRIVATE_CHAT) return null;
+  if (user.type !== UserType.MEDIATOR) return null;
+  const humanId = participantIds[0];
+  if (!humanId) return null;
+  const human = await getFirestoreParticipant(experimentId, humanId);
+  if (!human?.variableMap) return null;
+  const experiment = await getFirestoreExperiment(experimentId);
+  const stageIds = experiment?.stageIds ?? [];
+  const stageIndex = stageIds.indexOf(stage.id);
+  if (stageIndex < 0) return null;
+  const roundIndex = await getRoundTreatmentIndex(
+    experimentId,
+    stageIds,
+    stageIndex,
+  );
+  if (roundIndex === null) return null;
+  if (!treatmentAtIndexHasRepresentative(human.variableMap, roundIndex)) {
+    return null;
+  }
+  return getRepresentativeProfile(String(human.name || human.publicId));
+}
+
+/** Apply a representative override, when there is one, to a sender profile. */
+function withRepProfile(
+  profile: ParticipantProfileBase,
+  override: {name: string; avatar: string} | null,
+): ParticipantProfileBase {
+  if (!override) return profile;
+  return {...profile, name: override.name, avatar: override.avatar};
+}
+
+/**
+ * Sender profile for a message written into a private chat: the name the
+ * participant sees for that speaker. A mediator interviewing someone who has a
+ * representative speaks as that representative, so every message it writes,
+ * error messages included, carries that name and not its own.
+ */
+export async function getPrivateChatSenderProfile(
+  experimentId: string,
+  stage: StageConfig,
+  participantIds: string[],
+  user: ParticipantProfileExtended | MediatorProfileExtended,
+) {
+  return withRepProfile(
+    createParticipantProfileBase(user),
+    await getPrivateChatRepProfileOverride(
+      experimentId,
+      stage,
+      participantIds,
+      user,
+    ),
+  );
+}
+
+// Fast-failing transient gRPC status codes for which a Firestore write is worth
+// retrying: UNKNOWN(2), DEADLINE_EXCEEDED(4), ABORTED(10), INTERNAL(13),
+// UNAVAILABLE(14). Under load the local emulator intermittently fails a commit
+// with "2 UNKNOWN" or blows the ~60s client deadline ("4 DEADLINE_EXCEEDED");
+// without a retry that surfaces as an unhandled error that kills the function
+// and stalls the turn-based chat (the message is never written, the turn never
+// advances). A fresh commit on retry typically succeeds once the load clears,
+// so retrying beats letting the chat go silent.
+const TRANSIENT_FIRESTORE_CODES = new Set([2, 4, 10, 13, 14]);
+async function firestoreWriteWithRetry<T>(
+  op: () => Promise<T>,
+  attempts = 4,
+): Promise<T> {
+  let lastError: unknown;
+  for (let i = 0; i < attempts; i++) {
+    try {
+      return await op();
+    } catch (error) {
+      lastError = error;
+      const code = (error as {code?: number})?.code;
+      if (
+        !TRANSIENT_FIRESTORE_CODES.has(code as number) ||
+        i === attempts - 1
+      ) {
+        throw error;
+      }
+      console.warn(
+        `[chat.agent] Transient Firestore write error (code ${code}); retry ${i + 1}/${attempts - 1}`,
+      );
+      await new Promise((resolve) => setTimeout(resolve, 250 * (i + 1)));
+    }
+  }
+  throw lastError;
+}
 
 /** Use persona chat prompt to create and send agent chat message. */
 export async function createAgentChatMessageFromPrompt(
@@ -76,12 +191,31 @@ export async function createAgentChatMessageFromPrompt(
     return false;
   }
 
+  // Inactive personas supply persona context to other agents'
+  // prompts but never post chat messages themselves.
+  if (
+    user.type === UserType.PARTICIPANT &&
+    user.agentConfig.isInactivePersona
+  ) {
+    return false;
+  }
+
   // Stage (in order to determine stage kind)
   const stage = await getFirestoreStage(experimentId, stageId);
   if (!stage) {
     console.log(`[chat.agent] Stage ${stageId} not found`);
     return false;
   }
+
+  // Cosmetic: in `_hasRepresentative` conditions the private chat is
+  // presented as conducted by the participant's representative. Computed once;
+  // null unless this is a private-chat mediator message in such a condition.
+  const repProfileOverride = await getPrivateChatRepProfileOverride(
+    experimentId,
+    stage,
+    participantIds,
+    user,
+  );
 
   // Fetches stored (else default) prompt config for given stage
   const promptConfig = (await getStructuredPromptConfig(
@@ -100,9 +234,15 @@ export async function createAgentChatMessageFromPrompt(
   const isPrivateChat = stage.kind === StageKind.PRIVATE_CHAT;
   const isTurnBasedGroupChat =
     stage.kind === StageKind.CHAT && (stage as ChatStageConfig).isTurnBased;
+  // Group-style turn-based private chats retry transient model errors until
+  // the deadline too: the participant is blocked waiting on the mediator, so
+  // we mirror the group-chat turn-based behavior rather than erroring out.
+  const isTurnBasedPrivateChat =
+    stage.kind === StageKind.PRIVATE_CHAT &&
+    (stage as PrivateChatStageConfig).isTurnBasedChatGroupStyle;
   const retryDeadlineMs =
     turnBasedRetryDeadlineMs ??
-    (isTurnBasedGroupChat
+    (isTurnBasedGroupChat || isTurnBasedPrivateChat
       ? Date.now() + TURN_BASED_AGENT_RETRY_TIMEOUT_MS
       : undefined);
 
@@ -247,6 +387,10 @@ export async function createAgentChatMessageFromPrompt(
       );
       return false;
     }
+    if (message) {
+      // Present the mediator as the participant's representative.
+      message.profile = withRepProfile(message.profile, repProfileOverride);
+    }
     await sendAgentPrivateChatMessage(
       experimentId,
       privateChatParticipantId,
@@ -310,13 +454,16 @@ export async function getAgentChatMessage(
   // For turn-based conversation, ensure it is the agent's turn
   const isTurnBasedGroupChat =
     stage.kind === StageKind.CHAT && (stage as ChatStageConfig).isTurnBased;
+  const isTurnBasedPrivateChat =
+    stage.kind === StageKind.PRIVATE_CHAT &&
+    (stage as PrivateChatStageConfig).isTurnBasedChatGroupStyle;
+  let chatPublicData: ChatStagePublicData | undefined;
   if (isTurnBasedGroupChat) {
-    const publicStageData = await getFirestoreStagePublicData(
+    chatPublicData = (await getFirestoreStagePublicData(
       experimentId,
       cohortId,
       stageId,
-    );
-    const chatPublicData = publicStageData as ChatStagePublicData;
+    )) as ChatStagePublicData;
     if (
       chatPublicData &&
       chatPublicData.currentTurnParticipantId !== user.publicId
@@ -336,17 +483,6 @@ export async function getAgentChatMessage(
     return {message: null, success: false, retryTimedOut: false};
   }
 
-  // Use provided participant IDs for prompt context
-  // Get structured prompt
-  const structuredPrompt = await getPromptFromConfig(
-    experimentId,
-    cohortId,
-    stageId,
-    user,
-    promptConfig,
-    participantIds, // Pass participant IDs to limit context scope (e.g., for private chats)
-  );
-
   // Check if we should use message-based format
   // Only for private chat with exactly one participant AND one mediator
   const isPrivateChat = stage.kind === StageKind.PRIVATE_CHAT;
@@ -358,6 +494,7 @@ export async function getAgentChatMessage(
       cohortId,
       stageId,
       false, // checkIsAgent = false to get all mediators
+      stage,
     );
     mediatorCount = mediators.length;
   }
@@ -368,6 +505,33 @@ export async function getAgentChatMessage(
     participantIds.length,
     mediatorCount,
   );
+
+  // Use provided participant IDs for prompt context
+  // Get structured prompt
+  let structuredPrompt = await getPromptFromConfig(
+    experimentId,
+    cohortId,
+    stageId,
+    user,
+    promptConfig,
+    participantIds, // Pass participant IDs to limit context scope (e.g., for private chats)
+  );
+
+  // For a turn-based group chat with a fixed message cap, tell the agent
+  // (participant or mediator) which cycle it is in and how many remain, so it
+  // can pace its contribution. No-op when not turn-based or there is no cap.
+  if (isTurnBasedGroupChat) {
+    const cycleInfo = getTurnCycleInfo(
+      chatPublicData,
+      stage as ChatStageConfig,
+    );
+    if (cycleInfo) {
+      structuredPrompt = `${structuredPrompt.replace(/\n+$/, '')}\n\n${getTurnCycleStatusForPrompt(
+        cycleInfo.currentCycle,
+        cycleInfo.totalCycles,
+      )}`;
+    }
+  }
 
   // Prepare prompt - either message-based or traditional string
   let prompt: string | ModelMessage[];
@@ -384,7 +548,8 @@ export async function getAgentChatMessage(
   }
 
   const retryDurationMs =
-    isTurnBasedGroupChat && turnBasedRetryDeadlineMs !== undefined
+    (isTurnBasedGroupChat || isTurnBasedPrivateChat) &&
+    turnBasedRetryDeadlineMs !== undefined
       ? Math.max(0, turnBasedRetryDeadlineMs - Date.now())
       : null;
 
@@ -402,8 +567,11 @@ export async function getAgentChatMessage(
       ...config,
       schema: {
         ...config.schema,
-        properties: config.schema.properties.filter(
-          (p) => p.name !== shouldRespondFieldName,
+        properties: rewriteDescriptionsForRequiredResponse(
+          config.schema.properties.filter(
+            (p) => p.name !== shouldRespondFieldName,
+          ),
+          user.type === UserType.MEDIATOR,
         ),
       },
       shouldRespondField: '',
@@ -424,7 +592,9 @@ export async function getAgentChatMessage(
     user.agentConfig.modelSettings,
     promptConfig.generationConfig,
     effectiveStructuredOutputConfig,
-    isTurnBasedGroupChat ? null : (promptConfig.numRetries ?? 0),
+    isTurnBasedGroupChat || isTurnBasedPrivateChat
+      ? null
+      : (promptConfig.numRetries ?? 0),
     retryDurationMs,
   );
 
@@ -623,7 +793,7 @@ async function getNextTurnBasedSpeakerAfterSkippedAgent(
         ];
 
         const hadMediators = turnOrder.some((id) => mediatorIds.includes(id));
-        if (hadMediators) {
+        if (hadMediators && stage.randomizeTurnOrderEachCycle) {
           const shuffledParticipants = shuffleWithSeed(
             participantIds,
             `${cohortId}-${stage.id}-${cycleIndex}`,
@@ -702,7 +872,13 @@ export async function skipTimedOutTurnBasedAgentTurn(
         ChatStagePublicData | undefined
       >,
       getFirestoreActiveParticipants(experimentId, cohortId, stage.id, false),
-      getFirestoreActiveMediators(experimentId, cohortId, stage.id, true),
+      getFirestoreActiveMediators(
+        experimentId,
+        cohortId,
+        stage.id,
+        true,
+        stage,
+      ),
       getFirestorePublicStageChatMessages(experimentId, cohortId, stage.id),
     ]);
 
@@ -760,6 +936,10 @@ export async function skipTimedOutTurnBasedAgentTurn(
 
   const skipMessage = createSystemChatMessage({
     message: `${user.name ?? user.publicId} was skipped due to ${skipReason}.`,
+    // Use the firebase-admin Timestamp for this backend write: the util's
+    // default timestamp is a client-SDK (firebase/firestore) Timestamp, which
+    // firebase-admin cannot serialize (crashes the write, stalling the chat).
+    timestamp: Timestamp.now(),
   });
   await app
     .firestore()
@@ -800,21 +980,78 @@ export async function sendAgentGroupChatMessage(
   chatMessage: ChatMessage,
   chatSettings: AgentChatSettings,
 ) {
+  const capStage = await getFirestoreStage(experimentId, stageId);
+  const isTurnBasedGroup =
+    capStage?.kind === StageKind.CHAT &&
+    (capStage as ChatStageConfig).isTurnBased === true;
+
   // TODO: Decrease typing delay to account for LLM API call latencies?
   // TODO: Don't send message if conversation continues while agent is typing?
   if (chatSettings.wordsPerMinute) {
-    await awaitTypingDelay(chatMessage.message, chatSettings.wordsPerMinute);
+    // A turn-based chat's first message posts immediately.
+    const isFirstMessage =
+      isTurnBasedGroup &&
+      triggerChatId === '' &&
+      (
+        await getFirestorePublicStageChatMessages(
+          experimentId,
+          cohortId,
+          stageId,
+        )
+      ).every((m) => m.type === UserType.SYSTEM);
+    if (!isFirstMessage) {
+      await awaitTypingDelay(chatMessage.message, chatSettings.wordsPerMinute);
+    }
+  }
+
+  // Read the live cohort state once for both the cap guard and the
+  // conversation-moved-on check (avoids reading the chat history twice).
+  const [capPublicData, chatHistory] = await Promise.all([
+    getFirestoreStagePublicData(experimentId, cohortId, stageId) as Promise<
+      ChatStagePublicData | undefined
+    >,
+    getFirestorePublicStageChatMessages(experimentId, cohortId, stageId),
+  ]);
+
+  // Hard cap: never append a message past the effective message limit. The
+  // turn trigger ends the chat once the cap is reached, but an agent that began
+  // generating beforehand (or a slow/duplicate call) must not post its now-stale
+  // message past the limit. Drop it if the discussion already ended or the
+  // cohort is already at the cap. The count excludes the message we are
+  // about to write, so a message that itself reaches the cap is allowed.
+  if (capPublicData?.discussionEndTimestamp) {
+    console.log(
+      'Discussion already ended; dropping message to respect the cap',
+    );
+    return true;
+  }
+  const effectiveCap =
+    capPublicData?.effectiveMaxNumberOfMessages ??
+    (capStage?.kind === StageKind.CHAT
+      ? (capStage as ChatStageConfig).maxNumberOfMessages
+      : null);
+  if (effectiveCap != null) {
+    const capCount = chatHistory.filter(
+      (m) =>
+        m.type !== UserType.SYSTEM &&
+        !m.isError &&
+        !(m as {isReasoningOnly?: boolean}).isReasoningOnly,
+    ).length;
+    if (capCount >= effectiveCap) {
+      console.log(
+        'Cohort at message cap; dropping message to respect the limit',
+      );
+      return true;
+    }
   }
 
   // Check if the conversation has moved on,
-  // i.e., trigger chat ID is no longer that latest message
-  // Skip this check for initial messages (empty triggerChatId)
-  if (triggerChatId !== '') {
-    const chatHistory = await getFirestorePublicStageChatMessages(
-      experimentId,
-      cohortId,
-      stageId,
-    );
+  // i.e., trigger chat ID is no longer that latest message.
+  // Skip this check for initial messages (empty triggerChatId).
+  // Also skip it entirely for turn-based group chats: the turn order is
+  // deterministic, so a newer message never means this agent's turn was
+  // superseded. Dropping here would stall the whole turn-based chat.
+  if (triggerChatId !== '' && !isTurnBasedGroup) {
     const nonSystemHistory = chatHistory.filter(
       (m) => m.type !== UserType.SYSTEM,
     );
@@ -838,14 +1075,20 @@ export async function sendAgentGroupChatMessage(
       stageId,
       `${triggerChatId}-${chatMessage.type}`,
     );
-    const hasTriggerResponse = (await triggerResponseDoc.get()).exists;
-    if (hasTriggerResponse) {
-      console.log('Someone already responded');
-      return true; // expected outcome (TODO: return status enum)
+    // Claim the trigger with a create, which fails when the document is
+    // already there. A get followed by a set lets two agents that finish their
+    // typing delay at the same moment both read "absent" and both post; with a
+    // shared delay that is the normal case rather than a rare one.
+    try {
+      await firestoreWriteWithRetry(() => triggerResponseDoc.create({}));
+    } catch (error) {
+      const code = (error as {code?: number | string}).code;
+      if (code === 6 || code === 'already-exists') {
+        console.log('Someone already responded');
+        return true; // expected outcome (TODO: return status enum)
+      }
+      throw error;
     }
-
-    // Otherwise, log response ID as trigger message
-    await triggerResponseDoc.set({});
   }
 
   // Send chat message
@@ -861,7 +1104,7 @@ export async function sendAgentGroupChatMessage(
     .doc(chatMessage.id);
 
   chatMessage.timestamp = Timestamp.now();
-  await agentDocument.set(chatMessage);
+  await firestoreWriteWithRetry(() => agentDocument.set(chatMessage));
 
   return true;
 }
@@ -875,15 +1118,40 @@ export async function sendAgentPrivateChatMessage(
   chatMessage: ChatMessage,
   chatSettings: AgentChatSettings,
 ) {
+  const privateStage = await getFirestoreStage(experimentId, stageId);
+  const isTurnBasedPrivate =
+    privateStage?.kind === StageKind.PRIVATE_CHAT &&
+    (privateStage as PrivateChatStageConfig).isTurnBasedChatGroupStyle === true;
+
   // TODO: Decrease typing delay to account for LLM API call latencies?
   // TODO: Don't send message if conversation continues while agent is typing?
   if (chatSettings.wordsPerMinute) {
-    await awaitTypingDelay(chatMessage.message, chatSettings.wordsPerMinute);
+    // A turn-based chat's first message posts immediately.
+    const isFirstMessage =
+      isTurnBasedPrivate &&
+      triggerChatId === '' &&
+      (
+        await getFirestorePrivateChatMessages(
+          experimentId,
+          participantId,
+          stageId,
+        )
+      ).every((m) => m.type === UserType.SYSTEM);
+    if (!isFirstMessage) {
+      await awaitTypingDelay(chatMessage.message, chatSettings.wordsPerMinute);
+    }
   }
 
   // Check if the conversation has moved on,
-  // i.e., trigger chat ID is no longer that latest message
-  // Skip this check for initial messages (empty triggerChatId)
+  // i.e., trigger chat ID is no longer that latest message.
+  // Skip this check for initial messages (empty triggerChatId).
+  //
+  // This runs after the typing delay, which can be tens of seconds, so by now
+  // the turn may belong to someone else. In a turn-based chat that is decisive:
+  // an agent speaks on its turn or not at all, and a message newer than the one
+  // it was triggered by means the turn has passed. Posting anyway puts a
+  // mediator message on the participant's turn, and where two mediators are
+  // present each one's message re-triggers the other into an unbounded loop.
   if (triggerChatId !== '') {
     const chatHistory = await getFirestorePrivateChatMessages(
       experimentId,
@@ -898,7 +1166,11 @@ export async function sendAgentPrivateChatMessage(
       nonSystemHistory[nonSystemHistory.length - 1].id !== triggerChatId
     ) {
       // TODO: Write chat log
-      console.log('Conversation has moved on');
+      console.log(
+        isTurnBasedPrivate
+          ? 'Turn has passed; this agent is no longer the speaker'
+          : 'Conversation has moved on',
+      );
       return true; // expected outcome (TODO: return status enum)
     }
   }
@@ -913,14 +1185,20 @@ export async function sendAgentPrivateChatMessage(
       stageId,
       `${triggerChatId}-${chatMessage.type}`,
     );
-    const hasTriggerResponse = (await triggerResponseDoc.get()).exists;
-    if (hasTriggerResponse) {
-      console.log('Someone already responded');
-      return true; // expected outcome (TODO: return status enum)
+    // Claim the trigger with a create, which fails when the document is
+    // already there. A get followed by a set lets two agents that finish their
+    // typing delay at the same moment both read "absent" and both post; with a
+    // shared delay that is the normal case rather than a rare one.
+    try {
+      await firestoreWriteWithRetry(() => triggerResponseDoc.create({}));
+    } catch (error) {
+      const code = (error as {code?: number | string}).code;
+      if (code === 6 || code === 'already-exists') {
+        console.log('Someone already responded');
+        return true; // expected outcome (TODO: return status enum)
+      }
+      throw error;
     }
-
-    // Otherwise, log response ID as trigger message
-    await triggerResponseDoc.set({});
   }
 
   // Send chat message
@@ -936,7 +1214,7 @@ export async function sendAgentPrivateChatMessage(
     .doc(chatMessage.id);
 
   chatMessage.timestamp = Timestamp.now();
-  await agentDocument.set(chatMessage);
+  await firestoreWriteWithRetry(() => agentDocument.set(chatMessage));
 
   return true;
 }
@@ -1028,7 +1306,33 @@ async function sendInitialGroupChatMessages(
     false, // checkIsAgent = false to get ALL participants
   );
 
+  // Agents spawned for this cohort receive their persona a moment after they
+  // are created, whether it is claimed from a bank or generated. Until every
+  // one of them has it, the chat is still being set up: a prompt built now
+  // would describe them as taking part while saying nothing about them, and a
+  // turn spent on such a message cannot be taken back. Assign no turn and send
+  // nothing yet, which also holds the participant's setup banner in place; the
+  // last agent to become ready calls this again.
+  const agentsBeingPrepared = (
+    await getFirestoreActiveParticipants(
+      experimentId,
+      cohortId,
+      null, // any stage: a spawned agent may not have entered this one yet
+      true, // agents only
+    )
+  ).filter((agent) => agent.agentConfig?.needsPersonaGeneration);
+  if (agentsBeingPrepared.length > 0) {
+    console.log(
+      `[chat.agent] Group chat ${stageId} in cohort ${cohortId} is still being ` +
+        `set up: ${agentsBeingPrepared.length} agent(s) without a persona.`,
+    );
+    return;
+  }
+
   const allParticipantIds = allParticipants.map((p) => p.privateId);
+
+  const stage = await getFirestoreStage(experimentId, stageId);
+  const chatStage = stage as ChatStageConfig;
 
   // Send initial messages from agent mediators
   const agentMediators = await getFirestoreActiveMediators(
@@ -1036,10 +1340,8 @@ async function sendInitialGroupChatMessages(
     cohortId,
     stageId,
     true, // checkIsAgent = true
+    stage ?? null,
   );
-
-  const stage = await getFirestoreStage(experimentId, stageId);
-  const chatStage = stage as ChatStageConfig;
 
   if (chatStage.isTurnBased) {
     const publicStageData = await getFirestoreStagePublicData(
@@ -1077,6 +1379,7 @@ async function sendInitialGroupChatMessages(
           .map((m) => m.publicId)
           .filter((id) => !existingIds.has(id));
         const newParticipantIds = allParticipants
+          .filter((p) => !p.isObserver && !p.agentConfig?.isInactivePersona)
           .map((p) => p.publicId)
           .filter((id) => !existingIds.has(id));
 
@@ -1110,7 +1413,9 @@ async function sendInitialGroupChatMessages(
 
     // If uninitialized
     if (!chatPublicData || !chatPublicData.currentTurnParticipantId) {
-      const allPublicParticipantIds = allParticipants.map((p) => p.publicId);
+      const allPublicParticipantIds = allParticipants
+        .filter((p) => !p.isObserver && !p.agentConfig?.isInactivePersona)
+        .map((p) => p.publicId);
       const allMediatorIds = agentMediators.map((m) => m.publicId);
 
       // Shuffle participants with seed
@@ -1221,7 +1526,9 @@ async function sendInitialGroupChatMessages(
   }
 
   // Send initial messages from agent participants
-  const agentParticipants = allParticipants.filter((p) => p.agentConfig);
+  const agentParticipants = allParticipants.filter(
+    (p) => p.agentConfig && !p.agentConfig.isInactivePersona,
+  );
 
   for (const participant of agentParticipants) {
     await createAgentChatMessageFromPrompt(
@@ -1251,7 +1558,10 @@ async function sendInitialPrivateChatMessages(
     cohortId,
     stageId,
     false, // checkIsAgent = false to get all participants
+    true, // includeObservers = true
   );
+
+  const stage = await getFirestoreStage(experimentId, stageId);
 
   // Get agent mediators
   const agentMediators = await getFirestoreActiveMediators(
@@ -1259,6 +1569,7 @@ async function sendInitialPrivateChatMessages(
     cohortId,
     stageId,
     true, // checkIsAgent = true
+    stage ?? null,
   );
 
   // For each participant (human or agent), send initial messages from agent mediators
@@ -1276,7 +1587,9 @@ async function sendInitialPrivateChatMessages(
   }
 
   // Also send initial messages from agent participants if they exist
-  const agentParticipants = allParticipants.filter((p) => p.agentConfig);
+  const agentParticipants = allParticipants.filter(
+    (p) => p.agentConfig && !p.agentConfig.isInactivePersona,
+  );
 
   for (const agentParticipant of agentParticipants) {
     await createAgentChatMessageFromPrompt(

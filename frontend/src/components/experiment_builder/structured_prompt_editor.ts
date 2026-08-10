@@ -118,6 +118,12 @@ export class EditorComponent extends MobxLitElement {
       this.addPromptItem(targetArray, {type: PromptItemType.PROFILE_CONTEXT});
     };
 
+    const addOtherProfileContexts = () => {
+      this.addPromptItem(targetArray, {
+        type: PromptItemType.OTHER_PROFILE_CONTEXTS,
+      });
+    };
+
     const addProfileInfo = () => {
       this.addPromptItem(targetArray, {type: PromptItemType.PROFILE_INFO});
     };
@@ -158,6 +164,13 @@ export class EditorComponent extends MobxLitElement {
           <div class="menu-item" role="button" @click=${addProfileContext}>
             Custom agent context
           </div>
+          <div
+            class="menu-item"
+            role="button"
+            @click=${addOtherProfileContexts}
+          >
+            Automatically generated or retrieved personas
+          </div>
           <div class="menu-item" role="button" @click=${addProfileInfo}>
             Profile info (avatar, name, pronouns)
           </div>
@@ -193,6 +206,18 @@ export class EditorComponent extends MobxLitElement {
             <div class="chip-collapsible">
               Context string provided when specific agent is created (or empty
               string if none)
+            </div>
+          </details>
+        `;
+      case PromptItemType.OTHER_PROFILE_CONTEXTS:
+        return html`
+          <details>
+            <summary class="chip tertiary">
+              Automatically generated or retrieved personas
+            </summary>
+            <div class="chip-collapsible">
+              Inserts automatically generated or retrieved personas. Empty if
+              the cohort has no other agents with personas.
             </div>
           </details>
         `;

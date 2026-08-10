@@ -89,6 +89,14 @@ $bubble-width: 400px;
   }
 }
 
+// Mediator messages use a distinct (blue) bubble to set them apart from the
+// grey (secondary-container) participant bubbles. Declared after .chat-bubble
+// so it overrides the background/color at equal specificity.
+.mediator-bubble {
+  background: var(--md-sys-color-mediator-container);
+  color: var(--md-sys-color-on-mediator-container);
+}
+
 .current-user {
   flex-direction: row-reverse;
 

@@ -33,11 +33,18 @@ export class PrivateChatStageHandler extends BaseStageHandler {
     participants: ParticipantProfileExtended[],
     stageContext: StageContextData,
     includeScaffolding: boolean,
+    omitChatHistory = false,
   ) {
     const conversations: string[] = [];
     const stage = stageContext.stage as PrivateChatStageConfig;
 
     for (const participant of participants) {
+      if (omitChatHistory) {
+        conversations.push(
+          `Private chat with ${participant.name} (${participant.publicId})`,
+        );
+        continue;
+      }
       const history = getChatPromptMessageHistory(
         stageContext.privateChatMap[participant.publicId],
         stage,

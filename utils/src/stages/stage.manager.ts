@@ -126,6 +126,7 @@ export class StageManager {
     participants: ParticipantProfileExtended[],
     stageContext: StageContextData,
     includeScaffolding: boolean,
+    omitChatHistory = false,
   ) {
     return (
       this.handlerMap
@@ -134,6 +135,7 @@ export class StageManager {
           participants,
           stageContext,
           includeScaffolding,
+          omitChatHistory,
         ) ?? ''
     );
   }
