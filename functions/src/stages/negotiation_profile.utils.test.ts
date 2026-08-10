@@ -281,4 +281,143 @@ describe('assignNegotiationProfilesToParticipants', () => {
       },
     });
   });
+
+  it('should repair a participant whose anonymousProfiles identity drifted out of sync with participantMap', async () => {
+    mockGetStage.mockResolvedValue(mockStage);
+
+    // pub1 is assigned Party C in the authoritative participantMap, but their
+    // participant profile still carries a stale Party A anonymous identity.
+    const p1 = {
+      ...createParticipant('pub1', 'priv1'),
+      anonymousProfiles: {
+        [NEGOTIATION_PROFILE_SET_ID]: {
+          name: 'Party A',
+          avatar: '😀',
+          repeat: 0,
+        },
+      },
+    };
+    mockGetActiveParticipants.mockResolvedValue([p1]);
+
+    const publicStageData: NegotiationProfileStagePublicData = {
+      id: stageId,
+      kind: StageKind.NEGOTIATION_PROFILE,
+      participantMap: {
+        pub1: 'party-c',
+      },
+    };
+
+    const mockPublicDocSnapshot = {exists: true, data: () => publicStageData};
+    const mockParticipant1Snapshot = {exists: true, data: () => ({...p1})};
+
+    mockGetPublicDataRef.mockReturnValue('publicDocRef');
+    mockCollection.mockImplementation(() => ({
+      doc: jest.fn(() => ({
+        collection: jest.fn(() => ({
+          doc: jest.fn((docId) => `participantDocRef_${docId}`),
+        })),
+      })),
+    }));
+
+    mockRunTransaction.mockImplementation(async (cb) => {
+      const transaction = {
+        get: jest.fn().mockImplementation(async (ref) => {
+          if (ref === 'publicDocRef') return mockPublicDocSnapshot;
+          if (ref === 'participantDocRef_priv1')
+            return mockParticipant1Snapshot;
+          return {exists: false};
+        }),
+        set: jest.fn().mockImplementation((ref, val) => {
+          if (ref === 'publicDocRef') mockPublicDocSet(val);
+          if (ref === 'participantDocRef_priv1')
+            mockParticipantDocSet('priv1', val);
+        }),
+      };
+      return await cb(transaction);
+    });
+
+    const result = await assignNegotiationProfilesToParticipants(
+      experimentId,
+      cohortId,
+      stageId,
+    );
+
+    expect(result).toEqual({success: true});
+    // Assignment itself is unchanged...
+    expect(publicStageData.participantMap['pub1']).toBe('party-c');
+    // ...but the stale anonymous identity is repaired to match the assignment.
+    expect(mockParticipantDocSet).toHaveBeenCalledWith('priv1', {
+      ...p1,
+      anonymousProfiles: {
+        [NEGOTIATION_PROFILE_SET_ID]: {
+          name: 'Party C',
+          avatar: '😀',
+          repeat: 0,
+        },
+      },
+    });
+  });
+
+  it('should not rewrite a participant whose anonymousProfiles identity already matches', async () => {
+    mockGetStage.mockResolvedValue(mockStage);
+
+    const p1 = {
+      ...createParticipant('pub1', 'priv1'),
+      anonymousProfiles: {
+        [NEGOTIATION_PROFILE_SET_ID]: {
+          name: 'Party C',
+          avatar: '😀',
+          repeat: 0,
+        },
+      },
+    };
+    mockGetActiveParticipants.mockResolvedValue([p1]);
+
+    const publicStageData: NegotiationProfileStagePublicData = {
+      id: stageId,
+      kind: StageKind.NEGOTIATION_PROFILE,
+      participantMap: {
+        pub1: 'party-c',
+      },
+    };
+
+    const mockPublicDocSnapshot = {exists: true, data: () => publicStageData};
+    const mockParticipant1Snapshot = {exists: true, data: () => ({...p1})};
+
+    mockGetPublicDataRef.mockReturnValue('publicDocRef');
+    mockCollection.mockImplementation(() => ({
+      doc: jest.fn(() => ({
+        collection: jest.fn(() => ({
+          doc: jest.fn((docId) => `participantDocRef_${docId}`),
+        })),
+      })),
+    }));
+
+    mockRunTransaction.mockImplementation(async (cb) => {
+      const transaction = {
+        get: jest.fn().mockImplementation(async (ref) => {
+          if (ref === 'publicDocRef') return mockPublicDocSnapshot;
+          if (ref === 'participantDocRef_priv1')
+            return mockParticipant1Snapshot;
+          return {exists: false};
+        }),
+        set: jest.fn().mockImplementation((ref, val) => {
+          if (ref === 'publicDocRef') mockPublicDocSet(val);
+          if (ref === 'participantDocRef_priv1')
+            mockParticipantDocSet('priv1', val);
+        }),
+      };
+      return await cb(transaction);
+    });
+
+    const result = await assignNegotiationProfilesToParticipants(
+      experimentId,
+      cohortId,
+      stageId,
+    );
+
+    expect(result).toEqual({success: true});
+    // No participant write should occur when the identity is already correct.
+    expect(mockParticipantDocSet).not.toHaveBeenCalled();
+  });
 });

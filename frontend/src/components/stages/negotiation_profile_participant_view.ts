@@ -12,6 +12,7 @@ import {CohortService} from '../../services/cohort.service';
 import {ParticipantService} from '../../services/participant.service';
 
 import {
+  NEGOTIATION_PROFILE_SET_ID,
   NegotiationProfileStageConfig,
   StageKind,
 } from '@deliberation-lab/utils';
@@ -42,11 +43,24 @@ export class NegotiationProfileView extends MobxLitElement {
     if (!this.stage) return;
     const publicData = this.cohortService.stagePublicDataMap[this.stage.id];
     if (publicData?.kind !== StageKind.NEGOTIATION_PROFILE) return;
-    const itemId =
-      publicData.participantMap?.[
-        this.participantService.profile?.publicId ?? ''
-      ];
-    if (!itemId && this.requestedStageId !== this.stage.id) {
+    const publicId = this.participantService.profile?.publicId ?? '';
+    const itemId = publicData.participantMap?.[publicId];
+    const assignedItem = this.stage.items.find((item) => item.id === itemId);
+    const selfProfileName =
+      this.participantService.profile?.anonymousProfiles?.[
+        NEGOTIATION_PROFILE_SET_ID
+      ]?.name;
+    // Request assignment when we have no profile yet, or when our displayed
+    // identity (anonymousProfiles, used by the chat + profile chip) has drifted
+    // out of sync with the authoritative participantMap. The backend call is
+    // idempotent and repairs the mismatch.
+    const needsAssignment = !itemId;
+    const needsReconcile =
+      !!assignedItem && selfProfileName !== assignedItem.name;
+    if (
+      (needsAssignment || needsReconcile) &&
+      this.requestedStageId !== this.stage.id
+    ) {
       this.requestedStageId = this.stage.id;
       this.isAssigning = true;
       this.participantService

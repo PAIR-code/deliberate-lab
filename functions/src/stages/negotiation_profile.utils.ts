@@ -51,14 +51,12 @@ export async function assignNegotiationProfilesToParticipants(
       publicStageData.participantMap = {};
     }
 
-    // Filter participants that need assignment
-    const unassignedParticipants = participants.filter(
-      (p) => !publicStageData.participantMap[p.publicId],
-    );
-
-    // Perform ALL reads before any writes (required by Firestore transactions)
+    // Perform ALL reads before any writes (required by Firestore transactions).
+    // Read every active participant (not only unassigned ones) so we can also
+    // repair any participant whose anonymousProfiles identity has drifted out of
+    // sync with the authoritative participantMap.
     const participantSnapshots = await Promise.all(
-      unassignedParticipants.map((p) => {
+      participants.map((p) => {
         const ref = app
           .firestore()
           .collection('experiments')
@@ -95,33 +93,51 @@ export async function assignNegotiationProfilesToParticipants(
       return availableItems[0];
     };
 
-    // Perform WRITES
-    for (let i = 0; i < unassignedParticipants.length; i++) {
-      const participant = unassignedParticipants[i];
-      const participantDoc = participantSnapshots[i];
-      const nextItem = getNextItem();
-      if (nextItem) {
-        publicStageData.participantMap[participant.publicId] = nextItem.id;
+    const itemById = new Map(stage.items.map((item) => [item.id, item]));
 
-        if (participantDoc.exists) {
-          const pData = participantDoc.data() as ParticipantProfileExtended;
-          if (!pData.anonymousProfiles) {
-            pData.anonymousProfiles = {};
-          }
-          pData.anonymousProfiles[NEGOTIATION_PROFILE_SET_ID] = {
-            name: nextItem.name,
-            avatar: pData.avatar || nextItem.avatar || '',
-            repeat: 0,
-          };
-          const participantRef = app
-            .firestore()
-            .collection('experiments')
-            .doc(experimentId)
-            .collection('participants')
-            .doc(participant.privateId);
-          transaction.set(participantRef, pData);
+    // Perform WRITES. Assign an item to any unassigned participant, then ensure
+    // every participant's anonymousProfiles identity (used by the chat and
+    // profile display) matches their participantMap assignment.
+    for (let i = 0; i < participants.length; i++) {
+      const participant = participants[i];
+      const participantDoc = participantSnapshots[i];
+
+      if (!publicStageData.participantMap[participant.publicId]) {
+        const nextItem = getNextItem();
+        if (nextItem) {
+          publicStageData.participantMap[participant.publicId] = nextItem.id;
         }
       }
+
+      const assignedItem = itemById.get(
+        publicStageData.participantMap[participant.publicId],
+      );
+      if (!assignedItem || !participantDoc.exists) {
+        continue;
+      }
+
+      const pData = participantDoc.data() as ParticipantProfileExtended;
+      const existingProfile =
+        pData.anonymousProfiles?.[NEGOTIATION_PROFILE_SET_ID];
+      if (existingProfile?.name === assignedItem.name) {
+        continue; // Already in sync; nothing to write.
+      }
+
+      if (!pData.anonymousProfiles) {
+        pData.anonymousProfiles = {};
+      }
+      pData.anonymousProfiles[NEGOTIATION_PROFILE_SET_ID] = {
+        name: assignedItem.name,
+        avatar: pData.avatar || assignedItem.avatar || '',
+        repeat: 0,
+      };
+      const participantRef = app
+        .firestore()
+        .collection('experiments')
+        .doc(experimentId)
+        .collection('participants')
+        .doc(participant.privateId);
+      transaction.set(participantRef, pData);
     }
 
     transaction.set(publicDoc, publicStageData);
