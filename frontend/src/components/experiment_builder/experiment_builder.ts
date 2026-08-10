@@ -16,6 +16,7 @@ import '../stages/profile_stage_editor';
 import '../stages/reveal_editor';
 import '../stages/role_editor';
 import '../stages/negotiation_profile_editor';
+import '../stages/negotiation_payout_editor';
 import '../stages/stockinfo_editor';
 import '../stages/survey_editor';
 import '../stages/survey_per_participant_editor';
@@ -660,6 +661,15 @@ export class ExperimentBuilder extends MobxLitElement {
             <negotiation-profile-editor
               .stage=${stage}
             ></negotiation-profile-editor>
+          </base-stage-editor>
+        `;
+      case StageKind.NEGOTIATION_PAYOUT:
+        return html`
+          <base-stage-editor .stage=${stage}>
+            <div slot="title">Negotiation payout settings</div>
+            <negotiation-payout-editor
+              .stage=${stage}
+            ></negotiation-payout-editor>
           </base-stage-editor>
         `;
       case StageKind.STOCKINFO:

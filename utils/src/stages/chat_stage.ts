@@ -124,6 +124,9 @@ export function createChatStage(
     timeMinimumInMinutes: config.timeMinimumInMinutes ?? null,
     isTurnBased: config.isTurnBased ?? false,
     enableReactionsAndReplies: config.enableReactionsAndReplies ?? false,
+    ...(config.anonymousProfileSetId
+      ? {anonymousProfileSetId: config.anonymousProfileSetId}
+      : {}),
   };
 }
 

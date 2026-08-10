@@ -28,6 +28,7 @@ import {
   createRevealStage,
   createRoleStage,
   createNegotiationProfileStage,
+  createNegotiationPayoutStage,
   createStockInfoStage,
   createSurveyPerParticipantStage,
   createSurveyStage,
@@ -254,6 +255,7 @@ export class StageBuilderDialog extends MobxLitElement {
           ${this.renderComprehensionCard()} ${this.renderRankingCard()}
           ${this.renderRevealCard()} ${this.renderPayoutCard()}
           ${this.renderRoleCard()} ${this.renderNegotiationProfileCard()}
+          ${this.renderNegotiationPayoutCard()}
         </div>
       </div>
 
@@ -468,6 +470,22 @@ export class StageBuilderDialog extends MobxLitElement {
         <div>
           Randomly assign negotiation parties (e.g. Party A, Party B, Party C)
           to participants.
+        </div>
+      </div>
+    `;
+  }
+
+  private renderNegotiationPayoutCard() {
+    const addStage = () => {
+      this.addStage(createNegotiationPayoutStage());
+    };
+
+    return html`
+      <div class="card" @click=${addStage}>
+        <div class="title">💰 Negotiation Payout Summary</div>
+        <div>
+          Automatically calculate and display negotiation and coalition payouts
+          for Party A, Party B, and Party C.
         </div>
       </div>
     `;

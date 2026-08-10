@@ -330,7 +330,7 @@ export function getParticipantDisplayName(
     ? profile?.anonymousProfiles[profileSetId]?.name
     : profile?.name;
   const profileAvatar = profileSetId
-    ? profile?.anonymousProfiles[profileSetId]?.avatar
+    ? profile?.anonymousProfiles[profileSetId]?.avatar || profile?.avatar
     : profile?.avatar;
   const profilePronouns = profile?.pronouns;
 
@@ -369,7 +369,7 @@ export function getParticipantStageProfile(
     const anon = profile.anonymousProfiles[profileSetId];
     return {
       name: anon.name ?? '',
-      avatar: anon.avatar ?? '',
+      avatar: anon.avatar || profile.avatar || '',
       pronouns: null,
     };
   }

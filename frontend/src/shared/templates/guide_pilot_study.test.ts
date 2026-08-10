@@ -12,7 +12,6 @@ const NEGOTIATION_MARKERS = [
   'coalition',
   'task 2:',
   'discussion-round-2',
-  'final decision',
 ];
 function isNegotiationStage(stage: StageConfig): boolean {
   const haystack = `${stage.id} ${stage.name}`.toLowerCase();

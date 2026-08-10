@@ -9,10 +9,13 @@ import {
 import {NEGOTIATION_PROFILE_SET_ID} from './negotiation_profile_stage';
 import {
   ParticipantProfile,
+  ParticipantProfileExtended,
   createParticipantProfileBase,
   getParticipantStageProfile,
 } from '../participant';
 import {createChatStage} from './chat_stage';
+import {GroupChatStageHandler} from './chat_stage.manager';
+import {StageContextData} from './stage';
 import {ChatStageConfigData} from './chat_stage.validation';
 
 /** Minimal participant profile with a negotiation anonymous profile set. */
@@ -24,7 +27,7 @@ function makeParticipant(): ParticipantProfile {
     name: 'Real Name',
     avatar: '😺',
     anonymousProfiles: {
-      [NEGOTIATION_PROFILE_SET_ID]: {name: 'Party A', avatar: '🔴', repeat: 0},
+      [NEGOTIATION_PROFILE_SET_ID]: {name: 'Party A', avatar: '', repeat: 0},
     },
   } as unknown as ParticipantProfile;
 }
@@ -64,7 +67,7 @@ describe('getParticipantStageProfile', () => {
       NEGOTIATION_PROFILE_SET_ID,
     );
     expect(profile.name).toBe('Party A');
-    expect(profile.avatar).toBe('🔴');
+    expect(profile.avatar).toBe('😺');
   });
 
   it('falls back to base identity when no set is requested', () => {
@@ -85,6 +88,50 @@ describe('getParticipantStageProfile', () => {
       'some-other-set',
     );
     expect(profile.name).toBe('Real Name');
+  });
+});
+
+describe('GroupChatStageHandler.getStageDisplayForPrompt', () => {
+  const handler = new GroupChatStageHandler();
+  const participant = makeParticipant();
+
+  it('uses anonymous profile names with original avatar in chat prompt when stage opts in', () => {
+    const stage = createChatStage({
+      name: 'Task 2: Negotiation',
+      anonymousProfileSetId: NEGOTIATION_PROFILE_SET_ID,
+    });
+    const stageContext: StageContextData = {
+      stage,
+      participants: [participant as ParticipantProfileExtended],
+      publicChatMessages: [],
+      privateChatMap: {},
+      privateAnswers: [],
+      publicData: undefined,
+    };
+    const display = handler.getStageDisplayForPrompt(
+      [participant as ParticipantProfileExtended],
+      stageContext,
+      false,
+    );
+    expect(display).toContain('Participants in chat: 😺 Party A');
+  });
+
+  it('falls back to base avatar names when stage does not opt in', () => {
+    const stage = createChatStage({name: 'Task 1: Discussion'});
+    const stageContext: StageContextData = {
+      stage,
+      participants: [participant as ParticipantProfileExtended],
+      publicChatMessages: [],
+      privateChatMap: {},
+      privateAnswers: [],
+      publicData: undefined,
+    };
+    const display = handler.getStageDisplayForPrompt(
+      [participant as ParticipantProfileExtended],
+      stageContext,
+      false,
+    );
+    expect(display).toContain('Participants in chat: 😺 Real Name');
   });
 });
 
