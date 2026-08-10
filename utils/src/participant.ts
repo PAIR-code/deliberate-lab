@@ -268,16 +268,39 @@ export function setProfile(
   setAnonymousProfile = false,
   profileType: ProfileType = ProfileType.ANONYMOUS_ANIMAL,
   excludeColor?: string | string[],
+  excludeName?: string | string[],
 ) {
+  // Names already taken by someone the participant will see alongside this
+  // profile, in the same spirit as excludeColor. The in-order assignment can
+  // otherwise hand a spawned agent the name its own human already has, and a
+  // profile type that appends no repeat number leaves the two indistinguishable.
+  const excludedNames = (
+    Array.isArray(excludeName) ? excludeName : excludeName ? [excludeName] : []
+  ).map((n) => n.toLowerCase());
+
   const generateProfileFromSet = (
     profileSet: {name: string; avatar: string}[],
   ): AnonymousProfileMetadata => {
     // TODO: Randomly select from set
-    const {name, avatar} = profileSet[participantNumber % profileSet.length];
+    // Step past any excluded name, keeping the in-order assignment otherwise.
+    // With every name excluded, the first candidate is used.
+    let offset = 0;
+    while (
+      offset < profileSet.length &&
+      excludedNames.includes(
+        profileSet[
+          (participantNumber + offset) % profileSet.length
+        ].name.toLowerCase(),
+      )
+    ) {
+      offset += 1;
+    }
+    const position = participantNumber + (offset % profileSet.length);
+    const {name, avatar} = profileSet[position % profileSet.length];
     return {
       name,
       avatar,
-      repeat: Math.floor(participantNumber / profileSet.length),
+      repeat: Math.floor(position / profileSet.length),
     };
   };
 

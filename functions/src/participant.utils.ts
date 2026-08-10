@@ -1659,6 +1659,12 @@ export async function completeParticipantTransfer(
       transaction.set(getParticipantRef(repAgentId), repAgentProfile);
     }
 
+    // Names already in this cohort: the transferring participant's, and each
+    // spawned agent's as it is drawn. Passed to setProfile so the in-order
+    // animal assignment never hands an agent a name someone in the same chat
+    // already has.
+    const takenNames: string[] = [participant.name ?? ''].filter((n) => n);
+
     // Spawn the other virtual AI agents directly inside targetCohortId
     for (let i = 0; i < numOtherAgents; i++) {
       const agentId = generateId();
@@ -1701,7 +1707,9 @@ export async function completeParticipantTransfer(
         isAnonymousCohort,
         profileType,
         spawnedProfileExcludeColors,
+        takenNames,
       );
+      if (agentProfile.name) takenNames.push(agentProfile.name);
 
       // When an observer is present, suffix every AI participant with
       // "'s Agent" so the observer can distinguish them from humans (their
@@ -1811,7 +1819,9 @@ export async function completeParticipantTransfer(
         isAnonymousCohort,
         profileType,
         spawnedProfileExcludeColors,
+        takenNames,
       );
+      if (agentProfile.name) takenNames.push(agentProfile.name);
 
       if (!agentProfile.name) {
         agentProfile.name = `Agent ${agentProfile.publicId.substring(0, 8)}`;
