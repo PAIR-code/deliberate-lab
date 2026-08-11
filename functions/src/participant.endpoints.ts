@@ -950,13 +950,34 @@ export const submitParticipantThought = onCall(async (request) => {
   // No new chat message arrives to re-fire onPublicChatMessageCreated, so the
   // resume must be explicit here. quizAnsweredCheckpoint is recorded so the
   // trigger does not immediately re-pause for the checkpoint just answered.
+  // The submitted checkpoint is not trusted blindly: when a reply is lost in
+  // transit the participant submits the same answer again, and by then a newer
+  // quiz may have been raised. Writing the resend's number as-is would clear
+  // that newer quiz while recording progress below it, leaving nothing on
+  // screen and the stage impossible to pass. So the answered counter never
+  // moves backwards, and the pause is only cleared by an answer to the quiz
+  // it is currently showing (or later).
   if (checkpoint != null && participant.isQuizzed) {
     const cohortId = participant.currentCohortId;
-    await getFirestoreStagePublicDataRef(
+    const publicDataRef = getFirestoreStagePublicDataRef(
       experimentId,
       cohortId,
       stageId,
-    ).update({quizPauseCheckpoint: 0, quizAnsweredCheckpoint: checkpoint});
+    );
+    await app.firestore().runTransaction(async (transaction) => {
+      const current = (await transaction.get(publicDataRef)).data() as
+        | ChatStagePublicData
+        | undefined;
+      const answered = Math.max(
+        current?.quizAnsweredCheckpoint ?? 0,
+        checkpoint,
+      );
+      const pause = current?.quizPauseCheckpoint ?? 0;
+      transaction.update(publicDataRef, {
+        quizAnsweredCheckpoint: answered,
+        ...(pause <= checkpoint ? {quizPauseCheckpoint: 0} : {}),
+      });
+    });
 
     // Resume the turn that was paused: re-dispatch the current turn holder.
     const publicStageData = (await getFirestoreStagePublicData(
