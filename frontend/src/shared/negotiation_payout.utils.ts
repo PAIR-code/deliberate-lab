@@ -17,10 +17,10 @@ export interface NegotiationPayoutResult {
 }
 
 export const COALITION_LIMITS: Record<string, number> = {
-  'A+B': 7.6,
-  'A+C': 5.5,
-  'B+C': 3.2,
-  'A+B+C': 7.8,
+  'A+B': 9.0,
+  'A+C': 7.0,
+  'B+C': 5.0,
+  'A+B+C': 10.0,
 };
 
 /** Stable id of the negotiation "Final Decision" survey in the GUIDE study. */
@@ -92,8 +92,8 @@ export function calculateNegotiationPayout(
 
   if (subA.coalition === 'A+B' && subB.coalition === 'A+B') {
     const sum = subA.money + subB.money;
-    if (sum <= 7.6 + EPSILON) {
-      formedCoalition = 'A+B ($7.60 max)';
+    if (sum <= 9.0 + EPSILON) {
+      formedCoalition = 'A+B ($9.00 max)';
       isSuccess = true;
       payoutA = subA.money;
       payoutB = subB.money;
@@ -101,18 +101,18 @@ export function calculateNegotiationPayout(
         2,
       )} + $${subB.money.toFixed(2)} = $${sum.toFixed(
         2,
-      )}) fit within the $7.60 limit. Party C is excluded and receives $0.00.`;
+      )}) fit within the $9.00 limit. Party C is excluded and receives $0.00.`;
     } else {
       explanation = `Party A and Party B both selected Coalition A+B, but their total requested amounts ($${subA.money.toFixed(
         2,
       )} + $${subB.money.toFixed(2)} = $${sum.toFixed(
         2,
-      )}) exceeded the $7.60 limit by $${(sum - 7.6).toFixed(2)}. Deal failed.`;
+      )}) exceeded the $9.00 limit by $${(sum - 9.0).toFixed(2)}. Deal failed.`;
     }
   } else if (subA.coalition === 'A+C' && subC.coalition === 'A+C') {
     const sum = subA.money + subC.money;
-    if (sum <= 5.5 + EPSILON) {
-      formedCoalition = 'A+C ($5.50 max)';
+    if (sum <= 7.0 + EPSILON) {
+      formedCoalition = 'A+C ($7.00 max)';
       isSuccess = true;
       payoutA = subA.money;
       payoutC = subC.money;
@@ -120,18 +120,18 @@ export function calculateNegotiationPayout(
         2,
       )} + $${subC.money.toFixed(2)} = $${sum.toFixed(
         2,
-      )}) fit within the $5.50 limit. Party B is excluded and receives $0.00.`;
+      )}) fit within the $7.00 limit. Party B is excluded and receives $0.00.`;
     } else {
       explanation = `Party A and Party C both selected Coalition A+C, but their total requested amounts ($${subA.money.toFixed(
         2,
       )} + $${subC.money.toFixed(2)} = $${sum.toFixed(
         2,
-      )}) exceeded the $5.50 limit by $${(sum - 5.5).toFixed(2)}. Deal failed.`;
+      )}) exceeded the $7.00 limit by $${(sum - 7.0).toFixed(2)}. Deal failed.`;
     }
   } else if (subB.coalition === 'B+C' && subC.coalition === 'B+C') {
     const sum = subB.money + subC.money;
-    if (sum <= 3.2 + EPSILON) {
-      formedCoalition = 'B+C ($3.20 max)';
+    if (sum <= 5.0 + EPSILON) {
+      formedCoalition = 'B+C ($5.00 max)';
       isSuccess = true;
       payoutB = subB.money;
       payoutC = subC.money;
@@ -139,13 +139,13 @@ export function calculateNegotiationPayout(
         2,
       )} + $${subC.money.toFixed(2)} = $${sum.toFixed(
         2,
-      )}) fit within the $3.20 limit. Party A is excluded and receives $0.00.`;
+      )}) fit within the $5.00 limit. Party A is excluded and receives $0.00.`;
     } else {
       explanation = `Party B and Party C both selected Coalition B+C, but their total requested amounts ($${subB.money.toFixed(
         2,
       )} + $${subC.money.toFixed(2)} = $${sum.toFixed(
         2,
-      )}) exceeded the $3.20 limit by $${(sum - 3.2).toFixed(2)}. Deal failed.`;
+      )}) exceeded the $5.00 limit by $${(sum - 5.0).toFixed(2)}. Deal failed.`;
     }
   } else if (
     subA.coalition === 'A+B+C' &&
@@ -153,8 +153,8 @@ export function calculateNegotiationPayout(
     subC.coalition === 'A+B+C'
   ) {
     const sum = subA.money + subB.money + subC.money;
-    if (sum <= 7.8 + EPSILON) {
-      formedCoalition = 'A+B+C ($7.80 max)';
+    if (sum <= 10.0 + EPSILON) {
+      formedCoalition = 'A+B+C ($10.00 max)';
       isSuccess = true;
       payoutA = subA.money;
       payoutB = subB.money;
@@ -163,13 +163,13 @@ export function calculateNegotiationPayout(
         2,
       )} + $${subB.money.toFixed(2)} + $${subC.money.toFixed(
         2,
-      )} = $${sum.toFixed(2)}) fit within the $7.80 limit.`;
+      )} = $${sum.toFixed(2)}) fit within the $10.00 limit.`;
     } else {
       explanation = `All three parties selected Coalition A+B+C, but their total requested amounts ($${subA.money.toFixed(
         2,
       )} + $${subB.money.toFixed(2)} + $${subC.money.toFixed(
         2,
-      )}) exceeded the $7.80 limit by $${(sum - 7.8).toFixed(2)}. Deal failed.`;
+      )}) exceeded the $10.00 limit by $${(sum - 10.0).toFixed(2)}. Deal failed.`;
     }
   }
 
@@ -228,14 +228,18 @@ export function extractPartySubmission(
   }
 
   const moneyAnswer =
+    userAnswers['e7e5c73f-625d-40c0-bf9d-757795b79887'] ??
     userAnswers['169d8485-bee7-4205-9235-bc3d151df93e'] ??
     userAnswers['da77c231-efa0-4cf3-91fb-326de91f1d37'];
   if (moneyAnswer && typeof moneyAnswer === 'object') {
     const raw =
-      (moneyAnswer as {answer?: string; value?: unknown}).answer ??
-      (moneyAnswer as {answer?: string; value?: unknown}).value;
+      (moneyAnswer as {value?: unknown; answer?: string}).value ??
+      (moneyAnswer as {value?: unknown; answer?: string}).answer;
     if (raw !== undefined && raw !== null && raw !== '') {
-      const num = parseFloat(String(raw).replace(/[^0-9.]/g, ''));
+      const num =
+        typeof raw === 'number'
+          ? raw
+          : parseFloat(String(raw).replace(/[^0-9.]/g, ''));
       if (!isNaN(num)) money = num;
     }
   }
@@ -268,20 +272,25 @@ export function extractPartySubmission(
         }
       }
 
-      if (money === 0 && q.kind === 'text') {
+      if (money === 0 && (q.kind === 'scale' || q.kind === 'text')) {
         const qTitle = (q.questionTitle ?? '').toLowerCase();
+        // Do not treat trust rating scale questions as money share answers
         if (
-          qTitle.includes('share') ||
-          qTitle.includes('money') ||
-          qTitle.includes('number') ||
-          qTitle.includes('split') ||
-          qTitle.includes('amount')
+          !qTitle.includes('trust') &&
+          (qTitle.includes('share') ||
+            qTitle.includes('money') ||
+            qTitle.includes('slider') ||
+            qTitle.includes('split') ||
+            qTitle.includes('amount'))
         ) {
           const raw =
-            (ans as {answer?: string; value?: unknown}).answer ??
-            (ans as {answer?: string; value?: unknown}).value;
+            (ans as {value?: unknown; answer?: string}).value ??
+            (ans as {value?: unknown; answer?: string}).answer;
           if (raw !== undefined && raw !== null && raw !== '') {
-            const num = parseFloat(String(raw).replace(/[^0-9.]/g, ''));
+            const num =
+              typeof raw === 'number'
+                ? raw
+                : parseFloat(String(raw).replace(/[^0-9.]/g, ''));
             if (!isNaN(num) && num > 0) {
               money = num;
             }
