@@ -18,12 +18,7 @@ import {
 // negotiation profile set. This coupling is intentionally kept here in the
 // template — not in shared profile utilities — so it cannot affect other
 // experiments. Stages are tagged via their `anonymousProfileSetId` field.
-const NEGOTIATION_STAGE_MARKERS = [
-  'negotiation',
-  'coalition',
-  'task 2:',
-  'discussion-round-2',
-];
+const NEGOTIATION_STAGE_MARKERS = ['negotiation', 'coalition', 'task 2:'];
 
 /** Whether a stage should display participants under the negotiation profile. */
 function usesNegotiationProfile(stage: StageConfig): boolean {
@@ -85,7 +80,7 @@ const GUIDE_DATA = {
       'f6914ebc-769a-41cc-adc8-1fb113972358',
       '920efc24-d396-49ce-9fe1-3f6a95aa8039',
       '3e5f2a96-d115-4702-9d98-6936db6e8197',
-      'discussion-round-1',
+      'open-ended-discussion',
       '0413e80a-da8b-4055-a1d5-3ef412e2db3b',
       '785cb971-93ac-4e44-8eab-2d124cff69ea',
       'bf61994e-937d-4c51-80bc-40cb9e733a41',
@@ -94,7 +89,7 @@ const GUIDE_DATA = {
       '4ea3db67-ef1c-4cc1-8954-64d66d39edf2',
       'negotiation_profile',
       '558e9053-bec9-4177-9bb2-d0d2fa1bb009',
-      'discussion-round-2',
+      'negotiation',
       'fa00266d-2987-4dc1-8f30-e8febb63939d',
       'negotiation_payout_summary',
       '6d620ceb-fe2e-4248-954f-8a0843e14e7c',
@@ -104,7 +99,7 @@ const GUIDE_DATA = {
       'ecd09d91-0c7a-4982-b69a-8cf1575883be',
       'e5121a12-4853-4507-88e9-11ed6baf1074',
       'bf56e614-4749-43fb-94ef-106770dad6b8',
-      'a0b13593-9dc6-4bb7-9034-51d1ae77918e',
+      'consensus-building',
       '122bac65-de76-4556-9e30-5dfef2945089',
       '3f3b9e04-a721-4491-8a76-f20b715d4fbe',
       '59ae8e87-152c-43f0-8013-64a0c5933d3e',
@@ -1238,8 +1233,8 @@ const GUIDE_DATA = {
         },
       ],
     },
-    'a0b13593-9dc6-4bb7-9034-51d1ae77918e': {
-      id: 'a0b13593-9dc6-4bb7-9034-51d1ae77918e',
+    'consensus-building': {
+      id: 'consensus-building',
       kind: 'chat',
       name: '\ud83c\udfe0 Task 3: Discussion',
       descriptions: {
@@ -1512,8 +1507,8 @@ const GUIDE_DATA = {
       ],
       youtubeVideoId: null,
     },
-    'discussion-round-1': {
-      id: 'discussion-round-1',
+    'open-ended-discussion': {
+      id: 'open-ended-discussion',
       kind: 'chat',
       name: '\ud83d\udde3\ufe0f Task 1: Discussion Period',
       descriptions: {
@@ -1533,8 +1528,8 @@ const GUIDE_DATA = {
       enableReactionsAndReplies: true,
       isTurnBased: false,
     },
-    'discussion-round-2': {
-      id: 'discussion-round-2',
+    negotiation: {
+      id: 'negotiation',
       kind: 'chat',
       name: '\ud83d\udcb0 Task 2: Discussion',
       descriptions: {
@@ -2073,8 +2068,8 @@ const GUIDE_DATA = {
         },
       },
       promptMap: {
-        'a0b13593-9dc6-4bb7-9034-51d1ae77918e': {
-          id: 'a0b13593-9dc6-4bb7-9034-51d1ae77918e',
+        'consensus-building': {
+          id: 'consensus-building',
           type: 'chat',
           prompt: [
             {
@@ -2093,7 +2088,7 @@ const GUIDE_DATA = {
             },
             {
               type: 'STAGE_CONTEXT',
-              stageId: 'a0b13593-9dc6-4bb7-9034-51d1ae77918e',
+              stageId: 'consensus-building',
               includePrimaryText: true,
               includeInfoText: false,
               includeHelpText: false,
@@ -2175,8 +2170,8 @@ const GUIDE_DATA = {
             initialMessage: '',
           },
         },
-        'discussion-round-1': {
-          id: 'discussion-round-1',
+        'open-ended-discussion': {
+          id: 'open-ended-discussion',
           type: 'chat',
           prompt: [
             {
@@ -2194,7 +2189,7 @@ const GUIDE_DATA = {
             },
             {
               type: 'STAGE_CONTEXT',
-              stageId: 'discussion-round-1',
+              stageId: 'open-ended-discussion',
               includePrimaryText: true,
               includeInfoText: false,
               includeHelpText: false,
@@ -2276,8 +2271,8 @@ const GUIDE_DATA = {
             initialMessage: '',
           },
         },
-        'discussion-round-2': {
-          id: 'discussion-round-2',
+        negotiation: {
+          id: 'negotiation',
           type: 'chat',
           prompt: [
             {
@@ -2296,7 +2291,7 @@ const GUIDE_DATA = {
             },
             {
               type: 'STAGE_CONTEXT',
-              stageId: 'discussion-round-2',
+              stageId: 'negotiation',
               includePrimaryText: true,
               includeInfoText: false,
               includeHelpText: false,
