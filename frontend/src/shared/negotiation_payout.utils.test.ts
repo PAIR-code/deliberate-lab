@@ -1,6 +1,9 @@
+import {SurveyStageConfig} from '@deliberation-lab/utils';
 import {
+  NEGOTIATION_FINAL_DECISION_STAGE_ID,
   calculateNegotiationPayout,
   extractPartySubmission,
+  findNegotiationFinalDecisionStage,
 } from './negotiation_payout.utils';
 
 describe('calculateNegotiationPayout', () => {
@@ -112,5 +115,133 @@ describe('extractPartySubmission', () => {
     const submission = extractPartySubmission(undefined);
     expect(submission.coalition).toBe('Not submitted');
     expect(submission.money).toBe(0);
+  });
+});
+
+describe('findNegotiationFinalDecisionStage', () => {
+  // Minimal stand-ins for the two survey stages that share the "Final Decision"
+  // name in a combined experiment. Only fields read by the selector are set.
+  const consensusFinalDecision = {
+    id: '122bac65-de76-4556-9e30-5dfef2945089',
+    kind: 'survey',
+    name: '🏠 Task 3: Final Decision',
+    questions: [
+      {
+        id: '92380913-6e2a-4ec4-a0a9-6f49e0fdf29e',
+        kind: 'mc',
+        questionTitle: 'Which charity did you vote for?',
+        options: [
+          {id: 'c1', text: 'Charity One'},
+          {id: 'c2', text: 'Charity Two'},
+          {id: 'c3', text: 'Charity Three'},
+        ],
+      },
+    ],
+  } as unknown as SurveyStageConfig;
+
+  const negotiationFinalDecision = {
+    id: NEGOTIATION_FINAL_DECISION_STAGE_ID,
+    kind: 'survey',
+    name: '💰 Task 2: Final Decision',
+    questions: [
+      {
+        id: '5c95a991-483a-418f-90e3-d3a53e2aa06f',
+        kind: 'mc',
+        questionTitle: 'Which coalition would you like to form?',
+        options: [
+          {id: 'o1', text: 'A+B+C'},
+          {id: 'o2', text: 'A+B'},
+          {id: 'o3', text: 'A+C'},
+          {id: 'o4', text: 'B+C'},
+        ],
+      },
+    ],
+  } as unknown as SurveyStageConfig;
+
+  it('picks the negotiation survey when negotiation comes first', () => {
+    const stages = [negotiationFinalDecision, consensusFinalDecision];
+    const result = findNegotiationFinalDecisionStage(stages);
+    expect(result?.id).toBe(NEGOTIATION_FINAL_DECISION_STAGE_ID);
+  });
+
+  it('picks the negotiation survey even when the consensus study comes first', () => {
+    // Regression: previously the loose "final decision" name match returned the
+    // consensus "Task 3: Final Decision" stage because it appeared first.
+    const stages = [consensusFinalDecision, negotiationFinalDecision];
+    const result = findNegotiationFinalDecisionStage(stages);
+    expect(result?.id).toBe(NEGOTIATION_FINAL_DECISION_STAGE_ID);
+  });
+
+  it('falls back to coalition options when the id differs', () => {
+    const renamedNegotiation = {
+      ...negotiationFinalDecision,
+      id: 'some-other-id',
+      name: '💰 Task 2: Coalition Choice',
+    } as unknown as SurveyStageConfig;
+    const stages = [consensusFinalDecision, renamedNegotiation];
+    const result = findNegotiationFinalDecisionStage(stages);
+    expect(result?.id).toBe('some-other-id');
+  });
+
+  it('never picks the consensus survey (returns undefined when no negotiation survey exists)', () => {
+    const stages = [consensusFinalDecision];
+    const result = findNegotiationFinalDecisionStage(stages);
+    // The consensus "Final Decision" survey must not be mistaken for the
+    // negotiation one, even when it is the only survey present.
+    expect(result).toBeUndefined();
+  });
+});
+
+describe('negotiation payout end-to-end with consensus study ordering', () => {
+  // Hard-coded participant answers for the negotiation "Final Decision" survey.
+  const negotiationAnswers = (choiceId: string, money: string) => ({
+    '5c95a991-483a-418f-90e3-d3a53e2aa06f': {
+      id: '5c95a991-483a-418f-90e3-d3a53e2aa06f',
+      kind: 'mc',
+      choiceId,
+    },
+    '169d8485-bee7-4205-9235-bc3d151df93e': {
+      id: '169d8485-bee7-4205-9235-bc3d151df93e',
+      kind: 'text',
+      answer: money,
+    },
+  });
+
+  // Charity "Final Decision" answers contain no coalition/money data.
+  const consensusAnswers = {
+    '92380913-6e2a-4ec4-a0a9-6f49e0fdf29e': {
+      id: '92380913-6e2a-4ec4-a0a9-6f49e0fdf29e',
+      kind: 'mc',
+      choiceId: 'c2',
+    },
+  };
+
+  it('computes the correct payout from the negotiation survey answers', () => {
+    // A+B choiceId = b0cab089..., B side selects A+B too.
+    const subA = extractPartySubmission(
+      negotiationAnswers('b0cab089-b7b7-4827-a9a4-ebc1dfcc7571', '$3.80'),
+    );
+    const subB = extractPartySubmission(
+      negotiationAnswers('b0cab089-b7b7-4827-a9a4-ebc1dfcc7571', '$3.80'),
+    );
+    const subC = extractPartySubmission(consensusAnswers);
+
+    const result = calculateNegotiationPayout(subA, subB, subC);
+    expect(result.isSuccess).toBe(true);
+    expect(result.payouts['party-a']).toBe(3.8);
+    expect(result.payouts['party-b']).toBe(3.8);
+  });
+
+  it('demonstrates the failure when consensus answers are read instead', () => {
+    // This is what happened when the wrong (consensus) survey was selected:
+    // no coalition/money is extractable, so every party comes back empty and
+    // the payout fails.
+    const subA = extractPartySubmission(consensusAnswers);
+    const subB = extractPartySubmission(consensusAnswers);
+    const subC = extractPartySubmission(consensusAnswers);
+
+    const result = calculateNegotiationPayout(subA, subB, subC);
+    expect(result.isSuccess).toBe(false);
+    expect(result.formedCoalition).toBe('None');
   });
 });

@@ -7,12 +7,7 @@ import {
 import {getGuidePilotStudyTemplate} from './guide_pilot_study';
 
 /** Stages whose id/name marks them as part of the negotiation (Task 2) flow. */
-const NEGOTIATION_MARKERS = [
-  'negotiation',
-  'coalition',
-  'task 2:',
-  'discussion-round-2',
-];
+const NEGOTIATION_MARKERS = ['negotiation', 'coalition', 'task 2:'];
 function isNegotiationStage(stage: StageConfig): boolean {
   const haystack = `${stage.id} ${stage.name}`.toLowerCase();
   return NEGOTIATION_MARKERS.some((marker) => haystack.includes(marker));
