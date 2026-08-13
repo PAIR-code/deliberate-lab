@@ -17,10 +17,10 @@ export interface NegotiationPayoutResult {
 }
 
 export const COALITION_LIMITS: Record<string, number> = {
-  'A+B': 9.0,
-  'A+C': 7.0,
-  'B+C': 5.0,
-  'A+B+C': 10.0,
+  'A+B': 9,
+  'A+C': 7,
+  'B+C': 5,
+  'A+B+C': 10,
 };
 
 /** Stable id of the negotiation "Final Decision" survey in the GUIDE study. */
@@ -72,15 +72,16 @@ export function findNegotiationFinalDecisionStage(
 
 /**
  * Calculates the negotiation coalition payout for Parties A, B, and C.
+ * When participants submit integer shares, the sum of requested shares must
+ * equal the coalition limit exactly (sum === limit) for the agreement to succeed.
  */
 export function calculateNegotiationPayout(
   subA: PartySubmission,
   subB: PartySubmission,
   subC: PartySubmission,
 ): NegotiationPayoutResult {
-  const EPSILON = 0.001;
   const DEFAULT_EXPLANATION =
-    'No valid coalition agreement was reached or submitted money demands exceeded the coalition target total.';
+    'No valid coalition agreement was reached or submitted money demands did not match the coalition total.';
 
   let formedCoalition = 'None';
   let isSuccess = false;
@@ -92,60 +93,36 @@ export function calculateNegotiationPayout(
 
   if (subA.coalition === 'A+B' && subB.coalition === 'A+B') {
     const sum = subA.money + subB.money;
-    if (sum <= 9.0 + EPSILON) {
-      formedCoalition = 'A+B ($9.00 max)';
+    if (sum === 9) {
+      formedCoalition = 'A+B ($9 max)';
       isSuccess = true;
       payoutA = subA.money;
       payoutB = subB.money;
-      explanation = `Party A and Party B successfully formed Coalition A+B. Their requested amounts ($${subA.money.toFixed(
-        2,
-      )} + $${subB.money.toFixed(2)} = $${sum.toFixed(
-        2,
-      )}) fit within the $9.00 limit. Party C is excluded and receives $0.00.`;
+      explanation = `Party A and Party B successfully formed Coalition A+B. Their requested amounts ($${subA.money} + $${subB.money} = $${sum}) match the $9 total. Party C is excluded and receives $0.`;
     } else {
-      explanation = `Party A and Party B both selected Coalition A+B, but their total requested amounts ($${subA.money.toFixed(
-        2,
-      )} + $${subB.money.toFixed(2)} = $${sum.toFixed(
-        2,
-      )}) exceeded the $9.00 limit by $${(sum - 9.0).toFixed(2)}. Deal failed.`;
+      explanation = `Party A and Party B both selected Coalition A+B, but their total requested amounts ($${subA.money} + $${subB.money} = $${sum}) did not equal the required $9 total. Deal failed.`;
     }
   } else if (subA.coalition === 'A+C' && subC.coalition === 'A+C') {
     const sum = subA.money + subC.money;
-    if (sum <= 7.0 + EPSILON) {
-      formedCoalition = 'A+C ($7.00 max)';
+    if (sum === 7) {
+      formedCoalition = 'A+C ($7 max)';
       isSuccess = true;
       payoutA = subA.money;
       payoutC = subC.money;
-      explanation = `Party A and Party C successfully formed Coalition A+C. Their requested amounts ($${subA.money.toFixed(
-        2,
-      )} + $${subC.money.toFixed(2)} = $${sum.toFixed(
-        2,
-      )}) fit within the $7.00 limit. Party B is excluded and receives $0.00.`;
+      explanation = `Party A and Party C successfully formed Coalition A+C. Their requested amounts ($${subA.money} + $${subC.money} = $${sum}) match the $7 total. Party B is excluded and receives $0.`;
     } else {
-      explanation = `Party A and Party C both selected Coalition A+C, but their total requested amounts ($${subA.money.toFixed(
-        2,
-      )} + $${subC.money.toFixed(2)} = $${sum.toFixed(
-        2,
-      )}) exceeded the $7.00 limit by $${(sum - 7.0).toFixed(2)}. Deal failed.`;
+      explanation = `Party A and Party C both selected Coalition A+C, but their total requested amounts ($${subA.money} + $${subC.money} = $${sum}) did not equal the required $7 total. Deal failed.`;
     }
   } else if (subB.coalition === 'B+C' && subC.coalition === 'B+C') {
     const sum = subB.money + subC.money;
-    if (sum <= 5.0 + EPSILON) {
-      formedCoalition = 'B+C ($5.00 max)';
+    if (sum === 5) {
+      formedCoalition = 'B+C ($5 max)';
       isSuccess = true;
       payoutB = subB.money;
       payoutC = subC.money;
-      explanation = `Party B and Party C successfully formed Coalition B+C. Their requested amounts ($${subB.money.toFixed(
-        2,
-      )} + $${subC.money.toFixed(2)} = $${sum.toFixed(
-        2,
-      )}) fit within the $5.00 limit. Party A is excluded and receives $0.00.`;
+      explanation = `Party B and Party C successfully formed Coalition B+C. Their requested amounts ($${subB.money} + $${subC.money} = $${sum}) match the $5 total. Party A is excluded and receives $0.`;
     } else {
-      explanation = `Party B and Party C both selected Coalition B+C, but their total requested amounts ($${subB.money.toFixed(
-        2,
-      )} + $${subC.money.toFixed(2)} = $${sum.toFixed(
-        2,
-      )}) exceeded the $5.00 limit by $${(sum - 5.0).toFixed(2)}. Deal failed.`;
+      explanation = `Party B and Party C both selected Coalition B+C, but their total requested amounts ($${subB.money} + $${subC.money} = $${sum}) did not equal the required $5 total. Deal failed.`;
     }
   } else if (
     subA.coalition === 'A+B+C' &&
@@ -153,23 +130,15 @@ export function calculateNegotiationPayout(
     subC.coalition === 'A+B+C'
   ) {
     const sum = subA.money + subB.money + subC.money;
-    if (sum <= 10.0 + EPSILON) {
-      formedCoalition = 'A+B+C ($10.00 max)';
+    if (sum === 10) {
+      formedCoalition = 'A+B+C ($10 max)';
       isSuccess = true;
       payoutA = subA.money;
       payoutB = subB.money;
       payoutC = subC.money;
-      explanation = `All three parties successfully formed the Grand Coalition A+B+C. Their requested amounts ($${subA.money.toFixed(
-        2,
-      )} + $${subB.money.toFixed(2)} + $${subC.money.toFixed(
-        2,
-      )} = $${sum.toFixed(2)}) fit within the $10.00 limit.`;
+      explanation = `All three parties successfully formed the Grand Coalition A+B+C. Their requested amounts ($${subA.money} + $${subB.money} + $${subC.money} = $${sum}) match the $10 total.`;
     } else {
-      explanation = `All three parties selected Coalition A+B+C, but their total requested amounts ($${subA.money.toFixed(
-        2,
-      )} + $${subB.money.toFixed(2)} + $${subC.money.toFixed(
-        2,
-      )}) exceeded the $10.00 limit by $${(sum - 10.0).toFixed(2)}. Deal failed.`;
+      explanation = `All three parties selected Coalition A+B+C, but their total requested amounts ($${subA.money} + $${subB.money} + $${subC.money} = $${sum}) did not equal the required $10 total. Deal failed.`;
     }
   }
 
@@ -238,8 +207,8 @@ export function extractPartySubmission(
     if (raw !== undefined && raw !== null && raw !== '') {
       const num =
         typeof raw === 'number'
-          ? raw
-          : parseFloat(String(raw).replace(/[^0-9.]/g, ''));
+          ? Math.round(raw)
+          : parseInt(String(raw).replace(/[^0-9]/g, ''), 10);
       if (!isNaN(num)) money = num;
     }
   }
@@ -289,8 +258,8 @@ export function extractPartySubmission(
           if (raw !== undefined && raw !== null && raw !== '') {
             const num =
               typeof raw === 'number'
-                ? raw
-                : parseFloat(String(raw).replace(/[^0-9.]/g, ''));
+                ? Math.round(raw)
+                : parseInt(String(raw).replace(/[^0-9]/g, ''), 10);
             if (!isNaN(num) && num > 0) {
               money = num;
             }
@@ -310,7 +279,7 @@ export function extractPartySubmission(
       ) {
         const raw = (ansObj as {answer?: string}).answer;
         if (raw !== undefined && raw !== null && raw !== '') {
-          const num = parseFloat(String(raw).replace(/[^0-9.]/g, ''));
+          const num = parseInt(String(raw).replace(/[^0-9]/g, ''), 10);
           if (!isNaN(num) && num > 0) {
             money = num;
             break;

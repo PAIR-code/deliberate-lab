@@ -353,9 +353,9 @@ export class NegotiationPayoutParticipantView extends MobxLitElement {
             >
           </td>
           <td>${sub.coalition}</td>
-          <td>$${sub.money.toFixed(2)}</td>
+          <td>$${sub.money}</td>
           <td>
-            <strong>$${payout.toFixed(2)}</strong>
+            <strong>$${payout}</strong>
           </td>
         </tr>
       `;

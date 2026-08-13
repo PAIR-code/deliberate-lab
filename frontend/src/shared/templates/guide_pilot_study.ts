@@ -2015,7 +2015,7 @@ const GUIDE_DATA = {
           lowerValue: 0,
           lowerText: '',
           middleText: '',
-          useSlider: false,
+          useSlider: true,
           stepSize: 1,
           condition: null,
         },
