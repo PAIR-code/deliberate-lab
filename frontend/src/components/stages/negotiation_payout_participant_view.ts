@@ -370,8 +370,8 @@ export class NegotiationPayoutParticipantView extends MobxLitElement {
 
         <div class="status-badge ${isSuccess ? 'success' : 'failure'}">
           ${isSuccess
-            ? '✅ Coalition Validated'
-            : '❌ Deal Failed / Amount Mismatch'}
+            ? '✅ The negotiating parties successfully formed a valid coalition.'
+            : '❌ The negotiating parties did not form a valid coalition.'}
         </div>
 
         <div class="explanation"><strong>Result:</strong> ${explanation}</div>
