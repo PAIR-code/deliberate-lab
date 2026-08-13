@@ -23,6 +23,53 @@ export const COALITION_LIMITS: Record<string, number> = {
   'A+B+C': 7.8,
 };
 
+/** Stable id of the negotiation "Final Decision" survey in the GUIDE study. */
+export const NEGOTIATION_FINAL_DECISION_STAGE_ID =
+  'fa00266d-2987-4dc1-8f30-e8febb63939d';
+
+const COALITION_OPTION_TEXTS = ['A+B', 'A+C', 'B+C', 'A+B+C'];
+
+/** True if the survey stage offers the coalition multiple-choice options. */
+function hasCoalitionOptions(stage: SurveyStageConfig): boolean {
+  return (stage.questions ?? []).some(
+    (q) =>
+      'options' in q &&
+      Array.isArray((q as {options?: unknown[]}).options) &&
+      (q as {options: Array<{text?: string}>}).options.some((o) =>
+        COALITION_OPTION_TEXTS.includes(o.text?.trim().toUpperCase() ?? ''),
+      ),
+  );
+}
+
+/**
+ * Selects the negotiation "Final Decision" survey stage from all survey stages.
+ *
+ * The stable stage id is the reliable signal: experiments created from the
+ * template preserve stage ids (only the experiment id is regenerated), so the
+ * negotiation survey keeps this id regardless of how studies are ordered or
+ * concatenated. We deliberately do NOT fall back to a name match — a consensus
+ * study contributes its own "Task 3: Final Decision" survey, and matching on
+ * the name would pick the wrong one when that study is placed first.
+ *
+ * The only fallback is content-based: a survey offering the coalition options
+ * (A+B, A+C, B+C, A+B+C), which cannot be confused with a charity survey. This
+ * covers the case where the survey was rebuilt/duplicated in the editor and
+ * received a fresh id. If neither matches, we return undefined so the caller
+ * can show "not available" rather than silently reading an unrelated survey.
+ */
+export function findNegotiationFinalDecisionStage(
+  surveyStages: SurveyStageConfig[],
+): SurveyStageConfig | undefined {
+  // 1. Exact stage id (preserved from the template — the reliable signal).
+  const byId = surveyStages.find(
+    (s) => s.id === NEGOTIATION_FINAL_DECISION_STAGE_ID,
+  );
+  if (byId) return byId;
+
+  // 2. Fallback: survey offering the coalition options (A+B, A+C, B+C, A+B+C).
+  return surveyStages.find(hasCoalitionOptions);
+}
+
 /**
  * Calculates the negotiation coalition payout for Parties A, B, and C.
  */

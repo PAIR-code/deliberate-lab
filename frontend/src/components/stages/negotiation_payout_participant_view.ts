@@ -15,8 +15,10 @@ import {
   SurveyStageConfig,
 } from '@deliberation-lab/utils';
 import {
+  NEGOTIATION_FINAL_DECISION_STAGE_ID,
   calculateNegotiationPayout,
   extractPartySubmission,
+  findNegotiationFinalDecisionStage,
 } from '../../shared/negotiation_payout.utils';
 import {core} from '../../core/core';
 import {CohortService} from '../../services/cohort.service';
@@ -254,35 +256,11 @@ export class NegotiationPayoutParticipantView extends MobxLitElement {
         (s) => s.kind === StageKind.SURVEY,
       ) as SurveyStageConfig[];
 
-      let targetStage = surveyStages.find(
-        (s) =>
-          s.id === 'fa00266d-2987-4dc1-8f30-e8febb63939d' ||
-          s.name?.toLowerCase().includes('final decision'),
-      );
-      if (!targetStage) {
-        targetStage = surveyStages.find((s) =>
-          s.questions?.some(
-            (q) =>
-              'options' in q &&
-              Array.isArray((q as {options?: unknown[]}).options) &&
-              (q as {options: Array<{text?: string}>}).options.some((o) =>
-                ['A+B', 'A+C', 'B+C', 'A+B+C'].includes(
-                  o.text?.trim().toUpperCase() ?? '',
-                ),
-              ),
-          ),
-        );
-      }
-      if (!targetStage) {
-        targetStage = surveyStages.find(
-          (s) =>
-            s.name?.toLowerCase().includes('task 2') &&
-            !s.name?.toLowerCase().includes('pre-negotiation'),
-        );
-      }
-      if (!targetStage && surveyStages.length > 0) {
-        targetStage = surveyStages[surveyStages.length - 1];
-      }
+      // Select the negotiation "Final Decision" survey using negotiation-specific
+      // signals first. A loose "final decision" name match is unsafe here: when a
+      // consensus study precedes the negotiation study, its own "Final Decision"
+      // survey would otherwise be picked and the payout would read wrong answers.
+      const targetStage = findNegotiationFinalDecisionStage(surveyStages);
 
       if (
         targetStage &&
@@ -297,7 +275,7 @@ export class NegotiationPayoutParticipantView extends MobxLitElement {
       }
 
       const fallbackPublicData = this.cohortService.stagePublicDataMap[
-        'fa00266d-2987-4dc1-8f30-e8febb63939d'
+        NEGOTIATION_FINAL_DECISION_STAGE_ID
       ] as SurveyPublicData | undefined;
 
       if (fallbackPublicData) {
