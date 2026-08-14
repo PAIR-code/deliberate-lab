@@ -248,18 +248,16 @@ export class SurveyReveal extends MobxLitElement {
     };
 
     const renderCorrectAnswerCell = () => {
-      if (
-        hasScorableQuestions &&
-        'correctAnswerId' in question &&
-        question.correctAnswerId
-      ) {
+      if (!hasScorableQuestions) {
+        return nothing;
+      }
+      if ('correctAnswerId' in question && question.correctAnswerId) {
         const correctAnswer = question.options.find(
           (option) => option.id === question.correctAnswerId,
         );
         return this.makeCell(correctAnswer?.text ?? '');
-      } else {
-        return nothing;
       }
+      return this.makeCell('');
     };
 
     let tooltipText = question.questionTitle;
@@ -307,7 +305,13 @@ export class SurveyReveal extends MobxLitElement {
     switch (answer.kind) {
       case SurveyQuestionKind.TEXT:
         answerText = (answer as TextSurveyAnswer).answer ?? '-';
-        return this.makeCell(answerText!);
+        return html`
+          <div class="table-cell">
+            <pr-tooltip text=${answerText} position="BOTTOM_END">
+              <div class="text-answer">${answerText}</div>
+            </pr-tooltip>
+          </div>
+        `;
 
       case SurveyQuestionKind.CHECK:
         answerText = (answer as CheckSurveyAnswer).isChecked
