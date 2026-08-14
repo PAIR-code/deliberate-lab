@@ -319,6 +319,7 @@ export class SurveyView extends MobxLitElement {
         ${this.renderParticipant(participant)}
         <md-outlined-text-field
           type="textarea"
+          rows="5"
           placeholder="Type your response"
           .value=${textAnswer}
           ?disabled=${this.participantService.disableStage}
