@@ -7,6 +7,13 @@ import {
   ParticipantPromptConfig,
   ParticipantStatus,
   StageKind,
+  SurveyPerParticipantStageConfig,
+  SurveyPerParticipantStageParticipantAnswer,
+  SurveyStageConfig,
+  SurveyStageParticipantAnswer,
+  StageParticipantAnswer,
+  SurveyAnswer,
+  getVisibleSurveyQuestions,
 } from '@deliberation-lab/utils';
 import {processModelResponse} from './agent.utils';
 import {app, stageManager} from './app';
@@ -119,7 +126,7 @@ export async function completeStageAsAgentParticipant(
       stageManager.getDefaultParticipantStructuredPrompt(stage),
     );
     if (response) {
-      const answer = stageManager.extractAgentParticipantAnswerFromResponse(
+      let answer = stageManager.extractAgentParticipantAnswerFromResponse(
         participant,
         stage,
         response,
@@ -128,6 +135,79 @@ export async function completeStageAsAgentParticipant(
       // TODO: Consider making "set profile" not part of a stage
       // Otherwise, write answer to storage
       if (answer && stage.kind !== StageKind.PROFILE) {
+        // --- Filter out invisible survey questions ---
+        if (
+          stage.kind === StageKind.SURVEY ||
+          stage.kind === StageKind.SURVEY_PER_PARTICIPANT
+        ) {
+          // Fetch all stage answers for the participant for condition evaluation
+          const stageDataDocs = await app
+            .firestore()
+            .collection('experiments')
+            .doc(experiment.id)
+            .collection('participants')
+            .doc(participant.privateId)
+            .collection('stageData')
+            .get();
+
+          const allStageAnswers: Record<string, StageParticipantAnswer> = {};
+          stageDataDocs.forEach((doc) => {
+            allStageAnswers[doc.id] = doc.data() as StageParticipantAnswer;
+          });
+
+          if (stage.kind === StageKind.SURVEY) {
+            const surveyStage = stage as SurveyStageConfig;
+            const surveyAnswer = answer as SurveyStageParticipantAnswer;
+
+            const visibleQuestions = getVisibleSurveyQuestions(
+              surveyStage.questions,
+              stage.id,
+              surveyAnswer.answerMap,
+              allStageAnswers,
+            );
+
+            const visibleIds = new Set(visibleQuestions.map((q) => q.id));
+            const filteredMap: Record<string, SurveyAnswer> = {};
+            for (const [qId, val] of Object.entries(surveyAnswer.answerMap)) {
+              if (visibleIds.has(qId)) {
+                filteredMap[qId] = val;
+              }
+            }
+            surveyAnswer.answerMap = filteredMap;
+            answer = surveyAnswer;
+          } else if (stage.kind === StageKind.SURVEY_PER_PARTICIPANT) {
+            const surveyStage = stage as SurveyPerParticipantStageConfig;
+            const surveyAnswer =
+              answer as SurveyPerParticipantStageParticipantAnswer;
+
+            const filteredMap: Record<
+              string,
+              Record<string, SurveyAnswer>
+            > = {};
+            for (const [targetId, tMap] of Object.entries(
+              surveyAnswer.answerMap,
+            )) {
+              const visibleQuestions = getVisibleSurveyQuestions(
+                surveyStage.questions,
+                stage.id,
+                tMap,
+                allStageAnswers,
+                targetId,
+              );
+              const visibleIds = new Set(visibleQuestions.map((q) => q.id));
+
+              filteredMap[targetId] = {};
+              for (const [qId, val] of Object.entries(tMap)) {
+                if (visibleIds.has(qId)) {
+                  filteredMap[targetId][qId] = val;
+                }
+              }
+            }
+            surveyAnswer.answerMap = filteredMap;
+            answer = surveyAnswer;
+          }
+        }
+
         // Write answer to storage
         const answerDoc = app
           .firestore()

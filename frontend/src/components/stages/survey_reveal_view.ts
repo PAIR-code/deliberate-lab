@@ -47,12 +47,19 @@ export class SurveyReveal extends MobxLitElement {
       (question) => 'correctAnswerId' in question && question.correctAnswerId,
     );
 
-    const questions: SurveyQuestion[] = this.item.revealScorableOnly
+    const allQuestions: SurveyQuestion[] = this.item.revealScorableOnly
       ? scorableQuestions
       : this.stage.questions;
 
     const showAllParticipants =
       this.item.revealAudience === RevealAudience.ALL_PARTICIPANTS;
+
+    // Filter out questions that were never answered (e.g., hidden by
+    // display conditions that were never met).
+    const questions = this.filterAnsweredQuestions(
+      allQuestions,
+      showAllParticipants,
+    );
 
     const hasScorableQuestions = scorableQuestions.length > 0;
     return html`
@@ -66,6 +73,35 @@ export class SurveyReveal extends MobxLitElement {
 
   private makeCell(content: string) {
     return html` <div class="table-cell">${content}</div> `;
+  }
+
+  /**
+   * Filter out questions that no participant answered.
+   * Questions hidden by display conditions won't have answers,
+   * so they are excluded from the reveal.
+   */
+  private filterAnsweredQuestions(
+    questions: SurveyQuestion[],
+    showAllParticipants: boolean,
+  ): SurveyQuestion[] {
+    if (!showAllParticipants) {
+      // For individual reveal, only show questions the participant answered.
+      return questions.filter(
+        (question) => this.answer?.answerMap?.[question.id] != null,
+      );
+    }
+
+    // For group reveal, show questions answered by at least one participant.
+    const surveyAnswers = this.cohortService.stagePublicDataMap[this.stage!.id];
+    if (!surveyAnswers || surveyAnswers.kind !== StageKind.SURVEY) {
+      return questions;
+    }
+
+    return questions.filter((question) =>
+      Object.values(surveyAnswers.participantAnswerMap).some(
+        (answerMap) => answerMap?.[question.id] != null,
+      ),
+    );
   }
 
   private renderTableHeader(
@@ -212,18 +248,16 @@ export class SurveyReveal extends MobxLitElement {
     };
 
     const renderCorrectAnswerCell = () => {
-      if (
-        hasScorableQuestions &&
-        'correctAnswerId' in question &&
-        question.correctAnswerId
-      ) {
+      if (!hasScorableQuestions) {
+        return nothing;
+      }
+      if ('correctAnswerId' in question && question.correctAnswerId) {
         const correctAnswer = question.options.find(
           (option) => option.id === question.correctAnswerId,
         );
         return this.makeCell(correctAnswer?.text ?? '');
-      } else {
-        return nothing;
       }
+      return this.makeCell('');
     };
 
     let tooltipText = question.questionTitle;
@@ -271,7 +305,13 @@ export class SurveyReveal extends MobxLitElement {
     switch (answer.kind) {
       case SurveyQuestionKind.TEXT:
         answerText = (answer as TextSurveyAnswer).answer ?? '-';
-        return this.makeCell(answerText!);
+        return html`
+          <div class="table-cell">
+            <pr-tooltip text=${answerText} position="BOTTOM_END">
+              <div class="text-answer">${answerText}</div>
+            </pr-tooltip>
+          </div>
+        `;
 
       case SurveyQuestionKind.CHECK:
         answerText = (answer as CheckSurveyAnswer).isChecked

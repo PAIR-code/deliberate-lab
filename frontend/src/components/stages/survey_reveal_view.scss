@@ -1,5 +1,5 @@
-@use "../../sass/common";
-@use "../../sass/typescale";
+@use '../../sass/common';
+@use '../../sass/typescale';
 
 :host {
   @include common.flex-column;
@@ -31,4 +31,14 @@ h2 {
 
 .divider {
   border-bottom: 1px solid var(--md-sys-color-outline-variant);
+}
+
+.text-answer {
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: pre-wrap;
+  word-break: break-word;
 }
