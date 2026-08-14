@@ -247,7 +247,7 @@ export class SurveyView extends MobxLitElement {
           rows="5"
           placeholder="Type your response"
           .value=${textAnswer}
-          ?disabled=${this.participantService.disableStage}
+          ?readOnly=${this.participantService.disableStage}
           @input=${handleTextChange}
           .minLength=${minCount ?? nothing}
           .maxLength=${maxCount ?? nothing}
