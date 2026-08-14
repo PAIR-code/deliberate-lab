@@ -25,6 +25,9 @@ describe('chat message reactions', () => {
       reactionMap: {
         [ChatMessageReaction.HEART]: ['alice', 'bob'],
         [ChatMessageReaction.THUMBS_UP]: ['carol'],
+        [ChatMessageReaction.LAUGH]: ['alice'],
+        [ChatMessageReaction.THINKING]: ['bob', 'carol'],
+        [ChatMessageReaction.CELEBRATE]: [],
       },
     });
 
@@ -38,11 +41,23 @@ describe('chat message reactions', () => {
       getChatMessageReactionCount(chatMessage, ChatMessageReaction.THUMBS_UP),
     ).toBe(1);
     expect(
+      getChatMessageReactionCount(chatMessage, ChatMessageReaction.LAUGH),
+    ).toBe(1);
+    expect(
+      getChatMessageReactionCount(chatMessage, ChatMessageReaction.THINKING),
+    ).toBe(2);
+    expect(
+      getChatMessageReactionCount(chatMessage, ChatMessageReaction.CELEBRATE),
+    ).toBe(0);
+    expect(
       hasChatMessageReaction(chatMessage, ChatMessageReaction.HEART, 'alice'),
     ).toBe(true);
     expect(
       hasChatMessageReaction(chatMessage, ChatMessageReaction.HEART, 'carol'),
     ).toBe(false);
+    expect(
+      hasChatMessageReaction(chatMessage, ChatMessageReaction.THINKING, 'bob'),
+    ).toBe(true);
   });
 
   it('treats a message saved before reactions existed as having none', () => {

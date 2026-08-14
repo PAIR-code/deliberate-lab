@@ -44,8 +44,11 @@ const REACTIONS: {
   emoji: string;
   label: string;
 }[] = [
-  {reaction: ChatMessageReaction.HEART, emoji: '❤️', label: 'Heart'},
   {reaction: ChatMessageReaction.THUMBS_UP, emoji: '👍', label: 'Thumbs up'},
+  {reaction: ChatMessageReaction.HEART, emoji: '❤️', label: 'Heart'},
+  {reaction: ChatMessageReaction.LAUGH, emoji: '😂', label: 'Laugh'},
+  {reaction: ChatMessageReaction.THINKING, emoji: '🤔', label: 'Thinking'},
+  {reaction: ChatMessageReaction.CELEBRATE, emoji: '🎉', label: 'Celebrate'},
 ];
 
 /** Chat message component */
@@ -330,7 +333,7 @@ export class ChatMessageComponent extends MobxLitElement {
       if (publicId === this.participantService.profile?.publicId) return 'You';
       return this.cohortService.participantMap[publicId]?.name ?? publicId;
     });
-    return `${label}: ${names.join(', ')}`;
+    return names.join(', ');
   }
 
   renderFiles(files?: StoredFile[]) {

@@ -112,8 +112,11 @@ export const UserTypeData = Type.Union([
 
 /** ChatMessageReaction input validation. */
 export const ChatMessageReactionData = Type.Union([
-  Type.Literal(ChatMessageReaction.HEART),
   Type.Literal(ChatMessageReaction.THUMBS_UP),
+  Type.Literal(ChatMessageReaction.HEART),
+  Type.Literal(ChatMessageReaction.LAUGH),
+  Type.Literal(ChatMessageReaction.THINKING),
+  Type.Literal(ChatMessageReaction.CELEBRATE),
 ]);
 
 /** ChatMessageReply input validation. */

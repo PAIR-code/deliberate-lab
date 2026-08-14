@@ -15,8 +15,11 @@ import {StoredFile} from './model_response';
 
 /** Reaction that can be applied to a chat message. */
 export enum ChatMessageReaction {
-  HEART = 'heart',
   THUMBS_UP = 'thumbsUp',
+  HEART = 'heart',
+  LAUGH = 'laugh',
+  THINKING = 'thinking',
+  CELEBRATE = 'celebrate',
 }
 
 /**
