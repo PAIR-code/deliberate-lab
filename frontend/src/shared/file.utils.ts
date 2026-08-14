@@ -39,6 +39,9 @@ import {convertUnifiedTimestampToISO} from './utils';
 const CHAT_REACTION_CSV_LABELS: Record<ChatMessageReaction, string> = {
   [ChatMessageReaction.HEART]: 'Heart',
   [ChatMessageReaction.THUMBS_UP]: 'Thumbs up',
+  [ChatMessageReaction.LAUGH]: 'Laugh',
+  [ChatMessageReaction.THINKING]: 'Thinking',
+  [ChatMessageReaction.CELEBRATE]: 'Celebrate',
 };
 
 const CSV_STRINGIFY_OPTIONS = {

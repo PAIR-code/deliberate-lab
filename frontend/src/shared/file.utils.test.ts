@@ -70,10 +70,16 @@ describe('Chat history CSV', () => {
       'Reply to message ID',
       'Reply to sender ID',
       'Reply to content',
-      'Heart count',
-      'Heart by',
       'Thumbs up count',
       'Thumbs up by',
+      'Heart count',
+      'Heart by',
+      'Laugh count',
+      'Laugh by',
+      'Thinking count',
+      'Thinking by',
+      'Celebrate count',
+      'Celebrate by',
     ]);
   });
 
