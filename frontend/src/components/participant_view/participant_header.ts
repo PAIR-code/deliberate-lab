@@ -53,10 +53,11 @@ export class Header extends MobxLitElement {
   private updateTimer() {
     if (!this.stage) return;
 
-    // Check if stage is chat (or other stage with time limit)
+    // Check if stage is chat or survey (or other stage with time limit)
     if (
       this.stage.kind === StageKind.CHAT ||
-      this.stage.kind === StageKind.PRIVATE_CHAT
+      this.stage.kind === StageKind.PRIVATE_CHAT ||
+      this.stage.kind === StageKind.SURVEY
     ) {
       if (this.stage.timeLimitInMinutes) {
         const publicStageData = this.cohortService.stagePublicDataMap[
@@ -69,11 +70,11 @@ export class Header extends MobxLitElement {
             : this.cohortService.chatMap;
 
         const startTimestamp =
-          this.stage.kind === StageKind.PRIVATE_CHAT
-            ? this.participantService.profile?.timestamps.readyStages[
+          this.stage.kind === StageKind.CHAT
+            ? publicStageData?.discussionStartTimestamp
+            : this.participantService.profile?.timestamps.readyStages[
                 this.stage.id
-              ]
-            : publicStageData?.discussionStartTimestamp;
+              ];
 
         this.timeRemaining = getChatTimeRemainingInSeconds(
           this.stage,

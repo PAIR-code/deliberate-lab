@@ -112,6 +112,12 @@ export const SurveyStageConfigData = Type.Composite(
       {
         kind: Type.Literal(StageKind.SURVEY),
         questions: Type.Array(SurveyQuestionData),
+        timeLimitInMinutes: Type.Optional(
+          Type.Union([Type.Integer({minimum: 1}), Type.Null()]),
+        ),
+        timeMinimumInMinutes: Type.Optional(
+          Type.Union([Type.Integer({minimum: 1}), Type.Null()]),
+        ),
       },
       strict,
     ),
@@ -309,7 +315,19 @@ export function validateSurveyQuestions(
 export function validateSurveyStageConfig(
   stage: BaseStageConfig,
 ): StageValidationResult {
-  const {questions} = stage as SurveyStageConfig;
+  const {
+    questions,
+    timeMinimumInMinutes: min,
+    timeLimitInMinutes: max,
+  } = stage as SurveyStageConfig;
+
+  if (min != null && max != null && min > max) {
+    return {
+      valid: false,
+      error: `timeMinimumInMinutes (${min}) cannot exceed timeLimitInMinutes (${max})`,
+    };
+  }
+
   return validateSurveyQuestions(questions);
 }
 
