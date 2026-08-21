@@ -328,3 +328,25 @@ function isConnected(participant: ParticipantProfile) {
   }
   return participant.connected;
 }
+
+/**
+ * The next place in a turn order whose occupant is present.
+ *
+ * A turn order keeps a place for anyone who is not in the cohort at the moment,
+ * so that someone who comes back finds their own place again. The backend
+ * passes over those places when it hands out the turn, so anything that
+ * predicts the next speaker has to pass over them too, or it names someone who
+ * is not there. Returns null when no place in the order is occupied.
+ */
+export function nextOccupiedTurnPlace(
+  turnOrder: string[],
+  fromIndex: number,
+  isPresent: (id: string) => boolean,
+): string | null {
+  if (turnOrder.length === 0) return null;
+  for (let step = 1; step <= turnOrder.length; step++) {
+    const id = turnOrder[(fromIndex + step) % turnOrder.length];
+    if (isPresent(id)) return id;
+  }
+  return null;
+}

@@ -4,7 +4,11 @@ import {
   ProgressTimestamps,
   UserType,
 } from '@deliberation-lab/utils';
-import {sortParticipants, SortParticipantsOptions} from './participant.utils';
+import {
+  nextOccupiedTurnPlace,
+  sortParticipants,
+  SortParticipantsOptions,
+} from './participant.utils';
 
 describe('sortParticipants', () => {
   const stageIds = ['stage-1', 'stage-2', 'stage-3'];
@@ -533,5 +537,33 @@ describe('sortParticipants', () => {
 
       expect(participants).toEqual(originalOrder);
     });
+  });
+});
+
+describe('nextOccupiedTurnPlace', () => {
+  // p2 holds a place but is not in the cohort at the moment: they may be
+  // between stages, mid-transfer or briefly disconnected, and their place is
+  // kept so that they find it again when they come back.
+  const present = (id: string) => ['m1', 'p1', 'p3'].includes(id);
+  const order = ['m1', 'p1', 'p2', 'p3'];
+
+  it('passes over a place whose occupant is not there', () => {
+    expect(nextOccupiedTurnPlace(order, 1, present)).toBe('p3');
+  });
+
+  it('takes the next place when it is occupied', () => {
+    expect(nextOccupiedTurnPlace(order, 0, present)).toBe('p1');
+  });
+
+  it('wraps round the end of the order', () => {
+    expect(nextOccupiedTurnPlace(order, 3, present)).toBe('m1');
+  });
+
+  it('returns null when no place in the order is occupied', () => {
+    expect(nextOccupiedTurnPlace(['x1', 'x2'], 0, present)).toBeNull();
+  });
+
+  it('returns null for an empty order', () => {
+    expect(nextOccupiedTurnPlace([], 0, present)).toBeNull();
   });
 });

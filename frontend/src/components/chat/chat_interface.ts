@@ -17,6 +17,7 @@ import {
   getTimeElapsed,
   getParticipantStageProfile,
 } from '@deliberation-lab/utils';
+import {nextOccupiedTurnPlace} from '../../shared/participant.utils';
 import {core} from '../../core/core';
 import {AuthService} from '../../services/auth.service';
 import {CohortService} from '../../services/cohort.service';
@@ -215,7 +216,19 @@ export class ChatInterface extends MobxLitElement {
       const order = data.turnOrder ?? [];
       const senderIndex = order.indexOf(latest.senderId);
       if (senderIndex === -1 || order.length === 0) return null;
-      const nextId = order[(senderIndex + 1) % order.length];
+      // The order keeps a place for anyone who is not in the cohort at the
+      // moment, so that someone who comes back finds their own place again.
+      // The backend passes over those places when it hands out the turn, so
+      // this has to pass over them too, or the banner names someone who is not
+      // there, by their raw id since no profile is loaded for them.
+      const nextId = nextOccupiedTurnPlace(
+        order,
+        senderIndex,
+        (id) =>
+          !!this.cohortService.participantMap[id] ||
+          !!this.cohortService.mediatorMap[id],
+      );
+      if (!nextId) return null;
       return this.buildGroupChatTurnState(nextId);
     }
 
