@@ -8,6 +8,7 @@ import '../../pair-components/textarea_template';
 import {core} from '../../core/core';
 import {ExperimentEditor} from '../../services/experiment.editor';
 import {renderConditionEditor} from '../../shared/condition_editor.utils';
+import {renderTimeLimit} from '../../shared/stage.utils';
 import {
   CheckSurveyQuestion,
   Condition,
@@ -47,7 +48,17 @@ export class SurveyEditor extends MobxLitElement {
     }
 
     return html`
-      ${this.renderTimeLimit()}
+      ${this.stage.kind === StageKind.SURVEY
+        ? renderTimeLimit({
+            stage: this.stage,
+            canEdit: this.experimentEditor.canEditStages,
+            onStageChange: (stage) => this.experimentEditor.updateStage(stage),
+            checkboxTitle: 'Set time limit for survey',
+            maxTimeLabel:
+              'Maximum time in minutes (starting when participant enters stage).',
+            minTimeLabel: 'Minimum time participants must stay (in minutes).',
+          })
+        : nothing}
       <div class="section">
         <div class="header">
           <div class="title">Survey questions</div>
@@ -56,96 +67,6 @@ export class SurveyEditor extends MobxLitElement {
         ${this.stage.questions.map((question, index) =>
           this.renderQuestion(question, index),
         )}
-      </div>
-    `;
-  }
-
-  private renderTimeLimit() {
-    if (this.stage?.kind !== StageKind.SURVEY) {
-      return nothing;
-    }
-    const stage = this.stage;
-    const timeLimit = stage.timeLimitInMinutes;
-
-    const updateCheck = () => {
-      const isSet = stage.timeLimitInMinutes != null;
-      this.experimentEditor.updateStage({
-        ...stage,
-        timeLimitInMinutes: isSet ? null : 20,
-        timeMinimumInMinutes: null,
-      });
-    };
-
-    const updateMaxTime = (e: InputEvent) => {
-      const val = (e.target as HTMLInputElement).valueAsNumber;
-      const timeLimitInMinutes = val > 0 ? Math.floor(val) : null;
-      this.experimentEditor.updateStage({
-        ...stage,
-        timeLimitInMinutes,
-      });
-    };
-
-    const updateMinTime = (e: InputEvent) => {
-      const val = (e.target as HTMLInputElement).valueAsNumber;
-      const minTime = val > 0 ? Math.floor(val) : null;
-      const max = stage.timeLimitInMinutes;
-      const timeMinimumInMinutes =
-        minTime != null && max != null ? Math.min(minTime, max) : minTime;
-      this.experimentEditor.updateStage({
-        ...stage,
-        timeMinimumInMinutes,
-      });
-    };
-
-    return html`
-      <div class="config-item">
-        <div class="checkbox-wrapper">
-          <md-checkbox
-            touch-target="wrapper"
-            ?checked=${timeLimit != null}
-            ?disabled=${!this.experimentEditor.canEditStages}
-            @click=${updateCheck}
-          >
-          </md-checkbox>
-          <div>Set time limit for survey</div>
-        </div>
-        ${timeLimit != null
-          ? html`
-              <div class="number-input tab">
-                <label for="timeLimit">
-                  Maximum time in minutes (starting when participant enters
-                  stage).
-                </label>
-                <input
-                  type="number"
-                  id="timeLimit"
-                  name="timeLimit"
-                  min="1"
-                  step="1"
-                  .value=${timeLimit}
-                  ?disabled=${!this.experimentEditor.canEditStages}
-                  @input=${updateMaxTime}
-                />
-              </div>
-              <div class="number-input tab tab-bottom">
-                <label for="timeMinimum">
-                  Minimum time participants must stay (in minutes).
-                </label>
-                <input
-                  type="number"
-                  id="timeMinimum"
-                  name="timeMinimum"
-                  min="1"
-                  step="1"
-                  .max=${timeLimit ?? ''}
-                  .value=${stage.timeMinimumInMinutes ?? ''}
-                  placeholder="No minimum"
-                  ?disabled=${!this.experimentEditor.canEditStages}
-                  @input=${updateMinTime}
-                />
-              </div>
-            `
-          : nothing}
       </div>
     `;
   }
