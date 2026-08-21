@@ -36,6 +36,25 @@ describe('getTurnCycleInfo', () => {
     });
   });
 
+  it('counts only the places that can still be spoken from', () => {
+    // 'b' has left, so a cycle is two speakers, not three: cap 9 over two
+    // speakers is five cycles, where counting b's kept place would say three.
+    expect(
+      getTurnCycleInfo(publicData({cycleIndex: 0}), stage(9), ['a', 'c']),
+    ).toEqual({currentCycle: 1, totalCycles: 5});
+  });
+
+  it('counts every place when the caller does not say who is there', () => {
+    expect(getTurnCycleInfo(publicData(), stage(9))?.totalCycles).toBe(3);
+  });
+
+  it('ignores speakers who hold no place in the order', () => {
+    expect(
+      getTurnCycleInfo(publicData(), stage(9), ['a', 'b', 'c', 'd'])
+        ?.totalCycles,
+    ).toBe(3);
+  });
+
   it('rounds total cycles up when the cap is not a clean multiple', () => {
     // 3 speakers, cap 19 => ceil(19 / 3) = 7 cycles.
     expect(getTurnCycleInfo(publicData(), stage(19))?.totalCycles).toBe(7);

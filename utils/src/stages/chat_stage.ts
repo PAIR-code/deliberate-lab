@@ -157,12 +157,20 @@ export interface ChatStagePublicData extends BaseStagePublicData {
 export function getTurnCycleInfo(
   publicData: ChatStagePublicData | undefined | null,
   stage: ChatStageConfig,
+  // Who can still speak, when the caller knows. The turn order keeps a place
+  // for anyone who is not there at the moment, so that someone who comes back
+  // finds their own place again. Counting those places would make a cycle look
+  // longer than it is, and so make it look as though fewer cycles remain.
+  speakerIds?: string[],
 ): {currentCycle: number; totalCycles: number} | null {
   if (!stage.isTurnBased) return null;
   const max =
     publicData?.effectiveMaxNumberOfMessages ?? stage.maxNumberOfMessages;
   if (max === null || max === undefined || max <= 0) return null;
-  const speakersPerCycle = (publicData?.turnOrder ?? []).length;
+  const order = publicData?.turnOrder ?? [];
+  const speakersPerCycle = speakerIds
+    ? order.filter((id) => speakerIds.includes(id)).length
+    : order.length;
   if (speakersPerCycle <= 0) return null;
   const totalCycles = Math.ceil(max / speakersPerCycle);
   const currentCycle = Math.min((publicData?.cycleIndex ?? 0) + 1, totalCycles);

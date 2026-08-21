@@ -702,7 +702,13 @@ async function processPromptItems(
           cohortId,
           stageId,
         ))) as ChatStagePublicData | undefined;
-      turnCycleInfo = getTurnCycleInfo(publicData, stage);
+      // The order keeps a place for anyone who is not in the cohort at the
+      // moment, so the number of speakers in a cycle has to be counted from
+      // who is there now.
+      const speakers = (
+        promptData.data[stageId]?.participants ?? promptData.participants
+      ).map((participant) => participant.publicId);
+      turnCycleInfo = getTurnCycleInfo(publicData, stage, speakers);
     }
   }
 
