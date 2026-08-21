@@ -74,6 +74,9 @@ ${DEFAULT_AGENT_PARTICIPANT_CHAT_STYLE_INSTRUCTIONS}`;
 /** Hardcoded text used in stage display of chat transcript. */
 export const CHAT_PROMPT_TRANSCRIPT_EXPLANATION = `Below is the transcript of your discussion. Messages are shown in chronological order; new messages appear at the bottom. Each message / turn follows the format: (HH:MM) Name: message.`;
 
+/** Hardcoded text used in system prompt when timestamps are enabled for 1-on-1 private chat. */
+export const PRIVATE_CHAT_TIMESTAMP_EXPLANATION = `Each message is prepended with timestamps, e.g., (09:10), to represent when it was sent. Do NOT include timestamps in your own responses.`;
+
 // ************************************************************************* //
 // PROMPTS                                                                   //
 // ************************************************************************* //

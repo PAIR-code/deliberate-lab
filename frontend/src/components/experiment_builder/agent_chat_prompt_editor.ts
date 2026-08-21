@@ -20,6 +20,7 @@ import {
   ApiKeyType,
   ChatMediatorStructuredOutputConfig,
   ChatPromptConfig,
+  PRIVATE_CHAT_TIMESTAMP_EXPLANATION,
   PromptItem,
   PromptItemGroup,
   PromptItemType,
@@ -286,6 +287,17 @@ export class EditorComponent extends MobxLitElement {
       return agentPromptConfig.prompt.map((item) => renderPromptItem(item));
     };
 
+    const getTimestampExplanation = () => {
+      if (
+        agentPromptConfig.type === StageKind.PRIVATE_CHAT &&
+        this.agent?.type === AgentPersonaType.MEDIATOR &&
+        agentPromptConfig.chatSettings?.includeTimestampsPrivateChat
+      ) {
+        return html`<div>${PRIVATE_CHAT_TIMESTAMP_EXPLANATION}</div>`;
+      }
+      return nothing;
+    };
+
     const getStructuredOutput = () => {
       const config = agentPromptConfig.structuredOutputConfig;
       if (structuredOutputEnabled(config) && config.schema) {
@@ -297,7 +309,7 @@ export class EditorComponent extends MobxLitElement {
     return html`
       <div class="code-wrapper">
         <div class="field-title">Prompt preview</div>
-        <pre><code>${getPromptItems()}${getStructuredOutput()}</code></pre>
+        <pre><code>${getPromptItems()}${getTimestampExplanation()}${getStructuredOutput()}</code></pre>
       </div>
     `;
   }
@@ -349,6 +361,17 @@ export class EditorComponent extends MobxLitElement {
         chatSettings: {
           ...agentPromptConfig.chatSettings,
           canSelfTriggerCalls,
+        },
+      });
+    };
+
+    const updateIncludeTimestamps = (e: Event) => {
+      const includeTimestampsPrivateChat = (e.target as HTMLInputElement)
+        .checked;
+      this.updatePrompt({
+        chatSettings: {
+          ...agentPromptConfig.chatSettings,
+          includeTimestampsPrivateChat,
         },
       });
     };
@@ -444,6 +467,27 @@ export class EditorComponent extends MobxLitElement {
             </span>
           </div>
         </div>
+        ${agentPromptConfig.type === StageKind.PRIVATE_CHAT &&
+        agent.type === AgentPersonaType.MEDIATOR
+          ? html`
+              <div class="checkbox-wrapper">
+                <md-checkbox
+                  touch-target="wrapper"
+                  ?checked=${chatSettings.includeTimestampsPrivateChat ?? false}
+                  ?disabled=${!this.experimentEditor.isCreator}
+                  @change=${updateIncludeTimestamps}
+                >
+                </md-checkbox>
+                <div>
+                  Prepend timestamps to private chat messages
+                  <span class="small">
+                    (Prefixes each conversation turn with (HH:MM) and instructs
+                    the agent not to include timestamps in its own responses)
+                  </span>
+                </div>
+              </div>
+            `
+          : nothing}
         <div class="field">
           <label for="maxResponses">Maximum responses</label>
           <div class="description">

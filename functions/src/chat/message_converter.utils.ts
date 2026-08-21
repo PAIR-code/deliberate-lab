@@ -2,7 +2,11 @@
  * Utilities for converting chat history to message-based API format.
  */
 
-import {ChatMessage, UserType} from '@deliberation-lab/utils';
+import {
+  ChatMessage,
+  UserType,
+  convertUnifiedTimestampToTime,
+} from '@deliberation-lab/utils';
 
 import {ModelMessage} from '../api/ai-sdk.api';
 
@@ -26,6 +30,7 @@ export interface ChatToMessageOptions {
   mediatorId?: string;
   participantId?: string;
   includeSystemPrompt?: boolean;
+  includeTimestampsPrivateChat?: boolean;
 }
 
 /**
@@ -45,6 +50,11 @@ export function convertChatToMessages(
     return [];
   }
 
+  const formatMessageContent = (msg: ChatMessage, baseContent: string) => {
+    if (!options.includeTimestampsPrivateChat) return baseContent;
+    return `${convertUnifiedTimestampToTime(msg.timestamp)} ${baseContent}`;
+  };
+
   // For private chats, convert to user/assistant format
   for (const msg of chatHistory) {
     switch (msg.type) {
@@ -54,7 +64,10 @@ export function convertChatToMessages(
           currentUserType === UserType.MEDIATOR
             ? MessageRole.USER
             : MessageRole.ASSISTANT;
-        messages.push({role, content: msg.message});
+        messages.push({
+          role,
+          content: formatMessageContent(msg, msg.message),
+        });
         break;
       }
       case UserType.MEDIATOR: {
@@ -63,14 +76,20 @@ export function convertChatToMessages(
           currentUserType === UserType.MEDIATOR
             ? MessageRole.ASSISTANT
             : MessageRole.USER;
-        messages.push({role, content: msg.message});
+        messages.push({
+          role,
+          content: formatMessageContent(msg, msg.message),
+        });
         break;
       }
       case UserType.SYSTEM:
         // System messages are treated as "user" messages for the AI to see them
         messages.push({
           role: MessageRole.USER,
-          content: `[SYSTEM NOTIFICATION]: ${msg.message}`,
+          content: formatMessageContent(
+            msg,
+            `[SYSTEM NOTIFICATION]: ${msg.message}`,
+          ),
         });
         break;
       case UserType.EXPERIMENTER:

@@ -91,6 +91,8 @@ export interface AgentChatSettings {
   maxResponses: number | null;
   // Initial message to send when the conversation begins
   initialMessage: string;
+  // Whether to prepend messages with (HH:MM) timestamps in 1-on-1 private chat (mediators only)
+  includeTimestampsPrivateChat?: boolean;
 }
 
 export enum AgentPersonaType {
@@ -201,6 +203,7 @@ export function createAgentChatSettings(
     canSelfTriggerCalls: config.canSelfTriggerCalls ?? false,
     maxResponses: config.maxResponses ?? 100,
     initialMessage: config.initialMessage ?? '',
+    includeTimestampsPrivateChat: config.includeTimestampsPrivateChat ?? false,
   };
 }
 
