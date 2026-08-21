@@ -235,6 +235,7 @@ export const onPublicChatMessageCreated = onDocumentCreated(
 
       let nextTurnParticipantId: string | null = null;
       let shouldTriggerAgent = false;
+      let alreadyProcessed = false;
       let nextTurnHolder: ParticipantProfileExtended | null | undefined = null;
       let nextMediatorHolder: MediatorProfileExtended | null | undefined = null;
       let wasTurnHolderDroppedOut = false;
@@ -260,6 +261,22 @@ export const onPublicChatMessageCreated = onDocumentCreated(
           | ChatStagePublicData
           | undefined;
         if (!chatPublicData) return;
+
+        // One message is handled once. Firestore delivers a creation event at
+        // least once, so this trigger can run again for a message it has
+        // already dealt with. On that second run the turn has moved on, so the
+        // sender is no longer the turn holder, and the handler treats their
+        // message as out of turn and deletes it at the end. The speaker did
+        // nothing wrong and their place in the cycle passes with nothing said.
+        // Every branch below records the message it acted on, so a repeat is
+        // recognised here; the flag stops the work after the transaction too.
+        if (
+          chatPublicData.turnProcessedMessageId &&
+          chatPublicData.turnProcessedMessageId === message.id
+        ) {
+          alreadyProcessed = true;
+          return;
+        }
 
         let turnOrder = chatPublicData.turnOrder ?? [];
         let currentTurnParticipantId = chatPublicData.currentTurnParticipantId;
@@ -617,6 +634,11 @@ export const onPublicChatMessageCreated = onDocumentCreated(
           }
         }
       });
+
+      // A message already handled needs nothing further: in particular it must
+      // not be deleted as out of turn below, which is what a repeat delivery
+      // would otherwise do to a message that was posted on its own turn.
+      if (alreadyProcessed) return;
 
       // 4. Outside Transaction: Trigger the next speaker or delete out-of-turn messages
       const currentSnapshot = await publicStageDataRef.get();

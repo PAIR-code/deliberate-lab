@@ -375,6 +375,85 @@ describe('Chat Triggers - Turn Taking Mechanics', () => {
       expect(mockInternalCreateAgentChatMessage).not.toHaveBeenCalled();
     });
 
+    it('does not advance again when the same message is delivered twice', async () => {
+      // Event delivery is at least once, so the trigger can run a second time
+      // for a message whose turn it has already advanced. The second run must
+      // do nothing: advancing again would strand the speaker it just told to
+      // go, and that place in the cycle would pass with nothing said.
+      mockGetFirestoreStagePublicData.mockResolvedValue({
+        id: 'stage123',
+        currentTurnParticipantId: 'p2',
+        turnOrder: ['m1', 'p1', 'p2', 'p3'],
+        cycleIndex: 0,
+        turnProcessedMessageId: 'msg123',
+      });
+
+      const chatMessage = {
+        id: 'msg123',
+        senderId: 'p1',
+        message: 'My turn!',
+        type: UserType.PARTICIPANT,
+        timestamp: {} as any,
+      } as ChatMessage;
+
+      const event = {
+        data: {
+          data: () => chatMessage,
+          exists: true,
+        },
+        params: {
+          experimentId: 'exp123',
+          cohortId: 'cohort123',
+          stageId: 'stage123',
+          chatId: 'msg123',
+        },
+      };
+
+      await onPublicChatMessageCreated.run(event as any);
+
+      expect(__mocks__.setMock).not.toHaveBeenCalled();
+      expect(mockInternalCreateAgentChatMessage).not.toHaveBeenCalled();
+    });
+
+    it('does not delete the message when it is delivered twice', async () => {
+      // The turn has already moved on by the second delivery, so the sender is
+      // no longer the holder and the out-of-turn cleanup after the transaction
+      // would delete a message that was posted on its own turn. That is a
+      // speaker's whole contribution to the cycle disappearing.
+      const deleteMock = jest.fn();
+      mockGetFirestoreStagePublicData.mockResolvedValue({
+        id: 'stage123',
+        currentTurnParticipantId: 'p2',
+        turnOrder: ['m1', 'p1', 'p2', 'p3'],
+        cycleIndex: 0,
+        turnProcessedMessageId: 'msg123',
+      });
+
+      const chatMessage = {
+        id: 'msg123',
+        senderId: 'p1',
+        message: 'Posted on my own turn',
+        type: UserType.PARTICIPANT,
+        timestamp: {} as any,
+      } as ChatMessage;
+
+      await onPublicChatMessageCreated.run({
+        data: {
+          data: () => chatMessage,
+          exists: true,
+          ref: {delete: deleteMock},
+        },
+        params: {
+          experimentId: 'exp123',
+          cohortId: 'cohort123',
+          stageId: 'stage123',
+          chatId: 'msg123',
+        },
+      } as any);
+
+      expect(deleteMock).not.toHaveBeenCalled();
+    });
+
     it('triggers next AI agent when turn advances to an agent participant', async () => {
       // Make p3 an agent participant
       mockGetFirestoreActiveParticipants.mockResolvedValue([
