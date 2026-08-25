@@ -30,7 +30,21 @@
   "scripts": {
     "doctor": "node scripts/doctor.js",
     "prepare": "husky",
-    "update-schemas": "./scripts/update_schemas.sh"
+    "update-schemas": "./scripts/update_schemas.sh",
+    "build:utils": "npm run build -w utils",
+    "build:functions": "npm run build -w functions",
+    "build:frontend": "node scripts/ensure-frontend-dev-config.js && npm run build -w frontend",
+    "build": "npm run build:utils && npm run build:functions && npm run build:frontend",
+    "lint": "prettier --check \"utils/**/*.ts\" \"functions/**/*.ts\" \"frontend/**/*.ts\" && eslint --quiet \"utils/**/*.ts\" \"functions/**/*.ts\" \"frontend/**/*.ts\"",
+    "test": "npm test -w utils && npm test -w functions && npm test -w frontend",
+    "deploy:rules:firestore": "node scripts/deploy-firestore-rules.js",
+    "deploy:rules:storage": "node scripts/deploy-storage-rules.js",
+    "deploy:rules:database": "node scripts/deploy-database-rules.js",
+    "deploy:rules": "npm run deploy:rules:firestore && npm run deploy:rules:storage && npm run deploy:rules:database",
+    "deploy:indexes": "node scripts/deploy-indexes.js",
+    "deploy:functions": "node scripts/deploy-functions.js",
+    "deploy:frontend": "node scripts/deploy-frontend.js",
+    "deploy:all": "node scripts/deploy-preflight.js && npm run lint && npm run build && npm run test && YES=1 npm run deploy:rules && YES=1 npm run deploy:indexes && YES=1 npm run deploy:functions && YES=1 npm run deploy:frontend"
   },
   "workspaces": [
     "frontend",

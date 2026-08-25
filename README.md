@@ -10,6 +10,7 @@ on human + LLM group dynamics.
 
 - 🔎 [Documentation for researchers + developers](https://pair-code.github.io/deliberate-lab/)
 - 👉 [Quick start for developers](https://pair-code.github.io/deliberate-lab/developers/run-locally)
+- 🚀 [Deploying from local](./DEPLOY.md)
 - :📃 [Technical paper](https://arxiv.org/abs/2510.13011)
 
 ## Citation
