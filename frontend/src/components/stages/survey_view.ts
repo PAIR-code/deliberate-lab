@@ -100,6 +100,11 @@ export class SurveyView extends MobxLitElement {
       ? getTimeElapsed(startTimestamp, 'm')
       : 0;
 
+    // Timing check:
+    // - timeMinimumInMinutes strictly gates the "Next stage" button until met.
+    // - timeLimitInMinutes drives the visual countdown timer in participant-header;
+    //   participants can still complete and edit survey responses after the max time
+    //   is reached (no hard cutoff) to prevent data loss.
     const minTimeMet =
       this.stage.timeMinimumInMinutes == null ||
       this.stage.timeMinimumInMinutes <= 0 ||
