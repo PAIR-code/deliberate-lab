@@ -29,8 +29,8 @@ export class ChatEditor extends MobxLitElement {
       ${this.renderTimeLimit()} ${this.renderPreventCancellation()}
       <div class="divider"></div>
       <div class="title">Message limits</div>
-      ${this.renderTurnBasedChat()} ${this.renderMinNumberOfTurns()}
-      ${this.renderMaxNumberOfTurns()}
+      ${this.renderTurnBasedChat()} ${this.renderPreventAgentEndSetting()}
+      ${this.renderMinNumberOfTurns()} ${this.renderMaxNumberOfTurns()}
       <div class="divider"></div>
       <div class="title">Agent mediators</div>
       <div class="description">
@@ -181,6 +181,36 @@ export class ChatEditor extends MobxLitElement {
           </md-checkbox>
           <div>
             Turn-based chat (participant and mediator alternate messages)
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  private renderPreventAgentEndSetting() {
+    const preventAgentEnd = this.stage?.preventAgentEnd ?? false;
+
+    const updateCheck = () => {
+      if (!this.stage) return;
+      this.experimentEditor.updateStage({
+        ...this.stage,
+        preventAgentEnd: !preventAgentEnd,
+      });
+    };
+
+    return html`
+      <div class="config-item">
+        <div class="checkbox-wrapper">
+          <md-checkbox
+            touch-target="wrapper"
+            ?checked=${preventAgentEnd}
+            ?disabled=${!this.experimentEditor.canEditStages}
+            @click=${updateCheck}
+          >
+          </md-checkbox>
+          <div>
+            Prevent agents from ending chat (agents always reply and cannot end
+            the conversation)
           </div>
         </div>
       </div>

@@ -362,6 +362,7 @@ class PrivateChatStageConfig(BaseModel):
     minNumberOfTurns: float | None = None
     maxNumberOfTurns: float | None = None
     preventCancellation: bool | None = None
+    preventAgentEnd: bool | None = None
 
 
 class ProfileType(StrEnum):
@@ -1038,6 +1039,7 @@ class ChatStageConfig(BaseModel):
     timeMinimumInMinutes: Annotated[int | None, Field(ge=1)] = None
     discussions: list[DefaultChatDiscussion | CompareChatDiscussion]
     isTurnBased: bool | None = None
+    preventAgentEnd: bool | None = None
     enableReactionsAndReplies: bool | None = None
 
 

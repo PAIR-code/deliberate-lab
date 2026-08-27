@@ -42,6 +42,9 @@ export interface PrivateChatStageConfig extends BaseStageConfig {
   // If true, prevents participants from cancelling pending requests
   // while waiting for a response (to prevent gaming minimum message counts)
   preventCancellation: boolean;
+  // If true, agents in this chat are not asked whether to respond or end
+  // the chat: they always reply, and end-chat signals are ignored.
+  preventAgentEnd?: boolean;
 }
 
 // ************************************************************************* //
@@ -64,5 +67,6 @@ export function createPrivateChatStage(
     minNumberOfTurns: config.minNumberOfTurns ?? 0,
     maxNumberOfTurns: config.maxNumberOfTurns ?? null,
     preventCancellation: config.preventCancellation ?? false,
+    preventAgentEnd: config.preventAgentEnd ?? false,
   };
 }

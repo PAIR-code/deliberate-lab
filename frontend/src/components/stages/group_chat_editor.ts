@@ -31,7 +31,7 @@ export class ChatEditor extends MobxLitElement {
     return html`
       <div class="title">Conversation settings</div>
       ${this.renderTimeLimit()} ${this.renderTurnBasedSetting()}
-      ${this.renderReactionsSetting()}
+      ${this.renderReactionsSetting()} ${this.renderPreventAgentEndSetting()}
       <div class="divider"></div>
       <div class="title">Agent mediators</div>
       <div class="description">
@@ -88,6 +88,29 @@ export class ChatEditor extends MobxLitElement {
             Reactions and replies: Allow participants to react to and reply to
             each other's messages.
           </div>
+        </div>
+      </div>
+    `;
+  }
+
+  private renderPreventAgentEndSetting() {
+    return html`
+      <div class="config-item">
+        <div class="checkbox-wrapper">
+          <md-checkbox
+            touch-target="wrapper"
+            ?checked=${this.stage?.preventAgentEnd ?? false}
+            ?disabled=${!this.experimentEditor.canEditStages}
+            @change=${(e: Event) => {
+              const checked = (e.target as HTMLInputElement).checked;
+              this.experimentEditor.updateStage({
+                ...this.stage!,
+                preventAgentEnd: checked,
+              });
+            }}
+          >
+          </md-checkbox>
+          <div>Prevent agents from ending chat</div>
         </div>
       </div>
     `;
