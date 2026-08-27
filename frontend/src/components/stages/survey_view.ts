@@ -34,6 +34,7 @@ import {
   isQuestionVisible,
   isSurveyComplete,
   isSurveyAnswerComplete,
+  getTimeElapsed,
 } from '@deliberation-lab/utils';
 
 import {unsafeHTML} from 'lit/directives/unsafe-html.js';
@@ -56,6 +57,22 @@ export class SurveyView extends MobxLitElement {
 
   @property() stage: SurveyStageConfig | undefined = undefined;
 
+  private timerInterval: number | undefined;
+
+  override connectedCallback() {
+    super.connectedCallback();
+    this.timerInterval = window.setInterval(() => {
+      if (this.stage?.timeMinimumInMinutes || this.stage?.timeLimitInMinutes) {
+        this.requestUpdate();
+      }
+    }, 1000);
+  }
+
+  override disconnectedCallback() {
+    super.disconnectedCallback();
+    window.clearInterval(this.timerInterval);
+  }
+
   override render() {
     if (!this.stage) {
       return nothing;
@@ -77,6 +94,25 @@ export class SurveyView extends MobxLitElement {
       return isSurveyComplete(visibleQuestions, currentSurveyAnswers);
     };
 
+    const startTimestamp =
+      this.participantService.profile?.timestamps.readyStages[this.stage.id];
+    const elapsedMinutes = startTimestamp
+      ? getTimeElapsed(startTimestamp, 'm')
+      : 0;
+
+    // Timing check:
+    // - timeMinimumInMinutes strictly gates the "Next stage" button until met.
+    // - timeLimitInMinutes drives the visual countdown timer in participant-header;
+    //   participants can still complete and edit survey responses after the max time
+    //   is reached (no hard cutoff) to prevent data loss.
+    const minTimeMet =
+      this.stage.timeMinimumInMinutes == null ||
+      this.stage.timeMinimumInMinutes <= 0 ||
+      (startTimestamp != null &&
+        elapsedMinutes >= this.stage.timeMinimumInMinutes);
+
+    const isNextDisabled = !questionsComplete() || !minTimeMet;
+
     const saveAnswers = async () => {
       if (!this.stage) return;
 
@@ -95,14 +131,24 @@ export class SurveyView extends MobxLitElement {
           return nothing;
         })}
       </div>
-      <stage-footer
-        .disabled=${!questionsComplete()}
-        .onNextClick=${saveAnswers}
-      >
+      <stage-footer .disabled=${isNextDisabled} .onNextClick=${saveAnswers}>
         ${this.stage.progress.showParticipantProgress
           ? html`<progress-stage-completed></progress-stage-completed>`
           : nothing}
+        ${!minTimeMet ? this.renderMinTimeMessage(elapsedMinutes) : nothing}
       </stage-footer>
+    `;
+  }
+
+  private renderMinTimeMessage(elapsedMinutes: number) {
+    const remaining = Math.ceil(
+      (this.stage?.timeMinimumInMinutes ?? 0) - elapsedMinutes,
+    );
+    return html`
+      <div class="description">
+        You must stay on this page for at least ${remaining} more
+        minute${remaining !== 1 ? 's' : ''}.
+      </div>
     `;
   }
 

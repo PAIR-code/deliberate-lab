@@ -1341,6 +1341,8 @@ class SurveyStageConfig(BaseModel):
         | MultipleChoiceSurveyQuestion
         | ScaleSurveyQuestion
     ]
+    timeLimitInMinutes: Annotated[int | None, Field(ge=1)] = None
+    timeMinimumInMinutes: Annotated[int | None, Field(ge=1)] = None
 
 
 class TransferStageConfig(BaseModel):

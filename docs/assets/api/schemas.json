@@ -2557,6 +2557,14 @@
               }
             ]
           }
+        },
+        "timeLimitInMinutes": {
+          "minimum": 1,
+          "type": ["integer", "null"]
+        },
+        "timeMinimumInMinutes": {
+          "minimum": 1,
+          "type": ["integer", "null"]
         }
       }
     },

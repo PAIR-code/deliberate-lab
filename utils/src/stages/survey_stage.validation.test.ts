@@ -1,5 +1,10 @@
-import {validateSurveyQuestions} from './survey_stage.validation';
 import {
+  validateSurveyQuestions,
+  validateSurveyStageConfig,
+} from './survey_stage.validation';
+import {
+  createSurveyStage,
+  createTextSurveyQuestion,
   SurveyQuestionKind,
   MultipleChoiceDisplayType,
   SurveyQuestion,
@@ -217,6 +222,66 @@ describe('validateSurveyQuestions', () => {
     if (!res.valid) {
       expect(res.error).toContain(
         'has a correct answer ID "opt3" that doesn\'t match any option ID',
+      );
+    }
+  });
+});
+
+describe('validateSurveyStageConfig', () => {
+  it('should pass with default configuration (no timer)', () => {
+    const stage = createSurveyStage({
+      questions: [createTextSurveyQuestion({questionTitle: 'Feedback'})],
+    });
+    expect(validateSurveyStageConfig(stage)).toEqual({valid: true});
+  });
+
+  it('should pass when timeMinimumInMinutes <= timeLimitInMinutes', () => {
+    const stage = createSurveyStage({
+      questions: [createTextSurveyQuestion({questionTitle: 'Feedback'})],
+      timeLimitInMinutes: 10,
+      timeMinimumInMinutes: 5,
+    });
+    expect(validateSurveyStageConfig(stage)).toEqual({valid: true});
+  });
+
+  it('should pass when timeMinimumInMinutes equals timeLimitInMinutes', () => {
+    const stage = createSurveyStage({
+      questions: [createTextSurveyQuestion({questionTitle: 'Feedback'})],
+      timeLimitInMinutes: 5,
+      timeMinimumInMinutes: 5,
+    });
+    expect(validateSurveyStageConfig(stage)).toEqual({valid: true});
+  });
+
+  it('should pass when only timeLimitInMinutes is set', () => {
+    const stage = createSurveyStage({
+      questions: [createTextSurveyQuestion({questionTitle: 'Feedback'})],
+      timeLimitInMinutes: 5,
+      timeMinimumInMinutes: null,
+    });
+    expect(validateSurveyStageConfig(stage)).toEqual({valid: true});
+  });
+
+  it('should pass when only timeMinimumInMinutes is set', () => {
+    const stage = createSurveyStage({
+      questions: [createTextSurveyQuestion({questionTitle: 'Feedback'})],
+      timeLimitInMinutes: null,
+      timeMinimumInMinutes: 5,
+    });
+    expect(validateSurveyStageConfig(stage)).toEqual({valid: true});
+  });
+
+  it('should fail when timeMinimumInMinutes exceeds timeLimitInMinutes', () => {
+    const stage = createSurveyStage({
+      questions: [createTextSurveyQuestion({questionTitle: 'Feedback'})],
+      timeLimitInMinutes: 5,
+      timeMinimumInMinutes: 10,
+    });
+    const res = validateSurveyStageConfig(stage);
+    expect(res.valid).toBe(false);
+    if (!res.valid) {
+      expect(res.error).toContain(
+        'timeMinimumInMinutes (10) cannot exceed timeLimitInMinutes (5)',
       );
     }
   });

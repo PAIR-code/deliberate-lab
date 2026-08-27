@@ -133,3 +133,13 @@ pr-textarea-template {
   flex: 1;
   gap: common.$spacing-small;
 }
+
+.number-input {
+  @include common.number-input;
+  width: max-content;
+}
+
+.tab {
+  margin-top: 0px;
+  margin-left: calc(48px + common.$spacing-medium);
+}

@@ -8,6 +8,7 @@ import '../../pair-components/textarea_template';
 import {core} from '../../core/core';
 import {ExperimentEditor} from '../../services/experiment.editor';
 import {renderConditionEditor} from '../../shared/condition_editor.utils';
+import {renderTimeLimit} from '../../shared/stage.utils';
 import {
   CheckSurveyQuestion,
   Condition,
@@ -18,6 +19,7 @@ import {
   isMultipleChoiceImageQuestion,
   sanitizeSurveyQuestionConditions,
   ScaleSurveyQuestion,
+  StageKind,
   SurveyPerParticipantStageConfig,
   SurveyStageConfig,
   SurveyQuestion,
@@ -46,6 +48,17 @@ export class SurveyEditor extends MobxLitElement {
     }
 
     return html`
+      ${this.stage.kind === StageKind.SURVEY
+        ? renderTimeLimit({
+            stage: this.stage,
+            canEdit: this.experimentEditor.canEditStages,
+            onStageChange: (stage) => this.experimentEditor.updateStage(stage),
+            checkboxTitle: 'Set time limit for survey',
+            maxTimeLabel:
+              'Maximum time in minutes (starting when participant enters stage).',
+            minTimeLabel: 'Minimum time participants must stay (in minutes).',
+          })
+        : nothing}
       <div class="section">
         <div class="header">
           <div class="title">Survey questions</div>
