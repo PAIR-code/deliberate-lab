@@ -366,6 +366,7 @@ export class CohortService extends Service {
                 explanation: '', // backwards compatibility pre version 16
                 ...doc.data(),
               } as ChatMessage;
+              if (message.isScratchpadOnly) return;
               if (!message.discussionId) {
                 messages.push(message);
               } else {
