@@ -383,6 +383,7 @@ class ProfileStageConfig(BaseModel):
     progress: StageProgressConfig
     anonymousProfileSetId: str | None = None
     profileType: ProfileType
+    informalNameStyle: bool | None = False
 
 
 class Strategy(StrEnum):

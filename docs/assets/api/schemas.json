@@ -1457,6 +1457,10 @@
               "type": "string"
             }
           ]
+        },
+        "informalNameStyle": {
+          "default": false,
+          "type": "boolean"
         }
       }
     },

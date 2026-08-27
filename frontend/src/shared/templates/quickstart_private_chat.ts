@@ -46,7 +46,7 @@ const CHAT_STAGE_ID = 'chat';
 function getStageConfigs(): StageConfig[] {
   const stages: StageConfig[] = [];
   stages.push(
-    createProfileStage(),
+    createProfileStage({profileType: ProfileType.ANONYMOUS_ANIMAL}),
     createPrivateChatStage({
       id: CHAT_STAGE_ID,
       name: 'Private chat with agent',
