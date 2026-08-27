@@ -50,7 +50,11 @@ export class EditorComponent extends MobxLitElement {
     return getConditionTargetsFromStages(
       this.experimentEditor.stages,
       this.stageId,
-      {includeCurrentStage: true},
+      {
+        includeCurrentStage: true,
+        variableConfigs:
+          this.experimentEditor.experiment?.variableConfigs ?? [],
+      },
     );
   }
 

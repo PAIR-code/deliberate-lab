@@ -81,7 +81,7 @@ export class ConditionEditor extends MobxLitElement {
                 </div>
               `
             : group.conditions.map(
-                (c, index) => html`
+                (c: Condition, index: number) => html`
                   ${index > 0
                     ? html`
                         <div class="operator-connector">
@@ -166,15 +166,20 @@ export class ConditionEditor extends MobxLitElement {
 
   private renderComparisonCondition(condition: ComparisonCondition) {
     const conditionKey = this.getTargetKey(condition.target);
+
     const target = this.targets.find(
       (t) => this.getTargetKey(t.ref) === conditionKey,
     );
+
+    const matchedTargetKey = target
+      ? this.getTargetKey(target.ref)
+      : conditionKey;
 
     return html`
       <div class="comparison-condition">
         <md-outlined-select
           class="target-select"
-          .value=${conditionKey}
+          .value=${matchedTargetKey}
           @change=${(e: Event) =>
             this.updateComparisonTarget(
               condition,

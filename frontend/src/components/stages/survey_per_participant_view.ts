@@ -116,6 +116,7 @@ export class SurveyView extends MobxLitElement {
           answerMap,
           allStageAnswers,
           participant.publicId,
+          participant.variableMap,
         );
 
         if (!isSurveyComplete(visibleQuestions, answerMap)) {
@@ -215,6 +216,7 @@ export class SurveyView extends MobxLitElement {
       currentAnswers,
       allStageAnswers,
       participant.publicId, // Pass which participant is being evaluated
+      participant.variableMap,
     );
   }
 

@@ -1,5 +1,35 @@
-import {ChatMessage, UnifiedTimestamp} from '@deliberation-lab/utils';
+import {
+  ChatMessage,
+  UnifiedTimestamp,
+  VariableConfig,
+  extractVariablesFromVariableConfigs,
+  resolveTemplateVariables,
+} from '@deliberation-lab/utils';
 import {Timestamp} from 'firebase/firestore';
+
+/**
+ * Resolve template variables in a stage name for the current participant.
+ * Merges experiment-, cohort-, and participant-scoped value maps (participant
+ * takes precedence). Missing variables resolve to an empty string, matching
+ * prompt/description behavior.
+ */
+export function resolveStageName(
+  name: string,
+  variableConfigs: VariableConfig[],
+  experimentVariableMap: Record<string, string> = {},
+  cohortVariableMap: Record<string, string> = {},
+  participantVariableMap: Record<string, string> = {},
+): string {
+  return resolveTemplateVariables(
+    name,
+    extractVariablesFromVariableConfigs(variableConfigs),
+    {
+      ...experimentVariableMap,
+      ...cohortVariableMap,
+      ...participantVariableMap,
+    },
+  );
+}
 
 /** Returns the timestamp of the first chat message, or null if none. */
 export function getChatStartTimestamp(

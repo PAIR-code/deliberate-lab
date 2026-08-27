@@ -12,6 +12,7 @@ import {customElement, property, state} from 'lit/decorators.js';
 
 import {core} from '../../core/core';
 import {CohortService} from '../../services/cohort.service';
+import {ExperimentService} from '../../services/experiment.service';
 import {ParticipantService} from '../../services/participant.service';
 
 import {
@@ -21,7 +22,10 @@ import {
   StageConfig,
   StageKind,
 } from '@deliberation-lab/utils';
-import {getChatTimeRemainingInSeconds} from '../../shared/stage.utils';
+import {
+  getChatTimeRemainingInSeconds,
+  resolveStageName,
+} from '../../shared/stage.utils';
 import {styles} from './participant_header.scss';
 
 /** Header component for participant preview */
@@ -31,6 +35,7 @@ export class Header extends MobxLitElement {
 
   private readonly participantService = core.getService(ParticipantService);
   private readonly cohortService = core.getService(CohortService);
+  private readonly experimentService = core.getService(ExperimentService);
 
   @property() stage: StageConfig | undefined = undefined;
   @property() profile: ParticipantProfile | undefined = undefined;
@@ -93,10 +98,18 @@ export class Header extends MobxLitElement {
       return nothing;
     }
 
+    const stageName = resolveStageName(
+      this.stage.name,
+      this.experimentService.experiment?.variableConfigs ?? [],
+      this.experimentService.experiment?.variableMap ?? {},
+      this.cohortService.cohortConfig?.variableMap ?? {},
+      this.participantService.profile?.variableMap ?? {},
+    );
+
     return html`
       <div class="header">
         <div class="left">
-          ${this.renderMenu()} ${this.stage.name}${this.renderInfo()}
+          ${this.renderMenu()} ${stageName}${this.renderInfo()}
           ${this.renderTimer()}
         </div>
         <div class="right">

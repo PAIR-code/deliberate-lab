@@ -11,6 +11,7 @@ import {
   ComparisonCondition,
   ConditionGroup,
   ConditionTargetReference,
+  SYSTEM_VARIABLE_NAMESPACE,
 } from './condition';
 import {StageKind, StageParticipantAnswer} from '../stages/stage';
 import {
@@ -770,6 +771,71 @@ describe('condition.utils', () => {
 
       const result = filterByCondition(items, stageAnswers);
       expect(result.map((i) => i.id)).toEqual(['a', 'b', 'c', 'd']);
+    });
+  });
+  describe('participant variables (SYSTEM_VARIABLE_NAMESPACE)', () => {
+    const ns = SYSTEM_VARIABLE_NAMESPACE;
+
+    test('resolves a participant variable value directly', () => {
+      const dependencies: ConditionTargetReference[] = [
+        {stageId: ns, questionId: 'treatment'},
+      ];
+      const result = getConditionDependencyValues(dependencies, {}, undefined, {
+        treatment: 'A',
+      });
+      expect(result).toEqual({[`${ns}::treatment`]: 'A'});
+    });
+
+    test('resolves a nested value from a JSON variable via dot path', () => {
+      const variableMap = {
+        treatment: JSON.stringify({displayName: 'Group A', _isObserver: true}),
+      };
+      const dependencies: ConditionTargetReference[] = [
+        {stageId: ns, questionId: 'treatment.displayName'},
+        {stageId: ns, questionId: 'treatment._isObserver'},
+      ];
+      const result = getConditionDependencyValues(
+        dependencies,
+        {},
+        undefined,
+        variableMap,
+      );
+      expect(result).toEqual({
+        [`${ns}::treatment.displayName`]: 'Group A',
+        [`${ns}::treatment._isObserver`]: true,
+      });
+    });
+
+    test('omits unknown participant variables and a missing variableMap', () => {
+      const dependencies: ConditionTargetReference[] = [
+        {stageId: ns, questionId: 'missing'},
+      ];
+      expect(
+        getConditionDependencyValues(dependencies, {}, undefined, {
+          treatment: 'A',
+        }),
+      ).toEqual({});
+      expect(getConditionDependencyValues(dependencies, {})).toEqual({});
+    });
+
+    test('evaluates a comparison against a participant variable', () => {
+      const condition: ComparisonCondition = {
+        id: '1',
+        type: 'comparison',
+        target: {stageId: ns, questionId: 'treatment'},
+        operator: ComparisonOperator.EQUALS,
+        value: 'A',
+      };
+      expect(
+        evaluateConditionWithStageAnswers(condition, {}, undefined, {
+          treatment: 'A',
+        }),
+      ).toBe(true);
+      expect(
+        evaluateConditionWithStageAnswers(condition, {}, undefined, {
+          treatment: 'B',
+        }),
+      ).toBe(false);
     });
   });
 });

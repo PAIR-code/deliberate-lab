@@ -14,6 +14,7 @@ import {
   ProlificConfig,
   StageConfig,
   StageKind,
+  SYSTEM_VARIABLE_NAMESPACE,
   VariableConfig,
   MultiValueVariableConfigType,
   requiresValues,
@@ -186,6 +187,13 @@ export class ExperimentEditor extends Service {
     renderApiErrorMessage(ApiKeyType.OLLAMA_CUSTOM_URL);
 
     for (const stage of this.stages) {
+      // Block save if any stage's id collides with the participant-variable
+      // sentinel, since condition-dependency fetching would silently skip it.
+      if (stage.id === SYSTEM_VARIABLE_NAMESPACE) {
+        errors.push(
+          `The stage id "${SYSTEM_VARIABLE_NAMESPACE}" is reserved for tracking the system variables. Please rename it.`,
+        );
+      }
       if (
         stage.kind === StageKind.SURVEY ||
         stage.kind === StageKind.SURVEY_PER_PARTICIPANT

@@ -72,6 +72,8 @@ export class SurveyView extends MobxLitElement {
         this.stage.id,
         currentSurveyAnswers,
         allStageAnswers,
+        undefined,
+        this.participantService.profile?.variableMap,
       );
 
       return isSurveyComplete(visibleQuestions, currentSurveyAnswers);
@@ -118,6 +120,8 @@ export class SurveyView extends MobxLitElement {
       this.stage.id,
       currentSurveyAnswers,
       allStageAnswers,
+      undefined,
+      this.participantService.profile?.variableMap,
     );
   }
 
