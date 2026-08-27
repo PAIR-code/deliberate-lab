@@ -805,6 +805,7 @@ class AgentChatSettings(BaseModel):
     canSelfTriggerCalls: bool
     maxResponses: int | None = None
     initialMessage: str
+    includeTimestampsPrivateChat: bool | None = None
 
 
 class StageKind(StrEnum):
