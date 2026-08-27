@@ -97,7 +97,25 @@ export class ProfileStageEditorComponent extends MobxLitElement {
             @change=${() =>
               handleProfileTypeChange(ProfileType.ANONYMOUS_ANIMAL)}
           ></md-radio>
-          <label>🐱 Generate anonymous animal-themed profiles</label>
+          <label
+            >🐱 Generate anonymous animal-themed profiles, adding numbers to
+            avoid repeats (e.g., Bear, Bear 2)</label
+          >
+        </div>
+        <div class="profile-option">
+          <md-radio
+            name="profile-type"
+            value="animal-no-number"
+            ?checked=${this.stage.profileType ===
+            ProfileType.ANONYMOUS_ANIMAL_NO_NUMBER}
+            ?disabled=${!this.experimentEditor.canEditStages}
+            @change=${() =>
+              handleProfileTypeChange(ProfileType.ANONYMOUS_ANIMAL_NO_NUMBER)}
+          ></md-radio>
+          <label
+            >🐱 Generate anonymous animal-themed profiles, without adding
+            numbers (e.g., two participants named Bear)</label
+          >
         </div>
         <div class="profile-option">
           <md-radio

@@ -16,6 +16,7 @@ export enum ProfileType {
   DEFAULT = 'DEFAULT', // Profiles are set by the participant.
   DEFAULT_GENDERED = 'DEFAULT_GENDERED', // Participants pick from default gendered set.
   ANONYMOUS_ANIMAL = 'ANONYMOUS_ANIMAL', // Profiles are set to anonymous animals.
+  ANONYMOUS_ANIMAL_NO_NUMBER = 'ANONYMOUS_ANIMAL_NO_NUMBER', // Anonymous animals assigned in order, without numbers; names repeat once the set is exhausted.
   ANONYMOUS_PARTICIPANT = 'ANONYMOUS_PARTICIPANT', // Profiles are set to "Participant X" format.
 }
 
