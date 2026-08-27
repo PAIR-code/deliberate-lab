@@ -194,6 +194,7 @@ export const ParticipantStatusData = Type.Union([
   Type.Literal(ParticipantStatus.ATTENTION_TIMEOUT),
   Type.Literal(ParticipantStatus.BOOTED_OUT),
   Type.Literal(ParticipantStatus.DELETED),
+  Type.Literal(ParticipantStatus.API_FAILURE),
 ]);
 
 export const ProgressTimestampsSchema = Type.Object({

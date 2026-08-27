@@ -42,6 +42,9 @@ export interface PrivateChatStageConfig extends BaseStageConfig {
   // If true, prevents participants from cancelling pending requests
   // while waiting for a response (to prevent gaming minimum message counts)
   preventCancellation: boolean;
+  // Seconds a turn-based agent response may take (including retries) before
+  // the participant is shown the error pop-up. Unset = default (120).
+  agentTimeoutSeconds?: number;
 }
 
 // ************************************************************************* //

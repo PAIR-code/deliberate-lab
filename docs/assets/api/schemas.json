@@ -745,6 +745,10 @@
         "isTurnBased": {
           "type": "boolean"
         },
+        "agentTimeoutSeconds": {
+          "minimum": 1,
+          "type": "integer"
+        },
         "enableReactionsAndReplies": {
           "type": "boolean"
         }
@@ -1401,6 +1405,10 @@
         },
         "preventCancellation": {
           "type": "boolean"
+        },
+        "agentTimeoutSeconds": {
+          "minimum": 1,
+          "type": "integer"
         }
       }
     },
@@ -4505,6 +4513,12 @@
                   "items": {
                     "$ref": "#/$defs/CohortDefinition"
                   }
+                },
+                "timeoutMessageLimit": {
+                  "type": ["number", "null"]
+                },
+                "useNeutralTimeoutResponses": {
+                  "type": "boolean"
                 }
               },
               "title": "Experiment"

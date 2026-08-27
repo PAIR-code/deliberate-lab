@@ -13,6 +13,10 @@
   flex-grow: 1;
   max-height: calc(100vh - common.$header-height);
   overflow: auto;
+  // Positioning context for the API-failure overlay (position:absolute;
+  // inset:0): it fills this pane, which is the full viewport in the
+  // participant view and only the preview pane in the experimenter view.
+  position: relative;
 
   &.full-view {
     max-height: 100vh;

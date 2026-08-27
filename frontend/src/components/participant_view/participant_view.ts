@@ -1,4 +1,5 @@
 import '../popup/accept_transfer_popup';
+import '../popup/api_failure_popup';
 import '../popup/attention_check_popup';
 import '../popup/booted_popup';
 import '../progress/progress_stage_waiting';
@@ -125,7 +126,7 @@ export class ParticipantView extends MobxLitElement {
           ? 'full-view'
           : ''}"
       >
-        ${renderContent()}
+        ${renderContent()} ${this.renderApiFailurePopup()}
       </div>
       ${this.participantService.showHelpPanel
         ? html`<help-panel></help-panel>`
@@ -139,6 +140,31 @@ export class ParticipantView extends MobxLitElement {
       ${this.renderTransferPopup()} ${this.renderAttentionPopup()}
       ${this.renderBootedPopup()}
     `;
+  }
+
+  private renderApiFailurePopup() {
+    // Blocking overlay whenever the viewed participant is in API_FAILURE,
+    // in the participant view and the experimenter preview alike.
+    if (
+      this.participantService.profile?.currentStatus !==
+      ParticipantStatus.API_FAILURE
+    ) {
+      return nothing;
+    }
+    // When the last stage is named "Debrief", show its text in the pop-up
+    // (descriptions.infoText when set, else descriptions.primaryText).
+    const stageIds = this.experimentService.stageIds;
+    const lastStage = this.experimentService.getStage(
+      stageIds[stageIds.length - 1] ?? '',
+    );
+    const debriefText =
+      lastStage?.name?.trim().toLowerCase() === 'debrief'
+        ? lastStage.descriptions?.infoText?.trim() ||
+          (lastStage.descriptions?.primaryText ?? '')
+        : '';
+    return html`<api-failure-popup
+      .debriefText=${debriefText}
+    ></api-failure-popup>`;
   }
 
   private renderLanding() {

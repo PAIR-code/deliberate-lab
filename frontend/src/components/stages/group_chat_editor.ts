@@ -9,7 +9,10 @@ import {AuthService} from '../../services/auth.service';
 
 import {ExperimentEditor} from '../../services/experiment.editor';
 
-import {ChatStageConfig} from '@deliberation-lab/utils';
+import {
+  ChatStageConfig,
+  DEFAULT_AGENT_TIMEOUT_SECONDS,
+} from '@deliberation-lab/utils';
 
 import {styles} from './group_chat_editor.scss';
 
@@ -63,6 +66,40 @@ export class ChatEditor extends MobxLitElement {
             beginning with the mediators if at least one is present.
           </div>
         </div>
+        ${this.renderAgentTimeout()}
+      </div>
+    `;
+  }
+
+  private renderAgentTimeout() {
+    if (!this.stage?.isTurnBased) return nothing;
+
+    const updateTimeout = (e: InputEvent) => {
+      const val = (e.target as HTMLInputElement).valueAsNumber;
+      this.experimentEditor.updateStage({
+        ...this.stage!,
+        agentTimeoutSeconds:
+          val > 0 ? Math.floor(val) : DEFAULT_AGENT_TIMEOUT_SECONDS,
+      });
+    };
+
+    return html`
+      <div class="number-input tab">
+        <label for="agentTimeout">
+          Agent response timeout in seconds. If an agent's response does not
+          arrive in time, the participant is shown an error pop-up and the
+          study's debrief.
+        </label>
+        <input
+          type="number"
+          id="agentTimeout"
+          name="agentTimeout"
+          min="1"
+          .value=${this.stage?.agentTimeoutSeconds ??
+          DEFAULT_AGENT_TIMEOUT_SECONDS}
+          ?disabled=${!this.experimentEditor.canEditStages}
+          @input=${updateTimeout}
+        />
       </div>
     `;
   }
