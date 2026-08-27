@@ -4080,6 +4080,9 @@
         },
         "initialMessage": {
           "type": "string"
+        },
+        "includeTimestampsPrivateChat": {
+          "type": "boolean"
         }
       }
     },

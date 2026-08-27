@@ -157,6 +157,7 @@ export const AgentChatSettingsData = Type.Object(
     canSelfTriggerCalls: Type.Boolean(),
     maxResponses: Type.Optional(Type.Union([Type.Integer(), Type.Null()])),
     initialMessage: Type.String(),
+    includeTimestampsPrivateChat: Type.Optional(Type.Boolean()),
   },
   {$id: 'AgentChatSettings', ...strict},
 );
