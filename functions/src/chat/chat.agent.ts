@@ -62,11 +62,11 @@ import {updateModelLogFiles} from '../log.utils';
 const TURN_BASED_AGENT_RETRY_TIMEOUT_MS = 290000;
 
 /**
- * Strips leading timestamp prefix (e.g. "(14:30) " or "[14:30] ") if the model
- * accidentally mimics the prompt history format.
+ * Strips leading timestamp prefix (e.g. "(14:30)", "[14:30]", "(14:30:00)", or
+ * "[14:30:00]") if the model accidentally mimics the prompt history format.
  */
 export function stripTimestampPrefix(text: string): string {
-  return text.replace(/^\s*[([]\d{1,2}:\d{2}(?::\d{2})?[)\]]\s*/, '').trim();
+  return text.replace(/^\s*[([]\d{1,2}:\d{2}(?::\d{2})?[)\]]\s*/, '');
 }
 
 /** Inserts timestamp explanation before JSON format instructions if present. */
