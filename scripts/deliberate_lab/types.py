@@ -1335,14 +1335,14 @@ class SurveyStageConfig(BaseModel):
     descriptions: StageTextConfig
     progress: StageProgressConfig
     anonymousProfileSetId: str | None = None
-    timeLimitInMinutes: Annotated[int | None, Field(ge=1)] = None
-    timeMinimumInMinutes: Annotated[int | None, Field(ge=1)] = None
     questions: list[
         TextSurveyQuestion
         | CheckSurveyQuestion
         | MultipleChoiceSurveyQuestion
         | ScaleSurveyQuestion
     ]
+    timeLimitInMinutes: Annotated[int | None, Field(ge=1)] = None
+    timeMinimumInMinutes: Annotated[int | None, Field(ge=1)] = None
 
 
 class TransferStageConfig(BaseModel):
