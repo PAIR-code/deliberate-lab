@@ -632,6 +632,11 @@ class SurveyAutoTransferConfig(BaseModel):
     ]
 
 
+class Type(StrEnum):
+    participant = "participant"
+    mediator = "mediator"
+
+
 class ApiKeyType(StrEnum):
     GEMINI = "GEMINI"
     VERTEX_AI = "VERTEX_AI"
@@ -1000,6 +1005,9 @@ class Persona(BaseModel):
     )
     id: Annotated[str, Field(min_length=1)]
     name: str
+    description: str | None = None
+    type: Type | None = None
+    isDefaultAddToCohort: bool | None = None
     defaultModelSettings: AgentModelSettings | None = None
     defaultProfile: ParticipantProfileBase | None = None
 
