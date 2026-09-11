@@ -17,26 +17,9 @@ if [ "${1:-}" = "-h" ] || [ "${1:-}" = "--help" ]; then
   exit 0
 fi
 
-# ANSI styling if connected to a terminal
-if [ -t 1 ]; then
-  BOLD="\033[1m"
-  GREEN="\033[32m"
-  YELLOW="\033[33m"
-  RED="\033[31m"
-  CYAN="\033[36m"
-  RESET="\033[0m"
-else
-  BOLD=""
-  GREEN=""
-  YELLOW=""
-  RED=""
-  CYAN=""
-  RESET=""
-fi
-
-echo -e "${BOLD}======================================================${RESET}"
-echo -e "${BOLD}         Deliberate Lab — Workspace Overview         ${RESET}"
-echo -e "${BOLD}======================================================${RESET}"
+echo "======================================================"
+echo "         Deliberate Lab — Workspace Overview         "
+echo "======================================================"
 echo ""
 
 # -----------------------------------------------------------------------------
@@ -68,11 +51,11 @@ if [ -n "$NVMRC_FILE" ] && [ -f "$NVMRC_FILE" ]; then
 fi
 REQUIRED_MAJOR="$(echo "$REQUIRED_NODE" | cut -d. -f1)"
 
-echo -e "${BOLD}[1/4] Node.js & Runtime Environment${RESET}"
+echo "[1/4] Node.js & Runtime Environment"
 echo "      Source of truth (.nvmrc): Node v${REQUIRED_MAJOR}"
 
 # Check active node in $PATH
-echo -e "      ${CYAN}$ command -v node${RESET}"
+echo "      $ command -v node"
 ACTIVE_NODE_PATH="$(command -v node 2>/dev/null || true)"
 ACTIVE_NODE_VERSION=""
 ACTIVE_NODE_MAJOR=""
@@ -83,12 +66,12 @@ if [ -n "$ACTIVE_NODE_PATH" ]; then
   ACTIVE_NODE_MAJOR="$(echo "$ACTIVE_NODE_VERSION" | cut -d. -f1)"
   if [ "$ACTIVE_NODE_MAJOR" = "$REQUIRED_MAJOR" ]; then
     NODE_MATCHED=true
-    echo -e "      ${GREEN}[OK]${RESET} Active Node: v${ACTIVE_NODE_VERSION} ($ACTIVE_NODE_PATH)"
+    echo "      [OK] Active Node: v${ACTIVE_NODE_VERSION} ($ACTIVE_NODE_PATH)"
   else
-    echo -e "      ${YELLOW}[WARN]${RESET} Active Node is v${ACTIVE_NODE_VERSION} ($ACTIVE_NODE_PATH), but v${REQUIRED_MAJOR} is required."
+    echo "      [WARN] Active Node is v${ACTIVE_NODE_VERSION} ($ACTIVE_NODE_PATH), but v${REQUIRED_MAJOR} is required."
   fi
 else
-  echo -e "      ${YELLOW}[WARN]${RESET} Node.js is not found in the current \$PATH."
+  echo "      [WARN] Node.js is not found in the current \$PATH."
 fi
 
 # Tiered Discovery & Remediation if not matched
@@ -127,20 +110,20 @@ if [ "$NODE_MATCHED" = false ]; then
   if [ -n "$CANDIDATE_NODE" ]; then
     CANDIDATE_DIR="$(dirname "$CANDIDATE_NODE")"
     CANDIDATE_VER="$("$CANDIDATE_NODE" -v 2>/dev/null || echo "v${REQUIRED_MAJOR}")"
-    echo -e "      ${CYAN}[FOUND]${RESET} Compatible binary discovered: $CANDIDATE_VER ($CANDIDATE_NODE)"
+    echo "      [FOUND] Compatible binary discovered: $CANDIDATE_VER ($CANDIDATE_NODE)"
     echo ""
-    echo -e "      ${BOLD}👉 Action Required for Agent / Shell:${RESET}"
-    echo -e "         To use Node ${REQUIRED_MAJOR} in this session (and persistent terminal sessions), run:"
-    echo -e "         ${CYAN}export PATH=\"${CANDIDATE_DIR}:\$PATH\"${RESET}"
+    echo "      👉 Action Required for Agent / Shell:"
+    echo "         To use Node ${REQUIRED_MAJOR} in this session (and persistent terminal sessions), run:"
+    echo "         export PATH=\"${CANDIDATE_DIR}:\$PATH\""
     echo ""
   else
     # Check if NVM is installed
     if [ -f "${NVM_DIR:-$HOME/.nvm}/nvm.sh" ]; then
-      echo -e "      ${RED}[ERROR]${RESET} Node v${REQUIRED_MAJOR} is not installed in NVM."
-      echo -e "      👉 Run: ${CYAN}nvm install ${REQUIRED_MAJOR} && nvm use ${REQUIRED_MAJOR}${RESET}"
+      echo "      [ERROR] Node v${REQUIRED_MAJOR} is not installed in NVM."
+      echo "      👉 Run: nvm install ${REQUIRED_MAJOR} && nvm use ${REQUIRED_MAJOR}"
     else
-      echo -e "      ${RED}[ERROR]${RESET} Node.js v${REQUIRED_MAJOR} is not installed on this system."
-      echo -e "      👉 Please install Node.js v${REQUIRED_MAJOR} directly or via NVM (https://github.com/nvm-sh/nvm)."
+      echo "      [ERROR] Node.js v${REQUIRED_MAJOR} is not installed on this system."
+      echo "      👉 Please install Node.js v${REQUIRED_MAJOR} directly or via NVM (https://github.com/nvm-sh/nvm)."
     fi
   fi
 fi
@@ -149,10 +132,10 @@ echo ""
 # -----------------------------------------------------------------------------
 # 2. Git & Worktree Topology
 # -----------------------------------------------------------------------------
-echo -e "${BOLD}[2/4] Git & Worktree Topology${RESET}"
+echo "[2/4] Git & Worktree Topology"
 
 if ! git rev-parse --git-dir >/dev/null 2>&1; then
-  echo -e "      ${RED}[ERROR]${RESET} Not inside a git repository."
+  echo "      [ERROR] Not inside a git repository."
 else
   # Check if in a bare container or a worktree checkout
   IS_INSIDE_WORK_TREE="$(git rev-parse --is-inside-work-tree 2>/dev/null || echo "false")"
@@ -168,23 +151,23 @@ else
     echo "      Current context:   Bare repository parent container (holding .bare/ and sibling worktrees)"
     echo "      Working tree:      (n/a - switch to a sibling worktree directory to edit code)"
   else
-    echo -e "      ${CYAN}$ git branch --show-current && git rev-parse --short HEAD${RESET}"
+    echo "      $ git branch --show-current && git rev-parse --short HEAD"
     CURRENT_BRANCH="$(git branch --show-current 2>/dev/null || true)"
     [ -z "$CURRENT_BRANCH" ] && CURRENT_BRANCH="(detached HEAD)"
     CURRENT_COMMIT="$(git rev-parse --short HEAD 2>/dev/null || echo "unknown")"
     echo "      Current branch:    $CURRENT_BRANCH ($CURRENT_COMMIT)"
 
     # Uncommitted changes
-    echo -e "      ${CYAN}$ git status --porcelain${RESET}"
+    echo "      $ git status --porcelain"
     DIRTY_COUNT="$(git status --porcelain 2>/dev/null | wc -l | tr -d ' ')"
     if [ "$DIRTY_COUNT" -eq 0 ]; then
-      echo -e "      Working tree:      ${GREEN}clean${RESET}"
+      echo "      Working tree:      clean"
     else
-      echo -e "      Working tree:      ${YELLOW}$DIRTY_COUNT uncommitted file(s)${RESET}"
+      echo "      Working tree:      $DIRTY_COUNT uncommitted file(s)"
     fi
 
     # Upstream tracking
-    echo -e "      ${CYAN}$ git rev-parse --abbrev-ref @{u}${RESET}"
+    echo "      $ git rev-parse --abbrev-ref @{u}"
     TRACKING_REF="$(git rev-parse --abbrev-ref --symbolic-full-name @{u} 2>/dev/null || true)"
     if [ -n "$TRACKING_REF" ]; then
       COUNTS="$(git rev-list --left-right --count "HEAD...$TRACKING_REF" 2>/dev/null || echo "0 0")"
@@ -197,7 +180,7 @@ else
   fi
 
   echo ""
-  echo -e "      ${CYAN}$ git worktree list${RESET}"
+  echo "      $ git worktree list"
   echo "      Worktrees:"
   git worktree list 2>/dev/null | while read -r line; do
     wt_path="$(echo "$line" | awk '{print $1}')"
@@ -211,67 +194,68 @@ else
       echo "          ${rel_path} (bare)"
     else
       dirty_count="$(git -C "$wt_path" status --porcelain 2>/dev/null | wc -l | tr -d ' ')"
-      status_str="${GREEN}[clean]${RESET}"
+      status_str="[clean]"
       if [ -n "$dirty_count" ] && [ "$dirty_count" -gt 0 ]; then
-        status_str="${YELLOW}[dirty: ${dirty_count} file(s)]${RESET}"
+        status_str="[dirty: ${dirty_count} file(s)]"
       fi
 
       if [ "$wt_path" = "$PWD" ]; then
-        echo -e "       ${CYAN}==>${RESET} ${BOLD}${rel_path}${RESET} ($wt_commit) ${wt_branch} ${status_str} ${CYAN}[current]${RESET}"
+        echo "       ==> ${rel_path} ($wt_commit) ${wt_branch} ${status_str} [current]"
       else
-        echo -e "          ${rel_path} ($wt_commit) ${wt_branch} ${status_str}"
+        echo "          ${rel_path} ($wt_commit) ${wt_branch} ${status_str}"
       fi
     fi
   done
+
+  echo ""
+  echo "      $ git branch -vv"
+  git branch -vv 2>/dev/null | sed 's/^/          /'
 fi
 echo ""
 
 # -----------------------------------------------------------------------------
 # 3. Toolchain & Remotes
 # -----------------------------------------------------------------------------
-echo -e "${BOLD}[3/4] Toolchain & Remotes${RESET}"
+echo "[3/4] Toolchain & Remotes"
 
 # Remotes check
 if git rev-parse --git-dir >/dev/null 2>&1; then
-  echo -e "      ${CYAN}$ git remote get-url origin / upstream${RESET}"
-  ORIGIN_URL="$(git remote get-url origin 2>/dev/null || true)"
-  UPSTREAM_URL="$(git remote get-url upstream 2>/dev/null || true)"
-  [ -n "$ORIGIN_URL" ] && echo "      Remote (origin):   $ORIGIN_URL"
-  [ -n "$UPSTREAM_URL" ] && echo "      Remote (upstream): $UPSTREAM_URL"
+  echo "      $ git remote -v"
+  git remote -v 2>/dev/null | sed 's/^/      /'
 fi
 
 # GitHub CLI check
-echo -e "      ${CYAN}$ gh api user -q .login${RESET}"
+echo "      $ gh api user -q .login"
 if command -v gh >/dev/null 2>&1; then
   GH_USER="$(gh api user -q .login 2>/dev/null || true)"
   if [ -n "$GH_USER" ]; then
-    echo -e "      ${GREEN}[OK]${RESET} GitHub CLI (gh): Authenticated as @${GH_USER}"
-    echo -e "      ${CYAN}$ gh repo set-default --view${RESET}"
+    echo "      [OK] GitHub CLI (gh): Authenticated as @${GH_USER}"
+    echo "      $ gh repo set-default --view"
     GH_DEF_REPO="$(gh repo set-default --view 2>/dev/null || true)"
     if [ -n "$GH_DEF_REPO" ]; then
-      echo -e "      ${GREEN}[OK]${RESET} GitHub CLI (gh): Default repo is $GH_DEF_REPO"
+      echo "      [OK] GitHub CLI (gh): Default repo is $GH_DEF_REPO"
     else
-      echo -e "      ${YELLOW}[WARN]${RESET} GitHub CLI (gh): Default repo not set across remotes"
-      echo -e "      👉 Run: ${CYAN}gh repo set-default PAIR-code/deliberate-lab${RESET}"
+      echo "      [WARN] GitHub CLI (gh): Default repo not set across remotes"
+      echo "      👉 Run: gh repo set-default PAIR-code/deliberate-lab"
     fi
   else
-    echo -e "      ${YELLOW}[WARN]${RESET} GitHub CLI (gh): Installed but not authenticated (run 'gh auth login')"
+    echo "      [WARN] GitHub CLI (gh): Installed but not authenticated (run 'gh auth login')"
   fi
 else
-  echo -e "      ${YELLOW}[WARN]${RESET} GitHub CLI (gh): Not installed in \$PATH"
+  echo "      [WARN] GitHub CLI (gh): Not installed in \$PATH"
 fi
 echo ""
 
 # -----------------------------------------------------------------------------
 # 4. Monorepo Build Artifacts & Dependencies
 # -----------------------------------------------------------------------------
-echo -e "${BOLD}[4/4] Monorepo Artifacts & Dependencies${RESET}"
+echo "[4/4] Monorepo Artifacts & Dependencies"
 
 # Find the worktree root containing package.json
 WORKTREE_ROOT="$PWD"
 if [ ! -f "$WORKTREE_ROOT/package.json" ]; then
   # If at bare root, check main or first worktree
-  for cand in "$PWD"/main "$PWD"/1236-workspace-overview "$PWD"/*; do
+  for cand in "$PWD"/main "$PWD"/*; do
     if [ -f "$cand/package.json" ]; then
       WORKTREE_ROOT="$cand"
       break
@@ -282,30 +266,30 @@ fi
 if [ -f "$WORKTREE_ROOT/package.json" ]; then
   # Check root node_modules
   if [ -d "$WORKTREE_ROOT/node_modules" ]; then
-    echo -e "      ${GREEN}[OK]${RESET} node_modules: Installed in $(basename "$WORKTREE_ROOT")"
+    echo "      [OK] node_modules: Installed in $(basename "$WORKTREE_ROOT")"
   else
-    echo -e "      ${YELLOW}[WARN]${RESET} node_modules: Missing in $(basename "$WORKTREE_ROOT"). Run: npm ci"
+    echo "      [WARN] node_modules: Missing in $(basename "$WORKTREE_ROOT"). Run: npm ci"
   fi
 
   # Check utils/dist (critical shared library)
   if [ -d "$WORKTREE_ROOT/utils/dist" ] && [ -n "$(ls -A "$WORKTREE_ROOT/utils/dist" 2>/dev/null)" ]; then
-    echo -e "      ${GREEN}[OK]${RESET} utils/dist: Built (shared types & utilities available)"
+    echo "      [OK] utils/dist: Built (shared types & utilities available)"
   else
-    echo -e "      ${YELLOW}[WARN]${RESET} utils/dist: Missing or empty. Downstream packages (functions, frontend) will fail."
-    echo -e "             👉 Run: ${CYAN}npm run build -w utils${RESET}"
+    echo "      [WARN] utils/dist: Missing or empty. Downstream packages (functions, frontend) will fail."
+    echo "             👉 Run: npm run build -w utils"
   fi
 
   # Check functions/lib
   if [ -d "$WORKTREE_ROOT/functions/lib" ] && [ -n "$(ls -A "$WORKTREE_ROOT/functions/lib" 2>/dev/null)" ]; then
-    echo -e "      ${GREEN}[OK]${RESET} functions/lib: Built"
+    echo "      [OK] functions/lib: Built"
   else
-    echo -e "      ${YELLOW}[INFO]${RESET} functions/lib: Not built (needed if running/testing Cloud Functions; run: npm run build -w functions)"
+    echo "      [INFO] functions/lib: Not built (needed if running/testing Cloud Functions; run: npm run build -w functions)"
   fi
 else
-  echo -e "      ${YELLOW}[INFO]${RESET} Bare repository root container. Switch to a worktree directory to inspect node_modules and build artifacts."
+  echo "      [INFO] Bare repository root container. Switch to a worktree directory to inspect node_modules and build artifacts."
 fi
 
 echo ""
-echo -e "${BOLD}======================================================${RESET}"
-echo -e "Overview complete. Follow any [WARN] or [ERROR] instructions above."
-echo -e "${BOLD}======================================================${RESET}"
+echo "======================================================"
+echo "Overview complete. Follow any [WARN] or [ERROR] instructions above."
+echo "======================================================"
