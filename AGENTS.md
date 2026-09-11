@@ -70,7 +70,11 @@ utils ──► frontend
 
 ## Getting started
 
-- **Node ≥22** is required (see `.nvmrc`)
+- **Node 22 is strictly required** (see `.nvmrc` and `functions/package.json`).
+  Because non-interactive subshells often lack shell initialization (like NVM)
+  or inherit a mismatched host Node version, **prefer persistent terminal
+  sessions if available in your agent harness** so that an initialized Node 22
+  environment persists across command invocations throughout the session.
 - Install all dependencies from the repo root: `npm ci`
 - Run everything locally: `./run_locally.sh` (in the repo root)
 - Diagnose setup problems: `npm run doctor`
