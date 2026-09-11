@@ -11,6 +11,12 @@
 
 set -uo pipefail
 
+if [ "${1:-}" = "-h" ] || [ "${1:-}" = "--help" ]; then
+  echo "Usage: $(basename "$0")"
+  echo "Inspects Deliberate Lab workspace environment, Node runtime, git topology, toolchain, and build artifacts."
+  exit 0
+fi
+
 # ANSI styling if connected to a terminal
 if [ -t 1 ]; then
   BOLD="\033[1m"
@@ -66,6 +72,7 @@ echo -e "${BOLD}[1/4] Node.js & Runtime Environment${RESET}"
 echo "      Source of truth (.nvmrc): Node v${REQUIRED_MAJOR}"
 
 # Check active node in $PATH
+echo -e "      ${CYAN}$ command -v node${RESET}"
 ACTIVE_NODE_PATH="$(command -v node 2>/dev/null || true)"
 ACTIVE_NODE_VERSION=""
 ACTIVE_NODE_MAJOR=""
@@ -148,50 +155,72 @@ if ! git rev-parse --git-dir >/dev/null 2>&1; then
   echo -e "      ${RED}[ERROR]${RESET} Not inside a git repository."
 else
   # Check if in a bare container or a worktree checkout
+  IS_INSIDE_WORK_TREE="$(git rev-parse --is-inside-work-tree 2>/dev/null || echo "false")"
   IS_BARE_ROOT=false
-  if [ -d ".bare" ] || [ -d "$PWD/.bare" ]; then
+  if [ "$IS_INSIDE_WORK_TREE" != "true" ] && ([ -d ".bare" ] || [ -f ".git" ]); then
     IS_BARE_ROOT=true
   fi
 
-  CURRENT_BRANCH="$(git branch --show-current 2>/dev/null || true)"
-  [ -z "$CURRENT_BRANCH" ] && CURRENT_BRANCH="(detached / root)"
-  CURRENT_COMMIT="$(git rev-parse --short HEAD 2>/dev/null || echo "unknown")"
   CURRENT_DIR="$(basename "$PWD")"
-
   echo "      Current directory: $CURRENT_DIR"
-  echo "      Current branch:    $CURRENT_BRANCH ($CURRENT_COMMIT)"
 
-  # Uncommitted changes
-  DIRTY_COUNT="$(git status --porcelain 2>/dev/null | wc -l | tr -d ' ')"
-  if [ "$DIRTY_COUNT" -eq 0 ]; then
-    echo -e "      Working tree:      ${GREEN}clean${RESET}"
+  if [ "$IS_BARE_ROOT" = true ]; then
+    echo "      Current context:   Bare repository parent container (holding .bare/ and sibling worktrees)"
+    echo "      Working tree:      (n/a - switch to a sibling worktree directory to edit code)"
   else
-    echo -e "      Working tree:      ${YELLOW}$DIRTY_COUNT uncommitted file(s)${RESET}"
-  fi
+    echo -e "      ${CYAN}$ git branch --show-current && git rev-parse --short HEAD${RESET}"
+    CURRENT_BRANCH="$(git branch --show-current 2>/dev/null || true)"
+    [ -z "$CURRENT_BRANCH" ] && CURRENT_BRANCH="(detached HEAD)"
+    CURRENT_COMMIT="$(git rev-parse --short HEAD 2>/dev/null || echo "unknown")"
+    echo "      Current branch:    $CURRENT_BRANCH ($CURRENT_COMMIT)"
 
-  # Upstream tracking
-  TRACKING_REF="$(git rev-parse --abbrev-ref --symbolic-full-name @{u} 2>/dev/null || true)"
-  if [ -n "$TRACKING_REF" ]; then
-    COUNTS="$(git rev-list --left-right --count "HEAD...$TRACKING_REF" 2>/dev/null || echo "0 0")"
-    AHEAD="$(echo "$COUNTS" | awk '{print $1}')"
-    BEHIND="$(echo "$COUNTS" | awk '{print $2}')"
-    echo "      Tracking ref:      $TRACKING_REF (ahead: $AHEAD, behind: $BEHIND)"
-  else
-    echo "      Tracking ref:      (none configured)"
+    # Uncommitted changes
+    echo -e "      ${CYAN}$ git status --porcelain${RESET}"
+    DIRTY_COUNT="$(git status --porcelain 2>/dev/null | wc -l | tr -d ' ')"
+    if [ "$DIRTY_COUNT" -eq 0 ]; then
+      echo -e "      Working tree:      ${GREEN}clean${RESET}"
+    else
+      echo -e "      Working tree:      ${YELLOW}$DIRTY_COUNT uncommitted file(s)${RESET}"
+    fi
+
+    # Upstream tracking
+    echo -e "      ${CYAN}$ git rev-parse --abbrev-ref @{u}${RESET}"
+    TRACKING_REF="$(git rev-parse --abbrev-ref --symbolic-full-name @{u} 2>/dev/null || true)"
+    if [ -n "$TRACKING_REF" ]; then
+      COUNTS="$(git rev-list --left-right --count "HEAD...$TRACKING_REF" 2>/dev/null || echo "0 0")"
+      AHEAD="$(echo "$COUNTS" | awk '{print $1}')"
+      BEHIND="$(echo "$COUNTS" | awk '{print $2}')"
+      echo "      Tracking ref:      $TRACKING_REF (ahead: $AHEAD, behind: $BEHIND)"
+    else
+      echo "      Tracking ref:      (none configured)"
+    fi
   fi
 
   echo ""
+  echo -e "      ${CYAN}$ git worktree list${RESET}"
   echo "      Worktrees:"
   git worktree list 2>/dev/null | while read -r line; do
     wt_path="$(echo "$line" | awk '{print $1}')"
     wt_commit="$(echo "$line" | awk '{print $2}')"
     wt_branch="$(echo "$line" | awk '{$1=""; $2=""; print $0}' | sed 's/^[ \t]*//')"
-    wt_name="$(basename "$wt_path")"
 
-    if [ "$wt_path" = "$PWD" ]; then
-      echo -e "       ${CYAN}==>${RESET} ${BOLD}${wt_name}${RESET} ($wt_commit) ${wt_branch} ${CYAN}[current]${RESET}"
+    rel_path="$(realpath --relative-to="$PWD" "$wt_path" 2>/dev/null || echo "$wt_path")"
+    [[ "$rel_path" != /* && "$rel_path" != .* ]] && rel_path="./$rel_path"
+
+    if [[ "$wt_branch" == *"(bare)"* ]] || [ "$wt_commit" = "(bare)" ]; then
+      echo "          ${rel_path} (bare)"
     else
-      echo "          ${wt_name} ($wt_commit) ${wt_branch}"
+      dirty_count="$(git -C "$wt_path" status --porcelain 2>/dev/null | wc -l | tr -d ' ')"
+      status_str="${GREEN}[clean]${RESET}"
+      if [ -n "$dirty_count" ] && [ "$dirty_count" -gt 0 ]; then
+        status_str="${YELLOW}[dirty: ${dirty_count} file(s)]${RESET}"
+      fi
+
+      if [ "$wt_path" = "$PWD" ]; then
+        echo -e "       ${CYAN}==>${RESET} ${BOLD}${rel_path}${RESET} ($wt_commit) ${wt_branch} ${status_str} ${CYAN}[current]${RESET}"
+      else
+        echo -e "          ${rel_path} ($wt_commit) ${wt_branch} ${status_str}"
+      fi
     fi
   done
 fi
@@ -204,6 +233,7 @@ echo -e "${BOLD}[3/4] Toolchain & Remotes${RESET}"
 
 # Remotes check
 if git rev-parse --git-dir >/dev/null 2>&1; then
+  echo -e "      ${CYAN}$ git remote get-url origin / upstream${RESET}"
   ORIGIN_URL="$(git remote get-url origin 2>/dev/null || true)"
   UPSTREAM_URL="$(git remote get-url upstream 2>/dev/null || true)"
   [ -n "$ORIGIN_URL" ] && echo "      Remote (origin):   $ORIGIN_URL"
@@ -211,6 +241,7 @@ if git rev-parse --git-dir >/dev/null 2>&1; then
 fi
 
 # GitHub CLI check
+echo -e "      ${CYAN}$ gh api user -q .login${RESET}"
 if command -v gh >/dev/null 2>&1; then
   GH_USER="$(gh api user -q .login 2>/dev/null || true)"
   if [ -n "$GH_USER" ]; then

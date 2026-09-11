@@ -35,6 +35,8 @@ From any worktree directory or the parent repository container, execute:
 ./.agents/skills/workspace-overview/scripts/workspace-overview.sh
 ```
 
+The script visibly echoes the underlying diagnostic commands (`git`, `gh`, etc.) as it runs, providing complete transparency into command provenance and worktree topology.
+
 ### 2. Establish Node.js in Persistent Terminal Sessions
 
 Deliberate Lab requires the Node.js major version specified in `.nvmrc` (v22). Non-interactive agent subshells often lack shell initialization or inherit a mismatched host version.
