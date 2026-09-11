@@ -191,6 +191,13 @@ and optional helper scripts, examples, and resources.
 
 To inspect GitHub issues and pull requests, use the GitHub CLI (`gh issue view <number> --comments` or `gh pr view <number> --comments`) rather than fetching raw HTML or making unauthenticated REST calls.
 
+## Decisions
+
+Architectural, toolchain, and governance precedents are recorded in
+`.agents/decisions/` as lightweight Decision Records with YAML frontmatter
+(see [`0001-record-agent-decisions.md`](.agents/decisions/0001-record-agent-decisions.md)).
+Consult these records just-in-time when resolving architectural or policy ambiguity.
+
 ## Common pitfalls
 
 1. **Forgetting to rebuild `utils`** — `frontend` and `functions` consume
