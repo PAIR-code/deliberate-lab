@@ -246,6 +246,14 @@ if command -v gh >/dev/null 2>&1; then
   GH_USER="$(gh api user -q .login 2>/dev/null || true)"
   if [ -n "$GH_USER" ]; then
     echo -e "      ${GREEN}[OK]${RESET} GitHub CLI (gh): Authenticated as @${GH_USER}"
+    echo -e "      ${CYAN}$ gh repo set-default --view${RESET}"
+    GH_DEF_REPO="$(gh repo set-default --view 2>/dev/null || true)"
+    if [ -n "$GH_DEF_REPO" ]; then
+      echo -e "      ${GREEN}[OK]${RESET} GitHub CLI (gh): Default repo is $GH_DEF_REPO"
+    else
+      echo -e "      ${YELLOW}[WARN]${RESET} GitHub CLI (gh): Default repo not set across remotes"
+      echo -e "      👉 Run: ${CYAN}gh repo set-default PAIR-code/deliberate-lab${RESET}"
+    fi
   else
     echo -e "      ${YELLOW}[WARN]${RESET} GitHub CLI (gh): Installed but not authenticated (run 'gh auth login')"
   fi
