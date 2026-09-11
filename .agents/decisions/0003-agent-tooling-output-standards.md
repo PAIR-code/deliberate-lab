@@ -1,0 +1,89 @@
+---
+number: 3
+title: Design Standards for Agent-Facing Diagnostic and Maintenance Scripts
+date: 2026-09-11
+status: ratified
+deciders:
+  - "@jimbojw"
+  - "Antigravity"
+area: area:workspace
+supersedes: []
+superseded_by: null
+---
+
+# 0003. Design Standards for Agent-Facing Diagnostic and Maintenance Scripts
+
+## Context
+
+In [0002. Prefer Self-Diagnosing Scripts Over Documentation Bloat](./0002-prefer-self-diagnosing-scripts.md), we established the canon that environment and toolchain papercuts must be addressed through active diagnostic scripts (such as `workspace-overview.sh` and `workspace-sync.sh`) rather than expanding static troubleshooting checklists in `AGENTS.md`.
+
+However, traditional CLI script design optimizes for human visual consumption in interactive terminal emulators:
+- Saturated ANSI escape sequences (colors, bold text) to highlight status.
+- Custom synthetic abstractions (hand-rolled table formatters, padded columns, and translated status strings) that mask underlying command output.
+- Machine-specific absolute host paths or ambiguous bare branch names in remediation hints.
+
+During pairing across #1236 (`workspace-overview`) and #1238 (`workspace-sync`), we identified three severe failure modes when AI coding agents execute scripts built with these traditional visual patterns:
+
+1. **The Agent Trust Paradox (Opacity vs. Redundant Tool Calls)**:
+   An AI agent's confidence in a diagnostic script's output is inversely proportional to the output's opacity. When a script synthesizes or re-formats git or toolchain state into a custom pretty-printed summary, the agent reflexively suspects missing context or translation loss. The agent then routinely runs the underlying raw commands anyway (`git branch -vv`, `git remote -v`, `git status`), burning context window tokens, tool calls, and wall-clock latency.
+
+2. **Token Inflation and Transcript Serialization**:
+   ANSI escape sequences (`\033[32m`, `\033[0m`) provide zero semantic value to Large Language Models. In agent environments, they inflate prompt token counts, degrade regex/grep pattern matching, and serialize as noisy literal escape sequences (`\u001b[...]`) in background task JSON transcripts and persistent execution logs.
+
+3. **Contextual Ambiguity in Remediation**:
+   Remediation hints that omit execution context or use absolute host paths (e.g. `/home/developer/...` or `/Users/...`) introduce friction and require the agent or developer to reconstruct the relative working directory before executing the fix.
+
+## Decision
+
+We establish four non-negotiable design standards for all agent-facing diagnostic and maintenance scripts in `.agents/skills/`:
+
+### 1. Plain-Text Canon (Zero ANSI Escape Codes)
+- Scripts intended for agent consumption must emit clean, uncolored plain text.
+- Do not use ANSI escape sequences (`\033[...]`, `tput`, or `echo -e` color variables).
+- Convey semantic status exclusively via plain-text bracketed markers:
+  - `[OK]` — Check passed / operation succeeded / up to date.
+  - `[WARN]` — Non-fatal warning or drift detected.
+  - `[ERROR]` — Fatal condition or command failure.
+  - `[DRY RUN]` — Prospective action previewed without mutation.
+  - `[REMOVED]` — Resource or worktree successfully pruned.
+  - `[SKIP]` — Action skipped (e.g. protecting dirty worktrees).
+  - `[BEHIND]` / `[AHEAD]` — Commit drift relative to tracking trunk.
+  - `==>` — Section header or target resource delimiter.
+- These markers provide 100% of the cognitive and diagnostic signal to both human developers and LLMs with zero token overhead and zero transcript corruption.
+
+### 2. Raw Command Provenance over Synthetic Summaries
+- Maintain 1:1 provenance between script output and canonical tool commands.
+- Scripts must explicitly echo the command being run prefixed with `$ ` (or `$ [dry-run] `) and stream its raw, unmodified output directly to stdout:
+  ```sh
+  echo "      $ git branch -vv"
+  git branch -vv
+  ```
+- Do not write custom bash string-parsing loops or table-formatting logic to reformat standard CLI outputs (e.g. `git branch -vv`, `git remote -v`).
+- Providing direct, authoritative command output builds agent trust and eliminates redundant verification steps.
+
+### 3. Actionable Relative Paths
+- All remediation commands, file references, and worktree labels must use actionable relative paths from the current working directory (`$PWD`) or container root:
+  ```sh
+  # Correct:
+  git -C "./staging" rebase main
+  git worktree remove "./pr-1160"
+
+  # Incorrect:
+  git -C "/home/developer/deliberate-lab/staging" rebase main
+  git worktree remove pr-1160
+  ```
+- Relative paths are immediately copy-pasteable by human developers and directly executable by agents without path translation.
+
+### 4. Dry-Run Predictability for Mutating Operations
+- Any script performing state-mutating operations (`git fetch`, `merge`, `push`, `reset --hard`, `worktree remove`, `branch -D`) must support a `--dry-run` / `-n` flag.
+- In dry-run mode:
+  - Commands that would execute must be echoed with a `$ [dry-run] ` prefix.
+  - Proposed mutations must be flagged with `[DRY RUN]` status badges.
+  - No file system or git ref changes may occur.
+
+## Consequences
+
+- **Script Simplicity & Maintainability**: Eliminates brittle bash string manipulation, ANSI variable boilerplate, and column-padding gymnastics.
+- **Clean Agent Transcripts**: Execution logs, background task transcripts, and agent context windows remain dense, readable, and free of escape sequence noise.
+- **Higher Agent Autonomy & Efficiency**: Coding agents operate with high confidence from the initial script output, eliminating redundant exploratory commands.
+- **Immediate Actionability**: Both human developers and agents can copy-paste remediation commands directly from script stdout without mental mapping.
