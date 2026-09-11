@@ -57,7 +57,7 @@ The script executes four deterministic stages:
 3. **PR Worktree Mirroring (`pr-<number>`)**:
    - Finds all sibling worktrees matching `pr-[0-9]*`.
    - **Safety First**: Any worktree with uncommitted changes (`git status --porcelain`) is skipped to prevent data loss.
-   - **Lifecycle Awareness**: Queries GitHub CLI (`gh pr view`) to see if the PR is `MERGED` or `CLOSED`. If so, flags it as `[STALE]` and suggests safe removal commands (`git worktree remove ... && git branch -d ...`).
+   - **Lifecycle Awareness & Automated Cleanup**: Queries GitHub CLI (`gh pr view`) to see if the PR is `MERGED` or `CLOSED`. If so and the worktree is clean, automatically removes the worktree (`git worktree remove`) and deletes the local branch (`git branch -D`), keeping the workspace free of zombie checkouts.
    - **Exact Mirroring**: For open PRs, fetches `upstream pull/<number>/head` and resets the local branch to `FETCH_HEAD`.
    - **Dependency Notice**: If `package.json` or `package-lock.json` changed during the update, reminds you to run `npm ci` in that worktree.
 4. **Feature Branch Drift Awareness**:
