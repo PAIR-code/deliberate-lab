@@ -70,6 +70,10 @@ utils ──► frontend
 
 ## Getting started
 
+- **Orient yourself first**: Run the workspace overview diagnostic script upon
+  entering the workspace to inspect the bare repo layout, active worktrees, remotes,
+  and verify Node.js readiness:
+  `./.agents/skills/workspace-overview/scripts/workspace-overview.sh`
 - **Node 22 is strictly required** (see `.nvmrc` and `functions/package.json`).
   Because non-interactive subshells often lack shell initialization (like NVM)
   or inherit a mismatched host Node version, **prefer persistent terminal
@@ -186,6 +190,7 @@ and optional helper scripts, examples, and resources.
 
 | Skill | Purpose |
 |-------|---------|
+| [`workspace-overview`](.agents/skills/workspace-overview/SKILL.md) | Inspect environment, Node.js version, worktree topology, and toolchain readiness |
 | [`sync-fork`](.agents/skills/sync-fork/SKILL.md) | Sync fork's `main` with upstream and rebase feature branches |
 | [`eval-pr`](.agents/skills/eval-pr/SKILL.md) | Set up a git worktree to run and evaluate an upstream Pull Request locally |
 
