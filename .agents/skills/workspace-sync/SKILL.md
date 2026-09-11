@@ -43,6 +43,8 @@ To only sync trunk and feature branch status without touching PR worktrees:
 ./.agents/skills/workspace-sync/scripts/workspace-sync.sh --skip-pr-mirror
 ```
 
+The script visibly echoes the underlying git commands by default (prefixed with `[dry-run]` during dry-run mode) and formats all worktree targets with actionable relative paths.
+
 ### 2. Understanding the Execution Phases
 
 The script executes four deterministic stages:
