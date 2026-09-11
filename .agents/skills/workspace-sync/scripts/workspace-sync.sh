@@ -105,16 +105,27 @@ if [ -z "$WORKSPACE_ROOT" ]; then
   exit 1
 fi
 
+rel_path_of() {
+  local p="$1"
+  local r
+  r="$(realpath --relative-to="$PWD" "$p" 2>/dev/null || echo "$p")"
+  if [[ "$r" != /* && "$r" != .* ]]; then
+    r="./$r"
+  fi
+  echo "$r"
+}
+
 # -----------------------------------------------------------------------------
 # 1. Prune and Fetch Remotes
 # -----------------------------------------------------------------------------
-echo -e "${BOLD}[1/4] Remote Refreshes (git fetch --all --prune)${RESET}"
+echo -e "${BOLD}[1/4] Remote Refreshes${RESET}"
 if [ "$DRY_RUN" = true ]; then
-  echo -e "      ${CYAN}[DRY RUN]${RESET} Would run 'git fetch --all --prune'"
+  echo -e "      ${CYAN}$ [dry-run] git fetch --all --prune${RESET}"
+  echo -e "      ${CYAN}[DRY RUN]${RESET} Would fetch all remotes and prune deleted refs"
 else
-  echo -n "      Fetching all remotes and pruning deleted refs... "
+  echo -e "      ${CYAN}$ git fetch --all --prune${RESET}"
   git fetch --all --prune --quiet
-  echo -e "${GREEN}done${RESET}"
+  echo -e "      ${GREEN}[OK]${RESET} Remotes refreshed and pruned"
 fi
 echo ""
 
@@ -123,13 +134,14 @@ echo ""
 # -----------------------------------------------------------------------------
 echo -e "${BOLD}[2/4] Trunk Synchronization (main)${RESET}"
 MAIN_DIR="$WORKSPACE_ROOT/main"
+MAIN_REL="$(rel_path_of "$MAIN_DIR")"
 
 if [ ! -d "$MAIN_DIR" ]; then
-  echo -e "      ${YELLOW}[WARN]${RESET} Sibling worktree 'main' not found at $MAIN_DIR. Skipping trunk sync."
+  echo -e "      ${YELLOW}[WARN]${RESET} Sibling worktree 'main' not found at $MAIN_REL. Skipping trunk sync."
 else
   MAIN_DIRTY="$(git -C "$MAIN_DIR" status --porcelain 2>/dev/null | wc -l | tr -d ' ')"
   if [ "$MAIN_DIRTY" -gt 0 ]; then
-    echo -e "      ${YELLOW}[WARN]${RESET} 'main' worktree has uncommitted modifications ($MAIN_DIRTY files). Skipping fast-forward to protect uncommitted work."
+    echo -e "      ${YELLOW}[WARN]${RESET} '${MAIN_REL}' worktree has uncommitted modifications ($MAIN_DIRTY files). Skipping fast-forward to protect uncommitted work."
   else
     CURRENT_MAIN_SHA="$(git -C "$MAIN_DIR" rev-parse HEAD 2>/dev/null || true)"
     UPSTREAM_MAIN_SHA="$(git -C "$MAIN_DIR" rev-parse refs/remotes/upstream/main 2>/dev/null || true)"
@@ -137,14 +149,18 @@ else
     if [ -z "$UPSTREAM_MAIN_SHA" ]; then
       echo -e "      ${YELLOW}[WARN]${RESET} Remote ref upstream/main not found."
     elif [ "$CURRENT_MAIN_SHA" = "$UPSTREAM_MAIN_SHA" ]; then
-      echo -e "      ${GREEN}[OK]${RESET} Local 'main' is already up to date with upstream/main (${CURRENT_MAIN_SHA:0:8})"
+      echo -e "      ${GREEN}[OK]${RESET} Local '${MAIN_REL}' is already up to date with upstream/main (${CURRENT_MAIN_SHA:0:8})"
     else
       if [ "$DRY_RUN" = true ]; then
-        echo -e "      ${CYAN}[DRY RUN]${RESET} Would fast-forward 'main' (${CURRENT_MAIN_SHA:0:8} -> ${UPSTREAM_MAIN_SHA:0:8}) and push to origin/main"
+        echo -e "      ${CYAN}$ [dry-run] git -C ${MAIN_REL} merge --ff-only upstream/main${RESET}"
+        echo -e "      ${CYAN}$ [dry-run] git -C ${MAIN_REL} push origin main${RESET}"
+        echo -e "      ${CYAN}[DRY RUN]${RESET} Would fast-forward '${MAIN_REL}' (${CURRENT_MAIN_SHA:0:8} -> ${UPSTREAM_MAIN_SHA:0:8}) and push to origin/main"
       else
+        echo -e "      ${CYAN}$ git -C ${MAIN_REL} merge --ff-only upstream/main${RESET}"
         git -C "$MAIN_DIR" merge --ff-only upstream/main --quiet
+        echo -e "      ${CYAN}$ git -C ${MAIN_REL} push origin main${RESET}"
         git -C "$MAIN_DIR" push origin main --quiet
-        echo -e "      ${GREEN}[UPDATED]${RESET} 'main' fast-forwarded to upstream/main (${UPSTREAM_MAIN_SHA:0:8}) and pushed to origin/main"
+        echo -e "      ${GREEN}[UPDATED]${RESET} '${MAIN_REL}' fast-forwarded to upstream/main (${UPSTREAM_MAIN_SHA:0:8}) and pushed to origin/main"
       fi
     fi
   fi
@@ -171,7 +187,8 @@ else
     for pr_dir in "${PR_DIRS[@]}"; do
       pr_name="$(basename "$pr_dir")"
       pr_num="${pr_name#pr-}"
-      echo -e "      ${BOLD}==> ${pr_name} (PR #${pr_num})${RESET}"
+      pr_rel="$(rel_path_of "$pr_dir")"
+      echo -e "      ${BOLD}==> ${pr_rel} (PR #${pr_num})${RESET}"
 
       # Check for dirty working tree
       dirty_count="$(git -C "$pr_dir" status --porcelain 2>/dev/null | wc -l | tr -d ' ')"
@@ -194,13 +211,14 @@ else
       if [ "$PR_STATE" = "MERGED" ] || [ "$PR_STATE" = "CLOSED" ]; then
         echo -e "          ${MAGENTA}[STALE]${RESET} PR #${pr_num} is ${BOLD}${PR_STATE}${RESET} on GitHub! (\"${PR_TITLE}\")"
         echo -e "                  👉 Clean up worktree when ready:"
-        echo -e "                     ${CYAN}git worktree remove \"$pr_dir\" && git branch -d \"${pr_name}\"${RESET}"
+        echo -e "                     ${CYAN}git worktree remove \"${pr_rel}\" && git branch -d \"${pr_name}\"${RESET}"
         continue
       fi
 
       # PR is OPEN: Mirror upstream pull/<number>/head
       current_sha="$(git -C "$pr_dir" rev-parse HEAD 2>/dev/null || true)"
       if [ "$DRY_RUN" = true ]; then
+        echo -e "          ${CYAN}$ [dry-run] git -C ${pr_rel} fetch upstream pull/${pr_num}/head && git -C ${pr_rel} reset --hard FETCH_HEAD${RESET}"
         fetched_sha="$(git ls-remote upstream "refs/pull/${pr_num}/head" 2>/dev/null | awk '{print $1}')"
         if [ -n "$fetched_sha" ] && [ "$current_sha" = "$fetched_sha" ]; then
           echo -e "          ${GREEN}[OK]${RESET} Up to date (${current_sha:0:8})"
@@ -208,18 +226,20 @@ else
           echo -e "          ${CYAN}[DRY RUN]${RESET} Would fetch & reset to upstream head (${current_sha:0:8} -> ${fetched_sha:0:8})"
         fi
       else
+        echo -e "          ${CYAN}$ git -C ${pr_rel} fetch upstream pull/${pr_num}/head${RESET}"
         git -C "$pr_dir" fetch upstream "pull/${pr_num}/head" --quiet
         fetched_sha="$(git -C "$pr_dir" rev-parse FETCH_HEAD 2>/dev/null || true)"
 
         if [ "$current_sha" = "$fetched_sha" ]; then
           echo -e "          ${GREEN}[OK]${RESET} Up to date (${current_sha:0:8})"
         else
+          echo -e "          ${CYAN}$ git -C ${pr_rel} reset --hard FETCH_HEAD${RESET}"
           git -C "$pr_dir" reset --hard FETCH_HEAD --quiet
           echo -e "          ${GREEN}[UPDATED]${RESET} Mirrored upstream head: ${current_sha:0:8} -> ${fetched_sha:0:8}"
 
           # Check if dependencies changed
           if git -C "$pr_dir" diff --name-only "$current_sha" "$fetched_sha" 2>/dev/null | grep -qE '^package(-lock)?\.json$'; then
-            echo -e "          ${YELLOW}[NOTICE]${RESET} Dependencies changed in ${pr_name}. Run 'npm ci' in ${pr_name} before running or testing."
+            echo -e "          ${YELLOW}[NOTICE]${RESET} Dependencies changed in ${pr_rel}. Run 'npm ci' in ${pr_rel} before running or testing."
           fi
         fi
       fi
@@ -252,6 +272,7 @@ if [ "${#FEATURE_DIRS[@]}" -eq 0 ]; then
 else
   for feat_dir in "${FEATURE_DIRS[@]}"; do
     feat_name="$(basename "$feat_dir")"
+    feat_rel="$(rel_path_of "$feat_dir")"
     branch_name="$(git -C "$feat_dir" branch --show-current 2>/dev/null || true)"
     [ -z "$branch_name" ] && branch_name="(detached HEAD)"
 
@@ -260,10 +281,10 @@ else
     behind="$(echo "$counts" | awk '{print $2}')"
 
     if [ "$behind" -gt 0 ]; then
-      echo -e "      ${YELLOW}[BEHIND]${RESET} ${BOLD}${feat_name}${RESET} (${branch_name}): ${behind} commit(s) behind main (${ahead} ahead)"
-      echo -e "               👉 Run ${CYAN}git rebase main${RESET} inside '${feat_name}' when ready to incorporate upstream changes."
+      echo -e "      ${YELLOW}[BEHIND]${RESET} ${BOLD}${feat_rel}${RESET} (${branch_name}): ${behind} commit(s) behind main (${ahead} ahead)"
+      echo -e "               👉 Run: ${CYAN}git -C \"${feat_rel}\" rebase main${RESET} when ready to incorporate upstream changes."
     else
-      echo -e "      ${GREEN}[OK]${RESET} ${BOLD}${feat_name}${RESET} (${branch_name}): In sync with main (${ahead} ahead)"
+      echo -e "      ${GREEN}[OK]${RESET} ${BOLD}${feat_rel}${RESET} (${branch_name}): In sync with main (${ahead} ahead)"
     fi
   done
 fi
