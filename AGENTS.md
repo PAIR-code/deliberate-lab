@@ -12,34 +12,28 @@ concern** — ask which takes precedence (their idea or the documented
 convention) before proceeding. Do not modify `AGENTS.md` files unless the
 user explicitly asks you to.
 
-## Git safety
+## Git safety & worktree workflow
 
-Users control the pipeline from **edited → saved → staged → committed →
-pushed**. Do not advance code along this pipeline without explicit intent
-from the user.
+This repository follows a **bare Git repository + sibling worktrees** layout with a triangle workflow (`origin` fork vs `upstream` canonical). Operations are governed by the worktree type:
+
+| Worktree Pattern | Role | Policy |
+|------------------|------|--------|
+| `main/` | Local trunk | **Never commit directly.** Updated only by fast-forwarding from `upstream/main` after PRs merge (`git merge --ff-only upstream/main && git push origin main`). |
+| `pr-<number>/` | Collaborator PR review | **Never commit.** Read-only sandbox to evaluate peers' in-flight PRs. Updated only via `git fetch upstream pull/<id>/head && git reset --hard FETCH_HEAD`. |
+| `<id>-<slug>/` | Active development | **The only worktrees where development commits occur.** |
+
+### Committing and pushing in feature worktrees (`<id>-<slug>/`)
+
+- **Staging and committing**: Once an implementation plan is approved and changes are verified, the agent is encouraged to stage and create local commits following Conventional Commits (`feat:`, `fix:`, `chore:`, etc.). Report the commit in the walkthrough.
+- **Pushing to `origin`**: Pushing feature branches to your personal fork (`origin`) is safe and encouraged—GitHub preserves commit history even across rebase force-pushes (`--force-with-lease`).
+- **Pushing `main`**: Pushing fast-forwarded `main` to `origin/main` to keep your fork in sync with upstream is safe and expected.
 
 > [!CAUTION]
-> **Never run destructive or hard-to-reverse git commands** without the
-> user's explicit permission. This includes but is not limited to:
->
-> - `git push --force` / `--force-with-lease`
-> - `git rebase` (rewrites history)
-> - `git reset --hard`
+> **Never run destructive or hard-to-reverse git commands without confirmation**:
+> - `git reset --hard` (except when refreshing `pr-<number>` evaluation mirrors per the `eval-pr` skill)
 > - `git clean -fd`
-> - `git branch -D` (force-delete)
->
-> Before performing any of these, explain what will happen and confirm
-> the user wants to proceed. When in doubt, prefer the safer alternative
-> (e.g. `git stash` over `git reset`, `git branch -d` over `-D`).
-
-As a general rule:
-
-- **Reading** git state (`status`, `log`, `diff`, `branch`) is always safe.
-- **Fetching** is safe (`git fetch` does not modify the working tree).
-- **Staging and committing** — ask first unless the user has clearly
-  indicated they want you to commit.
-- **Pushing** — always confirm. Never push to a shared branch without
-  explicit approval.
+> - `git branch -D` (always use safe delete `git branch -d`)
+> - Overwriting or discarding uncommitted user changes
 
 ## Architecture
 
@@ -182,20 +176,16 @@ See each workspace's `AGENTS.md` for detailed guidance.
 
 ## Skills
 
-Reusable AI agent skills are defined in `.gemini/skills/`. Each skill is a
+Reusable AI agent skills are defined in `.agents/skills/`. Each skill is a
 directory containing a `SKILL.md` instruction file (with YAML frontmatter)
 and optional helper scripts, examples, and resources.
 
-> [!NOTE]
-> Files under `.gemini/` may not appear in file search results due to
-> dot-directory filtering. Use the paths in the table below to access
-> skills directly.
-
 | Skill | Purpose |
 |-------|---------|
-| [`sync-fork`](.gemini/skills/sync-fork/SKILL.md) | Sync fork's `main` with upstream and rebase feature branches |
-| [`eval-pr`](.gemini/skills/eval-pr/SKILL.md) | Set up a git worktree to run and evaluate an upstream Pull Request locally |
-| [`read-github`](.gemini/skills/read-github/SKILL.md) | Read GitHub issues and PRs via the REST API instead of scraping HTML |
+| [`sync-fork`](.agents/skills/sync-fork/SKILL.md) | Sync fork's `main` with upstream and rebase feature branches |
+| [`eval-pr`](.agents/skills/eval-pr/SKILL.md) | Set up a git worktree to run and evaluate an upstream Pull Request locally |
+
+To inspect GitHub issues and pull requests, use the GitHub CLI (`gh issue view <number> --comments` or `gh pr view <number> --comments`) rather than fetching raw HTML or making unauthenticated REST calls.
 
 ## Common pitfalls
 
