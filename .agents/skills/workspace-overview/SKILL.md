@@ -58,6 +58,7 @@ Once exported in the persistent session, all subsequent commands (`npm test`, `n
 | **Node.js** | Major version mismatch | Export the path to the matching Node binary discovered in NVM or install via NVM. |
 | **Worktree** | Uncommitted file(s) | Review `git status --short` before switching branches or pulling upstream changes. |
 | **Toolchain** | `gh` not authenticated | Run `gh auth login` or verify credentials if PR/issue interactions fail. |
+| **Toolchain** | `gh` default repo not set | Run `gh repo set-default PAIR-code/deliberate-lab` to resolve multi-remote ambiguity. |
 | **Artifacts** | `node_modules` missing | Run `npm ci` from the worktree root. |
 | **Artifacts** | `utils/dist` missing or empty | Run `npm run build -w utils`. `utils` is the shared dependency for `functions` and `frontend`. |
 | **Artifacts** | `functions/lib` missing | Run `npm run build -w functions` if running backend tests or the Firebase emulator. |
