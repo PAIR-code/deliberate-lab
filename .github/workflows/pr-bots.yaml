@@ -1,0 +1,57 @@
+name: PR Review Bots
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+  pull_request_target:
+    types: [opened, synchronize, reopened, ready_for_review]
+  workflow_dispatch:
+    inputs:
+      pr_number:
+        description: 'PR number to evaluate (optional when triggered from PR)'
+        required: false
+        type: string
+      bot_id:
+        description: 'Bot ID to run (e.g. hello-world, test-plan)'
+        required: false
+        type: string
+        default: 'hello-world'
+
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
+
+jobs:
+  review:
+    name: Run PR Bots
+    runs-on: ubuntu-latest
+    # Skip draft PRs automatically
+    if: >
+      github.event_name == 'workflow_dispatch' ||
+      (!github.event.pull_request.draft)
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run PR Bots
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          BOT_ID: ${{ inputs.bot_id || 'hello-world' }}
+          PR_NUMBER_INPUT: ${{ inputs.pr_number }}
+        run: |
+          ARGS="--bot $BOT_ID"
+          if [ -n "$PR_NUMBER_INPUT" ]; then
+            ARGS="$ARGS --pr $PR_NUMBER_INPUT"
+          fi
+          npx tsx bots/src/core/runner.ts $ARGS
+
