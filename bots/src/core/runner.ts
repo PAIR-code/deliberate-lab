@@ -2,33 +2,20 @@ import process from 'node:process';
 import type {PRReviewBot} from './types.js';
 import {loadPRContext} from './pr-context.js';
 import {postOrUpdateComment} from './comment-manager.js';
-import {HelloWorldBot} from '../bots/hello-world/bot.js';
-import {ExperimentTestPlanBot} from '../bots/experiment-test-plan/bot.js';
 
-// Production review bots run on standard PR reviews
-const PRODUCTION_BOTS: PRReviewBot[] = [new ExperimentTestPlanBot()];
-
-// Diagnostic bots available for pipeline and health checks via --bot <id>
-const DIAGNOSTIC_BOTS: PRReviewBot[] = [new HelloWorldBot()];
-
-const ALL_BOTS: PRReviewBot[] = [...PRODUCTION_BOTS, ...DIAGNOSTIC_BOTS];
-
-interface CliArgs {
-  botId?: string;
+export interface CliArgs {
   prNumber?: number;
   owner?: string;
   repo?: string;
   dryRun: boolean;
 }
 
-function parseArgs(args: string[]): CliArgs {
+export function parseArgs(args: string[]): CliArgs {
   const parsed: CliArgs = {dryRun: false};
 
   for (let i = 0; i < args.length; i++) {
     const arg = args[i];
-    if (arg === '--bot' && args[i + 1]) {
-      parsed.botId = args[++i];
-    } else if (arg === '--pr' && args[i + 1]) {
+    if (arg === '--pr' && args[i + 1]) {
       parsed.prNumber = parseInt(args[++i], 10);
     } else if (arg === '--owner' && args[i + 1]) {
       parsed.owner = args[++i];
@@ -42,10 +29,16 @@ function parseArgs(args: string[]): CliArgs {
   return parsed;
 }
 
-export async function main(): Promise<void> {
-  const args = parseArgs(process.argv.slice(2));
+/**
+ * Execute a single review bot against a pull request.
+ */
+export async function runBot(
+  bot: PRReviewBot,
+  argv: string[] = process.argv.slice(2),
+): Promise<void> {
+  const args = parseArgs(argv);
 
-  console.log('🤖 Deliberate Lab PR Review Bot Runner');
+  console.log(`🤖 Deliberate Lab PR Review Bot: ${bot.name} (id: ${bot.id})`);
   console.log('----------------------------------------');
 
   const context = await loadPRContext({
@@ -61,71 +54,38 @@ export async function main(): Promise<void> {
   console.log(`Files Changed: ${context.files.length}`);
   console.log('----------------------------------------');
 
-  const botsToRun =
-    args.botId && args.botId !== 'all'
-      ? ALL_BOTS.filter((b) => b.id === args.botId)
-      : PRODUCTION_BOTS;
-
-  if (botsToRun.length === 0) {
-    console.error(`[ERROR] No bot found matching ID "${args.botId}".`);
-    console.error(`Available bots: ${ALL_BOTS.map((b) => b.id).join(', ')}`);
-    process.exit(1);
+  if (!bot.shouldRun(context)) {
+    console.log(`  [SKIP] Bot indicated shouldRun = false (e.g. draft PR).`);
+    return;
   }
 
-  let hasBlockingFailure = false;
+  console.log('  Evaluating PR...');
+  const evaluation = await bot.evaluate(context);
+  console.log(
+    `  Evaluation result: [${evaluation.status.toUpperCase()}] ${evaluation.summary}`,
+  );
 
-  for (const bot of botsToRun) {
-    console.log(`\n▶ Running Bot: ${bot.name} (id: ${bot.id})`);
-
-    if (!bot.shouldRun(context)) {
-      console.log(`  [SKIP] Bot indicated shouldRun = false.`);
-      continue;
-    }
-
-    console.log('  Evaluating PR...');
-    const evaluation = await bot.evaluate(context);
-    console.log(
-      `  Evaluation result: [${evaluation.status.toUpperCase()}] ${evaluation.summary}`,
-    );
-
-    const commentBody = bot.renderComment(context, evaluation);
-    const result = await postOrUpdateComment(context, {
-      botId: bot.id,
-      markdownBody: commentBody,
-      dryRun: args.dryRun,
-    });
-
-    if (result.action === 'skipped_dry_run') {
-      console.log('  [DRY RUN] Completed without updating GitHub.');
-    } else {
-      console.log(
-        `  [OK] Comment ${result.action}: ${result.url || result.commentId}`,
-      );
-    }
-
-    if (evaluation.status === 'warn' || evaluation.status === 'fail') {
-      hasBlockingFailure = true;
-    }
-  }
-
-  if (hasBlockingFailure) {
-    console.error(
-      '\n❌ Blocking check failure: One or more PR review bots reported requirements not met (see comments above).',
-    );
-    process.exit(1);
-  }
-
-  console.log('\n✅ All bot evaluations finished successfully.');
-}
-
-// Execute if run directly
-if (
-  import.meta.url.endsWith(process.argv[1]) ||
-  process.argv[1]?.includes('runner')
-) {
-  main().catch((err) => {
-    console.error('\n❌ Fatal error in bot runner:');
-    console.error(err);
-    process.exit(1);
+  const commentBody = bot.renderComment(context, evaluation);
+  const result = await postOrUpdateComment(context, {
+    botId: bot.id,
+    markdownBody: commentBody,
+    dryRun: args.dryRun,
   });
+
+  if (result.action === 'skipped_dry_run') {
+    console.log('  [DRY RUN] Completed without updating GitHub.');
+  } else {
+    console.log(
+      `  [OK] Comment ${result.action}: ${result.url || result.commentId}`,
+    );
+  }
+
+  if (evaluation.status === 'warn' || evaluation.status === 'fail') {
+    console.error(
+      `\n❌ Blocking check failure: ${bot.name} reported requirements not met (see comment above).`,
+    );
+    process.exit(1);
+  }
+
+  console.log(`\n✅ ${bot.name} evaluation passed.`);
 }

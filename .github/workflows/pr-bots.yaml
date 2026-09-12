@@ -13,11 +13,6 @@ on:
         description: 'PR number to evaluate (optional when triggered from PR)'
         required: false
         type: string
-      bot_id:
-        description: 'Bot ID to run (e.g. hello-world, test-plan)'
-        required: false
-        type: string
-        default: 'all'
 
 permissions:
   contents: read
@@ -25,8 +20,8 @@ permissions:
   issues: write
 
 jobs:
-  review:
-    name: Run PR Bots
+  experiment-test-plan:
+    name: Experiment Test Plan Assistant
     runs-on: ubuntu-latest
     # Skip draft PRs automatically
     if: >
@@ -45,15 +40,14 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      - name: Run PR Bots
+      - name: Run Experiment Test Plan Assistant
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-          BOT_ID: ${{ inputs.bot_id || 'all' }}
           PR_NUMBER_INPUT: ${{ inputs.pr_number }}
         run: |
-          ARGS="--bot $BOT_ID"
+          ARGS=""
           if [ -n "$PR_NUMBER_INPUT" ]; then
-            ARGS="$ARGS --pr $PR_NUMBER_INPUT"
+            ARGS="--pr $PR_NUMBER_INPUT"
           fi
-          npx tsx bots/src/core/runner.ts $ARGS
+          npx tsx bots/src/bots/experiment-test-plan/cli.ts $ARGS

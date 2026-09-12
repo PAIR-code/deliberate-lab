@@ -7,7 +7,8 @@
     "build": "tsc",
     "typecheck": "tsc --noEmit",
     "test": "tsx --test \"src/**/*.test.ts\"",
-    "start": "tsx src/core/runner.ts"
+    "review:test-plan": "tsx src/bots/experiment-test-plan/cli.ts",
+    "review:hello-world": "tsx src/bots/hello-world/cli.ts"
   },
   "dependencies": {
     "@actions/core": "^1.11.1",
