@@ -12,34 +12,28 @@ concern** — ask which takes precedence (their idea or the documented
 convention) before proceeding. Do not modify `AGENTS.md` files unless the
 user explicitly asks you to.
 
-## Git safety
+## Git safety & worktree workflow
 
-Users control the pipeline from **edited → saved → staged → committed →
-pushed**. Do not advance code along this pipeline without explicit intent
-from the user.
+This repository follows a **bare Git repository + sibling worktrees** layout with a triangle workflow (`origin` fork vs `upstream` canonical). Operations are governed by the worktree type:
+
+| Worktree Pattern | Role | Policy |
+|------------------|------|--------|
+| `main/` | Local trunk | **Never commit directly.** Updated only by fast-forwarding from `upstream/main` after PRs merge (`git merge --ff-only upstream/main && git push origin main`). |
+| `pr-<number>/` | Collaborator PR review | **Never commit.** Read-only sandbox to evaluate peers' in-flight PRs. Updated only via `git fetch upstream pull/<id>/head && git reset --hard FETCH_HEAD`. |
+| `<id>-<slug>/` | Active development | **The only worktrees where development commits occur.** |
+
+### Committing and pushing in feature worktrees (`<id>-<slug>/`)
+
+- **Staging and committing**: Once an implementation plan is approved and changes are verified, the agent is encouraged to stage and create local commits following Conventional Commits (`feat:`, `fix:`, `chore:`, etc.). Align commit scopes and PR metadata with the 6 repository layers (see [Decision 0004](.agents/decisions/0004-repository-layer-taxonomy.md)). Report the commit in the walkthrough.
+- **Pushing to `origin`**: Pushing feature branches to your personal fork (`origin`) is safe and encouraged—GitHub preserves commit history even across rebase force-pushes (`--force-with-lease`).
+- **Pushing `main`**: Pushing fast-forwarded `main` to `origin/main` to keep your fork in sync with upstream is safe and expected.
 
 > [!CAUTION]
-> **Never run destructive or hard-to-reverse git commands** without the
-> user's explicit permission. This includes but is not limited to:
->
-> - `git push --force` / `--force-with-lease`
-> - `git rebase` (rewrites history)
-> - `git reset --hard`
+> **Never run destructive or hard-to-reverse git commands without confirmation**:
+> - `git reset --hard` (except when refreshing `pr-<number>` evaluation mirrors per the `eval-pr` skill)
 > - `git clean -fd`
-> - `git branch -D` (force-delete)
->
-> Before performing any of these, explain what will happen and confirm
-> the user wants to proceed. When in doubt, prefer the safer alternative
-> (e.g. `git stash` over `git reset`, `git branch -d` over `-D`).
-
-As a general rule:
-
-- **Reading** git state (`status`, `log`, `diff`, `branch`) is always safe.
-- **Fetching** is safe (`git fetch` does not modify the working tree).
-- **Staging and committing** — ask first unless the user has clearly
-  indicated they want you to commit.
-- **Pushing** — always confirm. Never push to a shared branch without
-  explicit approval.
+> - `git branch -D` (always use safe delete `git branch -d`)
+> - Overwriting or discarding uncommitted user changes
 
 ## Architecture
 
@@ -76,7 +70,15 @@ utils ──► frontend
 
 ## Getting started
 
-- **Node ≥22** is required (see `.nvmrc`)
+- **Orient yourself first**: Run the workspace overview diagnostic script upon
+  entering the workspace to inspect the bare repo layout, active worktrees, remotes,
+  and verify Node.js readiness:
+  `./.agents/skills/workspace-overview/scripts/workspace-overview.sh`
+- **Node 22 is strictly required** (see `.nvmrc` and `functions/package.json`).
+  Because non-interactive subshells often lack shell initialization (like NVM)
+  or inherit a mismatched host Node version, **prefer persistent terminal
+  sessions if available in your agent harness** so that an initialized Node 22
+  environment persists across command invocations throughout the session.
 - Install all dependencies from the repo root: `npm ci`
 - Run everything locally: `./run_locally.sh` (in the repo root)
 - Diagnose setup problems: `npm run doctor`
@@ -182,20 +184,32 @@ See each workspace's `AGENTS.md` for detailed guidance.
 
 ## Skills
 
-Reusable AI agent skills are defined in `.gemini/skills/`. Each skill is a
+Reusable AI agent skills are defined in `.agents/skills/`. Each skill is a
 directory containing a `SKILL.md` instruction file (with YAML frontmatter)
 and optional helper scripts, examples, and resources.
 
-> [!NOTE]
-> Files under `.gemini/` may not appear in file search results due to
-> dot-directory filtering. Use the paths in the table below to access
-> skills directly.
-
 | Skill | Purpose |
 |-------|---------|
-| [`sync-fork`](.gemini/skills/sync-fork/SKILL.md) | Sync fork's `main` with upstream and rebase feature branches |
-| [`eval-pr`](.gemini/skills/eval-pr/SKILL.md) | Set up a git worktree to run and evaluate an upstream Pull Request locally |
-| [`read-github`](.gemini/skills/read-github/SKILL.md) | Read GitHub issues and PRs via the REST API instead of scraping HTML |
+| [`workspace-overview`](.agents/skills/workspace-overview/SKILL.md) | Inspect environment, Node.js version, worktree topology, and toolchain readiness |
+| [`workspace-sync`](.agents/skills/workspace-sync/SKILL.md) | Synchronize trunk, mirror PR worktrees, and inspect feature branch drift |
+| [`eval-pr`](.agents/skills/eval-pr/SKILL.md) | Set up a git worktree to run and evaluate an upstream Pull Request locally |
+| [`gh`](.agents/skills/gh/SKILL.md) | Clean, untruncated GitHub CLI operations and issue/PR inspection |
+
+To inspect GitHub issues and pull requests, use the `gh` skill scripts (`./.agents/skills/gh/scripts/gh-issue-view.sh <number>` for issues or `./.agents/skills/gh/scripts/gh-pr-view.sh <number>` for PRs with CI checks and inline reviews) to stream complete context without terminal truncation.
+
+## Decisions
+
+Architectural, toolchain, and governance precedents are recorded in
+`.agents/decisions/` as lightweight Decision Records with YAML frontmatter
+(see [`0001-record-agent-decisions.md`](.agents/decisions/0001-record-agent-decisions.md)).
+Consult these records just-in-time when resolving architectural or policy ambiguity:
+
+| Decision | Title | Scope |
+|----------|-------|-------|
+| [`0001`](.agents/decisions/0001-record-agent-decisions.md) | Record Agent Decisions | Triad architecture (`skills/`, `AGENTS.md`, `decisions/`) |
+| [`0002`](.agents/decisions/0002-prefer-self-diagnosing-scripts.md) | Prefer Self-Diagnosing Scripts Over Documentation Bloat | Active detection and remediation over static checklists |
+| [`0003`](.agents/decisions/0003-agent-tooling-output-standards.md) | Agent Tooling Output Standards | Clean stdout, command provenance, 8KB buffer spillover |
+| [`0004`](.agents/decisions/0004-repository-layer-taxonomy.md) | Repository Layer Taxonomy & Labeling | 6 repository layers (`area:*`, `runtime:*`) and toolchain boundaries |
 
 ## Common pitfalls
 
