@@ -4,8 +4,8 @@ import {getBotMarker} from './comment-manager.js';
 
 describe('comment-manager', () => {
   it('generates expected HTML marker tag for a bot ID', () => {
-    const marker = getBotMarker('hello-world');
-    assert.equal(marker, '<!-- deliberate-lab-bot: hello-world -->');
+    const marker = getBotMarker('experiment-test-plan');
+    assert.equal(marker, '<!-- deliberate-lab-bot: experiment-test-plan -->');
   });
 
   it('generates unique marker for different bot IDs', () => {

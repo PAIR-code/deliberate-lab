@@ -5,11 +5,13 @@ import {postOrUpdateComment} from './comment-manager.js';
 import {HelloWorldBot} from '../bots/hello-world/bot.js';
 import {ExperimentTestPlanBot} from '../bots/experiment-test-plan/bot.js';
 
-// Registry of available review bots
-const AVAILABLE_BOTS: PRReviewBot[] = [
-  new HelloWorldBot(),
-  new ExperimentTestPlanBot(),
-];
+// Production review bots run on standard PR reviews
+const PRODUCTION_BOTS: PRReviewBot[] = [new ExperimentTestPlanBot()];
+
+// Diagnostic bots available for pipeline and health checks via --bot <id>
+const DIAGNOSTIC_BOTS: PRReviewBot[] = [new HelloWorldBot()];
+
+const ALL_BOTS: PRReviewBot[] = [...PRODUCTION_BOTS, ...DIAGNOSTIC_BOTS];
 
 interface CliArgs {
   botId?: string;
@@ -61,14 +63,12 @@ export async function main(): Promise<void> {
 
   const botsToRun =
     args.botId && args.botId !== 'all'
-      ? AVAILABLE_BOTS.filter((b) => b.id === args.botId)
-      : AVAILABLE_BOTS;
+      ? ALL_BOTS.filter((b) => b.id === args.botId)
+      : PRODUCTION_BOTS;
 
   if (botsToRun.length === 0) {
     console.error(`[ERROR] No bot found matching ID "${args.botId}".`);
-    console.error(
-      `Available bots: ${AVAILABLE_BOTS.map((b) => b.id).join(', ')}`,
-    );
+    console.error(`Available bots: ${ALL_BOTS.map((b) => b.id).join(', ')}`);
     process.exit(1);
   }
 

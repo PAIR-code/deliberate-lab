@@ -2,7 +2,7 @@ import type {BotEvaluation, PRContext, PRReviewBot} from '../../core/types.js';
 
 export class HelloWorldBot implements PRReviewBot {
   readonly id = 'hello-world';
-  readonly name = 'Deliberate Lab Bot • Status Check';
+  readonly name = 'Deliberate Lab Diagnostics • Pipeline Status Check';
 
   shouldRun(_context: PRContext): boolean {
     return true;
@@ -31,7 +31,7 @@ export class HelloWorldBot implements PRReviewBot {
     );
     const timestamp = new Date().toISOString();
 
-    return `### 🤖 Deliberate Lab Bot • Pipeline Verified
+    return `### 🤖 Deliberate Lab Diagnostics • Pipeline Verified
 
 ${evaluation.summary}
 

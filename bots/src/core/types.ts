@@ -35,8 +35,8 @@ export interface BotEvaluation {
 
 export interface PRReviewBot {
   /**
-   * Unique identifier used in HTML comment signatures:
-   * `<!-- deliberate-lab-bot: <id> -->`
+   * Unique identifier for the specialist bot, used in HTML comment signatures:
+   * `<!-- deliberate-lab-bot: <id> -->` (e.g. `experiment-test-plan`).
    */
   readonly id: string;
 

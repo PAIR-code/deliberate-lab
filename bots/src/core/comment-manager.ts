@@ -16,7 +16,8 @@ export interface CommentResult {
 }
 
 /**
- * Generate standard HTML signature marker for a bot.
+ * Generate standard HTML signature marker for a specialist bot.
+ * Follows the convention: `<!-- deliberate-lab-bot: <bot-id> -->` (e.g. `experiment-test-plan`).
  */
 export function getBotMarker(botId: string): string {
   return `<!-- deliberate-lab-bot: ${botId} -->`;
