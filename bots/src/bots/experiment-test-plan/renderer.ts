@@ -84,6 +84,60 @@ export function renderErrorComment(
 }
 
 /**
+ * Format an individual item within the 7-part experiment topology list.
+ * Normalizes literal '\n' sequences into actual newlines and cleanly indents
+ * nested sub-steps or bullet points (3 spaces) so GitHub Flavored Markdown
+ * renders them as a proper nested list without breaking the outer list.
+ */
+export function formatTopologyItem(
+  num: number,
+  label: string,
+  value?: string,
+): string {
+  if (!value) return `${num}. **${label}**: None / Not specified`;
+
+  // Normalize literal '\n' escape sequences into real newlines
+  const normalized = value.replace(/\\n/g, '\n').trim();
+
+  const lines = normalized
+    .split('\n')
+    .map((l) => l.trim())
+    .filter(Boolean);
+
+  if (lines.length > 1) {
+    const formattedLines = lines.map((line) => {
+      // If already starts with a number like "1. " or "2) ", indent with 3 spaces
+      if (/^\d+[.)]\s+/.test(line)) {
+        return `   ${line}`;
+      }
+      // If starts with a bullet like "- " or "* ", indent with 3 spaces
+      if (/^[-*]\s+/.test(line)) {
+        return `   ${line}`;
+      }
+      // Otherwise, make it an indented bullet sub-item
+      return `   - ${line}`;
+    });
+
+    return `${num}. **${label}**:\n${formattedLines.join('\n')}`;
+  }
+
+  // Check if a single line contains embedded inline numbered steps e.g. "1. ... 2. ..."
+  const inlineNumbered = normalized.match(/^1[.)]\s+/);
+  if (inlineNumbered && /\s+2[.)]\s+/.test(normalized)) {
+    const subSteps = normalized
+      .split(/(?=\b\d+[.)]\s+)/)
+      .map((s) => s.trim())
+      .filter(Boolean);
+    if (subSteps.length > 1) {
+      const formattedLines = subSteps.map((step) => `   ${step}`);
+      return `${num}. **${label}**:\n${formattedLines.join('\n')}`;
+    }
+  }
+
+  return `${num}. **${label}**: ${normalized}`;
+}
+
+/**
  * Render ExperimentTestPlanEvaluation into GitHub-flavored Markdown.
  */
 export function renderTestPlanComment(
@@ -123,19 +177,22 @@ export function renderTestPlanComment(
   // Runtime change with complete manual plan
   if (evaluation.hasManualTestPlan) {
     const details = evaluation.manualPlanDetails || {};
+    const sanitizeTableCell = (text?: string) =>
+      (text || 'Specified').replace(/\\n|\n/g, '<br>');
+
     return (
       header +
       `✅ **Manual Experiment Test Plan Verified**\n\n` +
       `This PR modifies runtime behavior and provides manual test verification steps covering Deliberate Lab's experiment topology:\n\n` +
       `| Topology Component | Verified Details |\n` +
       `| :--- | :--- |\n` +
-      `| **Experiment Template** | ${details.experimentTemplate || 'Specified'} |\n` +
-      `| **Stage Sequence** | ${details.stagesSequence || 'Specified'} |\n` +
-      `| **Human Cohort** | ${details.humanParticipants || 'Specified'} |\n` +
-      `| **Agent Mediator** | ${details.agentMediator || 'None / Default'} |\n` +
-      `| **Agent Participants** | ${details.agentParticipants || 'None / Default'} |\n` +
-      `| **Participant Actions** | ${details.participantActions || 'Specified'} |\n` +
-      `| **Success Criteria** | ${details.successCriteria || 'Specified'} |\n\n` +
+      `| **Experiment Template** | ${sanitizeTableCell(details.experimentTemplate)} |\n` +
+      `| **Stage Sequence** | ${sanitizeTableCell(details.stagesSequence)} |\n` +
+      `| **Human Cohort** | ${sanitizeTableCell(details.humanParticipants)} |\n` +
+      `| **Agent Mediator** | ${sanitizeTableCell(details.agentMediator)} |\n` +
+      `| **Agent Participants** | ${sanitizeTableCell(details.agentParticipants)} |\n` +
+      `| **Participant Actions** | ${sanitizeTableCell(details.participantActions)} |\n` +
+      `| **Success Criteria** | ${sanitizeTableCell(details.successCriteria)} |\n\n` +
       `*Test plan verified. Reviewers can use these steps to evaluate the experiment.*`
     );
   }
@@ -147,19 +204,23 @@ export function renderTestPlanComment(
 
   if (hasDeducedPlan && evaluation.suggestedTentativePlan) {
     const plan = evaluation.suggestedTentativePlan;
+    const planItems = [
+      formatTopologyItem(1, 'Experiment Template', plan.experimentTemplate),
+      formatTopologyItem(2, 'Stages Sequence', plan.stagesSequence),
+      formatTopologyItem(3, 'Human Cohort', plan.humanParticipants),
+      formatTopologyItem(4, 'Agent Mediator', plan.agentMediator),
+      formatTopologyItem(5, 'Agent Participants', plan.agentParticipants),
+      formatTopologyItem(6, 'Tester Actions', plan.participantActions),
+      formatTopologyItem(7, 'Expected Behavior', plan.successCriteria),
+    ].join('\n');
+
     return (
       header +
       `💡 **Draft Manual Experiment Test Plan (Ready for Review)**\n\n` +
       `This pull request alters runtime application behavior. While manual verification steps were not provided in the PR description, a tentative 7-step test plan was synthesized from the code changes:\n\n` +
       `**Classification Rationale**: ${evaluation.classificationRationale}\n\n` +
       `#### 📋 Suggested Test Plan\n` +
-      `1. **Experiment Template**: ${plan.experimentTemplate}\n` +
-      `2. **Stages Sequence**: ${plan.stagesSequence}\n` +
-      `3. **Human Cohort**: ${plan.humanParticipants}\n` +
-      `4. **Agent Mediator**: ${plan.agentMediator}\n` +
-      `5. **Agent Participants**: ${plan.agentParticipants}\n` +
-      `6. **Tester Actions**: ${plan.participantActions}\n` +
-      `7. **Expected Behavior**: ${plan.successCriteria}\n\n` +
+      `${planItems}\n\n` +
       `---\n\n` +
       `*✅ **CI Status: Passed** — Reviewers and maintainers can use this draft test plan to verify the PR locally. Authors are encouraged to adopt or refine these steps in their PR description.*`
     );

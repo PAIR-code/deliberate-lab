@@ -105,11 +105,13 @@ export const RESPONSE_SCHEMA = {
         },
         participantActions: {
           type: 'string',
-          description: 'Specific actions for testers to take',
+          description:
+            'Numbered sequential actions for testers to take (e.g. "1. Do foo\n2. Do bar"). Do not escape newlines.',
         },
         successCriteria: {
           type: 'string',
-          description: 'Expected observable outcome',
+          description:
+            'Expected observable outcome or state transitions that prove success.',
         },
       },
       required: [

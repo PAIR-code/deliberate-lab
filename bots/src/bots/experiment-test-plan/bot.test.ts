@@ -1,7 +1,7 @@
 import {describe, it} from 'node:test';
 import assert from 'node:assert/strict';
 import {ExperimentTestPlanBot} from './bot.js';
-import {renderTestPlanComment} from './renderer.js';
+import {formatTopologyItem, renderTestPlanComment} from './renderer.js';
 import type {ExperimentTestPlanEvaluation} from './types.js';
 import type {PRContext} from '../../core/types.js';
 
@@ -170,5 +170,50 @@ describe('ExperimentTestPlanBot', () => {
     assert.match(errorComment, /Re-run all jobs/);
     assert.match(errorComment, /issues\/new\?/);
     assert.match(errorComment, /area%3Aci-deploy/);
+  });
+
+  describe('formatTopologyItem', () => {
+    it('formats single-line values correctly', () => {
+      const formatted = formatTopologyItem(
+        1,
+        'Experiment Template',
+        'Default Experiment',
+      );
+      assert.equal(formatted, '1. **Experiment Template**: Default Experiment');
+    });
+
+    it('normalizes literal \\n and indents numbered sub-steps with 3 spaces', () => {
+      const raw = '1. Open editor\\n2. Add stage\\n3. Click save';
+      const formatted = formatTopologyItem(6, 'Tester Actions', raw);
+      assert.equal(
+        formatted,
+        '6. **Tester Actions**:\n   1. Open editor\n   2. Add stage\n   3. Click save',
+      );
+    });
+
+    it('indents bullet points with 3 spaces', () => {
+      const raw = '- First action\n- Second action';
+      const formatted = formatTopologyItem(6, 'Tester Actions', raw);
+      assert.equal(
+        formatted,
+        '6. **Tester Actions**:\n   - First action\n   - Second action',
+      );
+    });
+
+    it('splits inline numbered steps into indented sub-steps', () => {
+      const raw = '1. First step 2. Second step 3. Third step';
+      const formatted = formatTopologyItem(6, 'Tester Actions', raw);
+      assert.equal(
+        formatted,
+        '6. **Tester Actions**:\n   1. First step\n   2. Second step\n   3. Third step',
+      );
+    });
+
+    it('handles undefined or empty values gracefully', () => {
+      assert.equal(
+        formatTopologyItem(4, 'Agent Mediator', undefined),
+        '4. **Agent Mediator**: None / Not specified',
+      );
+    });
   });
 });
