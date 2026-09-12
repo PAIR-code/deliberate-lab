@@ -35,7 +35,7 @@ From any worktree directory or the parent repository container, execute:
 ./.agents/skills/workspace-overview/scripts/workspace-overview.sh
 ```
 
-The script visibly echoes the underlying diagnostic commands (`git`, `gh`, etc.) as it runs, providing complete transparency into command provenance and worktree topology.
+The script visibly echoes the underlying diagnostic commands (`git`, `gh`, etc.) as it runs, providing complete transparency into command provenance and worktree topology. In repositories with dozens of worktrees or branches, if the diagnostic output exceeds 7 KB, it automatically saves to a temporary file via `mktemp` and provides the path for lossless inspection via `view_file` ([ADR 0003](../../decisions/0003-agent-tooling-output-standards.md)).
 
 ### 2. Establish Node.js in Persistent Terminal Sessions
 

@@ -33,9 +33,12 @@ During pairing across #1236 (`workspace-overview`) and #1238 (`workspace-sync`),
 3. **Contextual Ambiguity in Remediation**:
    Remediation hints that omit execution context or use absolute host paths (e.g. `/home/developer/...` or `/Users/...`) introduce friction and require the agent or developer to reconstruct the relative working directory before executing the fix.
 
+4. **The Stdout Buffer Truncation Trap (The Head-Loss Ring Buffer)**:
+   AI agent harnesses typically enforce an **8 KB (8,192 bytes)** terminal output buffer ceiling for shell command execution (`run_command`). Terminal runners behave like a tail ring buffer, preserving the end of execution and silently discarding lines from the top (`<truncated N lines>`). This is especially treacherous because script outputs routinely place their most critical diagnostic information at the very beginning (such as Node.js version checks, PATH remediation commands, headings, or issue/PR descriptions). When an output exceeds 8 KB, the harness silently discards the exact context the agent needs most.
+
 ## Decision
 
-We establish four non-negotiable design standards for all agent-facing diagnostic and maintenance scripts in `.agents/skills/`:
+We establish five non-negotiable design standards for all agent-facing diagnostic and maintenance scripts in `.agents/skills/`:
 
 ### 1. Plain-Text Canon (Zero ANSI Escape Codes)
 - Scripts intended for agent consumption must emit clean, uncolored plain text.
@@ -81,9 +84,22 @@ We establish four non-negotiable design standards for all agent-facing diagnosti
   - Proposed mutations must be flagged with `[DRY RUN]` status badges.
   - No file system or git ref changes may occur.
 
+### 5. Stdout Buffer Ceiling & Automatic Spillover (`<8 KB` Rule)
+- Agent harness terminal runners enforce an **8 KB (8,192 bytes)** stdout buffer limit, whereas file viewing tools (`view_file`) can read up to **45 KiB (46,080 bytes)** intact without loss.
+- Scripts whose assembled diagnostic or query payload can foreseeably exceed 7,000 bytes (e.g. repos with dozens of worktrees/branches, detailed git diffs, or extensive GitHub issue/PR threads) must buffer their output in memory or a temporary file.
+- **Threshold & Branching**:
+  - **<= 7,000 bytes**: Emit directly to terminal stdout.
+  - **> 7,000 bytes**: Automatically spill the complete, clean plain-text/markdown content to a temporary file via `mktemp "${TMPDIR:-/tmp}/<script-name>-XXXXXX.<ext>"`. Emit a single plain-text notification pointing the agent to inspect the file using `view_file`:
+    ```text
+    <Diagnostic/Query name> (<N> bytes) exceeds 8KB terminal limit; saved to: /tmp/<script-name>-XXXXXX.<ext> (view with view_file)
+    ```
+- **Harness Interoperability**: AI agent harnesses permit agents to read `mktemp` files losslessly without triggering security confirmation prompts or human interruptions.
+- This pattern guarantees zero context loss, eliminates head truncation, and preserves full fidelity for large payloads.
+
 ## Consequences
 
 - **Script Simplicity & Maintainability**: Eliminates brittle bash string manipulation, ANSI variable boilerplate, and column-padding gymnastics.
 - **Clean Agent Transcripts**: Execution logs, background task transcripts, and agent context windows remain dense, readable, and free of escape sequence noise.
 - **Higher Agent Autonomy & Efficiency**: Coding agents operate with high confidence from the initial script output, eliminating redundant exploratory commands.
 - **Immediate Actionability**: Both human developers and agents can copy-paste remediation commands directly from script stdout without mental mapping.
+- **Immunity to Terminal Buffer Truncation**: Critical diagnostic context at the top of script outputs (such as Node.js remediation, branch topologies, and issue descriptions) is never silently truncated by the agent harness.
