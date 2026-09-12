@@ -9,7 +9,7 @@ import {
   RESPONSE_SCHEMA,
   SYSTEM_INSTRUCTION,
 } from './prompt.js';
-import {renderTestPlanComment} from './renderer.js';
+import {renderErrorComment, renderTestPlanComment} from './renderer.js';
 
 export class ExperimentTestPlanBot implements PRReviewBot {
   readonly id = 'experiment-test-plan';
@@ -73,7 +73,7 @@ export class ExperimentTestPlanBot implements PRReviewBot {
           hasManualTestPlan: false,
           missingElements: [],
         },
-        {missingApiKey: true},
+        {missingApiKey: true, context},
       );
     }
 
@@ -82,14 +82,9 @@ export class ExperimentTestPlanBot implements PRReviewBot {
       | undefined;
 
     if (!planEval) {
-      return (
-        `### 🧪 Deliberate Lab • Experiment Test Plan Assistant\n\n` +
-        `⚠️ **Evaluation Notice**\n\n` +
-        `${evaluation.summary}\n\n` +
-        (evaluation.details ? `\`\`\`\n${evaluation.details}\n\`\`\`\n` : '')
-      );
+      return renderErrorComment(context, evaluation);
     }
 
-    return renderTestPlanComment(planEval);
+    return renderTestPlanComment(planEval, {context});
   }
 }

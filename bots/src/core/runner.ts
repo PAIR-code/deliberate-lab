@@ -72,6 +72,8 @@ export async function main(): Promise<void> {
     process.exit(1);
   }
 
+  let hasBlockingFailure = false;
+
   for (const bot of botsToRun) {
     console.log(`\n▶ Running Bot: ${bot.name} (id: ${bot.id})`);
 
@@ -100,6 +102,17 @@ export async function main(): Promise<void> {
         `  [OK] Comment ${result.action}: ${result.url || result.commentId}`,
       );
     }
+
+    if (evaluation.status === 'warn' || evaluation.status === 'fail') {
+      hasBlockingFailure = true;
+    }
+  }
+
+  if (hasBlockingFailure) {
+    console.error(
+      '\n❌ Blocking check failure: One or more PR review bots reported requirements not met (see comments above).',
+    );
+    process.exit(1);
   }
 
   console.log('\n✅ All bot evaluations finished successfully.');

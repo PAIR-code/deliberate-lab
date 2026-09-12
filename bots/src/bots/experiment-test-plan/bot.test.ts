@@ -122,5 +122,23 @@ describe('ExperimentTestPlanBot', () => {
     assert.match(comment, /Suggested Tentative Test Plan/);
     assert.match(comment, /QuizStage -> SurveyStage/);
     assert.match(comment, /Survey stage unlocks upon submission/);
+    assert.match(comment, /How to Resolve/);
+    assert.match(comment, /issues\/new\?/);
+  });
+
+  it('renders upstream error comment with mitigation steps and bug report link', () => {
+    const errorComment = bot.renderComment(mockContext, {
+      status: 'warn',
+      summary: 'API quota exceeded (503 Service Unavailable)',
+      details: 'Preempted out of decode queue',
+    });
+
+    assert.match(errorComment, /Evaluation Blocked: Upstream Service Error/);
+    assert.match(errorComment, /API quota exceeded/);
+    assert.match(errorComment, /Preempted out of decode queue/);
+    assert.match(errorComment, /How to Re-run/);
+    assert.match(errorComment, /Re-run all jobs/);
+    assert.match(errorComment, /issues\/new\?/);
+    assert.match(errorComment, /area%3Aci-deploy/);
   });
 });
