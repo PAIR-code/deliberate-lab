@@ -17,7 +17,7 @@ on:
         description: 'Bot ID to run (e.g. hello-world, test-plan)'
         required: false
         type: string
-        default: 'hello-world'
+        default: 'all'
 
 permissions:
   contents: read
@@ -48,7 +48,8 @@ jobs:
       - name: Run PR Bots
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          BOT_ID: ${{ inputs.bot_id || 'hello-world' }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          BOT_ID: ${{ inputs.bot_id || 'all' }}
           PR_NUMBER_INPUT: ${{ inputs.pr_number }}
         run: |
           ARGS="--bot $BOT_ID"

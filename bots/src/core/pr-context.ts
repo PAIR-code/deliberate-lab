@@ -52,10 +52,18 @@ export async function loadPRContext(
       const [envOwner, envRepo] = process.env.GITHUB_REPOSITORY.split('/');
       owner = owner || envOwner;
       repo = repo || envRepo;
-    } else if (github.context.repo.owner && github.context.repo.repo) {
-      owner = owner || github.context.repo.owner;
-      repo = repo || github.context.repo.repo;
+    } else {
+      try {
+        if (github.context.repo.owner && github.context.repo.repo) {
+          owner = owner || github.context.repo.owner;
+          repo = repo || github.context.repo.repo;
+        }
+      } catch {
+        // Not running in an Actions environment with GITHUB_REPOSITORY set
+      }
     }
+    owner = owner || 'PAIR-code';
+    repo = repo || 'deliberate-lab';
   }
 
   if (!prNumber) {

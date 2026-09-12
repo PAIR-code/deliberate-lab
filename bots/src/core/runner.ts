@@ -3,9 +3,13 @@ import type {PRReviewBot} from './types.js';
 import {loadPRContext} from './pr-context.js';
 import {postOrUpdateComment} from './comment-manager.js';
 import {HelloWorldBot} from '../bots/hello-world/bot.js';
+import {ExperimentTestPlanBot} from '../bots/experiment-test-plan/bot.js';
 
 // Registry of available review bots
-const AVAILABLE_BOTS: PRReviewBot[] = [new HelloWorldBot()];
+const AVAILABLE_BOTS: PRReviewBot[] = [
+  new HelloWorldBot(),
+  new ExperimentTestPlanBot(),
+];
 
 interface CliArgs {
   botId?: string;
@@ -55,9 +59,10 @@ export async function main(): Promise<void> {
   console.log(`Files Changed: ${context.files.length}`);
   console.log('----------------------------------------');
 
-  const botsToRun = args.botId
-    ? AVAILABLE_BOTS.filter((b) => b.id === args.botId)
-    : AVAILABLE_BOTS;
+  const botsToRun =
+    args.botId && args.botId !== 'all'
+      ? AVAILABLE_BOTS.filter((b) => b.id === args.botId)
+      : AVAILABLE_BOTS;
 
   if (botsToRun.length === 0) {
     console.error(`[ERROR] No bot found matching ID "${args.botId}".`);
