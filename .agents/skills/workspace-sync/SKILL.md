@@ -43,7 +43,7 @@ To only sync trunk and feature branch status without touching PR worktrees:
 ./.agents/skills/workspace-sync/scripts/workspace-sync.sh --skip-pr-mirror
 ```
 
-The script visibly echoes the underlying git commands by default (prefixed with `[dry-run]` during dry-run mode) and formats all worktree targets with actionable relative paths.
+The script visibly echoes the underlying git commands by default (prefixed with `[dry-run]` during dry-run mode) and formats all worktree targets with actionable relative paths. If the sync report exceeds 7 KB, it automatically saves to a temporary file via `mktemp` and provides the path for lossless inspection via `view_file` ([ADR 0003](../../decisions/0003-agent-tooling-output-standards.md)).
 
 ### 2. Understanding the Execution Phases
 

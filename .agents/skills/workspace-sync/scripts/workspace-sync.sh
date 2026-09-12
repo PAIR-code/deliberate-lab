@@ -49,14 +49,6 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-echo "======================================================"
-echo "         Deliberate Lab — Workspace Sync             "
-if [ "$DRY_RUN" = true ]; then
-  echo "         [DRY RUN MODE — No changes will be made]"
-fi
-echo "======================================================"
-echo ""
-
 # -----------------------------------------------------------------------------
 # 0. Locate Workspace Root (Bare Repository Container)
 # -----------------------------------------------------------------------------
@@ -96,10 +88,19 @@ rel_path_of() {
   echo "$r"
 }
 
-# -----------------------------------------------------------------------------
-# 1. Prune and Fetch Remotes
-# -----------------------------------------------------------------------------
-echo "[1/4] Remote Refreshes"
+perform_sync() {
+  echo "======================================================"
+  echo "         Deliberate Lab — Workspace Sync             "
+  if [ "$DRY_RUN" = true ]; then
+    echo "         [DRY RUN MODE — No changes will be made]"
+  fi
+  echo "======================================================"
+  echo ""
+
+  # -----------------------------------------------------------------------------
+  # 1. Prune and Fetch Remotes
+  # -----------------------------------------------------------------------------
+  echo "[1/4] Remote Refreshes"
 if [ "$DRY_RUN" = true ]; then
   echo "      $ [dry-run] git fetch --all --prune"
   echo "      [DRY RUN] Would fetch all remotes and prune deleted refs"
@@ -282,8 +283,21 @@ else
   done
 fi
 
-echo ""
-echo "======================================================"
-echo "Workspace sync complete."
-echo "======================================================"
+  echo ""
+  echo "======================================================"
+  echo "Workspace sync complete."
+  echo "======================================================"
+}
+
+SYNC_OUTPUT="$(perform_sync)"
+TOTAL_BYTES="${#SYNC_OUTPUT}"
+LIMIT="${SYNC_BUFFER_LIMIT:-7000}" # Safe ceiling comfortably below 8,192 byte terminal buffer (ADR 0003 Standard 5)
+
+if [ "$TOTAL_BYTES" -gt "$LIMIT" ]; then
+  OUT_FILE="$(mktemp "${TMPDIR:-/tmp}/workspace-sync-XXXXXX.txt")"
+  printf "%s\n" "$SYNC_OUTPUT" > "$OUT_FILE"
+  echo "Workspace sync report (${TOTAL_BYTES} bytes) exceeds 8KB terminal limit; saved to: ${OUT_FILE} (view with view_file)"
+else
+  printf "%s\n" "$SYNC_OUTPUT"
+fi
 
