@@ -2,8 +2,6 @@ name: PR Review Bots
 
 # zizmor: ignore[dangerous-triggers] - Runs trusted base scripts; inspects PR diffs strictly as inert text via Octokit
 on:
-  pull_request:
-    types: [opened, synchronize, reopened, ready_for_review]
   # zizmor: ignore[dangerous-triggers]
   pull_request_target:
     types: [opened, synchronize, reopened, ready_for_review]
