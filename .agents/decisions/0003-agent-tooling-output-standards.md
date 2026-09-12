@@ -36,9 +36,12 @@ During pairing across #1236 (`workspace-overview`) and #1238 (`workspace-sync`),
 4. **The Stdout Buffer Truncation Trap (The Head-Loss Ring Buffer)**:
    AI agent harnesses typically enforce an **8 KB (8,192 bytes)** terminal output buffer ceiling for shell command execution (`run_command`). Terminal runners behave like a tail ring buffer, preserving the end of execution and silently discarding lines from the top (`<truncated N lines>`). This is especially treacherous because script outputs routinely place their most critical diagnostic information at the very beginning (such as Node.js version checks, PATH remediation commands, headings, or issue/PR descriptions). When an output exceeds 8 KB, the harness silently discards the exact context the agent needs most.
 
+5. **The Unbounded Execution / Credential Store Lock Trap (The Silent Headless Deadlock)**:
+   AI agent harnesses execute diagnostic and maintenance commands in non-interactive subshells. When a script calls external tooling (`gh`, `git`, package managers) that queries system credential stores (e.g. GNOME Keyring via D-Bus, macOS Keychain, Secret Service) or remote network APIs, those stores often expect an interactive desktop environment to render unlock dialogs or prompt for user authorization. In headless, SSH, or automated agent environments, no graphical modal can render; instead, the process blocks indefinitely on IPC sockets (`recvmsg`). When combined with stdout buffering or non-interactive execution, this produces complete silence, leaving developers and AI agents stalled with zero diagnostic feedback.
+
 ## Decision
 
-We establish five non-negotiable design standards for all agent-facing diagnostic and maintenance scripts in `.agents/skills/`:
+We establish six non-negotiable design standards for all agent-facing diagnostic and maintenance scripts in `.agents/skills/`:
 
 ### 1. Plain-Text Canon (Zero ANSI Escape Codes)
 - Scripts intended for agent consumption must emit clean, uncolored plain text.
@@ -96,6 +99,16 @@ We establish five non-negotiable design standards for all agent-facing diagnosti
 - **Harness Interoperability**: AI agent harnesses permit agents to read `mktemp` files losslessly without triggering security confirmation prompts or human interruptions.
 - This pattern guarantees zero context loss, eliminates head truncation, and preserves full fidelity for large payloads.
 
+### 6. Bounded Execution & Credential Store Timeout Protection
+- Every execution of an external tool that interfaces with system credential stores or remote network endpoints must be bounded by a non-blocking timeout (default 5s, configurable via environment variable, e.g. `GH_TIMEOUT="${GH_TIMEOUT:-5s}"`).
+- **Differential Exit Code Handling**:
+  - Scripts must differentiate between command-level failures (e.g. exit code 1 or 4: unauthenticated, missing remote) and timeout termination (exit code 124).
+- **Active Diagnostic Remediation (ADR 0002 Alignment)**:
+  - On timeout, the script must emit an explicit `[WARN]` explaining the likely root cause (locked desktop keyring, pending GUI prompt, or network stall).
+  - The script must prioritize security-conscious remediation by actively guiding the developer to check and unlock their active desktop session or keyring prompt, rather than defaulting to storing insecure plaintext tokens in shell profiles.
+- **Non-Fatal Graceful Degradation**:
+  - Toolchain timeouts must never abort the diagnostic script prematurely (`set -e` traps must not kill the process). The script must log the warning and proceed to verify remaining local facets (git topology, monorepo build artifacts, etc.).
+
 ## Consequences
 
 - **Script Simplicity & Maintainability**: Eliminates brittle bash string manipulation, ANSI variable boilerplate, and column-padding gymnastics.
@@ -103,3 +116,4 @@ We establish five non-negotiable design standards for all agent-facing diagnosti
 - **Higher Agent Autonomy & Efficiency**: Coding agents operate with high confidence from the initial script output, eliminating redundant exploratory commands.
 - **Immediate Actionability**: Both human developers and agents can copy-paste remediation commands directly from script stdout without mental mapping.
 - **Immunity to Terminal Buffer Truncation**: Critical diagnostic context at the top of script outputs (such as Node.js remediation, branch topologies, and issue descriptions) is never silently truncated by the agent harness.
+- **Immunity to Silent Credential Store / Network Deadlocks**: Agents and developers never get blocked indefinitely by stalled background daemons or locked desktop keyrings, while respecting corporate security policies that discourage plaintext token proliferation.
