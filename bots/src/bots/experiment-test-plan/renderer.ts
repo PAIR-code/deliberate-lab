@@ -140,42 +140,53 @@ export function renderTestPlanComment(
     );
   }
 
-  // Runtime change missing test plan: Proactive co-author drafting
-  const plan = evaluation.suggestedTentativePlan;
-  let suggestionSection = '';
+  // Tier 4: Runtime change missing test plan, but confidently deduced by Gemini (CI Passes)
+  const hasDeducedPlan =
+    evaluation.canDeducePlan !== false &&
+    Boolean(evaluation.suggestedTentativePlan);
 
-  if (plan) {
-    suggestionSection =
-      `#### 💡 Suggested Tentative Test Plan\n` +
-      `*Deduced from your code changes. Please review, adopt, or refine this in your PR description:*\n\n` +
+  if (hasDeducedPlan && evaluation.suggestedTentativePlan) {
+    const plan = evaluation.suggestedTentativePlan;
+    return (
+      header +
+      `💡 **Draft Manual Experiment Test Plan (Ready for Review)**\n\n` +
+      `This pull request alters runtime application behavior. While manual verification steps were not provided in the PR description, a tentative 7-step test plan was synthesized from the code changes:\n\n` +
+      `**Classification Rationale**: ${evaluation.classificationRationale}\n\n` +
+      `#### 📋 Suggested Test Plan\n` +
       `1. **Experiment Template**: ${plan.experimentTemplate}\n` +
       `2. **Stages Sequence**: ${plan.stagesSequence}\n` +
       `3. **Human Cohort**: ${plan.humanParticipants}\n` +
       `4. **Agent Mediator**: ${plan.agentMediator}\n` +
       `5. **Agent Participants**: ${plan.agentParticipants}\n` +
       `6. **Tester Actions**: ${plan.participantActions}\n` +
-      `7. **Expected Behavior**: ${plan.successCriteria}\n\n`;
+      `7. **Expected Behavior**: ${plan.successCriteria}\n\n` +
+      `---\n\n` +
+      `*✅ **CI Status: Passed** — Reviewers and maintainers can use this draft test plan to verify the PR locally. Authors are encouraged to adopt or refine these steps in their PR description.*`
+    );
   }
 
+  // Tier 5: Runtime change missing test plan, and cannot be deduced (CI Fails Closed)
   const bugUrl = buildBugReportUrl(
     options.context,
     'Potential misclassification or test plan synthesis failure',
-    `Rationale: ${evaluation.classificationRationale}\nMissing: ${evaluation.missingElements.join(', ')}`,
+    `Rationale: ${evaluation.classificationRationale}\nMissing: ${evaluation.missingElements.join(', ')}\nGuidance Needed: ${evaluation.guidanceNeededReason || 'Opaque diff'}`,
   );
 
   return (
     header +
-    `⚠️ **Manual Experiment Test Plan Needed**\n\n` +
-    `This pull request alters runtime application behavior, but complete manual verification steps were not provided.\n\n` +
+    `⚠️ **Manual Experiment Test Plan Guidance Required**\n\n` +
+    `This pull request alters runtime application behavior, but complete manual verification steps were not provided and could not be confidently deduced from the code changes.\n\n` +
     `**Classification Rationale**: ${evaluation.classificationRationale}\n\n` +
+    `**Why Author Guidance Is Needed**:\n` +
+    `${evaluation.guidanceNeededReason || 'The changes to runtime behavior are too complex or opaque to deduce a realistic 7-step test plan automatically.'}\n\n` +
     (evaluation.missingElements.length > 0
-      ? `**Missing Elements**: ${evaluation.missingElements.join(', ')}\n\n`
+      ? `**Missing Topology Elements**: ${evaluation.missingElements.join(', ')}\n\n`
       : '') +
-    suggestionSection +
     `---\n\n` +
     `#### 🔄 How to Resolve\n` +
-    `1. Copy and adopt (or refine) the suggested test plan above into your PR description.\n` +
+    `1. Update your PR description to include step-by-step manual test instructions addressing the 7-part experiment topology (Template, Stages, Human Cohort, Agent Mediator, Agent Participants, Actions, Expected Behavior).\n` +
     `2. Re-run this check by clicking **Re-run all jobs** under the **Checks** tab (or push an update to your PR).\n` +
-    `3. If you believe this PR was misclassified or if this check is failing persistently, please [file a bug report](${bugUrl}).`
+    `3. If you believe this PR was misclassified or if this check is failing persistently, please [file a bug report](${bugUrl}).\n\n` +
+    `*❌ **CI Status: Blocked** — Manual experiment verification instructions are required from the author before this PR can be merged.*`
   );
 }

@@ -28,9 +28,11 @@ You perform two key tasks:
      (6) participantActions: what participants should do or click
      (7) successCriteria: expected behavior, state changes, or UI transitions that prove success
 
-3. Proactive Co-Author Synthesis:
-   - If a manual test plan is missing or incomplete, inspect the file changes, additions, and diff patches.
-   - Deduce what experiment setup is needed to test this change and synthesize a ready-to-use Suggested Tentative Manual Test Plan covering all 7 fields.`;
+3. Proactive Co-Author Synthesis & Confidence Assessment:
+   - If a manual test plan is missing or incomplete:
+     a. Evaluate whether you can confidently deduce a complete, realistic 7-part experiment test plan from the diffs and description.
+     b. If the code changes clearly map to experiment templates, stages, UI actions, or participant flows (e.g. adding min/max timers to InfoStage), synthesize the 7-part plan, set canDeducePlan = true, and populate suggestedTentativePlan.
+     c. If the code changes are too ambiguous, complex, opaque, or internal (e.g. low-level backend refactoring, data migration, subtle algorithm shifts, or lacking context) such that you cannot confidently map them to the 7-part topology without guessing, set canDeducePlan = false, do not guess, and explain in guidanceNeededReason specifically what context or manual steps the author must provide.`;
 
 export const RESPONSE_SCHEMA = {
   type: 'object',
@@ -67,6 +69,16 @@ export const RESPONSE_SCHEMA = {
       items: {type: 'string'},
       description:
         'List of missing schema elements from the 7-part topology if incomplete.',
+    },
+    canDeducePlan: {
+      type: 'boolean',
+      description:
+        'True if a realistic 7-step test plan could be confidently deduced from diffs; false if changes are too ambiguous or opaque and require author guidance.',
+    },
+    guidanceNeededReason: {
+      type: 'string',
+      description:
+        'If canDeducePlan is false, explain why author guidance is required to test this change.',
     },
     suggestedTentativePlan: {
       type: 'object',

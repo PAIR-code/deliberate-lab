@@ -28,5 +28,7 @@ export interface ExperimentTestPlanEvaluation {
   hasManualTestPlan: boolean;
   manualPlanDetails?: ExperimentTestPlanDetails;
   missingElements: string[];
+  canDeducePlan?: boolean;
+  guidanceNeededReason?: string;
   suggestedTentativePlan?: SuggestedTentativePlan;
 }

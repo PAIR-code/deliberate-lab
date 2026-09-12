@@ -43,23 +43,52 @@ export class ExperimentTestPlanBot implements PRReviewBot {
           responseSchema: RESPONSE_SCHEMA,
         });
 
-      const isCompliant =
-        !evaluation.isRuntimeBehaviorChange || evaluation.hasManualTestPlan;
+      // Tier 2: Non-runtime change (passes cleanly)
+      if (!evaluation.isRuntimeBehaviorChange) {
+        return {
+          status: 'pass',
+          summary: 'Non-runtime change (manual test plan not required).',
+          metadata: {evaluation, tier: 2},
+        };
+      }
 
+      // Tier 3: Runtime change with verified author test plan (passes cleanly)
+      if (evaluation.hasManualTestPlan) {
+        return {
+          status: 'pass',
+          summary: 'Manual experiment test plan verified.',
+          metadata: {evaluation, tier: 3},
+        };
+      }
+
+      // Tier 4: Runtime change with confidently deduced tentative plan (passes cleanly)
+      const hasDeducedPlan =
+        evaluation.canDeducePlan !== false &&
+        Boolean(evaluation.suggestedTentativePlan);
+
+      if (hasDeducedPlan) {
+        return {
+          status: 'pass',
+          summary:
+            'Draft manual experiment test plan synthesized from code changes (ready for review).',
+          metadata: {evaluation, tier: 4},
+        };
+      }
+
+      // Tier 5: Runtime change lacking plan, guidance needed (fails closed)
       return {
-        status: isCompliant ? 'pass' : 'warn',
-        summary: isCompliant
-          ? evaluation.isRuntimeBehaviorChange
-            ? 'Manual experiment test plan verified.'
-            : 'Non-runtime change (manual test plan not required).'
-          : 'Manual experiment test plan needed for behavioral changes.',
-        metadata: {evaluation},
+        status: 'warn',
+        summary:
+          evaluation.guidanceNeededReason ||
+          'Manual experiment test plan required from author (unable to deduce from diffs).',
+        metadata: {evaluation, tier: 5},
       };
     } catch (err) {
       return {
         status: 'warn',
         summary: `Evaluation error encountered: ${(err as Error).message}`,
         details: (err as Error).stack,
+        metadata: {tier: 1},
       };
     }
   }

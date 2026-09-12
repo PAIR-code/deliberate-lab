@@ -62,7 +62,7 @@ describe('ExperimentTestPlanBot', () => {
     }
   });
 
-  it('renders non-runtime change comment correctly', () => {
+  it('renders non-runtime change comment correctly (Tier 2)', () => {
     const nonRuntimeEval: ExperimentTestPlanEvaluation = {
       isRuntimeBehaviorChange: false,
       classificationRationale:
@@ -76,7 +76,7 @@ describe('ExperimentTestPlanBot', () => {
     assert.match(comment, /Manual experiment verification is not required/);
   });
 
-  it('renders verified plan comment correctly', () => {
+  it('renders verified plan comment correctly (Tier 3)', () => {
     const verifiedEval: ExperimentTestPlanEvaluation = {
       isRuntimeBehaviorChange: true,
       classificationRationale: 'Adds new quiz stage.',
@@ -99,13 +99,14 @@ describe('ExperimentTestPlanBot', () => {
     assert.match(comment, /Score saves to participant variables/);
   });
 
-  it('renders suggested tentative plan when manual plan is missing', () => {
-    const missingEval: ExperimentTestPlanEvaluation = {
+  it('renders draft tentative plan for reviewers when deduced (Tier 4, Passes CI)', () => {
+    const deducedEval: ExperimentTestPlanEvaluation = {
       isRuntimeBehaviorChange: true,
       classificationRationale:
         'Introduces new QuizStage runtime component without test plan.',
       hasManualTestPlan: false,
       missingElements: ['stagesSequence', 'participantActions'],
+      canDeducePlan: true,
       suggestedTentativePlan: {
         experimentTemplate: 'Default Experiment',
         stagesSequence: 'QuizStage -> SurveyStage',
@@ -117,16 +118,45 @@ describe('ExperimentTestPlanBot', () => {
       },
     };
 
-    const comment = renderTestPlanComment(missingEval);
-    assert.match(comment, /Manual Experiment Test Plan Needed/);
-    assert.match(comment, /Suggested Tentative Test Plan/);
+    const comment = renderTestPlanComment(deducedEval);
+    assert.match(
+      comment,
+      /Draft Manual Experiment Test Plan \(Ready for Review\)/,
+    );
+    assert.match(comment, /Suggested Test Plan/);
     assert.match(comment, /QuizStage -> SurveyStage/);
     assert.match(comment, /Survey stage unlocks upon submission/);
-    assert.match(comment, /How to Resolve/);
+    assert.match(comment, /CI Status: Passed/);
+  });
+
+  it('renders guidance required comment when code is too ambiguous to deduce (Tier 5, Blocks CI)', () => {
+    const opaqueEval: ExperimentTestPlanEvaluation = {
+      isRuntimeBehaviorChange: true,
+      classificationRationale:
+        'Alters internal participant state machine transition algorithms.',
+      hasManualTestPlan: false,
+      missingElements: [
+        'stagesSequence',
+        'participantActions',
+        'successCriteria',
+      ],
+      canDeducePlan: false,
+      guidanceNeededReason:
+        'State transitions are deeply coupled to custom event bus logic with no UI cues.',
+    };
+
+    const comment = renderTestPlanComment(opaqueEval);
+    assert.match(comment, /Manual Experiment Test Plan Guidance Required/);
+    assert.match(comment, /Why Author Guidance Is Needed/);
+    assert.match(
+      comment,
+      /State transitions are deeply coupled to custom event bus/,
+    );
+    assert.match(comment, /CI Status: Blocked/);
     assert.match(comment, /issues\/new\?/);
   });
 
-  it('renders upstream error comment with mitigation steps and bug report link', () => {
+  it('renders upstream error comment with mitigation steps and bug report link (Tier 1)', () => {
     const errorComment = bot.renderComment(mockContext, {
       status: 'warn',
       summary: 'API quota exceeded (503 Service Unavailable)',
