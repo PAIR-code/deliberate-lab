@@ -50,6 +50,19 @@ while [[ $# -gt 0 ]]; do
 done
 
 # -----------------------------------------------------------------------------
+# Helper: Run command with bounded timeout (ADR 0003 Standard 6)
+# -----------------------------------------------------------------------------
+run_with_timeout() {
+  local duration="$1"
+  shift
+  if command -v timeout >/dev/null 2>&1; then
+    timeout "$duration" "$@"
+  else
+    "$@"
+  fi
+}
+
+# -----------------------------------------------------------------------------
 # 0. Locate Workspace Root (Bare Repository Container)
 # -----------------------------------------------------------------------------
 find_workspace_root() {
@@ -179,14 +192,21 @@ else
         continue
       fi
 
-      # Check PR state on GitHub via gh CLI if available
+      # Check PR state on GitHub via gh CLI if available (bounded by timeout per ADR 0003 Standard 6)
       PR_STATE="OPEN"
       PR_TITLE=""
       if command -v gh >/dev/null 2>&1; then
-        gh_info="$(gh pr view "$pr_num" --repo PAIR-code/deliberate-lab --json state,title -q '.state + "\t" + .title' 2>/dev/null || true)"
-        if [ -n "$gh_info" ]; then
+        GH_TIMEOUT="${GH_TIMEOUT:-5s}"
+        gh_info=""
+        gh_exit=0
+        gh_info="$(run_with_timeout "$GH_TIMEOUT" gh pr view "$pr_num" --repo PAIR-code/deliberate-lab --json state,title -q '.state + "\t" + .title' 2>/dev/null)" || gh_exit=$?
+        if [ "$gh_exit" -eq 0 ] && [ -n "$gh_info" ]; then
           PR_STATE="$(echo "$gh_info" | awk -F'\t' '{print $1}')"
           PR_TITLE="$(echo "$gh_info" | awk -F'\t' '{print $2}')"
+        elif [ "$gh_exit" -eq 124 ]; then
+          echo "          [WARN] Timed out querying PR #${pr_num} state from GitHub CLI after ${GH_TIMEOUT}."
+          echo "                 The system credential store (e.g. GNOME Keyring) may be locked."
+          echo "                 Preserving worktree and treating as OPEN."
         fi
       fi
 
