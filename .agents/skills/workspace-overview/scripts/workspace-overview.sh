@@ -24,6 +24,19 @@ generate_overview() {
   echo ""
 
 # -----------------------------------------------------------------------------
+# Helper: Run command with bounded timeout (ADR 0003 Standard 6)
+# -----------------------------------------------------------------------------
+run_with_timeout() {
+  local duration="$1"
+  shift
+  if command -v timeout >/dev/null 2>&1; then
+    timeout "$duration" "$@"
+  else
+    "$@"
+  fi
+}
+
+# -----------------------------------------------------------------------------
 # 1. Locate .nvmrc and Determine Target Node Version
 # -----------------------------------------------------------------------------
 find_nvmrc() {
@@ -225,20 +238,30 @@ if git rev-parse --git-dir >/dev/null 2>&1; then
   git remote -v 2>/dev/null | sed 's/^/      /'
 fi
 
-# GitHub CLI check
+# GitHub CLI check (bounded by timeout per ADR 0003 Standard 6)
 echo "      $ gh api user -q .login"
 if command -v gh >/dev/null 2>&1; then
-  GH_USER="$(gh api user -q .login 2>/dev/null || true)"
-  if [ -n "$GH_USER" ]; then
+  GH_TIMEOUT="${GH_TIMEOUT:-5s}"
+  GH_USER=""
+  GH_EXIT_CODE=0
+  GH_USER="$(run_with_timeout "$GH_TIMEOUT" gh api user -q .login 2>/dev/null)" || GH_EXIT_CODE=$?
+
+  if [ "$GH_EXIT_CODE" -eq 0 ] && [ -n "$GH_USER" ]; then
     echo "      [OK] GitHub CLI (gh): Authenticated as @${GH_USER}"
     echo "      $ gh repo set-default --view"
-    GH_DEF_REPO="$(gh repo set-default --view 2>/dev/null || true)"
+    GH_DEF_REPO="$(run_with_timeout "$GH_TIMEOUT" gh repo set-default --view 2>/dev/null || true)"
     if [ -n "$GH_DEF_REPO" ]; then
       echo "      [OK] GitHub CLI (gh): Default repo is $GH_DEF_REPO"
     else
       echo "      [WARN] GitHub CLI (gh): Default repo not set across remotes"
       echo "      👉 Run: gh repo set-default PAIR-code/deliberate-lab"
     fi
+  elif [ "$GH_EXIT_CODE" -eq 124 ]; then
+    echo "      [WARN] GitHub CLI (gh): Timed out after ${GH_TIMEOUT} attempting to verify authentication."
+    echo "             The system credential store (e.g. GNOME Keyring) may be locked or awaiting an interactive desktop prompt."
+    echo "             👉 Action Required:"
+    echo "                - Unlock your desktop session or check for an active keyring prompt."
+    echo "                - Once unlocked, re-run $(basename "$0") to confirm authentication."
   else
     echo "      [WARN] GitHub CLI (gh): Installed but not authenticated (run 'gh auth login')"
   fi
