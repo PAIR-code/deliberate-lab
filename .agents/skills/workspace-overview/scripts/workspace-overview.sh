@@ -17,10 +17,11 @@ if [ "${1:-}" = "-h" ] || [ "${1:-}" = "--help" ]; then
   exit 0
 fi
 
-echo "======================================================"
-echo "         Deliberate Lab — Workspace Overview         "
-echo "======================================================"
-echo ""
+generate_overview() {
+  echo "======================================================"
+  echo "         Deliberate Lab — Workspace Overview         "
+  echo "======================================================"
+  echo ""
 
 # -----------------------------------------------------------------------------
 # 1. Locate .nvmrc and Determine Target Node Version
@@ -289,7 +290,20 @@ else
   echo "      [INFO] Bare repository root container. Switch to a worktree directory to inspect node_modules and build artifacts."
 fi
 
-echo ""
-echo "======================================================"
-echo "Overview complete. Follow any [WARN] or [ERROR] instructions above."
-echo "======================================================"
+  echo ""
+  echo "======================================================"
+  echo "Overview complete. Follow any [WARN] or [ERROR] instructions above."
+  echo "======================================================"
+}
+
+OVERVIEW_OUTPUT="$(generate_overview)"
+TOTAL_BYTES="${#OVERVIEW_OUTPUT}"
+LIMIT="${OVERVIEW_BUFFER_LIMIT:-7000}" # Safe ceiling comfortably below 8,192 byte terminal buffer (ADR 0003 Standard 5)
+
+if [ "$TOTAL_BYTES" -gt "$LIMIT" ]; then
+  OUT_FILE="$(mktemp "${TMPDIR:-/tmp}/workspace-overview-XXXXXX.txt")"
+  printf "%s\n" "$OVERVIEW_OUTPUT" > "$OUT_FILE"
+  echo "Workspace overview (${TOTAL_BYTES} bytes) exceeds 8KB terminal limit; saved to: ${OUT_FILE} (view with view_file)"
+else
+  printf "%s\n" "$OVERVIEW_OUTPUT"
+fi
