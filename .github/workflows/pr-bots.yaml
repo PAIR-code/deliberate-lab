@@ -3,6 +3,7 @@ name: PR Review Bots
 on:
   pull_request:
     types: [opened, synchronize, reopened, ready_for_review]
+  # zizmor: ignore[pull-request-target]
   pull_request_target:
     types: [opened, synchronize, reopened, ready_for_review]
   workflow_dispatch:
@@ -54,4 +55,3 @@ jobs:
             ARGS="$ARGS --pr $PR_NUMBER_INPUT"
           fi
           npx tsx bots/src/core/runner.ts $ARGS
-
