@@ -41,6 +41,14 @@ git worktree list
 
 **Intent**: Fetch the pull request branch directly from `upstream` without adding the contributor's remote.
 
+You can inspect the PR status and metadata first using the GitHub CLI:
+```sh
+gh pr view <PR-NUMBER> --json number,title,state,headRefName
+```
+
+> [!NOTE]
+> While `gh pr checkout` is common in standard single-checkout repos, in Deliberate Lab's bare repository layout, use `git fetch` and `git worktree add` as described below to maintain flat sibling worktrees.
+
 Run the following command from the repo root:
 ```sh
 git fetch upstream pull/<PR-NUMBER>/head:pr-<PR-NUMBER>
