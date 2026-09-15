@@ -191,7 +191,7 @@ and optional helper scripts, examples, and resources.
 | Skill | Purpose |
 |-------|---------|
 | [`workspace-overview`](.agents/skills/workspace-overview/SKILL.md) | Inspect environment, Node.js version, worktree topology, and toolchain readiness |
-| [`sync-fork`](.agents/skills/sync-fork/SKILL.md) | Sync fork's `main` with upstream and rebase feature branches |
+| [`workspace-sync`](.agents/skills/workspace-sync/SKILL.md) | Synchronize trunk, mirror PR worktrees, and inspect feature branch drift |
 | [`eval-pr`](.agents/skills/eval-pr/SKILL.md) | Set up a git worktree to run and evaluate an upstream Pull Request locally |
 
 To inspect GitHub issues and pull requests, use the GitHub CLI (`gh issue view <number> --comments` or `gh pr view <number> --comments`) rather than fetching raw HTML or making unauthenticated REST calls.
