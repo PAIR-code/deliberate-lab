@@ -22,10 +22,10 @@ However, traditional CLI script design optimizes for human visual consumption in
 - Custom synthetic abstractions (hand-rolled table formatters, padded columns, and translated status strings) that mask underlying command output.
 - Machine-specific absolute host paths or ambiguous bare branch names in remediation hints.
 
-During pairing across #1236 (`workspace-overview`) and #1238 (`workspace-sync`), we identified three severe failure modes when AI coding agents execute scripts built with these traditional visual patterns:
+During pairing across #1236 (`workspace-overview`) and #1238 (`workspace-sync`), we identified the following severe failure modes when AI coding agents execute scripts built with these traditional visual patterns:
 
-1. **The Agent Trust Paradox (Opacity vs. Redundant Tool Calls)**:
-   An AI agent's confidence in a diagnostic script's output is inversely proportional to the output's opacity. When a script synthesizes or re-formats git or toolchain state into a custom pretty-printed summary, the agent reflexively suspects missing context or translation loss. The agent then routinely runs the underlying raw commands anyway (`git branch -vv`, `git remote -v`, `git status`), burning context window tokens, tool calls, and wall-clock latency.
+1. **Redundant Command Re-Execution (The "Agent Trust" Hypothesis)**:
+   When earlier versions of diagnostic scripts synthesized git or toolchain state into custom pretty-printed summaries without echoing the underlying commands, AI agents would routinely re-run the exact same raw commands anyway (`git branch -vv`, `git remote -v`, `git status`), burning context window tokens, tool calls, and wall-clock latency. Omitting synthetic formatting and visibly echoing underlying commands reliably cuts down on redundant exploratory tool calls.
 
 2. **Token Inflation and Transcript Serialization**:
    ANSI escape sequences (`\033[32m`, `\033[0m`) provide zero semantic value to Large Language Models. In agent environments, they inflate prompt token counts, degrade regex/grep pattern matching, and serialize as noisy literal escape sequences (`\u001b[...]`) in background task JSON transcripts and persistent execution logs.
@@ -34,7 +34,7 @@ During pairing across #1236 (`workspace-overview`) and #1238 (`workspace-sync`),
    Remediation hints that omit execution context or use absolute host paths (e.g. `/home/developer/...` or `/Users/...`) introduce friction and require the agent or developer to reconstruct the relative working directory before executing the fix.
 
 4. **The Stdout Buffer Truncation Trap (The Head-Loss Ring Buffer)**:
-   AI agent harnesses typically enforce an **8 KB (8,192 bytes)** terminal output buffer ceiling for shell command execution (`run_command`). Terminal runners behave like a tail ring buffer, preserving the end of execution and silently discarding lines from the top (`<truncated N lines>`). This is especially treacherous because script outputs routinely place their most critical diagnostic information at the very beginning (such as Node.js version checks, PATH remediation commands, headings, or issue/PR descriptions). When an output exceeds 8 KB, the harness silently discards the exact context the agent needs most.
+   AI agent harnesses typically enforce a terminal output buffer ceiling sometimes as low as **8 KB (8,192 bytes)** for shell command execution (`run_command`). Terminal runners behave like a tail ring buffer, preserving the end of execution and silently discarding lines from the top (`<truncated N lines>`). This is especially treacherous because script outputs routinely place their most critical diagnostic information at the very beginning (such as Node.js version checks, PATH remediation commands, headings, or issue/PR descriptions). When an output exceeds the ceiling, the harness silently discards the exact context the agent needs most.
 
 5. **The Unbounded Execution / Credential Store Lock Trap (The Silent Headless Deadlock)**:
    AI agent harnesses execute diagnostic and maintenance commands in non-interactive subshells. When a script calls external tooling (`gh`, `git`, package managers) that queries system credential stores (e.g. GNOME Keyring via D-Bus, macOS Keychain, Secret Service) or remote network APIs, those stores often expect an interactive desktop environment to render unlock dialogs or prompt for user authorization. In headless, SSH, or automated agent environments, no graphical modal can render; instead, the process blocks indefinitely on IPC sockets (`recvmsg`). When combined with stdout buffering or non-interactive execution, this produces complete silence, leaving developers and AI agents stalled with zero diagnostic feedback.
@@ -65,7 +65,7 @@ We establish six non-negotiable design standards for all agent-facing diagnostic
   git branch -vv
   ```
 - Do not write custom bash string-parsing loops or table-formatting logic to reformat standard CLI outputs (e.g. `git branch -vv`, `git remote -v`).
-- Providing direct, authoritative command output builds agent trust and eliminates redundant verification steps.
+- Providing direct, authoritative command output and echoing commands tends to eliminate redundant agent verification steps.
 
 ### 3. Actionable Relative Paths
 - All remediation commands, file references, and worktree labels must use actionable relative paths from the current working directory (`$PWD`) or container root:
@@ -113,7 +113,7 @@ We establish six non-negotiable design standards for all agent-facing diagnostic
 
 - **Script Simplicity & Maintainability**: Eliminates brittle bash string manipulation, ANSI variable boilerplate, and column-padding gymnastics.
 - **Clean Agent Transcripts**: Execution logs, background task transcripts, and agent context windows remain dense, readable, and free of escape sequence noise.
-- **Higher Agent Autonomy & Efficiency**: Coding agents operate with high confidence from the initial script output, eliminating redundant exploratory commands.
+- **Higher Agent Autonomy & Efficiency**: Coding agents accept direct command output at face value, significantly reducing redundant exploratory commands.
 - **Immediate Actionability**: Both human developers and agents can copy-paste remediation commands directly from script stdout without mental mapping.
 - **Immunity to Terminal Buffer Truncation**: Critical diagnostic context at the top of script outputs (such as Node.js remediation, branch topologies, and issue descriptions) is never silently truncated by the agent harness.
 - **Immunity to Silent Credential Store / Network Deadlocks**: Agents and developers never get blocked indefinitely by stalled background daemons or locked desktop keyrings, while respecting corporate security policies that discourage plaintext token proliferation.
