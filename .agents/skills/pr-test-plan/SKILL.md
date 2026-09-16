@@ -1,9 +1,9 @@
 ---
 name: pr-test-plan
 description: >
-  Evaluate Pull Requests for participant or experimenter UX changes, classify
-  runtime vs. non-runtime modifications, evaluate or synthesize Deliberate Lab's
-  7-part manual experiment test plans, and interactively co-author verification steps.
+  Evaluate Pull Requests for participant or experimenter UX changes, determine
+  runtime behavioral impact, audit and synthesize Deliberate Lab's 7-part manual
+  experiment test plans, and interactively co-author verification steps.
 ---
 
 # Pull Request Experiment Test Plan Assistant (`pr-test-plan`)
@@ -28,31 +28,31 @@ Invoke this skill when:
 
 ```mermaid
 flowchart TD
-    Start["PR / Worktree Input"] --> Step1["Step 1: Cheap File Listing<br>(gh pr diff --name-only)"]
-    Step1 --> ShortCircuit{"Touches frontend/,<br>functions/, or utils/?"}
-    ShortCircuit -->|No| NonRuntime["Non-Runtime Short-Circuit<br>(No manual test plan required)"]
-    ShortCircuit -->|Yes| Step2["Step 2: Inspect Context & Diffs<br>(gh-pr-view.sh & patch diffs)"]
-    Step2 --> Classify{"Pure Tests or Chores<br>Within Workspaces?"}
-    Classify -->|Yes| NonRuntime
-    Classify -->|No: Runtime Change| Audit{"Step 3: Audit Existing Plan<br>(7-Part Topology)"}
-    Audit -->|Complete Plan| Verify["Format & Summarize Verified Plan"]
-    Audit -->|Missing / Incomplete| Deduce{"Step 4: Can Deduce Plan?"}
-    Deduce -->|Yes: High Confidence| Synthesize["Synthesize 7-Part Test Plan<br>(Defensive formatting)"]
-    Deduce -->|No: Ambiguous / Opaque| Guidance["Formulate Targeted Questions<br>for PR Author"]
-    NonRuntime --> Present["Step 5: Present Conversationally"]
-    Verify --> Present
-    Synthesize --> Present
-    Guidance --> Present
-    Present --> Auth{"Human Authorizes<br>PR Comment?"}
-    Auth -->|Yes| PostComment["Post via gh pr comment"]
-    Auth -->|No| Done["Done / Ready for Local Testing"]
+    Start["PR / Worktree Input"] --> Step1["Step 1: Code Path Filter<br>(gh pr diff --name-only)"]
+    Step1 --> TouchRuntime{"Touches frontend/, functions/,<br>utils/, or firestore/?"}
+    TouchRuntime -->|No| NonRuntime["Stop: Non-Runtime Code Paths<br>(No manual test plan required)"]
+    TouchRuntime -->|Yes| Step2["Step 2: Behavioral Impact Filter<br>(Diff inspection)"]
+    Step2 --> ChangesBehavior{"Alters user-experienced<br>runtime behavior?"}
+    ChangesBehavior -->|No: Pure Refactor / Tests| NoBehaviorChange["Stop: No Behavioral Change<br>(No manual test plan required)"]
+    ChangesBehavior -->|Yes| Step3["Step 3: Audit Existing Plan<br>(Check PR description against 7-part topology)"]
+    Step3 --> Step4["Step 4: Deduce / Refine Test Plan<br>(Inspect code diff)"]
+    Step4 --> Deduce{"Can deduce plan?"}
+    Deduce -->|Yes: High Confidence| Synthesize["Synthesize / Refine 7-Part Plan"]
+    Deduce -->|No: Ambiguous / Opaque| TargetedQuestions["Formulate Targeted Questions"]
+    NonRuntime --> Step5["Step 5: Present Findings Conversationally"]
+    NoBehaviorChange --> Step5
+    Synthesize --> Step5
+    TargetedQuestions --> Step5
+    Step5 --> Step6{"Step 6: Developer Authorizes<br>PR Comment?"}
+    Step6 -->|Yes| PostComment["Post comment via gh pr comment"]
+    Step6 -->|No| Done["Done / Ready for Local Testing"]
 ```
 
 ---
 
-### Step 1 — Fast Short-Circuit on Touched Files (`--name-only`)
+### Step 1 — Code Path Filter (Touches user-facing logic?)
 
-Start with an ultra-cheap listing of changed paths before pulling PR discussions, checks, or large diffs:
+Start with an ultra-cheap listing of changed file paths before inspecting diffs, discussions, or CI checks:
 
 ```sh
 # Remote Pull Request
@@ -62,67 +62,58 @@ gh pr diff <number> --name-only
 git diff origin/main...HEAD --name-only
 ```
 
-#### Deterministic Short-Circuit Rule
-Deliberate Lab runtime experiment software strictly lives in three npm workspaces ([Decision 0004](../../decisions/0004-repository-layer-taxonomy.md)):
+#### Deterministic Code Path Heuristic
+Deliberate Lab runtime experiment software lives in:
 - `frontend/` (participant & experimenter UX, stage components, MobX stores)
 - `functions/` (Cloud Functions endpoints & Firestore triggers)
 - `utils/` (stage definitions, data schemas, validation)
+- `firestore/` (Firestore security rules & indexes)
 
-**If none of the changed files touch `frontend/`, `functions/`, or `utils/`** (e.g., changes strictly reside in `.agents/`, `.github/`, `docs/`, `scripts/`, `README.md`, or root configs):
+**If none of the changed files touch `frontend/`, `functions/`, `utils/`, or `firestore/`** (e.g., changes strictly reside in `.agents/`, `.github/`, `docs/`, `scripts/`, `README.md`, or root configs):
 1. **Stop immediately**.
-2. Classify as **Non-Runtime** (`area:workspace`, `area:ci-deploy`, `area:git`, etc.).
-3. Report to the user:
+2. Report to the user:
    > *"PR touches only non-runtime paths (`<file-list>`). No manual experiment test plan required."*
 
-If any touched file is within `frontend/`, `functions/`, or `utils/`, proceed to Step 2.
+If any touched file is within `frontend/`, `functions/`, `utils/`, or `firestore/`, proceed to Step 2.
 
 ---
 
-### Step 2 — Inspect PR Context, Diffs & Classify Layer
+### Step 2 — Behavioral Impact Filter (Alters user-experienced behavior?)
 
-Once confirmed that files touch runtime workspaces, inspect the full PR context and diffs:
+Once confirmed that changes touch runtime directories, inspect the diffs to determine if they actually produce an observable change in participant- or experimenter-experienced runtime behavior:
 
-#### Mode A: Remote Pull Request (Maintainer Triage)
-1. **Inspect PR Overview & Description**:
-   ```sh
-   ./.agents/skills/gh/scripts/gh-pr-view.sh <number>
-   ```
-2. **Inspect Patch Diffs**:
-   ```sh
-   gh pr diff <number>
-   ```
+#### Inspecting Context & Diffs
+```sh
+# Remote Pull Request
+./.agents/skills/gh/scripts/gh-pr-view.sh <number>
+gh pr diff <number>
 
-#### Mode B: Active Evaluation Worktree or Feature Branch
-1. **Inspect Diffs**:
-   ```sh
-   git diff origin/main...HEAD
-   ```
-2. **Inspect Commits**:
-   ```sh
-   git log origin/main...HEAD --oneline
-   ```
+# Local Evaluation Worktree or Feature Branch
+git diff origin/main...HEAD
+git log origin/main...HEAD --oneline
+```
+*(Note: If operating inside a worktree where `./.agents` is not local, reference the container root `.agents/skills/gh/scripts/gh-pr-view.sh`.)*
 
-#### Layer Classification
-Ground the change in Deliberate Lab's repository layers:
+#### Non-Behavioral Changes (Stop Condition)
+If the changes fall into any of the following categories:
+- **Pure Standalone Unit Tests / Mocks**: Changes strictly in `*.test.ts`, test fixtures, or test utilities without modifying production code.
+- **Build & Lint Configs**: Modifications to workspace `package.json`, `tsconfig.json`, linters, or Prettier settings.
+- **Pure Internal Refactoring**: Code reorganization, renaming, dead code elimination, or internal typing changes that preserve identical observable behavior and data structures.
 
-| Layer Category | Repository Layer | Typical Paths & Scopes | Manual Plan Required? |
-| :--- | :--- | :--- | :--- |
-| **Non-Runtime** | `area:test` | Standalone unit tests (`*.test.ts`) or mocks without runtime edits | ❌ No |
-| **Non-Runtime** | `area:build` | Workspace `package.json`, `tsconfig.json`, linters, Prettier | ❌ No |
-| **Runtime** | `runtime:participant-ux` | `frontend/src/components/stages/`, `frontend/src/components/participant/` | ✅ **Yes** |
-| **Runtime** | `runtime:experimenter-ux`| `frontend/src/components/experimenter/`, dashboard, monitors | ✅ **Yes** |
-| **Runtime** | `runtime:agents` | In-experiment LLM agents, mediator rules, prompts, personas | ✅ **Yes** |
-| **Runtime** | `runtime:backend` | `functions/src/`, `utils/src/`, Firestore data models/triggers | ✅ **Yes** |
+**If no user-experienced behavior is changed:**
+1. **Stop**.
+2. Report to the user:
+   > *"PR contains only non-behavioral changes (pure refactor, unit tests, or build configuration). No manual experiment test plan required."*
 
-If the diff strictly modifies unit tests (`area:test`) or workspace build configs (`area:build`) without runtime logic changes, classify as **Non-Runtime**. Otherwise, proceed to Step 3.
+Otherwise (changes affect participant stages, experimenter dashboard controls, agent mediator/participant prompts, Cloud Functions endpoints, or Firestore triggers/rules), proceed to Step 3.
 
 ---
 
-### Step 3 — Audit Existing Plan Against the 7-Part Topology
+### Step 3 — Audit Existing Manual Test Steps
 
-Inspect the PR title, body description, and discussion comments. Evaluate whether the author provided manual verification instructions covering Deliberate Lab's canonical **7-part experiment topology**:
+Inspect the PR title, body description, and discussion comments. Evaluate whether the author provided manual verification instructions and whether they are clear, complete, and accurate based on Deliberate Lab's canonical **7-part experiment topology**:
 
-1. **Experiment Template**: Base experiment template or configuration to load (e.g., *Chat Negotiation*, *Group Discussion*, *Single-Player Survey*, or *Custom*).
+1. **Experiment Template**: Base experiment template or configuration to load (e.g., *Chat Negotiation*, *Group Discussion*, *Single-Player Survey*, or *Empty/Custom*).
 2. **Stages Sequence**: Ordered sequence of stages to configure or navigate through (e.g., `InfoStage` ➔ `ProfileStage` ➔ `ChatStage` ➔ `SurveyStage`).
 3. **Human Cohort**: Number of human participant sessions needed (e.g., *1 human tester*, *2 humans in separate incognito windows*).
 4. **Agent Mediator**: Configuration of the LLM mediator bot, if involved (e.g., *None*, or *Default Mediator with standard prompt*).
@@ -132,18 +123,18 @@ Inspect the PR title, body description, and discussion comments. Evaluate whethe
 
 ---
 
-### Step 4 — Proactive Synthesis & Confidence Assessment
+### Step 4 — Deduce or Refine the 7-Part Test Plan
 
-If a manual test plan is missing or lacks elements of the 7-part topology:
+Whether the PR already included a test plan or not, inspect the code diff to deduce or refine a ready-to-run 7-part test plan:
 
 #### Scenario A: High Confidence Plan Synthesis (`canDeducePlan = true`)
-When code diffs clearly map to specific stages, UI components, configuration flags, or participant journeys (e.g. adding minimum/maximum countdown timers to `InfoStageConfig`):
-- Proactively reverse-engineer the code changes.
-- Synthesize a complete, ready-to-run 7-part test plan.
-- Use **defensive formatting**:
+When code diffs clearly map to specific stages, UI components, configuration flags, or participant journeys (e.g. adding countdown timers to `InfoStageConfig`):
+- Proactively reverse-engineer the code changes into a complete 7-part test plan (or fill in any gaps from the author's existing plan).
+- **Defensive Formatting**:
   - Keep numbered steps clean and sequential.
   - Indent sub-bullets with 3 spaces so GitHub Flavored Markdown preserves list nesting.
-  - Avoid ambiguous jargon; state exact button labels and stage names.
+  - Avoid ambiguous jargon; cite exact stage names, form fields, and button labels.
+- **Experimenter-Only Features**: If changes strictly affect the experimenter dashboard (e.g. CSV exports, session monitoring), specify the minimal experiment session (e.g. 1 participant) needed to populate data.
 
 #### Scenario B: Ambiguous or Opaque Changes (`canDeducePlan = false`)
 When changes involve subtle backend data migrations, low-level concurrency locks, or private logic without evident UI manifestations:
@@ -153,17 +144,23 @@ When changes involve subtle backend data migrations, low-level concurrency locks
 
 ---
 
-### Step 5 — Interactive Co-Authoring & Authorized Commenting
+### Step 5 — Present Findings Conversationally
 
-1. **Present the Determination in Conversation**:
-   Present the classification and draft plan to the user in markdown.
-2. **Review & Iterate**:
-   Allow the user to tweak the steps, add custom experiment templates, or adjust cohort sizes.
-3. **Authorized GitHub Comment (Optional)**:
-   If—and **only if**—the developer explicitly directs you to post the comment to GitHub:
-   ```sh
-   gh pr comment <number> --body "<formatted-comment>"
-   ```
+Present the full evaluation to the developer in markdown:
+1. **Behavioral Determination**: Whether runtime changes were detected and why.
+2. **Audit of Author Instructions**: Summary of existing test steps in the PR (or note that none were provided).
+3. **Canonical 7-Part Test Plan**: The complete, deduced verification walkthrough (or targeted questions if opaque).
+4. **Ready for Verification**: Remind the user that these steps can be executed locally in `./run_locally.sh` (or paired with [`eval-pr`](../eval-pr/SKILL.md)).
+
+---
+
+### Step 6 — Offer Authorized GitHub PR Comment
+
+Offer to post the formatted test plan as a comment on the GitHub PR:
+- **Strict Authorization Gate**: Never post comments autonomously. Only run the command if the developer explicitly directs you to post:
+  ```sh
+  gh pr comment <number> --body "<formatted-comment>"
+  ```
 
 ---
 

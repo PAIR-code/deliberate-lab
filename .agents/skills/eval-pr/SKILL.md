@@ -76,7 +76,7 @@ Once the worktree is created, inform the user that it is ready and provide the p
 ### Step 4 — Formulate Manual Test Plan (`pr-test-plan`)
 
 Before or after switching into the evaluation worktree, invoke the [`pr-test-plan`](../pr-test-plan/SKILL.md) skill to audit the author's test plan or synthesize Deliberate Lab's canonical 7-part experiment test plan:
-- Verifies whether the PR alters runtime behavior (`runtime:*`) vs. non-runtime infrastructure (`area:*`).
+- Verifies whether the PR alters user-experienced runtime behavior vs. non-runtime paths or pure refactors.
 - Deduces template, stages sequence, cohort size, agent mediator/participant configs, tester actions, and success criteria.
 - Provides a step-by-step walkthrough for manual verification in `./run_locally.sh`.
 
