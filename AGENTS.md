@@ -196,6 +196,7 @@ and optional helper scripts, examples, and resources.
 | [`eval-pr`](.agents/skills/eval-pr/SKILL.md) | Set up a git worktree to run and evaluate an upstream Pull Request locally |
 | [`gh`](.agents/skills/gh/SKILL.md) | Clean, untruncated GitHub CLI operations and issue/PR inspection |
 | [`retrospective`](.agents/skills/retrospective/SKILL.md) | AI-native Post-Action Reviews using FAR rubric, telemetry mining, and zero-in-flight fixes |
+| [`pr-test-plan`](.agents/skills/pr-test-plan/SKILL.md) | Evaluate PRs for participant/experimenter UX changes and synthesize 7-part manual experiment test plans |
 
 To inspect GitHub issues and pull requests, use the `gh` skill scripts (`./.agents/skills/gh/scripts/gh-issue-view.sh <number>` for issues or `./.agents/skills/gh/scripts/gh-pr-view.sh <number>` for PRs with CI checks and inline reviews) to stream complete context without terminal truncation.
 

@@ -22,6 +22,9 @@ Invoke this skill when the user asks to:
 - "Sync PR <ID> worktree"
 - "Pull new changes for PR <ID>"
 
+> [!TIP]
+> **Pair with [`pr-test-plan`](../pr-test-plan/SKILL.md)**: Before or after checking out a PR worktree, invoke the `pr-test-plan` skill to determine if runtime testing is required and synthesize a 7-part manual experiment verification plan.
+
 ## Prerequisites
 
 The local repo must have a triangle workflow configured with:
@@ -69,6 +72,13 @@ This fetches the head of PR `<PR-NUMBER>` and creates a local branch named `pr-<
 ### Step 3 — Handover
 
 Once the worktree is created, inform the user that it is ready and provide the path to switch to. The user will handle installing dependencies, building, and running the project from their IDE/terminal.
+
+### Step 4 — Formulate Manual Test Plan (`pr-test-plan`)
+
+Before or after switching into the evaluation worktree, invoke the [`pr-test-plan`](../pr-test-plan/SKILL.md) skill to audit the author's test plan or synthesize Deliberate Lab's canonical 7-part experiment test plan:
+- Verifies whether the PR alters runtime behavior (`runtime:*`) vs. non-runtime infrastructure (`area:*`).
+- Deduces template, stages sequence, cohort size, agent mediator/participant configs, tester actions, and success criteria.
+- Provides a step-by-step walkthrough for manual verification in `./run_locally.sh`.
 
 ### Updating an Existing PR Worktree
 
