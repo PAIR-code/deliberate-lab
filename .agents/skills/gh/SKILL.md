@@ -126,3 +126,5 @@ When writing automated scripts or querying GitHub CLI directly without helper sc
 
 - **Never allow interactive prompts**: Keep `export GH_PROMPT_DISABLED=1` active in non-interactive agent sessions.
 - **Do not shadow system binaries**: Never install a silent `gh` wrapper into `$PATH` or use relative PATH modifications. Always call scripts explicitly to preserve command provenance.
+- **Bounded execution**: Script operations are bounded by non-blocking timeouts (`${GH_TIMEOUT:-5s}`) per [ADR 0003](../../decisions/0003-agent-tooling-output-standards.md) Standard 6 to prevent headless credential store deadlocks.
+

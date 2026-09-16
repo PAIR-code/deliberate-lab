@@ -2,18 +2,33 @@
 set -eo pipefail
 
 usage() {
-  echo "Usage: $(basename "$0") <issue-or-pr-number> [--no-comments | --comments-only]"
-  echo ""
-  echo "View a GitHub Issue or Pull Request cleanly without PTY/Glamour truncation."
-  echo ""
-  echo "Arguments:"
-  echo "  <number>           GitHub Issue or Pull Request number (e.g. 1245)"
-  echo ""
-  echo "Options:"
-  echo "  --no-comments      Only display the issue/PR header and description"
-  echo "  --comments-only    Only display the discussion comments thread"
-  echo "  -h, --help         Show this help message"
-  exit 1
+  cat <<EOF
+Usage: $(basename "$0") <issue-or-pr-number> [--no-comments | --comments-only]
+
+View a GitHub Issue or Pull Request cleanly without PTY/Glamour truncation.
+
+Arguments:
+  <number>           GitHub Issue or Pull Request number (e.g. 1245)
+
+Options:
+  --no-comments      Only display the issue/PR header and description
+  --comments-only    Only display the discussion comments thread
+  -h, --help         Show this help message and exit
+EOF
+  exit "${1:-0}"
+}
+
+# -----------------------------------------------------------------------------
+# Helper: Run command with bounded timeout (ADR 0003 Standard 6)
+# -----------------------------------------------------------------------------
+run_with_timeout() {
+  local duration="$1"
+  shift
+  if command -v timeout >/dev/null 2>&1; then
+    timeout "$duration" "$@"
+  else
+    "$@"
+  fi
 }
 
 TARGET=""
@@ -31,44 +46,66 @@ while [[ $# -gt 0 ]]; do
       shift
       ;;
     -h|--help)
-      usage
+      usage 0
       ;;
     *)
       if [[ -z "$TARGET" ]]; then
         TARGET="$1"
         shift
       else
-        echo "Error: Unexpected argument '$1'" >&2
-        usage
+        echo "[ERROR] Unexpected argument '$1'" >&2
+        usage 1
       fi
       ;;
   esac
 done
 
 if [[ -z "$TARGET" ]]; then
-  echo "Error: Missing issue or PR number." >&2
-  usage
+  echo "[ERROR] Missing issue or PR number." >&2
+  usage 1
 fi
 
 if ! [[ "$TARGET" =~ ^[0-9]+$ ]]; then
-  echo "Error: Target '$TARGET' must be a numeric Issue or PR number." >&2
+  echo "[ERROR] Target '$TARGET' must be a numeric Issue or PR number." >&2
   exit 1
 fi
 
-# Disable interactive prompts
+# Disable interactive prompts & set timeout (ADR 0003 Standard 6)
 export GH_PROMPT_DISABLED=1
+GH_TIMEOUT="${GH_TIMEOUT:-5s}"
 
 BODY=""
 COMMENTS=""
 
 # Fetch body if requested
 if [ "$INCLUDE_BODY" = true ]; then
-  BODY="$(gh issue view "${TARGET}" | cat)"
+  body_exit=0
+  BODY="$(run_with_timeout "$GH_TIMEOUT" gh issue view "${TARGET}" 2>&1 | cat)" || body_exit=$?
+  if [ "$body_exit" -eq 124 ]; then
+    echo "[WARN] Timed out querying Issue #${TARGET} after ${GH_TIMEOUT}." >&2
+    echo "       The system credential store (e.g. GNOME Keyring) may be locked or awaiting an interactive desktop prompt." >&2
+    echo "       👉 Action Required:" >&2
+    echo "          - Unlock your desktop session or check for an active keyring prompt." >&2
+    echo "          - Once unlocked, re-run $(basename "$0") ${TARGET}." >&2
+    exit 124
+  elif [ "$body_exit" -ne 0 ]; then
+    echo "$BODY" >&2
+    echo "[ERROR] Failed to view Issue #${TARGET}." >&2
+    exit "$body_exit"
+  fi
 fi
 
 # Fetch comments if requested
 if [ "$INCLUDE_COMMENTS" = true ]; then
-  COMMENTS="$(gh issue view "${TARGET}" --comments 2>/dev/null | cat || true)"
+  comments_exit=0
+  COMMENTS="$(run_with_timeout "$GH_TIMEOUT" gh issue view "${TARGET}" --comments 2>&1 | cat)" || comments_exit=$?
+  if [ "$comments_exit" -eq 124 ]; then
+    echo "[WARN] Timed out fetching comments for Issue #${TARGET} after ${GH_TIMEOUT}." >&2
+    echo "       The system credential store (e.g. GNOME Keyring) may be locked or network stalled." >&2
+    COMMENTS=""
+  elif [ "$comments_exit" -ne 0 ]; then
+    COMMENTS=""
+  fi
 fi
 
 # Calculate total payload size

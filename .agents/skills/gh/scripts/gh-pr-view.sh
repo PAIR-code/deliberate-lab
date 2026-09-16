@@ -2,23 +2,38 @@
 set -eo pipefail
 
 usage() {
-  echo "Usage: $(basename "$0") <pr-number> [options]"
-  echo ""
-  echo "View a GitHub Pull Request cleanly with metadata, CI checks, discussion comments,"
-  echo "and inline code review comments without PTY/Glamour truncation."
-  echo ""
-  echo "Arguments:"
-  echo "  <number>           GitHub Pull Request number (e.g. 1246)"
-  echo ""
-  echo "Options:"
-  echo "  --checks-only      Only display CI status and checks"
-  echo "  --reviews-only     Only display inline code review comments"
-  echo "  --comments-only    Only display general discussion comments"
-  echo "  --no-checks        Skip CI status and checks"
-  echo "  --no-reviews       Skip inline code review comments"
-  echo "  --no-comments      Skip general discussion comments"
-  echo "  -h, --help         Show this help message"
-  exit 1
+  cat <<EOF
+Usage: $(basename "$0") <pr-number> [options]
+
+View a GitHub Pull Request cleanly with metadata, CI checks, discussion comments,
+and inline code review comments without PTY/Glamour truncation.
+
+Arguments:
+  <number>           GitHub Pull Request number (e.g. 1246)
+
+Options:
+  --checks-only      Only display CI status and checks
+  --reviews-only     Only display inline code review comments
+  --comments-only    Only display general discussion comments
+  --no-checks        Skip CI status and checks
+  --no-reviews       Skip inline code review comments
+  --no-comments      Skip general discussion comments
+  -h, --help         Show this help message and exit
+EOF
+  exit "${1:-0}"
+}
+
+# -----------------------------------------------------------------------------
+# Helper: Run command with bounded timeout (ADR 0003 Standard 6)
+# -----------------------------------------------------------------------------
+run_with_timeout() {
+  local duration="$1"
+  shift
+  if command -v timeout >/dev/null 2>&1; then
+    timeout "$duration" "$@"
+  else
+    "$@"
+  fi
 }
 
 TARGET=""
@@ -63,32 +78,33 @@ while [[ $# -gt 0 ]]; do
       shift
       ;;
     -h|--help)
-      usage
+      usage 0
       ;;
     *)
       if [[ -z "$TARGET" ]]; then
         TARGET="$1"
         shift
       else
-        echo "Error: Unexpected argument '$1'" >&2
-        usage
+        echo "[ERROR] Unexpected argument '$1'" >&2
+        usage 1
       fi
       ;;
   esac
 done
 
 if [[ -z "$TARGET" ]]; then
-  echo "Error: Missing Pull Request number." >&2
-  usage
+  echo "[ERROR] Missing Pull Request number." >&2
+  usage 1
 fi
 
 if ! [[ "$TARGET" =~ ^[0-9]+$ ]]; then
-  echo "Error: Target '$TARGET' must be a numeric Pull Request number." >&2
+  echo "[ERROR] Target '$TARGET' must be a numeric Pull Request number." >&2
   exit 1
 fi
 
-# Disable interactive prompts
+# Disable interactive prompts & configure timeout (ADR 0003 Standard 6)
 export GH_PROMPT_DISABLED=1
+GH_TIMEOUT="${GH_TIMEOUT:-5s}"
 
 BODY=""
 CHECKS=""
@@ -97,29 +113,55 @@ REVIEWS=""
 
 # 1. PR Metadata & Description
 if [ "$INCLUDE_BODY" = true ]; then
-  if ! BODY="$(gh pr view "${TARGET}" 2>&1 | cat)"; then
+  body_exit=0
+  BODY="$(run_with_timeout "$GH_TIMEOUT" gh pr view "${TARGET}" 2>&1 | cat)" || body_exit=$?
+  if [ "$body_exit" -eq 124 ]; then
+    echo "[WARN] Timed out querying PR #${TARGET} after ${GH_TIMEOUT}." >&2
+    echo "       The system credential store (e.g. GNOME Keyring) may be locked or awaiting an interactive desktop prompt." >&2
+    echo "       👉 Action Required:" >&2
+    echo "          - Unlock your desktop session or check for an active keyring prompt." >&2
+    echo "          - Once unlocked, re-run $(basename "$0") ${TARGET}." >&2
+    exit 124
+  elif [ "$body_exit" -ne 0 ]; then
     echo "$BODY" >&2
-    echo "Tip: If #${TARGET} is an Issue rather than a PR, use gh-issue-view.sh instead." >&2
-    exit 1
+    echo "Tip: If #${TARGET} is an Issue rather than a PR, use ./.agents/skills/gh/scripts/gh-issue-view.sh instead." >&2
+    exit "$body_exit"
   fi
 fi
 
 # 2. CI Status & Checks
 if [ "$INCLUDE_CHECKS" = true ]; then
-  C_OUT="$(gh pr checks "${TARGET}" 2>&1 | cat || true)"
-  if [[ -n "$C_OUT" && "$C_OUT" != *"no checks reported"* ]]; then
+  c_exit=0
+  C_OUT="$(run_with_timeout "$GH_TIMEOUT" gh pr checks "${TARGET}" 2>&1 | cat)" || c_exit=$?
+  if [ "$c_exit" -eq 124 ]; then
+    echo "[WARN] Timed out querying CI checks for PR #${TARGET} after ${GH_TIMEOUT}." >&2
+  elif [ "$c_exit" -eq 0 ] && [ -n "$C_OUT" ] && [[ "$C_OUT" != *"no checks reported"* ]]; then
     CHECKS="$C_OUT"
   fi
 fi
 
 # 3. PR-Level Discussion Comments
 if [ "$INCLUDE_COMMENTS" = true ]; then
-  COMMENTS="$(gh pr view "${TARGET}" --comments 2>/dev/null | cat || true)"
+  com_exit=0
+  COMMENTS="$(run_with_timeout "$GH_TIMEOUT" gh pr view "${TARGET}" --comments 2>&1 | cat)" || com_exit=$?
+  if [ "$com_exit" -eq 124 ]; then
+    echo "[WARN] Timed out querying discussion comments for PR #${TARGET} after ${GH_TIMEOUT}." >&2
+    COMMENTS=""
+  elif [ "$com_exit" -ne 0 ]; then
+    COMMENTS=""
+  fi
 fi
 
 # 4. Inline Code Review Comments
 if [ "$INCLUDE_REVIEWS" = true ]; then
-  REVIEWS="$(gh api repos/{owner}/{repo}/pulls/"${TARGET}"/comments --jq '.[] | "[\(.path):\(.line // "diff")] \(.user.login): \(.body)"' 2>/dev/null || true)"
+  rev_exit=0
+  REVIEWS="$(run_with_timeout "$GH_TIMEOUT" gh api repos/{owner}/{repo}/pulls/"${TARGET}"/comments --jq '.[] | "[\(.path):\(.line // "diff")] \(.user.login): \(.body)"' 2>&1 | cat)" || rev_exit=$?
+  if [ "$rev_exit" -eq 124 ]; then
+    echo "[WARN] Timed out querying inline code review comments for PR #${TARGET} after ${GH_TIMEOUT}." >&2
+    REVIEWS=""
+  elif [ "$rev_exit" -ne 0 ]; then
+    REVIEWS=""
+  fi
 fi
 
 # Calculate total payload size
