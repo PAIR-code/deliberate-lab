@@ -24,32 +24,20 @@ Invoke this skill when:
 
 ---
 
-## Core Principles
-
-### 1. The Co-Author Posture
-Rather than acting as an asynchronous, blocking CI gatekeeper, this skill operates **interactively within the pairing session**. It acts as a helpful co-author:
-- If a contributor provided a complete test plan, it verifies and summarizes it.
-- If a test plan is missing or incomplete, it reverse-engineers the diff to deduce a runnable 7-step draft.
-- If code changes are too opaque to deduce without guessing, it isolates the exact ambiguities and prompts the developer for the missing domain context.
-
-### 2. The Cardinal Rule of GitHub Interaction
-> [!CRITICAL]
-> **Never post comments to GitHub (`gh pr comment`) autonomously.**
-> All evaluations, classifications, and synthesized test plans must be presented conversationally in the active pairing session first. Only post to GitHub when the developer provides explicit authorization (e.g., *"Post this to the PR"*, *"Leave a comment with this test plan"*).
-
----
-
 ## Procedures
 
 ```mermaid
 flowchart TD
-    Start["PR / Worktree Input"] --> Inspect["Step 1: Inspect Metadata & Diffs<br>(via gh skill or git diff)"]
-    Inspect --> Classify{"Step 2: Classify Layer<br>(ADR 0004 Taxonomy)"}
-    Classify -->|Non-Runtime<br>area:*| NonRuntime["Mark Non-Runtime<br>(No manual test plan required)"]
-    Classify -->|Runtime<br>runtime:*| Audit{"Step 3: Audit Existing Plan<br>(7-Part Topology)"}
+    Start["PR / Worktree Input"] --> Step1["Step 1: Cheap File Listing<br>(gh pr diff --name-only)"]
+    Step1 --> ShortCircuit{"Touches frontend/,<br>functions/, or utils/?"}
+    ShortCircuit -->|No| NonRuntime["Non-Runtime Short-Circuit<br>(No manual test plan required)"]
+    ShortCircuit -->|Yes| Step2["Step 2: Inspect Context & Diffs<br>(gh-pr-view.sh & patch diffs)"]
+    Step2 --> Classify{"Pure Tests or Chores<br>Within Workspaces?"}
+    Classify -->|Yes| NonRuntime
+    Classify -->|No: Runtime Change| Audit{"Step 3: Audit Existing Plan<br>(7-Part Topology)"}
     Audit -->|Complete Plan| Verify["Format & Summarize Verified Plan"]
     Audit -->|Missing / Incomplete| Deduce{"Step 4: Can Deduce Plan?"}
-    Deduce -->|Yes: High Confidence| Synthesize["Synthesize 7-Part Test Plan<br>(Defensive markdown formatting)"]
+    Deduce -->|Yes: High Confidence| Synthesize["Synthesize 7-Part Test Plan<br>(Defensive formatting)"]
     Deduce -->|No: Ambiguous / Opaque| Guidance["Formulate Targeted Questions<br>for PR Author"]
     NonRuntime --> Present["Step 5: Present Conversationally"]
     Verify --> Present
@@ -62,63 +50,71 @@ flowchart TD
 
 ---
 
-### Step 1 — Inspect PR Context and Diffs
+### Step 1 — Fast Short-Circuit on Touched Files (`--name-only`)
 
-Obtain the PR metadata, description, and diffs using the appropriate mode:
+Start with an ultra-cheap listing of changed paths before pulling PR discussions, checks, or large diffs:
+
+```sh
+# Remote Pull Request
+gh pr diff <number> --name-only
+
+# Local Evaluation Worktree or Feature Branch
+git diff origin/main...HEAD --name-only
+```
+
+#### Deterministic Short-Circuit Rule
+Deliberate Lab runtime experiment software strictly lives in three npm workspaces ([Decision 0004](../../decisions/0004-repository-layer-taxonomy.md)):
+- `frontend/` (participant & experimenter UX, stage components, MobX stores)
+- `functions/` (Cloud Functions endpoints & Firestore triggers)
+- `utils/` (stage definitions, data schemas, validation)
+
+**If none of the changed files touch `frontend/`, `functions/`, or `utils/`** (e.g., changes strictly reside in `.agents/`, `.github/`, `docs/`, `scripts/`, `README.md`, or root configs):
+1. **Stop immediately**.
+2. Classify as **Non-Runtime** (`area:workspace`, `area:ci-deploy`, `area:git`, etc.).
+3. Report to the user:
+   > *"PR touches only non-runtime paths (`<file-list>`). No manual experiment test plan required."*
+
+If any touched file is within `frontend/`, `functions/`, or `utils/`, proceed to Step 2.
+
+---
+
+### Step 2 — Inspect PR Context, Diffs & Classify Layer
+
+Once confirmed that files touch runtime workspaces, inspect the full PR context and diffs:
 
 #### Mode A: Remote Pull Request (Maintainer Triage)
-Use the [`gh`](../gh/SKILL.md) skill helper scripts to avoid terminal truncation:
-
 1. **Inspect PR Overview & Description**:
    ```sh
    ./.agents/skills/gh/scripts/gh-pr-view.sh <number>
    ```
-2. **Inspect Changed Files**:
-   ```sh
-   gh pr diff <number> --name-only
-   ```
-3. **Inspect Patch Diffs**:
+2. **Inspect Patch Diffs**:
    ```sh
    gh pr diff <number>
    ```
 
 #### Mode B: Active Evaluation Worktree or Feature Branch
-If already inside an evaluation worktree (`pr-<number>/` created via [`eval-pr`](../eval-pr/SKILL.md)) or local feature worktree:
-
-1. **Inspect Changed Files**:
-   ```sh
-   git diff origin/main...HEAD --name-only
-   ```
-2. **Inspect Diffs**:
+1. **Inspect Diffs**:
    ```sh
    git diff origin/main...HEAD
    ```
-3. **Inspect Recent Commits**:
+2. **Inspect Commits**:
    ```sh
    git log origin/main...HEAD --oneline
    ```
 
----
-
-### Step 2 — Classify Runtime vs. Non-Runtime Changes
-
-Ground the classification directly in Deliberate Lab's canonical 6-layer repository taxonomy ([Decision 0004](../../decisions/0004-repository-layer-taxonomy.md)):
+#### Layer Classification
+Ground the change in Deliberate Lab's repository layers:
 
 | Layer Category | Repository Layer | Typical Paths & Scopes | Manual Plan Required? |
 | :--- | :--- | :--- | :--- |
-| **Non-Runtime** | `area:workspace` | `.agents/`, `.bare/`, container root, workspace scripts | ❌ No |
-| **Non-Runtime** | `area:git` | Root documentation, git hooks, policies, PR templates | ❌ No |
-| **Non-Runtime** | `area:build` | `package.json`, `tsconfig.json`, linters, Prettier, Webpack | ❌ No |
-| **Non-Runtime** | `area:test` | Unit tests (`*.test.ts`), test fixtures without runtime changes | ❌ No |
-| **Non-Runtime** | `area:ci-deploy` | `.github/workflows/*`, `cloudbuild.yaml` | ❌ No |
+| **Non-Runtime** | `area:test` | Standalone unit tests (`*.test.ts`) or mocks without runtime edits | ❌ No |
+| **Non-Runtime** | `area:build` | Workspace `package.json`, `tsconfig.json`, linters, Prettier | ❌ No |
 | **Runtime** | `runtime:participant-ux` | `frontend/src/components/stages/`, `frontend/src/components/participant/` | ✅ **Yes** |
 | **Runtime** | `runtime:experimenter-ux`| `frontend/src/components/experimenter/`, dashboard, monitors | ✅ **Yes** |
 | **Runtime** | `runtime:agents` | In-experiment LLM agents, mediator rules, prompts, personas | ✅ **Yes** |
 | **Runtime** | `runtime:backend` | `functions/src/`, `utils/src/`, Firestore data models/triggers | ✅ **Yes** |
 
-**Classification Rules**:
-1. **Pure Non-Runtime**: If changed files strictly reside in non-runtime layers (`area:*`) without altering experiment runtime execution semantics, classify as **Non-Runtime**. Document the rationale (e.g. *"This PR adds agent pairing documentation and does not affect the web application runtime"*). No manual experiment test plan is required.
-2. **Runtime Changes**: If any changed file affects participant stages, experimenter controls, agent participants/mediators, backend Cloud Functions, or Firestore state machines, classify as **Runtime**. Proceed to Step 3.
+If the diff strictly modifies unit tests (`area:test`) or workspace build configs (`area:build`) without runtime logic changes, classify as **Non-Runtime**. Otherwise, proceed to Step 3.
 
 ---
 
@@ -168,69 +164,6 @@ When changes involve subtle backend data migrations, low-level concurrency locks
    ```sh
    gh pr comment <number> --body "<formatted-comment>"
    ```
-
----
-
-## Canonical Comment Templates
-
-### Template 1: Runtime Change with Synthesized Test Plan
-
-```markdown
-### 🧪 Deliberate Lab • Experiment Test Plan Assistant
-
-💡 **Draft Manual Experiment Test Plan (Ready for Review)**
-
-This pull request alters runtime application behavior (`runtime:participant-ux`). While manual verification steps were not included in the PR description, a tentative 7-step test plan was synthesized from the code changes:
-
-**Classification Rationale**: Changes in `frontend/src/components/stages/info_stage.ts` add configurable min/max countdown timers to the Info stage.
-
-#### 📋 Suggested Test Plan
-1. **Experiment Template**: Default / Empty Experiment
-2. **Stages Sequence**: Add an `InfoStage` followed by a `SurveyStage`
-3. **Human Cohort**: 1 human participant
-4. **Agent Mediator**: None
-5. **Agent Participants**: None
-6. **Tester Actions**:
-   1. In the Experimenter Dashboard, edit the `InfoStage` configuration.
-   2. Set **Minimum Timer** to 10 seconds and **Maximum Timer** to 30 seconds.
-   3. Save and launch a new experiment session.
-   4. Join the session as a participant.
-   5. Verify the "Next" button is disabled and displays a countdown timer for the first 10 seconds.
-   6. After 10 seconds, verify the "Next" button becomes enabled.
-   7. Wait until 30 seconds elapse and observe auto-advance behavior.
-7. **Expected Behavior**: Next button respects minimum lockout and auto-advances or displays expiration warning at maximum limit without console errors.
-
----
-*Reviewers and maintainers can use this draft test plan to verify the PR locally via [`eval-pr`](https://github.com/PAIR-code/deliberate-lab/blob/main/.agents/skills/eval-pr/SKILL.md). Authors are welcome to adopt or refine these steps in their PR description.*
-
-<!-- deliberate-lab: test-plan -->
-```
-
-### Template 2: Non-Runtime Change
-
-```markdown
-### 🧪 Deliberate Lab • Experiment Test Plan Assistant
-
-ℹ️ **Non-Runtime Change Detected**
-
-This pull request modifies files in `area:workspace` (`.agents/skills/pr-test-plan/SKILL.md`). It does not alter web application runtime behavior, participant/experimenter UX, Cloud Functions, or experiment lifecycles.
-
-*Manual experiment verification is not required for non-runtime pull requests (documentation, CI/CD workflows, developer tooling, or chores).*
-
-<!-- deliberate-lab: test-plan -->
-```
-
----
-
-## Synergy with `eval-pr`
-
-The `pr-test-plan` and [`eval-pr`](../eval-pr/SKILL.md) skills form a natural pairing:
-
-1. **Pre-Checkout Triage**:
-   - Before running `eval-pr`, invoke `pr-test-plan <number>` to determine if the PR touches runtime logic.
-   - If non-runtime, you may review the code diff directly without spinning up a local server.
-2. **Local Verification Walkthrough**:
-   - When `eval-pr` creates a `pr-<number>/` worktree, use the synthesized 7-part test plan as your exact walkthrough guide while testing in `./run_locally.sh`.
 
 ---
 
