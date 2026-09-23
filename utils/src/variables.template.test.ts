@@ -1,9 +1,14 @@
 import {VariableDefinition, VariableType} from './variables';
 import {
   findUnusedVariables,
+  getVariableContext,
   resolveTemplateVariables,
   validateTemplateVariables,
 } from './variables.template';
+import {createRandomPermutationVariableConfig} from './variables.utils';
+import {createParticipantProfileExtended} from './participant';
+import type {Experiment} from './experiment';
+import type {CohortConfig} from './cohort';
 
 describe('Mustache Template Resolution', () => {
   const variableDefinitions: Record<string, VariableDefinition> = {
@@ -422,5 +427,104 @@ describe('Mustache Template Resolution', () => {
       const result = findUnusedVariables(stages, variableDefinitions);
       expect(result).toEqual(['city']);
     });
+  });
+});
+
+describe('getVariableContext: participant-variable aggregation (mediator access)', () => {
+  // A participant-scoped variable whose value is a per-round array of
+  // objects, matching how a random-permutation variable is stored per
+  // participant.
+  const topicConfig = createRandomPermutationVariableConfig({
+    expandListToSeparateVariables: false,
+    definition: {
+      name: 'topic',
+      description: '',
+      schema: VariableType.array(
+        VariableType.object({topicName: VariableType.STRING}),
+      ),
+    },
+  });
+  const experiment = {
+    variableConfigs: [topicConfig],
+    variableMap: {},
+  } as unknown as Experiment;
+  const cohort = {variableMap: {}} as unknown as CohortConfig;
+  const withTopic = (rounds: {topicName: string}[]) =>
+    createParticipantProfileExtended({
+      variableMap: {topic: JSON.stringify(rounds)},
+    });
+  const plain = (variableMap: Record<string, string>) =>
+    createParticipantProfileExtended({variableMap});
+
+  it('aggregates a participant-scoped variable into an array indexed by participant', () => {
+    const {valueMap} = getVariableContext(experiment, cohort, [
+      plain({topic: JSON.stringify({topicName: 'Education'})}),
+      plain({topic: JSON.stringify({topicName: 'Privacy'})}),
+    ]);
+    expect(JSON.parse(valueMap.topic)).toEqual([
+      {topicName: 'Education'},
+      {topicName: 'Privacy'},
+    ]);
+  });
+
+  it('uses null where a participant lacks the variable', () => {
+    const {valueMap} = getVariableContext(experiment, cohort, [
+      plain({topic: JSON.stringify({topicName: 'Education'})}),
+      plain({}),
+    ]);
+    expect(JSON.parse(valueMap.topic)).toEqual([
+      {topicName: 'Education'},
+      null,
+    ]);
+  });
+
+  it('keeps a non-JSON (plain string) variable as its raw value', () => {
+    const {valueMap} = getVariableContext(experiment, cohort, [
+      plain({arm: 'control'}),
+      plain({arm: 'treatment'}),
+    ]);
+    expect(JSON.parse(valueMap.arm)).toEqual(['control', 'treatment']);
+  });
+
+  it('unions variable names across participants, aligned by participant position', () => {
+    const {valueMap} = getVariableContext(experiment, cohort, [
+      plain({a: '"x"'}),
+      plain({b: '"y"'}),
+    ]);
+    expect(JSON.parse(valueMap.a)).toEqual(['x', null]);
+    expect(JSON.parse(valueMap.b)).toEqual([null, 'y']);
+  });
+
+  it('group chat: resolves {{topic.<participant>.<position>.field}}', () => {
+    const {variableDefinitions, valueMap} = getVariableContext(
+      experiment,
+      cohort,
+      [
+        withTopic([{topicName: 'Education'}, {topicName: 'Privacy'}]),
+        withTopic([{topicName: 'Economy'}, {topicName: 'Deepfakes'}]),
+      ],
+    );
+    expect(
+      resolveTemplateVariables(
+        '{{topic.0.0.topicName}} | {{topic.0.1.topicName}} | {{topic.1.0.topicName}}',
+        variableDefinitions,
+        valueMap,
+      ),
+    ).toBe('Education | Privacy | Economy');
+  });
+
+  it('private chat: a single participant keeps direct {{topic.<position>.field}} access', () => {
+    const {variableDefinitions, valueMap} = getVariableContext(
+      experiment,
+      cohort,
+      withTopic([{topicName: 'Education'}, {topicName: 'Privacy'}]),
+    );
+    expect(
+      resolveTemplateVariables(
+        '{{topic.1.topicName}}',
+        variableDefinitions,
+        valueMap,
+      ),
+    ).toBe('Privacy');
   });
 });
