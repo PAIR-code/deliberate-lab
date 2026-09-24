@@ -21,6 +21,7 @@ export const ProfileStageConfigData = Type.Composite(
           Type.Literal(ProfileType.DEFAULT),
           Type.Literal(ProfileType.DEFAULT_GENDERED),
           Type.Literal(ProfileType.ANONYMOUS_ANIMAL),
+          Type.Literal(ProfileType.ANONYMOUS_ANIMAL_NO_NUMBER),
           Type.Literal(ProfileType.ANONYMOUS_PARTICIPANT),
         ]),
       },

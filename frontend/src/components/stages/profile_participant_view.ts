@@ -26,6 +26,7 @@ export class ProfileViewer extends MobxLitElement {
 
     const info =
       this.stage.profileType === ProfileType.ANONYMOUS_ANIMAL ||
+      this.stage.profileType === ProfileType.ANONYMOUS_ANIMAL_NO_NUMBER ||
       this.stage.profileType === ProfileType.ANONYMOUS_PARTICIPANT
         ? 'You will be playing as this randomly generated identity:'
         : 'This is your specified profile:';
