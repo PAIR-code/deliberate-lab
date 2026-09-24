@@ -23,6 +23,7 @@ export const ProfileStageConfigData = Type.Composite(
           Type.Literal(ProfileType.ANONYMOUS_ANIMAL),
           Type.Literal(ProfileType.ANONYMOUS_PARTICIPANT),
         ]),
+        informalNameStyle: Type.Optional(Type.Boolean({default: false})),
       },
       strict,
     ),
