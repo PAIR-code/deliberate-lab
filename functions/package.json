@@ -37,7 +37,7 @@
     "express-rate-limit": "^8.5.1",
     "firebase-admin": "^13.7.0",
     "firebase-functions": "^7.1.0",
-    "firebase-tools": "^15.9.0",
+    "firebase-tools": "^15.32.1",
     "jest": "^30.2.0",
     "json-stream-stringify": "^3.1.6",
     "ollama-ai-provider-v2": "^3.3.1",
