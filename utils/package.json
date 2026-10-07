@@ -40,7 +40,7 @@
     "ajv": "^8.18.0",
     "crypto-browserify": "^3.12.1",
     "firebase-functions-test": "^3.4.1",
-    "firebase-tools": "^15.9.0",
+    "firebase-tools": "^15.32.1",
     "jest": "^30.2.0",
     "jsonrepair": "^3.13.2",
     "mustache": "^4.2.0",
