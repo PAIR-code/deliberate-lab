@@ -82,12 +82,13 @@ interface Archetype {
 // HELPER
 // ============================================================================
 
-/** Weighted random pick. Falls back to last item if weights don't sum to 1. */
+/** Weighted random pick. Weights are proportions and need not sum to 1. */
 function weightedPick(items: WeightedItem[]): string {
+  const total = items.reduce((sum, item) => sum + item.weight, 0);
   const r = Math.random();
   let cumulative = 0;
   for (const item of items) {
-    cumulative += item.weight;
+    cumulative += item.weight / total;
     if (r < cumulative) return item.label;
   }
   return items[items.length - 1].label;
@@ -387,10 +388,11 @@ export function samplePersonaParams(
   const haltonIndex = batchIndex ?? Math.floor(Math.random() * 997);
   // 1. Pick life-stage archetype (correlated: age + education + setting)
   const archetypeRand = Math.random();
+  const archetypeTotal = ARCHETYPES.reduce((sum, {weight}) => sum + weight, 0);
   let cumulative = 0;
   let selectedArchetype = ARCHETYPES[0].archetype;
   for (const {weight, archetype} of ARCHETYPES) {
-    cumulative += weight;
+    cumulative += weight / archetypeTotal;
     if (archetypeRand < cumulative) {
       selectedArchetype = archetype;
       break;
