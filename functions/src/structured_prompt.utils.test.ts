@@ -4,8 +4,12 @@ import {
   MediatorProfileExtended,
   BasePromptConfig,
   PromptItemType,
+  StageKind,
 } from '@deliberation-lab/utils';
-import {getFirestoreDataForStructuredPrompt} from './structured_prompt.utils';
+import {
+  getFirestoreDataForStructuredPrompt,
+  getPromptFromConfig,
+} from './structured_prompt.utils';
 import * as firestoreUtils from './utils/firestore';
 
 // Mock firestore utilities
@@ -249,6 +253,160 @@ describe('structured_prompt.utils', () => {
 
       // Should fall back to default mediator behavior (all participants)
       expect(result.participants).toHaveLength(2);
+    });
+  });
+
+  describe('getPromptFromConfig mediator participant variables', () => {
+    const experimentId = 'exp';
+    const cohortId = 'cohort';
+    const stageId = 'stage';
+    const utils = jest.requireActual('@deliberation-lab/utils');
+
+    const topicConfig = utils.createRandomPermutationVariableConfig({
+      expandListToSeparateVariables: false,
+      scope: utils.VariableScope.PARTICIPANT,
+      definition: {
+        name: 'topic',
+        description: '',
+        schema: utils.VariableType.array(
+          utils.VariableType.object({topicName: utils.VariableType.STRING}),
+        ),
+      },
+    });
+    const experiment = {
+      id: experimentId,
+      stageIds: [stageId],
+      variableConfigs: [topicConfig],
+      variableMap: {},
+    };
+    const cohort = {id: cohortId, variableMap: {}};
+
+    const baseParticipant = {
+      type: UserType.PARTICIPANT,
+      pronouns: null,
+      currentCohortId: cohortId,
+      currentExperimentId: experimentId,
+      currentStageId: stageId,
+      timestamps: {
+        accountCreated: {seconds: 0, nanoseconds: 0},
+        lastLogin: {seconds: 0, nanoseconds: 0},
+      },
+      prolificId: null,
+      transferCohortId: null,
+    };
+    const human = {
+      ...baseParticipant,
+      id: 'h',
+      privateId: 'h-priv',
+      publicId: 'human-1',
+      name: 'Human',
+      avatar: '🧑',
+      agentConfig: null,
+      variableMap: {topic: JSON.stringify([{topicName: 'HumanTopic'}])},
+    } as unknown as ParticipantProfileExtended;
+    const agent = {
+      ...baseParticipant,
+      id: 'a',
+      privateId: 'a-priv',
+      publicId: 'agent-1',
+      name: 'Agent',
+      avatar: '🤖',
+      agentConfig: {agentId: 'agent-1', promptContext: ''},
+      variableMap: {topic: JSON.stringify([{topicName: 'AgentTopic'}])},
+    } as unknown as ParticipantProfileExtended;
+
+    const mediator = {
+      id: 'mediator-1',
+      privateId: 'mediator-1-priv',
+      publicId: 'mediator-1',
+      type: UserType.MEDIATOR,
+      name: 'Riley',
+      avatar: '🤖',
+      pronouns: null,
+      currentCohortId: cohortId,
+      currentExperimentId: experimentId,
+      currentStageId: stageId,
+      timestamps: {
+        accountCreated: {seconds: 0, nanoseconds: 0},
+        lastLogin: {seconds: 0, nanoseconds: 0},
+      },
+      agentConfig: {agentId: 'mediator-1', promptContext: ''},
+      prolificId: null,
+      transferCohortId: null,
+      variableMap: {},
+    } as unknown as MediatorProfileExtended;
+
+    const makePromptConfig = (kind: StageKind, text: string) =>
+      ({
+        type: kind,
+        includeScaffoldingInPrompt: false,
+        prompt: [{type: PromptItemType.TEXT, text}],
+      }) as unknown as BasePromptConfig;
+
+    const setupMocks = (
+      stageKind: StageKind,
+      participants: ParticipantProfileExtended[],
+    ) => {
+      jest.clearAllMocks();
+      (firestoreUtils.getFirestoreExperiment as jest.Mock).mockResolvedValue(
+        experiment,
+      );
+      (firestoreUtils.getFirestoreCohort as jest.Mock).mockResolvedValue(
+        cohort,
+      );
+      (
+        firestoreUtils.getFirestoreActiveParticipants as jest.Mock
+      ).mockResolvedValue(participants);
+      (firestoreUtils.getFirestoreStage as jest.Mock).mockResolvedValue({
+        id: stageId,
+        kind: stageKind,
+        name: 'Stage',
+        descriptions: {primaryText: '', infoText: '', helpText: ''},
+      });
+      (firestoreUtils.getFirestoreParticipant as jest.Mock).mockImplementation(
+        async (_experiment: string, id: string) =>
+          participants.find((p) => p.privateId === id),
+      );
+      (
+        firestoreUtils.getFirestorePrivateChatMessages as jest.Mock
+      ).mockResolvedValue([]);
+      (
+        firestoreUtils.getFirestoreAnswersForStage as jest.Mock
+      ).mockResolvedValue([]);
+      (
+        firestoreUtils.getFirestoreStagePublicData as jest.Mock
+      ).mockResolvedValue({});
+    };
+
+    it('group chat: exposes every participant, humans first', async () => {
+      // The agent is listed first; humans-first ordering must still put the
+      // human at participant index 0.
+      setupMocks(StageKind.CHAT, [agent, human]);
+      const prompt = await getPromptFromConfig(
+        experimentId,
+        cohortId,
+        stageId,
+        mediator,
+        makePromptConfig(
+          StageKind.CHAT,
+          'A={{topic.0.0.topicName}} B={{topic.1.0.topicName}}',
+        ),
+      );
+      expect(prompt).toContain('A=HumanTopic');
+      expect(prompt).toContain('B=AgentTopic');
+    });
+
+    it('private chat: exposes the single participant directly', async () => {
+      setupMocks(StageKind.PRIVATE_CHAT, [human]);
+      const prompt = await getPromptFromConfig(
+        experimentId,
+        cohortId,
+        stageId,
+        mediator,
+        makePromptConfig(StageKind.PRIVATE_CHAT, 'T={{topic.0.topicName}}'),
+        [human.privateId],
+      );
+      expect(prompt).toContain('T=HumanTopic');
     });
   });
 });

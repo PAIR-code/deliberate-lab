@@ -6,9 +6,10 @@ import {
   createRandomPermutationVariableConfig,
   createStaticVariableConfig,
   extractVariablesFromVariableConfigs,
+  getSchemaAtPath,
   sanitizeVariableName,
 } from './variables.utils';
-import {VariableConfigType, VariableScope} from './variables';
+import {VariableConfigType, VariableScope, VariableType} from './variables';
 
 describe('generateRandomPermutationVariables', () => {
   const consoleSpy = jest.spyOn(console, 'warn').mockImplementation();
@@ -572,5 +573,31 @@ describe('sanitizeVariableName', () => {
     expect(sanitizeVariableName('@#$')).toBe('');
     // Only numbers at start gets underscore
     expect(sanitizeVariableName('123abc')).toBe('_123abc');
+  });
+});
+
+describe('getSchemaAtPath', () => {
+  const topicSchema = VariableType.array(
+    VariableType.object({topicName: VariableType.STRING}),
+  );
+
+  it('resolves a numeric index through array items', () => {
+    expect(getSchemaAtPath(topicSchema, '0.topicName')?.type).toBe('string');
+  });
+
+  it('passes a participant index through before an array variable', () => {
+    // Group chats expose participant variables as arrays by participant, so
+    // paths gain a leading index with no schema level of its own:
+    // {{topic.<participant>.<position>.topicName}}.
+    expect(getSchemaAtPath(topicSchema, '0.0.topicName')?.type).toBe('string');
+  });
+
+  it('passes a participant index through before an expanded variable', () => {
+    const expanded = VariableType.object({price: VariableType.NUMBER});
+    expect(getSchemaAtPath(expanded, '0.price')?.type).toBe('number');
+  });
+
+  it('still returns undefined for unknown properties', () => {
+    expect(getSchemaAtPath(topicSchema, '0.0.bogus')).toBeUndefined();
   });
 });
