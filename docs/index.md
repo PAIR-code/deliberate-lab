@@ -11,8 +11,7 @@ layout: default
 
 ## Information
 
-> [Log into the Google-hosted platform](https://deliberate-lab.appspot.com/){:target="_blank"}
-(or [request access here](https://forms.gle/VCmYQxsZWEA3mbZN6){:target="_blank"})
+> If you're a Google collaborator, [log into the Google-hosted platform](https://deliberate-lab.appspot.com/){:target="_blank"} (otherwise, see documentation on [running locally](https://pair-code.github.io/deliberate-lab/developers/run-locally) or [deploying your own instance](https://pair-code.github.io/deliberate-lab/developers/deploy))
 
 - [GitHub repository](https://github.com/PAIR-code/deliberate-lab/){:target="_blank"}
 - [Contributing](contributing.md){:target="_blank"}
