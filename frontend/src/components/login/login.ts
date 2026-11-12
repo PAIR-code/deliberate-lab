@@ -69,9 +69,9 @@ export class Login extends MobxLitElement {
             <pr-button
               variant="tonal"
               @click=${() =>
-                window.open('https://forms.gle/K87ACqV3H5mwPUoN8', '_blank')}
+                window.open('https://pair-code.github.io/deliberate-lab/', '_blank')}
             >
-              Apply to run experiments
+              View documentation
             </pr-button>
             <pr-button @click=${handleLogin}> Sign in </pr-button>
           </div>
