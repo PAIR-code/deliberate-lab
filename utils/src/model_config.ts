@@ -8,7 +8,7 @@ import {ApiKeyType} from './providers';
 // Default model names for each provider
 export const GEMINI_DEFAULT_MODEL = 'gemini-3-flash-preview';
 export const VERTEX_AI_DEFAULT_MODEL = 'gemini-3-flash-preview';
-export const OPENAI_DEFAULT_MODEL = 'gpt-5-mini-2025-08-07';
+export const OPENAI_DEFAULT_MODEL = 'gpt-5.6-terra';
 export const CLAUDE_DEFAULT_MODEL = 'claude-haiku-4-5-20251001';
 export const OLLAMA_DEFAULT_MODEL = 'ministral-3';
 
